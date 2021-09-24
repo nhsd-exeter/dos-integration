@@ -1,0 +1,14 @@
+name: "Check code for secrets"
+on: push
+jobs:
+  check-code-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check if code contains any secrets
+        run: |
+          make \
+            git-config \
+            git-secrets-scan-repo-files

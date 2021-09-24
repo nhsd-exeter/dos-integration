@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+
+export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/gnu-tar/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:/usr/local/opt/make/libexec/gnubin:build/automation/bin:$PATH
+
+current_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" > /dev/null 2>&1 && pwd)"
+project_dir=$(git rev-parse --show-toplevel)
+cd $project_dir
+
+for script in $(ls -1 $current_dir/scripts/*-pre-commit.sh 2> /dev/null); do
+  ts=$SECONDS
+  printf "Running githook: $(echo $script | sed "s;$project_dir/;;g")"
+  $script "$@"
+  te=$(($SECONDS - $ts))
+  printf " (${te}s)\n"
+done

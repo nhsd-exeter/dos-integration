@@ -1,0 +1,49 @@
+user:
+  nginx:
+    exists: true
+    uid: 999
+    gid: 999
+    home: /tmp
+    shell: /bin/false
+
+package:
+  bash:
+    installed: true
+  curl:
+    installed: true
+
+file:
+  /var/log/nginx/access.log:
+    exists: true
+    filetype: symlink
+    linked-to: /dev/stdout
+  /var/log/nginx/error.log:
+    exists: true
+    filetype: symlink
+    linked-to: /dev/stderr
+  /certificate/certificate.pem:
+    exists: true
+    filetype: file
+    mode: "0400"
+    owner: nginx
+    group: nginx
+
+command:
+  date | grep UTC:
+    exit-status: 0
+  gosu --version:
+    exit-status: 0
+
+process:
+  nginx:
+    running: true
+
+port:
+  tcp:8080:
+    listening: true
+    ip:
+      - 0.0.0.0
+  tcp:8443:
+    listening: true
+    ip:
+      - 0.0.0.0

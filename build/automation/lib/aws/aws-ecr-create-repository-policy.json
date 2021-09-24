@@ -1,0 +1,55 @@
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCrossAccountPullAccess",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:root",
+          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:root",
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:root"
+        ]
+      },
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ]
+    },
+    {
+      "Sid": "AllowServiceDeveloperRoleBasedAccess",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACEServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACEServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACESupportServiceDeveloper"
+        ]
+      },
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeImages",
+        "ecr:DescribeRepositories",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:InitiateLayerUpload",
+        "ecr:PutImage",
+        "ecr:UploadLayerPart"
+      ]
+    },
+    {
+      "Sid": "DenyDelete",
+      "Effect": "Deny",
+      "NotPrincipal": {
+        "AWS": [
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/jenkins_assume_role",
+          "arn:aws:sts::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:assumed-role/jenkins_assume_role/jenkins",
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:root"
+        ]
+      },
+      "Action": ["ecr:BatchDeleteImage", "ecr:DeleteRepository"]
+    }
+  ]
+}

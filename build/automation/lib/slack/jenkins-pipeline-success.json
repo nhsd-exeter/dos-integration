@@ -1,0 +1,29 @@
+{
+  "attachments": [
+    {
+      "color": "#0def42",
+      "blocks": [
+        {
+          "type": "header",
+          "text": {
+            "type": "plain_text",
+            "text": "PIPELINE_NAME_TO_REPLACE"
+          }
+        },
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Status: *BUILD_STATUS_TO_REPLACE* :woohoo:
+Project: *${PROJECT_GROUP_SHORT_TO_REPLACE}-${PROJECT_NAME_SHORT_TO_REPLACE}* | Environment: *ENVIRONMENT_TO_REPLACE* | Profile: *PROFILE_TO_REPLACE*
+Build: <BUILD_URL_TO_REPLACE|#${BUILD_ID_TO_REPLACE}> on *BUILD_DATE_TO_REPLACE* in *BUILD_TIME_TO_REPLACE*
+Commit: *BUILD_COMMIT_HASH_TO_REPLACE* on *BUILD_BRANCH_TO_REPLACE* by <mailto:BUILD_COMMIT_AUTHOR_EMAIL_TO_REPLACE|BUILD_COMMIT_AUTHOR_NAME_TO_REPLACE>
+Message: _${BUILD_COMMIT_MESSAGE_TO_REPLACE}_
+<RUN_DISPLAY_URL_TO_REPLACE|Pipeline> | <RUN_ARTIFACTS_DISPLAY_URL_TO_REPLACE|Artefects> | <RUN_CHANGES_DISPLAY_URL_TO_REPLACE|Changes> | <BUILD_REPO_TO_REPLACE|Repository>
+SLACK_EXTRA_DETAILS_TO_REPLACE"
+          }
+        }
+      ]
+    }
+  ]
+}

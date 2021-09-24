@@ -1,0 +1,4 @@
+#!/bin/bash
+
+alias ipe="net-get-external-ip"
+alias net="net-is-connected"

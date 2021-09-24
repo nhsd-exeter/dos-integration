@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  NAME_TEMPLATE_TO_REPLACE:
+    image: $DOCKER_REGISTRY/NAME_TEMPLATE_TO_REPLACE:latest
+    container_name: NAME_TEMPLATE_TO_REPLACE
+    hostname: NAME_TEMPLATE_TO_REPLACE
+    environment:
+      PROFILE: $PROFILE
+    ports:
+      - "8443:8443"
+    networks:
+      default:
+        aliases:
+          - NAME_TEMPLATE_TO_REPLACE.$PROJECT_NAME_SHORT.local
+networks:
+  default:
+    external:
+      name: $DOCKER_NETWORK

@@ -1,0 +1,9 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: STACK_TEMPLATE_TO_REPLACE-ingress
+  namespace: K8S_APP_NAMESPACE_TO_REPLACE
+  annotations:
+    alb.ingress.kubernetes.io/waf-acl-id: K8S_WAF_ACL_ID_TO_REPLACE
+    alb.ingress.kubernetes.io/certificate-arn: K8S_CERTIFICATE_ARN_TO_REPLACE
+    alb.ingress.kubernetes.io/inbound-cidrs: K8S_INBOUND_CIDRS_TO_REPLACE

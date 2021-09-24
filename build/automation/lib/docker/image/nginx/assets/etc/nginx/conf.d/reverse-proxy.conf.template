@@ -1,0 +1,41 @@
+proxy_buffer_size 2048k;
+proxy_buffers 4 4096k;
+proxy_busy_buffers_size 4096k;
+
+upstream ui {
+  server REVERS_PROXY_UI_HOST_TO_REPLACE:REVERS_PROXY_UI_PORT_TO_REPLACE;
+}
+upstream api {
+  server REVERS_PROXY_API_HOST_TO_REPLACE:REVERS_PROXY_API_PORT_TO_REPLACE;
+}
+
+server {
+  listen 8443 ssl;
+  server_name DOMAIN_TO_REPLACE;
+  error_log /dev/stdout info;
+  ssl_certificate /certificate/certificate.crt;
+  ssl_certificate_key /certificate/certificate.key;
+
+  location / {
+    proxy_pass https://ui;
+    proxy_redirect off;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $server_name;
+  }
+
+  location /api {
+    proxy_pass https://api;
+    proxy_redirect off;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Host $server_name;
+  }
+
+  location /nginx_status {
+    stub_status on;
+    access_log off;
+  }
+}

@@ -1,0 +1,5 @@
+build/automation/etc/git-secrets/.*
+build/automation/var/profile/local.mk
+build/automation/var/profile/.*.mk:.*:[#A-Z0-9_]*(PASSWORD|KEY|TOKEN)[[:blank:]]*:*=[[:blank:]]*\[secret\]$
+build/automation/.*/.*.mk:.*:TERRAFORM_STATE_KEY
+.*.py:.*:[A-Z0-9_]*(PASSWORD|KEY|TOKEN)[[:blank:]]*=[[:blank:]]*os.getenv\("[A-Z0-9_]*"\)$

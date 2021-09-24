@@ -1,0 +1,4 @@
+#!/bin/bash
+
+alias a="atom ."
+alias c='code $(ls -1 *.code-workspace)'

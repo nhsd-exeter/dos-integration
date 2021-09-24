@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: K8S_APP_NAMESPACE_TO_REPLACE
+  labels:
+    ttl: K8S_TTL_TO_REPLACE
+    project-group: PROJECT_GROUP_SHORT_TO_REPLACE

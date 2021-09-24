@@ -1,0 +1,14 @@
+#!/bin/bash
+
+alias d="docker"
+alias dex="docker exec --interactive --tty"
+alias dim="docker images"
+alias dip="docker inspect --format '{{ .NetworkSettings.IPAddress }}'"
+alias dlo="docker logs --follow"
+alias dnl="docker network ls"
+alias dnr='docker network rm $(docker network ls --quiet --filter dangling=true) 2> /dev/null'
+alias dps="docker ps --all"
+alias drc='docker rm --volumes --force $(docker ps --all --quiet) 2> /dev/null'
+alias dri='docker rmi --force $(docker images | grep "<none>" | awk "{print $3}") 2> /dev/null'
+alias dvl="docker volume ls"
+alias dvr='docker volume rm $(docker volume ls --quiet --filter dangling=true) 2> /dev/null'

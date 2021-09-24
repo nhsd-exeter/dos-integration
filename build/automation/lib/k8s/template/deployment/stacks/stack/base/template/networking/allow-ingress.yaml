@@ -1,0 +1,13 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: STACK_TEMPLATE_TO_REPLACE-allow-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: STACK_TEMPLATE_TO_REPLACE
+  ingress:
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8443

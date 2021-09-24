@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  localstack:
+    image: localstack/localstack:$DOCKER_LOCALSTACK_VERSION
+    container_name: localstack
+    hostname: localstack
+    ports:
+      - "4566:4566"
+      - "4567-4597:4567-4597"
+    environment:
+      - SERVICES=apigateway,dynamodb,ec2,es,iam,lambda,redshift,route53,s3,secretsmanager,ses,sns,sqs
+      - USE_SSL=true
+      - DEBUG=1
+      - DATA_DIR=$TMP_DIR/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_ACCESS_KEY_ID=localstack
+      - AWS_SECRET_ACCESS_KEY=localstack
+      - AWS_DEFAULT_REGION=eu-west-2
+    volumes:
+      - "$TMP_DIR/localstack:/tmp/localstack"
+    networks:
+      default:
+        aliases:
+          - localstack.$PROJECT_NAME_SHORT.local
+
+networks:
+  default:
+    external:
+      name: $DOCKER_NETWORK

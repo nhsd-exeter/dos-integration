@@ -46,10 +46,15 @@
     "java.home": "/Library/Java/JavaVirtualMachines/adoptopenjdk-16.jdk/Contents/Home",
     "php.suggest.basic": false,
     "php.validate.executablePath": "/usr/bin/php",
-    "python.formatting.blackArgs": ["--line-length", "120"],
+    "python.formatting.blackArgs": [
+      "--line-length",
+      "120"
+    ],
     "python.formatting.provider": "black",
     "python.languageServer": "Pylance",
-    "python.linting.flake8Args": ["--max-line-length=120"],
+    "python.linting.flake8Args": [
+      "--max-line-length=120"
+    ],
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Path": "~/.pyenv/versions/3.9.5/bin/flake8",
     "python.linting.mypyArgs": [],

@@ -1,0 +1,22 @@
+file:
+  /certificate/certificate.pem:
+    exists: true
+    filetype: file
+
+process:
+  gunicorn:
+    running: true
+
+port:
+  tcp:8443:
+    listening: true
+    ip:
+      - 0.0.0.0
+
+http:
+  https://localhost:8443:
+    allow-insecure: true
+    status: 200
+    timeout: 1000
+    body:
+      - body

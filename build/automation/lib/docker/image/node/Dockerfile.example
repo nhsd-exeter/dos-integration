@@ -1,0 +1,17 @@
+FROM nhsd/node:latest as base
+
+# ==============================================================================
+
+FROM base as builder
+
+COPY example/package.json /package.json
+RUN set -eux && \
+    cd / && \
+    npm install --only=production
+
+# ==============================================================================
+
+FROM base
+
+COPY --from=builder /node_modules /application/node_modules
+COPY example /application

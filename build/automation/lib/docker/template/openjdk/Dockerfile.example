@@ -1,0 +1,38 @@
+FROM maven:latest AS build
+
+COPY example/demo /src
+WORKDIR /src
+RUN set -eux && \
+    \
+    mvn install -Dmaven.test.skip=true
+
+# ==============================================================================
+
+FROM openjdk:latest AS jdk
+
+COPY --from=build /src/java.modules /build/java.modules
+RUN jlink \
+    --no-header-files \
+    --no-man-pages \
+    --strip-java-debug-attributes \
+    --module-path /opt/java/openjdk/jmods \
+    --add-modules java.base,java.desktop,java.instrument,java.logging,java.management,java.naming,java.net.http,java.security.jgss,$(cat /build/java.modules), \
+    --verbose \
+    --compress 2 \
+    --output /jdk
+
+# ==============================================================================
+
+FROM nhsd/openjdk:latest
+COPY --from=jdk /jdk /opt/jdk/
+COPY --from=build /src/target/demo-0.0.1-SNAPSHOT.jar /application/demo.jar
+ENV PATH "/opt/jdk/bin:${PATH}"
+RUN set -eux && \
+    \
+    echo "PATH=/opt/jdk/bin:\$PATH" >> /etc/enviroment && \
+    ls -la /opt/jdk/bin/java && \
+    env | grep PATH && \
+    /opt/jdk/bin/java -version
+
+# docker run openjdk:14-alpine java --list-modules
+# docker run -it --rm nhsd/openjdk-example:latest java -jar /application/demo.jar

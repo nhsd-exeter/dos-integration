@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: STACK_TEMPLATE_TO_REPLACE-configmap
+data:
+  ENVIRONMENT: "ENVIRONMENT_TO_REPLACE"
+  PROFILE: "PROFILE_TO_REPLACE"

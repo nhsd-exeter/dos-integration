@@ -1,0 +1,32 @@
+name: "Check code format and quality"
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check text files format
+        run: |
+          build/automation/etc/githooks/scripts/editorconfig-pre-commit.sh
+      - name: Check Python files format
+        run: |
+          build/automation/etc/githooks/scripts/python-code-pre-commit.sh
+      - name: Check Terraform files format
+        run: |
+          build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
+      - uses: sonarsource/sonarcloud-github-action@master
+        # SEE: https://github.com/SonarSource/sonarcloud-github-action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: ./application
+          args: >
+            -Dsonar.organization=ORG_NAME_TO_REPLACE
+            -Dsonar.projectKey=PROJECT_ID_TO_REPLACE

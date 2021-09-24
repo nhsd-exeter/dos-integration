@@ -1,0 +1,7 @@
+FROM nhsd/nginx:latest as base
+
+# ==============================================================================
+
+FROM base
+
+COPY example /application

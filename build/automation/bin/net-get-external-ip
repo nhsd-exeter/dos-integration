@@ -1,0 +1,30 @@
+#!/bin/bash
+
+help=$(cat <<HEREDOC
+
+    DESCRIPTION: Get external IP address.
+HEREDOC
+)
+if [ "$1" == "--help" ]; then
+    echo -e "${help}\n"
+    exit 0
+fi
+
+function get_ip() {
+    curl \
+        --connect-timeout 1 \
+        --location \
+        --max-time 1 \
+        --retry 1 \
+        --retry-delay 1 \
+        --show-error \
+        --silent \
+        --url "$1" 2> /dev/null \
+            | grep -oEi "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+}
+ip=
+[ -z "$ip" ] && ip=$(dig +short myip.opendns.com @resolver1.opendns.com 2> /dev/null) ||:
+[ -z "$ip" ] && ip=$(get_ip "http://myip.dnsomatic.com") ||:
+[ -z "$ip" ] && ip=$(get_ip "http://checkip.dyndns.org") ||:
+[ -z "$ip" ] && ip=$(get_ip "http://ipecho.net") ||:
+[ -n "$ip" ] && echo $ip || exit 1

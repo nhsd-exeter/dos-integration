@@ -1,0 +1,44 @@
+#!/bin/bash
+
+alias g="git"
+alias ga="git add"
+alias gb+="git branch -vv --all"
+alias gb="git branch -vv"
+alias gbd="git branch -D"
+alias gc+="git commit --all --gpg-sign -m"
+alias gc="git commit --gpg-sign -m"
+alias gco="git checkout"
+alias gd+="git diff --cached"
+alias gd="git diff"
+alias gf="git fetch --prune"
+alias gl+="git log --graph --oneline --decorate --stat"
+alias gl="git log --graph --oneline --decorate"
+alias gm="git merge --no-ff"
+alias gp="git pull --prune"
+alias gpu+="git push --force-with-lease"
+alias gpu="git push"
+alias gpuo="git push --set-upstream origin"
+alias gr++="git reset --hard HEAD~1"
+alias gr+="git reset --hard HEAD"
+alias gr="git reset HEAD"
+alias gs="git status --short"
+
+function git-pull {
+  git branch -r | grep -v '\->' | while read remote; do git branch --track "${remote#origin/}" "$remote" 2> /dev/null; done
+  git pull --all
+}
+
+function git-prune {
+  git fetch --prune
+  for branch in $(git for-each-ref --format '%(refname) %(upstream:track)' refs/heads | awk '$2 == "[gone]" {sub("refs/heads/", "", $1); print $1}'); do
+    git branch -D $branch
+  done
+  for branch in $(git branch -vv | cut -c 3- | awk '$3 !~/\[origin/ { print $1 }'); do
+    git branch -D $branch
+  done
+}
+
+function git-track {
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  git branch --set-upstream-to=origin/$branch $branch
+}

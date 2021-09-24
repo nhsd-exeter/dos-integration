@@ -1,0 +1,74 @@
+{
+  "info": {
+    "_postman_id": "50537d4a-d0a2-4da0-a3f5-ed3a45d38962",
+    "name": "Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "5957aee8-0682-40d8-a22a-787769941798",
+            "exec": [
+              "pm.test(\"Sample test\", function() {",
+              "  var response = pm.response.json();",
+              "  var result=tv4.validateResult(response, schema)",
+              "  pm.expect(result.valid).to.be.true;",
+              "});",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "7840cead-db23-4ddb-a00b-5af49fd71d1b",
+            "exec": [
+              "schema = {",
+              "    \"$schema\": \"http://json-schema.org/draft-07/schema\",",
+              "    \"$id\": \"http://example.com/example.json\",",
+              "    \"type\": \"object\",",
+              "    \"title\": \"The root schema\",",
+              "    \"required\": [",
+              "        \"message\"",
+              "    ],",
+              "    \"properties\": {",
+              "        \"message\": {",
+              "            \"$id\": \"#/properties/message\",",
+              "            \"type\": \"string\",",
+              "            \"title\": \"The message schema\",",
+              "            \"description\": \"An explanation about the purpose of this instance.\",",
+              "            \"default\": \"\",",
+              "            \"examples\": [",
+              "                \"Hello world!\"",
+              "            ],",
+              "            \"pattern\": \"^(.*)$\"",
+              "        }",
+              "    }",
+              "}",
+              ""
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://{{host}}:8080/hello-world",
+          "protocol": "http",
+          "host": ["{{host}}"],
+          "port": "8080",
+          "path": ["hello-world"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "protocolProfileBehavior": {}
+}

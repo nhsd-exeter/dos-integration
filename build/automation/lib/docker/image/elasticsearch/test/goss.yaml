@@ -1,0 +1,33 @@
+user:
+  elasticsearch:
+    exists: true
+    uid: 999
+    gid: 999
+    home: /tmp
+    shell: /bin/false
+
+package:
+  ca-certificates:
+    installed: true
+  curl:
+    installed: true
+  gnupg:
+    installed: true
+  wget:
+    installed: true
+
+command:
+  date | grep UTC:
+    exit-status: 0
+  gosu --version:
+    exit-status: 0
+
+process:
+  java:
+    running: true
+
+port:
+  tcp:9200:
+    listening: true
+    ip:
+      - 0.0.0.0

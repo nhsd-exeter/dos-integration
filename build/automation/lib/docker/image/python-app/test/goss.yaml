@@ -1,0 +1,12 @@
+file:
+  /certificate/certificate.pem:
+    exists: true
+    filetype: file
+    mode: "0400"
+    owner: python
+    group: python
+
+command:
+  pip list | grep -iE 'gunicorn.*20.1':
+    exit-status: 0
+    timeout: 60000

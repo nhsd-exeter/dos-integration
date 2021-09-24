@@ -1,0 +1,36 @@
+name: "Check pull request title, branch name and commit message"
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+jobs:
+  check-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check pull request title
+        if: github.event_name == 'pull_request'
+        run: |
+          [ $(make git-check-if-commit-msg-is-correct BUILD_BRANCH="${{ github.head_ref }}" BUILD_COMMIT_MESSAGE="${{ github.event.pull_request.title }}") = true ] && \
+            exit 0 || make show-configuration | grep GIT_COMMIT_MESSAGE_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
+      - name: Get commit message
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "BUILD_COMMIT_MESSAGE<<EOF" >> $GITHUB_ENV
+          echo "$(git log --format=%B -n 1 HEAD^2)" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Get commit message
+        if: github.event_name == 'push'
+        run: |
+          echo "BUILD_COMMIT_MESSAGE<<EOF" >> $GITHUB_ENV
+          echo "$(git log --format=%B -n 1 HEAD)" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+      - name: Check last commit message
+        run: |
+          [ $(make git-check-if-commit-msg-is-correct BUILD_BRANCH="${{ github.head_ref }}" BUILD_COMMIT_MESSAGE="${{ env.BUILD_COMMIT_MESSAGE }}") = true ] && \
+            exit 0 || make show-configuration | grep GIT_COMMIT_MESSAGE_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
+      - name: Check branch name
+        run: |
+          [ $(make git-check-if-branch-name-is-correct BUILD_BRANCH="${{ github.head_ref }}") = true ] && \
+            exit 0 || make show-configuration | grep GIT_BRANCH_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1

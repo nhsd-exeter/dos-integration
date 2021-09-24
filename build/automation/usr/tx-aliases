@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# MFA
+alias tx-mfa="source ~/bin/texas-mfa-clear && ~/bin/texas-mfa.py && source ~/.aws/session.tmp"
+alias tx-mfa-clear="rm -f ~/.aws/session.tmp && source ~/bin/texas-mfa-clear"
+
+# SSM
+alias tx-ssm-connect="~/bin/texas-ssm-connect.py"

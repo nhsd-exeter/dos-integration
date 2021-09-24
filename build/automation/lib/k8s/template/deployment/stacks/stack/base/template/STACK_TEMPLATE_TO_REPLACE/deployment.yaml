@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: STACK_TEMPLATE_TO_REPLACE-deployment
+  namespace: K8S_APP_NAMESPACE_TO_REPLACE
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: STACK_TEMPLATE_TO_REPLACE
+    spec:
+      containers:
+        - name: STACK_TEMPLATE_TO_REPLACE
+          image: DOCKER_REGISTRY_TO_REPLACE/STACK_TEMPLATE_TO_REPLACE:VERSION_TO_REPLACE
+          envFrom:
+            - configMapRef:
+                name: STACK_TEMPLATE_TO_REPLACE-configmap
+          readinessProbe:
+            tcpSocket:
+              port: 8443
+            initialDelaySeconds: 3
+            periodSeconds: 7
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: "128M"
+            limits:
+              cpu: "1"
+              memory: "2048M"
+          imagePullPolicy: Always

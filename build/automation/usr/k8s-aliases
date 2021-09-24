@@ -1,0 +1,64 @@
+#!/bin/bash
+
+alias {k-config-export-dev,kced}="export KUBECONFIG=~/.kube/configs/lk8s-dev-kubeconfig"
+alias {k-config-export-nonprod,kcenp}="export KUBECONFIG=~/.kube/configs/lk8s-nonprod-kubeconfig"
+alias {k-config-export-prod,kcep}="export KUBECONFIG=~/.kube/configs/lk8s-prod-kubeconfig"
+
+alias {k-get-namespace,kgn}="kubectl-get-current-namespace"
+alias {k-list-namespaces,klns}="kubectl get namespaces"
+alias {k-list-pods,klp}="kubectl get pods"
+alias {k-show-pods,ksp}="kubectl-describe-pods"
+alias {k-list-configmaps,klcm}="kubectl get configmaps"
+alias {k-show-configmaps,kscm}="kubectl-get-configmaps"
+alias {k-list-networkpolicies,klnp}="kubectl get networkpolicies"
+alias {k-show-networkpolicies,ksnp}="kubectl-get-networkpolicies"
+alias {k-list-services,kls}="kubectl get services"
+alias {k-show-services,kss}="kubectl-describe-services"
+alias {k-list-nodes,kln}="kubectl get nodes"
+alias {k-show-nodes,ksn}="kubectl-describe-nodes"
+alias k-list-nodes-pods="kubectl get pod -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName"
+alias {k-log,kl}="kubetail --tail 1"
+
+function kubectl-get-current-namespace() {
+    current="$(kubectl config current-context)"
+    namespace="$(kubectl config get-contexts "$current" | awk "/$current/ {print \$5}")"
+    if [[ -z "$namespace" ]]; then
+        namespace="default"
+    fi
+    echo $namespace
+}
+
+function kubectl-describe-pods() {
+    for pod in $(kubectl get pods | tail -n +2 | awk '{ print $1 }'); do
+        printf "\n[ ------ describe pod: %s ------ ]\n\n" $pod
+        kubectl describe pod $pod
+    done
+}
+
+function kubectl-get-configmaps() {
+    for cm in $(kubectl get configmaps | tail -n +2 | awk '{ print $1 }'); do
+        printf "\n[ ------ get configmap: %s ------ ]\n\n" $cm
+        kubectl get configmap $cm -o=json
+    done
+}
+
+function kubectl-get-networkpolicies() {
+    for np in $(kubectl get networkpolicies | tail -n +2 | awk '{ print $1 }'); do
+        printf "\n[ ------ get networkpolicies: %s ------ ]\n\n" $np
+        kubectl describe networkpolicy $np
+    done
+}
+
+function kubectl-describe-services() {
+    for service in $(kubectl get services | tail -n +2 | awk '{ print $1 }'); do
+        printf "\n[ ------ describe service: %s ------ ]\n\n" $service
+        kubectl describe service $service
+    done
+}
+
+function kubectl-describe-nodes() {
+    for node in $(kubectl get nodes | tail -n +2 | awk '{ print $1 }'); do
+        printf "\n[ ------ describe node: %s ------ ]\n\n" $node
+        kubectl describe node $node
+    done
+}

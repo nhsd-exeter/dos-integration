@@ -1,0 +1,87 @@
+version: "3.7"
+
+# TODO: What's the purpose of this file?
+
+services:
+  # service:
+  #   image: $DOCKER_REGISTRY/service:latest
+  #   container_name: service
+  #   hostname: service
+  #   environment:
+  #     PROFILE: $PROFILE
+  #   ports:
+  #     - "8443:8443"
+  #   networks:
+  #     default:
+  #       aliases:
+  #         - service.$PROJECT_NAME_SHORT.local
+
+  python:
+    image: python:latest
+    container_name: python
+    hostname: python
+    environment:
+      PROFILE: $PROFILE
+      PIP_TARGET: /tmp/.packages
+      PYTHONPATH: /tmp/.packages
+      XDG_CACHE_HOME: /tmp/.cache
+    volumes:
+      - $PROJECT_DIR:/project
+      - $HOME/.python/pip/packages:/tmp/.packages
+      - $HOME/.python/pip/cache:/tmp/.cache/pip
+    user: $USER_ID:$GROUP_ID
+    working_dir: /project/application
+    command: sh -c "pip install django"
+    networks:
+      default:
+        aliases:
+          - python.$PROJECT_NAME_SHORT.local
+
+  mock:
+    image: jamesdbloom/mockserver:latest
+    container_name: mock
+    hostname: mock
+    stdin_open: true
+    tty: true
+    ports:
+      - "1080:1080"
+      - "1090:1090"
+    networks:
+      default:
+        aliases:
+          - mock.$PROJECT_NAME_SHORT.local
+
+  mail:
+    image: mailhog/mailhog:latest
+    container_name: mail
+    hostname: mail
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      default:
+        aliases:
+          - mail.$PROJECT_NAME_SHORT.local
+
+  browser:
+    image: selenium/standalone-chrome${DOCKER_BROWSER_DEBUG}:latest
+    container_name: browser
+    hostname: browser
+    environment:
+      JAVA_OPTS: "-Xmx512m -Dselenium.LOGGER.level=ALL"
+    volumes:
+      - /dev/shm:/dev/shm
+    ports:
+      - "4444:4444"
+      - "5900:5900"
+    networks:
+      default:
+        aliases:
+          - browser.$PROJECT_NAME_SHORT.local
+
+  # TODO: jmeter
+
+networks:
+  default:
+    external:
+      name: $DOCKER_NETWORK
