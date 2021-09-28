@@ -771,6 +771,11 @@ docker-compose-stop: ### Stop Docker Compose - optional: YML=[docker-compose.yml
 	docker rm --force --volumes $$(docker ps --all --filter "name=.*$(BUILD_ID).*" --quiet) 2> /dev/null ||:
 	[[ "$(ALL)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]] && docker rm --force --volumes $$(docker ps --all --quiet) 2> /dev/null ||:
 
+docker-compose-exec: ### Run Docker Compose exec command - mandatory: CMD; optional: YML=[docker-compose.yml, defaults to $(DOCKER_COMPOSE_YML)]
+	yml=$$(make _docker-get-docker-compose-yml YML=$(YML))
+	docker-compose --file $$yml \
+		exec $(CMD)
+
 docker-compose-log: ### Log Docker Compose output - optional: DO_NOT_FOLLOW=true,YML=[docker-compose.yml, defaults to $(DOCKER_COMPOSE_YML)]
 	yml=$$(make _docker-get-docker-compose-yml YML=$(YML))
 	docker-compose --file $$yml \

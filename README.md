@@ -84,9 +84,13 @@ Generate and trust a self-signed certificate that will be used locally to enable
 
 ### Local Project Setup
 
-    make build
+    # Terminal 1
     make start log
-    open https://ui.project.local:8443
+    # Terminal 2
+    make kafka-topic-create kafka-consumer-run
+    # Terminal 3
+    make python-requirements
+    make python-producer-run
 
 ## Contributing
 
