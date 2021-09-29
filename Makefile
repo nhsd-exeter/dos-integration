@@ -52,3 +52,7 @@ python-requirements:
 python-producer-run:
 	make docker-run-python \
 		CMD="python /project/application/producer.py"
+
+python-consumer-run:
+	make docker-run-python \
+		CMD="python /project/application/consumer.py"
