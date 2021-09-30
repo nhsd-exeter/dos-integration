@@ -56,3 +56,7 @@ kafka-producer-run:
 				--bootstrap-server kafka:9092 \
 				--topic TestTopic \
 		"
+
+python-listener-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-di/deployment)"
+	python application/listener.py
