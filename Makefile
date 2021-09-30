@@ -57,6 +57,10 @@ kafka-producer-run:
 				--topic TestTopic \
 		"
 
-python-listener-run:
+python-get-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-di/deployment)"
-	python application/listener.py
+	python application/get_message.py
+
+python-put-message-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-di/deployment)"
+	python application/put_message.py
