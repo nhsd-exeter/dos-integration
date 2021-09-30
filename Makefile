@@ -17,6 +17,18 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
+python-requirements:
+	make docker-run-python \
+		CMD="pip install -r application/requirements.txt"
+
+python-producer-run:
+	make docker-run-python \
+		CMD="python /project/application/producer.py"
+
+python-consumer-run:
+	make docker-run-python \
+		CMD="python /project/application/consumer.py"
+
 kafka-topic-create:
 	make docker-compose-exec CMD=" \
 		kafka kafka-topics --create --topic TestTopic \
@@ -44,15 +56,3 @@ kafka-producer-run:
 				--bootstrap-server kafka:9092 \
 				--topic TestTopic \
 		"
-
-python-requirements:
-	make docker-run-python \
-		CMD="pip install -r application/requirements.txt"
-
-python-producer-run:
-	make docker-run-python \
-		CMD="python /project/application/producer.py"
-
-python-consumer-run:
-	make docker-run-python \
-		CMD="python /project/application/consumer.py"
