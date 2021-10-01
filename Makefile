@@ -58,9 +58,12 @@ kafka-producer-run:
 		"
 
 python-get-message-run:
-	eval "$$(make secret-fetch-and-export-variables NAME=uec-di/deployment)"
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/get_message.py
 
 python-put-message-run:
-	eval "$$(make secret-fetch-and-export-variables NAME=uec-di/deployment)"
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
+
+python-unit-tests:
+	python -m pytest application/tests -v -s -x
