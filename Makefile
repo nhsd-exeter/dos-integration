@@ -67,5 +67,5 @@ python-put-message-run:
 
 coverage-report:
 	cd ./application
-	coverage run --source=. --omit='*/tests/*' -m pytest
-	coverage xml
+	python -m coverage run --source=. --omit='*/tests/*' -m pytest
+	python -m coverage xml
