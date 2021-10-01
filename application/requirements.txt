@@ -1,3 +1,5 @@
 azure-servicebus
 kafka-python
 requests
+pytest
+coverage

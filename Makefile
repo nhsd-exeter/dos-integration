@@ -65,5 +65,7 @@ python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
 
-python-unit-tests:
-	python -m pytest application/tests -v -s -x
+coverage-report:
+	cd ./application
+	coverage run --source=. --omit='*/tests/*' -m pytest
+	coverage xml
