@@ -1,4 +1,4 @@
-FROM nginx:latest as base
+FROM docker2021repos/nginx:latest as base
 
 # ==============================================================================
 
