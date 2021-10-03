@@ -105,9 +105,9 @@ terraform-export-variables: ### Get environment variables as TF_VAR_[name] varia
 	make terraform-export-variables-from-shell PATTERN="^(DB|DATABASE|APP|APPLICATION|UI|API|SERVER|HOST|URL)"
 	make terraform-export-variables-from-shell PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)"
 
-terraform-export-variables-from-secret: ### Get secret as TF_VAR_[name] variables - mandatory: NAME=[secret name]; return: [variables export]
-	if [ -n "$(NAME)" ]; then
-		secret=$$(make secret-fetch NAME=$(NAME))
+terraform-export-variables-from-secret: ### Get secret as TF_VAR_[name] variables - mandatory: NAME|DEPLOYMENT_SECRETS=[secret name]; return: [variables export]
+	if [ -n "$(NAME)" ] || [ -n "$(DEPLOYMENT_SECRETS)" ]; then
+		secret=$$(make secret-fetch NAME=$(or $(NAME), $(DEPLOYMENT_SECRETS)))
 		exports=$$(make terraform-export-variables-from-json JSON="$$secret")
 		echo "$$exports"
 	fi

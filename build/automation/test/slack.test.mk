@@ -1,8 +1,8 @@
 test-slack:
 	make test-slack-setup
 	tests=( \
-		test-slack-send-standard-notification \
 		test-slack-send-notification \
+		test-slack-send-template-notification \
 		test-slack-render-template \
 	)
 	for test in $${tests[*]}; do
@@ -17,10 +17,10 @@ test-slack-setup:
 test-slack-teardown:
 	:
 
-test-slack-send-standard-notification:
+test-slack-send-notification:
 	mk_test_skip
 
-test-slack-send-notification:
+test-slack-send-template-notification:
 	mk_test_skip
 
 test-slack-render-template:

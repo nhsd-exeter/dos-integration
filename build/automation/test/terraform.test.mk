@@ -29,6 +29,8 @@ test-terraform:
 
 test-terraform-setup:
 	make localstack-start
+	find $(TEST_DIR)/terraform -type d -name '.terraform' -print0 | xargs -0 rm -rfv
+	find $(TEST_DIR)/terraform -type f -name '*terraform.tfstate*' -print0 | xargs -0 rm -rfv
 	# Prerequisites
 	make docker-pull NAME=tools VERSION=$(DOCKER_LIBRARY_TOOLS_VERSION)
 

@@ -425,7 +425,7 @@ test-docker-run-specify-image:
 	# arrange
 	make docker-config
 	# act
-	output=$$(make -s docker-run-python IMAGE=python:3.7.0 CMD="python --version" | grep "3.7.0" | wc -l)
+	output=$$(make -s docker-run-python IMAGE=python:$(PYTHON_VERSION) CMD="python --version" | grep "$(PYTHON_VERSION)" | wc -l)
 	# assert
 	mk_test "1 -eq $$output"
 
@@ -559,7 +559,7 @@ test-docker-repo-list-tags:
 
 TEST_DOCKER_COMPOSE_YML = $(TMP_DIR)/docker-compose.yml
 TEST_DOCKER_COMPOSE_YML:
-	echo 'version: "3.7"' > $(TEST_DOCKER_COMPOSE_YML)
+	echo 'version: "3.9"' > $(TEST_DOCKER_COMPOSE_YML)
 	echo "services:" >> $(TEST_DOCKER_COMPOSE_YML)
 	echo "  alpine:" >> $(TEST_DOCKER_COMPOSE_YML)
 	echo "    image: alpine:latest" >> $(TEST_DOCKER_COMPOSE_YML)
