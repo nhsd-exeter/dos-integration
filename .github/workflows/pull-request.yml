@@ -12,8 +12,8 @@ jobs:
       - name: Check pull request title
         if: github.event_name == 'pull_request'
         run: |
-          [ $(make git-check-if-commit-msg-is-correct BUILD_BRANCH="${{ github.head_ref }}" BUILD_COMMIT_MESSAGE="${{ github.event.pull_request.title }}") = true ] && \
-            exit 0 || make show-configuration | grep GIT_COMMIT_MESSAGE_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
+          [ $(make git-check-if-pull-request-title-is-correct BUILD_BRANCH="${{ github.head_ref }}" PULL_REQUEST_TITLE="${{ github.event.pull_request.title }}") = true ] && \
+            exit 0 || make show-configuration | grep -E 'GIT_COMMIT_MESSAGE_|GIT_PULL_REQUEST_' && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
       - name: Get commit message
         if: github.event_name == 'pull_request'
         run: |

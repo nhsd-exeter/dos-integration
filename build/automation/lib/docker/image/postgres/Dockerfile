@@ -4,7 +4,7 @@ FROM postgres:latest as base
 
 FROM base as builder
 ENV \
-    GOSU_VERSION="1.12"
+    GOSU_VERSION="1.14"
 
 RUN set -eux && \
     \

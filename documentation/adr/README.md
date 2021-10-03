@@ -1,8 +1,4 @@
-# ADR Template
-
-In each Architecture Decision Record file include these sections as follows:
-
-## Title [short present tense imperative phrase]
+# ADR-XXX: ADR Template
 
 * Date: [YYYY/MM/DD when the decision was last updated]
 * Status: [Proposed | Rejected | Accepted | Deprecated | ... | Superseded by ADR-XXX]

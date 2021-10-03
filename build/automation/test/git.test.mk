@@ -6,6 +6,7 @@ test-git:
 		test-git-config \
 		test-git-check-if-branch-name-is-correct \
 		test-git-check-if-commit-msg-is-correct \
+		test-git-check-if-pull-request-title-is-correct \
 		test-git-secrets-load \
 		test-git-secrets-add-banned \
 		test-git-secrets-add-allowed \
@@ -118,6 +119,11 @@ test-git-check-if-commit-msg-is-correct:
 	mk_test_complete
 	# clean up
 	rm -f $(TEST_GIT_COMMIT_MESSAGE_FILE)
+
+test-git-check-if-pull-request-title-is-correct:
+	# assert
+	mk_test "01" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=master PULL_REQUEST_TITLE="ABC-123 This is a passing test") = true"
+	mk_test "02" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=master PULL_REQUEST_TITLE="ABC-123 This is a failing tast due to the summary being too long being too long being too long being too long being too long") = false"
 
 test-git-secrets-load:
 	mk_test_skip

@@ -4,6 +4,10 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # ==============================================================================
 # Development workflow targets
 
+setup: # Set up project
+	make project-config
+	# Set up local virtual environment and download dependencies
+
 build: project-config # Build project
 	make docker-build NAME=NAME_TEMPLATE_TO_REPLACE
 

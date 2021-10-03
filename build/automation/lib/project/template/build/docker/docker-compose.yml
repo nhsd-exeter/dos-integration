@@ -1,4 +1,4 @@
-version: "3.7"
+version: "3.9"
 
 services:
   NAME_TEMPLATE_TO_REPLACE:
@@ -13,7 +13,7 @@ services:
       default:
         aliases:
           - NAME_TEMPLATE_TO_REPLACE.$PROJECT_NAME_SHORT.local
+
 networks:
   default:
-    external:
-      name: $DOCKER_NETWORK
+    name: $DOCKER_NETWORK

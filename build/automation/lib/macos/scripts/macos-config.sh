@@ -2,10 +2,21 @@
 set -e
 
 function main() {
-  download
-  cd "$HOME/.make-devops"
+  clone || download; cd "$HOME/.make-devops"
   make macos-config
   finish
+}
+
+function clone() {
+  if ! [ -d "$HOME/.make-devops/.git" ]; then
+    cd "$HOME"
+    rm -rf make-devops .make-devops
+    git clone https://github.com/nhsd-exeter/make-devops.git
+    mv make-devops .make-devops
+  fi
+  cd "$HOME/.make-devops"
+  git pull --all
+  git checkout ${BRANCH_NAME:-master}
 }
 
 function download() {

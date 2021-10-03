@@ -9,10 +9,10 @@ DOCKER_NETWORK = $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(BUILD_ID)
 DOCKER_REGISTRY = $(AWS_ECR)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)
 DOCKER_LIBRARY_REGISTRY = nhsd
 
-DOCKER_ALPINE_VERSION = 3.13.5
+DOCKER_ALPINE_VERSION = 3.14.2
 DOCKER_COMPOSER_VERSION = 2.0.13
 DOCKER_CONFIG_LINT_VERSION = v1.6.0
-DOCKER_DIND_VERSION = 20.10.6-dind
+DOCKER_DIND_VERSION = 20.10.8-dind
 DOCKER_EDITORCONFIG_CHECKER_VERSION = 2.3.5
 DOCKER_ELASTICSEARCH_VERSION = 7.13.0
 DOCKER_GRADLE_VERSION = 7.0.2-jdk$(JAVA_VERSION)
@@ -771,15 +771,15 @@ docker-compose-stop: ### Stop Docker Compose - optional: YML=[docker-compose.yml
 	docker rm --force --volumes $$(docker ps --all --filter "name=.*$(BUILD_ID).*" --quiet) 2> /dev/null ||:
 	[[ "$(ALL)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]] && docker rm --force --volumes $$(docker ps --all --quiet) 2> /dev/null ||:
 
-docker-compose-exec: ### Run Docker Compose exec command - mandatory: CMD; optional: YML=[docker-compose.yml, defaults to $(DOCKER_COMPOSE_YML)]
-	yml=$$(make _docker-get-docker-compose-yml YML=$(YML))
-	docker-compose --file $$yml \
-		exec $(CMD)
-
 docker-compose-log: ### Log Docker Compose output - optional: DO_NOT_FOLLOW=true,YML=[docker-compose.yml, defaults to $(DOCKER_COMPOSE_YML)]
 	yml=$$(make _docker-get-docker-compose-yml YML=$(YML))
 	docker-compose --file $$yml \
 		logs $$(echo $(DO_NOT_FOLLOW) | grep -E 'true|yes|y|on|1|TRUE|YES|Y|ON' > /dev/null 2>&1 && : || echo "--follow")
+
+docker-compose-exec: ### Run Docker Compose exec command - mandatory: CMD; optional: YML=[docker-compose.yml, defaults to $(DOCKER_COMPOSE_YML)]
+	yml=$$(make _docker-get-docker-compose-yml YML=$(YML))
+	docker-compose --file $$yml \
+		exec $(CMD)
 
 # ==============================================================================
 
