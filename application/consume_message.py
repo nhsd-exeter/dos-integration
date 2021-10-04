@@ -1,5 +1,6 @@
 from azure.servicebus import ServiceBusClient
 from os import environ
+from time import sleep
 
 
 def get_message_from_service_bus() -> None:
@@ -13,9 +14,10 @@ def get_message_from_service_bus() -> None:
             subscription_name=environ["AZURE_SERVICE_BUS_SUBSCRIPTION_NAME"],
         ) as service_bus_receiver:
             print("Topic and Subscription Name set")
-            received_msgs = service_bus_receiver.peek_messages(max_message_count=30)
-            print("Received messages if any")
-            print(received_msgs)
+            received_msgs = service_bus_receiver.receive_messages(max_message_count=10, max_wait_time=5)
+            for msg in received_msgs:
+                print(str(msg))
+                service_bus_receiver.complete_message(msg)
 
 
 if __name__ == "__main__":

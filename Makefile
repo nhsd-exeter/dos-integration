@@ -57,15 +57,23 @@ kafka-producer-run:
 				--topic TestTopic \
 		"
 
-python-get-message-run:
+python-consume-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/get_message.py
+	python application/consume_message.py
+
+python-peek-message-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
+	python application/peek_message.py
 
 python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
 
+python-pytest:
+	python -m pytest application/tests -s -x -v
+
 coverage-report:
 	cd ./application
 	python -m coverage run --source=. --omit='*/tests/*' -m pytest
+	python -m coverage report
 	python -m coverage xml
