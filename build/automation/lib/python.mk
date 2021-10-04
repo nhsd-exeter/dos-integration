@@ -74,6 +74,7 @@ python-code-check: ### Check Python code with 'flake8' - optional: FILES=[direc
 
 python-code-coverage: ### Test Python code with 'coverage' - mandatory: CMD=[test program]; optional: DIR,FILES=[file or pattern],EXCLUDE=[comma-separated list]
 	make docker-run-tools SH=y DIR=$(or $(DIR), $(APPLICATION_DIR_REL)) CMD=" \
+		python -m pip install -r requirements.txt && \
 		python -m coverage run \
 			--source=$(or $(FILES), '.') \
 			--omit=*/tests/*,$(EXCLUDE) \
