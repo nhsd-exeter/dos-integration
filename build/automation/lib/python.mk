@@ -72,26 +72,26 @@ python-code-check: ### Check Python code with 'flake8' - optional: FILES=[direc
 			$(or $(FILES), $(APPLICATION_DIR)) \
 	"
 
-python-code-coverage: ### Test Python code with 'coverage' - mandatory: CMD=[test program]; optional: FILES=[directory, file or pattern],EXCLUDE=[comma-separated list]
-	make docker-run-tools SH=y CMD=" \
+python-code-coverage: ### Test Python code with 'coverage' - mandatory: CMD=[test program]; optional: DIR,FILES=[file or pattern],EXCLUDE=[comma-separated list]
+	make docker-run-tools SH=y DIR=$(or $(DIR), $(APPLICATION_DIR_REL)) CMD=" \
 		python -m coverage run \
-			--source=$(or $(FILES), $(APPLICATION_DIR)) \
+			--source=$(or $(FILES), '.') \
 			--omit=*/tests/*,$(EXCLUDE) \
-			$(CMD) &&
-		coverage report -m && \
-		coverage erase \
+			$(or $(CMD), -m pytest) && \
+		python -m coverage xml \
 	"
 
-python-clean: ### Clean up Python project files - mandatory: DIR=[Python project directory]
-	[ -z "$(DIR)" ] && (echo "ERROR: Please, specify the DIR"; exit 1)
-	find $(DIR) \( \
-		-name "__pycache__" -o \
-		-name ".mypy_cache" -o \
-		-name "*.pyc" -o \
-		-name "*.pyd" -o \
-		-name "*.pyo" -o \
-		-name "coverage.xml" -o \
-		-name "db.sqlite3" -o \
+python-clean: ### Clean up Python project files - optional: DIR=[Python project directory]
+	find $(or $(DIR), '.') \( \
+		-name '__pycache__' -o \
+		-name '.coverage' -o \
+		-name '.mypy_cache' -o \
+		-name '.pytest_cache' -o \
+		-name '*.pyc' -o \
+		-name '*.pyd' -o \
+		-name '*.pyo' -o \
+		-name 'coverage.xml' -o \
+		-name 'db.sqlite3' \
 	\) -print | xargs rm -rfv
 
 python-check-versions: ### Check Python versions alignment

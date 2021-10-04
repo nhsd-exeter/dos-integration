@@ -18,7 +18,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 python-requirements:
-	make docker-run-python \
+	make docker-run-tools \
 		CMD="pip install -r application/requirements.txt"
 
 python-producer-run:
@@ -77,3 +77,6 @@ coverage-report:
 	python -m coverage run --source=. --omit='*/tests/*' -m pytest
 	python -m coverage report
 	python -m coverage xml
+
+clean:
+	make python-clean
