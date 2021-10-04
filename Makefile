@@ -73,10 +73,7 @@ python-pytest:
 	python -m pytest application/tests -s -x -v
 
 coverage-report:
-	cd ./application
-	python -m coverage run --source=. --omit='*/tests/*' -m pytest
-	python -m coverage report
-	python -m coverage xml
+	make python-code-coverage DIR=./application
 
 clean:
 	make python-clean
