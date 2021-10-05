@@ -17,6 +17,7 @@
     "editor.formatOnSave": true,
     "editor.renderWhitespace": "all",
     "editor.suggestSelection": "recentlyUsedByPrefix",
+    "editor.bracketPairColorization.enabled": true,
     "explorer.autoReveal": true,
     "explorer.sortOrder": "type",
     "extensions.ignoreRecommendations": true,

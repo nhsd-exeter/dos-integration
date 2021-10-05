@@ -18,8 +18,9 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 python-requirements:
-	make docker-run-python \
-		CMD="pip install -r application/requirements.txt"
+	make docker-run-tools \
+		CMD="pip install -r requirements.txt" \
+		DIR=./application
 
 python-producer-run:
 	make docker-run-python \
@@ -56,3 +57,28 @@ kafka-producer-run:
 				--bootstrap-server kafka:9092 \
 				--topic TestTopic \
 		"
+
+python-consume-message-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
+	python application/consume_message.py
+
+python-peek-message-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
+	python application/peek_message.py
+
+python-put-message-run:
+	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
+	python application/put_message.py
+
+python-pytest:
+	make docker-run-tools CMD=" \
+		pip install -r requirements.txt && \
+		python -m pytest application/tests -s -x -v \
+	" \
+	DIR=./application
+
+coverage-report:
+	make python-code-coverage DIR=./application
+
+clean:
+	make python-clean
