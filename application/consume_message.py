@@ -1,6 +1,5 @@
 from azure.servicebus import ServiceBusClient
 from os import environ
-from time import sleep
 
 
 def get_message_from_service_bus() -> None:

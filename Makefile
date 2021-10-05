@@ -19,7 +19,8 @@ log: project-log # Show project logs
 
 python-requirements:
 	make docker-run-tools \
-		CMD="pip install -r application/requirements.txt"
+		CMD="pip install -r requirements.txt" \
+		DIR=./application
 
 python-producer-run:
 	make docker-run-python \
@@ -70,7 +71,11 @@ python-put-message-run:
 	python application/put_message.py
 
 python-pytest:
-	python -m pytest application/tests -s -x -v
+	make docker-run-tools CMD=" \
+		pip install -r requirements.txt && \
+		python -m pytest application/tests -s -x -v \
+	" \
+	DIR=./application
 
 coverage-report:
 	make python-code-coverage DIR=./application

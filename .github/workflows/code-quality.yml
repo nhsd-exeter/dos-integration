@@ -22,7 +22,7 @@ jobs:
           build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
       - name: Create coverage reports
         run: |
-          pip install -r application/requirements.txt
+          make python-requirements
           make coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
         # SEE: https://github.com/SonarSource/sonarcloud-github-action
