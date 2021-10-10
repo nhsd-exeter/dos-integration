@@ -405,9 +405,9 @@ docker-run-composer: ### Run composer container - mandatory: CMD; optional: DIR,
 
 docker-run-editorconfig: ### Run editorconfig container - optional: DIR=[working directory],EXCLUDE=[file pattern e.g. '\.txt$$'],ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
 	if [ $(PROJECT_NAME) = $(DEVOPS_PROJECT_NAME) ]; then
-		exclude='$(shell [ -n "$(EXCLUDE)" ] && echo '$(EXCLUDE)|')markdown|linux-amd64$$|\.drawio|\.p12|\.so$$'
+		exclude='$(shell [ -n "$(EXCLUDE)" ] && echo '$(EXCLUDE)|')markdown|linux-amd64$$|\.drawio|\.p12|\.jks|\.so$$'
 	else
-		exclude='$(shell [ -n "$(EXCLUDE)" ] && echo '$(EXCLUDE)|')build/automation|markdown|linux-amd64$$|\.drawio|\.p12|\.so$$'
+		exclude='$(shell [ -n "$(EXCLUDE)" ] && echo '$(EXCLUDE)|')build/automation|markdown|linux-amd64$$|\.drawio|\.p12|\.jks|\.so$$'
 	fi
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo mstruebing/editorconfig-checker:$(DOCKER_EDITORCONFIG_CHECKER_VERSION))

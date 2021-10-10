@@ -7,6 +7,7 @@ AWS_ALTERNATIVE_REGION = eu-west-1
 AWS_ROLE_PIPELINE = jenkins_assume_role
 AWS_ROLE_SESSION = jenkins
 AWS_ROLE = $(if $(HUDSON_URL),$(AWS_ROLE_PIPELINE),Developer)
+AWS_ALB_SSL_TLS_POLICY = ELBSecurityPolicy-TLS-1-2-2017-01
 
 # ==============================================================================
 
