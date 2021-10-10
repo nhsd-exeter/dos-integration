@@ -3,7 +3,6 @@ FROM python:latest as base
 # ==============================================================================
 
 FROM base as builder
-ARG PYTHON_BASE_PACKAGES
 ENV \
     GOSU_VERSION="1.14"
 
@@ -13,11 +12,10 @@ RUN set -eux && \
     apk add --no-cache \
         ca-certificates \
         dpkg \
-        g++ \
         gnupg \
-        linux-headers \
         wget \
     && \
+    \
     # Get gosu
     dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" && \
     wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" && \
@@ -27,17 +25,12 @@ RUN set -eux && \
     gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu && \
     gpgconf --kill all && \
     rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc && \
-    chmod +x /usr/local/bin/gosu && \
-    \
-    # Get Python packages
-    mkdir /packages && cd /packages && \
-    pip install --upgrade pip && \
-    pip install --prefix=/packages --no-warn-script-location \
-        $PYTHON_BASE_PACKAGES
+    chmod +x /usr/local/bin/gosu
 
 # ==============================================================================
 
 FROM base
+ARG PYTHON_BASE_PACKAGES
 ENV \
     LANG="C.UTF-8" \
     LC_ALL="C.UTF-8" \
@@ -49,7 +42,6 @@ ENV \
     TZ="UTC"
 
 COPY --from=builder /usr/local/bin/gosu /usr/local/bin/gosu
-COPY --from=builder /packages /usr/local
 COPY assets/ /
 RUN set -eux && \
     \
@@ -58,20 +50,30 @@ RUN set -eux && \
         bash \
         bind-tools \
         ca-certificates \
+        cmake \
         curl \
+        g++ \
         git \
         gnupg \
         graphviz \
         iputils \
+        linux-headers \
         make \
         msttcorefonts-installer \
         net-tools \
         netcat-openbsd \
+        openssl-dev \
         unzip \
         wget \
         zip \
     && \
     update-ms-fonts && \
+    \
+    # Get Python packages
+    pip install --upgrade pip && \
+    pip install --no-warn-script-location \
+        $PYTHON_BASE_PACKAGES \
+    && \
     \
     # Install aws-iam-authenticator
     curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/aws-iam-authenticator && \
