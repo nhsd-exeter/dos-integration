@@ -5,5 +5,5 @@
 .nvmrc
 .python-version
 .scannerwork
-*.code-workspace
+.serverless
 !project.code-workspace

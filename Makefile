@@ -82,3 +82,33 @@ coverage-report:
 
 clean:
 	make python-clean
+
+# -----------------------------
+# Serverless
+
+serverless-deploy:
+	if [ "$(PROFILE)" == "local" ]; then
+		make -s localstack-start
+		serverless deploy --config serverless.yml --stage $(PROFILE)
+	else
+		serverless deploy --config serverless.yml --stage $(ENVIRONMENT)
+	fi
+
+serverless-remove:
+	if [ "$(PROFILE)" == "local" ]; then
+		make -s localstack-start
+		serverless remove --config serverless.yml --stage $(PROFILE)
+	else
+		serverless remove --config serverless.yml --stage $(ENVIRONMENT)
+	fi
+
+serverless-info:
+	serverless info --config serverless.yml --stage $(ENVIRONMENT)
+
+serverless-clean:
+	rm -rf .serverless
+
+create-ecr-repositories:
+	make docker-create-repository NAME=event-processor
+	make docker-create-repository NAME=event-receiver
+	make docker-create-repository NAME=event-sender
