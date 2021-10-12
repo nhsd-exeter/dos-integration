@@ -83,27 +83,54 @@ coverage-report:
 clean:
 	make python-clean
 
+# ==============================================================================
+# Event Sender
+
+event-sender-build:
+	cd $(APPLICATION_DIR)/event_sender
+	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
+		*.py \
+		requirements.txt
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-sender
+	make event-sender-clean
+
+event-sender-clean: ## Clean up
+	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
+
+event-sender-run:
+	echo hi
+
+event-sender-start:
+	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
+	-d \
+	-p 9000:8080 \
+	" \
+	CONTAINER="event-sender"
+
+event-sender-trigger:
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
 # -----------------------------
 # Serverless
 
 serverless-deploy:
-	if [ "$(PROFILE)" == "local" ]; then
-		make -s localstack-start
-		serverless deploy --config serverless.yml --stage $(PROFILE)
-	else
-		serverless deploy --config serverless.yml --stage $(ENVIRONMENT)
-	fi
+	make serverless-run CMD=deploy
 
 serverless-remove:
-	if [ "$(PROFILE)" == "local" ]; then
-		make -s localstack-start
-		serverless remove --config serverless.yml --stage $(PROFILE)
-	else
-		serverless remove --config serverless.yml --stage $(ENVIRONMENT)
-	fi
+	make serverless-run CMD=remove
 
 serverless-info:
-	serverless info --config serverless.yml --stage $(ENVIRONMENT)
+	make serverless-run CMD=info
+
+serverless-run:
+	if [ "$(PROFILE)" == "local" ]; then
+		make -s localstack-start
+		export SLS_DEBUG=true
+		serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(PROFILE)
+	else
+		serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(ENVIRONMENT)
+	fi
 
 serverless-clean:
 	rm -rf .serverless
