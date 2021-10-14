@@ -162,7 +162,8 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Deployment From the Command-line
 
-    make deploy PROFILE=dev
+    make serverless-plugin-install
+    make deploy PROFILE=task
 
 ### Secrets
 
@@ -314,7 +315,7 @@ List all the environments and their relation to profiles
 - Live
   - Profile: `live`
 
-Describe how to provision and deploy to a task branch environment
+To deploy a environment run `make deploy PROFILE=task`
 
 ### Runbooks
 

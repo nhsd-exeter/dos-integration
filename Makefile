@@ -18,7 +18,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project
-	echo TODO
+	make serverless-run
 
 python-requirements:
 	make docker-run-tools \
@@ -117,16 +117,16 @@ event-sender-trigger:
 # -----------------------------
 # Serverless
 
-serverless-deploy:
+serverless-deploy: # Deploy AWS resources
 	make serverless-run CMD=deploy
 
-serverless-remove:
+serverless-remove: # Delete existing AWS resources
 	make serverless-run CMD=remove
 
-serverless-info:
+serverless-info: # See info on deployed environment
 	make serverless-run CMD=info
 
-serverless-run:
+serverless-run: # Runs serverless commands
 	if [ "$(PROFILE)" == "local" ]; then
 		make -s localstack-start
 		export SLS_DEBUG=true
@@ -140,7 +140,7 @@ serverless-run:
 serverless-clean:
 	rm -rf .serverless
 
-serverless-plugin-install:
+serverless-plugin-install: # Install serverless plugins
 	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-localstack"
 	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-vpc-discovery"
 
@@ -159,6 +159,9 @@ docker-run-serverless:
 			$(ARGS) \
 			$(IMAGE) \
 				$(CMD)
+
+# -----------------------------
+# Other
 
 create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
