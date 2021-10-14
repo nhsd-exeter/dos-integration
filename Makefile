@@ -140,6 +140,10 @@ serverless-run:
 serverless-clean:
 	rm -rf .serverless
 
+serverless-plugin-install:
+	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-localstack"
+	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-vpc-discovery"
+
 docker-run-serverless:
 	make docker-config > /dev/null 2>&1
 		container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo $$(echo '$(IMAGE)' | md5sum | cut -c1-7)-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
@@ -152,8 +156,6 @@ docker-run-serverless:
 			--volume $(PROJECT_DIR):/project \
 			--network $(DOCKER_NETWORK) \
 			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
-			--privileged \
-			-v /var/run/docker.sock:/var/run/docker.sock \
 			$(ARGS) \
 			$(IMAGE) \
 				$(CMD)

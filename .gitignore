@@ -21,5 +21,7 @@ env/
 lib/
 lib64/
 node_modules/
+package-lock.json
+package.json
 parts/
 sdist/

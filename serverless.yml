@@ -3,7 +3,6 @@ service: dos-integration
 frameworkVersion: '2'
 
 configValidationMode: error
-projectDir: ./
 
 provider:
   name: aws
@@ -12,7 +11,7 @@ provider:
   region: ${env:AWS_REGION}
   deploymentBucket:
     blockPublicAccess: true
-    skipPolicySetup: false
+    skipPolicySetup: true
   tags:
     Environment: ${env:ENVIRONMENT}
     PROFILE: ${env:PROFILE}
@@ -23,29 +22,39 @@ provider:
   #   role:
   #     name: dos-integration-${sls:stage}-lambda-role
   #     statements:
-        # - Effect: 'Deny'
+        # - Effect: 'Allow'
         #   Resource: 'TODO'
         #   Action: 'TODO' #This need to be restricted when used
         # - Effect: 'Deny'
         #   Resource: 'TODO'
         #   Action: 'TODO'
 
-
-
 plugins:
   - serverless-localstack
+  - serverless-vpc-discovery
 
 custom:
   localstack:
     # Documentation - https://github.com/localstack/serverless-localstack
     stages:
-      # list of stages for which the plugin should be enabled
       - local
     host: http://localhost
     edgePort: 4566
     docker:
       sudo: False
-
+  # vpcDiscovery:
+  #   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+  #   vpcName: '${env:AWS_VPC_NAME}'
+  #   subnets:
+  #     - tagKey: Name
+  #       tagValues:
+  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+  #   securityGroups:
+  #     - tagKey: Name
+  #       tagValues:
+  #         - 'uec-pu-apu-2429-rds'
 
 functions:
   event-sender:
@@ -59,13 +68,8 @@ functions:
       PYTHON_VERSION: ${env:APP_PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-    # vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
-    #   securityGroupIds:
-    #     - securityGroupId1
-    #     - securityGroupId2
-    #   subnetIds:
-    #     - subnetId1
-    #     - subnetId2
+    # tracing:
+    #   lambda: true
 
 #resources:
 #  Outputs:
