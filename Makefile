@@ -9,7 +9,9 @@ setup: # Set up project
 	make python-virtualenv
 	pip install -r application/requirements.txt
 
-start: project-start # Start project
+build:
+	make event-sender-build
+
 
 stop: project-stop # Stop project
 
@@ -110,6 +112,9 @@ event-sender-start:
 	-p 9000:8080 \
 	" \
 	CONTAINER="event-sender"
+
+event-sender-stop:
+	docker stop event-sender 2> /dev/null ||:
 
 event-sender-trigger:
 	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'

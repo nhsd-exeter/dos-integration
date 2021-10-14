@@ -11,6 +11,8 @@
     - [Local Project Setup](#local-project-setup)
   - [Contributing](#contributing)
   - [Development](#development)
+    - [Code Formatting](#code-formatting)
+    - [Code Quality](#code-quality)
   - [Testing](#testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
@@ -111,10 +113,21 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
   - Connect to a local database
   - Interact with mock components
   - Switch each individual component to the dev mode
-- Code formatting
-- Code quality
-- Reference the [TODO.md](documentation/TODO.md) file
-- Provide guidance on how to use feature toggles and branching by abstraction
+  - Reference the [TODO.md](documentation/TODO.md) file
+  - Provide guidance on how to use feature toggles and branching by abstraction
+
+### Code Formatting
+
+  To format the code run:
+    make python-code-format FILES=./application
+    make python-code-format FILES=./test
+
+### Code Quality
+
+  To check the code quality run:
+    make python-code-check FILES=./application
+    make python-code-check FILES=./test
+
 
 ## Testing
 
@@ -336,7 +349,37 @@ All of the above can be service, product, application or even team specific.
 ### Documentation
 
 - Sprint board link
+
+  <https://nhsd-jira.digital.nhs.uk/secure/RapidBoard.jspa?rapidView=3875>
+
+  Note this sprint board requires permissions for both APU (PU project) and DI project
+
 - Backlog link
-- Roadmap link
-- Risks register link
+
+  <https://nhsd-jira.digital.nhs.uk/secure/RapidBoard.jspa?rapidView=3875&view=planning&issueLimit=100>
+
+- Roadmap
+
+  <https://nhsd-confluence.digital.nhs.uk/display/DI/Roadmap>
+
+- Risks register
+
+  We have a risk register but not accessible/viewable by the development team. So if a new risk needs to be added the Delivery Manager is the best to talk to.
+
 - Documentation workspace link
+
+  Documentation is stored in the [documentation](documentation) folder
+
+- Confluence
+
+  A separate confluence space has been set up for the DoS Integration Project
+
+  <https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home>
+
+- Definition of Ready/Done
+
+  <https://nhsd-confluence.digital.nhs.uk/pages/viewpage.action?pageId=293247477>
+
+- Ways of working
+
+  <https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working>
