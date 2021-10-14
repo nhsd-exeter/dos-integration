@@ -307,14 +307,12 @@ Are there any auditing requirements in accordance with the data retention polici
 
 List all the environments and their relation to profiles
 
-- Development
+- Dev
   - Profile: `dev`
-  - URL address: [https://?.k8s-dev.texasplatform.uk/](https://?.k8s-dev.texasplatform.uk/)
-  - Username: ?@nhs.net
-  - Password: _stored in the AWS Secrets Manager `?`_
-- Test
 - Demo
+  - Profile: `demo`
 - Live
+  - Profile: `live`
 
 Describe how to provision and deploy to a task branch environment
 

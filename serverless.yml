@@ -7,26 +7,28 @@ projectDir: ./
 
 provider:
   name: aws
-  runtime: python3.9
   lambdaHashingVersion: 20201221
   architecture: x86_64
   region: ${env:AWS_REGION}
+  deploymentBucket:
+    blockPublicAccess: true
+    skipPolicySetup: false
   tags:
+    Environment: ${env:ENVIRONMENT}
+    PROFILE: ${env:PROFILE}
+    Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
-    Product: ${env:PROJECT_GROUP_SHORT}
-    PROFILE: ${env:PROFILE}
-    Environment: ${env:ENVIRONMENT}
   # iam:
   #   role:
   #     name: dos-integration-${sls:stage}-lambda-role
   #     statements:
-  #       - Effect: 'Allow'
-  #         Resource: 'TODO'
-  #         Action: 'TODO'
-  #       - Effect: 'Deny'
-  #         Resource: 'TODO'
-  #         Action: 'TODO'
+        # - Effect: 'Deny'
+        #   Resource: 'TODO'
+        #   Action: 'TODO' #This need to be restricted when used
+        # - Effect: 'Deny'
+        #   Resource: 'TODO'
+        #   Action: 'TODO'
 
 
 
@@ -47,17 +49,16 @@ custom:
 
 functions:
   event-sender:
-    # handler: event_sender.lambda_handler # The file and module for this specific function. Cannot be used when `image` is defined.
-    image: ${env:SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:latest # Image to be used by function, cannot be used when `handler` is defined. It can be configured as concrete uri of Docker image in ECR or as a reference to image defined in `provider.ecr.images`
-    architecture: x86_64 # Instruction set architecture of a Lambda function (for ARM, AWS Graviton2 processor based, set it to 'arm64')
-    name: ${env:PROJECT_ID}-${sls:stage}-event-sender # optional, Deployed Lambda name
-    description: ${sls:stage} Event Sender lambda # The description of your function.
-    memorySize: 512 # memorySize for this specific function.
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:latest
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
+    description: ${sls:stage} Event Sender lambda
+    memorySize: 512
     timeout: 10
-    tags: # Tags that will be added to each of the deployment resources
-      PYTHON_VERSION: ${env:PYTHON_VERSION_MAJOR}.${env:PYTHON_VERSION_MINOR}
-    # environment: # Function level environment variables
-    #   functionEnvVar: 12345678
+    tags:
+      PYTHON_VERSION: ${env:APP_PYTHON_VERSION}
+    environment:
+      PROFILE: ${env:PROFILE}
     # vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     #   securityGroupIds:
     #     - securityGroupId1
@@ -66,13 +67,7 @@ functions:
     #     - subnetId1
     #     - subnetId2
 
-# you can add CloudFormation resource templates here
 #resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
 #  Outputs:
 #     NewOutput:
 #       Description: "Description for the output"

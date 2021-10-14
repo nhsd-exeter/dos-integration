@@ -17,6 +17,9 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
+deploy: # Deploys whole project
+	echo TODO
+
 python-requirements:
 	make docker-run-tools \
 		CMD="pip install -r requirements.txt" \
@@ -128,12 +131,32 @@ serverless-run:
 		make -s localstack-start
 		export SLS_DEBUG=true
 		serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(PROFILE)
+	elif [ "$(PROFILE)" == "task" ]; then
+		make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(ENVIRONMENT)"
 	else
-		serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(ENVIRONMENT)
+		make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(PROFILE)"
 	fi
 
 serverless-clean:
 	rm -rf .serverless
+
+docker-run-serverless:
+	make docker-config > /dev/null 2>&1
+		container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo $$(echo '$(IMAGE)' | md5sum | cut -c1-7)-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
+		docker run --interactive $(_TTY) --rm \
+			--name $$container \
+			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
+			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
+			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+			--volume $(PROJECT_DIR):/project \
+			--network $(DOCKER_NETWORK) \
+			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+			--privileged \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			$(ARGS) \
+			$(IMAGE) \
+				$(CMD)
 
 create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
