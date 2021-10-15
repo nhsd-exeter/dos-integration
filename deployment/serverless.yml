@@ -57,7 +57,7 @@ functions:
     memorySize: 512
     timeout: 10
     tags:
-      PYTHON_VERSION: ${env:APP_PYTHON_VERSION}
+      PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
     # tracing:
