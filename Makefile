@@ -20,7 +20,10 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project
-	make serverless-run
+	make serverless-deploy
+
+undeploy: # Deploys whole project
+	make serverless-remove
 
 python-requirements:
 	make docker-run-tools \
