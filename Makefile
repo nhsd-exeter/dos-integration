@@ -21,12 +21,16 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
+<<<<<<< d6cc7d1aa47ef32ab6f746a69a4830f6cb9a6146
+=======
 deploy: # Deploys whole project
+	make push-images
 	make serverless-deploy
 
 undeploy: # Deploys whole project
 	make serverless-remove
 
+>>>>>>> Add aws-lambda-powertools to event sender
 python-requirements:
 	make docker-run-tools \
 		CMD="pip install -r requirements.txt" \
@@ -92,6 +96,8 @@ coverage-report:
 
 clean:
 	make python-clean
+<<<<<<< d6cc7d1aa47ef32ab6f746a69a4830f6cb9a6146
+=======
 
 # ==============================================================================
 # Event Sender
@@ -108,16 +114,6 @@ event-sender-build:
 event-sender-clean: ## Clean up
 	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
 
-event-sender-run:
-	echo hi
-
-event-sender-start:
-	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
-	-d \
-	-p 9000:8080 \
-	" \
-	CONTAINER="event-sender"
-
 event-sender-stop:
 	docker stop event-sender 2> /dev/null ||:
 
@@ -126,6 +122,11 @@ event-sender-trigger:
 
 # -----------------------------
 # Serverless
+
+push-images:
+	make docker-push NAME=event-sender
+# make docker-push NAME=event-receiver
+# make docker-push NAME=event-processor
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
@@ -138,3 +139,4 @@ create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
 	make docker-create-repository NAME=event-receiver
 	make docker-create-repository NAME=event-sender
+>>>>>>> Add aws-lambda-powertools to event sender
