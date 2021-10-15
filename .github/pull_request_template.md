@@ -12,7 +12,7 @@ Please include a summary of the change
 
 ## Type of change
 
-Tick relevant ticket type
+Tick relevant ticket types
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)

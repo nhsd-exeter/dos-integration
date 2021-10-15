@@ -87,6 +87,7 @@ Generate and trust a self-signed certificate that will be used locally to enable
 ### Local Project Setup
 
     # Terminal 1
+    make build-dev build
     make start log
     # Terminal 2
     make kafka-topic-create
@@ -175,7 +176,7 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Deployment From the Command-line
 
-    make serverless-plugin-install
+    make serverless-requirements
     make deploy PROFILE=task
 
 ### Secrets

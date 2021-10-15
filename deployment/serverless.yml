@@ -30,18 +30,10 @@ provider:
         #   Action: 'TODO'
 
 plugins:
-  - serverless-localstack
   - serverless-vpc-discovery
+  - serverless-localstack
 
-custom:
-  localstack:
-    # Documentation - https://github.com/localstack/serverless-localstack
-    stages:
-      - local
-    host: http://localhost
-    edgePort: 4566
-    docker:
-      sudo: False
+# custom:
   # vpcDiscovery:
   #   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
   #   vpcName: '${env:AWS_VPC_NAME}'

@@ -9,9 +9,11 @@ setup: # Set up project
 	make python-virtualenv
 	pip install -r application/requirements.txt
 
+build-dev:
+	make docker-build NAME=serverless
+
 build:
 	make event-sender-build
-
 
 stop: project-stop # Stop project
 
@@ -125,48 +127,9 @@ event-sender-trigger:
 # -----------------------------
 # Serverless
 
-serverless-deploy: # Deploy AWS resources
-	make serverless-run CMD=deploy
-
-serverless-remove: # Delete existing AWS resources
-	make serverless-run CMD=remove
-
-serverless-info: # See info on deployed environment
-	make serverless-run CMD=info
-
-serverless-run: # Runs serverless commands
-	if [ "$(PROFILE)" == "local" ]; then
-		make -s localstack-start
-		export SLS_DEBUG=true
-		serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(PROFILE)
-	elif [ "$(PROFILE)" == "task" ]; then
-		make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(ENVIRONMENT)"
-	else
-		make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless $(CMD) --config $(or $(CONFIG_FILE), serverless.yml) --stage $(PROFILE)"
-	fi
-
-serverless-clean:
-	rm -rf .serverless
-
-serverless-plugin-install: # Install serverless plugins
-	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-localstack"
-	make docker-run-serverless IMAGE=$(DOCKER_REGISTRY)/serverless CMD="serverless plugin install -n serverless-vpc-discovery"
-
-docker-run-serverless:
-	make docker-config > /dev/null 2>&1
-		container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo $$(echo '$(IMAGE)' | md5sum | cut -c1-7)-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-		docker run --interactive $(_TTY) --rm \
-			--name $$container \
-			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
-			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
-			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
-			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
-			--volume $(PROJECT_DIR):/project \
-			--network $(DOCKER_NETWORK) \
-			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
-			$(ARGS) \
-			$(IMAGE) \
-				$(CMD)
+serverless-requirements: # Install serverless plugins
+	make serverless-install-plugin NAME="serverless-vpc-discovery"
+	make serverless-install-plugin NAME="serverless-localstack"
 
 # -----------------------------
 # Other
