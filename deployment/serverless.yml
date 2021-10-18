@@ -34,19 +34,19 @@ plugins:
   - serverless-localstack
 
 # custom:
-  # vpcDiscovery:
-  #   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-  #   vpcName: '${env:AWS_VPC_NAME}'
-  #   subnets:
-  #     - tagKey: Name
-  #       tagValues:
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-  #   securityGroups:
-  #     - tagKey: Name
-  #       tagValues:
-  #         - 'uec-pu-apu-2429-rds'
+#   vpcDiscovery:
+#     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+#     vpcName: '${env:AWS_VPC_NAME}'
+#     subnets:
+#       - tagKey: Name
+#         tagValues:
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+#     securityGroups:
+#       - tagKey: Name
+#         tagValues:
+#           - 'uec-pu-apu-2429-rds'
 
 functions:
   event-sender:
@@ -60,8 +60,11 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-    # tracing:
-    #   lambda: true
+      FUNCTION_NAME: event-sender
+      POWERTOOLS_METRICS_NAMESPACE: dos-integration
+      POWERTOOLS_SERVICE_NAME: event-sender
+      LOG_LEVEL: INFO
+    tracing: Active
 
 #resources:
 #  Outputs:

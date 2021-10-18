@@ -21,8 +21,6 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
-<<<<<<< d6cc7d1aa47ef32ab6f746a69a4830f6cb9a6146
-=======
 deploy: # Deploys whole project
 	make push-images
 	make serverless-deploy
@@ -30,7 +28,6 @@ deploy: # Deploys whole project
 undeploy: # Deploys whole project
 	make serverless-remove
 
->>>>>>> Add aws-lambda-powertools to event sender
 python-requirements:
 	make docker-run-tools \
 		CMD="pip install -r requirements.txt" \
@@ -96,16 +93,26 @@ coverage-report:
 
 clean:
 	make python-clean
-<<<<<<< d6cc7d1aa47ef32ab6f746a69a4830f6cb9a6146
-=======
+
+# ==============================================================================
+# Common Lambda Code
+
+common-code-copy:
+	cp -rf $(APPLICATION_DIR)/common $(APPLICATION_DIR)/$(LAMBDA_DIR)/
+
+common-code-remove:
+	rm -rf $(APPLICATION_DIR)/$(LAMBDA_DIR)/common
 
 # ==============================================================================
 # Event Sender
 
 event-sender-build:
+	make common-code-copy LAMBDA_DIR=event_sender
 	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
+		--exclude=tests \
 		*.py \
+		common \
 		requirements.txt
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender
@@ -113,12 +120,31 @@ event-sender-build:
 
 event-sender-clean: ## Clean up
 	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
+	make common-code-remove LAMBDA_DIR=event_sender
 
 event-sender-stop:
 	docker stop event-sender 2> /dev/null ||:
 
+event-sender-start:
+	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
+	-d \
+	-p 9000:8080 \
+	-e FUNCTION_NAME=event-sender \
+	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
+	-e POWERTOOLS_SERVICE_NAME="event-sender" \
+	-e LOG_LEVEL=INFO \
+	" \
+	CONTAINER="event-sender"
+
 event-sender-trigger:
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"message": "hello world", "username": "lessa"}'
+
+event-sender-run:
+	make event-sender-stop
+	make event-sender-build
+	make event-sender-start
+	make event-sender-trigger
+
 
 # -----------------------------
 # Serverless
@@ -139,4 +165,3 @@ create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
 	make docker-create-repository NAME=event-receiver
 	make docker-create-repository NAME=event-sender
->>>>>>> Add aws-lambda-powertools to event sender
