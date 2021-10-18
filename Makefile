@@ -9,13 +9,23 @@ setup: # Set up project
 	make python-virtualenv
 	pip install -r application/requirements.txt
 
-start: project-start # Start project
+build-dev:
+	make docker-build NAME=serverless
+
+build:
+	make event-sender-build
 
 stop: project-stop # Stop project
 
 restart: stop start # Restart project
 
 log: project-log # Show project logs
+
+deploy: # Deploys whole project
+	make serverless-deploy
+
+undeploy: # Deploys whole project
+	make serverless-remove
 
 python-requirements:
 	make docker-run-tools \
@@ -82,3 +92,49 @@ coverage-report:
 
 clean:
 	make python-clean
+
+# ==============================================================================
+# Event Sender
+
+event-sender-build:
+	cd $(APPLICATION_DIR)/event_sender
+	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
+		*.py \
+		requirements.txt
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-sender
+	make event-sender-clean
+
+event-sender-clean: ## Clean up
+	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
+
+event-sender-run:
+	echo hi
+
+event-sender-start:
+	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
+	-d \
+	-p 9000:8080 \
+	" \
+	CONTAINER="event-sender"
+
+event-sender-stop:
+	docker stop event-sender 2> /dev/null ||:
+
+event-sender-trigger:
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
+# -----------------------------
+# Serverless
+
+serverless-requirements: # Install serverless plugins
+	make serverless-install-plugin NAME="serverless-vpc-discovery"
+	make serverless-install-plugin NAME="serverless-localstack"
+
+# -----------------------------
+# Other
+
+create-ecr-repositories:
+	make docker-create-repository NAME=event-processor
+	make docker-create-repository NAME=event-receiver
+	make docker-create-repository NAME=event-sender
