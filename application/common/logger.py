@@ -20,9 +20,8 @@ def setup_logger(handler: Any, event: Dict[str, Any], context: LambdaContext) ->
     """
     import_logger_from_file()
     logger = getLogger("lambda")
-    export_logging_variables(context)
     logger = set_log_level(logger)
-    logger.addFilter(LambdaFilter())
+    logger.addFilter(LambdaFilter(context))
     return handler(event, context)
 
 
@@ -47,26 +46,25 @@ def set_log_level(logger: Logger) -> Logger:
     return logger
 
 
-def export_logging_variables(context: LambdaContext) -> None:
-    """Export the context variables for use in the log filter
-
-    Args:
-        context (LambdaContext): Lambda function context object
-    """
-    environ["LOGGING_FUNCTION_NAME"] = str(context.function_name)
-    environ["LOGGING_REQUEST_ID"] = str(context.aws_request_id)
-    x_ray_trace_id = getenv("_X_AMZN_TRACE_ID")
-    if x_ray_trace_id is None:
-        x_ray_trace_id = "00000-00000-00000"
-    environ["LOGGING_X_AMZN_TRACE_ID"] = x_ray_trace_id
-
-
 class LambdaFilter(Filter):
     """The filter to be added to the lambda logger to add custom fields to logs
 
     Args:
         Filter (Class): The logging filter class to extend
     """
+
+    def __init__(self, context: LambdaContext) -> None:
+        """Set context variables to filter LambdaFilter class variables
+
+        Args:
+            context (LambdaContext): Lambda function context object
+        """
+        self.function_name = context.function_name
+        self.aws_request_id = context.aws_request_id
+        x_ray_trace_id = getenv("_X_AMZN_TRACE_ID")
+        if x_ray_trace_id is None:
+            x_ray_trace_id = "00000-00000-00000"
+        self.x_ray_trace_id = x_ray_trace_id
 
     def filter(self, record: LogRecord) -> bool:
         """Sets custom variables to the logging format
@@ -77,7 +75,7 @@ class LambdaFilter(Filter):
         Returns:
             bool: return True if the record is to be processed
         """
-        record.function_name = getenv("LOGGING_FUNCTION_NAME")
-        record.aws_request_id = getenv("LOGGING_REQUEST_ID")
-        record.x_ray_trace_id = getenv("LOGGING_X_AMZN_TRACE_ID")
+        record.function_name = self.function_name
+        record.aws_request_id = self.aws_request_id
+        record.x_ray_trace_id = self.x_ray_trace_id
         return True
