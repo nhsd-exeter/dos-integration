@@ -14,7 +14,7 @@
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
-  - [Unit Testing](#unit-testing)
+    - [Unit Testing](#unit-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
@@ -145,7 +145,7 @@ List all the type of test suites included and provide instructions how to execut
 
 How to run test suite in the pipeline
 
-## Unit Testing
+### Unit Testing
 
 To run unit tests run the following commands
 

@@ -34,10 +34,14 @@ python-requirements:
 		DIR=./application
 
 unit-test:
-	make -s docker-run-tools CMD="python -m pytest --cov=. " DIR=application
+	make -s docker-run-tools \
+	CMD="python -m pytest --cov=. " \
+	DIR=application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 coverage-report:
-	make python-code-coverage DIR=./application
+	make python-code-coverage DIR=./application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 clean:
 	make python-clean

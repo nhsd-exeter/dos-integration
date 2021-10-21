@@ -1,6 +1,5 @@
 aws-lambda-context
 coverage
-mock
 pytest
 pytest-bdd
 pytest-cov

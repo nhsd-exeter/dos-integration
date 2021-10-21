@@ -31,7 +31,7 @@ def import_logger_from_file() -> None:
     """Import logging config from logging.conf"""
     try:
         logging_path = path.join(path.dirname(__file__), "logging.conf")
-        fileConfig(logging_path, disable_existing_loggers=True)
+        fileConfig(logging_path)
     except KeyError as e:
         print("Can't find logging config file")
         raise e
