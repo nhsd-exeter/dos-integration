@@ -36,7 +36,7 @@ Please tick the testing that has been completed
 - [ ] Tests have added that prove my fix is effective or that my feature works
 - [ ] I have made corresponding changes to the documentation
 - [ ] I have cleaned down my environment (if created)
-- [ ]
+
 ## Code Reviewer Checklist
 
 - [ ] I have run the unit tests and they run correctly
