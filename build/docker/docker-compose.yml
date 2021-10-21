@@ -1,6 +1,5 @@
 version: "3.9"
 services:
-  # Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
@@ -33,16 +32,6 @@ services:
       default:
         aliases:
           - kafka.$PROJECT_NAME_SHORT.local
-  # Lambdas
-  event-sender:
-    image: $DOCKER_REGISTRY/event-sender:latest
-    container_name: event-sender
-    ports:
-      - 9000:8080
-    networks:
-      default:
-        aliases:
-          - event-sender.$PROJECT_NAME_SHORT.local
 
 networks:
   default:

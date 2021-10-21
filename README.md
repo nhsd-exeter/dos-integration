@@ -14,6 +14,7 @@
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
+  - [Unit Testing](#unit-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
@@ -143,6 +144,17 @@ List all the type of test suites included and provide instructions how to execut
 - Smoke
 
 How to run test suite in the pipeline
+
+## Unit Testing
+
+To run unit tests run the following commands
+
+    make python-requirements
+    make unit-test
+
+For coverage run
+
+    make coverage-report
 
 ### Test data and mock services
 

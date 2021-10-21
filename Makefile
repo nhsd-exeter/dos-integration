@@ -30,8 +30,20 @@ undeploy: # Deploys whole project
 
 python-requirements:
 	make docker-run-tools \
-		CMD="pip install -r requirements.txt" \
+		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt" \
 		DIR=./application
+
+unit-test:
+	make -s docker-run-tools CMD="python -m pytest --cov=. " DIR=application
+
+coverage-report:
+	make python-code-coverage DIR=./application
+
+clean:
+	make python-clean
+
+# ==============================================================================
+# Other
 
 python-producer-run:
 	make docker-run-python \
@@ -81,19 +93,6 @@ python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
 
-python-pytest:
-	make docker-run-tools CMD=" \
-		pip install -r requirements.txt && \
-		python -m pytest application/tests -s -x -v \
-	" \
-	DIR=./application
-
-coverage-report:
-	make python-code-coverage DIR=./application
-
-clean:
-	make python-clean
-
 # ==============================================================================
 # Common Lambda Code
 
@@ -130,9 +129,9 @@ event-sender-start:
 	-d \
 	-p 9000:8080 \
 	-e FUNCTION_NAME=event-sender \
+	-e LOG_LEVEL=INFO \
 	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
 	-e POWERTOOLS_SERVICE_NAME="event-sender" \
-	-e LOG_LEVEL=INFO \
 	" \
 	CONTAINER="event-sender"
 
@@ -144,7 +143,6 @@ event-sender-run:
 	make event-sender-build
 	make event-sender-start
 	make event-sender-trigger
-
 
 # -----------------------------
 # Serverless

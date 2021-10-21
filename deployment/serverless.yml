@@ -1,8 +1,9 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
-service: dos-integration
+service: ${env:TEAM_ID}
 frameworkVersion: '2'
 
 configValidationMode: error
+unresolvedVariablesNotificationMode: error
 
 provider:
   name: aws
@@ -60,10 +61,11 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-      FUNCTION_NAME: event-sender
-      POWERTOOLS_METRICS_NAMESPACE: dos-integration
-      POWERTOOLS_SERVICE_NAME: event-sender
-      LOG_LEVEL: INFO
+      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      LOG_LEVEL: ${env:LOG_LEVEL}
     tracing: Active
 
 #resources:

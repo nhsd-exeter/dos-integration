@@ -1,15 +1,14 @@
 from logging import getLogger
 from typing import Any, Dict
 
-from aws_lambda_powertools import Metrics, Tracer
+from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from common.logger import setup_logger
 
 tracer = Tracer()
-metrics = Metrics()
 
 
-@tracer.capture_lambda_handler
+@tracer.capture_lambda_handler(capture_response=True)
 @setup_logger
 def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """[summary]
@@ -20,3 +19,5 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """
     logger = getLogger("lambda")
     logger.info("Test")
+    logger.warning("my warning")
+    return {"status": 200, "message": "Lambda has completed"}
