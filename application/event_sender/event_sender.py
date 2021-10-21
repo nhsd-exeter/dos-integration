@@ -11,13 +11,11 @@ tracer = Tracer()
 @tracer.capture_lambda_handler(capture_response=True)
 @setup_logger
 def lambda_handler(event: Dict[str, Any], context: LambdaContext):
-    """[summary]
+    """Entrypoint handler for the event_sender lambda
 
     Args:
-        event (Dict[str, Any]): [description]
-        context (LambdaContext): [description]
+        event (Dict[str, Any]): Lambda function invocation event
+        context (LambdaContext): Lambda function context object
     """
     logger = getLogger("lambda")
     logger.info("Test")
-    logger.warning("my warning")
-    return {"status": 200, "message": "Lambda has completed"}

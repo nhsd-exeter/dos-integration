@@ -9,12 +9,12 @@ setup: # Set up project
 	make python-virtualenv
 	pip install -r application/requirements.txt
 
-build-dev: #Build dev requirements
+build-dev: # Build dev requirements
 	make docker-build NAME=serverless
 	make serverless-requirements
 	make python-requirements
 
-build:
+build: # Build lambdas
 	make event-sender-build
 
 stop: project-stop # Stop project
@@ -166,20 +166,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
 	make serverless-install-plugin NAME="serverless-localstack"
-
-# -----------------------------
-# CI/CD
-
-parse-profile-from-tag: # Return profile based off of git tag - Mandatory GIT_TAG=[git tag]
-	echo $(GIT_TAG) | cut -d "-" -f2
-
-parse-profile-from-branch: # Return profile based off of git branch - Mandatory BRANCH_NAME=[git branch name]
-	if [ $(BRANCH_NAME) == "master" ]; then
-		echo "dev"
-	else
-		echo "task"
-	fi
-
 
 # -----------------------------
 # Other
