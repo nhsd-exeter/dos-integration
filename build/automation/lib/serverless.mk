@@ -15,7 +15,7 @@ serverless-run: # Runs serverless commands - mandatory: PROFILE=[], CMD=[serverl
 	make docker-run-serverless \
 	IMAGE=$(DOCKER_REGISTRY)/serverless \
 	DIR=$(SERVERLESS_DIR) \
-	CMD="serverless $(CMD) --config $(SERVERLESS_CONFIG_FILE) --stage $(ENVIRONMENT) && sleep 30"
+	CMD="serverless $(CMD) --config $(SERVERLESS_CONFIG_FILE) --stage $(ENVIRONMENT)"
 
 serverless-install-plugin: ### Install serverless plugin - mandatory: NAME=[plugin name]; optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment]
 	make docker-run-serverless \
