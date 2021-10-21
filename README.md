@@ -21,6 +21,7 @@
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+    - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Architecture](#architecture)
@@ -188,9 +189,13 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Deployment From the Command-line
 
-    make serverless-requirements
-    make deploy PROFILE=task
+    make docker-build NAME=serverless # (TMP) Build Serverless docker image
+    make serverless-requirements # Install serverless plugins
+    make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
 
+### Remove Deployment From the Command-line
+
+    make undeploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
 ### Secrets
 
 Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID)-$(PROFILE)/deployment` secret name and variable `$(DEPLOYMENT_SECRETS)` should be set accordingly.

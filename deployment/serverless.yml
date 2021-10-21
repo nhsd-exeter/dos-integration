@@ -51,7 +51,7 @@ plugins:
 
 functions:
   event-sender:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:latest
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda

@@ -35,8 +35,10 @@ Please tick the testing that has been completed
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Tests have added that prove my fix is effective or that my feature works
 - [ ] I have made corresponding changes to the documentation
-
+- [ ] I have cleaned down my environment (if created)
+- [ ]
 ## Code Reviewer Checklist
 
 - [ ] I have run the unit tests and they run correctly
 - [ ] I can confirm the changes have been tested or approved by a tester
+- [ ] I can confirm no remaining infrastructure is left over from this branch

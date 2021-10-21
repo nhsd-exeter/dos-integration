@@ -15,7 +15,7 @@ serverless-run: # Runs serverless commands - mandatory: PROFILE=[], CMD=[serverl
 	make docker-run-serverless \
 	IMAGE=$(DOCKER_REGISTRY)/serverless \
 	DIR=$(SERVERLESS_DIR) \
-	CMD="serverless $(CMD) --config $(SERVERLESS_CONFIG_FILE) --stage $(ENVIRONMENT)"
+	CMD="serverless $(CMD) --config $(SERVERLESS_CONFIG_FILE) --stage $(ENVIRONMENT) && sleep 30"
 
 serverless-install-plugin: ### Install serverless plugin - mandatory: NAME=[plugin name]; optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment]
 	make docker-run-serverless \
@@ -33,7 +33,7 @@ docker-run-serverless:
 			--name $$container \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
 			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
-			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT|VERSION)") \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/profile/$(PROFILE).mk) \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
