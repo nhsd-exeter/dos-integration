@@ -1,7 +1,7 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
 service: ${env:PROGRAMME}-${env:TEAM_ID}
 frameworkVersion: '2'
-
+variablesResolutionMode: 20210326
 configValidationMode: error
 unresolvedVariablesNotificationMode: error
 
@@ -19,30 +19,51 @@ provider:
     Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
+  tracing:
+    lambda: true
+  apiGateway:
+    apiKeySourceType: HEADER
+    apiKeys:
+      - name: MY_API_KEY  # TODO
+        value: ${self:custom.secret.MY_API_KEY} #TODO
+custom:
+  secret: ${ssm:/aws/reference/secretsmanager/[NEED TO ADD REST OF THE SSM PATH HERE]} # TODO
+
+  # iam:
+  #   role:
+  #     name: dos-integration-${sls:stage}-lambda-role
+  #     statements:
+        # - Effect: 'Allow'
+        #   Resource: 'TODO'
+        #   Action: 'TODO' #This need to be restricted when used
+        # - Effect: 'Deny'
+        #   Resource: 'TODO'
+        #   Action: 'TODO'
 
 plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 
-custom:
-  vpcDiscovery:
+#custom:
+#  vpcDiscovery:
     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-    vpcName: '${env:AWS_VPC_NAME}'
-    subnets:
-      - tagKey: Name
-        tagValues:
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-    securityGroups:
-      - tagKey: Name
-        tagValues:
-          - '${env:TF_VAR_lambda_security_group_name}'
+#    vpcName: '${env:AWS_VPC_NAME}'
+#    subnets:
+#      - tagKey: Name
+#        tagValues:
+#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+#    securityGroups:
+#      - tagKey: Name
+#        tagValues:
+#          - '${env:TF_VAR_lambda_security_group_name}'
 
 functions:
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
+    tracing: Active
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
     memorySize: 512
@@ -56,11 +77,17 @@ functions:
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
-      DOS_API_GATEWAY_USERNAME: ${env:DOS_API_GATEWAY_USERNAME}
-      DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
-      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
-      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
-    tracing: Active
+    events:
+      - http:
+        path: /dos-integration/api/v1/nhsuk-event-receiver/{type}
+        request:
+          parameters:
+            paths:
+              type: true # pharmacy /dental
+        method: post
+        private: true
+    # tracing:
+    #   lambda: true
 
 #resources:
 #  Outputs:
