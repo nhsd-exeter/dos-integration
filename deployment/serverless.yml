@@ -18,6 +18,13 @@ provider:
     Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
+  apiGateway: 
+    apiKeySourceType: HEADER 
+    apiKeys:
+      - name: NHSUK_${sls.stage}_API_KEY
+        value: ${ssm:/path/${sls.stage}/}
+        description: This key is for NHSUK
+
   # iam:
   #   role:
   #     name: dos-integration-${sls:stage}-lambda-role
@@ -60,6 +67,11 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
+    events:
+      - http:
+        path: /api/v1/pharmacy
+        method: post
+        private: true
     # tracing:
     #   lambda: true
 
