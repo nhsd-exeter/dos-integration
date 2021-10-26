@@ -9,10 +9,12 @@ setup: # Set up project
 	make python-virtualenv
 	pip install -r application/requirements.txt
 
-build-dev:
+build-dev: # Build dev requirements
 	make docker-build NAME=serverless
+	make serverless-requirements
+	make python-requirements
 
-build:
+build: # Build lambdas
 	make event-sender-build
 
 stop: project-stop # Stop project
@@ -21,16 +23,37 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
-deploy: # Deploys whole project
+deploy: # Deploys whole project - mandatory: PROFILE
 	make serverless-deploy
 
-undeploy: # Deploys whole project
-	make serverless-remove
+undeploy: # Undeploys whole project - mandatory: PROFILE
+	make serverless-remove VERSION="any"
 
-python-requirements:
+build-and-deploy: # - mandatory: PROFILE
+	make build VERSION=$(BUILD_TAG)
+	make push-images VERSION=$(BUILD_TAG)
+	make deploy VERSION=$(BUILD_TAG)
+
+python-requirements: # Installs whole project python requirements
 	make docker-run-tools \
-		CMD="pip install -r requirements.txt" \
+		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt" \
 		DIR=./application
+
+unit-test: # Runs whole project unit tests
+	make -s docker-run-tools \
+	CMD="python -m pytest --cov=. " \
+	DIR=application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+
+coverage-report: # Runs whole project coverage unit tests
+	make python-code-coverage DIR=./application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+
+clean: # Runs whole project clean
+	make python-clean
+
+# ==============================================================================
+# Other
 
 python-producer-run:
 	make docker-run-python \
@@ -80,52 +103,65 @@ python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
 
-python-pytest:
-	make docker-run-tools CMD=" \
-		pip install -r requirements.txt && \
-		python -m pytest application/tests -s -x -v \
-	" \
-	DIR=./application
+# ==============================================================================
+# Common Lambda Code
 
-coverage-report:
-	make python-code-coverage DIR=./application
+common-code-copy: ### Copy common code to lambda direcory - mandatory: LAMBDA_DIR=[directory of lambda]
+	cp -rf $(APPLICATION_DIR)/common $(APPLICATION_DIR)/$(LAMBDA_DIR)/
 
-clean:
-	make python-clean
+common-code-remove: ### Remove common code from lambda direcory - mandatory: LAMBDA_DIR=[directory of lambda]
+	rm -rf $(APPLICATION_DIR)/$(LAMBDA_DIR)/common
 
 # ==============================================================================
 # Event Sender
 
-event-sender-build:
+event-sender-build: ### Build event sender lambda docker image
+	make common-code-copy LAMBDA_DIR=event_sender
 	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
+		--exclude=tests \
 		*.py \
+		common \
 		requirements.txt
 	cd $(PROJECT_DIR)
-	make docker-image NAME=event-sender
+	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-sender-clean
+	export VERSION=$$(make docker-image-get-version NAME=event-sender)
 
-event-sender-clean: ## Clean up
+event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
+	make common-code-remove LAMBDA_DIR=event_sender
 
-event-sender-run:
-	echo hi
+event-sender-stop: ### Stop running event sender lambda
+	docker stop event-sender 2> /dev/null ||:
 
-event-sender-start:
+event-sender-start: ### Start event sender lambda
 	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
 	-d \
 	-p 9000:8080 \
+	-e FUNCTION_NAME=event-sender \
+	-e LOG_LEVEL=INFO \
+	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
+	-e POWERTOOLS_SERVICE_NAME="event-sender" \
 	" \
 	CONTAINER="event-sender"
 
-event-sender-stop:
-	docker stop event-sender 2> /dev/null ||:
+event-sender-trigger: ### Trigger event sender lambda
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"message": "hello world", "username": "lessa"}'
 
-event-sender-trigger:
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+event-sender-run: ### A rebuild and restart of the event sender lambda.
+	make event-sender-stop
+	make event-sender-build
+	make event-sender-start
+	make event-sender-trigger
 
 # -----------------------------
 # Serverless
+
+push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
+	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+# make docker-push NAME=event-processor
+# make docker-push NAME=event-receiver
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"

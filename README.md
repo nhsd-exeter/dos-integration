@@ -14,12 +14,14 @@
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
+    - [Unit Testing](#unit-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+    - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Architecture](#architecture)
@@ -144,6 +146,17 @@ List all the type of test suites included and provide instructions how to execut
 
 How to run test suite in the pipeline
 
+### Unit Testing
+
+To run unit tests run the following commands
+
+    make python-requirements
+    make unit-test
+
+For coverage run
+
+    make coverage-report
+
 ### Test data and mock services
 
 - How the test data set is produced
@@ -176,9 +189,13 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Deployment From the Command-line
 
-    make serverless-requirements
-    make deploy PROFILE=task
+    make docker-build NAME=serverless # (TMP) Build Serverless docker image
+    make serverless-requirements # Install serverless plugins
+    make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
 
+### Remove Deployment From the Command-line
+
+    make undeploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
 ### Secrets
 
 Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID)-$(PROFILE)/deployment` secret name and variable `$(DEPLOYMENT_SECRETS)` should be set accordingly.

@@ -33,7 +33,7 @@ docker-run-serverless:
 			--name $$container \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
 			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
-			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT|VERSION)") \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/profile/$(PROFILE).mk) \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \

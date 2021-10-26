@@ -1,8 +1,9 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
-service: dos-integration
+service: ${env:TEAM_ID}
 frameworkVersion: '2'
 
 configValidationMode: error
+unresolvedVariablesNotificationMode: error
 
 provider:
   name: aws
@@ -34,23 +35,23 @@ plugins:
   - serverless-localstack
 
 # custom:
-  # vpcDiscovery:
-  #   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-  #   vpcName: '${env:AWS_VPC_NAME}'
-  #   subnets:
-  #     - tagKey: Name
-  #       tagValues:
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-  #         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-  #   securityGroups:
-  #     - tagKey: Name
-  #       tagValues:
-  #         - 'uec-pu-apu-2429-rds'
+#   vpcDiscovery:
+#     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+#     vpcName: '${env:AWS_VPC_NAME}'
+#     subnets:
+#       - tagKey: Name
+#         tagValues:
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+#     securityGroups:
+#       - tagKey: Name
+#         tagValues:
+#           - 'uec-pu-apu-2429-rds'
 
 functions:
   event-sender:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:latest
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
@@ -60,8 +61,12 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-    # tracing:
-    #   lambda: true
+      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      LOG_LEVEL: ${env:LOG_LEVEL}
+    tracing: Active
 
 #resources:
 #  Outputs:
