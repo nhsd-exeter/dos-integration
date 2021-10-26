@@ -62,6 +62,7 @@ component-test:
 	make event-sender-component-test
 
 clean: # Runs whole project clean
+	make terraform-clean
 	make python-clean
 
 # ==============================================================================
