@@ -1,0 +1,21 @@
+###
+# Pass
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+content-type: application/json
+
+{
+    "reference":"1",
+    "system":"DoS Integration",
+    "message":"Test message 1531816592293|@.\/",
+    "service_id":"49016",
+    "changes":{
+      "website":"http:\/\/www.google.pl"
+    }
+}
+
+###
+# Fail
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+content-type: application/json
+
+{}

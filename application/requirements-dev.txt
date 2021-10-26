@@ -1,7 +1,7 @@
 aws-lambda-context
+behave
 coverage
 pytest
-pytest-bdd
 pytest-cov
 pytest-icdiff
 pytest-sugar

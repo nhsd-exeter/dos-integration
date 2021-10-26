@@ -3,12 +3,14 @@ from typing import Any, Dict
 
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from change_request import ChangeRequest
 from common.logger import setup_logger
+from os import getenv
 
 tracer = Tracer()
 
 
-@tracer.capture_lambda_handler(capture_response=True)
+@tracer.capture_lambda_handler()
 @setup_logger
 def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """Entrypoint handler for the event_sender lambda
@@ -17,5 +19,5 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    logger = getLogger("lambda")
-    logger.info("Test")
+    change_request = ChangeRequest(event)
+    change_request.post_change_request()

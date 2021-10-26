@@ -1,0 +1,42 @@
+{
+  "reference": "1",
+  "system": "Profile Updater (test)",
+  "message": "Test message 1531816592293|@./",
+  "service_id": "49016",
+  "changes": {
+    "ods_code": "f0000",
+    "address": {
+      "address_lines": ["1 Gloucester Road", "Bristol"],
+      "post_code": "BS1 4SB"
+    },
+    "phone": "0118 999 88199 9119 725 3",
+    "website": "http://www.google.pl",
+    "opening_days": {
+      "Monday": [
+        {
+          "start_time": "09:00",
+          "end_time": "12:00"
+        },
+        {
+          "start_time": "13:00",
+          "end_time": "18:00"
+        }
+      ],
+      "Sunday": []
+    },
+    "opening_dates": {
+      "2018-08-27": [
+        {
+          "start_time": "09:00",
+          "end_time": "12:00"
+        },
+        {
+          "start_time": "13:00",
+          "end_time": "18:00"
+        }
+      ],
+      "2018-12-25": []
+    },
+    "status": "active"
+  }
+}

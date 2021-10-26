@@ -24,6 +24,7 @@ Delete not appropriate
 Please tick the testing that has been completed
 
 - [ ] Unit tests
+- [ ] Component tests
 
 ## Developer Checklist
 
@@ -33,7 +34,7 @@ Please tick the testing that has been completed
 - [ ] New code meets [standards](https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working) agreed by the team
 - [ ] Unit test code coverage is at or above 80%
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] Tests have added that prove my fix is effective or that my feature works
+- [ ] Tests have added that prove my fix is effective or that my feature works (Component tests)
 - [ ] I have made corresponding changes to the documentation
 - [ ] I have cleaned down my environment (if created)
 

@@ -42,12 +42,20 @@ python-requirements: # Installs whole project python requirements
 unit-test: # Runs whole project unit tests
 	make -s docker-run-tools \
 	CMD="python -m pytest --cov=. " \
-	DIR=application \
-	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+	DIR=./application \
+	ARGS=" \
+		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		"
 
 coverage-report: # Runs whole project coverage unit tests
 	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
-	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+	ARGS=" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		"
+
+component-test:
+	make event-sender-component-test
 
 clean: # Runs whole project clean
 	make python-clean
@@ -132,28 +140,11 @@ event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
 	make common-code-remove LAMBDA_DIR=event_sender
 
-event-sender-stop: ### Stop running event sender lambda
-	docker stop event-sender 2> /dev/null ||:
-
-event-sender-start: ### Start event sender lambda
-	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
-	-d \
-	-p 9000:8080 \
-	-e FUNCTION_NAME=event-sender \
-	-e LOG_LEVEL=INFO \
-	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
-	-e POWERTOOLS_SERVICE_NAME="event-sender" \
-	" \
-	CONTAINER="event-sender"
-
-event-sender-trigger: ### Trigger event sender lambda
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"message": "hello world", "username": "lessa"}'
-
-event-sender-run: ### A rebuild and restart of the event sender lambda.
-	make event-sender-stop
-	make event-sender-build
-	make event-sender-start
-	make event-sender-trigger
+event-sender-component-test:
+	make -s docker-run-tools \
+	CMD="python -m behave --no-capture" \
+	DIR=test/component \
+	ARGS="-e MOCKSERVER_URL=http://mockserver:1080"
 
 # -----------------------------
 # Serverless
