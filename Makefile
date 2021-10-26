@@ -17,7 +17,11 @@ build-dev: # Build dev requirements
 build: # Build lambdas
 	make event-sender-build
 
-stop: project-stop # Stop project
+start: # Stop project
+	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+stop: # Stop project
+	make project-stop  AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 restart: stop start # Restart project
 
