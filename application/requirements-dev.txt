@@ -5,4 +5,5 @@ pytest
 pytest-cov
 pytest-icdiff
 pytest-sugar
+responses
 testfixtures

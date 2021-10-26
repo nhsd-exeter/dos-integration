@@ -1,11 +1,9 @@
-from logging import getLogger
 from typing import Any, Dict
 
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_request import ChangeRequest
 from common.logger import setup_logger
-from os import getenv
 
 tracer = Tracer()
 

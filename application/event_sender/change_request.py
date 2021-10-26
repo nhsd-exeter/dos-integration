@@ -1,4 +1,3 @@
-from json import dumps
 from logging import Logger, getLogger
 from os import environ
 from typing import Any, Dict
@@ -6,13 +5,14 @@ from typing import Any, Dict
 from change_request_logger import ChangeRequestLogger
 from requests import post
 from requests.auth import HTTPBasicAuth
+from requests.models import Response
 
 
 class ChangeRequest:
     logger: Logger = getLogger("lambda")
     change_request_logger = ChangeRequestLogger()
     headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
-    response: None = None
+    response: Response
 
     def __init__(self, change_request_json: Dict[str, Any]) -> None:
         self.change_request_url: str = self.get_environment_variable("CHANGE_REQUEST_ENDPOINT_URL")
