@@ -1,6 +1,7 @@
 aws-lambda-context
 behave
 coverage
+mutmut
 pytest
 pytest-cov
 pytest-icdiff

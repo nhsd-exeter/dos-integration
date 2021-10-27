@@ -7,6 +7,7 @@ from requests.models import Response
 from testfixtures import LogCapture
 
 from ..change_request_logger import ChangeRequestLogger
+from logging import getLogger
 
 
 class TestChangeRequestLogger:
@@ -14,7 +15,11 @@ class TestChangeRequestLogger:
     FAILURE_STATUS_CODES = [400, 401, 404, 500]
 
     def test__init__(self):
-        pass
+        # Arrange
+        # Act
+        change_request_logger = ChangeRequestLogger()
+        # Assert
+        assert change_request_logger.logger == getLogger("lambda")
 
     @pytest.mark.parametrize("status_code", SUCCESS_STATUS_CODES)
     def test_log_change_request_response_success(self, status_code: int, log_capture):
@@ -47,13 +52,13 @@ class TestChangeRequestLogger:
     def test_log_change_request_body_development(self, log_capture):
         # Arrange
         change_request_logger = ChangeRequestLogger()
-        change_request_json = '{"my-key": "my-var"}'
+        change_request_body = '{"my-key": "my-var"}'
         environ["PROFILE"] = "task"
         # Act
-        change_request_logger.log_change_request_body(change_request_json)
+        change_request_logger.log_change_request_body(change_request_body)
         # Assert
         log_capture.check(
-            ("lambda", "INFO", f"CHANGE_REQUEST|{change_request_json=}"),
+            ("lambda", "INFO", f"CHANGE_REQUEST|{change_request_body=}"),
         )
         assert HTTPConnection.debuglevel == 1
         # Clean up
@@ -63,13 +68,13 @@ class TestChangeRequestLogger:
     def test_log_change_request_body_production(self, log_capture):
         # Arrange
         change_request_logger = ChangeRequestLogger()
-        change_request_json = '{"my-key": "my-var"}'
+        change_request_body = '{"my-key": "my-var"}'
         environ["PROFILE"] = "dev"
         # Act
-        change_request_logger.log_change_request_body(change_request_json)
+        change_request_logger.log_change_request_body(change_request_body)
         # Assert
         log_capture.check(
-            ("lambda", "INFO", f"CHANGE_REQUEST|{change_request_json=}"),
+            ("lambda", "INFO", f"CHANGE_REQUEST|{change_request_body=}"),
         )
         assert HTTPConnection.debuglevel == 0
         # Clean up

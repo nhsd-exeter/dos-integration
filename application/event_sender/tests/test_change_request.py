@@ -1,4 +1,9 @@
+from logging import getLogger
 from os import environ
+from unittest.mock import MagicMock
+
+from responses import add, activate, POST
+from requests.auth import HTTPBasicAuth
 
 from ..change_request import ChangeRequest
 
@@ -14,16 +19,59 @@ class TestChangeRequest:
 
     def test__init__(self):
         # Arrange
-        environ["CHANGE_REQUEST_ENDPOINT_URL"] = "dev"
-        environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"] = "10"
-        environ["API_GATEWAY_USERNAME"] = "dev"
-        environ["API_GATEWAY_PASSWORD"] = "dev"
+        environ["PROFILE"] = "remote"
+        expected_change_request_url = "https://test.com"
+        environ["CHANGE_REQUEST_ENDPOINT_URL"] = expected_change_request_url
+        expected_timeout = "10"
+        environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"] = expected_timeout
+        expected_username = "username"
+        environ["API_GATEWAY_USERNAME"] = expected_username
+        expected_password = "password"
+        environ["API_GATEWAY_PASSWORD"] = expected_password
+        expected_auth = HTTPBasicAuth(expected_username, expected_password)
         # Act
-        ChangeRequest(self.change_request_event)
+        change_request = ChangeRequest(self.change_request_event)
         # Assert
+        assert change_request.logger == getLogger("lambda")
+        assert change_request.headers == {"Content-Type": "application/json", "Accept": "application/json"}
+        assert change_request.change_request_url == expected_change_request_url
+        assert change_request.timeout == int(expected_timeout)
+        assert change_request.authorisation == expected_auth
+        assert change_request.change_request_body == self.change_request_event
+        # Clean up
+        del environ["CHANGE_REQUEST_ENDPOINT_URL"]
+        del environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"]
+        del environ["API_GATEWAY_USERNAME"]
+        del environ["API_GATEWAY_PASSWORD"]
+        del environ["PROFILE"]
 
+    @activate
     def test_post_change_request(self):
-        pass
-
-    def test_get_environment_variable(self):
-        pass
+        # Arrange
+        environ["PROFILE"] = "remote"
+        expected_change_request_url = "https://test.com"
+        environ["CHANGE_REQUEST_ENDPOINT_URL"] = expected_change_request_url
+        expected_timeout = "10"
+        environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"] = expected_timeout
+        expected_username = "username"
+        environ["API_GATEWAY_USERNAME"] = expected_username
+        expected_password = "password"
+        environ["API_GATEWAY_PASSWORD"] = expected_password
+        change_request = ChangeRequest(self.change_request_event)
+        expected_response_body = {"my-key": "my-val"}
+        status_code = 200
+        add(POST, expected_change_request_url, json=expected_response_body, status=status_code)
+        change_request.change_request_logger = MagicMock()
+        # Act
+        change_request.post_change_request()
+        # Assert
+        assert change_request.response.status_code == status_code
+        change_request.change_request_logger.log_change_request_response.assert_called_once_with(
+            change_request.response
+        )
+        # Clean up
+        del environ["CHANGE_REQUEST_ENDPOINT_URL"]
+        del environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"]
+        del environ["API_GATEWAY_USERNAME"]
+        del environ["API_GATEWAY_PASSWORD"]
+        del environ["PROFILE"]

@@ -65,10 +65,10 @@ functions:
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
-      API_GATEWAY_USERNAME: gwuser
-      API_GATEWAY_PASSWORD: gwpassword
-      CHANGE_REQUEST_ENDPOINT_TIMEOUT: 30
-      CHANGE_REQUEST_ENDPOINT_URL: https://core-dos-pd-153-connect-di-ddc-core-dos-api-gateway.k8s-nonprod.texasplatform.uk/api/change-request
+      API_GATEWAY_USERNAME: ${env:API_GATEWAY_USERNAME}
+      API_GATEWAY_PASSWORD: ${env:API_GATEWAY_PASSWORD}
+      CHANGE_REQUEST_ENDPOINT_TIMEOUT: ${env:CHANGE_REQUEST_ENDPOINT_TIMEOUT}
+      CHANGE_REQUEST_ENDPOINT_URL: ${env:CHANGE_REQUEST_ENDPOINT_URL}
     tracing: Active
 
 #resources:

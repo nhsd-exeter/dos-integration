@@ -9,7 +9,8 @@
         "Authorization": ["^Basic .{10,}$"]
       },
       "body": {
-        "type": "STRING"
+        "type": "JSON_SCHEMA",
+        "jsonSchema": "{\"$schema\":\"http://json-schema.org/draft-07/schema\",\"$id\":\"http://example.com/example.json\",\"type\":\"object\",\"title\":\"The root schema\",\"description\":\"The root schema comprises the entire JSON document.\",\"default\":{},\"required\":[\"reference\",\"system\",\"message\",\"service_id\",\"changes\"],\"properties\":{\"reference\":{\"$id\":\"#/properties/reference\",\"type\":\"string\"},\"system\":{\"$id\":\"#/properties/system\",\"type\":\"string\"},\"message\":{\"$id\":\"#/properties/message\",\"type\":\"string\"},\"service_id\":{\"$id\":\"#/properties/service_id\",\"type\":\"string\"},\"changes\":{\"$id\":\"#/properties/changes\",\"type\":\"object\"}},\"additionalProperties\":true}"
       }
     },
     "httpResponse": {

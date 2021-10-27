@@ -48,8 +48,12 @@ services:
       POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       PROFILE: $PROFILE
+    volumes:
+      - type: bind
+        source: $TMP_DIR
+        target: /tmp
     ports:
-      - 9000:8080
+      - 9002:8080
 
   mockserver:
     image: jamesdbloom/mockserver:latest

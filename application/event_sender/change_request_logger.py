@@ -1,20 +1,41 @@
 from http.client import HTTPConnection
 from logging import getLogger
-from os import getenv
-
+from typing import Any
+from common.utilities import debug_mode
 from requests import Response
 
 
 class ChangeRequestLogger:
+    """Change Request Logging class to log the change request for auditing
+
+    Raises:
+        ValueError: Raises ValueError if json response from api-gateway if json isn't valid
+    """
+
     logger = getLogger("lambda")
+    default_log_format = "CHANGE_REQUEST"
 
     def log_change_request_response(self, response: Response) -> None:
-        if response.ok is True:
-            self.logger.info(f"CHANGE_REQUEST|Success|{response.status_code}|{response.json()}")
-        elif response.ok is False:
-            self.logger.error(f"CHANGE_REQUEST|Failure|{response.status_code}|{response.json()}")
+        """Log the change request response for auditing
 
-    def log_change_request_body(self, change_request_json: str) -> None:
-        self.logger.info(f"CHANGE_REQUEST|{change_request_json=}")
-        if getenv("PROFILE") in ["task", "local"]:
+        Args:
+            response (Response): Response object from posting the change request
+        """
+        try:
+            if response.ok is True:
+                self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.json()}")
+            elif response.ok is False:
+                self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.json()}")
+        except ValueError as e:
+            self.logger.exception(f"{self.default_log_format}|Failure to log response")
+            raise e
+
+    def log_change_request_body(self, change_request_body: Any) -> None:
+        """Log the change request body for auditing
+
+        Args:
+            change_request_body (Any): Change request body to be logged
+        """
+        self.logger.info(f"{self.default_log_format}|{change_request_body=}")
+        if debug_mode():
             HTTPConnection.debuglevel = 1

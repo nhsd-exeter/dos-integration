@@ -15,6 +15,7 @@
     - [Code Quality](#code-quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
+    - [Component Testing](#component-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
@@ -89,14 +90,8 @@ Generate and trust a self-signed certificate that will be used locally to enable
 ### Local Project Setup
 
     # Terminal 1
-    make build-dev build
+    make build
     make start log
-    # Terminal 2
-    make kafka-topic-create
-    make python-requirements
-    make python-consumer-run
-    # Terminal 3
-    make python-producer-run
 
 ## Contributing
 
@@ -137,6 +132,7 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 List all the type of test suites included and provide instructions how to execute them
 
 - Unit
+- Component
 - Integration
 - Contract
 - End-to-end
@@ -156,6 +152,13 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
+
+### Component Testing
+
+To run unit tests run the following commands
+
+    make python-requirements
+    make start component-test
 
 ### Test data and mock services
 
