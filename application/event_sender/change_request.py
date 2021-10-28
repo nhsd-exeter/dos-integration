@@ -2,10 +2,10 @@ from logging import Logger, getLogger
 from typing import Any, Dict
 
 from change_request_logger import ChangeRequestLogger
+from common.utilities import get_environment_variable
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
-from common.utilities import get_environment_variable
 
 
 class ChangeRequest:
@@ -22,22 +22,26 @@ class ChangeRequest:
         Args:
             change_request_body (Dict[str, Any]): The change request
         """
-        self.change_request_url: str = get_environment_variable("CHANGE_REQUEST_ENDPOINT_URL")
-        self.timeout: int = int(get_environment_variable("CHANGE_REQUEST_ENDPOINT_TIMEOUT"))
+        self.change_request_url: str = get_environment_variable("DOS_API_GATEWAY_URL")
+        self.timeout: int = int(get_environment_variable("DOS_API_GATEWAY_REQUEST_TIMEOUT"))
         self.authorisation = HTTPBasicAuth(
-            get_environment_variable("API_GATEWAY_USERNAME"),
-            get_environment_variable("API_GATEWAY_PASSWORD"),
+            get_environment_variable("DOS_API_GATEWAY_USERNAME"),
+            get_environment_variable("DOS_API_GATEWAY_PASSWORD"),
         )
         self.change_request_body: Dict[str, Any] = change_request_body
         self.change_request_logger.log_change_request_body(self.change_request_body)
 
     def post_change_request(self) -> None:
         """Post a change request to the API gateway"""
-        self.response = post(
-            url=self.change_request_url,
-            headers=self.headers,
-            auth=self.authorisation,
-            json=self.change_request_body,
-            timeout=self.timeout,
-        )
-        self.change_request_logger.log_change_request_response(self.response)
+        try:
+            self.response = post(
+                url=self.change_request_url,
+                headers=self.headers,
+                auth=self.authorisation,
+                json=self.change_request_body,
+                timeout=self.timeout,
+            )
+            self.change_request_logger.log_change_request_response(self.response)
+        except Exception as exception:
+            self.change_request_logger.log_change_request_exception()
+            raise exception

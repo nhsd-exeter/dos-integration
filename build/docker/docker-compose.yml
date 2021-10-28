@@ -38,10 +38,10 @@ services:
     container_name: event-sender
     hostname: event-sender
     environment:
-      API_GATEWAY_USERNAME: user
-      API_GATEWAY_PASSWORD: password
-      CHANGE_REQUEST_ENDPOINT_URL: http://mockserver:1080/api/change-request
-      CHANGE_REQUEST_ENDPOINT_TIMEOUT: 30
+      DOS_API_GATEWAY_USERNAME: user
+      DOS_API_GATEWAY_PASSWORD: password
+      DOS_API_GATEWAY_URL: http://mockserver:1080/api/change-request
+      DOS_API_GATEWAY_REQUEST_TIMEOUT: 30
       LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       POWERTOOLS_TRACER_CAPTURE_ERROR: true

@@ -43,8 +43,8 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 populate-deployment-variables:
 	if [ "$(PROFILE)" != "local" ]; then
 		eval "$$(make aws-assume-role-export-variables)"
-		echo "export API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USER))"
-		echo "export API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD))"
+		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
+		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 	fi
 
 python-requirements: # Installs whole project python requirements
@@ -162,6 +162,11 @@ event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_sender
+
+event-sender-run: ### A rebuild and restart of the event sender lambda.
+	make stop
+	make event-sender-build
+	make start
 
 # -----------------------------
 # Serverless

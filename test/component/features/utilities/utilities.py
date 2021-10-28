@@ -14,3 +14,10 @@ def get_change_request_name(variable: str):
     else:
         raise Exception("Unable to set change request name")
     return change_request_file_name
+
+
+def read_log_file() -> str:
+    file_path = "../../build/automation/tmp/log_file.txt"
+    with open(file_path, "r", encoding="utf-8") as file:
+        log_file = file.read()
+        return log_file

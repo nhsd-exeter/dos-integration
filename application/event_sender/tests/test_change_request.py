@@ -2,8 +2,8 @@ from logging import getLogger
 from os import environ
 from unittest.mock import MagicMock
 
-from responses import add, activate, POST
 from requests.auth import HTTPBasicAuth
+from responses import POST, activate, add
 
 from ..change_request import ChangeRequest
 
@@ -21,13 +21,13 @@ class TestChangeRequest:
         # Arrange
         environ["PROFILE"] = "remote"
         expected_change_request_url = "https://test.com"
-        environ["CHANGE_REQUEST_ENDPOINT_URL"] = expected_change_request_url
+        environ["DOS_API_GATEWAY_URL"] = expected_change_request_url
         expected_timeout = "10"
-        environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"] = expected_timeout
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = expected_timeout
         expected_username = "username"
-        environ["API_GATEWAY_USERNAME"] = expected_username
+        environ["DOS_API_GATEWAY_USERNAME"] = expected_username
         expected_password = "password"
-        environ["API_GATEWAY_PASSWORD"] = expected_password
+        environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
         expected_auth = HTTPBasicAuth(expected_username, expected_password)
         # Act
         change_request = ChangeRequest(self.change_request_event)
@@ -39,10 +39,10 @@ class TestChangeRequest:
         assert change_request.authorisation == expected_auth
         assert change_request.change_request_body == self.change_request_event
         # Clean up
-        del environ["CHANGE_REQUEST_ENDPOINT_URL"]
-        del environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"]
-        del environ["API_GATEWAY_USERNAME"]
-        del environ["API_GATEWAY_PASSWORD"]
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME"]
+        del environ["DOS_API_GATEWAY_PASSWORD"]
         del environ["PROFILE"]
 
     @activate
@@ -50,13 +50,13 @@ class TestChangeRequest:
         # Arrange
         environ["PROFILE"] = "remote"
         expected_change_request_url = "https://test.com"
-        environ["CHANGE_REQUEST_ENDPOINT_URL"] = expected_change_request_url
+        environ["DOS_API_GATEWAY_URL"] = expected_change_request_url
         expected_timeout = "10"
-        environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"] = expected_timeout
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = expected_timeout
         expected_username = "username"
-        environ["API_GATEWAY_USERNAME"] = expected_username
+        environ["DOS_API_GATEWAY_USERNAME"] = expected_username
         expected_password = "password"
-        environ["API_GATEWAY_PASSWORD"] = expected_password
+        environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
         change_request = ChangeRequest(self.change_request_event)
         expected_response_body = {"my-key": "my-val"}
         status_code = 200
@@ -70,8 +70,8 @@ class TestChangeRequest:
             change_request.response
         )
         # Clean up
-        del environ["CHANGE_REQUEST_ENDPOINT_URL"]
-        del environ["CHANGE_REQUEST_ENDPOINT_TIMEOUT"]
-        del environ["API_GATEWAY_USERNAME"]
-        del environ["API_GATEWAY_PASSWORD"]
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME"]
+        del environ["DOS_API_GATEWAY_PASSWORD"]
         del environ["PROFILE"]

@@ -19,16 +19,6 @@ provider:
     Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
-  # iam:
-  #   role:
-  #     name: dos-integration-${sls:stage}-lambda-role
-  #     statements:
-        # - Effect: 'Allow'
-        #   Resource: 'TODO'
-        #   Action: 'TODO' #This need to be restricted when used
-        # - Effect: 'Deny'
-        #   Resource: 'TODO'
-        #   Action: 'TODO'
 
 plugins:
   - serverless-vpc-discovery
@@ -46,7 +36,7 @@ custom:
     securityGroups:
       - tagKey: Name
         tagValues:
-          - 'uec-pu-apu-2429-rds'
+          - '${env:TF_VAR_lambda_security_group_name}'
 
 functions:
   event-sender:
@@ -65,10 +55,10 @@ functions:
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
-      API_GATEWAY_USERNAME: ${env:API_GATEWAY_USERNAME}
-      API_GATEWAY_PASSWORD: ${env:API_GATEWAY_PASSWORD}
-      CHANGE_REQUEST_ENDPOINT_TIMEOUT: ${env:CHANGE_REQUEST_ENDPOINT_TIMEOUT}
-      CHANGE_REQUEST_ENDPOINT_URL: ${env:CHANGE_REQUEST_ENDPOINT_URL}
+      DOS_API_GATEWAY_USERNAME: ${env:DOS_API_GATEWAY_USERNAME}
+      DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
+      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
+      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
     tracing: Active
 
 #resources:

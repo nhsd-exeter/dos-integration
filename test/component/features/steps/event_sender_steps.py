@@ -2,7 +2,7 @@ from os import getenv
 
 from behave import given, then, when
 from features.utilities.mockserver import MockServer
-from features.utilities.utilities import get_change_request_name, load_json_file
+from features.utilities.utilities import get_change_request_name, load_json_file, read_log_file
 from requests import post
 
 
@@ -60,9 +60,7 @@ def the_response_is_logged(context, response_status, status_code):
     """Checks if expected criteria is stored in the log files"""
     change_request_file_name = get_change_request_name(response_status)
     change_request = load_json_file(change_request_file_name)
-    file_path = "../../build/automation/tmp/log_file.txt"
-    with open(file_path, "r", encoding="utf-8") as file:
-        log_file = file.read()
+    log_file = read_log_file()
     if response_status == "Success":
         assert (
             f"CHANGE_REQUEST|{response_status}|{status_code}|"

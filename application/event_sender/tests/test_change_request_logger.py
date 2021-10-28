@@ -1,4 +1,5 @@
 from http.client import HTTPConnection
+from logging import getLogger
 from os import environ
 
 import pytest
@@ -7,7 +8,6 @@ from requests.models import Response
 from testfixtures import LogCapture
 
 from ..change_request_logger import ChangeRequestLogger
-from logging import getLogger
 
 
 class TestChangeRequestLogger:
