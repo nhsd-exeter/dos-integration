@@ -1,12 +1,12 @@
 resource "aws_secretsmanager_secret" "api_gateway_api_key" {
-  name                    = var.api_gateway_api_key
+  name                    = var.api_gateway_api_key_name
   description             = "API Key for DI AWS API Gateway"
   recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "api_gateway_api_key" {
   secret_id     = aws_secretsmanager_secret.api_gateway_api_key.id
-  secret_string = random_password.api_gateway_api_key.result
+  secret_string = "{\"${var.nhs_uk_api_key_key}\" : \"${random_password.api_gateway_api_key.result}\"}"
 }
 
 resource "random_password" "api_gateway_api_key" {
