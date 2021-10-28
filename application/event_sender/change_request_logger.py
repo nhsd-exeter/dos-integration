@@ -22,14 +22,11 @@ class ChangeRequestLogger:
         Args:
             response (Response): Response object from posting the change request
         """
-        try:
-            if response.ok is True:
-                self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.json()}")
-            elif response.ok is False:
-                self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.json()}")
-        except ValueError as exception:
-            self.logger.exception(f"{self.default_log_format}|Failure to log response")
-            raise exception
+        # Fix this error - JSONDecodeError
+        if response.ok is True:
+            self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.text}")
+        elif response.ok is False:
+            self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.text}")
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing

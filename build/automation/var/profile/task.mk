@@ -4,13 +4,10 @@
 # Service variables
 
 LOG_LEVEL := DEBUG
-DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
-DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
-DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
-DOS_API_GATEWAY_USERNAME:= $(or $(DOS_API_GATEWAY_USERNAME), "")
-DOS_API_GATEWAY_PASSWORD:= $(or $(DOS_API_GATEWAY_PASSWORD), "")
+DOS_API_GATEWAY_USERNAME := user
+DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
-DOS_API_GATEWAY_URL := //
+DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)

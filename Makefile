@@ -32,8 +32,8 @@ quick-deploy: # Deploys all lambdas - mandatory: PROFILE
 	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
-	make terraform-destroy-auto-approve STACKS=lambda-security-group
 	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=lambda-security-group
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
@@ -41,7 +41,7 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
-	if [ "$(PROFILE)" != "local" ]; then
+	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
 		eval "$$(make aws-assume-role-export-variables)"
 		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"

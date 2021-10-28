@@ -32,7 +32,7 @@ class TestChangeRequestLogger:
         change_request_logger.log_change_request_response(test_response)
         # Assert
         log_capture.check(
-            ("lambda", "INFO", f"CHANGE_REQUEST|Success|{status_code}|{{'key': 'a'}}"),
+            ("lambda", "INFO", f'CHANGE_REQUEST|Success|{status_code}|{{ "key" : "a" }}'),
         )
 
     @pytest.mark.parametrize("status_code", FAILURE_STATUS_CODES)
@@ -46,7 +46,7 @@ class TestChangeRequestLogger:
         change_request_logger.log_change_request_response(test_response)
         # Assert
         log_capture.check(
-            ("lambda", "ERROR", f"CHANGE_REQUEST|Failure|{status_code}|{{'key': 'a'}}"),
+            ("lambda", "ERROR", f'CHANGE_REQUEST|Failure|{status_code}|{{ "key" : "a" }}'),
         )
 
     def test_log_change_request_body_development(self, log_capture):

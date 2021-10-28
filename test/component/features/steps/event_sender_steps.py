@@ -64,9 +64,9 @@ def the_response_is_logged(context, response_status, status_code):
     if response_status == "Success":
         assert (
             f"CHANGE_REQUEST|{response_status}|{status_code}|"
-            + "{'dosChanges': [{'changeId': 'Change_ID_1_here'}, {'changeId': 'Change_ID_2_here'}]}"
+            + '{"dosChanges": [{"changeId": "Change_ID_1_here"},{"changeId": "Change_ID_2_here"}]}'
             in log_file
         ), "Log Format not found"
     elif response_status == "Failure":
-        assert "CHANGE_REQUEST|Failure to log response" in log_file, "Log Format not found"
+        assert "CHANGE_REQUEST|404|", "Log Format not found"
     assert str(change_request) in log_file

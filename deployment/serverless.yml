@@ -1,5 +1,5 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
-service: ${env:TEAM_ID}
+service: ${env:PROGRAMME}-${env:TEAM_ID}
 frameworkVersion: '2'
 
 configValidationMode: error
@@ -23,6 +23,7 @@ provider:
 plugins:
   - serverless-vpc-discovery
   - serverless-localstack
+
 custom:
   vpcDiscovery:
     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
@@ -50,7 +51,7 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
       POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
