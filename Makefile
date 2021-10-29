@@ -67,9 +67,6 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		"
 
-github-action-coverage:
-	sed -i 's|/project/application|/github/workspace/application|' $(APPLICATION_DIR_REL)/coverage.xml
-
 component-test: # Runs whole project component tests
 	make -s docker-run-tools \
 	CMD="python -m behave" \

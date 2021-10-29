@@ -16,6 +16,7 @@
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
     - [Component Testing](#component-testing)
+    - [Integration Testing](#integration-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
@@ -144,6 +145,16 @@ How to run test suite in the pipeline
 
 ### Unit Testing
 
+Unit testing is to test the functions within each lambda. This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
+
+This includes:This testing includes:
+
+- Function calls
+- Correct data types and data returned from function
+- All paths tested of the application
+
+This testing is generally done by a developer
+
 To run unit tests run the following commands
 
     make python-requirements
@@ -155,10 +166,34 @@ For coverage run
 
 ### Component Testing
 
-To run unit tests run the following commands
+Component Testing is to test the functional capabilities of the individual component(lambda). This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
+
+This testing includes:
+
+- Logging
+- Input & Output of component
+- Calls to Mocks (DB/DoS API Gateway)
+- Erroneous data passed into component
+- Meets business needs of the ticket
+
+This testing is generally done by a developer
+
+To run components tests run the following commands
 
     make python-requirements
     make start component-test
+
+### Integration Testing
+
+Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals.  This testing is done on AWS to test the connection between components.
+
+This testing includes:
+
+- Calls to Mocks (DoS API Gateway if required)
+- Check data when passed between components
+- Meets business needs of the application
+
+This testing is generally done by a tester
 
 ### Test data and mock services
 
