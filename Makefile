@@ -46,7 +46,7 @@ unit-test: # Runs whole project unit tests
 	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 coverage-report: # Runs whole project coverage unit tests
-	make python-code-coverage DIR=./application \
+	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 clean: # Runs whole project clean
