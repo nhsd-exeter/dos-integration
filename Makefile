@@ -49,9 +49,6 @@ coverage-report: # Runs whole project coverage unit tests
 	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
-github-action-coverage:
-	sed -i 's|/project/application|/github/workspace/application|' $(APPLICATION_DIR_REL)/coverage.xml
-
 clean: # Runs whole project clean
 	make python-clean
 
