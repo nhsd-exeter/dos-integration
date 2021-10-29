@@ -24,10 +24,10 @@ provider:
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
-      - name: MY_API_KEY  # TODO
-        value: ${self:custom.secret.MY_API_KEY} #TODO
+      - name: NHS_UK_API_KEY
+        value: ${self:custom.secret.NHS_UK_API_KEY}
 custom:
-  secret: ${ssm:/aws/reference/secretsmanager/[NEED TO ADD REST OF THE SSM PATH HERE]} # TODO
+  secret: ${ssm:/aws/reference/secretsmanager/uec-dos-int-dev-api-key}
 
   # iam:
   #   role:
@@ -60,12 +60,12 @@ plugins:
 #          - '${env:TF_VAR_lambda_security_group_name}'
 
 functions:
-  event-sender:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
+  event-receiver:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-receiver:latest
     architecture: x86_64
     tracing: Active
-    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
-    description: ${sls:stage} Event Sender lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-event-receiver
+    description: ${sls:stage} Event Receiver lambda
     memorySize: 512
     timeout: 60
     tags:

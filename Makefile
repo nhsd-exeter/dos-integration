@@ -168,6 +168,38 @@ event-sender-run: ### A rebuild and restart of the event sender lambda.
 	make event-sender-build
 	make start
 
+# ==============================================================================
+# Event receiver
+
+event-receiver-build:
+	cd $(APPLICATION_DIR)/event_receiver
+	tar -czf $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz \
+		*.py \
+		requirements.txt
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-receiver
+	make event-receiver-clean
+
+event-receiver-clean: ## Clean up
+	rm -fv $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz
+
+event-receiver-run:
+	echo hi
+
+event-receiver-start:
+	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-receiver:latest ARGS=" \
+	-d \
+	-p 9000:8080 \
+	" \
+	CONTAINER="event-receiver"
+
+event-receiver-stop:
+	docker stop event-receiver 2> /dev/null ||:
+
+event-receiver-trigger:
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
+
 # -----------------------------
 # Serverless
 
