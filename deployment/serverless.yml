@@ -19,8 +19,6 @@ provider:
     Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
-  tracing:
-    lambda: true
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
@@ -44,20 +42,20 @@ plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 
-#custom:
-#  vpcDiscovery:
-    # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-#    vpcName: '${env:AWS_VPC_NAME}'
-#    subnets:
-#      - tagKey: Name
-#        tagValues:
-#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-#          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-#    securityGroups:
-#      - tagKey: Name
-#        tagValues:
-#          - '${env:TF_VAR_lambda_security_group_name}'
+# custom:
+#   vpcDiscovery:
+#     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+#     vpcName: '${env:AWS_VPC_NAME}'
+#     subnets:
+#       - tagKey: Name
+#         tagValues:
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+#     securityGroups:
+#       - tagKey: Name
+#         tagValues:
+#           - 'uec-pu-apu-2429-rds'
 
 functions:
   event-receiver:
@@ -67,12 +65,12 @@ functions:
     name: ${env:PROJECT_ID}-${sls:stage}-event-receiver
     description: ${sls:stage} Event Receiver lambda
     memorySize: 512
-    timeout: 60
+    timeout: 10
     tags:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
+      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
       POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
@@ -86,8 +84,23 @@ functions:
               type: true # pharmacy /dental
         method: post
         private: true
-    # tracing:
-    #   lambda: true
+  event-sender:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:latest
+    architecture: x86_64
+    tracing: Active
+    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
+    description: ${sls:stage} Event Sender lambda
+    memorySize: 512
+    timeout: 10
+    tags:
+      PYTHON_VERSION: ${env:PYTHON_VERSION}
+    environment:
+      PROFILE: ${env:PROFILE}
+      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      LOG_LEVEL: ${env:LOG_LEVEL}
 
 #resources:
 #  Outputs:
