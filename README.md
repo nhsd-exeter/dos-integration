@@ -23,6 +23,7 @@
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+      - [Quick Deployment](#quick-deployment)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
@@ -230,6 +231,12 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
     make docker-build NAME=serverless # (TMP) Build Serverless docker image
     make serverless-requirements # Install serverless plugins
     make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+
+#### Quick Deployment
+
+To quick update the lambdas run the following command. Note this only updates the lambdas and api-gateway
+
+    make sls-only-deploy PROFILE=task VERSION=latest
 
 ### Remove Deployment From the Command-line
 

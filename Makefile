@@ -27,7 +27,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	make terraform-apply-auto-approve STACKS=lambda-security-group
 	make serverless-deploy
 
-quick-deploy: # Deploys all lambdas - mandatory: PROFILE
+sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
 	eval "$$(make populate-deployment-variables)"
 	make serverless-deploy
 
