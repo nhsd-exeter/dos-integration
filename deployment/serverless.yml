@@ -22,10 +22,10 @@ provider:
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
-      - name: NHS_UK_API_KEY
-        value: ${self:custom.secret.NHS_UK_API_KEY}
+      - name: ${env:TF_VAR_nhs_uk_api_key_key}
+        value: ${self:custom.secret}.${env:TF_VAR_nhs_uk_api_key_key}
 custom:
-  secret: ${ssm:/aws/reference/secretsmanager/uec-dos-int-dev-api-key}
+  secret: ${env:TF_VAR_api_gateway_api_key_name}
 
   # iam:
   #   role:
