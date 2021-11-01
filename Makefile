@@ -136,6 +136,13 @@ python-put-message-run:
 	python application/put_message.py
 
 # ==============================================================================
+# Mocks Setup
+
+mock-dos-db-setup:
+	mkdir -p $(TMP_DIR)/sql 2> /dev/null ||:
+	aws s3 sync s3://uec-dos-int-dos-database $(TMP_DIR)/sql
+
+# ==============================================================================
 # Common Lambda Code
 
 common-code-copy: ### Copy common code to lambda direcory - mandatory: LAMBDA_DIR=[directory of lambda]
