@@ -22,10 +22,15 @@ provider:
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
-      - name: ${env:TF_VAR_nhs_uk_api_key_key}
-        value: ${self:custom.secret}.${env:TF_VAR_nhs_uk_api_key_key}
+      - name: ${env:NHS_UK_API_KEY_KEY}
+        value: ${self:custom.secret.${env:NHS_UK_API_KEY_KEY}}
+  endpointType: regional
+  tracing:
+    apiGateway: true
+    lambda: true
+
 custom:
-  secret: ${env:TF_VAR_api_gateway_api_key_name}
+  secret: ${ssm:/aws/reference/secretsmanager/${env:API_GATEWAY_API_KEY_NAME}}
 
   # iam:
   #   role:
@@ -61,7 +66,6 @@ functions:
   event-receiver:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-receiver:${env:VERSION}
     architecture: x86_64
-    tracing: Active
     name: ${env:PROJECT_ID}-${sls:stage}-event-receiver
     description: ${sls:stage} Event Receiver lambda
     memorySize: 512
@@ -77,17 +81,16 @@ functions:
       LOG_LEVEL: ${env:LOG_LEVEL}
     events:
       - http:
-        path: /dos-integration/api/v1/nhsuk-event-receiver/{type}
-        request:
-          parameters:
-            paths:
-              type: true # pharmacy /dental
-        method: post
-        private: true
+          path: /dos-integration/api/v1/nhsuk-event-receiver/{type}
+          request:
+            parameters:
+              paths:
+                type: true # pharmacy /dental
+          method: post
+          private: true
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
-    tracing: Active
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
     memorySize: 512

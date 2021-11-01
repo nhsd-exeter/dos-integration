@@ -1,2 +1,5 @@
+from json import dumps
+
+
 def lambda_handler(event, context):
-    print(event['body'])
+    return {"statusCode": 200, "body": dumps({"Message": "Lambda received message"})}

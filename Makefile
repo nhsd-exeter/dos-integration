@@ -4,48 +4,36 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # ==============================================================================
 # Development workflow targets
 
-setup: project-config # Set up project
+setup: # Set up project
+	make project-config
+	make python-virtualenv
+	pip install -r application/requirements.txt
+
+build-dev: # Build dev requirements
 	make docker-build NAME=serverless
 	make serverless-requirements
 	make python-requirements
 
 build: # Build lambdas
-	make event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make event-sender-build
+	make event-receiver-build
 
-start: # Stop project
-	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-
-stop: # Stop project
-	make project-stop AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+stop: project-stop # Stop project
 
 restart: stop start # Restart project
 
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=lambda-security-group
-	make serverless-deploy
-
-sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
-	eval "$$(make populate-deployment-variables)"
 	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=lambda-security-group
 
-build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
+build-and-deploy: # - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
 	make deploy VERSION=$(BUILD_TAG)
-
-populate-deployment-variables:
-	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
-		eval "$$(make aws-assume-role-export-variables)"
-		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
-		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
-	fi
 
 python-requirements: # Installs whole project python requirements
 	make docker-run-tools \
@@ -54,33 +42,16 @@ python-requirements: # Installs whole project python requirements
 
 unit-test: # Runs whole project unit tests
 	make -s docker-run-tools \
-	CMD="python -m pytest --cov=." \
-	DIR=./application \
-	ARGS=" \
-		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		"
+	CMD="python -m pytest --cov=. " \
+	DIR=application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 coverage-report: # Runs whole project coverage unit tests
-	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
-	ARGS=" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		"
-
-component-test: # Runs whole project component tests
-	make -s docker-run-tools \
-	CMD="python -m behave" \
-	DIR=test/component \
-	ARGS=" \
-		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL)\
-		"
+	make python-code-coverage DIR=./application \
+	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
 
 clean: # Runs whole project clean
-	make \
-		terraform-clean \
-		python-clean \
-		event-sender-clean
+	make python-clean
 
 # ==============================================================================
 # Other
@@ -147,26 +118,43 @@ common-code-remove: ### Remove common code from lambda direcory - mandatory: LAM
 
 event-sender-build: ### Build event sender lambda docker image
 	make common-code-copy LAMBDA_DIR=event_sender
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
 	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
 		--exclude=tests \
 		*.py \
-		common
+		common \
+		requirements.txt
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-sender-clean
 	export VERSION=$$(make docker-image-get-version NAME=event-sender)
 
 event-sender-clean: ### Clean event sender lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
+	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
 	make common-code-remove LAMBDA_DIR=event_sender
 
+event-sender-stop: ### Stop running event sender lambda
+	docker stop event-sender 2> /dev/null ||:
+
+event-sender-start: ### Start event sender lambda
+	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
+	-d \
+	-p 9000:8080 \
+	-e FUNCTION_NAME=event-sender \
+	-e LOG_LEVEL=INFO \
+	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
+	-e POWERTOOLS_SERVICE_NAME="event-sender" \
+	" \
+	CONTAINER="event-sender"
+
+event-sender-trigger: ### Trigger event sender lambda
+	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"message": "hello world", "username": "lessa"}'
+
 event-sender-run: ### A rebuild and restart of the event sender lambda.
-	make stop
+	make event-sender-stop
 	make event-sender-build
-	make start
+	make event-sender-start
+	make event-sender-trigger
 
 # ==============================================================================
 # Event receiver
@@ -177,7 +165,7 @@ event-receiver-build:
 		*.py \
 		requirements.txt
 	cd $(PROJECT_DIR)
-	make docker-image NAME=event-receiver
+	make docker-image NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-receiver-clean
 
 event-receiver-clean: ## Clean up
@@ -199,14 +187,13 @@ event-receiver-stop:
 event-receiver-trigger:
 	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
 
-
 # -----------------------------
 # Serverless
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
+	make docker-push NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 # make docker-push NAME=event-processor
-# make docker-push NAME=event-receiver
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
