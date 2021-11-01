@@ -19,10 +19,9 @@ class LogFilter(Filter):
         """
         self.function_name = context.function_name
         self.aws_request_id = context.aws_request_id
-        x_ray_trace_id = getenv("_X_AMZN_TRACE_ID")
-        if x_ray_trace_id is None:
-            x_ray_trace_id = "NA"
-        self.x_ray_trace_id = x_ray_trace_id
+        self.x_ray_trace_id = "NA"
+        if getenv("_X_AMZN_TRACE_ID") is not None:
+            self.x_ray_trace_id = getenv("_X_AMZN_TRACE_ID").split(";")[0].split("=")[1]
 
     def filter(self, record: LogRecord) -> bool:
         """Sets custom variables to the logging format

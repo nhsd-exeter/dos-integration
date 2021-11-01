@@ -15,12 +15,15 @@
     - [Code Quality](#code-quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
+    - [Component Testing](#component-testing)
+    - [Integration Testing](#integration-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+      - [Quick Deployment](#quick-deployment)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
@@ -89,14 +92,8 @@ Generate and trust a self-signed certificate that will be used locally to enable
 ### Local Project Setup
 
     # Terminal 1
-    make build-dev build
+    make build
     make start log
-    # Terminal 2
-    make kafka-topic-create
-    make python-requirements
-    make python-consumer-run
-    # Terminal 3
-    make python-producer-run
 
 ## Contributing
 
@@ -137,6 +134,7 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 List all the type of test suites included and provide instructions how to execute them
 
 - Unit
+- Component
 - Integration
 - Contract
 - End-to-end
@@ -148,6 +146,16 @@ How to run test suite in the pipeline
 
 ### Unit Testing
 
+Unit testing is to test the functions within each lambda. This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
+
+This includes:This testing includes:
+
+- Function calls
+- Correct data types and data returned from function
+- All paths tested of the application
+
+This testing is generally done by a developer
+
 To run unit tests run the following commands
 
     make python-requirements
@@ -156,6 +164,37 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
+
+### Component Testing
+
+Component Testing is to test the functional capabilities of the individual component(lambda). This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
+
+This testing includes:
+
+- Logging
+- Input & Output of component
+- Calls to Mocks (DB/DoS API Gateway)
+- Erroneous data passed into component
+- Meets business needs of the ticket
+
+This testing is generally done by a developer
+
+To run components tests run the following commands
+
+    make python-requirements
+    make start component-test
+
+### Integration Testing
+
+Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals.  This testing is done on AWS to test the connection between components.
+
+This testing includes:
+
+- Calls to Mocks (DoS API Gateway if required)
+- Check data when passed between components
+- Meets business needs of the application
+
+This testing is generally done by a tester
 
 ### Test data and mock services
 
@@ -192,6 +231,12 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
     make docker-build NAME=serverless # (TMP) Build Serverless docker image
     make serverless-requirements # Install serverless plugins
     make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+
+#### Quick Deployment
+
+To quick update the lambdas run the following command. Note this only updates the lambdas and api-gateway
+
+    make sls-only-deploy PROFILE=task VERSION=latest
 
 ### Remove Deployment From the Command-line
 

@@ -1,8 +1,10 @@
 from logging import Logger
 from os import environ
+from typing import Any, Dict
 from unittest.mock import MagicMock, patch
-from typing import Dict, Any
+
 from aws_lambda_powertools.utilities.typing import LambdaContext
+
 from ..logger import import_logger_from_file, set_log_level, setup_logger
 
 FILE_PATH = "application.common.logger"

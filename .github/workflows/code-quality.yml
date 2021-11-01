@@ -33,5 +33,6 @@ jobs:
           args: >
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.python.version=3.9

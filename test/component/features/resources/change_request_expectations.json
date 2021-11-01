@@ -1,0 +1,82 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/api/change-request",
+      "headers": {
+        "Accept": ["application/json"],
+        "Content-Type": ["application/json"],
+        "Authorization": ["^Basic .{10,}$"]
+      },
+      "body": {
+        "type": "JSON_SCHEMA",
+        "jsonSchema": "{\"$schema\":\"http://json-schema.org/draft-07/schema\",\"$id\":\"http://example.com/example.json\",\"type\":\"object\",\"title\":\"The root schema\",\"description\":\"The root schema comprises the entire JSON document.\",\"default\":{},\"required\":[\"reference\",\"system\",\"message\",\"service_id\",\"changes\"],\"properties\":{\"reference\":{\"$id\":\"#/properties/reference\",\"type\":\"string\"},\"system\":{\"$id\":\"#/properties/system\",\"type\":\"string\"},\"message\":{\"$id\":\"#/properties/message\",\"type\":\"string\"},\"service_id\":{\"$id\":\"#/properties/service_id\",\"type\":\"string\"},\"changes\":{\"$id\":\"#/properties/changes\",\"type\":\"object\"}},\"additionalProperties\":true}"
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/json"]
+      },
+      "body": "{\"dosChanges\": [{\"changeId\": \"Change_ID_1_here\"},{\"changeId\": \"Change_ID_2_here\"}]}"
+    },
+    "times": {
+      "remainingTimes": 0,
+      "unlimited": true
+    },
+    "timeToLive": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/api/change-request",
+      "method": "!POST"
+    },
+    "httpResponse": {
+      "statusCode": 405,
+      "reasonPhrase": "Method not allowed"
+    },
+    "times": {
+      "remainingTimes": 0,
+      "unlimited": true
+    },
+    "timeToLive": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/api/change-request",
+      "headers": {
+        "Authorization": ["!^Basic .{10,}$"]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 401,
+      "reasonPhrase": "Unauthorized"
+    },
+    "times": {
+      "remainingTimes": 0,
+      "unlimited": true
+    },
+    "timeToLive": {
+      "unlimited": true
+    }
+  },
+  {
+    "httpRequest": {
+      "path": "/api/change-request"
+    },
+    "httpResponse": {
+      "statusCode": 400
+    },
+    "times": {
+      "remainingTimes": 0,
+      "unlimited": true
+    },
+    "timeToLive": {
+      "unlimited": true
+    }
+  }
+]

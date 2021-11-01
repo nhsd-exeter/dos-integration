@@ -1,37 +1,70 @@
 version: "3.9"
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    container_name: zookeeper
-    hostname: zookeeper
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:latest
+  #   container_name: zookeeper
+  #   hostname: zookeeper
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   ports:
+  #     - 22181:2181
+  #   networks:
+  #     default:
+  #       aliases:
+  #         - zookeeper.$PROJECT_NAME_SHORT.local
+  # kafka:
+  #   image: confluentinc/cp-kafka:latest
+  #   container_name: kafka
+  #   hostname: kafka
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - 29092:9092
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #   networks:
+  #     default:
+  #       aliases:
+  #         - kafka.$PROJECT_NAME_SHORT.local
+
+  event-sender:
+    image: $DOCKER_REGISTRY/event-sender:latest
+    container_name: event-sender
+    hostname: event-sender
     environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+      AWS_LAMBDA_FUNCTION_NAME: event-sender
+      DOS_API_GATEWAY_USERNAME: user
+      DOS_API_GATEWAY_PASSWORD: password
+      DOS_API_GATEWAY_URL: http://mockserver:1080/api/change-request
+      DOS_API_GATEWAY_REQUEST_TIMEOUT: 30
+      LOG_LEVEL: DEBUG
+      POWERTOOLS_SERVICE_NAME: $TEAM_ID
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      PROFILE: $PROFILE
+    volumes:
+      - type: bind
+        source: $TMP_DIR
+        target: /tmp
     ports:
-      - 22181:2181
-    networks:
-      default:
-        aliases:
-          - zookeeper.$PROJECT_NAME_SHORT.local
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    container_name: kafka
-    hostname: kafka
-    depends_on:
-      - zookeeper
+      - 9002:8080
+
+  mockserver:
+    image: jamesdbloom/mockserver:latest
+    hostname: mockserver
+    container_name: mockserver
+    stdin_open: true
+    tty: true
     ports:
-      - 29092:9092
-    environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      default:
-        aliases:
-          - kafka.$PROJECT_NAME_SHORT.local
+      - 1080:1080
+      - 1090:1090
 
 networks:
   default:
