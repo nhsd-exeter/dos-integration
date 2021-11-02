@@ -8,6 +8,7 @@ setup: project-config # Set up project
 	make docker-build NAME=serverless
 	make serverless-requirements
 	make python-requirements
+	make mock-dos-db-setup
 
 build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)

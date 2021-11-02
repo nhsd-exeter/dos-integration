@@ -11,6 +11,7 @@
     - [Local Project Setup](#local-project-setup)
   - [Contributing](#contributing)
   - [Development](#development)
+    - [Database Connection](#database-connection)
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
@@ -115,6 +116,17 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
   - Switch each individual component to the dev mode
   - Reference the [TODO.md](documentation/TODO.md) file
   - Provide guidance on how to use feature toggles and branching by abstraction
+
+### Database Connection
+
+To connect to the local postgres database use these connection
+
+    Host = localhost
+    Port = 5432
+    Database = postgres
+    Username = postgres
+    Password = postgres
+    Schema = postgres
 
 ### Code Formatting
 
