@@ -202,7 +202,7 @@ Integration Testing is to test the functional capabilities of the individual com
 
 This testing includes:
 
-- Calls to Mocks (DoS API Gateway if required)
+- Limited use of Mocks
 - Check data when passed between components
 - Meets business needs of the application
 
