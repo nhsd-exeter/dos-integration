@@ -30,20 +30,20 @@ provider:
     lambda: true
 
 custom:
-  secret: ${env:TF_VAR_api_gateway_api_key_name}
-# vpcDiscovery:
-#   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-#   vpcName: '${env:AWS_VPC_NAME}'
-#   subnets:
-#     - tagKey: Name
-#       tagValues:
-#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-#   securityGroups:
-#     - tagKey: Name
-#       tagValues:
-#         - 'uec-pu-apu-2429-rds'
+  secret: ${ssm:/aws/reference/secretsmanager/${env:API_GATEWAY_API_KEY_NAME}}
+  vpcDiscovery:
+  # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+    vpcName: '${env:AWS_VPC_NAME}'
+    subnets:
+      - tagKey: Name
+        tagValues:
+          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+    securityGroups:
+      - tagKey: Name
+        tagValues:
+          - '${env:TF_VAR_lambda_security_group_name}'
 
   # iam:
   #   role:
@@ -72,7 +72,7 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
       POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
@@ -97,11 +97,15 @@ functions:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
       PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME: ${env:TEAM_ID}
+      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
       POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
+      DOS_API_GATEWAY_USERNAME: ${env:DOS_API_GATEWAY_USERNAME}
+      DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
+      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
+      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
 
 #resources:
 #  Outputs:

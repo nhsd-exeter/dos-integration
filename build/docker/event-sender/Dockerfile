@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/python:3.9
 
-# Install Python requirements
+# Copy Python requirements
 COPY assets/requirements.txt /
 # Install Python requirements
 RUN pip install -r /requirements.txt --upgrade

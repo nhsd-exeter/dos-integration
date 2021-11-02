@@ -72,9 +72,12 @@ coverage-report: # Runs whole project coverage unit tests
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		"
-
 clean: # Runs whole project clean
-	make python-clean
+	make \
+			terraform-clean \
+			python-clean \
+			event-sender-clean \
+			event-receiver-clean
 
 # ==============================================================================
 # Other
@@ -141,73 +144,50 @@ common-code-remove: ### Remove common code from lambda direcory - mandatory: LAM
 
 event-sender-build: ### Build event sender lambda docker image
 	make common-code-copy LAMBDA_DIR=event_sender
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
 	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
 		--exclude=tests \
-		*.py \
-		requirements.txt
+		*.py
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-sender-clean
 	export VERSION=$$(make docker-image-get-version NAME=event-sender)
 
 event-sender-clean: ### Clean event sender lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz
+	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_sender
 
-event-sender-stop: ### Stop running event sender lambda
-	docker stop event-sender 2> /dev/null ||:
-
-event-sender-start: ### Start event sender lambda
-	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-sender:latest ARGS=" \
-	-d \
-	-p 9000:8080 \
-	-e FUNCTION_NAME=event-sender \
-	-e LOG_LEVEL=INFO \
-	-e POWERTOOLS_METRICS_NAMESPACE="dos-integration" \
-	-e POWERTOOLS_SERVICE_NAME="event-sender" \
-	" \
-	CONTAINER="event-sender"
-
-event-sender-trigger: ### Trigger event sender lambda
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"message": "hello world", "username": "lessa"}'
-
 event-sender-run: ### A rebuild and restart of the event sender lambda.
-	make event-sender-stop
+	make stop
 	make event-sender-build
-	make event-sender-start
-	make event-sender-trigger
+	make start
 
 # ==============================================================================
 # Event receiver
 
 event-receiver-build:
+	make common-code-copy LAMBDA_DIR=event_receiver
+	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/event-receiver/assets/requirements.txt
 	cd $(APPLICATION_DIR)/event_receiver
 	tar -czf $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz \
-		*.py \
-		requirements.txt
+		--exclude=tests \
+		*.py
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-receiver-clean
+	export VERSION=$$(make docker-image-get-version NAME=event-receiver)
 
-event-receiver-clean: ## Clean up
-	rm -fv $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz
+event-receiver-clean: ### Clean event receiver lambda docker image directory
+	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.txt
+	make common-code-remove LAMBDA_DIR=event_sender
 
-event-receiver-run:
-	echo hi
-
-event-receiver-start:
-	make docker-run IMAGE=$(DOCKER_REGISTRY)/event-receiver:latest ARGS=" \
-	-d \
-	-p 9000:8080 \
-	" \
-	CONTAINER="event-receiver"
-
-event-receiver-stop:
-	docker stop event-receiver 2> /dev/null ||:
-
-event-receiver-trigger:
-	curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+event-receiver-run: ### A rebuild and restart of the event receiver lambda.
+	make stop
+	make event-sender-build
+	make start
 
 # -----------------------------
 # Serverless
