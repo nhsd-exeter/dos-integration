@@ -30,7 +30,20 @@ provider:
     lambda: true
 
 custom:
-  secret: ${ssm:/aws/reference/secretsmanager/${env:API_GATEWAY_API_KEY_NAME}}
+  secret: ${env:TF_VAR_api_gateway_api_key_name}
+# vpcDiscovery:
+#   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
+#   vpcName: '${env:AWS_VPC_NAME}'
+#   subnets:
+#     - tagKey: Name
+#       tagValues:
+#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+#         - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+#   securityGroups:
+#     - tagKey: Name
+#       tagValues:
+#         - 'uec-pu-apu-2429-rds'
 
   # iam:
   #   role:
@@ -46,21 +59,6 @@ custom:
 plugins:
   - serverless-vpc-discovery
   - serverless-localstack
-
-# custom:
-#   vpcDiscovery:
-#     # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-#     vpcName: '${env:AWS_VPC_NAME}'
-#     subnets:
-#       - tagKey: Name
-#         tagValues:
-#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-#           - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-#     securityGroups:
-#       - tagKey: Name
-#         tagValues:
-#           - 'uec-pu-apu-2429-rds'
 
 functions:
   event-receiver:

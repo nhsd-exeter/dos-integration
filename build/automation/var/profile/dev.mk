@@ -12,5 +12,10 @@ DOS_API_GATEWAY_PASSWORD := $(or $(DOS_API_GATEWAY_PASSWORD), "")
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 
-API_GATEWAY_API_KEY_NAME := uec-dos-int-$(PROFILE)-api-key
-NHS_UK_API_KEY_KEY := NHS_UK_API_KEY
+TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(PROFILE)-api-key
+TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
+
+# ==============================================================================
+# Infrastructure variables (Terraform, Serverless, etc)
+
+TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg

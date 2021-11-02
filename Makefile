@@ -5,9 +5,9 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # Development workflow targets
 
 setup: # Set up project
-	make project-config
-	make python-virtualenv
-	pip install -r application/requirements.txt
+	make docker-build NAME=serverless
+	make serverless-requirements
+	make python-requirements
 
 build-dev: # Build dev requirements
 	make docker-build NAME=serverless
@@ -15,25 +15,43 @@ build-dev: # Build dev requirements
 	make python-requirements
 
 build: # Build lambdas
-	make event-sender-build
-	make event-receiver-build
+	make event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
-stop: project-stop # Stop project
+start: # Stop project
+	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+stop: # Stop project
+	make project-stop AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 restart: stop start # Restart project
 
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
+	eval "$$(make populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=lambda-security-group
+	make serverless-deploy
+
+sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
+	eval "$$(make populate-deployment-variables)"
 	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=lambda-security-group
 
 build-and-deploy: # - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
 	make deploy VERSION=$(BUILD_TAG)
+
+populate-deployment-variables:
+	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
+		eval "$$(make aws-assume-role-export-variables)"
+		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
+		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
+	fi
 
 python-requirements: # Installs whole project python requirements
 	make docker-run-tools \
@@ -42,13 +60,18 @@ python-requirements: # Installs whole project python requirements
 
 unit-test: # Runs whole project unit tests
 	make -s docker-run-tools \
-	CMD="python -m pytest --cov=. " \
-	DIR=application \
-	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+	CMD="python -m pytest --cov=." \
+	DIR=./application \
+	ARGS=" \
+		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make python-code-coverage DIR=./application \
-	ARGS="-e POWERTOOLS_TRACE_DISABLED=1"
+	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	ARGS=" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		"
 
 clean: # Runs whole project clean
 	make python-clean
@@ -122,7 +145,6 @@ event-sender-build: ### Build event sender lambda docker image
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
 		--exclude=tests \
 		*.py \
-		common \
 		requirements.txt
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)

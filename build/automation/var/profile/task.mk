@@ -12,5 +12,7 @@ DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 
-API_GATEWAY_API_KEY_NAME := uec-dos-int-dev-api-key
-NHS_UK_API_KEY_KEY := NHS_UK_API_KEY
+TF_VAR_api_gateway_api_key_name := ssm:/aws/reference/secretsmanager/$(PROJECT_ID)-$(ENVIRONMENT)-api-key
+TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
+
+TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
