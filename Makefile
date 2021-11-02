@@ -4,19 +4,14 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # ==============================================================================
 # Development workflow targets
 
-setup: # Set up project
-	make docker-build NAME=serverless
-	make serverless-requirements
-	make python-requirements
-
-build-dev: # Build dev requirements
+setup: project-config # Set up project
 	make docker-build NAME=serverless
 	make serverless-requirements
 	make python-requirements
 
 build: # Build lambdas
-	make event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -41,7 +36,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group
 
-build-and-deploy: # - mandatory: PROFILE
+build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
 	make deploy VERSION=$(BUILD_TAG)
@@ -72,12 +67,22 @@ coverage-report: # Runs whole project coverage unit tests
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		"
+
+component-test: # Runs whole project component tests
+	make -s docker-run-tools \
+	CMD="python -m behave" \
+	DIR=test/component \
+	ARGS=" \
+		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
+		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL)\
+		"
+
 clean: # Runs whole project clean
 	make \
-			terraform-clean \
-			python-clean \
-			event-sender-clean \
-			event-receiver-clean
+		terraform-clean \
+		python-clean \
+		event-sender-clean \
+		event-receiver-clean
 
 # ==============================================================================
 # Other
@@ -148,7 +153,8 @@ event-sender-build: ### Build event sender lambda docker image
 	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
 		--exclude=tests \
-		*.py
+		*.py \
+		common
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-sender-clean
@@ -173,7 +179,8 @@ event-receiver-build:
 	cd $(APPLICATION_DIR)/event_receiver
 	tar -czf $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz \
 		--exclude=tests \
-		*.py
+		*.py \
+		common
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make event-receiver-clean
@@ -182,11 +189,11 @@ event-receiver-build:
 event-receiver-clean: ### Clean event receiver lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.txt
-	make common-code-remove LAMBDA_DIR=event_sender
+	make common-code-remove LAMBDA_DIR=event_receiver
 
 event-receiver-run: ### A rebuild and restart of the event receiver lambda.
 	make stop
-	make event-sender-build
+	make event-receiver-build
 	make start
 
 # -----------------------------
