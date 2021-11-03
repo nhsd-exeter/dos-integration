@@ -1,0 +1,82 @@
+version: 0.2
+
+#env:
+  #variables:
+    # key: "value"
+    # key: "value"
+  #parameter-store:
+    # key: "value"
+    # key: "value"
+  #secrets-manager:
+    # key: secret-id:json-key:version-stage:version-id
+    # key: secret-id:json-key:version-stage:version-id
+  #exported-variables:
+    # - variable
+    # - variable
+  #git-credential-helper: yes
+#batch:
+  #fast-fail: true
+  #build-list:
+  #build-matrix:
+  #build-graph:
+phases:
+  #install:
+    #If you use the Ubuntu standard image 2.0 or later, you must specify runtime-versions.
+    #If you specify runtime-versions and use an image other than Ubuntu standard image 2.0, the build fails.
+    #runtime-versions:
+      # name: version
+      # name: version
+    #commands:
+      # - command
+      # - command
+  # pre_build:
+  #   commands:
+      # - command
+      # - command
+  build:
+    commands:
+      - echo "[Running Unit Tests]"
+      - cd profile-updater/application/nhs_uk_importer/get_data
+      - python -m pytest tests -vv --junitxml=tests/result.xml --cov=. --cov-report xml:tests/coverage.xml --cov-config=tests/.coveragerc
+      - cd $CODEBUILD_SRC_DIR/profile-updater/application/nhs_uk_importer/process_csv
+      - python -m pytest tests -vv --junitxml=tests/result.xml --cov=. --cov-report xml:tests/coverage.xml --cov-config=tests/.coveragerc
+      # - command
+  #post_build:
+    #commands:
+      # - command
+      # - command
+reports:
+  get-data-results:
+    files:
+      - get_data/tests/result.xml
+    base-directory: $CODEBUILD_SRC_DIR/profile-updater/application/nhs_uk_importer
+    discard-paths: yes
+    file-format: JUNITXML
+  process-csv-results:
+    files:
+      - process_csv/tests/result.xml
+    base-directory: $CODEBUILD_SRC_DIR/profile-updater/application/nhs_uk_importer
+    discard-paths: yes
+    file-format: JUNITXML
+  get-data-coverage:
+    files:
+      - get_data/tests/coverage.xml
+    base-directory: $CODEBUILD_SRC_DIR/profile-updater/application/nhs_uk_importer
+    discard-paths: yes
+    file-format: COBERTURAXML
+  process-csv-coverage:
+    files:
+      - process_csv/tests/coverage.xml
+    base-directory: $CODEBUILD_SRC_DIR/profile-updater/application/nhs_uk_importer
+    discard-paths: yes
+    file-format: COBERTURAXML
+#artifacts:
+  #files:
+    # - location
+    # - location
+  #name: $(date +%Y-%m-%d)
+  #discard-paths: yes
+  #base-directory: location
+#cache:
+  #paths:
+    # - paths
