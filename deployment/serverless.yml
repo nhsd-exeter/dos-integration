@@ -36,6 +36,9 @@ provider:
     lambda: true
 
 custom:
+  custom:
+  localstack:
+    stages: local
   secret: ${ssm:/aws/reference/secretsmanager/${env:API_GATEWAY_API_KEY_NAME}}
   vpcDiscovery:
   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery

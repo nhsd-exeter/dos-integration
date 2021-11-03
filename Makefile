@@ -25,6 +25,20 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
+deploy-pipeline:
+		make terraform-apply-auto-approve STACKS=development-pipeline
+
+plan-pipeline:
+	if [ "$(PROFILE)" == "dev" ]; then
+		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=GITHUB_TOKEN)
+		echo $$TF_VAR_github_token
+		make terraform-plan STACKS=development-pipeline
+	fi
+	if [ "$(PROFILE)" != "dev" ]; then
+		echo "Only dev profile supported at present"
+	fi
+
+
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key
@@ -64,10 +78,15 @@ populate-deployment-variables:
 	echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 	echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 
+docker-hub-signin: # Sign into Docker hub
+	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
+	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
+	make docker-login
+
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m pytest --cov=. -vv" \
+	CMD="python -m pytest --junitxml=./testresults.xml --cov=. -vv" \
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
@@ -94,10 +113,11 @@ coverage-report: # Runs whole project coverage unit tests
 component-test: # Runs whole project component tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture" \
-	DIR=test/component \
+	CMD="python -m behave --junit --no-capture " \
+	DIR=./test/component \
 	ARGS=" \
 		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
+		-e AWS_DEFAULT_REGION=$(AWS_REGION) \
 		-e EVENT_RECEIVER_FUNCTION_URL=$(EVENT_RECEIVER_FUNCTION_URL) \
 		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
@@ -334,6 +354,8 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 
 # ==============================================================================
 # Serverless
+push-tester-image:
+	make docker-push NAME=tester
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	make docker-push NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
