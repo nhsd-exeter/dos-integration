@@ -81,7 +81,8 @@ component-test: # Runs whole project component tests
 	DIR=test/component \
 	ARGS=" \
 		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL)\
+		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
+		-e EVENT_RECEIVER_FUNCTION_URL=$(EVENT_RECEIVER_FUNCTION_URL) \
 		"
 
 clean: # Runs whole project clean
