@@ -2,43 +2,43 @@ from os import environ
 
 from pytest import raises
 
-from ..utilities import debug_mode, get_environment_variable
+from ..utilities import get_environment_variable, is_debug_mode, is_mock_mode
 
 
-def test_debug_mode_true_local():
+def test_is_debug_mode_true_local():
     # Arrange
     environ["PROFILE"] = "local"
     # Act
-    result = debug_mode()
+    result = is_debug_mode()
     # Assert
     assert result is True
     # Clean up
     del environ["PROFILE"]
 
 
-def test_debug_mode_true_task():
+def test_is_debug_mode_true_task():
     # Arrange
     environ["PROFILE"] = "task"
     # Act
-    result = debug_mode()
+    result = is_debug_mode()
     # Assert
     assert result is True
     # Clean up
     del environ["PROFILE"]
 
 
-def test_debug_mode_false():
+def test_is_debug_mode_false():
     # Arrange
     environ["PROFILE"] = "remote"
     # Act
-    result = debug_mode()
+    result = is_debug_mode()
     # Assert
     assert result is False
     # Clean up
     del environ["PROFILE"]
 
 
-def test_get_environment_variable():
+def test_is_get_environment_variable():
     # Arrange
     other_variable_key = "OTHER_VAR"
     other_variable_value = "my-var"
@@ -55,3 +55,15 @@ def test_get_environment_variable_key_error():
     # Act & Assert
     with raises(KeyError):
         get_environment_variable("UNKNOWN_VARIABLE")
+
+
+def test_is_mock_mode():
+    # Arrange
+    mock_mode = True
+    environ["MOCK_MODE"] = str(mock_mode)
+    # Act
+    response = is_mock_mode()
+    # Assert
+    assert response == str(mock_mode)
+    # Clean up
+    del environ["MOCK_MODE"]

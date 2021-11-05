@@ -2,7 +2,7 @@ from http.client import HTTPConnection
 from logging import getLogger
 from typing import Any
 
-from common.utilities import debug_mode
+from common.utilities import is_debug_mode
 from requests import Response
 
 
@@ -35,7 +35,7 @@ class ChangeRequestLogger:
             change_request_body (Any): Change request body to be logged
         """
         self.logger.info(f"{self.default_log_format}|{change_request_body=}")
-        if debug_mode():
+        if is_debug_mode():
             HTTPConnection.debuglevel = 1
 
     def log_change_request_exception(self) -> None:

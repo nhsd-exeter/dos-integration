@@ -8,6 +8,7 @@ DOS_API_GATEWAY_USERNAME := user
 DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
+MOCK_MODE := False
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)

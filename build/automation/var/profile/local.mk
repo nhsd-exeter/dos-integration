@@ -8,6 +8,7 @@ API_GATEWAY_PASSWORD := password
 CHANGE_REQUEST_ENDPOINT_URL := http://mockserver:1080/api/change-request
 CHANGE_REQUEST_ENDPOINT_TIMEOUT := 30
 LOG_LEVEL := DEBUG
+MOCK_MODE := True
 
 # ==============================================================================
 # Component Test Variables

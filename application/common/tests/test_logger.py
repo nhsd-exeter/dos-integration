@@ -3,6 +3,7 @@ from os import environ
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
 
+from pytest import raises
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from ..logger import import_logger_from_file, set_log_level, setup_logger
@@ -41,6 +42,16 @@ def test_import_logger_from_file(mock_path, mock_fileConfig):
     mock_fileConfig.assert_called_with(test_path)
 
 
+@patch(f"{FILE_PATH}.path")
+def test_import_logger_from_file_file_does_not_exist(mock_path):
+    # Arrange
+    test_path = "test/path/to/file.txt"
+    mock_path.join.return_value = test_path
+    # Act & Assert
+    with raises(KeyError):
+        import_logger_from_file()
+
+
 def test_set_log_level() -> None:
     # Arrange
     logger = Logger("my-logger1")
@@ -63,5 +74,5 @@ def test_set_log_level_no_log_level() -> None:
 
 
 @setup_logger
-def call_setup_logger(event: Dict[str, Any], context: LambdaContext) -> None:
+def call_setup_logger(event: Dict[str, Any], context: LambdaContext) -> dict:
     return {"status": 200, "message": "Lambda is complete"}
