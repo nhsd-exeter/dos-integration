@@ -71,7 +71,7 @@ unit-test: # Runs whole project unit tests
 		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender\
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver\

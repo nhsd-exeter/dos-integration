@@ -1,12 +1,12 @@
+from json import dumps, loads
 from logging import getLogger
 from os import getenv
 from typing import Any, Dict
 
-import boto3
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from common.logger import setup_logger
-from common.utilities import is_mock_mode
+from common.utilities import invoke_lambda_function, is_mock_mode
 from event_validation import validate_event
 
 tracer = Tracer()
@@ -22,7 +22,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    if validate_event(event) is False:
+    string_event = dumps(event["body"])
+    change_event = loads(str(string_event))
+    if validate_event(change_event) is False:
         message = "Bad Change Event Received"
         status_code = 400
     else:
@@ -42,13 +44,12 @@ def get_return_value(status_code: int, message: str) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: [description]
     """
-    return {"statusCode": status_code, "body": message}
+    return {"statusCode": status_code, "body": dumps({"body": message})}
 
 
 def trigger_event_processor() -> None:
     """Triggers the event processor lambda function"""
-    if is_mock_mode():
+    if is_mock_mode() is True:
         logger.info("Mocking mode is set to mock")
     else:
-        client = boto3.client("lambda")
-        client.invoke(FunctionName=getenv("EVENT_PROCESSOR_NAME"), InvocationType="Event")
+        invoke_lambda_function(getenv("EVENT_PROCESSOR_NAME"))

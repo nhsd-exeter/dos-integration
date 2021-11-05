@@ -1,5 +1,10 @@
-from os import environ, getenv
 from logging import getLogger
+from os import environ, getenv
+from typing import Any, Dict
+
+from boto3 import client
+
+logger = getLogger("lambda")
 
 
 def is_debug_mode() -> bool:
@@ -29,7 +34,6 @@ def get_environment_variable(environment_key: str) -> str:
     try:
         return environ[environment_key]
     except KeyError as e:
-        logger = getLogger("lambda")
         logger.exception(f"Environment variable not found {environment_key}")
         raise e
 
@@ -40,4 +44,18 @@ def is_mock_mode() -> bool:
     Returns:
         bool: Should mock mode be on?
     """
-    return getenv("MOCK_MODE")
+    response = ""
+    if getenv("MOCK_MODE") is not None:
+        response = bool(getenv("MOCK_MODE"))
+    return response
+
+
+def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> None:
+    """[summary]
+
+    Args:
+        lambda_name (str): [description]
+    """
+    logger.info(f"Invoking {lambda_name}")
+    lambda_client = client("lambda")
+    lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_event)

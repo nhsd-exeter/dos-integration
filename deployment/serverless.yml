@@ -76,6 +76,7 @@ functions:
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
+      MOCK_MODE: true
     events:
       - http:
           path: /dos-integration/api/v1/nhsuk-event-receiver/{type}

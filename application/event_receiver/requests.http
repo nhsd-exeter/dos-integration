@@ -2,10 +2,11 @@
 # Pass
 # NOTE: All date is fake and should not be used as a real change event.
 POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
-content-type: application/json
+Content-Type: application/json
 Accept: application/json
 
 {
+  "body": {
     "SearchKey": "ANEI1245",
     "ODSCode": "FX111",
     "OrganisationName": "My Test Pharmacy",
@@ -27,13 +28,14 @@ Accept: application/json
     "Website": "https://my-pharmacy.com/health-service",
     "OrganisationSubType": null,
     "OrganisationAliases": []
+  }
 }
 
 ###
 # Fail
 # NOTE: All date is fake and should not be used as a real change event.
 POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
-content-type: application/json
+Content-Type: application/json
 Accept: application/json
 
 {
@@ -58,4 +60,4 @@ Accept: application/json
     "Website": "https://my-pharmacy.com/health-service",
     "OrganisationSubType": null,
     "OrganisationAliases": []
-}
+}"

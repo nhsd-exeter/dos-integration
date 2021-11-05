@@ -64,6 +64,15 @@ def test_is_mock_mode():
     # Act
     response = is_mock_mode()
     # Assert
-    assert response == str(mock_mode)
+    assert response == mock_mode
     # Clean up
     del environ["MOCK_MODE"]
+
+
+def test_is_mock_mode_none():
+    # Arrange
+    expected_response = ""
+    # Act
+    response = is_mock_mode()
+    # Assert
+    assert response == expected_response

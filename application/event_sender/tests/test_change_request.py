@@ -9,7 +9,7 @@ from ..change_request import ChangeRequest
 
 
 class TestChangeRequest:
-    change_request_event = {
+    CHANGE_REQUEST_EVENT = {
         "reference": "1",
         "system": "Profile Updater (test)",
         "message": "Test message 1531816592293|@./",
@@ -30,14 +30,14 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
         expected_auth = HTTPBasicAuth(expected_username, expected_password)
         # Act
-        change_request = ChangeRequest(self.change_request_event)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         # Assert
         assert change_request.logger == getLogger("lambda")
         assert change_request.headers == {"Content-Type": "application/json", "Accept": "application/json"}
         assert change_request.change_request_url == expected_change_request_url
         assert change_request.timeout == int(expected_timeout)
         assert change_request.authorisation == expected_auth
-        assert change_request.change_request_body == self.change_request_event
+        assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
@@ -57,7 +57,7 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_USERNAME"] = expected_username
         expected_password = "password"
         environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
-        change_request = ChangeRequest(self.change_request_event)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         expected_response_body = {"my-key": "my-val"}
         status_code = 200
         add(POST, expected_change_request_url, json=expected_response_body, status=status_code)

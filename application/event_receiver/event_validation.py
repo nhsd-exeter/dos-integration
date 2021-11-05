@@ -61,14 +61,14 @@ def check_ods_code_type_and_length(odscode: str) -> bool:
         bool: True is passes validation, False otherwise
     """
     logger.debug("Checking ODS code type and length")
-    valid = True
     if isinstance(odscode, str) is False:
         logger.error(f"ODS code is not a string: {odscode}")
-        valid = False
+        return False
     if len(odscode) != 5:
         logger.error(f"ODSCode '{odscode}' is not expected length {len(odscode)}")
-        valid = False
-    return valid
+        return False
+    logger.debug("Checking ODS code matches expected format")
+    return True
 
 
 INPUT_SCHEMA = {
