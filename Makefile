@@ -26,6 +26,9 @@ log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make populate-deployment-variables)"
+	if [ "$(PROFILE)" == "task" ]; then
+		make terrafrom-apply-auto-approve STACKS=api-key
+	fi
 	make terraform-apply-auto-approve STACKS=lambda-security-group
 	make serverless-deploy
 
