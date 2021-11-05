@@ -17,7 +17,6 @@ def validate_event(event: Dict[str, Any]) -> bool:
     Returns:
         bool: True if event is valid, False otherwise
     """
-    is_valid_event = True
     try:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError:
@@ -25,11 +24,11 @@ def validate_event(event: Dict[str, Any]) -> bool:
         return False
 
     if check_organisation_type(organisation_type=event["OrganisationType"]) is False:
-        is_valid_event = False
+        return False
     if check_ods_code_type_and_length(odscode=event["ODSCode"]) is False:
-        is_valid_event = False
+        return False
     logger.info("event has been validated")
-    return is_valid_event
+    return True
 
 
 def check_organisation_type(organisation_type: str) -> bool:

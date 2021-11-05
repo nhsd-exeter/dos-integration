@@ -66,15 +66,15 @@ unit-test: # Runs whole project unit tests
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender\
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver\
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS=" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender\
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver\
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
 component-test: # Runs whole project component tests

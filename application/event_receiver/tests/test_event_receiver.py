@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from ..event_receiver import get_return_value, lambda_handler, trigger_event_processor
+from ..event_receiver import extract_event, get_return_value, lambda_handler, trigger_event_processor
 from .change_events import PHARMACY_STANDARD_EVENT
 
 FILE_PATH = "application.event_receiver.event_receiver"
@@ -46,6 +46,23 @@ def test_lambda_handler_invalid_event(mock_validate_event, mock_trigger_event_pr
     mock_trigger_event_processor.assert_not_called()
     mock_get_return_value.assert_called_once_with(400, "Bad Change Event Received")
     assert response == expected_return_value
+
+
+def test_extract_event():
+    # Arrange
+    event = {"body": "example"}
+    # Act
+    response = extract_event(event)
+    # Assert
+    assert response == event["body"]
+
+
+def test_extract_event_invalid_event():
+    # Arrange
+    event = {"other": "example"}
+    # Act & Assert
+    with pytest.raises(KeyError):
+        extract_event(event)
 
 
 def test_get_return_value():

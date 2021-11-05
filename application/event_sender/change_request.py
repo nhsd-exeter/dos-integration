@@ -42,6 +42,6 @@ class ChangeRequest:
                 timeout=self.timeout,
             )
             self.change_request_logger.log_change_request_response(self.response)
-        except Exception as exception:
+        except Exception:
             self.change_request_logger.log_change_request_exception()
-            raise exception
+            raise

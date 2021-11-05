@@ -22,7 +22,6 @@ class ChangeRequestLogger:
         Args:
             response (Response): Response object from posting the change request
         """
-        # Fix this error - JSONDecodeError
         if response.ok is True:
             self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.text}")
         elif response.ok is False:

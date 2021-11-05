@@ -1,11 +1,14 @@
 from logging import getLogger
 from os import environ
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+import pytest
 
 from requests.auth import HTTPBasicAuth
 from responses import POST, activate, add
 
 from ..change_request import ChangeRequest
+
+FILE_PATH = "application.event_sender.change_request"
 
 
 class TestChangeRequest:
@@ -69,6 +72,31 @@ class TestChangeRequest:
         change_request.change_request_logger.log_change_request_response.assert_called_once_with(
             change_request.response
         )
+        # Clean up
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME"]
+        del environ["DOS_API_GATEWAY_PASSWORD"]
+        del environ["PROFILE"]
+
+    @patch(f"{FILE_PATH}.post")
+    def test_post_change_request_exception(self, mock_post):
+        # Arrange
+        environ["PROFILE"] = "remote"
+        expected_change_request_url = "https://test.com"
+        environ["DOS_API_GATEWAY_URL"] = expected_change_request_url
+        expected_timeout = "10"
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = expected_timeout
+        expected_username = "username"
+        environ["DOS_API_GATEWAY_USERNAME"] = expected_username
+        expected_password = "password"
+        environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request.change_request_logger = MagicMock()
+        mock_post.side_effect = Exception("Test exception")
+        # Act & Assert
+        with pytest.raises(Exception):
+            change_request.post_change_request()
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]

@@ -22,8 +22,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    string_event = dumps(event["body"])
-    change_event = loads(str(string_event))
+    change_event = extract_event(event)
     if validate_event(change_event) is False:
         message = "Bad Change Event Received"
         status_code = 400
@@ -32,6 +31,24 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         message = "Change Event Accepted"
         status_code = 200
     return get_return_value(status_code, message)
+
+
+def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Extracts the event from the lambda function invocation event
+
+    Args:
+        event (Dict[str, Any]): Lambda function invocation event
+
+    Returns:
+        Dict[str, Any]: Lambda function invocation event
+    """
+    try:
+        string_event = dumps(event["body"])
+        change_event = loads(str(string_event))
+    except KeyError:
+        logger.exception("KeyError: No event found in event")
+        raise
+    return change_event
 
 
 def get_return_value(status_code: int, message: str) -> Dict[str, Any]:

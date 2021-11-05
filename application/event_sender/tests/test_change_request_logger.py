@@ -80,6 +80,16 @@ class TestChangeRequestLogger:
         # Clean up
         del environ["PROFILE"]
 
+    def test_log_change_request_exception(self, log_capture):
+        # Arrange
+        change_request_logger = ChangeRequestLogger()
+        # Act
+        change_request_logger.log_change_request_exception()
+        # Assert
+        log_capture.check(
+            ("lambda", "ERROR", f"{change_request_logger.default_log_format}|Exception|Error posting change request"),
+        )
+
 
 @fixture()
 def log_capture():

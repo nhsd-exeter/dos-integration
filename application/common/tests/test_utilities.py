@@ -1,8 +1,11 @@
 from os import environ
+from unittest.mock import patch
 
 from pytest import raises
 
-from ..utilities import get_environment_variable, is_debug_mode, is_mock_mode
+from ..utilities import get_environment_variable, invoke_lambda_function, is_debug_mode, is_mock_mode
+
+FILE_PATH = "application.common.utilities"
 
 
 def test_is_debug_mode_true_local():
@@ -76,3 +79,17 @@ def test_is_mock_mode_none():
     response = is_mock_mode()
     # Assert
     assert response == expected_response
+
+
+@patch(f"{FILE_PATH}.client")
+def test_invoke_lambda_function(mock_client):
+    # Arrange
+    lambda_function_name = "my-lambda-function"
+    payload = {"test": "test"}
+    # Act
+    invoke_lambda_function(lambda_function_name, payload)
+    # Assert
+    mock_client.assert_called_once_with("lambda")
+    mock_client().invoke.assert_called_once_with(
+        FunctionName=lambda_function_name, InvocationType="Event", Payload=payload
+    )
