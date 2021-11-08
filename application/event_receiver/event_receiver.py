@@ -5,12 +5,19 @@ from typing import Any, Dict
 
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from change_event_exceptions import ValidationException
+from change_event_responses import set_error_return_value, set_return_value
+from change_event_validation import valid_event
 from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
-from event_validation import validate_event
 
 tracer = Tracer()
 logger = getLogger("lambda")
+
+SUCCESS_STATUS_CODE = 200
+FAILURE_STATUS_CODE = 400
+SUCCESS_STATUS_RESPONSE = "Change Event Accepted"
+GENERIC_FAILURE_STATUS_RESPONSE = "Event malformed, validation failed"
 
 
 @tracer.capture_lambda_handler()
@@ -22,19 +29,25 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    change_event = extract_event(event)
-    if validate_event(change_event) is False:
-        message = "Bad Change Event Received"
-        status_code = 400
-    else:
-        trigger_event_processor()
-        message = "Change Event Accepted"
-        status_code = 200
-    return get_return_value(status_code, message)
+    try:
+        change_event = extract_event(event)
+        if valid_event(change_event) is True:
+            trigger_event_processor()
+        else:
+            raise ValidationException(GENERIC_FAILURE_STATUS_RESPONSE)
+
+        logger.info(f"{SUCCESS_STATUS_CODE}|{SUCCESS_STATUS_RESPONSE}")
+        return set_return_value(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
+
+    except Exception as exception:
+        logger.error(f"{FAILURE_STATUS_CODE}|{str(exception)}")
+        return set_error_return_value(FAILURE_STATUS_CODE, str(exception))
 
 
 def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Extracts the event from the lambda function invocation event
+    """
+    Extracts the change event from the lambda function invocation event,
+    also handles if object is passed in not from API Gateway
 
     Args:
         event (Dict[str, Any]): Lambda function invocation event
@@ -44,24 +57,11 @@ def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
     """
     try:
         string_event = dumps(event["body"])
-        change_event = loads(str(string_event))
+        change_event = loads(string_event)
     except KeyError:
-        logger.exception("KeyError: No event found in event")
-        raise
+        logger.exception("Change Event failed transformations")
+        raise ValidationException("Change Event incorrect format")
     return change_event
-
-
-def get_return_value(status_code: int, message: str) -> Dict[str, Any]:
-    """Returns the return value for the lambda function
-
-    Args:
-        status_code (int): [description]
-        message (str): [description]
-
-    Returns:
-        Dict[str, Any]: [description]
-    """
-    return {"statusCode": status_code, "body": dumps({"body": message})}
 
 
 def trigger_event_processor() -> None:

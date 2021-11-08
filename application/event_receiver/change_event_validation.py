@@ -3,80 +3,62 @@ from typing import Any, Dict
 
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
-
+from change_event_exceptions import ValidationException
 
 logger = getLogger("lambda")
 
 
-def validate_event(event: Dict[str, Any]) -> bool:
+def valid_event(event: Dict[str, Any]) -> bool:
     """Validate event using business rules
 
     Args:
         event (Dict[str, Any]): Lambda function invocation event
 
     Returns:
-        bool: True if event is valid, False otherwise
+        bool: True if event is valid, otherwise Exception
     """
     try:
         validate(event=event, schema=INPUT_SCHEMA)
-    except SchemaValidationError:
-        logger.exception(f"Input schema validation error|{event.__str__}")
+    except SchemaValidationError as exception:
+        logger.exception(f"Input schema validation error|{str(exception)}")
         return False
-
-    if check_organisation_type(organisation_type=event["OrganisationType"]) is False:
-        return False
-    if check_ods_code_type_and_length(odscode=event["ODSCode"]) is False:
-        return False
-    logger.info("event has been validated")
+    check_organisation_type(organisation_type=event["OrganisationType"])
+    check_ods_code_length(odscode=event["ODSCode"])
+    logger.info("Event has been validated")
     return True
 
 
-def check_organisation_type(organisation_type: str) -> bool:
-    """Check organisation type if matches pharmacy
+def check_organisation_type(organisation_type: str) -> None:
+    """Check organisation type if matches pharmacy, exception raise if error
 
     Args:
         organisation_type (str): organisation type of NHS UK service
-
-    Returns:
-        bool: True is passes validation, False otherwise
     """
     logger.debug("Checking service type")
     if organisation_type == "Pharmacy":
         logger.info(f"Organisation Type {organisation_type}")
-        valid = True
     else:
         logger.error(f"Organisation Type not in expected types: {organisation_type}")
-        valid = False
-    return valid
+        raise ValidationException("Unexpected Organisation Type")
 
 
-def check_ods_code_type_and_length(odscode: str) -> bool:
-    """Check ODS code type and length as expected
+def check_ods_code_length(odscode: str) -> None:
+    """Check ODS code length as expected, exception raise if error
+    Note: ods code type is checked by schema validation
 
     Args:
         odscode (str): odscode of NHS UK service
-
-    Returns:
-        bool: True is passes validation, False otherwise
     """
     logger.debug("Checking ODS code type and length")
-    if isinstance(odscode, str) is False:
-        logger.error(f"ODS code is not a string: {odscode}")
-        return False
     if len(odscode) != 5:
         logger.error(f"ODSCode '{odscode}' is not expected length {len(odscode)}")
-        return False
+        raise ValidationException("ODSCode Wrong Length")
     logger.debug("Checking ODS code matches expected format")
-    return True
 
 
 INPUT_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://example.com/example.json",
     "type": "object",
-    "title": "The root schema",
-    "description": "The root schema comprises the entire JSON document.",
-    "default": {},
     "required": [
         "ODSCode",
         "OrganisationType",

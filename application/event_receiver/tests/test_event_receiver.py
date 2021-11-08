@@ -3,49 +3,71 @@ from unittest.mock import patch
 
 import pytest
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+from change_event_validation import ValidationException
+from pytest import fixture, raises
+from testfixtures import LogCapture
 
-from ..event_receiver import extract_event, get_return_value, lambda_handler, trigger_event_processor
-from .change_events import PHARMACY_STANDARD_EVENT
+from ..event_receiver import (
+    FAILURE_STATUS_CODE,
+    GENERIC_FAILURE_STATUS_RESPONSE,
+    SUCCESS_STATUS_CODE,
+    SUCCESS_STATUS_RESPONSE,
+    extract_event,
+    lambda_handler,
+    trigger_event_processor,
+)
 
 FILE_PATH = "application.event_receiver.event_receiver"
 
 
-@patch(f"{FILE_PATH}.get_return_value")
+@patch(f"{FILE_PATH}.extract_event")
+@patch(f"{FILE_PATH}.set_return_value")
 @patch(f"{FILE_PATH}.trigger_event_processor")
-@patch(f"{FILE_PATH}.validate_event")
-def test_lambda_handler_valid_event(mock_validate_event, mock_trigger_event_processor, mock_get_return_value):
+@patch(f"{FILE_PATH}.valid_event")
+def test_lambda_handler_valid_event(
+    mock_valid_event, mock_trigger_event_processor, mock_set_return_value, mock_extract_event, change_event
+):
     # Arrange
     context = LambdaContext()
     context._function_name = "test"
     context._aws_request_id = "test"
-    mock_validate_event.return_value = True
+    mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
-    mock_get_return_value.return_value = expected_return_value
+    mock_set_return_value.return_value = expected_return_value
+    mock_valid_event.return_value = True
     # Act
-    response = lambda_handler(PHARMACY_STANDARD_EVENT, context)
+    response = lambda_handler(change_event, context)
     # Assert
+    assert response == expected_return_value
+    mock_extract_event.assert_called_once_with(change_event)
+    mock_valid_event.assert_called_once_with(change_event["body"])
     mock_trigger_event_processor.assert_called_once_with()
-    mock_get_return_value.assert_called_once_with(200, "Change Event Accepted")
-    assert response == expected_return_value
+    mock_set_return_value.assert_called_once_with(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
 
 
-@patch(f"{FILE_PATH}.get_return_value")
+@patch(f"{FILE_PATH}.extract_event")
+@patch(f"{FILE_PATH}.set_error_return_value")
 @patch(f"{FILE_PATH}.trigger_event_processor")
-@patch(f"{FILE_PATH}.validate_event")
-def test_lambda_handler_invalid_event(mock_validate_event, mock_trigger_event_processor, mock_get_return_value):
+@patch(f"{FILE_PATH}.valid_event")
+def test_lambda_handler_event_fails_validation(
+    mock_valid_event, mock_trigger_event_processor, mock_set_error_return_value, mock_extract_event, change_event
+):
     # Arrange
     context = LambdaContext()
     context._function_name = "test"
     context._aws_request_id = "test"
-    mock_validate_event.return_value = False
+    mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
-    mock_get_return_value.return_value = expected_return_value
+    mock_set_error_return_value.return_value = expected_return_value
+    mock_valid_event.return_value = False
     # Act
-    response = lambda_handler(PHARMACY_STANDARD_EVENT, context)
+    response = lambda_handler(change_event, context)
     # Assert
-    mock_trigger_event_processor.assert_not_called()
-    mock_get_return_value.assert_called_once_with(400, "Bad Change Event Received")
     assert response == expected_return_value
+    mock_extract_event.assert_called_once_with(change_event)
+    mock_valid_event.assert_called_once_with(change_event["body"])
+    mock_trigger_event_processor.assert_not_called()
+    mock_set_error_return_value.assert_called_once_with(FAILURE_STATUS_CODE, GENERIC_FAILURE_STATUS_RESPONSE)
 
 
 def test_extract_event():
@@ -57,22 +79,15 @@ def test_extract_event():
     assert response == event["body"]
 
 
-def test_extract_event_invalid_event():
+def test_extract_event_invalid_event(log_capture):
     # Arrange
     event = {"other": "example"}
     # Act & Assert
-    with pytest.raises(KeyError):
+    with raises(ValidationException) as exception:
         extract_event(event)
+        assert exception.value.message == "Change Event incorrect format"
 
-
-def test_get_return_value():
-    # Arrange
-    status_code = 200
-    message = "example"
-    # Act
-    response = get_return_value(status_code, message)
-    # Assert
-    assert response == {"statusCode": status_code, "body": '{"body": "' + message + '"}'}
+    log_capture.check(["lambda", "ERROR", "Change Event failed transformations"])
 
 
 @pytest.mark.parametrize("is_mock_mode_value", [True])
@@ -99,3 +114,42 @@ def test_trigger_event_processor_not_mock_mode(mock_is_mock_mode, mock_invoke_la
     trigger_event_processor()
     # Assert
     mock_invoke_lambda_function.assert_called_once_with(event_processor_name)
+
+
+@fixture()
+def log_capture():
+    with LogCapture(names="lambda") as capture:
+        yield capture
+
+
+@fixture
+def change_event():
+    change_event = PHARMACY_STANDARD_EVENT.copy()
+    yield change_event
+
+
+PHARMACY_STANDARD_EVENT = {
+    "body": {
+        "SearchKey": "ANEI1245",
+        "ODSCode": "FX111",
+        "OrganisationName": "My Test Pharmacy",
+        "OrganisationTypeId": "PH1",
+        "OrganisationType": "Pharmacy",
+        "OrganisationStatus": "Visible",
+        "SummaryText": "",
+        "URL": "https://my-pharmacy.com/",
+        "Address1": "85 Peachfield Road",
+        "Address2": None,
+        "Address3": None,
+        "City": "CHAPEL ROW",
+        "County": "South Godshire",
+        "Latitude": 53.38030624389648,
+        "Longitude": -1.4826949834823608,
+        "Postcode": "RG7 1DB",
+        "Phone": "123456789",
+        "Email": "health.my-pharmacy@nhs.net",
+        "Website": "https://my-pharmacy.com/health-service",
+        "OrganisationSubType": None,
+        "OrganisationAliases": [],
+    }
+}

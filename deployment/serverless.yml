@@ -25,6 +25,12 @@ provider:
       - name: ${env:ENVIRONMENT}-${env:NHS_UK_API_KEY_KEY}
         value: ${self:custom.secret.${env:NHS_UK_API_KEY_KEY}}
   endpointType: regional
+  logs:
+    restApi:
+      accessLogging: true
+      executionLogging: true
+      level: INFO
+      fullExecutionData: true
   tracing:
     apiGateway: true
     lambda: true
