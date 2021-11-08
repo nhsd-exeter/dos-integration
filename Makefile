@@ -8,6 +8,7 @@ setup: project-config # Set up project
 	make docker-build NAME=serverless
 	make serverless-requirements
 	make python-requirements
+	make mock-dos-db-setup
 
 build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -134,6 +135,13 @@ python-peek-message-run:
 python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
 	python application/put_message.py
+
+# ==============================================================================
+# Mocks Setup
+
+mock-dos-db-setup:
+	mkdir -p $(TMP_DIR)/sql 2> /dev/null ||:
+	aws s3 sync s3://uec-dos-int-dos-database $(TMP_DIR)/sql
 
 # ==============================================================================
 # Common Lambda Code

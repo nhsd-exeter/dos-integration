@@ -74,6 +74,19 @@ services:
     ports:
       - 9002:8080
 
+  mock-dos:
+    image: postgres:latest
+    hostname: mock-dos
+    container_name: mock-dos
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - type: bind
+        source: $TMP_DIR/sql
+        target: /docker-entrypoint-initdb.d
+    ports:
+      - 5432:5432
+
   mockserver:
     image: jamesdbloom/mockserver:latest
     hostname: mockserver
