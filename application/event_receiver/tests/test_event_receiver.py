@@ -46,11 +46,11 @@ def test_lambda_handler_valid_event(
 
 
 @patch(f"{FILE_PATH}.extract_event")
-@patch(f"{FILE_PATH}.set_error_return_value")
+@patch(f"{FILE_PATH}.set_return_value")
 @patch(f"{FILE_PATH}.trigger_event_processor")
 @patch(f"{FILE_PATH}.valid_event")
 def test_lambda_handler_event_fails_validation(
-    mock_valid_event, mock_trigger_event_processor, mock_set_error_return_value, mock_extract_event, change_event
+    mock_valid_event, mock_trigger_event_processor, set_return_value, mock_extract_event, change_event
 ):
     # Arrange
     context = LambdaContext()
@@ -58,7 +58,7 @@ def test_lambda_handler_event_fails_validation(
     context._aws_request_id = "test"
     mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
-    mock_set_error_return_value.return_value = expected_return_value
+    set_return_value.return_value = expected_return_value
     mock_valid_event.return_value = False
     # Act
     response = lambda_handler(change_event, context)
@@ -67,7 +67,7 @@ def test_lambda_handler_event_fails_validation(
     mock_extract_event.assert_called_once_with(change_event)
     mock_valid_event.assert_called_once_with(change_event["body"])
     mock_trigger_event_processor.assert_not_called()
-    mock_set_error_return_value.assert_called_once_with(FAILURE_STATUS_CODE, GENERIC_FAILURE_STATUS_RESPONSE)
+    set_return_value.assert_called_once_with(FAILURE_STATUS_CODE, GENERIC_FAILURE_STATUS_RESPONSE)
 
 
 def test_extract_event():
@@ -128,6 +128,7 @@ def change_event():
     yield change_event
 
 
+# Please update when an official event is created
 PHARMACY_STANDARD_EVENT = {
     "body": {
         "SearchKey": "ANEI1245",
@@ -136,6 +137,8 @@ PHARMACY_STANDARD_EVENT = {
         "OrganisationTypeId": "PH1",
         "OrganisationType": "Pharmacy",
         "OrganisationStatus": "Visible",
+        "ServiceType": "PHA",
+        "ServiceSubType": "COMPH",
         "SummaryText": "",
         "URL": "https://my-pharmacy.com/",
         "Address1": "85 Peachfield Road",

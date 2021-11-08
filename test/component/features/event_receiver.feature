@@ -13,10 +13,16 @@ Feature: Event Reciever
     And the response is logged with status code "400" and message "Change Event incorrect format"
 
   Scenario:
-    Given an invalid change event with incorrect organisation type
+    Given an invalid change event with incorrect service type
     When a change event is sent to the event receiver
-    Then the response has status code "400" with error message "Unexpected Organisation Type"
-    And the response is logged with status code "400" and message "Unexpected Organisation Type"
+    Then the response has status code "400" with error message "Unexpected Service Type"
+    And the response is logged with status code "400" and message "Unexpected Service Type"
+
+  Scenario:
+    Given an invalid change event with incorrect sub service type
+    When a change event is sent to the event receiver
+    Then the response has status code "400" with error message "Unexpected Service Sub Type"
+    And the response is logged with status code "400" and message "Unexpected Service Sub Type"
 
   Scenario:
     Given an invalid change event with no ods code

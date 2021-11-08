@@ -6,6 +6,8 @@
     "OrganisationTypeId": "PH1",
     "OrganisationType": "Pharmacy",
     "OrganisationStatus": "Visible",
+    "ServiceType": "PHA",
+    "ServiceSubType": "COMPH",
     "SummaryText": "",
     "URL": "https://my-pharmacy.com/",
     "Address1": "85 Peachfield Road",

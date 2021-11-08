@@ -20,11 +20,18 @@ def an_invalid_change_event_invalid_format(context):
     context.change_event = load_json_file(VALID_CHANGE_EVENT_FILE_NAME)["body"]
 
 
-@given("an invalid change event with incorrect organisation type")
-def an_invalid_change_event_with_incorrect_organisation_type(context):
+@given("an invalid change event with incorrect service type")
+def an_invalid_change_event_with_incorrect_service_type(context):
     """[summary]"""
     context.change_event = load_json_file(VALID_CHANGE_EVENT_FILE_NAME)
-    context.change_event["body"]["OrganisationType"] = "Anything"
+    context.change_event["body"]["ServiceType"] = "Anything"
+
+
+@given("an invalid change event with incorrect sub service type")
+def an_invalid_change_event_with_incorrect_service_sub_type(context):
+    """[summary]"""
+    context.change_event = load_json_file(VALID_CHANGE_EVENT_FILE_NAME)
+    context.change_event["body"]["ServiceSubType"] = "Anything"
 
 
 @given("an invalid change event with no ods code")
@@ -67,9 +74,10 @@ def the_response_body_contains_message(context, expected_status_code: str, expec
 @then('the response has status code "{expected_status_code:d}" with error message "{expected_message}"')
 def the_response_body_contains_error_message(context, expected_status_code: str, expected_message: str):
     """[summary]"""
+    print(context.response.json())
     actual_status_code = context.response.json()["statusCode"]
     assert expected_status_code == actual_status_code, f"Status code not as expected, Status Code: {actual_status_code}"
-    error_message = loads(context.response.json()["errorMessage"])["message"]
+    error_message = loads(context.response.json()["body"])["message"]
     assert expected_message == error_message, f"Error Message not as expected, Error Message: {error_message}"
 
 

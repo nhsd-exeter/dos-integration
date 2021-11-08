@@ -4,7 +4,13 @@ import pytest
 from pytest import fixture, raises
 from testfixtures import LogCapture
 
-from ..change_event_validation import ValidationException, check_ods_code_length, check_organisation_type, valid_event
+from ..change_event_validation import (
+    ValidationException,
+    check_ods_code_length,
+    check_service_type,
+    check_service_sub_type,
+    valid_event,
+)
 
 FILE_PATH = "application.event_receiver.change_event_validation"
 
@@ -16,10 +22,11 @@ def test_valid_event(change_event):
     assert response is True
 
 
-@patch(f"{FILE_PATH}.check_organisation_type")
+@patch(f"{FILE_PATH}.check_service_sub_type")
+@patch(f"{FILE_PATH}.check_service_type")
 @patch(f"{FILE_PATH}.check_ods_code_length")
 def test_validate_event_missing_key(
-    mock_check_ods_code_length, mock_check_organisation_type, change_event, log_capture
+    mock_check_ods_code_length, mock_check_service_type, mock_check_service_sub_type, change_event, log_capture
 ):
     # Arrange
     del change_event["body"]["ODSCode"]
@@ -27,22 +34,36 @@ def test_validate_event_missing_key(
     response = valid_event(change_event["body"])
     # Assert
     mock_check_ods_code_length.assert_not_called()
-    mock_check_organisation_type.assert_not_called()
+    mock_check_service_type.assert_not_called()
+    mock_check_service_sub_type.assert_not_called()
     assert "Input schema validation error|" in log_capture[0][2]
     assert response is False
 
 
-@pytest.mark.parametrize("organisation_type", ["Pharmacy"])
-def test_check_organisation_type(organisation_type):
+@pytest.mark.parametrize("service_type", ["PHA"])
+def test_check_service_type(service_type):
     # Act & Assert
-    check_organisation_type(organisation_type)
+    check_service_type(service_type)
 
 
-@pytest.mark.parametrize("organisation_type", ["Not Expected Type", "Dentist", "Pharmacy Out of hours"])
-def test_check_organisation_type_wrong_organisation_type(organisation_type):
+@pytest.mark.parametrize("service_type", ["Not Expected Type", "Dentist", "Pharmacy Out of hours", "PH1"])
+def test_check_service_type_wrong_service_type(service_type):
     # Act & Assert
     with raises(ValidationException):
-        check_organisation_type(organisation_type)
+        check_service_type(service_type)
+
+
+@pytest.mark.parametrize("service_sub_type", ["COMPH"])
+def test_check_service_sub_type(service_sub_type):
+    # Act & Assert
+    check_service_sub_type(service_sub_type)
+
+
+@pytest.mark.parametrize("service_sub_type", ["Pharmacy", "PH1"])
+def test_check_service_sub_type_wrong_service_sub_type(service_sub_type):
+    # Act & Assert
+    with raises(ValidationException):
+        check_service_sub_type(service_sub_type)
 
 
 @pytest.mark.parametrize("odscode", ["FXXX1", "AAAAA", "00000"])
@@ -70,6 +91,7 @@ def change_event():
     yield change_event
 
 
+# Please update when an official event is created
 PHARMACY_STANDARD_EVENT = {
     "body": {
         "SearchKey": "ANEI1245",
@@ -78,6 +100,8 @@ PHARMACY_STANDARD_EVENT = {
         "OrganisationTypeId": "PH1",
         "OrganisationType": "Pharmacy",
         "OrganisationStatus": "Visible",
+        "ServiceType": "PHA",
+        "ServiceSubType": "COMPH",
         "SummaryText": "",
         "URL": "https://my-pharmacy.com/",
         "Address1": "85 Peachfield Road",

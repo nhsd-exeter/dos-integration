@@ -6,7 +6,7 @@ from typing import Any, Dict
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_event_exceptions import ValidationException
-from change_event_responses import set_error_return_value, set_return_value
+from change_event_responses import set_return_value
 from change_event_validation import valid_event
 from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
@@ -41,7 +41,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 
     except Exception as exception:
         logger.error(f"{FAILURE_STATUS_CODE}|{str(exception)}")
-        return set_error_return_value(FAILURE_STATUS_CODE, str(exception))
+        return set_return_value(FAILURE_STATUS_CODE, str(exception))
 
 
 def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:

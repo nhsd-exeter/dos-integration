@@ -24,7 +24,7 @@ class ChangeRequestLogger:
         """
         if response.ok is True:
             self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.text}")
-        elif response.ok is False:
+        else:
             self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.text}")
 
     def log_change_request_body(self, change_request_body: Any) -> None:
