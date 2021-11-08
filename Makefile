@@ -10,7 +10,8 @@ setup: project-config # Set up project
 	make python-requirements
 
 build: # Build lambdas
-	make event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -80,7 +81,8 @@ clean: # Runs whole project clean
 	make \
 		terraform-clean \
 		python-clean \
-		event-sender-clean
+		event-sender-clean \
+		event-receiver-clean
 
 # ==============================================================================
 # Other
@@ -168,13 +170,39 @@ event-sender-run: ### A rebuild and restart of the event sender lambda.
 	make event-sender-build
 	make start
 
+# ==============================================================================
+# Event receiver
+
+event-receiver-build:
+	make common-code-copy LAMBDA_DIR=event_receiver
+	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/event-receiver/assets/requirements.txt
+	cd $(APPLICATION_DIR)/event_receiver
+	tar -czf $(DOCKER_DIR)/event-receiver/assets/event-receiver-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make event-receiver-clean
+	export VERSION=$$(make docker-image-get-version NAME=event-receiver)
+
+event-receiver-clean: ### Clean event receiver lambda docker image directory
+	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-receiver/assets/*.txt
+	make common-code-remove LAMBDA_DIR=event_receiver
+
+event-receiver-run: ### A rebuild and restart of the event receiver lambda.
+	make stop
+	make event-receiver-build
+	make start
+
 # -----------------------------
 # Serverless
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
+	make docker-push NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 # make docker-push NAME=event-processor
-# make docker-push NAME=event-receiver
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"

@@ -33,6 +33,24 @@ services:
   #       aliases:
   #         - kafka.$PROJECT_NAME_SHORT.local
 
+  event-receiver:
+    image: $DOCKER_REGISTRY/event-receiver:latest
+    container_name: event-receiver
+    hostname: event-receiver
+    environment:
+      LOG_LEVEL: DEBUG
+      POWERTOOLS_SERVICE_NAME: $TEAM_ID
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      PROFILE: $PROFILE
+    volumes:
+      - type: bind
+        source: $TMP_DIR
+        target: /tmp
+    ports:
+      - 9000:8080
+
   event-sender:
     image: $DOCKER_REGISTRY/event-sender:latest
     container_name: event-sender

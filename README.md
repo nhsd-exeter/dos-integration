@@ -209,6 +209,10 @@ Here are the steps to perform meaningful local system check:
 
 ## Deployment
 
+### APIKey
+
+API Key must be generated prior to external API-Gateways being set up.
+
 ### Artefact Versioning
 
 E.g. semantic versioning vs. timestamp-based
