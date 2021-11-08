@@ -27,7 +27,7 @@ log: project-log # Show project logs
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make populate-deployment-variables)"
 	if [ "$(PROFILE)" == "task" ]; then
-		make terrafrom-apply-auto-approve STACKS=api-key
+		make terraform-apply-auto-approve STACKS=api-key
 	fi
 	make terraform-apply-auto-approve STACKS=lambda-security-group
 	make serverless-deploy
@@ -39,6 +39,9 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group
+	if [ "$(PROFILE)" == "task" ]; then
+		make terraform-destroy-auto-approve STACKS=api-key
+	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)

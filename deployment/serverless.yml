@@ -22,7 +22,7 @@ provider:
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
-      - name: ${env:NHS_UK_API_KEY_KEY}
+      - name: ${env:ENVIRONMENT}-${env:NHS_UK_API_KEY_KEY}
         value: ${self:custom.secret.${env:NHS_UK_API_KEY_KEY}}
   endpointType: regional
   tracing:
