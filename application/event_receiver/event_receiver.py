@@ -1,4 +1,4 @@
-from json import dumps, loads
+from json import loads
 from logging import getLogger
 from os import getenv
 from typing import Any, Dict
@@ -56,8 +56,7 @@ def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: Lambda function invocation event
     """
     try:
-        string_event = dumps(event["body"])
-        change_event = loads(string_event)
+        change_event = loads(event["body"])
     except KeyError:
         logger.exception("Change Event failed transformations")
         raise ValidationException("Change Event incorrect format")

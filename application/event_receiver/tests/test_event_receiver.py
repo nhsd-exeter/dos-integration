@@ -1,3 +1,4 @@
+from json import loads
 from os import environ
 from unittest.mock import patch
 
@@ -72,11 +73,11 @@ def test_lambda_handler_event_fails_validation(
 
 def test_extract_event():
     # Arrange
-    event = {"body": "example"}
+    event = {"body": '{"example" : "Test"}'}
     # Act
     response = extract_event(event)
     # Assert
-    assert response == event["body"]
+    assert loads(event["body"]) == response
 
 
 def test_extract_event_invalid_event(log_capture):
@@ -86,7 +87,6 @@ def test_extract_event_invalid_event(log_capture):
     with raises(ValidationException) as exception:
         extract_event(event)
         assert exception.value.message == "Change Event incorrect format"
-
     log_capture.check(["lambda", "ERROR", "Change Event failed transformations"])
 
 
