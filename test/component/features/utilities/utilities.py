@@ -47,11 +47,11 @@ def read_log_file() -> str:
         return log_file
 
 
-def setup_change_event() -> str:
+def setup_change_event() -> dict:
     """Sets up valid change event
 
     Returns:
-        str: Change event as a string
+        str: Change event as a dict with json string body
     """
     change_event = load_json_file("valid_change_event.json")
     change_event["body"] = dumps(change_event["body"])

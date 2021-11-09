@@ -17,7 +17,7 @@ def a_valid_change_request_endpoint(context):
 
 
 @when('a "{change_request_status}" change request is sent to the event sender')
-def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_status):
+def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_status: str):
     """Sends change event to Event Sender lambda"""
     lambda_url = getenv("EVENT_SENDER_FUNCTION_URL")
     change_request_file_name = get_change_request_name(change_request_status)
@@ -27,7 +27,7 @@ def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_s
 
 
 @then('a change request is received "{number_of_times:d}" times')
-def a_change_request_is_received_x_times(context, number_of_times):
+def a_change_request_is_received_x_times(context, number_of_times: int):
     """Confirms number of times a change request has been received"""
     mockserver = MockServer()
     mockserver.put(
@@ -44,7 +44,7 @@ def a_change_request_is_received_x_times(context, number_of_times):
 
 
 @then('the change request has status code "{expected_status_code:d}"')
-def the_change_request_has_status_code_x(context, expected_status_code):
+def the_change_request_has_status_code_x(context, expected_status_code: int):
     """Checks status code from mock server is as expected"""
     mockserver = MockServer()
     mockserver.put("/retrieve?format=json&type=request_responses", body={})
@@ -57,7 +57,7 @@ def the_change_request_has_status_code_x(context, expected_status_code):
 
 
 @then('the successful response is logged with status code "{expected_status_code:d}"')
-def the_successful_response_is_logged(context, expected_status_code):
+def the_successful_response_is_logged(context, expected_status_code: int):
     """Checks if expected criteria is stored in the log file"""
     response_status = "Success"
     change_request_file_name = get_change_request_name(response_status)
@@ -72,7 +72,7 @@ def the_successful_response_is_logged(context, expected_status_code):
 
 
 @then('the failure response is logged with status code "{expected_status_code:d}"')
-def the_failure_response_is_logged(context, expected_status_code):
+def the_failure_response_is_logged(context, expected_status_code: int):
     """Checks if expected criteria is stored in the log file"""
     response_status = "Failure"
     change_request_file_name = get_change_request_name(response_status)

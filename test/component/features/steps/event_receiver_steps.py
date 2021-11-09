@@ -66,7 +66,7 @@ def a_change_event_is_send_to_the_event_receiver(context):
 
 
 @then('the response has status code "{expected_status_code:d}" with message "{expected_message}"')
-def the_response_body_contains_message(context, expected_status_code: str, expected_message: str):
+def the_response_body_contains_message(context, expected_status_code: int, expected_message: str):
     """Checks response has expected status code and message in response body"""
     actual_status_code = context.response.json()["statusCode"]
     assert expected_status_code == actual_status_code, f"Status code not as expected, Status Code: {actual_status_code}"
@@ -75,7 +75,7 @@ def the_response_body_contains_message(context, expected_status_code: str, expec
 
 
 @then('the response has status code "{expected_status_code:d}" with error message "{expected_message}"')
-def the_response_body_contains_error_message(context, expected_status_code: str, expected_message: str):
+def the_response_body_contains_error_message(context, expected_status_code: int, expected_message: str):
     """Checks response has expected status code and error message in response body"""
     actual_status_code = context.response.json()["statusCode"]
     assert expected_status_code == actual_status_code, f"Status code not as expected, Status Code: {actual_status_code}"
@@ -84,7 +84,7 @@ def the_response_body_contains_error_message(context, expected_status_code: str,
 
 
 @then('the response is logged with status code "{expected_status_code:d}" and message "{expected_message}"')
-def the_response_contained_in_logs(context, expected_status_code: str, expected_message: str):
+def the_response_contained_in_logs(context, expected_status_code: int, expected_message: str):
     """Checks response is logged in log file"""
     log_file = read_log_file()
     assert (
