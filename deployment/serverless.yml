@@ -1,5 +1,5 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
-service: ${env:PROGRAMME}-${env:TEAM_ID}
+service: uec-dos-integration
 frameworkVersion: '2'
 variablesResolutionMode: 20210326
 configValidationMode: error
@@ -59,7 +59,6 @@ custom:
 plugins:
   - serverless-vpc-discovery
   - serverless-localstack
-
 functions:
   event-receiver:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-receiver:${env:VERSION}
