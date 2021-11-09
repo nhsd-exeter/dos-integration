@@ -19,7 +19,7 @@ Feature: Event Reciever
     And the response is logged with status code "400" and message "Unexpected Service Type"
 
   Scenario:
-    Given an invalid change event with incorrect sub service type
+    Given an invalid change event with incorrect service sub type
     When a change event is sent to the event receiver
     Then the response has status code "400" with error message "Unexpected Service Sub Type"
     And the response is logged with status code "400" and message "Unexpected Service Sub Type"
