@@ -74,7 +74,7 @@ def test_is_mock_mode():
 
 def test_is_mock_mode_none():
     # Arrange
-    expected_response = ""
+    expected_response = False
     # Act
     response = is_mock_mode()
     # Assert

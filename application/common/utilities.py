@@ -44,7 +44,7 @@ def is_mock_mode() -> bool:
     Returns:
         bool: Should mock mode be on?
     """
-    response = ""
+    response = False
     if getenv("MOCK_MODE") is not None:
         response = bool(getenv("MOCK_MODE"))
     return response

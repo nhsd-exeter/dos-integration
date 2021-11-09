@@ -72,7 +72,7 @@ def check_ods_code_length(odscode: str) -> None:
 
 
 INPUT_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema",
+    "$schema": "https://json-schema.org/draft-07/schema",
     "type": "object",
     "required": ["ODSCode", "ServiceType", "ServiceSubType"],
     "properties": {
