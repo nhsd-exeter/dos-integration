@@ -41,7 +41,7 @@ services:
       LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
-      MOCK_MODE: true
+      MOCK_MODE: "true"
     volumes:
       - type: bind
         source: $TMP_DIR
