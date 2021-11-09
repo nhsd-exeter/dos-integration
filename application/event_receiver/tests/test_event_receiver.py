@@ -42,7 +42,7 @@ def test_lambda_handler_valid_event(
     assert response == expected_return_value
     mock_extract_event.assert_called_once_with(change_event)
     mock_valid_event.assert_called_once_with(change_event["body"])
-    mock_trigger_event_processor.assert_called_once_with()
+    mock_trigger_event_processor.assert_called_once_with(change_event["body"])
     mock_set_return_value.assert_called_once_with(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
 
 
@@ -96,8 +96,9 @@ def test_extract_event_invalid_event(log_capture):
 def test_trigger_event_processor_mock_mode(mock_is_mock_mode, mock_invoke_lambda_function, is_mock_mode_value):
     # Arrange
     mock_is_mock_mode.return_value = is_mock_mode_value
+    change_event = PHARMACY_STANDARD_EVENT["body"]
     # Act
-    trigger_event_processor()
+    trigger_event_processor(change_event)
     # Assert
     mock_invoke_lambda_function.assert_not_called()
 
@@ -110,10 +111,11 @@ def test_trigger_event_processor_not_mock_mode(mock_is_mock_mode, mock_invoke_la
     mock_is_mock_mode.return_value = is_mock_mode_value
     event_processor_name = "event_processor"
     environ["EVENT_PROCESSOR_NAME"] = event_processor_name
+    change_event = PHARMACY_STANDARD_EVENT["body"]
     # Act
-    trigger_event_processor()
+    trigger_event_processor(change_event)
     # Assert
-    mock_invoke_lambda_function.assert_called_once_with(event_processor_name)
+    mock_invoke_lambda_function.assert_called_once_with(event_processor_name, change_event)
 
 
 @fixture()

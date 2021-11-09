@@ -32,7 +32,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     try:
         change_event = extract_event(event)
         if valid_event(change_event) is True:
-            trigger_event_processor()
+            trigger_event_processor(change_event)
         else:
             raise ValidationException(GENERIC_FAILURE_STATUS_RESPONSE)
 
@@ -63,9 +63,9 @@ def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
     return change_event
 
 
-def trigger_event_processor() -> None:
+def trigger_event_processor(change_event: Dict[str, Any]) -> None:
     """Triggers the event processor lambda function"""
     if is_mock_mode() is True:
         logger.info("Mocking mode is set to mock")
     else:
-        invoke_lambda_function(getenv("EVENT_PROCESSOR_NAME"))
+        invoke_lambda_function(getenv("EVENT_PROCESSOR_NAME"), change_event)
