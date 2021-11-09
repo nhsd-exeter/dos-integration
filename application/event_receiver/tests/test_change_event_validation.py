@@ -1,8 +1,7 @@
 from unittest.mock import patch
 
 import pytest
-from pytest import fixture, raises
-from testfixtures import LogCapture
+from pytest import raises
 
 from ..change_event_validation import (
     ValidationException,
@@ -11,7 +10,7 @@ from ..change_event_validation import (
     check_service_type,
     valid_event,
 )
-from .change_event import PHARMACY_STANDARD_EVENT
+
 
 FILE_PATH = "application.event_receiver.change_event_validation"
 
@@ -78,15 +77,3 @@ def test_check_ods_code_length_incorrect_length(odscode):
     # Act & Assert
     with raises(ValidationException):
         check_ods_code_length(odscode)
-
-
-@fixture()
-def log_capture():
-    with LogCapture(names="lambda") as capture:
-        yield capture
-
-
-@fixture
-def change_event():
-    change_event = PHARMACY_STANDARD_EVENT.copy()
-    yield change_event

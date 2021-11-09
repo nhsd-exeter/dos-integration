@@ -1,3 +1,19 @@
+from testfixtures import LogCapture
+from pytest import fixture
+
+
+@fixture()
+def log_capture():
+    with LogCapture(names="lambda") as capture:
+        yield capture
+
+
+@fixture
+def change_event():
+    change_event = PHARMACY_STANDARD_EVENT.copy()
+    yield change_event
+
+
 # Please update when an official event is created
 PHARMACY_STANDARD_EVENT = {
     "body": {

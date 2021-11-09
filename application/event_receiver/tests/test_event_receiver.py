@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from change_event_validation import ValidationException
-from pytest import fixture, raises
-from testfixtures import LogCapture
+from pytest import raises
+
 
 from ..event_receiver import (
     FAILURE_STATUS_CODE,
@@ -17,7 +17,6 @@ from ..event_receiver import (
     lambda_handler,
     trigger_event_processor,
 )
-from .change_event import PHARMACY_STANDARD_EVENT
 
 FILE_PATH = "application.event_receiver.event_receiver"
 
@@ -94,10 +93,12 @@ def test_extract_event_invalid_event(log_capture):
 @pytest.mark.parametrize("is_mock_mode_value", [True])
 @patch(f"{FILE_PATH}.invoke_lambda_function")
 @patch(f"{FILE_PATH}.is_mock_mode")
-def test_trigger_event_processor_mock_mode(mock_is_mock_mode, mock_invoke_lambda_function, is_mock_mode_value):
+def test_trigger_event_processor_mock_mode(
+    mock_is_mock_mode, mock_invoke_lambda_function, is_mock_mode_value, change_event
+):
     # Arrange
     mock_is_mock_mode.return_value = is_mock_mode_value
-    change_event = PHARMACY_STANDARD_EVENT["body"]
+    change_event = change_event["body"]
     # Act
     trigger_event_processor(change_event)
     # Assert
@@ -107,25 +108,15 @@ def test_trigger_event_processor_mock_mode(mock_is_mock_mode, mock_invoke_lambda
 @pytest.mark.parametrize("is_mock_mode_value", [False, "any", None, "", 1])
 @patch(f"{FILE_PATH}.invoke_lambda_function")
 @patch(f"{FILE_PATH}.is_mock_mode")
-def test_trigger_event_processor_not_mock_mode(mock_is_mock_mode, mock_invoke_lambda_function, is_mock_mode_value):
+def test_trigger_event_processor_not_mock_mode(
+    mock_is_mock_mode, mock_invoke_lambda_function, is_mock_mode_value, change_event
+):
     # Arrange
     mock_is_mock_mode.return_value = is_mock_mode_value
     event_processor_name = "event_processor"
     environ["EVENT_PROCESSOR_NAME"] = event_processor_name
-    change_event = PHARMACY_STANDARD_EVENT["body"]
+    change_event = change_event["body"]
     # Act
     trigger_event_processor(change_event)
     # Assert
     mock_invoke_lambda_function.assert_called_once_with(event_processor_name, change_event)
-
-
-@fixture()
-def log_capture():
-    with LogCapture(names="lambda") as capture:
-        yield capture
-
-
-@fixture
-def change_event():
-    change_event = PHARMACY_STANDARD_EVENT.copy()
-    yield change_event
