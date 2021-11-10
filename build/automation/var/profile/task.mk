@@ -11,7 +11,7 @@ DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
-API_GATEWAY_API_KEY_NAME := $(PROJECT_ID)-dev-api-key
+API_GATEWAY_API_KEY_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
 NHS_UK_API_KEY_KEY := NHS_UK_API_KEY
 
 # API Gateway API Keys
