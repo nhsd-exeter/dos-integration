@@ -15,8 +15,8 @@ resource "aws_api_gateway_base_path_mapping" "uec-dos-integration_api_mapping" {
 
 resource "aws_route53_record" "uec-dos-integration_api_endpoint" {
   name    = "${var.dos_integration_sub_domain_name}.${var.terraform_networking_route53_zone_name}"
-  type    = "A"
-  zone_id = data.aws_route53_zone.k8s_route53_zone.zone_id
+  type    = "CNAME"
+  zone_id = data.terraform_remote_state.route53.outputs.dns_zone_id
   alias {
     name                   = aws_api_gateway_domain_name.api_gateway_domain_name.cloudfront_domain_name
     zone_id                = aws_api_gateway_domain_name.api_gateway_domain_name.cloudfront_zone_id

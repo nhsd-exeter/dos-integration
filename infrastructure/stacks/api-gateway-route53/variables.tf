@@ -38,6 +38,19 @@ variable "vpc_terraform_state_key" {
   description = ""
 }
 
+# ############################
+# # Common
+# ############################
+
+variable "route53_terraform_state_key" {
+  description = ""
+}
+variable "team_id" {
+  description = ""
+}
+variable "programme" {
+  description = ""
+}
 
 # ############################
 # # ROUTE53
