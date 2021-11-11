@@ -36,10 +36,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         trigger_event_processor(change_event)
         logger.info(f"{SUCCESS_STATUS_CODE}|{SUCCESS_STATUS_RESPONSE}")
         return set_return_value(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
-    except ValidationException as exception: # Expected Error (self made)
+    except ValidationException as exception:  # Expected Error (self made)
         logger.warning(f"{FAILURE_STATUS_CODE}|{str(exception)}")
         return set_return_value(FAILURE_STATUS_CODE, str(exception))
-    except Exception as exception: # Unexpected Error
+    except Exception as exception:  # Unexpected Error
         logger.critical(f"Expection Occurred: {str(exception)}")
         logger.error(f"{UNEXPECTED_SERVER_ERROR_STATUS_CODE}|{UNEXPECTED_SERVER_ERROR_RESPONSE}")
         return set_return_value(UNEXPECTED_SERVER_ERROR_STATUS_CODE, UNEXPECTED_SERVER_ERROR_RESPONSE)
@@ -65,7 +65,11 @@ def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def trigger_event_processor(change_event: Dict[str, Any]) -> None:
-    """Triggers the event processor lambda function"""
+    """Triggers the event processor lambda function
+
+    Args:
+        change_event (Dict[str, Any]): Change event to be sent to event processor
+    """
     if is_mock_mode() is True:
         logger.info("Mocking mode is set to mock")
     else:

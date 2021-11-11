@@ -29,7 +29,7 @@ def get_environment_variable(environment_key: str) -> str:
         KeyError: If environment variable not set
 
     Returns:
-        str: [description]
+        str: environment variable value
     """
     try:
         return environ[environment_key]
@@ -51,10 +51,11 @@ def is_mock_mode() -> bool:
 
 
 def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> None:
-    """[summary]
+    """Invokes a lambda function with specified event
 
     Args:
-        lambda_name (str): [description]
+        lambda_name (str): Name of lambda to invoke
+        lambda_event (Dict[str, Any]): Event to pass to lambda
     """
     logger.info(f"Invoking {lambda_name}")
     lambda_client = client("lambda")
