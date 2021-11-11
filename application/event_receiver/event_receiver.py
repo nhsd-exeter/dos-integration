@@ -7,7 +7,7 @@ from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_event_exceptions import ValidationException
 from change_event_responses import set_return_value
-from change_event_validation import valid_event
+from change_event_validation import validate_event
 from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
 
@@ -16,8 +16,9 @@ logger = getLogger("lambda")
 
 SUCCESS_STATUS_CODE = 200
 FAILURE_STATUS_CODE = 400
+UNEXPECTED_SERVER_ERROR_STATUS_CODE = 500
 SUCCESS_STATUS_RESPONSE = "Change Event Accepted"
-GENERIC_FAILURE_STATUS_RESPONSE = "Event malformed, validation failed"
+UNEXPECTED_SERVER_ERROR_RESPONSE = "Unexpected server error"
 
 
 @tracer.capture_lambda_handler()
@@ -31,17 +32,17 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     """
     try:
         change_event = extract_event(event)
-        if valid_event(change_event) is True:
-            trigger_event_processor(change_event)
-        else:
-            raise ValidationException(GENERIC_FAILURE_STATUS_RESPONSE)
-
+        validate_event(change_event)
+        trigger_event_processor(change_event)
         logger.info(f"{SUCCESS_STATUS_CODE}|{SUCCESS_STATUS_RESPONSE}")
         return set_return_value(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
-
-    except Exception as exception:
-        logger.error(f"{FAILURE_STATUS_CODE}|{str(exception)}")
+    except ValidationException as exception: # Expected Error (self made)
+        logger.warning(f"{FAILURE_STATUS_CODE}|{str(exception)}")
         return set_return_value(FAILURE_STATUS_CODE, str(exception))
+    except Exception as exception: # Unexpected Error
+        logger.critical(f"Expection Occurred: {str(exception)}")
+        logger.error(f"{UNEXPECTED_SERVER_ERROR_STATUS_CODE}|{UNEXPECTED_SERVER_ERROR_RESPONSE}")
+        return set_return_value(UNEXPECTED_SERVER_ERROR_STATUS_CODE, UNEXPECTED_SERVER_ERROR_RESPONSE)
 
 
 def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -58,8 +59,8 @@ def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
     try:
         change_event = loads(event["body"])
     except KeyError:
-        logger.exception("Change Event failed transformations")
-        raise ValidationException("Change Event incorrect format")
+        logger.exception("Change Event unable to be extracted")
+        raise
     return change_event
 
 

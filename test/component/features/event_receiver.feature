@@ -6,11 +6,11 @@ Feature: Event Reciever
     Then the response has status code "200" with message "Change Event Accepted"
     And the response is logged with status code "200" and message "Change Event Accepted"
 
-  Scenario: An invalid change event sent to event receiver
+  Scenario: An invalid change event sent to event receiver (change event doesn't represent event send by API Gateway)
     Given an invalid change event with incorrectly formatted event
     When a change event is sent to the event receiver
-    Then the response has status code "400" with error message "Change Event incorrect format"
-    And the response is logged with status code "400" and message "Change Event incorrect format"
+    Then the response has status code "500" with error message "Unexpected server error"
+    And the response is logged with status code "500" and message "Unexpected server error"
 
   Scenario:
     Given an invalid change event with incorrect service type
@@ -27,8 +27,8 @@ Feature: Event Reciever
   Scenario:
     Given an invalid change event with no ods code
     When a change event is sent to the event receiver
-    Then the response has status code "400" with error message "Event malformed, validation failed"
-    And the response is logged with status code "400" and message "Event malformed, validation failed"
+    Then the response has status code "400" with error message "Change Event malformed, validation failed"
+    And the response is logged with status code "400" and message "Change Event malformed, validation failed"
 
   Scenario:
     Given an invalid change event with incorrect length ods code
@@ -39,5 +39,5 @@ Feature: Event Reciever
   Scenario:
     Given an invalid change event with incorrect type ods code
     When a change event is sent to the event receiver
-    Then the response has status code "400" with error message "Event malformed, validation failed"
-    And the response is logged with status code "400" and message "Event malformed, validation failed"
+    Then the response has status code "400" with error message "Change Event malformed, validation failed"
+    And the response is logged with status code "400" and message "Change Event malformed, validation failed"

@@ -8,18 +8,16 @@ from ..change_event_validation import (
     check_ods_code_length,
     check_service_sub_type,
     check_service_type,
-    valid_event,
+    validate_event,
 )
 
 
 FILE_PATH = "application.event_receiver.change_event_validation"
 
 
-def test_valid_event(change_event):
-    # Act
-    response = valid_event(change_event["body"])
-    # Assert
-    assert response is True
+def test_validate_event(change_event):
+    # Act & Assert
+    validate_event(change_event["body"])
 
 
 @patch(f"{FILE_PATH}.check_service_sub_type")
@@ -31,13 +29,13 @@ def test_validate_event_missing_key(
     # Arrange
     del change_event["body"]["ODSCode"]
     # Act
-    response = valid_event(change_event["body"])
+    with raises(ValidationException):
+        validate_event(change_event["body"])
     # Assert
     mock_check_ods_code_length.assert_not_called()
     mock_check_service_type.assert_not_called()
     mock_check_service_sub_type.assert_not_called()
     assert "Input schema validation error|" in log_capture[0][2]
-    assert response is False
 
 
 @pytest.mark.parametrize("service_type", ["PHA"])
