@@ -48,6 +48,9 @@ services:
         target: /tmp
     ports:
       - 9000:8080
+    depends_on:
+      mock-dos:
+        condition: service_healthy
 
   event-sender:
     image: $DOCKER_REGISTRY/event-sender:latest
@@ -81,6 +84,11 @@ services:
         target: /docker-entrypoint-initdb.d
     ports:
       - 5432:5432
+    healthcheck:
+      test: POSTGRES_PASSWORD=postgres psql -h localhost -p 5432 -d postgres -U postgres -c "SELECT id from services" || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 100
 
   mockserver:
     image: jamesdbloom/mockserver:latest
