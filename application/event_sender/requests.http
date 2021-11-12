@@ -1,7 +1,8 @@
 ###
 # Pass
 POST http://localhost:9002/2015-03-31/functions/function/invocations HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Accept: application/json
 
 {
     "reference":"1",
@@ -16,6 +17,7 @@ content-type: application/json
 ###
 # Fail
 POST http://localhost:9002/2015-03-31/functions/function/invocations HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Accept: application/jsonv
 
 {}

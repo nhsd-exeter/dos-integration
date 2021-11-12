@@ -1,5 +1,6 @@
 aws-lambda-context
 behave
+boto3
 coverage
 mutmut
 pytest

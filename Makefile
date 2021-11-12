@@ -67,12 +67,14 @@ unit-test: # Runs whole project unit tests
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
 component-test: # Runs whole project component tests
@@ -81,7 +83,8 @@ component-test: # Runs whole project component tests
 	DIR=test/component \
 	ARGS=" \
 		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL)\
+		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
+		-e EVENT_RECEIVER_FUNCTION_URL=$(EVENT_RECEIVER_FUNCTION_URL) \
 		"
 
 clean: # Runs whole project clean

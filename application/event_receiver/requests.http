@@ -1,6 +1,99 @@
 ###
-# Pass
+# Pass - Valid Change Event
+# NOTE: All date is fake and should not be used as a real change event.
 POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
-content-type: application/json
+Content-Type: application/json
+Accept: application/json
 
-{}
+{
+  "body": "{\n    \"SearchKey\": \"ANEI1245\",\n    \"ODSCode\": \"FX111\",\n    \"OrganisationName\": \"My Test Pharmacy\",\n    \"OrganisationTypeId\": \"PH1\",\n    \"OrganisationType\": \"Pharmacy\",\n    \"OrganisationStatus\": \"Visible\",\n    \"ServiceType\": \"PHA\",\n    \"ServiceSubType\": \"COMPH\",\n    \"SummaryText\": \"\",\n    \"URL\": \"https:\/\/my-pharmacy.com\/\",\n    \"Address1\": \"85 Peachfield Road\",\n    \"Address2\": null,\n    \"Address3\": null,\n    \"City\": \"CHAPEL ROW\",\n    \"County\": \"South Godshire\",\n    \"Latitude\": 53.38030624389648,\n    \"Longitude\": -1.4826949834823608,\n    \"Postcode\": \"RG7 1DB\",\n    \"Phone\": \"123456789\",\n    \"Email\": \"health.my-pharmacy@nhs.net\",\n    \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n    \"OrganisationSubType\": null,\n    \"OrganisationAliases\": []\n  }"
+}
+
+
+###
+# Fail - Incorrect event format (no body)
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "SearchKey": "ANEI1245",
+  "ODSCode": "FX111",
+  "OrganisationName": "My Test Pharmacy",
+  "OrganisationTypeId": "PH1",
+  "OrganisationType": "Pharmacy",
+  "OrganisationStatus": "Visible",
+  "ServiceType": "PHA",
+  "ServiceSubType": "COMPH",
+  "SummaryText": "",
+  "URL": "https://my-pharmacy.com/",
+  "Address1": "85 Peachfield Road",
+  "Address2": null,
+  "Address3": null,
+  "City": "CHAPEL ROW",
+  "County": "South Godshire",
+  "Latitude": 53.38030624389648,
+  "Longitude": -1.4826949834823608,
+  "Postcode": "RG7 1DB",
+  "Phone": "123456789",
+  "Email": "health.my-pharmacy@nhs.net",
+  "Website": "https://my-pharmacy.com/health-service",
+  "OrganisationSubType": null,
+  "OrganisationAliases": []
+}
+
+###
+# Fail - missing service type
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "body": "{\n  \"SearchKey\": \"ANEI1245\",\n  \"ODSCode\": \"FX111\",\n  \"OrganisationName\": \"My Test Pharmacy\",\n  \"OrganisationTypeId\": \"PH1\",\n  \"OrganisationType\": \"Pharmacy\",\n  \"OrganisationStatus\": \"Visible\",\n  \"ServiceSubType\": \"COMPH\",\n  \"SummaryText\": \"\",\n  \"URL\": \"https:\/\/my-pharmacy.com\/\",\n  \"Address1\": \"85 Peachfield Road\",\n  \"Address2\": null,\n  \"Address3\": null,\n  \"City\": \"CHAPEL ROW\",\n  \"County\": \"South Godshire\",\n  \"Latitude\": 53.38030624389648,\n  \"Longitude\": -1.4826949834823608,\n  \"Postcode\": \"RG7 1DB\",\n  \"Phone\": \"123456789\",\n  \"Email\": \"health.my-pharmacy@nhs.net\",\n  \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n  \"OrganisationSubType\": null,\n  \"OrganisationAliases\": []\n}"
+}
+
+###
+# Fail - missing service sub type
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "body": "{\n  \"SearchKey\": \"ANEI1245\",\n  \"ODSCode\": \"FX111\",\n  \"OrganisationName\": \"My Test Pharmacy\",\n  \"OrganisationTypeId\": \"PH1\",\n  \"OrganisationType\": \"Pharmacy\",\n  \"OrganisationStatus\": \"Visible\",\n  \"ServiceType\": \"PHA\",\n  \"SummaryText\": \"\",\n  \"URL\": \"https:\/\/my-pharmacy.com\/\",\n  \"Address1\": \"85 Peachfield Road\",\n  \"Address2\": null,\n  \"Address3\": null,\n  \"City\": \"CHAPEL ROW\",\n  \"County\": \"South Godshire\",\n  \"Latitude\": 53.38030624389648,\n  \"Longitude\": -1.4826949834823608,\n  \"Postcode\": \"RG7 1DB\",\n  \"Phone\": \"123456789\",\n  \"Email\": \"health.my-pharmacy@nhs.net\",\n  \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n  \"OrganisationSubType\": null,\n  \"OrganisationAliases\": []\n}"
+}
+
+###
+# Fail - Incorrect service type
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "body": "{\n  \"SearchKey\": \"ANEI1245\",\n  \"ODSCode\": \"FX111\",\n  \"OrganisationName\": \"My Test Pharmacy\",\n  \"OrganisationTypeId\": \"PH1\",\n  \"OrganisationType\": \"Pharmacy\",\n  \"OrganisationStatus\": \"Visible\",\n  \"ServiceType\": \"TEST\",\n  \"ServiceSubType\": \"COMPH\",\n  \"SummaryText\": \"\",\n  \"URL\": \"https:\/\/my-pharmacy.com\/\",\n  \"Address1\": \"85 Peachfield Road\",\n  \"Address2\": null,\n  \"Address3\": null,\n  \"City\": \"CHAPEL ROW\",\n  \"County\": \"South Godshire\",\n  \"Latitude\": 53.38030624389648,\n  \"Longitude\": -1.4826949834823608,\n  \"Postcode\": \"RG7 1DB\",\n  \"Phone\": \"123456789\",\n  \"Email\": \"health.my-pharmacy@nhs.net\",\n  \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n  \"OrganisationSubType\": null,\n  \"OrganisationAliases\": []\n}"
+}
+
+###
+# Fail - Incorrect service sub type
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "body": "{\n  \"SearchKey\": \"ANEI1245\",\n  \"ODSCode\": \"FX111\",\n  \"OrganisationName\": \"My Test Pharmacy\",\n  \"OrganisationTypeId\": \"PH1\",\n  \"OrganisationType\": \"Pharmacy\",\n  \"OrganisationStatus\": \"Visible\",\n  \"ServiceType\": \"PHA\",\n  \"ServiceSubType\": \"TEST\",\n  \"SummaryText\": \"\",\n  \"URL\": \"https:\/\/my-pharmacy.com\/\",\n  \"Address1\": \"85 Peachfield Road\",\n  \"Address2\": null,\n  \"Address3\": null,\n  \"City\": \"CHAPEL ROW\",\n  \"County\": \"South Godshire\",\n  \"Latitude\": 53.38030624389648,\n  \"Longitude\": -1.4826949834823608,\n  \"Postcode\": \"RG7 1DB\",\n  \"Phone\": \"123456789\",\n  \"Email\": \"health.my-pharmacy@nhs.net\",\n  \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n  \"OrganisationSubType\": null,\n  \"OrganisationAliases\": []\n}"
+}
+
+###
+# Fail - Incorrect odscode
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9000/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "body": "{\n  \"SearchKey\": \"ANEI1245\",\n  \"ODSCode\": \"FX1111\",\n  \"OrganisationName\": \"My Test Pharmacy\",\n  \"OrganisationTypeId\": \"PH1\",\n  \"OrganisationType\": \"Pharmacy\",\n  \"OrganisationStatus\": \"Visible\",\n  \"ServiceType\": \"PHA\",\n  \"ServiceSubType\": \"COMPH\",\n  \"SummaryText\": \"\",\n  \"URL\": \"https:\/\/my-pharmacy.com\/\",\n  \"Address1\": \"85 Peachfield Road\",\n  \"Address2\": null,\n  \"Address3\": null,\n  \"City\": \"CHAPEL ROW\",\n  \"County\": \"South Godshire\",\n  \"Latitude\": 53.38030624389648,\n  \"Longitude\": -1.4826949834823608,\n  \"Postcode\": \"RG7 1DB\",\n  \"Phone\": \"123456789\",\n  \"Email\": \"health.my-pharmacy@nhs.net\",\n  \"Website\": \"https:\/\/my-pharmacy.com\/health-service\",\n  \"OrganisationSubType\": null,\n  \"OrganisationAliases\": []\n}"
+}

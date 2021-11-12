@@ -1,43 +1,46 @@
 from logging import getLogger
 from os import environ
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+from pytest import raises
 
 from requests.auth import HTTPBasicAuth
 from responses import POST, activate, add
 
 from ..change_request import ChangeRequest
 
+FILE_PATH = "application.event_sender.change_request"
+
 
 class TestChangeRequest:
-    change_request_event = {
+    CHANGE_REQUEST_EVENT = {
         "reference": "1",
         "system": "Profile Updater (test)",
         "message": "Test message 1531816592293|@./",
         "service_id": "49016",
         "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
     }
+    WEBSITE = "https://test.com"
+    TIMEOUT = "10"
+    USERNAME = "username"
+    PASSWORD = "password"
 
     def test__init__(self):
         # Arrange
         environ["PROFILE"] = "remote"
-        expected_change_request_url = "https://test.com"
-        environ["DOS_API_GATEWAY_URL"] = expected_change_request_url
-        expected_timeout = "10"
-        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = expected_timeout
-        expected_username = "username"
-        environ["DOS_API_GATEWAY_USERNAME"] = expected_username
-        expected_password = "password"
-        environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
-        expected_auth = HTTPBasicAuth(expected_username, expected_password)
+        environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
+        environ["DOS_API_GATEWAY_USERNAME"] = self.USERNAME
+        environ["DOS_API_GATEWAY_PASSWORD"] = self.PASSWORD
+        expected_auth = HTTPBasicAuth(self.USERNAME, self.PASSWORD)
         # Act
-        change_request = ChangeRequest(self.change_request_event)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         # Assert
         assert change_request.logger == getLogger("lambda")
         assert change_request.headers == {"Content-Type": "application/json", "Accept": "application/json"}
-        assert change_request.change_request_url == expected_change_request_url
-        assert change_request.timeout == int(expected_timeout)
+        assert change_request.change_request_url == self.WEBSITE
+        assert change_request.timeout == int(self.TIMEOUT)
         assert change_request.authorisation == expected_auth
-        assert change_request.change_request_body == self.change_request_event
+        assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
@@ -49,18 +52,14 @@ class TestChangeRequest:
     def test_post_change_request(self):
         # Arrange
         environ["PROFILE"] = "remote"
-        expected_change_request_url = "https://test.com"
-        environ["DOS_API_GATEWAY_URL"] = expected_change_request_url
-        expected_timeout = "10"
-        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = expected_timeout
-        expected_username = "username"
-        environ["DOS_API_GATEWAY_USERNAME"] = expected_username
-        expected_password = "password"
-        environ["DOS_API_GATEWAY_PASSWORD"] = expected_password
-        change_request = ChangeRequest(self.change_request_event)
+        environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
+        environ["DOS_API_GATEWAY_USERNAME"] = self.USERNAME
+        environ["DOS_API_GATEWAY_PASSWORD"] = self.PASSWORD
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         expected_response_body = {"my-key": "my-val"}
         status_code = 200
-        add(POST, expected_change_request_url, json=expected_response_body, status=status_code)
+        add(POST, self.WEBSITE, json=expected_response_body, status=status_code)
         change_request.change_request_logger = MagicMock()
         # Act
         change_request.post_change_request()
@@ -69,6 +68,27 @@ class TestChangeRequest:
         change_request.change_request_logger.log_change_request_response.assert_called_once_with(
             change_request.response
         )
+        # Clean up
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME"]
+        del environ["DOS_API_GATEWAY_PASSWORD"]
+        del environ["PROFILE"]
+
+    @patch(f"{FILE_PATH}.post")
+    def test_post_change_request_exception(self, mock_post):
+        # Arrange
+        environ["PROFILE"] = "remote"
+        environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
+        environ["DOS_API_GATEWAY_USERNAME"] = self.USERNAME
+        environ["DOS_API_GATEWAY_PASSWORD"] = self.PASSWORD
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request.change_request_logger = MagicMock()
+        mock_post.side_effect = Exception("Test exception")
+        # Act & Assert
+        with raises(Exception):
+            change_request.post_change_request()
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]

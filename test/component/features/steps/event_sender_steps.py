@@ -17,7 +17,7 @@ def a_valid_change_request_endpoint(context):
 
 
 @when('a "{change_request_status}" change request is sent to the event sender')
-def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_status):
+def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_status: str):
     """Sends change event to Event Sender lambda"""
     lambda_url = getenv("EVENT_SENDER_FUNCTION_URL")
     change_request_file_name = get_change_request_name(change_request_status)
@@ -26,10 +26,9 @@ def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_s
     assert response.status_code == 200
 
 
-@then('a change request is received "{number_of_times}" times')
-def a_change_request_is_received_x_times(context, number_of_times):
+@then('a change request is received "{number_of_times:d}" times')
+def a_change_request_is_received_x_times(context, number_of_times: int):
     """Confirms number of times a change request has been received"""
-    number_of_times = int(number_of_times)
     mockserver = MockServer()
     mockserver.put(
         "/mockserver/verify",
@@ -44,29 +43,42 @@ def a_change_request_is_received_x_times(context, number_of_times):
     mockserver.assert_status_code(202)
 
 
-@then('the change request has status code "{status_code}"')
-def the_change_request_has_status_code_x(context, status_code):
+@then('the change request has status code "{expected_status_code:d}"')
+def the_change_request_has_status_code_x(context, expected_status_code: int):
     """Checks status code from mock server is as expected"""
-    status_code = int(status_code)
     mockserver = MockServer()
     mockserver.put("/retrieve?format=json&type=request_responses", body={})
     mockserver.assert_status_code(200)
     requests = mockserver.response.json()
-    assert requests[0]["httpResponse"]["statusCode"] == status_code
+    actual_status_code = requests[0]["httpResponse"]["statusCode"]
+    assert (
+        expected_status_code == actual_status_code
+    ), f"Status code not as expected, Expected: {expected_status_code}, Actual {actual_status_code}"
 
 
-@then('the response "{response_status}" is logged and has status code "{status_code}"')
-def the_response_is_logged(context, response_status, status_code):
-    """Checks if expected criteria is stored in the log files"""
+@then('the successful response is logged with status code "{expected_status_code:d}"')
+def the_successful_response_is_logged(context, expected_status_code: int):
+    """Checks if expected criteria is stored in the log file"""
+    response_status = "Success"
     change_request_file_name = get_change_request_name(response_status)
     change_request = load_json_file(change_request_file_name)
     log_file = read_log_file()
-    if response_status == "Success":
-        assert (
-            f"CHANGE_REQUEST|{response_status}|{status_code}|"
-            + '{"dosChanges": [{"changeId": "Change_ID_1_here"},{"changeId": "Change_ID_2_here"}]}'
-            in log_file
-        ), "Log Format not found"
-    elif response_status == "Failure":
-        assert "CHANGE_REQUEST|404|", "Log Format not found"
-    assert str(change_request) in log_file
+    assert str(change_request) in log_file, "Change Request body not logged as expected"
+    assert (
+        f"CHANGE_REQUEST|{response_status}|{expected_status_code}|"
+        + '{"dosChanges": [{"changeId": "Change_ID_1_here"},{"changeId": "Change_ID_2_here"}]}'
+        in log_file
+    ), "DoS API Gateway response not found in log file"
+
+
+@then('the failure response is logged with status code "{expected_status_code:d}"')
+def the_failure_response_is_logged(context, expected_status_code: int):
+    """Checks if expected criteria is stored in the log file"""
+    response_status = "Failure"
+    change_request_file_name = get_change_request_name(response_status)
+    change_request = load_json_file(change_request_file_name)
+    log_file = read_log_file()
+    assert str(change_request) in log_file, "Change Request body not logged as expected"
+    assert (
+        f"CHANGE_REQUEST|{response_status}|{expected_status_code}|" in log_file
+    ), "Change Request error not found in log file"

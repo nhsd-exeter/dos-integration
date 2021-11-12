@@ -25,6 +25,12 @@ provider:
       - name: ${env:ENVIRONMENT}-${env:NHS_UK_API_KEY_KEY}
         value: ${self:custom.secret.${env:NHS_UK_API_KEY_KEY}}
   endpointType: regional
+  logs:
+    restApi:
+      accessLogging: true
+      executionLogging: true
+      level: INFO
+      fullExecutionData: true
   tracing:
     apiGateway: true
     lambda: true
@@ -76,6 +82,7 @@ functions:
       POWERTOOLS_TRACER_CAPTURE_ERROR: true
       POWERTOOLS_TRACE_MIDDLEWARES: true
       LOG_LEVEL: ${env:LOG_LEVEL}
+      MOCK_MODE: true
     events:
       - http:
           path: /dos-integration/api/v1/nhsuk-event-receiver/{type}
