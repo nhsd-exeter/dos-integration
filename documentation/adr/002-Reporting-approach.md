@@ -66,6 +66,6 @@ Cons:
 
 ## Decision
 
-**The decision was made to go with option 1** using Splunk as our reporting platform with all its features. As it would effect delivery time least, allow most people with the ability to create and share adhoc reports.
+**The decision was made to go with option 1** using Splunk as our reporting platform with all its features. As it would effect delivery time least, allow most people to get permissions to create and share adhoc reports.
 
 However we are going for a fast fail approach where if Splunk as our reporting platform can't do what we required or we can't get permissions we will switch to using option 2.
