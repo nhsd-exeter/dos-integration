@@ -31,11 +31,15 @@ class EventProcessor:
 
     def __init__(self, nhs_entity):
         self.nhs_entity = nhs_entity
+
+        # Set these values to None to show they are yet to be calculated
         self.matching_services = None
         self.change_requests = None
 
 
     def get_matching_services(self):
+        """ Using the nhs entity attributed to this object, it finds the
+            matching DoS services from the db and filters the results"""
 
         # Check database for services with same first 5 digits of ODSCode
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
@@ -58,13 +62,18 @@ class EventProcessor:
 
 
     def get_change_requests(self):
-        assert self.matching_services is not None
+        """ Generates change requests needed for the found services to 
+            make them inline with the NHS Entity
+            """
 
-        # Generate change request for each service (if needed)
+        assert (self.matching_services is not None, 
+               "Matching services not yet calculated")  
+
+
         change_requests = []
         for service in self.matching_services:
 
-            # Find changes, skip if none found
+            # Find changes, don't make a change req if none found
             changes = service.get_changes(self.nhs_entity)
             if len(changes) == 0:
                 continue
@@ -73,7 +82,7 @@ class EventProcessor:
             trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
             cr = {"reference": trace_id,
                   "system": "DoS Integration",
-                  "message": f"AWS Lambda trace id: {trace_id}",
+                  "message": f"DoS Integration CR. AMZN-trace-id: {trace_id}",
                   "service_id": service.id,
                   "changes": changes}
 
@@ -108,6 +117,26 @@ class EventProcessor:
 
 @tracer.capture_lambda_handler()
 def lambda_handler(event, context):
+    """ 
+
+    event: The event payload should contain a "entity" field which 
+           contains the fields for the NHS Entity (Pharmacy)
+
+           example
+           {"send_changes: False,
+            "entity": {"odscode": "FA0021"
+                       "publicphone": "893233284932",
+                       "etc": "some data"
+                       "another field": "more data"}}
+            etc etc...
+
+            Some code may need to be changed if the exact
+            input format is changed.
+
+            Another optional field 'send_changes' will decide if the
+            change requests generated will be sent at the end.  (def: False)
+
+    """
 
     # Check all required env vars are present
     for env_var in expected_env_vars:
@@ -117,15 +146,13 @@ def lambda_handler(event, context):
             return {"statusCode": 400, "error": err_msg}
 
 
-    # It's assumed currently that a pharmacy (NHS Entity) will
-    # be passed in through the event. The start here may need 
-    # to be edited slightly depending on its exact form of the 
-    # payload
+    # Create NHS Entity object (the pharmacy)
     nhs_entity = NHSEntity(event["entity"])
     log.info(f"Begun event processor function for NHS Entity\n"
              f"{json.dumps(nhs_entity.__dict__, indent=2, default=str)}")
 
 
+    # Create processor using our NHS Entity
     event_processor = EventProcessor(nhs_entity)
     matching_services = event_processor.get_matching_services()
 
@@ -136,10 +163,11 @@ def lambda_handler(event, context):
         log.error(err_msg)
         return {"statusCode": 400, "error": err_msg}
 
-    
+    # Generate the change requests (if any are needed)
     change_requests = event_processor.get_change_requests()
 
 
+    # Either send off the change requests or not depending on option 
     if event.get("send_changes", False) is True:
         event_processor.send_changes()
     else:
@@ -147,6 +175,8 @@ def lambda_handler(event, context):
                  f"Change requests will not be sent")
     
 
+    # Return the matching services found, as well as the change requests
+    # in json format
     return {
         "statusCode": 200, 
         "body": {
