@@ -31,11 +31,11 @@ variable "texas_s3_logs_bucket" {
 }
 
 variable "terraform_platform_state_store" {
-  description = ""
+  description = "platform state store"
 }
 
 variable "vpc_terraform_state_key" {
-  description = ""
+  description = "vpc state key"
 }
 
 # ############################
@@ -43,13 +43,16 @@ variable "vpc_terraform_state_key" {
 # ############################
 
 variable "route53_terraform_state_key" {
-  description = ""
+  description = "terraform state key"
 }
 variable "team_id" {
-  description = ""
+  description = "team id"
 }
 variable "programme" {
-  description = ""
+  description = "programme"
+}
+variable "environment" {
+    description = "environment"
 }
 
 # ############################
@@ -60,5 +63,8 @@ variable "programme" {
 variable "dos_integration_sub_domain_name" {
   type        = string
   description = "sub domain name"
+}
+variable "texas_hosted_zone" {
+  description = "hosted zone"
 }
 

@@ -27,3 +27,5 @@ AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 
 TF_VAR_team_id = $(TEAM_ID)
 TF_VAR_programme = $(PROGRAMME)
+TF_VAR_texas_hosted_zone = $(TEXAS_HOSTED_ZONE)
+TF_VAR_environment = $(ENVIRONMENT)

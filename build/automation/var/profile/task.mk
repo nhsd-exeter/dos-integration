@@ -9,7 +9,6 @@ DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 MOCK_MODE := False
-
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 API_GATEWAY_API_KEY_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
@@ -23,4 +22,5 @@ TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
 
 # API Gateway Route53
-TF_VAR_dos_integration_sub_domain_name := $(PROJECT_ID)-$(ENVIRONMENT)
+TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
+DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)
