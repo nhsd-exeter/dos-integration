@@ -72,6 +72,21 @@ services:
     ports:
       - 9002:8080
 
+  event-processor:
+    image: $DOCKER_REGISTRY/event-processor:latest
+    container_name: event-processor
+    hostname: event-processor
+    environment:
+      LOG_LEVEL: DEBUG
+      POWERTOOLS_SERVICE_NAME: $TEAM_ID
+      PROFILE: $PROFILE
+    volumes:
+      - type: bind
+        source: $TMP_DIR
+        target: /tmp
+    ports:
+      - 9001:8080
+
   mock-dos:
     image: postgres:latest
     hostname: mock-dos

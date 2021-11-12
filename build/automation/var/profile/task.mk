@@ -9,6 +9,13 @@ DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 MOCK_MODE := False
+
+DB_SERVER := http://uec-dos-int-di-161.dos-db.k8s-nonprod.texasplatform.uk/
+DB_PORT := 5432
+DB_NAME := postgres
+DB_USER_NAME := dbuser
+DB_SECRET_NAME := uec-dos-int-di-161-db-master-password
+
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 API_GATEWAY_API_KEY_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-api-key

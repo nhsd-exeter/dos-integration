@@ -13,6 +13,7 @@ setup: project-config # Set up project
 build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-processor-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -59,7 +60,7 @@ populate-deployment-variables:
 
 python-requirements: # Installs whole project python requirements
 	make docker-run-tools \
-		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt" \
+		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt -r event_processor/requirements.txt" \
 		DIR=./application
 
 unit-test: # Runs whole project unit tests
@@ -69,6 +70,7 @@ unit-test: # Runs whole project unit tests
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
@@ -76,6 +78,7 @@ coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
@@ -94,7 +97,8 @@ clean: # Runs whole project clean
 		terraform-clean \
 		python-clean \
 		event-sender-clean \
-		event-receiver-clean
+		event-receiver-clean \
+		event-processor-clean
 
 # ==============================================================================
 # Other
@@ -213,6 +217,32 @@ event-receiver-clean: ### Clean event receiver lambda docker image directory
 event-receiver-run: ### A rebuild and restart of the event receiver lambda.
 	make stop
 	make event-receiver-build
+	make start
+
+# ==============================================================================
+# Event Processor
+
+event-processor-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=event_processor
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/event-processor/assets/requirements.txt
+	cd $(APPLICATION_DIR)/event_processor
+	tar -czf $(DOCKER_DIR)/event-processor/assets/event-processor-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make event-processor-clean
+	export VERSION=$$(make docker-image-get-version NAME=event-processor)
+
+event-processor-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
+	make common-code-remove LAMBDA_DIR=event_processor
+
+event-processor-run: ### A rebuild and restart of the event processor lambda.
+	make stop
+	make event-processor-build
 	make start
 
 # -----------------------------
