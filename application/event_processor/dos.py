@@ -19,7 +19,7 @@ valid_status_id = 1
 class DoSService():
 
     # These values are which columns are selected from the database and then
-    # are passed in as attrributes into the DoSService object.
+    # are passed in as attributes into the DoSService object.
     #
     # example: Put 'postcode' in this list and you can use service.postcode in
     # the object
@@ -72,8 +72,9 @@ class DoSService():
 
 
     def get_changes(self, nhs_entity) -> dict:
-        """Given an NHS Entity as the standard for the data, returns
-           the changes needed to bring the service inline"""
+        """ Returns a dict of the changes that are required to get
+            the service inline with the given nhs_entity
+            """
 
         changes = {}
 
@@ -81,14 +82,14 @@ class DoSService():
         if self.web != nhs_entity.website:
             changes["website"] = nhs_entity.website
 
-
-        # TODO: Add in checks for the rest of the possible changes
+        # TODO in future tickets: Add in checks for the rest of the
+        # possible changes
 
         return changes
 
 
 def dummy_dos_service():
-    """ Creates a DoSService Object with random data for testing"""
+    """ Creates a DoSService Object with random data for the unit testing"""
     test_data = []
     for col in DoSService.db_columns:
         random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
