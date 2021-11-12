@@ -112,6 +112,29 @@ functions:
       DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
+  event-processor:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-event-processor
+    description: ${sls:stage} Event Processor lambda
+    memorySize: 256
+    timeout: 60
+    tags:
+      PYTHON_VERSION: ${env:PYTHON_VERSION}
+    environment:
+      PROFILE: ${env:PROFILE}
+      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
+      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+      POWERTOOLS_TRACER_CAPTURE_ERROR: true
+      POWERTOOLS_TRACE_MIDDLEWARES: true
+      LOG_LEVEL: ${env:LOG_LEVEL}
+      DB_SERVER: ${env:DB_SERVER}
+      DB_PORT: ${env:DB_PORT}
+      DB_NAME: ${env:DB_NAME}
+      DB_USER_NAME: ${env:DB_USER_NAME}
+      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
+      
 
 #resources:
 #  Outputs:
