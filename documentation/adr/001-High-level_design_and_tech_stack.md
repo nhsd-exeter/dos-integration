@@ -1,6 +1,6 @@
 # ADR-001: High-level design and tech stack
 
-## Title
+## Overview
 
 Option selection report - Technology for centralized messaging broker
 
