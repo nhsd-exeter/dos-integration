@@ -10,6 +10,11 @@ CHANGE_REQUEST_ENDPOINT_TIMEOUT := 30
 LOG_LEVEL := DEBUG
 MOCK_MODE := True
 
+DB_SERVER := uec-dos-int-di-161.dos-db.k8s-nonprod.texasplatform.uk
+DB_PORT := 5432
+DB_NAME := postgres
+DB_USER_NAME := dbuser
+DB_SECRET_NAME := uec-dos-int-di-161-db-master-password
 # ==============================================================================
 # Component Test Variables
 
