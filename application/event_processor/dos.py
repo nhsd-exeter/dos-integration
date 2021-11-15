@@ -10,13 +10,13 @@ from nhs import NHSEntity
 
 log = getLogger("lambda")
 
-sec_manager = boto3.client("secretsmanager")
+sec_manager = boto3.client("secretsmanager", region_name="eu-west-2")
 
 valid_service_types = {13, 131, 132, 134, 137}
 valid_status_id = 1
 
 
-class DoSService():
+class DoSService:
 
     # These values are which columns are selected from the database and then
     # are passed in as attributes into the DoSService object.
@@ -42,8 +42,8 @@ class DoSService():
         "createdtime",
         "modifiedtime",
         "publicphone",
-        "publicname"
-        ]
+        "publicname",
+    ]
 
     def __init__(self, db_cursor_row):
 
@@ -51,7 +51,6 @@ class DoSService():
         for i, attribute_name in enumerate(self.db_columns):
             attrbute_value = db_cursor_row[i]
             setattr(self, attribute_name, attrbute_value)
-
 
     def __repr__(self):
         if self.publicname is not None:
@@ -61,26 +60,22 @@ class DoSService():
         else:
             name = "NO-VALID-NAME"
 
-        return (f"<uid={self.uid} ods={self.odscode} type={self.typeid} "
-                f"status={self.statusid} name='{name}'>")
-
-
+        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} " f"status={self.statusid} name='{name}'>"
 
     def ods5(self):
         """First 5 digits of odscode"""
         return self.odscode[0:5]
 
-
     def get_changes(self, nhs_entity) -> dict:
-        """ Returns a dict of the changes that are required to get
-            the service inline with the given nhs_entity
-            """
+        """Returns a dict of the changes that are required to get
+        the service inline with the given nhs_entity
+        """
 
         changes = {}
 
         # WEBSITE
-        if self.web != nhs_entity.website:
-            changes["website"] = nhs_entity.website
+        if self.web != nhs_entity.Website:
+            changes["Website"] = nhs_entity.Website
 
         # TODO in future tickets: Add in checks for the rest of the
         # possible changes
@@ -89,7 +84,7 @@ class DoSService():
 
 
 def dummy_dos_service():
-    """ Creates a DoSService Object with random data for the unit testing"""
+    """Creates a DoSService Object with random data for the unit testing"""
     test_data = []
     for col in DoSService.db_columns:
         random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
@@ -98,17 +93,16 @@ def dummy_dos_service():
 
 
 def get_matching_dos_services(odscode):
-    """llRetreives DoS Services from DoS database
+    """Retrieves DoS Services from DoS database
 
-       input:  ODSCode
+    input:  ODSCode
 
-       output: List of DoSService objects with matching first 5 digits
+    output: List of DoSService objects with matching first 5 digits
 
-               of ODSCode, taken from DoS database
-       """
+            of ODSCode, taken from DoS database
+    """
 
-    log.info(f"Searching for DoS services with ODSCode that matches first "
-             f" 5 digits of '{odscode}'")
+    log.info(f"Searching for DoS services with ODSCode that matches first " f" 5 digits of '{odscode}'")
 
     # Check size of ODSCode, fail if shorter than 5, warn if longer
     if len(odscode) < 5:
@@ -117,7 +111,7 @@ def get_matching_dos_services(odscode):
         log.warn(f"ODSCode '{odscode}' is longer than exptected 5 characters")
 
     # Get DB details from env variables
-    server =  environ["DB_SERVER"]
+    server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
     db_name = environ["DB_NAME"]
     db_user = environ["DB_USER_NAME"]
@@ -129,16 +123,14 @@ def get_matching_dos_services(odscode):
 
     # Connect to Database
     log.info(f"Attempting connection to database '{server}'")
-    db = psycopg2.connect(host=server,port=port, dbname=db_name, 
-                          user=db_user, password=password)
+    db = psycopg2.connect(host=server, port=port, dbname=db_name, user=db_user, password=password)
 
     # Create and run SQL Command with inputted odscode SELECTING columns
     # defined at top of file and using the 'LIKE' command to match first
     # 5 digits of ODSCode
-    sql_command = (f"SELECT {', '.join(DoSService.db_columns)} "
-
-                   f"FROM services "
-                   f"WHERE odscode LIKE '{odscode[0:5]}%'")
+    sql_command = (
+        f"SELECT {', '.join(DoSService.db_columns)} " f"FROM services " f"WHERE odscode LIKE '{odscode[0:5]}%'"
+    )
     log.info(f"Created SQL command to run: {sql_command}")
     c = db.cursor()
     c.execute(sql_command)

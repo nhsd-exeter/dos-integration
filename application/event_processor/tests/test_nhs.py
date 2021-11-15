@@ -2,13 +2,8 @@ import random
 
 from nhs import *
 
-test_attr_names = (
-    "odscode",
-    "website",
-    "publicphone",
-    "phone",
-    "postcode"
-)
+test_attr_names = ("odscode", "website", "publicphone", "phone", "postcode")
+
 
 def test__init__():
 
@@ -24,7 +19,7 @@ def test__init__():
     # Check all attributes have been assigned in new object
     for attr_name, value in test_data.items():
         assert getattr(nhs_entity, attr_name) == test_data[attr_name]
-    
+
 
 def test_ods5():
 

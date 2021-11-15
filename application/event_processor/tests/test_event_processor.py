@@ -61,14 +61,13 @@ def test_get_change_requests():
     service_1.web = "differentwebsite.com"
     change_requests = ep.get_change_requests()
 
-    # validate change request 
+    # validate change request
     assert len(change_requests) == 1
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:
         assert field in cr
     assert cr["system"] == "DoS Integration"
     assert cr["changes"] == {"website": nhs_entity.website}
-
 
     # Change website in service 2 and get changes again
     service_2.web = "differentwebsite2.com"
@@ -83,7 +82,6 @@ def test_get_change_requests():
         assert cr["changes"] == {"website": nhs_entity.website}
 
 
-
 def test_get_matching_services():
     # Create entity
     nhs_entity = NHSEntity({})
@@ -96,7 +94,6 @@ def test_get_matching_services():
     ep = EventProcessor(nhs_entity)
 
 
-
 def test_lamda_handler():
 
     # Fake test input should yield no results in db
@@ -105,13 +102,10 @@ def test_lamda_handler():
         "website": "www.pharmacywebsite.com",
         "publicname": "Cool Pharmacy 4 U",
         "phone": "441462622788",
-        }
+    }
 
     # Create test payload for lambda
-    event = {
-        "entity": dummy_entity_data,
-        "send_changes": False
-        }
+    event = {"entity": dummy_entity_data, "send_changes": False}
 
     # Run lambda and check ouput
     result = lambda_handler(event, None)
