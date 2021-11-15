@@ -15,7 +15,7 @@ The dos integration project needs a reporting solution to inform DoS Leads and o
 High level requirements:
 
 * The ability to create reports
-* Reports can be send via email to pre-decided list of email addresses
+* Reports can be sent via email to pre-decided list of email addresses
 * When reports are generated a notification is sent and received in Slack
 * Multiple people in the team can create/edit reports (Not limited to point of failure)
 
@@ -24,13 +24,13 @@ High level requirements:
 
 #### Option 1 - Splunk Reporting, Emailing and Alerting
 
-This option is use Cloud Splunk as a platform for reporting. Using all their features such as generating reports, emailing reports and alerting from Splunk.
+This option uses Cloud Splunk as a platform for reporting. Using all their features such as generating reports, emailing reports and alerting from Splunk.
 
 Pros:
 
 * Splunk is a known product so won't require validation
 * Anyone with permissions can create reports (devs, tests, BAs, ect)
-* A all in one platform does all what we want
+* An all in one platform does all what we want
 * Simple to write new reports
 * Already have a similar solution from the DoS Team. So there is experience in the DoS Products if we require some help.
 * A corporate solution which is paid for by NHS Digital. No money taken out of our budget.
@@ -40,7 +40,7 @@ Cons:
 
 * Difficult to get access to Splunk. Slow and very restrictive permissions.
 * Splunk’s limited job search rate
-* To generate a report the use must understand how to write Splunk queries
+* To generate a report the user must understand how to write Splunk queries
 * Control of our reporting is in Splunk's hands
 * Logs may not reach Splunk (very low possibility)
 
