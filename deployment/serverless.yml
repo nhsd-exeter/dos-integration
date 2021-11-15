@@ -85,7 +85,7 @@ functions:
       MOCK_MODE: true
     events:
       - http:
-          path: /dos-integration/api/v1/nhsuk-event-receiver/{type}
+          path: /api/v1/nhsuk-event-receiver/{type}
           request:
             parameters:
               paths:

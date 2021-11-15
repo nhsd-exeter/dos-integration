@@ -10,7 +10,7 @@ resource "aws_secretsmanager_secret_version" "api_gateway_api_key" {
 }
 
 resource "random_password" "api_gateway_api_key" {
-  length      = 25
+  length      = 80
   min_upper   = 2
   min_lower   = 2
   min_numeric = 2
