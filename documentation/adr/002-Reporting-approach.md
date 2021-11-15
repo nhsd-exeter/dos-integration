@@ -19,7 +19,6 @@ High level requirements:
 * When reports are generated a notification is sent and received in Slack
 * Multiple people in the team can create/edit reports (Not limited to point of failure)
 
-
 ### Detailed analysis of the options
 
 #### Option 1 - Splunk Reporting, Emailing and Alerting
@@ -33,7 +32,7 @@ Pros:
 * An all in one platform does all what we want
 * Simple to write new reports
 * Already have a similar solution from the DoS Team. So there is experience in the DoS Products if we require some help.
-* A corporate solution which is paid for by NHS Digital. No money taken out of our budget.
+* A corporate solution which is paid for by NHS Digital. No money taken out of DoS Integration team's budget.
 * New reports can be created quickly and adhoc
 
 Cons:
@@ -43,7 +42,7 @@ Cons:
 * To generate a report the user must understand how to write Splunk queries
 * Control of our reporting is in Splunk's hands
 * Logs may not reach Splunk (very low possibility)
-
+* Splunk holds log data for only two years (another storage method is needed for longer than two years)
 
 ### Option 2 - Use AWS Services for Reporting, Emailing and Alerting
 
@@ -51,15 +50,15 @@ This option is to use a range of AWS services to store logs, report, email and a
 
 Pros:
 
-* Control over infrastructure and reporting
-* Use python to create whatever kinds of reports we want CSV, PDF and graphs
-* 100% of logs in storage mechanism
+* Control over infrastructure and reporting (we create and control what we require)
+* We can use python to create whatever kinds of reports we want CSV, PDF and graphs. All report data/format is within DoS Integration team's control.
+* 100% of logs in storage mechanism. (Less chance of log not reaching log storage)
 * Keep logs for longer than two years
 
 Cons:
 
-* Need a pipeline to deploy reporting infrastructure
-* Additional Texas permissions required to trigger reports
+* Need a pipeline to deploy reporting infrastructure (This pipeline would increase development time)
+* Additional Texas permissions required to trigger reports (Texas may not give us such permission)
 * A lengthy process to create a report. A developer is required to create each report and must be tested.
 * Requires multiple AWS Services that must be be put into infrastructure as code. Which must be maintained.
 * Reporting solution must be paid for by our team. Money taken out of our budget
