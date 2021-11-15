@@ -163,5 +163,5 @@ def lambda_handler(event, context):
     # in json format
     return {
         "statusCode": 200,
-        "body": {"matching_services": [s.__dict__ for s in matching_services], "change_requests": change_requests},
+        "body": json.dumps({"change_requests": change_requests}),
     }
