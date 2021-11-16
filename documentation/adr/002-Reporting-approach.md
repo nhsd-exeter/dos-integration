@@ -27,7 +27,7 @@ This option uses Cloud Splunk as a platform for reporting. Using all their featu
 
 Pros:
 
-* Splunk is a known product so won't require validation
+* Splunk is a well used product/platform so no platform validation is required to confirm it works.
 * Anyone with permissions can create reports (devs, tests, BAs, ect)
 * An all in one platform does all what we want
 * Simple to write new reports
@@ -46,7 +46,7 @@ Cons:
 
 ### Option 2 - Use AWS Services for Reporting, Emailing and Alerting
 
-This option is to use a range of AWS services to store logs, report, email and alert. Such as S3, Athena, EventBridge, Lambda and SES. This isn't a definite list but some possible services that can be used to create the solution.
+This option is to use a range of AWS services to store logs, report, email and alert. Such as S3, Athena, EventBridge, Lambda and SES. This isn't a definitive list but some possible services that can be used to create the solution.
 
 Pros:
 
