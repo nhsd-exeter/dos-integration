@@ -123,7 +123,8 @@ def get_matching_dos_services(odscode):
 
     # Connect to Database
     log.info(f"Attempting connection to database '{server}'")
-    db = psycopg2.connect(host=server, port=port, dbname=db_name, user=db_user, password=password)
+    log.debug(f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={password}")
+    db = psycopg2.connect(host=server, port=port, dbname=db_name, user=db_user, password=password, connect_timeout=30)
 
     # Create and run SQL Command with inputted odscode SELECTING columns
     # defined at top of file and using the 'LIKE' command to match first

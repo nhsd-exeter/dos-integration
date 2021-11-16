@@ -41,13 +41,17 @@ variable "vpc_terraform_state_key" {
 
 
 # ############################
-# # SECURITY GROUP / RULES
+# # IAM
 # ############################
 
-variable "lambda_security_group_name" {
-  description = "Name of the lambda security group"
+variable "event_receiver_role_name" {
+  description = "Role name for event receiver lambda"
 }
 
-variable "dos_db_name" {
-  description = "Name of db dos instance to connect to"
+variable "event_processor_role_name" {
+  description = "Role name for event processor lambda"
+}
+
+variable "event_sender_role_name" {
+  description = "Role name for event sender lambda"
 }

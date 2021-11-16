@@ -6,3 +6,7 @@ data "terraform_remote_state" "vpc" {
     region = var.aws_region
   }
 }
+
+data "aws_db_instance" "dos_db" {
+  db_instance_identifier = var.dos_db_name
+}
