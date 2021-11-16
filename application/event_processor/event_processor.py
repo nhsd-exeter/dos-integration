@@ -18,7 +18,7 @@ tracer = Tracer()
 lambda_client = boto3.client("lambda", region_name="eu-west-2")
 
 
-expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "DB_SECRET_NAME", "EVENT_SENDER_LAMBDA_NAME")
+expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
 
 
 class EventProcessor:

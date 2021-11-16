@@ -34,6 +34,6 @@ DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_
 TF_VAR_dos_db_name := uec-dos-int-di-161
 
 # IAM Roles
-TF_VAR_event_receiver_role_name := $(PROJECT_ID)-event-receiver-role
-TF_VAR_event_processor_role_name := $(PROJECT_ID)-event-processor-role
-TF_VAR_event_sender_role_name := $(PROJECT_ID)-event-sender-role
+TF_VAR_event_receiver_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-receiver-role
+TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
+TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
