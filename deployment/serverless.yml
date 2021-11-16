@@ -51,21 +51,12 @@ custom:
         tagValues:
           - '${env:TF_VAR_lambda_security_group_name}'
 
-  # iam:
-  #   role:
-  #     name: dos-integration-${sls:stage}-lambda-role
-  #     statements:
-        # - Effect: 'Allow'
-        #   Resource: 'TODO'
-        #   Action: 'TODO' #This need to be restricted when used
-        # - Effect: 'Deny'
-        #   Resource: 'TODO'
-        #   Action: 'TODO'
-
 plugins:
   - serverless-vpc-discovery
   - serverless-localstack
+
 functions:
+
   event-receiver:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-receiver:${env:VERSION}
     architecture: x86_64
@@ -73,6 +64,7 @@ functions:
     description: ${sls:stage} Event Receiver lambda
     memorySize: 512
     timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_receiver_role_name}
     tags:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
@@ -92,6 +84,7 @@ functions:
                 type: true # pharmacy /dental
           method: post
           private: true
+
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
@@ -99,6 +92,7 @@ functions:
     description: ${sls:stage} Event Sender lambda
     memorySize: 512
     timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
     tags:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
@@ -112,13 +106,15 @@ functions:
       DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
+
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
     memorySize: 256
-    timeout: 60
+    timeout: 120
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     tags:
       PYTHON_VERSION: ${env:PYTHON_VERSION}
     environment:
@@ -134,7 +130,7 @@ functions:
       DB_USER_NAME: ${env:DB_USER_NAME}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
-      
+
 
 #resources:
 #  Outputs:
