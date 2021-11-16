@@ -128,7 +128,7 @@ functions:
       DB_PORT: ${env:DB_PORT}
       DB_NAME: ${env:DB_NAME}
       DB_USER_NAME: ${env:DB_USER_NAME}
-      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      DB_PASSWORD: ${env:DB_PASSWORD}
       EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
 
 

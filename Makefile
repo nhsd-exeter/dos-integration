@@ -26,7 +26,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make populate-deployment-variables)"
+	eval "$$(make -s populate-deployment-variables)"
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key
 	fi
@@ -52,8 +52,9 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
+	eval "$$(make aws-assume-role-export-variables)"
+	echo "export DB_PASSWORD=$$(make -s secret-fetch NAME=$(DB_SECRET_NAME))"
 	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
-		eval "$$(make aws-assume-role-export-variables)"
 		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 	fi
