@@ -36,7 +36,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         trigger_event_processor(change_event)
         logger.info(f"{SUCCESS_STATUS_CODE}|{SUCCESS_STATUS_RESPONSE}")
         return set_return_value(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
-    except ValidationException as exception:  # Expected Error (self made)
+    except ValidationException as exception:  # Expected Error (Deliberately Raised)
         logger.warning(f"{FAILURE_STATUS_CODE}|{str(exception)}")
         return set_return_value(FAILURE_STATUS_CODE, str(exception))
     except Exception as exception:  # Unexpected Error
@@ -46,8 +46,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 
 
 def extract_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Extracts the change event from the lambda function invocation event,
+    """Extracts the change event from the lambda function invocation event,
     also handles if object is passed in not from API Gateway
 
     Args:

@@ -38,6 +38,7 @@ services:
     container_name: event-receiver
     hostname: event-receiver
     environment:
+      AWS_LAMBDA_FUNCTION_NAME: event-receiver
       LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
@@ -48,6 +49,7 @@ services:
         target: /tmp
     ports:
       - 9000:8080
+
 
   event-sender:
     image: $DOCKER_REGISTRY/event-sender:latest
@@ -74,6 +76,7 @@ services:
     container_name: event-processor
     hostname: event-processor
     environment:
+      AWS_LAMBDA_FUNCTION_NAME: event-processor
       LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
@@ -84,9 +87,6 @@ services:
       DB_USER_NAME: $DB_USER_NAME
       DB_PASSWORD: $DB_PASSWORD
       EVENT_SENDER_LAMBDA_NAME: event-sender
-      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-      AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN
     volumes:
       - type: bind
         source: $TMP_DIR

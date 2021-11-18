@@ -2,7 +2,12 @@ from json import loads
 from os import getenv
 
 from behave import given, then, when
-from features.utilities.utilities import compile_change_event, load_change_event, read_log_file, setup_change_event
+from features.utilities.utilities import (
+    compile_change_event,
+    load_event_receiver_change_event,
+    read_log_file,
+    setup_change_event,
+)
 from requests import post
 
 
@@ -21,7 +26,7 @@ def an_invalid_change_event_invalid_format(context):
 @given("an invalid change event with incorrect service type")
 def an_invalid_change_event_with_incorrect_service_type(context):
     """Creates an invalid change event with invalid service type"""
-    change_event = load_change_event()
+    change_event = load_event_receiver_change_event()
     change_event["body"]["ServiceType"] = "Anything"
     context.change_event = compile_change_event(change_event)
 
@@ -29,7 +34,7 @@ def an_invalid_change_event_with_incorrect_service_type(context):
 @given("an invalid change event with incorrect service sub type")
 def an_invalid_change_event_with_incorrect_service_sub_type(context):
     """Creates an invalid change event with invalid service sub type"""
-    change_event = load_change_event()
+    change_event = load_event_receiver_change_event()
     change_event["body"]["ServiceSubType"] = "Anything"
     context.change_event = compile_change_event(change_event)
 
@@ -37,7 +42,7 @@ def an_invalid_change_event_with_incorrect_service_sub_type(context):
 @given("an invalid change event with no ods code")
 def an_invalid_change_event_with_no_ods_code(context):
     """Creates an invalid change event without an ods code"""
-    change_event = load_change_event()
+    change_event = load_event_receiver_change_event()
     del change_event["body"]["ODSCode"]
     context.change_event = compile_change_event(change_event)
 
@@ -45,7 +50,7 @@ def an_invalid_change_event_with_no_ods_code(context):
 @given("an invalid change event with incorrect length ods code")
 def an_invalid_change_event_with_incorrect_length_ods_code(context):
     """Creates an invalid change event with invalid ods code length"""
-    change_event = load_change_event()
+    change_event = load_event_receiver_change_event()
     change_event["body"]["ODSCode"] = "ABCDEFGH"
     context.change_event = compile_change_event(change_event)
 
@@ -53,7 +58,7 @@ def an_invalid_change_event_with_incorrect_length_ods_code(context):
 @given("an invalid change event with incorrect type ods code")
 def an_invalid_change_event_with_incorrect_type_ods_code(context):
     """Creates an invalid change event with invalid ods code type"""
-    change_event = load_change_event()
+    change_event = load_event_receiver_change_event()
     change_event["body"]["ODSCode"] = 12345
     context.change_event = compile_change_event(change_event)
 

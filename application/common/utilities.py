@@ -39,15 +39,12 @@ def get_environment_variable(environment_key: str) -> str:
 
 
 def is_mock_mode() -> bool:
-    """This function checks if mock mode should be enabled
+    """This function checks if mock mode should be enabled, default is False
 
     Returns:
         bool: Should mock mode be on?
     """
-    response = False
-    if getenv("MOCK_MODE") is not None:
-        response = bool(getenv("MOCK_MODE"))
-    return response
+    return bool(getenv("MOCK_MODE", default=False))
 
 
 def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> None:
