@@ -1,16 +1,9 @@
-from os import environ, getenv
+from os import environ
 from logging import getLogger
-from datetime import datetime
-import random
 
-import boto3
 import psycopg2
 
-from event_processor.nhs import NHSEntity
-
 log = getLogger("lambda")
-
-sec_manager = boto3.client("secretsmanager", region_name="eu-west-2")
 
 valid_service_types = {13, 131, 132, 134, 137}
 valid_status_id = 1
@@ -83,32 +76,23 @@ class DoSService:
         return changes
 
 
-def dummy_dos_service():
-    """Creates a DoSService Object with random data for the unit testing"""
-    test_data = []
-    for col in DoSService.db_columns:
-        random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
-        test_data.append(random_str)
-    return DoSService(test_data)
-
-
 def get_matching_dos_services(odscode):
     """Retrieves DoS Services from DoS database
 
-    input:  ODSCode
+    input:  odscode
 
     output: List of DoSService objects with matching first 5 digits
 
-            of ODSCode, taken from DoS database
+            of odscode, taken from DoS database
     """
 
-    log.info(f"Searching for DoS services with ODSCode that matches first " f" 5 digits of '{odscode}'")
+    log.info(f"Searching for DoS services with odscode that matches first " f" 5 digits of '{odscode}'")
 
-    # Check size of ODSCode, fail if shorter than 5, warn if longer
+    # Check size of odscode, fail if shorter than 5, warn if longer
     if len(odscode) < 5:
-        raise Exception(f"ODSCode '{odscode}' is too short.")
+        raise Exception(f"odscode '{odscode}' is too short.")
     if len(odscode) > 5:
-        log.warn(f"ODSCode '{odscode}' is longer than exptected 5 characters")
+        log.warn(f"odscode '{odscode}' is longer than exptected 5 characters")
 
     # Get DB details from env variables
     server = environ["DB_SERVER"]
@@ -126,7 +110,7 @@ def get_matching_dos_services(odscode):
 
     # Create and run SQL Command with inputted odscode SELECTING columns
     # defined at top of file and using the 'LIKE' command to match first
-    # 5 digits of ODSCode
+    # 5 digits of odscode
     sql_command = (
         f"SELECT {', '.join(DoSService.db_columns)} " f"FROM services " f"WHERE odscode LIKE '{odscode[0:5]}%'"
     )

@@ -1,8 +1,6 @@
 from os import environ
 from typing import Any, Dict
 from aws_lambda_powertools.utilities.typing import LambdaContext
-import sys
-import logging
 from logging import getLogger
 import json
 
@@ -35,11 +33,11 @@ class EventProcessor:
         """Using the nhs entity attributed to this object, it finds the
         matching DoS services from the db and filters the results"""
 
-        # Check database for services with same first 5 digits of ODSCode
-        matching_services = get_matching_dos_services(self.nhs_entity.ODSCode)
+        # Check database for services with same first 5 digits of OdsCode
+        matching_services = get_matching_dos_services(self.nhs_entity.OdsCode)
         log.info(
             f"Found {len(matching_services)} services in DB with matching "
-            f"first 5 chars of ODSCode: {matching_services}"
+            f"first 5 chars of OdsCode: {matching_services}"
         )
 
         # Filter for services with valid type and status
@@ -111,14 +109,15 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """
 
     event: The event payload should contain a "entity" field which
-           contains the fields for the NHS Entity (Pharmacy)
+        contains the fields for the NHS Entity (Pharmacy)
 
-           example
-           {"send_changes: False,
-            "entity": {"odscode": "FA0021"
-                       "publicphone": "893233284932",
-                       "etc": "some data"
-                       "another field": "more data"}}
+        example
+        {"send_changes: False,
+        "entity":
+            {"OdsCode": "FA0021"
+            "publicphone": "893233284932",
+            "etc": "some data"
+            "another field": "more data"}}
             etc etc...
 
             Some code may need to be changed if the exact
@@ -148,7 +147,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
 
     # IF NO MATCHING SERVICES FOUND - log error and return/end
     if len(matching_services) == 0:
-        err_msg = f"No matching DOS services found that fit all criteria for " f"ODSCode '{nhs_entity.odscode}'"
+        err_msg = f"No matching DOS services found that fit all criteria for " f"OdsCode '{nhs_entity.OdsCode}'"
         log.error(err_msg)
         return {"statusCode": 400, "error": err_msg}
 
@@ -159,7 +158,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     if event.get("send_changes", False) is True:
         event_processor.send_changes()
     else:
-        log.info(f"'send_changes' argument in event payload is set to False. " f"Change requests will not be sent")
+        log.info("'send_changes' argument in event payload is set to False. Change requests will not be sent")
 
     # Return the matching services found, as well as the change requests
     # in json format

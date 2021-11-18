@@ -3,7 +3,18 @@ import random
 import pytest
 from unittest.mock import patch
 
-from event_processor.dos import *
+from event_processor.dos import get_matching_dos_services
+from event_processor.nhs import NHSEntity
+from event_processor.dos import DoSService
+
+
+def dummy_dos_service():
+    """Creates a DoSService Object with random data for the unit testing"""
+    test_data = []
+    for col in DoSService.db_columns:
+        random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
+        test_data.append(random_str)
+    return DoSService(test_data)
 
 
 def test__init__():
@@ -34,7 +45,7 @@ def test_ods5():
         random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
         test_db_row.append(random_str)
 
-    # Insert specfic ODScode
+    # Insert specfic odscode
     ods_index = DoSService.db_columns.index("odscode")
     test_db_row[ods_index] = "SLC92823732"
 
@@ -75,7 +86,6 @@ def test_get_changes():
 def test_get_matching_dos_services(mock_connect):
 
     mock_connect.return_value.cursor.execute.return_value.fetchall.return_value = []
-
 
     # odscode too short should raise exception
     with pytest.raises(Exception):

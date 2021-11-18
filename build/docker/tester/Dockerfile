@@ -1,7 +1,7 @@
 FROM python:latest
 # Install python package build requirements
 # RUN apk add gcc-c++ libpq-dev python-devel postgresql-devel
-RUN apk add postgresql-dev gcc python3-dev musl-dev
+RUN apk add postgresql-dev build-base python3-dev musl-dev cmake
 # Install Python requirements
 COPY assets/requirements.txt /
 # Install Python requirements

@@ -1,10 +1,11 @@
 import random
+from os import environ
+from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+from unittest.mock import patch
 
-import pytest
-
-from event_processor.event_processor import *
+from event_processor.event_processor import EventProcessor, lambda_handler
 from event_processor.nhs import NHSEntity
-from event_processor.dos import DoSService, dummy_dos_service
+from event_processor.tests.test_dos import dummy_dos_service
 
 
 def test__init__():
@@ -26,25 +27,24 @@ def test__init__():
 
 
 def test_get_change_requests():
-    trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
     # Create test services and nhs entity
     service_1 = dummy_dos_service()
     service_1.id = 1
     service_1.uid = 101
-    service_1.odscode = "SLC4501"
+    service_1.OdsCode = "SLC4501"
     service_1.web = "www.fakesite.com"
     service_1.publicphone = "01462622435"
 
     service_2 = dummy_dos_service()
     service_2.id = 2
     service_2.uid = 102
-    service_2.odscode = "SLC4502"
+    service_2.OdsCode = "SLC4502"
     service_2.web = "www.fakesite.com"
     service_2.publicphone = "01462622435"
 
     nhs_entity = NHSEntity({})
-    nhs_entity.Odscode = "SLC45"
+    nhs_entity.OdsCode = "SLC45"
     nhs_entity.Website = "www.fakesite.com"
     nhs_entity.PublicPhone = "01462622435"
 
@@ -82,23 +82,34 @@ def test_get_change_requests():
         assert cr["changes"] == {"Website": nhs_entity.Website}
 
 
-def test_get_matching_services():
+@patch("event_processor.dos.get_matching_dos_services")
+def test_get_matching_services(mock_get_matching_dos_services):
+
+    dos_service_one = dummy_dos_service()
+    dos_service_one.odscode = "SLC45"
+    dos_service_one.publicname = "One"
+    dos_service_two = dummy_dos_service()
+    dos_service_two.odscode = "SLC45001"
+    dos_service_two.publicname = "Two"
+    mock_get_matching_dos_services.return_value = [dos_service_one, dos_service_two]
     # Create entity
     nhs_entity = NHSEntity({})
-    nhs_entity.Odscode = "SLC45"
+    nhs_entity.OdsCode = "SLC45"
     nhs_entity.Website = "www.fakesite.com"
-    nhs_entity.Publicphone = "01462622435"
+    nhs_entity.PublicPhone = "01462622435"
 
     # Create test processor and input our services
     # as matching services
     ep = EventProcessor(nhs_entity)
 
+    assert ep.get_matching_services() == []
 
-def test_lamda_handler():
+
+def test_lambda_handler():
 
     # Fake test input should yield no results in db
     dummy_entity_data = {
-        "Odscode": "F@T67",
+        "OdsCode": "F@T67",
         "Website": "www.pharmacywebsite.com",
         "Publicname": "Cool Pharmacy 4 U",
         "Phone": "441462622788",

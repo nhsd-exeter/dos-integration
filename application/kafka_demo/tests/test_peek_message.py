@@ -1,9 +1,9 @@
-from ..peek_message import peek_message_from_service_bus
+from kafka_demo.peek_message import peek_message_from_service_bus
 from os import environ
 from unittest.mock import MagicMock, patch
 
 
-@patch("application.peek_message.ServiceBusClient")
+@patch("kafka_demo.peek_message.ServiceBusClient")
 def test_add_message_to_service_bus(mock_service_bus_client):
     # Arrange
     connection_string = "https://test.com"

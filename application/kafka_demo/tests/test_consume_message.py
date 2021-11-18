@@ -1,9 +1,9 @@
-from ..consume_message import get_message_from_service_bus
+from kafka_demo.consume_message import get_message_from_service_bus
 from os import environ
 from unittest.mock import MagicMock, patch
 
 
-@patch("application.consume_message.ServiceBusClient")
+@patch("kafka_demo.consume_message.ServiceBusClient")
 def test_add_message_to_service_bus(mock_service_bus_client):
     # Arrange
     connection_string = "https://test.com"

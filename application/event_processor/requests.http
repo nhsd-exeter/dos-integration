@@ -7,7 +7,7 @@ Accept: application/json
 
 {
   "SearchKey": "ANEI1245",
-  "ODSCode": "FQ038",
+  "OdsCode": "FQ038",
   "OrganisationName": "My Test Pharmacy",
   "OrganisationTypeId": "PH1",
   "OrganisationType": "Pharmacy",

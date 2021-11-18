@@ -7,7 +7,7 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 setup: project-config # Set up project
 	make docker-build NAME=serverless
 	make serverless-requirements
-	make python-requirements
+	make tester-build
 	make mock-dos-db-setup
 
 build: # Build lambdas
@@ -59,24 +59,9 @@ populate-deployment-variables:
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 	fi
 
-python-requirements: # Installs whole project python requirements
-	make docker-run-tools \
-		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt -r event_processor/requirements.txt" \
-		DIR=./application
-
-unit-test: # Runs whole project unit tests
-	make -s docker-run-tools \
-	CMD="python -m pytest --cov=." \
-	DIR=./application \
-	ARGS=" \
-		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
-		"
-
 tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
+		cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
 	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
@@ -85,10 +70,10 @@ tester-build: ### Build tester docker image
 	make docker-image NAME=tester
 	make tester-clean
 
-tester-run:
+tester-run-unittest:
 	make docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m pytest --cov=. --ignore=kafka_demo" \
+	CMD="python -m pytest --cov=." \
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
@@ -102,6 +87,7 @@ tester-clean:
 
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	IMAGE=$$(make _docker-get-reg)/tester \
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
@@ -109,7 +95,8 @@ coverage-report: # Runs whole project coverage unit tests
 		"
 
 component-test: # Runs whole project component tests
-	make -s docker-run-tools \
+	make docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m behave" \
 	DIR=test/component \
 	ARGS=" \
@@ -167,15 +154,15 @@ kafka-producer-run:
 
 python-consume-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/consume_message.py
+	python application/kafka_demo/consume_message.py
 
 python-peek-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/peek_message.py
+	python application/kafka_demo/peek_message.py
 
 python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/put_message.py
+	python application/kafka_demo/put_message.py
 
 # ==============================================================================
 # Mocks Setup

@@ -1,9 +1,9 @@
-from ..put_message import add_message_to_service_bus
+from kafka_demo.put_message import add_message_to_service_bus
 from os import environ
 from unittest.mock import patch
 
 
-@patch("application.put_message.post")
+@patch("kafka_demo.put_message.post")
 def test_add_message_to_service_bus(mock_post):
     # Arrange
     test_url = "https://test.com"

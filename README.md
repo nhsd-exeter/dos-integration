@@ -21,6 +21,7 @@
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
+    - [APIKey](#apikey)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
@@ -170,7 +171,7 @@ This testing is generally done by a developer
 
 To run unit tests run the following commands
 
-    make python-requirements
+    make tester-build
     make unit-test
 
 For coverage run
@@ -193,7 +194,7 @@ This testing is generally done by a developer
 
 To run components tests run the following commands
 
-    make python-requirements
+    make tester-build
     make start component-test
 
 ### Integration Testing
