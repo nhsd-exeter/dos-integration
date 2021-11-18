@@ -1,4 +1,6 @@
 from os import environ
+from typing import Any, Dict
+from aws_lambda_powertools.utilities.typing import LambdaContext
 import sys
 import logging
 from logging import getLogger
@@ -7,8 +9,8 @@ import json
 import boto3
 from aws_lambda_powertools import Tracer
 
-from dos import get_matching_dos_services, valid_service_types, valid_status_id
-from nhs import NHSEntity
+from event_processor.dos import get_matching_dos_services, valid_service_types, valid_status_id
+from event_processor.nhs import NHSEntity
 from common.logger import setup_logger
 
 # logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -105,7 +107,7 @@ class EventProcessor:
 
 @tracer.capture_lambda_handler()
 @setup_logger
-def lambda_handler(event, context):
+def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """
 
     event: The event payload should contain a "entity" field which

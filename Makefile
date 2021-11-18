@@ -75,6 +75,31 @@ unit-test: # Runs whole project unit tests
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
+tester-build: ### Build tester docker image
+	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
+	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
+	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
+	make docker-image NAME=tester
+	make tester-clean
+
+tester-run:
+	make docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m pytest --cov=. --ignore=kafka_demo" \
+	DIR=./application \
+	ARGS=" \
+		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		"
+
+tester-clean:
+	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
+
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
 	ARGS=" \
