@@ -74,7 +74,7 @@ functions:
     memorySize: 512
     timeout: 10
     tags:
-      PYTHON_VERSION: ${env:PYTHON_VERSION}
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       PROFILE: ${env:PROFILE}
       POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
@@ -100,7 +100,7 @@ functions:
     memorySize: 512
     timeout: 10
     tags:
-      PYTHON_VERSION: ${env:PYTHON_VERSION}
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       PROFILE: ${env:PROFILE}
       POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
