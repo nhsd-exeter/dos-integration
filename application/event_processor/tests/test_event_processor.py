@@ -82,16 +82,21 @@ def test_get_change_requests():
         assert cr["changes"] == {"Website": nhs_entity.Website}
 
 
-@patch("event_processor.dos.get_matching_dos_services")
+@patch("event_processor.event_processor.get_matching_dos_services")
 def test_get_matching_services(mock_get_matching_dos_services):
 
     dos_service_one = dummy_dos_service()
     dos_service_one.odscode = "SLC45"
     dos_service_one.publicname = "One"
+    dos_service_one.typeid = 13
+    dos_service_one.statusid = 1
     dos_service_two = dummy_dos_service()
     dos_service_two.odscode = "SLC45001"
     dos_service_two.publicname = "Two"
+    dos_service_two.typeid = 13
+    dos_service_two.statusid = 1
     mock_get_matching_dos_services.return_value = [dos_service_one, dos_service_two]
+
     # Create entity
     nhs_entity = NHSEntity({})
     nhs_entity.OdsCode = "SLC45"
@@ -102,7 +107,7 @@ def test_get_matching_services(mock_get_matching_dos_services):
     # as matching services
     ep = EventProcessor(nhs_entity)
 
-    assert ep.get_matching_services() == []
+    assert ep.get_matching_services() == [dos_service_one, dos_service_two]
 
 
 def test_lambda_handler():
