@@ -1,8 +1,8 @@
 import random
 
-from nhs import *
+from event_processor.nhs import *
 
-test_attr_names = ("odscode", "website", "publicphone", "phone", "postcode")
+test_attr_names = ("Odscode", "Website", "PublicPhone", "Phone", "Postcode")
 
 
 def test__init__():

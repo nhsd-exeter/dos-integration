@@ -1,8 +1,9 @@
 import random
 
 import pytest
+from unittest.mock import patch
 
-from dos import *
+from event_processor.dos import *
 
 
 def test__init__():
@@ -56,21 +57,25 @@ def test_get_changes():
     dos_service = DoSService(test_db_row)
 
     # Create NHSEntity with same data
-    nhs_kwargs = {"website": dos_service.web}
+    nhs_kwargs = {"Website": dos_service.web}
     nhs_entity = NHSEntity(nhs_kwargs)
 
     # Changes should be empty when checked
     assert dos_service.get_changes(nhs_entity) == {}
 
     # Create NHSEntity with different web field but rest the same
-    nhs_kwargs = {"website": "changed-website.com", "publicphone": dos_service.publicphone}
+    nhs_kwargs = {"Website": "changed-website.com", "publicphone": dos_service.publicphone}
     nhs_entity = NHSEntity(nhs_kwargs)
 
-    expected_changes = {"website": "changed-website.com"}
+    expected_changes = {"Website": "changed-website.com"}
     assert dos_service.get_changes(nhs_entity) == expected_changes
 
 
-def test_get_matching_dos_services():
+@patch("psycopg2.connect")
+def test_get_matching_dos_services(mock_connect):
+
+    mock_connect.return_value.cursor.execute.return_value.fetchall.return_value = []
+
 
     # odscode too short should raise exception
     with pytest.raises(Exception):

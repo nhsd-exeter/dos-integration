@@ -2,9 +2,9 @@ import random
 
 import pytest
 
-from event_processor import *
-from nhs import NHSEntity
-from dos import DoSService, dummy_dos_service
+from event_processor.event_processor import *
+from event_processor.nhs import NHSEntity
+from event_processor.dos import DoSService, dummy_dos_service
 
 
 def test__init__():
@@ -44,9 +44,9 @@ def test_get_change_requests():
     service_2.publicphone = "01462622435"
 
     nhs_entity = NHSEntity({})
-    nhs_entity.odscode = "SLC45"
-    nhs_entity.website = "www.fakesite.com"
-    nhs_entity.publicphone = "01462622435"
+    nhs_entity.Odscode = "SLC45"
+    nhs_entity.Website = "www.fakesite.com"
+    nhs_entity.PublicPhone = "01462622435"
 
     # Create test processor and input our services
     # as matching services
@@ -67,7 +67,7 @@ def test_get_change_requests():
     for field in ["system", "service_id", "changes"]:
         assert field in cr
     assert cr["system"] == "DoS Integration"
-    assert cr["changes"] == {"website": nhs_entity.website}
+    assert cr["changes"] == {"Website": nhs_entity.Website}
 
     # Change website in service 2 and get changes again
     service_2.web = "differentwebsite2.com"
@@ -79,15 +79,15 @@ def test_get_change_requests():
         for field in ["system", "service_id", "changes"]:
             assert field in cr
         assert cr["system"] == "DoS Integration"
-        assert cr["changes"] == {"website": nhs_entity.website}
+        assert cr["changes"] == {"Website": nhs_entity.Website}
 
 
 def test_get_matching_services():
     # Create entity
     nhs_entity = NHSEntity({})
-    nhs_entity.odscode = "SLC45"
-    nhs_entity.website = "www.fakesite.com"
-    nhs_entity.publicphone = "01462622435"
+    nhs_entity.Odscode = "SLC45"
+    nhs_entity.Website = "www.fakesite.com"
+    nhs_entity.Publicphone = "01462622435"
 
     # Create test processor and input our services
     # as matching services
@@ -98,23 +98,28 @@ def test_lamda_handler():
 
     # Fake test input should yield no results in db
     dummy_entity_data = {
-        "odscode": "F@T67",
-        "website": "www.pharmacywebsite.com",
-        "publicname": "Cool Pharmacy 4 U",
-        "phone": "441462622788",
+        "Odscode": "F@T67",
+        "Website": "www.pharmacywebsite.com",
+        "Publicname": "Cool Pharmacy 4 U",
+        "Phone": "441462622788",
     }
 
     # Create test payload for lambda
     event = {"entity": dummy_entity_data, "send_changes": False}
 
-    # Run lambda and check ouput
-    result = lambda_handler(event, None)
+    # Arrange
+    context = LambdaContext()
+    context._function_name = "test"
+    context._aws_request_id = "test"
+
+    # Run lambda and check output
+    result = lambda_handler(event, context)
 
     assert isinstance(result, dict)
     assert "statusCode" in result
 
     # Remove env var and check failure
     del environ["DB_SERVER"]
-    result = lambda_handler(event, None)
+    result = lambda_handler(event, context)
     assert result["statusCode"] == 400
     assert "error" in result

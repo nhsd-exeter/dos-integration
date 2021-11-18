@@ -6,7 +6,7 @@ import random
 import boto3
 import psycopg2
 
-from nhs import NHSEntity
+from event_processor.nhs import NHSEntity
 
 log = getLogger("lambda")
 
