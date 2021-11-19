@@ -2,7 +2,7 @@ import random
 
 from event_processor.nhs import NHSEntity
 
-test_attr_names = ("OdsCode", "Website", "PublicPhone", "Phone", "Postcode")
+test_attr_names = ("ODSCode", "Website", "PublicPhone", "Phone", "Postcode")
 
 
 def test__init__():
@@ -32,8 +32,8 @@ def test_ods5():
     # Create test object
     nhs_entity = NHSEntity(test_data)
 
-    # change specific OdsCode
-    nhs_entity.OdsCode = "SLC82738272"
+    # change specific ODSCode
+    nhs_entity.ODSCode = "SLC82738272"
 
     # Check output
     assert nhs_entity.ods5() == "SLC82"

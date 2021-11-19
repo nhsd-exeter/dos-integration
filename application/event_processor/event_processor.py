@@ -33,11 +33,11 @@ class EventProcessor:
         """Using the nhs entity attributed to this object, it finds the
         matching DoS services from the db and filters the results"""
 
-        # Check database for services with same first 5 digits of OdsCode
-        matching_services = get_matching_dos_services(self.nhs_entity.OdsCode)
+        # Check database for services with same first 5 digits of ODSCode
+        matching_services = get_matching_dos_services(self.nhs_entity.ODSCode)
         log.info(
             f"Found {len(matching_services)} services in DB with matching "
-            f"first 5 chars of OdsCode: {matching_services}"
+            f"first 5 chars of ODSCode: {matching_services}"
         )
 
         # Filter for services with valid type and status
@@ -114,7 +114,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
         example
         {"send_changes: False,
         "entity":
-            {"OdsCode": "FA0021"
+            {"ODSCode": "FA0021"
             "publicphone": "893233284932",
             "etc": "some data"
             "another field": "more data"}}
@@ -147,7 +147,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
 
     # IF NO MATCHING SERVICES FOUND - log error and return/end
     if len(matching_services) == 0:
-        err_msg = f"No matching DOS services found that fit all criteria for " f"OdsCode '{nhs_entity.OdsCode}'"
+        err_msg = f"No matching DOS services found that fit all criteria for " f"ODSCode '{nhs_entity.ODSCode}'"
         log.error(err_msg)
         return {"statusCode": 400, "error": err_msg}
 

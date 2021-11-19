@@ -16,5 +16,5 @@ class NHSEntity:
             setattr(self, key, value)
 
     def ods5(self):
-        """First 5 digits of OdsCode"""
-        return self.OdsCode[0:5]
+        """First 5 digits of ODSCode"""
+        return self.ODSCode[0:5]

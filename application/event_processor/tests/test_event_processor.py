@@ -1,7 +1,9 @@
 import random
+from types import LambdaType
+import pytest
 from os import environ
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from event_processor.event_processor import EventProcessor, lambda_handler
 from event_processor.nhs import NHSEntity
@@ -32,19 +34,19 @@ def test_get_change_requests():
     service_1 = dummy_dos_service()
     service_1.id = 1
     service_1.uid = 101
-    service_1.OdsCode = "SLC4501"
+    service_1.ODSCode = "SLC4501"
     service_1.web = "www.fakesite.com"
     service_1.publicphone = "01462622435"
 
     service_2 = dummy_dos_service()
     service_2.id = 2
     service_2.uid = 102
-    service_2.OdsCode = "SLC4502"
+    service_2.ODSCode = "SLC4502"
     service_2.web = "www.fakesite.com"
     service_2.publicphone = "01462622435"
 
     nhs_entity = NHSEntity({})
-    nhs_entity.OdsCode = "SLC45"
+    nhs_entity.ODSCode = "SLC45"
     nhs_entity.Website = "www.fakesite.com"
     nhs_entity.PublicPhone = "01462622435"
 
@@ -99,7 +101,7 @@ def test_get_matching_services(mock_get_matching_dos_services):
 
     # Create entity
     nhs_entity = NHSEntity({})
-    nhs_entity.OdsCode = "SLC45"
+    nhs_entity.ODSCode = "SLC45"
     nhs_entity.Website = "www.fakesite.com"
     nhs_entity.PublicPhone = "01462622435"
 
@@ -108,34 +110,64 @@ def test_get_matching_services(mock_get_matching_dos_services):
     ep = EventProcessor(nhs_entity)
 
     assert ep.get_matching_services() == [dos_service_one, dos_service_two]
-
-
-def test_lambda_handler():
+@patch("psycopg2.connect")
+def test_lambda_handler(mock_connect):
 
     # Fake test input should yield no results in db
     dummy_entity_data = {
-        "OdsCode": "F@T67",
+        "ODSCode": "F@T67",
         "Website": "www.pharmacywebsite.com",
         "Publicname": "Cool Pharmacy 4 U",
         "Phone": "441462622788",
     }
 
     # Create test payload for lambda
-    event = {"entity": dummy_entity_data, "send_changes": False}
+    event = dummy_entity_data
+
+    mock_connect.return_value.cursor.execute.return_value.fetchall.return_value = [dummy_entity_data]
 
     # Arrange
     context = LambdaContext()
     context._function_name = "test"
     context._aws_request_id = "test"
-
+    environ["EVENT_SENDER_LAMBDA_NAME"] = "DummyLambdaName"
     # Run lambda and check output
     result = lambda_handler(event, context)
 
     assert isinstance(result, dict)
     assert "statusCode" in result
+    assert result["statusCode"] == 400
+    assert result["error"] == "No matching DOS services found that fit all criteria for ODSCode 'F@T67'"
 
     # Remove env var and check failure
     del environ["DB_SERVER"]
     result = lambda_handler(event, context)
     assert result["statusCode"] == 400
     assert "error" in result
+    assert result["error"] == "Environmental variable DB_SERVER not present"
+
+# def test_lambda_handler_no_matching_services():
+
+
+def test_send_changes_fail_none():
+
+    with pytest.raises(Exception):
+        EventProcessor().send_changes()
+
+@patch("event_processor.event_processor.lambda_client")
+def test_send_changes(lambda_client):
+    cr = {
+        "reference": "dummy-trace-id",
+        "system": "DoS Integration",
+        "message": "DoS Integration CR. AMZN-trace-id: dummy-trace-id",
+        "service_id": "dummyServiceId",
+        "changes": {"dummykey": "dummychange"},
+    }
+    lambda_client.invoke.return_value = cr
+    event_processor = EventProcessor(NHSEntity({}))
+    event_processor.change_requests = [cr]
+    environ["EVENT_SENDER_LAMBDA_NAME"] = "DummyLambdaName"
+
+    event_processor.send_changes()
+
+    lambda_client.invoke.assert_called_once_with(FunctionName=environ["EVENT_SENDER_LAMBDA_NAME"], InvocationType="Event", Payload=cr)
