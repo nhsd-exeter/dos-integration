@@ -172,7 +172,7 @@ This testing is generally done by a developer
 To run unit tests run the following commands
 
     make tester-build
-    make unit-test
+    make tester-run-unittest
 
 For coverage run
 
