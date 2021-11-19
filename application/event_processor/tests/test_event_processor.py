@@ -1,9 +1,8 @@
 import random
-from types import LambdaType
 import pytest
 from os import environ
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from event_processor.event_processor import EventProcessor, lambda_handler
 from event_processor.nhs import NHSEntity
@@ -110,6 +109,8 @@ def test_get_matching_services(mock_get_matching_dos_services):
     ep = EventProcessor(nhs_entity)
 
     assert ep.get_matching_services() == [dos_service_one, dos_service_two]
+
+
 @patch("psycopg2.connect")
 def test_lambda_handler(mock_connect):
 
@@ -146,6 +147,7 @@ def test_lambda_handler(mock_connect):
     assert "error" in result
     assert result["error"] == "Environmental variable DB_SERVER not present"
 
+
 # def test_lambda_handler_no_matching_services():
 
 
@@ -153,6 +155,7 @@ def test_send_changes_fail_none():
 
     with pytest.raises(Exception):
         EventProcessor().send_changes()
+
 
 @patch("event_processor.event_processor.lambda_client")
 def test_send_changes(lambda_client):
@@ -170,4 +173,6 @@ def test_send_changes(lambda_client):
 
     event_processor.send_changes()
 
-    lambda_client.invoke.assert_called_once_with(FunctionName=environ["EVENT_SENDER_LAMBDA_NAME"], InvocationType="Event", Payload=cr)
+    lambda_client.invoke.assert_called_once_with(
+        FunctionName=environ["EVENT_SENDER_LAMBDA_NAME"], InvocationType="Event", Payload=cr
+    )
