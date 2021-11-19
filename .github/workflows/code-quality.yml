@@ -33,6 +33,6 @@ jobs:
           args: >
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,kafka_demo/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9
