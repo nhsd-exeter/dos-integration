@@ -3,7 +3,7 @@ Feature: Event Processor
 Scenario: A change event is passed to the event processor which doesn't equal DoS services
   Given a change event that is for a service is the different from a DoS service
   When the change event is sent to the event processor
-  Then the change event that is for a service is the different from a DoS service is logged
+  Then the change event that is for a service is different from a DoS service is logged
   And the change request is produced and logged
 
 Scenario: A change event is passed to the event processor which does equal a DoS service

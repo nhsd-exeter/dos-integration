@@ -30,8 +30,8 @@ def the_change_event_is_sent_to_the_event_processor(context):
     assert context.response.status_code == 200, "Lambda emulator didn't accept request"
 
 
-@then("the change event that is for a service is the different from a DoS service is logged")
-def the_change_event_that_is_for_a_service_is_the_different_from_a_dos_service_is_logged(context):
+@then("the change event that is for a service is different from a DoS service is logged")
+def the_change_event_that_is_for_a_service_is_different_from_a_dos_service_is_logged(context):
     log_file = read_log_file()
     with open("features/resources/event_processor_change_event_different_from_dos.json", "r", encoding="utf-8") as file:
         expected_event = file.read()

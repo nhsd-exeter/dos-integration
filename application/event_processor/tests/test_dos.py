@@ -1,8 +1,15 @@
 from datetime import datetime, timezone
-from random import choices
 from os import environ
+from random import choices
 from unittest.mock import patch
 
+from ..change_request import (
+    ADDRESS_CHANGE_KEY,
+    PHONE_CHANGE_KEY,
+    POSTCODE_CHANGE_KEY,
+    PUBLICNAME_CHANGE_KEY,
+    WEBSITE_CHANGE_KEY,
+)
 from ..dos import (
     DoSService,
     add_address_to_change_request_if_not_equal,
@@ -129,11 +136,11 @@ def test_get_changes_different_changes():
     }
     nhs_entity = NHSEntity(nhs_kwargs)
     expected_changes = {
-        "address": [address1, address2, address3, city, county],
-        "publicname": organisation_name,
-        "website": website,
-        "postcode": postcode,
-        "phone": phone,
+        ADDRESS_CHANGE_KEY: [address1, address2, address3, city, county],
+        PUBLICNAME_CHANGE_KEY: organisation_name,
+        WEBSITE_CHANGE_KEY: website,
+        POSTCODE_CHANGE_KEY: postcode,
+        PHONE_CHANGE_KEY: phone,
     }
     # Act
     response = dos_service.get_changes(nhs_entity)
@@ -194,7 +201,7 @@ def test_add_address_to_change_request_if_not_equal_not_equal():
     nhs_uk_entity.County = "county"
     dos_address = "Test RD$Testown$Testshire"
     expected_changes = {
-        "address": [
+        ADDRESS_CHANGE_KEY: [
             nhs_uk_entity.Address1,
             nhs_uk_entity.Address2,
             nhs_uk_entity.Address3,

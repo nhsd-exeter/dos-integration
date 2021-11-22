@@ -3,6 +3,13 @@ from os import environ, getenv
 from typing import List
 
 from boto3 import client
+from change_request import (
+    ADDRESS_CHANGE_KEY,
+    PHONE_CHANGE_KEY,
+    POSTCODE_CHANGE_KEY,
+    PUBLICNAME_CHANGE_KEY,
+    WEBSITE_CHANGE_KEY,
+)
 from nhs import NHSEntity
 from psycopg2 import connect
 
@@ -67,11 +74,13 @@ class DoSService:
         the service inline with the given nhs_entity
         """
         changes = {}
-        add_field_to_change_request_if_not_equal(changes, "website", self.web, nhs_entity.Website)
-        add_field_to_change_request_if_not_equal(changes, "postcode", self.postcode, nhs_entity.Postcode)
-        add_field_to_change_request_if_not_equal(changes, "phone", self.publicphone, nhs_entity.Phone)
-        add_field_to_change_request_if_not_equal(changes, "publicname", self.publicname, nhs_entity.OrganisationName)
-        add_address_to_change_request_if_not_equal(changes, "address", self.address, nhs_entity)
+        add_field_to_change_request_if_not_equal(changes, WEBSITE_CHANGE_KEY, self.web, nhs_entity.Website)
+        add_field_to_change_request_if_not_equal(changes, POSTCODE_CHANGE_KEY, self.postcode, nhs_entity.Postcode)
+        add_field_to_change_request_if_not_equal(changes, PHONE_CHANGE_KEY, self.publicphone, nhs_entity.Phone)
+        add_field_to_change_request_if_not_equal(
+            changes, PUBLICNAME_CHANGE_KEY, self.publicname, nhs_entity.OrganisationName
+        )
+        add_address_to_change_request_if_not_equal(changes, ADDRESS_CHANGE_KEY, self.address, nhs_entity)
         return changes
 
 
@@ -121,7 +130,7 @@ def add_address_to_change_request_if_not_equal(
 
 
 def compare_values(dos_value: str, nhs_uk_value: str) -> bool:
-    """Compare if two values are equal. Values are converted to string and compared.
+    """Compare if two values are equal.
 
     Args:
         dos_value (str): First value to compare
