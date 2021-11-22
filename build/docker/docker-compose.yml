@@ -48,9 +48,6 @@ services:
         target: /tmp
     ports:
       - 9000:8080
-    depends_on:
-      mock-dos:
-        condition: service_healthy
 
   event-sender:
     image: $DOCKER_REGISTRY/event-sender:latest
@@ -72,8 +69,36 @@ services:
     ports:
       - 9002:8080
 
+  event-processor:
+    image: $DOCKER_REGISTRY/event-processor:latest
+    container_name: event-processor
+    hostname: event-processor
+    environment:
+      LOG_LEVEL: DEBUG
+      POWERTOOLS_SERVICE_NAME: $TEAM_ID
+      PROFILE: $PROFILE
+      AWS_REGION: eu-west-2
+      DB_SERVER: $DB_SERVER
+      DB_PORT: $DB_PORT
+      DB_NAME: $DB_NAME
+      DB_USER_NAME: $DB_USER_NAME
+      DB_PASSWORD: $DB_PASSWORD
+      EVENT_SENDER_LAMBDA_NAME: event-sender
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      AWS_SESSION_TOKEN: $AWS_SESSION_TOKEN
+    volumes:
+      - type: bind
+        source: $TMP_DIR
+        target: /tmp
+    ports:
+      - 9001:8080
+    depends_on:
+      mock-dos:
+        condition: service_healthy
+
   mock-dos:
-    image: postgres:latest
+    image: postgres:12
     hostname: mock-dos
     container_name: mock-dos
     environment:
@@ -85,7 +110,8 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: POSTGRES_PASSWORD=postgres psql -h localhost -p 5432 -d postgres -U postgres -c "SELECT id from services" || exit 1
+      test: POSTGRES_PASSWORD=postgres psql -h localhost -p 5432 -d postgres -U
+        postgres -c "SELECT id from services" || exit 1
       interval: 5s
       timeout: 10s
       retries: 100

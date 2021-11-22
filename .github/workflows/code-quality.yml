@@ -22,7 +22,7 @@ jobs:
           build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
       - name: Create coverage report
         run: |
-          make python-requirements coverage-report
+          make tester-build coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
         # SEE: https://github.com/SonarSource/sonarcloud-github-action
         env:
@@ -33,6 +33,6 @@ jobs:
           args: >
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,kafka_demo/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9

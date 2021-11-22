@@ -7,12 +7,13 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 setup: project-config # Set up project
 	make docker-build NAME=serverless
 	make serverless-requirements
-	make python-requirements
+	make tester-build
 	make mock-dos-db-setup
 
 build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s event-receiver-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s event-processor-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -25,11 +26,11 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make populate-deployment-variables)"
+	eval "$$(make -s populate-deployment-variables)"
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key
 	fi
-	make terraform-apply-auto-approve STACKS=lambda-security-group
+	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=api-gateway-route53
 
@@ -40,7 +41,7 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=api-gateway-route53
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=lambda-security-group
+	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -51,36 +52,51 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
+	eval "$$(make aws-assume-role-export-variables)"
+	echo "export DB_PASSWORD=$$(make -s secret-fetch NAME=$(DB_SECRET_NAME))"
 	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
-		eval "$$(make aws-assume-role-export-variables)"
 		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 	fi
 
-python-requirements: # Installs whole project python requirements
-	make docker-run-tools \
-		CMD="pip install -r requirements.txt -r requirements-dev.txt -r event_sender/requirements.txt" \
-		DIR=./application
+tester-build: ### Build tester docker image
+	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
+	cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
+	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
+	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
+	make docker-image NAME=tester
+	make tester-clean
 
-unit-test: # Runs whole project unit tests
-	make -s docker-run-tools \
+tester-run-unittest:
+	make docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m pytest --cov=." \
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
+tester-clean:
+	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
+
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	IMAGE=$$(make _docker-get-reg)/tester \
 	ARGS=" \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		"
 
 component-test: # Runs whole project component tests
-	make -s docker-run-tools \
+	make docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m behave" \
 	DIR=test/component \
 	ARGS=" \
@@ -94,7 +110,8 @@ clean: # Runs whole project clean
 		terraform-clean \
 		python-clean \
 		event-sender-clean \
-		event-receiver-clean
+		event-receiver-clean \
+		event-processor-clean
 
 # ==============================================================================
 # Other
@@ -137,15 +154,15 @@ kafka-producer-run:
 
 python-consume-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/consume_message.py
+	python application/kafka_demo/consume_message.py
 
 python-peek-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/peek_message.py
+	python application/kafka_demo/peek_message.py
 
 python-put-message-run:
 	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/put_message.py
+	python application/kafka_demo/put_message.py
 
 # ==============================================================================
 # Mocks Setup
@@ -215,13 +232,39 @@ event-receiver-run: ### A rebuild and restart of the event receiver lambda.
 	make event-receiver-build
 	make start
 
+# ==============================================================================
+# Event Processor
+
+event-processor-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=event_processor
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/event-processor/assets/requirements.txt
+	cd $(APPLICATION_DIR)/event_processor
+	tar -czf $(DOCKER_DIR)/event-processor/assets/event-processor-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make event-processor-clean
+	export VERSION=$$(make docker-image-get-version NAME=event-processor)
+
+event-processor-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
+	make common-code-remove LAMBDA_DIR=event_processor
+
+event-processor-run: ### A rebuild and restart of the event processor lambda.
+	make stop
+	make event-processor-build
+	make start
+
 # -----------------------------
 # Serverless
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	make docker-push NAME=event-receiver AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-# make docker-push NAME=event-processor
+	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"

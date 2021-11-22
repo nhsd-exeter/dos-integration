@@ -1,0 +1,124 @@
+from os import environ
+from logging import getLogger
+
+import psycopg2
+
+log = getLogger("lambda")
+
+valid_service_types = {13, 131, 132, 134, 137}
+valid_status_id = 1
+
+
+class DoSService:
+
+    # These values are which columns are selected from the database and then
+    # are passed in as attributes into the DoSService object.
+    #
+    # example: Put 'postcode' in this list and you can use service.postcode in
+    # the object
+    db_columns = [
+        "id",
+        "uid",
+        "name",
+        "odscode",
+        "address",
+        "town",
+        "postcode",
+        "web",
+        "email",
+        "fax",
+        "nonpublicphone",
+        "typeid",
+        "parentid",
+        "subregionid",
+        "statusid",
+        "createdtime",
+        "modifiedtime",
+        "publicphone",
+        "publicname",
+    ]
+
+    def __init__(self, db_cursor_row):
+
+        # Sets the attributes of this object to those found in the db row
+        for i, attribute_name in enumerate(self.db_columns):
+            attrbute_value = db_cursor_row[i]
+            setattr(self, attribute_name, attrbute_value)
+
+    def __repr__(self):
+        if self.publicname is not None:
+            name = self.publicname
+        elif self.name is not None:
+            name = self.name
+        else:
+            name = "NO-VALID-NAME"
+
+        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} " f"status={self.statusid} name='{name}'>"
+
+    def ods5(self):
+        """First 5 digits of odscode"""
+        return self.odscode[0:5]
+
+    def get_changes(self, nhs_entity) -> dict:
+        """Returns a dict of the changes that are required to get
+        the service inline with the given nhs_entity
+        """
+
+        changes = {}
+
+        # WEBSITE
+        if self.web != nhs_entity.Website:
+            changes["Website"] = nhs_entity.Website
+
+        # TODO in future tickets: Add in checks for the rest of the
+        # possible changes
+
+        return changes
+
+
+def get_matching_dos_services(odscode):
+    """Retrieves DoS Services from DoS database
+
+    input:  odscode
+
+    output: List of DoSService objects with matching first 5 digits
+
+            of odscode, taken from DoS database
+    """
+
+    log.info(f"Searching for DoS services with odscode that matches first " f" 5 digits of '{odscode}'")
+
+    # Check size of odscode, fail if shorter than 5, warn if longer
+    if len(odscode) < 5:
+        raise Exception(f"odscode '{odscode}' is too short.")
+    if len(odscode) > 5:
+        log.warn(f"odscode '{odscode}' is longer than exptected 5 characters")
+
+    # Get DB details from env variables
+    server = environ["DB_SERVER"]
+    port = environ["DB_PORT"]
+    db_name = environ["DB_NAME"]
+    db_user = environ["DB_USER_NAME"]
+    db_password = environ["DB_PASSWORD"]
+
+    # Connect to Database
+    log.info(f"Attempting connection to database '{server}'")
+    log.debug(f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
+    db = psycopg2.connect(
+        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+    )
+
+    # Create and run SQL Command with inputted odscode SELECTING columns
+    # defined at top of file and using the 'LIKE' command to match first
+    # 5 digits of odscode
+    sql_command = (
+        f"SELECT {', '.join(DoSService.db_columns)} " f"FROM services " f"WHERE odscode LIKE '{odscode[0:5]}%'"
+    )
+    log.info(f"Created SQL command to run: {sql_command}")
+    c = db.cursor()
+    c.execute(sql_command)
+
+    # Create list of DoSService objects from returned rows
+    services = [DoSService(row) for row in c.fetchall()]
+
+    return services
