@@ -2,6 +2,7 @@ aws-lambda-context
 behave
 boto3
 coverage
+locust
 mutmut
 pytest
 pytest-cov
