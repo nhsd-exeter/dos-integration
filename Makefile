@@ -61,7 +61,7 @@ populate-deployment-variables:
 
 tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-		cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
+	cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
 	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
