@@ -62,7 +62,7 @@ populate-deployment-variables:
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m pytest --cov=." \
+	CMD="python -m pytest --cov=. -vv" \
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
@@ -100,7 +100,8 @@ clean: # Runs whole project clean
 		python-clean \
 		event-sender-clean \
 		event-receiver-clean \
-		event-processor-clean
+		event-processor-clean \
+		tester-clean
 
 # ==============================================================================
 # Tester
@@ -115,6 +116,7 @@ tester-build: ### Build tester docker image
 	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
 	make docker-image NAME=tester
 	make tester-clean
+
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
 
