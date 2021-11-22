@@ -115,7 +115,7 @@ functions:
     timeout: 120
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     tags:
-      PYTHON_VERSION: ${env:PYTHON_VERSION}
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       PROFILE: ${env:PROFILE}
       POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
