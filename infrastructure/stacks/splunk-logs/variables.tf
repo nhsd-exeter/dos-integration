@@ -40,15 +40,15 @@ variable "texas_s3_logs_bucket" {
 # ##############
 
 variable "event_receiver_subscription_filter_name" {
-  description = "Log Filter name for event receiver lambda"
+  description = "Log filter name for event receiver lambda"
 }
 
 variable "event_processor_subscription_filter_name" {
-  description = "Log Filter name for event processor lambda"
+  description = "Log filter name for event processor lambda"
 }
 
 variable "event_sender_subscription_filter_name" {
-  description = "Log Filter name for event sender lambda"
+  description = "Log filter name for event sender lambda"
 }
 
 variable "dos_integration_firehose" {
@@ -56,7 +56,7 @@ variable "dos_integration_firehose" {
 }
 
 variable "firehose_role" {
-  description = "The firehose delivery stream role arn"
+  description = "The firehose delivery stream role name"
 }
 
 # ##############
