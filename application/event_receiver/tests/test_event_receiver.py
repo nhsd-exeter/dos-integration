@@ -136,7 +136,7 @@ def test_trigger_event_processor_not_mock_mode(
     # Arrange
     mock_is_mock_mode.return_value = is_mock_mode_value
     event_processor_name = "event_processor"
-    environ["EVENT_PROCESSOR_NAME"] = event_processor_name
+    environ["EVENT_PROCESSOR_LAMBDA_NAME"] = event_processor_name
     change_event = change_event["body"]
     # Act
     trigger_event_processor(change_event)

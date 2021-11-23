@@ -8,7 +8,7 @@ DOS_API_GATEWAY_USERNAME := user
 DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
-MOCK_MODE := False
+MOCK_MODE := false
 
 DB_SERVER := uec-dos-int-di-161.dos-db.k8s-nonprod.texasplatform.uk
 DB_PORT := 5432

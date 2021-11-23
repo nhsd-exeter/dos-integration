@@ -104,7 +104,7 @@ def lambda_handler(event, context):
 
     event_processor.get_change_requests()
 
-    if is_mock_mode():
+    if is_mock_mode() is False:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")

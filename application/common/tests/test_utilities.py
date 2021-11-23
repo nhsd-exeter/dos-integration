@@ -1,3 +1,4 @@
+from json import dumps
 from os import environ
 from unittest.mock import patch
 
@@ -91,5 +92,5 @@ def test_invoke_lambda_function(mock_client):
     # Assert
     mock_client.assert_called_once_with("lambda")
     mock_client().invoke.assert_called_once_with(
-        FunctionName=lambda_function_name, InvocationType="Event", Payload=payload
+        FunctionName=lambda_function_name, InvocationType="Event", Payload=dumps(payload).encode("utf-8")
     )

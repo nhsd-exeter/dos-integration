@@ -52,7 +52,7 @@ variable "programme" {
   description = "programme"
 }
 variable "environment" {
-    description = "environment"
+  description = "environment"
 }
 
 # ############################

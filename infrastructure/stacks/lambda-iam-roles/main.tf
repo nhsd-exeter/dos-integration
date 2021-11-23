@@ -39,7 +39,10 @@ resource "aws_iam_role_policy" "event_receiver_policy" {
         "ec2:UnassignPrivateIpAddresses",
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs"
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "lambda:InvokeFunction"
       ],
       "Resource": ["*"]
     }
@@ -100,7 +103,10 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "ec2:UnassignPrivateIpAddresses",
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs"
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "lambda:InvokeFunction"
       ],
       "Resource": ["*"]
     }
@@ -150,7 +156,10 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "ec2:UnassignPrivateIpAddresses",
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs"
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords",
+        "lambda:InvokeFunction"
       ],
       "Resource": ["*"]
     }

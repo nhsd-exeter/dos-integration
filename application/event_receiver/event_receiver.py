@@ -72,4 +72,4 @@ def trigger_event_processor(change_event: Dict[str, Any]) -> None:
     if is_mock_mode() is True:
         logger.info("Mocking mode is set to mock")
     else:
-        invoke_lambda_function(getenv("EVENT_PROCESSOR_NAME"), change_event)
+        invoke_lambda_function(getenv("EVENT_PROCESSOR_LAMBDA_NAME"), change_event)
