@@ -13,3 +13,13 @@ class NHSEntity:
         # Set attributes for each value in dict
         for key, value in entity_data.items():
             setattr(self, key, value)
+
+    def get_standard_opening_times(self,opening_time_type) -> list:
+        """Get all the Standard Opening Times"""
+        standard_filter =  lambda standard: standard["OpeningTimeType"] == opening_time_type and standard["AdditionalOpeningDate"] == ""
+        return list(filter(standard_filter, self.OpeningTimes))
+
+    def get_specified_opening_times(self,opening_time_type):
+        """Get all the Specified Opening Times"""
+        specified_filter =  lambda specified: specified["OpeningTimeType"] == opening_time_type and specified["AdditionalOpeningDate"] != ""
+        return list(filter(specified_filter, self.OpeningTimes))
