@@ -8,7 +8,7 @@ DOS_API_GATEWAY_USERNAME := user
 DOS_API_GATEWAY_PASSWORD := password
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
-MOCK_MODE := False
+MOCK_MODE := false
 
 DB_SERVER := uec-dos-int-di-161.dos-db.k8s-nonprod.texasplatform.uk
 DB_PORT := 5432
@@ -27,6 +27,7 @@ TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
 
 # Lambda Security Group
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
+TF_VAR_dos_db_name := uec-dos-int-di-161
 
 # API Gateway Route53
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)

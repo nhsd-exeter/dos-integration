@@ -1,14 +1,14 @@
 from json import dumps, load
 
 
-def load_json_file(filename: str) -> str:
+def load_json_file(filename: str) -> dict:
     """Load Json file from resource folder
 
     Args:
         filename (str): Name of the file to be loaded
 
     Returns:
-        str: File as string
+        dict: File as dictionary
     """
     with open(f"features/resources/{filename}", "r", encoding="utf-8") as json_file:
         return load(json_file)
@@ -53,18 +53,18 @@ def setup_change_event() -> dict:
     Returns:
         str: Change event as a dict with json string body
     """
-    change_event = load_json_file("valid_change_event.json")
+    change_event = load_json_file("valid_event_receiver_change_event.json")
     change_event["body"] = dumps(change_event["body"])
     return change_event
 
 
-def load_change_event() -> str:
+def load_event_receiver_change_event() -> str:
     """Loads change event, ready for modification
 
     Returns:
         str: Change event as a string
     """
-    change_event = load_json_file("valid_change_event.json")
+    change_event = load_json_file("valid_event_receiver_change_event.json")
     return change_event
 
 

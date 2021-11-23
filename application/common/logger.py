@@ -1,4 +1,4 @@
-from logging import INFO, Logger, getLogger
+from logging import Logger, getLogger
 from logging.config import fileConfig
 from os import getenv, path
 from typing import Any, Dict
@@ -46,10 +46,6 @@ def set_log_level(logger: Logger) -> Logger:
     Returns:
         Logger: returns logger set to correct logging level
     """
-    log_level = getenv("LOG_LEVEL")
-    if log_level is None:
-        print("LOG_LEVEL environment variable not set")
-        log_level = INFO
-        print(f"LOG_LEVEL has been set to default {log_level}")
+    log_level = getenv("LOG_LEVEL", default="INFO")
     logger.setLevel(log_level)
     return logger

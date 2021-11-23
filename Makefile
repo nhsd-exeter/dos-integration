@@ -59,6 +59,53 @@ populate-deployment-variables:
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 	fi
 
+unit-test:
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m pytest --cov=. -vv" \
+	DIR=./application \
+	ARGS=" \
+		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
+		-e TF_VAR_api_gateway_api_key_name=$(TF_VAR_api_gateway_api_key_name) \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		"
+
+coverage-report: # Runs whole project coverage unit tests
+	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	ARGS=" \
+		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		"
+
+component-test: # Runs whole project component tests
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m behave --no-capture" \
+	DIR=test/component \
+	ARGS=" \
+		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
+		-e EVENT_RECEIVER_FUNCTION_URL=$(EVENT_RECEIVER_FUNCTION_URL) \
+		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
+		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
+		"
+
+clean: # Runs whole project clean
+	make \
+		terraform-clean \
+		python-clean \
+		event-sender-clean \
+		event-receiver-clean \
+		event-processor-clean \
+		tester-clean
+
+# ==============================================================================
+# Tester
+
 tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
 	cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
@@ -70,48 +117,8 @@ tester-build: ### Build tester docker image
 	make docker-image NAME=tester
 	make tester-clean
 
-tester-run-unittest:
-	make docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m pytest --cov=." \
-	DIR=./application \
-	ARGS=" \
-		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
-		"
-
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
-
-coverage-report: # Runs whole project coverage unit tests
-	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	ARGS=" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
-		"
-
-component-test: # Runs whole project component tests
-	make docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave" \
-	DIR=test/component \
-	ARGS=" \
-		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
-		-e EVENT_RECEIVER_FUNCTION_URL=$(EVENT_RECEIVER_FUNCTION_URL) \
-		"
-
-clean: # Runs whole project clean
-	make \
-		terraform-clean \
-		python-clean \
-		event-sender-clean \
-		event-receiver-clean \
-		event-processor-clean
 
 # ==============================================================================
 # Other

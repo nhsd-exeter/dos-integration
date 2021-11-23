@@ -1,3 +1,4 @@
+from json import dumps
 from logging import getLogger
 from os import environ, getenv
 from typing import Any, Dict
@@ -39,15 +40,15 @@ def get_environment_variable(environment_key: str) -> str:
 
 
 def is_mock_mode() -> bool:
-    """This function checks if mock mode should be enabled
+    """This function checks if mock mode should be enabled, default is False
 
     Returns:
         bool: Should mock mode be on?
     """
-    response = False
-    if getenv("MOCK_MODE") is not None:
-        response = bool(getenv("MOCK_MODE"))
-    return response
+    if getenv("MOCK_MODE") in ["true", "True"]:
+        return True
+    else:
+        return False
 
 
 def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> None:
@@ -58,5 +59,6 @@ def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> No
         lambda_event (Dict[str, Any]): Event to pass to lambda
     """
     logger.info(f"Invoking {lambda_name}")
+    lambda_payload = dumps(lambda_event).encode("utf-8")
     lambda_client = client("lambda")
-    lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_event)
+    lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_payload)

@@ -1,8 +1,8 @@
-# PROJECT_NAME_TO_REPLACE
+# DoS Integration
 
 ## Table of Contents
 
-- [PROJECT_NAME_TO_REPLACE](#project_name_to_replace)
+- [DoS Integration](#dos-integration)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
   - [Quick Start](#quick-start)
@@ -41,7 +41,7 @@
       - [Interfaces](#interfaces)
       - [Dependencies](#dependencies)
     - [Data](#data)
-    - [Authentication and authorisation](#authentication-and-authorisation)
+    - [Authentication and Authorisation](#authentication-and-authorisation)
     - [Technology Stack](#technology-stack)
     - [Key Architectural Decisions](#key-architectural-decisions)
     - [System Quality Attributes](#system-quality-attributes)
@@ -104,7 +104,7 @@ Here is the list of the development practices that have to be followed by the te
 - Only use single canonical branch **master**. Any intermediate branch significantly increases the maintenance overhead of the repository.
 - Apply the git rebase workflow and never merge from master to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
 - Cryptographically sign your commits using **gpg** to ensure its content have not been tampered with.
-- Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complines and clarity as well as to enable tooling to produce release notes automatically.
+- Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complies and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.
 
 Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTING.md) for more detailed instructions.
@@ -172,7 +172,7 @@ This testing is generally done by a developer
 To run unit tests run the following commands
 
     make tester-build
-    make tester-run-unittest
+    make unit-test
 
 For coverage run
 
@@ -224,7 +224,7 @@ Here are the steps to perform meaningful local system check:
 
 ### APIKey
 
-API Key must be generated prior to external API-Gateways being set up.
+API Key must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
 
 ### Artefact Versioning
 
@@ -258,6 +258,7 @@ To quick update the lambdas run the following command. Note this only updates th
 ### Remove Deployment From the Command-line
 
     make undeploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+
 ### Secrets
 
 Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID)-$(PROFILE)/deployment` secret name and variable `$(DEPLOYMENT_SECRETS)` should be set accordingly.
@@ -325,22 +326,28 @@ What sort of data system operates on and processes
 - Consistency and integrity
 - Persistence
 
-### Authentication and authorisation
+### Authentication and Authorisation
 
 - Default user login for testing
 - Different user roles
-- Authosrisation type
+- Authorisation type
 - Authentication method
 
 It is recommended that any other documentation related to the aspect of security should be stored in a private workspace.
 
 ### Technology Stack
 
-What are the technologies and programing languages used to implement the solution
+What are the technologies and programming languages used to implement the solution
+
+The current technology stack is:
+
+- Python (typically latest version) - Main programming language
+- Serverless Framework - Infrastructure as code tool (we use where possible)
+- Terraform - Infrastructure as code tool (we use when infrastructure is not supported by Serverless Framework)
 
 ### Key Architectural Decisions
 
-Link or include the abbreviated list of the ADRs
+Architectural decisions records (ADRs) are stored in `documentation/adr`
 
 ### System Quality Attributes
 
@@ -377,7 +384,7 @@ List of the high level principles that a product /development team must adhere t
   - Indexes
   - Format
 - Tracing
-  - Correlation ID
+  - AWS X-Ray Trace Ids (These are included in logs)
 - Monitoring
   - Dashboards
 - Alerting
@@ -419,7 +426,15 @@ List all the operational runbooks
 ### Communications
 
 - Slack channels
-  - Development, e.g. `[service-name]-development`
+  - Getting Started (Private: Ask for invite) `di-get-started`
+    - Handy tips on how to get started as part of the DoS Integration team
+  - Full Development Team (Private: Ask for invite) `dos-integration-devs`
+    - For team conversations and team notifications
+  - Devs/Tests Only (Private: Ask for invite) `di-coders`
+    - For technical conversation without distracting the non technical team members
+  - Swarming Channel (Public) `dos-integration-swarming`
+    - For team meetings and swarming sessions. Generally used for huddles.
+- TO DO SLACK CHANNELS
   - CI/CD and data pipelines, processes, e.g. `[service-name]-automation`
   - Service status, e.g. `[service-name]-status`
 - Email addresses in use, e.g. `[service.name]@nhs.net`

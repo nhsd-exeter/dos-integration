@@ -15,7 +15,6 @@ DB_PORT := 5432
 DB_NAME := postgres
 DB_USER_NAME := postgres
 DB_PASSWORD := postgres
-DB_SECRET_NAME := uec-dos-int-di-161-db-master-password
 
 # ==============================================================================
 # Component Test Variables

@@ -1,3 +1,4 @@
 .version
+*.txt
 *.tar.gz
 Dockerfile.effective
