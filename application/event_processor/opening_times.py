@@ -32,7 +32,7 @@ class OpenPeriod:
         return hash(str(self))
 
 
-class SpecififedOpeningTime:
+class SpecifiedOpeningTime:
     def __init__(self, open_periods: (List[OpenPeriod]), date: (date)) -> None:
         self.open_periods = open_periods
         self.date = date
@@ -49,7 +49,7 @@ class SpecififedOpeningTime:
         return f"<SpecifiedOpenTime: {self.date_string} "
 
     def __eq__(self, other):
-        return (isinstance(other, SpecififedOpeningTime) and
+        return (isinstance(other, SpecifiedOpeningTime) and
                 set(self.open_periods) == set(other.open_periods) and
                 self.date == other.date)
 
