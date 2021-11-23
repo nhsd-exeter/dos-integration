@@ -95,8 +95,8 @@ def add_field_to_change_request_if_not_equal(changes: dict, change_key: str, dos
     Returns:
         dict: Change Request changes
     """
-    logger.debug(f"Comparing {change_key} values")
-    if compare_values(str(dos_value), str(nhs_uk_value)):
+    if str(dos_value) != str(nhs_uk_value):
+        logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
         changes[change_key] = nhs_uk_value
     return changes
 
@@ -124,26 +124,10 @@ def add_address_to_change_request_if_not_equal(
     ]
     nhs_uk_address = [address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
     nhs_uk_address_string = "$".join(nhs_uk_address)
-    if compare_values(dos_address, nhs_uk_address_string):
+    if dos_address != nhs_uk_address_string:
+        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
         changes[change_key] = nhs_uk_address
     return changes
-
-
-def compare_values(dos_value: str, nhs_uk_value: str) -> bool:
-    """Compare if two values are equal.
-
-    Args:
-        dos_value (str): First value to compare
-        nhs_uk_value (str): Second value to compare
-
-    Returns:
-        bool: False if equal, True if not equal
-    """
-    not_equal = False
-    if dos_value != nhs_uk_value:
-        logger.debug(f"{dos_value=} != {nhs_uk_value=}")
-        not_equal = True
-    return not_equal
 
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:

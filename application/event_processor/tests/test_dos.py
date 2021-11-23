@@ -14,7 +14,6 @@ from ..dos import (
     DoSService,
     add_address_to_change_request_if_not_equal,
     add_field_to_change_request_if_not_equal,
-    compare_values,
     get_matching_dos_services,
 )
 from ..nhs import NHSEntity
@@ -213,28 +212,6 @@ def test_add_address_to_change_request_if_not_equal_not_equal():
     actual_changes = add_address_to_change_request_if_not_equal(changes, "address", dos_address, nhs_uk_entity)
     # Assert
     assert expected_changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
-
-
-def test_compare_values_same_value():
-    # Arrange
-    dos_value = "test"
-    nhs_value = "test"
-    expected_response = False
-    # Act
-    response = compare_values(dos_value, nhs_value)
-    # Assert
-    assert expected_response == response, f"Should return {expected_response} bool, actually: {response}"
-
-
-def test_compare_values_different_value():
-    # Arrange
-    dos_value = "test"
-    nhs_value = "test2"
-    expected_response = True
-    # Act
-    response = compare_values(dos_value, nhs_value)
-    # Assert
-    assert expected_response == response, f"Should return {expected_response} bool, actually: {response}"
 
 
 @patch(f"{FILE_PATH}.connect")
