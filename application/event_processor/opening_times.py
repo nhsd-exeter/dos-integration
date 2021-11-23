@@ -24,7 +24,7 @@ class OpenPeriod:
 
     def __eq__(self, other):
         return (isinstance(other, OpenPeriod) and
-                self.start == other.start and 
+                self.start == other.start and
                 self.end == other.end)
 
     # A hashing function lets us compare sets correctly later
@@ -68,4 +68,3 @@ class StandardOpeningTimes:
 
     def __hash__(self) -> int:
         pass
-    
