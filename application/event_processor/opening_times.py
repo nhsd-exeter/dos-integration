@@ -1,4 +1,4 @@
-from datetime import datetime, time, date
+from datetime import time, date
 from typing import List
 
 time_format = "%H:%M:%S"
@@ -31,6 +31,22 @@ class OpenPeriod:
     # A hashing function lets us compare sets correctly later
     def __hash__(self):
         return hash(str(self))
+
+
+    def start_before_end(self):
+        return self.start < self.end
+
+    
+    def overlaps(self, other):
+        assert self.start_before_end()
+        assert other.start_before_end()
+
+        # Q: 'Could two people have met?'
+        # A: 'Yes, if both were born before the other died.'
+        return (self.start  < other.end and 
+                other.start < self.end)
+        
+
 
 
 class SpecifiedOpeningTime:
