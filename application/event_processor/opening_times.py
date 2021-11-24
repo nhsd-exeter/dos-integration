@@ -4,6 +4,7 @@ from typing import List
 time_format = "%H:%M:%S"
 date_format = "%Y/%m/%d"
 
+
 class OpenPeriod:
 
     def __init__(self, start: time, end: time) -> None:
@@ -42,7 +43,7 @@ class SpecifiedOpeningTime:
 
     def openings_string(self):
         open_period_strings = [str(op) for op in self.open_periods]
-        open_period_strings.sort() # for consitencey
+        open_period_strings.sort()  # for consitencey
         return f"[{', '.join(open_period_strings)}]"
 
     def __repr__(self):
@@ -57,10 +58,9 @@ class SpecifiedOpeningTime:
         return hash(self.date_string() + self.openings_string())
 
 
-
 # TODO: complete later
 class StandardOpeningTimes:
-    def __init__(self, open_periods: (dict(List[OpenPeriod]))) -> None:
+    def __init__(self, open_periods: (List[OpenPeriod])) -> None:
         self.open_periods = open_periods
 
     def __eq__(self, other):
