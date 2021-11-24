@@ -1,8 +1,9 @@
 from logging import getLogger
 from os import environ, getenv
 from typing import List
-
+from itertools import groupby
 from boto3 import client
+from event_processor.opening_times import SpecifiedOpeningTime, OpenPeriod
 from change_request import (
     ADDRESS_CHANGE_KEY,
     PHONE_CHANGE_KEY,
@@ -14,7 +15,8 @@ from nhs import NHSEntity
 from psycopg2 import connect
 
 logger = getLogger("lambda")
-secrets_manager = client("secretsmanager", region_name=getenv("AWS_REGION", default="eu-west-2"))
+secrets_manager = client("secretsmanager", region_name=getenv(
+    "AWS_REGION", default="eu-west-2"))
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
 
@@ -74,13 +76,17 @@ class DoSService:
         the service inline with the given nhs_entity
         """
         changes = {}
-        add_field_to_change_request_if_not_equal(changes, WEBSITE_CHANGE_KEY, self.web, nhs_entity.Website)
-        add_field_to_change_request_if_not_equal(changes, POSTCODE_CHANGE_KEY, self.postcode, nhs_entity.Postcode)
-        add_field_to_change_request_if_not_equal(changes, PHONE_CHANGE_KEY, self.publicphone, nhs_entity.Phone)
+        add_field_to_change_request_if_not_equal(
+            changes, WEBSITE_CHANGE_KEY, self.web, nhs_entity.Website)
+        add_field_to_change_request_if_not_equal(
+            changes, POSTCODE_CHANGE_KEY, self.postcode, nhs_entity.Postcode)
+        add_field_to_change_request_if_not_equal(
+            changes, PHONE_CHANGE_KEY, self.publicphone, nhs_entity.Phone)
         add_field_to_change_request_if_not_equal(
             changes, PUBLICNAME_CHANGE_KEY, self.publicname, nhs_entity.OrganisationName
         )
-        add_address_to_change_request_if_not_equal(changes, ADDRESS_CHANGE_KEY, self.address, nhs_entity)
+        add_address_to_change_request_if_not_equal(
+            changes, ADDRESS_CHANGE_KEY, self.address, nhs_entity)
         return changes
 
 
@@ -122,7 +128,8 @@ def add_address_to_change_request_if_not_equal(
         nhs_uk_entity.City,
         nhs_uk_entity.County,
     ]
-    nhs_uk_address = [address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
+    nhs_uk_address = [
+        address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
     nhs_uk_address_string = "$".join(nhs_uk_address)
     if dos_address != nhs_uk_address_string:
         logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
@@ -140,7 +147,8 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
         list[DoSService]: List of DoSService objects with matching first 5 digits of odscode, taken from DoS database
     """
 
-    logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
+    logger.info(
+        f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
 
     server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
@@ -149,7 +157,8 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
+    logger.debug(
+        f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
     db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30)
 
     sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
@@ -160,3 +169,44 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     services = [DoSService(row) for row in c.fetchall()]
     c.close()
     return services
+
+
+def get_specified_opening_times_from_db(odscode: str) -> List[SpecifiedOpeningTime]:
+    """Retrieves specified opening times from  DoS database
+
+    Args:
+        odscode (str): ODScode to match on
+
+    Returns:
+        List[SpecifiedOpeningTime]: List of Specified Opening times with matching serviceid
+        serviceid can get from sevices table by passing ODSCode in where clause
+    """
+
+    logger.info(
+        f"Searching for specified opening times with ODSCode that matches first 5 digits of '{odscode}'")
+
+    server = environ["DB_SERVER"]
+    port = environ["DB_PORT"]
+    db_name = environ["DB_NAME"]
+    db_user = environ["DB_USER_NAME"]
+    db_password = environ["DB_PASSWORD"]
+
+    logger.info(f"Attempting connection to database '{server}'")
+    logger.debug(
+        f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
+    db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30)
+
+    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+    logger.info(f"Created SQL command to run: {sql_command}")
+    c = db.cursor()
+    c.execute(sql_command)
+
+    """sort by date and then by starttime"""
+    sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
+    data = dict()
+    for key, value in groupby(sorted_list, lambda row: (row[1])):
+        data[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
+    specified_times = [SpecifiedOpeningTime(
+        value, key) for key, value in data.items()]
+    c.close()
+    return specified_times

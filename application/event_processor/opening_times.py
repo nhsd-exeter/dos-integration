@@ -32,21 +32,17 @@ class OpenPeriod:
     def __hash__(self):
         return hash(str(self))
 
-
     def start_before_end(self):
         return self.start < self.end
 
-    
     def overlaps(self, other):
         assert self.start_before_end()
         assert other.start_before_end()
 
         # Q: 'Could two people have met?'
         # A: 'Yes, if both were born before the other died.'
-        return (self.start  < other.end and 
+        return (self.start < other.end and
                 other.start < self.end)
-        
-
 
 
 class SpecifiedOpeningTime:
@@ -63,7 +59,7 @@ class SpecifiedOpeningTime:
         return f"[{', '.join(open_period_strings)}]"
 
     def __repr__(self):
-        return f"<SpecifiedOpenTime: {self.date_string} "
+        return f"<SpecifiedOpenTime: {self.date} {''.join(str(v) for v in self.open_periods)}>"
 
     def __eq__(self, other):
         return (isinstance(other, SpecifiedOpeningTime) and

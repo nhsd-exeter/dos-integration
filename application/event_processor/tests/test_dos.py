@@ -15,6 +15,7 @@ from ..dos import (
     add_address_to_change_request_if_not_equal,
     add_field_to_change_request_if_not_equal,
     get_matching_dos_services,
+    get_specified_opening_times_from_db,
 )
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
@@ -307,3 +308,94 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     del environ["DB_NAME"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
+
+@patch(f"{FILE_PATH}.connect")
+def test_get_specified_opening_times_from_db_times_returned(mock_connect):
+    # Arrange
+    server = "test.db"
+    port = "5432"
+    db_name = "my-db"
+    db_user = "my-user"
+    db_password = "my-password"
+    environ["DB_SERVER"] = server
+    environ["DB_PORT"] = port
+    environ["DB_NAME"] = db_name
+    environ["DB_USER_NAME"] = db_user
+    environ["DB_PASSWORD"] = db_password
+    db_return = [
+        (
+            28334,
+            datetime(2019, 5, 6),
+            datetime(1970,1,1,8,0,0),
+            datetime(1970,1,1,20,0,0),
+            False
+        ),
+        (
+            28334,
+            datetime(2019, 5, 27),
+            datetime(1970,1,1,8,0,0),
+            datetime(1970,1,1,20,0,0),
+            False
+        ),
+        (
+            28334,
+            datetime(2019, 8, 26),
+            datetime(1970,1,1,8,0,0),
+            datetime(1970,1,1,20,0,0),
+            False
+        ),
+    ]
+    mock_connect().cursor().fetchall.return_value = db_return
+    odscode = "FQ038"
+    expected_response = "[<SpecifiedOpenTime: 2019-05-06 00:00:00 08:00:00-20:00:00>, <SpecifiedOpenTime: 2019-05-27 00:00:00 08:00:00-20:00:00>, <SpecifiedOpenTime: 2019-08-26 00:00:00 08:00:00-20:00:00>]"
+    # Act
+    response = get_specified_opening_times_from_db(odscode)
+    print(response)
+    # Assert
+    assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
+    mock_connect.assert_called_with(
+        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+    )
+    mock_connect().cursor().execute.assert_called_with(
+        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+    )
+    # Clean up
+    del environ["DB_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_USER_NAME"]
+    del environ["DB_PASSWORD"]
+
+@patch(f"{FILE_PATH}.connect")
+def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
+    # Arrange
+    server = "test.db"
+    port = "5432"
+    db_name = "my-db"
+    db_user = "my-user"
+    db_password = "my-password"
+    environ["DB_SERVER"] = server
+    environ["DB_PORT"] = port
+    environ["DB_NAME"] = db_name
+    environ["DB_USER_NAME"] = db_user
+    environ["DB_PASSWORD"] = db_password
+    mock_connect().cursor().fetchall.return_value = []
+    odscode = "FQ038"
+    expected_response = []
+    # Act
+    response = get_specified_opening_times_from_db(odscode)
+    # Assert
+    mock_connect.assert_called_with(
+        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+    )
+    mock_connect().cursor().execute.assert_called_with(
+        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+    )
+    assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
+    # Clean up
+    del environ["DB_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_USER_NAME"]
+    del environ["DB_PASSWORD"]
+
