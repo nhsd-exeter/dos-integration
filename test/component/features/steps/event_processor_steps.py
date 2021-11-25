@@ -78,26 +78,7 @@ def the_change_request_is_produced_and_logged(context):
                     change_event["County"],
                 ],
             },
-        },
-        {
-            "reference": "<NO-TRACE-ID>",
-            "system": "DoS Integration",
-            "message": "DoS Integration CR. AMZN-trace-id: <NO-TRACE-ID>",
-            "service_id": "94621",
-            "changes": {
-                "website": change_event["Website"],
-                "postcode": change_event["Postcode"],
-                "phone": change_event["Phone"],
-                "publicname": change_event["OrganisationName"],
-                "address": [
-                    change_event["Address1"],
-                    change_event["Address2"],
-                    change_event["Address3"],
-                    change_event["City"],
-                    change_event["County"],
-                ],
-            },
-        },
+        }
     ]
     expected_change_request = dumps(expected_change_request, indent=2, default=str)
     assert (
