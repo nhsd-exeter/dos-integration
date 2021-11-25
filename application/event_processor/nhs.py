@@ -1,5 +1,6 @@
 from datetime import datetime, time
 from typing import List
+from application.event_processor.opening_times import SpecifiedOpeningTime
 from  event_processor.opening_times import OpenPeriod
 from itertools import groupby
 from logging import getLogger
@@ -30,7 +31,7 @@ class NHSEntity:
             standard): return standard["OpeningTimeType"] == opening_time_type and standard["AdditionalOpeningDate"] == ""
         return list(filter(standard_filter, self.OpeningTimes))
 
-    def get_specified_opening_times(self, opening_time_type: str) -> dict:
+    def get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
         """Get all the Specified Opening Times
         Args:
             opening_time_type  (str): OpeningTimeType to filter the data e.g General for pharmacy
@@ -40,16 +41,14 @@ class NHSEntity:
         logger.info(f"TODO")
 
         """filter the raw openingtimes  data"""
-        def specified_opening_times_filter(
-            specified): return specified["OpeningTimeType"] == opening_time_type and specified["AdditionalOpeningDate"] != ""
-        specified_times_list = list(
-            filter(specified_opening_times_filter, self.OpeningTimes))
+        def specified_opening_times_filter(specified):
+            return specified["OpeningTimeType"] == opening_time_type and specified["AdditionalOpeningDate"] != ""
+        specified_times_list = list(filter(specified_opening_times_filter, self.OpeningTimes))
 
         """sort the openingtimes  data"""
         sort_specifiled = sorted(specified_times_list, key=lambda item: (
             item["AdditionalOpeningDate"], item['Times']))
         data = dict()
-
         """ grouping data by date"""
         for key, value in groupby(sort_specifiled, lambda item: (item["AdditionalOpeningDate"])):
             op_list: List[OpenPeriod] = []
@@ -59,4 +58,5 @@ class NHSEntity:
                 end = datetime.strptime(times[1], '%H:%M').time()
                 op_list.append(OpenPeriod(start, end))
                 data[key] = op_list
-        return data
+        specified_times = [SpecifiedOpeningTime(value, key) for key, value in data.items()]
+        return specified_times
