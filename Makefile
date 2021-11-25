@@ -32,15 +32,15 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	fi
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=api-gateway-route53
+	make terraform-apply-auto-approve STACKS=api-gateway-route53,splunk-logs
 
 sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
 	eval "$$(make populate-deployment-variables)"
 	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
-	make terraform-destroy-auto-approve STACKS=api-gateway-route53
-	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=api-gateway-route53,splunk-logs
+	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
