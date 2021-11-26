@@ -1,9 +1,12 @@
 from json import dumps
 from logging import getLogger
 from os import environ, getenv
+import sys
+sys.path.append("../")
 
 from aws_lambda_powertools import Tracer
 from boto3 import client
+
 from change_request import ChangeRequest
 from common.logger import setup_logger
 from common.utilities import is_mock_mode, invoke_lambda_function

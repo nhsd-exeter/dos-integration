@@ -1,10 +1,14 @@
 from logging import getLogger
-from os import environ, getenv
-from typing import List,Dict
-from datetime import datetime,date
+from os import environ, getenv, urandom
+from typing import List, Dict
+from datetime import datetime, date, time
 from itertools import groupby
+
 from boto3 import client
-from event_processor.opening_times import SpecifiedOpeningTime, OpenPeriod
+from psycopg2 import connect
+
+from nhs import NHSEntity
+from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from change_request import (
     ADDRESS_CHANGE_KEY,
     PHONE_CHANGE_KEY,
@@ -13,11 +17,12 @@ from change_request import (
     WEBSITE_CHANGE_KEY,
     OPENING_DATES
 )
-from nhs import NHSEntity
-from psycopg2 import connect
+
+
 
 logger = getLogger("lambda")
-secrets_manager = client("secretsmanager", region_name=getenv(
+secrets_manager = client(
+    "secretsmanager", region_name=getenv(
     "AWS_REGION", default="eu-west-2"))
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
@@ -185,7 +190,7 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     return services
 
 
-def get_specified_opening_times_from_db(serviceid: int) -> List[SpecifiedOpeningTime]:
+def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
     """Retrieves specified opening times from  DoS database
 
     Args:
@@ -196,23 +201,10 @@ def get_specified_opening_times_from_db(serviceid: int) -> List[SpecifiedOpening
     """
 
     logger.info(
-        f"Searching for specified opening times with serviceid that matches '{serviceid}'")
+        f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
-    server = environ["DB_SERVER"]
-    port = environ["DB_PORT"]
-    db_name = environ["DB_NAME"]
-    db_user = environ["DB_USER_NAME"]
-    db_password = environ["DB_PASSWORD"]
-
-    logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(
-        f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
-    db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30)
-
-    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
-    logger.info(f"Created SQL command to run: {sql_command}")
-    c = db.cursor()
-    c.execute(sql_command)
+    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {service_id}"
+    c = query_dos_db(sql_command)
 
     """sort by date and then by starttime"""
     sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
@@ -224,3 +216,58 @@ def get_specified_opening_times_from_db(serviceid: int) -> List[SpecifiedOpening
         value, key) for key, value in specified_opening_time_dict.items()]
     c.close()
     return specified_opening_times
+
+
+def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
+
+    logger.info(f"Searching for standard opening times with serviceid "
+                f"that matches '{serviceid}'")
+
+
+    sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
+                   "       sdot.starttime, sdot.endtime "
+                   "FROM servicedayopenings sdo "
+                   "INNER JOIN servicedayopeningtimes sdot "
+                   "ON sdo.id = sdot.servicedayopeningid "
+                   "LEFT JOIN openingtimedays otd "
+                   "ON sdo.dayid = otd.id "
+                  f"WHERE sdo.serviceid = {serviceid}"
+    )
+    c = query_dos_db(sql_command)
+
+    standard_opening_times = StandardOpeningTimes()
+    for row in c.fetchall():
+        weekday = row[2].lower()
+        start = row[3]
+        end = row[4]
+        open_period = OpenPeriod(start, end)
+        standard_opening_times.add_open_period(open_period, weekday)
+    return standard_opening_times
+        
+
+def query_dos_db(sql_command):
+
+    server = environ["DB_SERVER"]
+    port = environ["DB_PORT"]
+    db_name = environ["DB_NAME"]
+    db_user = environ["DB_USER_NAME"]
+    db_password = environ["DB_PASSWORD"]
+
+    logger.info(f"Attempting connection to database '{server}'")
+    logger.debug(f"host={server}, port={port}, dbname={db_name}, "
+                 f"user={db_user}, password={db_password}")
+    db = connect(host=server, port=port, dbname=db_name, user=db_user, 
+                 password=db_password, connect_timeout=30)
+
+    logger.info(f"Running SQL command: {sql_command}")
+    c = db.cursor()
+    c.execute(sql_command)
+    return c
+
+
+
+
+id = "16579"
+sot = get_standard_opening_times_from_db(id)
+
+print(sot)
