@@ -87,6 +87,7 @@ services:
       DB_USER_NAME: $DB_USER_NAME
       DB_PASSWORD: $DB_PASSWORD
       EVENT_SENDER_LAMBDA_NAME: event-sender
+      MOCK_MODE: $MOCK_MODE
     volumes:
       - type: bind
         source: $TMP_DIR
