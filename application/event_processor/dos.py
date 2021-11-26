@@ -1,6 +1,7 @@
 from logging import getLogger
 from os import environ, getenv
-from typing import List
+from typing import List,Dict
+from datetime import datetime,date
 from itertools import groupby
 from boto3 import client
 from event_processor.opening_times import SpecifiedOpeningTime, OpenPeriod
@@ -171,19 +172,18 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     return services
 
 
-def get_specified_opening_times_from_db(odscode: str) -> List[SpecifiedOpeningTime]:
+def get_specified_opening_times_from_db(serviceid: int) -> List[SpecifiedOpeningTime]:
     """Retrieves specified opening times from  DoS database
 
     Args:
-        odscode (str): ODScode to match on
+        serviceid (int): serviceid to match on
 
     Returns:
         List[SpecifiedOpeningTime]: List of Specified Opening times with matching serviceid
-        serviceid can get from sevices table by passing ODSCode in where clause
     """
 
     logger.info(
-        f"Searching for specified opening times with ODSCode that matches first 5 digits of '{odscode}'")
+        f"Searching for specified opening times with serviceid that matches '{serviceid}'")
 
     server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
@@ -196,17 +196,18 @@ def get_specified_opening_times_from_db(odscode: str) -> List[SpecifiedOpeningTi
         f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
     db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30)
 
-    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
     logger.info(f"Created SQL command to run: {sql_command}")
     c = db.cursor()
     c.execute(sql_command)
 
     """sort by date and then by starttime"""
     sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
-    data = dict()
+    specified_opening_time_dict : Dict[datetime,List[OpenPeriod]] = {}
+    key:date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
-        data[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
-    specified_times = [SpecifiedOpeningTime(
-        value, key) for key, value in data.items()]
+        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
+    specified_opening_times = [SpecifiedOpeningTime(
+        value, key) for key, value in specified_opening_time_dict.items()]
     c.close()
-    return specified_times
+    return specified_opening_times
