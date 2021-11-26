@@ -1,4 +1,4 @@
-from datetime import datetime,date 
+from datetime import datetime,date
 from typing import List,Dict
 from application.event_processor.opening_times import SpecifiedOpeningTime
 from  event_processor.opening_times import OpenPeriod

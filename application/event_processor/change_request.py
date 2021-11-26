@@ -5,6 +5,7 @@ PHONE_CHANGE_KEY = "phone"
 POSTCODE_CHANGE_KEY = "postcode"
 PUBLICNAME_CHANGE_KEY = "publicname"
 WEBSITE_CHANGE_KEY = "website"
+OPENING_DATES = "opening_dates"
 
 
 class ChangeRequest:
