@@ -346,18 +346,17 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         ),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
-    odscode = "FQ038"
-    expected_response = "[<SpecifiedOpenTime: 2019-05-06 00:00:00 08:00:00-20:00:00>, <SpecifiedOpenTime: 2019-05-27 00:00:00 08:00:00-20:00:00>, <SpecifiedOpenTime: 2019-08-26 00:00:00 08:00:00-20:00:00>]"
+    serviceid = 123456
+    expected_response = "[<SpecifiedOpenTime: 2019-05-06 [08:00-20:00]>, <SpecifiedOpenTime: 2019-05-27 [08:00-20:00]>, <SpecifiedOpenTime: 2019-08-26 [08:00-20:00]>]"
     # Act
-    response = get_specified_opening_times_from_db(odscode)
-    print(response)
+    response = get_specified_opening_times_from_db(serviceid)
     # Assert
     assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
     mock_connect.assert_called_with(
         host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
     )
     mock_connect().cursor().execute.assert_called_with(
-        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -380,16 +379,16 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     environ["DB_USER_NAME"] = db_user
     environ["DB_PASSWORD"] = db_password
     mock_connect().cursor().fetchall.return_value = []
-    odscode = "FQ038"
+    serviceid = 123456
     expected_response = []
     # Act
-    response = get_specified_opening_times_from_db(odscode)
+    response = get_specified_opening_times_from_db(serviceid)
     # Assert
     mock_connect.assert_called_with(
         host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
     )
     mock_connect().cursor().execute.assert_called_with(
-        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid IN (select id from services  where odscode LIKE '{odscode[0:5]}%'"
+        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up

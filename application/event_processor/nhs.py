@@ -1,5 +1,5 @@
-from datetime import datetime, time
-from typing import List
+from datetime import datetime,date 
+from typing import List,Dict
 from application.event_processor.opening_times import SpecifiedOpeningTime
 from  event_processor.opening_times import OpenPeriod
 from itertools import groupby
@@ -48,15 +48,14 @@ class NHSEntity:
         """sort the openingtimes  data"""
         sort_specifiled = sorted(specified_times_list, key=lambda item: (
             item["AdditionalOpeningDate"], item['Times']))
-        data = dict()
+        specified_opening_time_dict: Dict[datetime,List[OpenPeriod]] = {}
         """ grouping data by date"""
+        key:date
         for key, value in groupby(sort_specifiled, lambda item: (item["AdditionalOpeningDate"])):
             op_list: List[OpenPeriod] = []
             for item in list(value):
                 times = str(item["Times"]).split("-")
-                start = datetime.strptime(times[0], '%H:%M').time()
-                end = datetime.strptime(times[1], '%H:%M').time()
-                op_list.append(OpenPeriod(start, end))
-                data[key] = op_list
-        specified_times = [SpecifiedOpeningTime(value, key) for key, value in data.items()]
-        return specified_times
+                op_list.append(OpenPeriod(times[0], times[1]))
+                specified_opening_time_dict[key] = op_list
+        specified_opening_times = [SpecifiedOpeningTime(value, key) for key, value in specified_opening_time_dict.items()]
+        return specified_opening_times

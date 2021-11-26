@@ -1,8 +1,8 @@
 from datetime import time, date
 from typing import List
 
-time_format = "%H:%M:%S"
-date_format = "%Y/%m/%d"
+time_format = "%H:%M"
+date_format = "%Y-%m-%d"
 
 
 class OpenPeriod:
@@ -59,7 +59,7 @@ class SpecifiedOpeningTime:
         return f"[{', '.join(open_period_strings)}]"
 
     def __repr__(self):
-        return f"<SpecifiedOpenTime: {self.date} {''.join(str(v) for v in self.open_periods)}>"
+        return f"<SpecifiedOpenTime: {self.date_string()} {self.openings_string()}>"
 
     def __eq__(self, other):
         return (isinstance(other, SpecifiedOpeningTime) and
@@ -69,6 +69,8 @@ class SpecifiedOpeningTime:
     def __hash__(self):
         return hash(self.date_string() + self.openings_string())
 
+    def toJson(self):
+        return {self.date:[{"start_time":"{0}".format(row.start_string()) , "end_time":"{0}".format(row.end_string())} for row in self.open_periods]}
 
 # TODO: complete later
 class StandardOpeningTimes:
