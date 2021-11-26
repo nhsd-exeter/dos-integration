@@ -193,7 +193,7 @@ This testing includes:
 
 This testing is generally done by a developer
 
-To run components tests run the following commands
+To run components tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
 
     make tester-build mock-dos-db-setup
     make start component-test
@@ -220,7 +220,7 @@ This testing includes:
 
 This testing is generally done by a tester
 
-To run the performance tests run the following commands
+To run the performance tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
 
     make tester-build
     make performance-test
