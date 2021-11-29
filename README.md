@@ -18,6 +18,7 @@
     - [Unit Testing](#unit-testing)
     - [Component Testing](#component-testing)
     - [Integration Testing](#integration-testing)
+    - [Performance Testing](#performance-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
   - [Deployment](#deployment)
@@ -192,14 +193,14 @@ This testing includes:
 
 This testing is generally done by a developer
 
-To run components tests run the following commands
+To run components tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
 
-    make tester-build
+    make tester-build mock-dos-db-setup
     make start component-test
 
 ### Integration Testing
 
-Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals.  This testing is done on AWS to test the connection between components.
+Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals. This testing is done on AWS to test the connection between components.
 
 This testing includes:
 
@@ -209,6 +210,20 @@ This testing includes:
 
 This testing is generally done by a tester
 
+### Performance Testing
+
+Performance testing is the practice of evaluating how a system performs in terms of responsiveness and stability under a particular workload. Performance tests are typically executed to examine speed, robustness, reliability of the application.
+
+This testing includes:
+
+- Checking non functional requirements (performance/reliability)
+
+This testing is generally done by a tester
+
+To run the performance tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
+
+    make tester-build
+    make performance-test
 ### Test data and mock services
 
 - How the test data set is produced

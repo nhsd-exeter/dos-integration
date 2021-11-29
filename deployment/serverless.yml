@@ -106,6 +106,7 @@ functions:
       DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
+      MOCK_MODE: ${env:MOCK_MODE}
 
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
@@ -131,3 +132,4 @@ functions:
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_PASSWORD: ${env:DB_PASSWORD}
       EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
+      MOCK_MODE: ${env:MOCK_MODE}
