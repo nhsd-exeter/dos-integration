@@ -10,11 +10,13 @@ DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 MOCK_MODE := false
 
-DB_SERVER := uec-dos-int-di-161.dos-db.k8s-nonprod.texasplatform.uk
+DB_SERVER_NAME := uec-core-dos-regression-db-9-replica-pu
 DB_PORT := 5432
 DB_NAME := postgres
 DB_USER_NAME := dbuser
-DB_SECRET_NAME := uec-dos-int-di-161-db-master-password
+DB_SECRET_NAME := core-dos-dev/deployment
+DB_SECRET_KEY := DB_SF_READONLY_PASSWORD
+TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
@@ -27,12 +29,11 @@ TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
 
 # Lambda Security Group
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
-TF_VAR_dos_db_name := uec-dos-int-di-161
+
 
 # API Gateway Route53
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)
-TF_VAR_dos_db_name := uec-dos-int-di-161
 
 # IAM Roles
 TF_VAR_event_receiver_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-receiver-role

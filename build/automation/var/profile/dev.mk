@@ -12,6 +12,15 @@ DOS_API_GATEWAY_PASSWORD := $(or $(DOS_API_GATEWAY_PASSWORD), "")
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
 MOCK_MODE := False
+
+
+DB_SERVER := uec-core-dos-regression-db-9-replica-pu
+DB_PORT := 5432
+DB_NAME := postgres
+DB_USER_NAME := dbuser
+DB_SECRET_NAME := core-dos-dev/deployment
+DB_SECRET_KEY := DB_SF_READONLY_PASSWORD
+TF_VAR_dos_db_name := uec-core-dos-regression-db-9-replica-pu
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 
