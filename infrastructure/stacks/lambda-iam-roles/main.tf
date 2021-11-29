@@ -158,8 +158,7 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
         "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords",
-        "lambda:InvokeFunction"
+        "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
     }

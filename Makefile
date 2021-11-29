@@ -265,7 +265,7 @@ event-processor-run: ### A rebuild and restart of the event processor lambda.
 	make event-processor-build
 	make start
 
-# -----------------------------
+# ==============================================================================
 # Serverless
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
@@ -276,6 +276,26 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
 	make serverless-install-plugin NAME="serverless-localstack"
+
+# ==============================================================================
+# Testing
+
+# -----------------------------
+# Performance Testing
+
+performance-test:
+	TIME_DATE=$$(date +%Y-%m-%d_%H-%M-%S)
+	make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python -m locust -f locustfile.py --headless \
+			--users 10 --spawn-rate 1 --run-time 30s \
+			-H https://$(DOS_INTEGRATION_URL) --stop-timeout 99 \
+			--csv=results/$$TIME_DATE" \
+		DIR=./test/performance \
+		ARGS="\
+			-p 8089:8089 \
+			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
+			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key)"
 
 # -----------------------------
 # Other

@@ -1,7 +1,8 @@
-FROM python:latest
+FROM python:3.9
 # Install python package build requirements
-RUN apk add postgresql-dev build-base python3-dev musl-dev cmake
-# Copy Full Python requirements
+RUN apt-get update && apt-get -y install libpq-dev gcc postgresql-client musl-dev
+RUN ln -s /usr/lib/x86_64-linux-musl/libc.so /lib/libc.musl-x86_64.so.1
+# Install Python requirements
 COPY assets/requirements.txt /
 # Install Python requirements
 RUN python -m pip install -r /requirements.txt --upgrade
