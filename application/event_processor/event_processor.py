@@ -20,11 +20,11 @@ expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_S
 
 
 class EventProcessor:
-    matching_services: list = []
-    change_requests: list = []
 
     def __init__(self, nhs_entity):
         self.nhs_entity = nhs_entity
+        self.matching_services = None
+        self.change_requests = None
 
     def get_matching_services(self):
         """Using the nhs entity attributed to this object, it finds the matching DoS services from the db
@@ -52,15 +52,22 @@ class EventProcessor:
         Returns:
             dict: A dictionary of change requests
         """
+        if self.matching_services is None:
+            logger.error("Attempting to form change requests before matching "
+                         "services have been found.")
+            return
+
         change_requests = []
         for service in self.matching_services:
+
             # Find changes, don't make a change req if none found
             changes = service.get_changes(self.nhs_entity)
-            if len(changes) == 0:
-                continue
-            cr = ChangeRequest(service.id, changes).get_change_request()
-            change_requests.append(cr)
+            if len(changes) > 0:
+                cr = ChangeRequest(service.id, changes).get_change_request()
+                change_requests.append(cr)
+
         logger.info(f"Created {len(change_requests)} change requests {dumps(change_requests, indent=2, default=str)}")
+
         # Assign to attribute and return
         self.change_requests = change_requests
         return self.change_requests
@@ -69,7 +76,11 @@ class EventProcessor:
         """Sends change request payload off to next part of workflow
         [Which at the moment is straight to the next lambda]
         """
-        assert self.change_requests is not None
+        if self.change_requests is None:
+            logger.error("Attempting to send change requests before "
+                         "get_change_requests have been called.")
+            return
+
         for change_payload in self.change_requests:
             invoke_lambda_function(environ["EVENT_SENDER_LAMBDA_NAME"], change_payload)
             logger.info(f"Sent off change payload for id={change_payload['service_id']}")
@@ -96,14 +107,15 @@ def lambda_handler(event, context):
             logger.error(err_msg)
 
     nhs_entity = NHSEntity(event)
-    logger.info(f"Begun event processor function for NHS Entity: {dumps(nhs_entity.__dict__, indent=2, default=str)}")
+    logger.info(f"Begun event processor function for NHS Entity: "
+                f"{dumps(nhs_entity.__dict__, indent=2, default=str)}")
 
     event_processor = EventProcessor(nhs_entity)
     matching_services = event_processor.get_matching_services()
 
     if len(matching_services) == 0:
-        err_msg = f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.ODSCode}'"
-        logger.error(err_msg)
+        logger.error(f"No matching DOS services found that fit all criteria "
+                     f"for ODSCode '{nhs_entity.ODSCode}'")
 
     event_processor.get_change_requests()
 

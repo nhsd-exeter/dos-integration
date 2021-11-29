@@ -1,10 +1,11 @@
+import logging
 from logging import getLogger
 from os import environ, getenv, urandom
 from typing import List, Dict
 from datetime import datetime, date, time
 from itertools import groupby
+from pprint import pprint as pp
 
-from boto3 import client
 from psycopg2 import connect
 
 from nhs import NHSEntity
@@ -21,11 +22,10 @@ from change_request import (
 
 
 logger = getLogger("lambda")
-secrets_manager = client(
-    "secretsmanager", region_name=getenv(
-    "AWS_REGION", default="eu-west-2"))
+db_connection = None
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
+
 
 
 class DoSService:
@@ -67,6 +67,11 @@ class DoSService:
             attribute_value = db_cursor_row[i]
             setattr(self, attribute_name, attribute_value)
 
+        # Do not use these, access them via their corresponding methods
+        self._standard_opening_times = None
+        self._specififed_opening_times = None
+
+
     def __repr__(self) -> str:
         """Returns a string representation of this object"""
         if self.publicname is not None:
@@ -76,7 +81,23 @@ class DoSService:
         else:
             name = "NO-VALID-NAME"
 
-        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name}'>"
+        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name[0:16]}'>"
+
+    def standard_opening_times(self) -> StandardOpeningTimes:
+        """ Retrieves values from db on first call. Returns stored
+            values on subsequent calls
+        """
+        if self._standard_opening_times is None:
+            self._standard_opening_times = get_standard_opening_times_from_db(self.id)
+        return self._standard_opening_times
+
+    def specififed_opening_times(self) -> List[SpecifiedOpeningTime]:
+        """ Retrieves values from db on first call. Returns stored
+            values on subsequent calls
+        """
+        if self._specififed_opening_times is None:
+            self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
+        return self._specififed_opening_times
 
     def get_changes(self, nhs_entity: NHSEntity) -> dict:
         """Returns a dict of the changes that are required to get
@@ -163,27 +184,17 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
         odscode (str): ODScode to match on
 
     Returns:
-        list[DoSService]: List of DoSService objects with matching first 5 digits of odscode, taken from DoS database
+        list[DoSService]: List of DoSService objects with matching first 5
+        digits of odscode, taken from DoS database
     """
 
-    logger.info(
-        f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
-
-    server = environ["DB_SERVER"]
-    port = environ["DB_PORT"]
-    db_name = environ["DB_NAME"]
-    db_user = environ["DB_USER_NAME"]
-    db_password = environ["DB_PASSWORD"]
-
-    logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(
-        f"host={server}, port={port}, dbname={db_name}, user={db_user}, password={db_password}")
-    db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30)
+    logger.info(f"Searching for DoS services with ODSCode that matches first "
+                f"5 digits of '{odscode}'")
 
     sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
     logger.info(f"Created SQL command to run: {sql_command}")
-    c = db.cursor()
-    c.execute(sql_command)
+    c = query_dos_db(sql_command)
+
     # Create list of DoSService objects from returned rows
     services = [DoSService(row) for row in c.fetchall()]
     c.close()
@@ -220,9 +231,8 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
 
 def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
 
-    logger.info(f"Searching for standard opening times with serviceid "
-                f"that matches '{serviceid}'")
-
+    logger.info(f"Searching for standard opening times with serviceid that "
+                f"matches '{serviceid}'")
 
     sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
                    "       sdot.starttime, sdot.endtime "
@@ -242,10 +252,17 @@ def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
         end = row[4]
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
-    return standard_opening_times
         
+    c.close()
+    return standard_opening_times
 
-def query_dos_db(sql_command):
+
+def _connect_dos_db():
+    """ Creates a new connection to the DoS DB and returns the
+        connection object
+
+        warning: Do not use. Should only be used by query_dos_db() func
+    """
 
     server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
@@ -258,16 +275,26 @@ def query_dos_db(sql_command):
                  f"user={db_user}, password={db_password}")
     db = connect(host=server, port=port, dbname=db_name, user=db_user, 
                  password=db_password, connect_timeout=30)
+    return db
+
+
+def query_dos_db(sql_command):
+    """ Querys the dos database with given sql command and 
+        returns the resulting cursor object.
+    """
+
+    # Check if new connection needed.
+    global db_connection
+    if db_connection is None or db_connection.closed != 0:
+        db_connection = _connect_dos_db()
+    else:
+        logger.info("Using existing open database connection.")
 
     logger.info(f"Running SQL command: {sql_command}")
-    c = db.cursor()
+    c = db_connection.cursor()
     c.execute(sql_command)
     return c
 
 
-
-
-id = "16579"
-sot = get_standard_opening_times_from_db(id)
-
-print(sot)
+x = get_specified_opening_times_from_db(28334)
+print(x)

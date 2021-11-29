@@ -1,9 +1,9 @@
-from datetime import datetime, date
+from datetime import datetime, date, time, timedelta
 from typing import List,Dict
-from opening_times import SpecifiedOpeningTime, OpenPeriod
 from itertools import groupby
 from logging import getLogger
 
+from opening_times import SpecifiedOpeningTime, OpenPeriod, WEEKDAYS, StandardOpeningTimes
 
 logger = getLogger("lambda")
 
@@ -21,32 +21,62 @@ class NHSEntity:
 
     def __init__(self, entity_data: dict):
         # Set attributes for each value in dict
+        self.data = entity_data
         for key, value in entity_data.items():
             setattr(self, key, value)
 
-    def get_standard_opening_times(self, opening_time_type) -> list:
+        self.standard_opening_times = self.get_standard_opening_times("General")
+        self.specified_opening_times = self.get_specified_opening_times("General")
+
+    
+    def __repr__(self):
+        pass
+
+
+    def get_standard_opening_times(self, opening_time_type) -> StandardOpeningTimes:
         """Get all the Standard Opening Times"""
-        def standard_filter(
-            standard): return standard["OpeningTimeType"] == opening_time_type and standard["AdditionalOpeningDate"] == ""
-        return list(filter(standard_filter, self.OpeningTimes))
+        
+        std_opening_times = StandardOpeningTimes()
+        for opentime in self.OpeningTimes:
+
+            # Skips unwanted open times
+            if not (opentime["Weekday"].lower() in WEEKDAYS and
+                    opentime["AdditionalOpeningDate"] == "" and
+                    opentime["OpeningTimeType"] == opening_time_type and
+                    opentime["IsOpen"]):
+
+                continue
+
+            weekday = opentime["Weekday"].lower()
+            start, end = [datetime.strptime(time_str, "%H:%M").time()
+                          for time_str in opentime["Times"].split("-")]
+
+            open_period = OpenPeriod(start, end)
+            std_opening_times.add_open_period(open_period, weekday)
+
+        return std_opening_times
+
+
 
     def get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
-        """Get all the Specified Opening Times
-        Args:
-            opening_time_type  (str): OpeningTimeType to filter the data e.g General for pharmacy
-        Returns:
-        dict: key=date and value = List[OpenPeriod] objects  in a sort order
+        """ Get all the Specified Opening Times
+            Args:
+                opening_time_type  (str): OpeningTimeType to filter the data 
+                e.g General for pharmacy
+            Returns:
+            dict: key=date and value = List[OpenPeriod] objects  in a sort
+            order
         """
         logger.info(f"TODO")
 
-        """filter the raw openingtimes  data"""
+        # Filter 
         def specified_opening_times_filter(specified):
-            return specified["OpeningTimeType"] == opening_time_type and specified["AdditionalOpeningDate"] != ""
+            return (specified["OpeningTimeType"] == opening_time_type and 
+                    specified["AdditionalOpeningDate"] != "")
         specified_times_list = list(filter(specified_opening_times_filter, self.OpeningTimes))
 
         """sort the openingtimes  data"""
-        sort_specifiled = sorted(specified_times_list, key=lambda item: (
-            item["AdditionalOpeningDate"], item['Times']))
+        sort_specifiled = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item['Times']))
         specified_opening_time_dict: Dict[datetime,List[OpenPeriod]] = {}
         """ grouping data by date"""
         key:date

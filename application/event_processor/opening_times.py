@@ -2,6 +2,8 @@ from datetime import time, date
 from typing import List
 from logging import getLogger
 
+import change_request
+
 logger = getLogger("lambda")
 
 TIME_FORMAT = "%H:%M:%S"
@@ -62,6 +64,13 @@ class OpenPeriod:
         # "2 people can meet if both were born before the other dies"
         return (self.start  < other.end and 
                 other.start < self.end)
+
+    def export_cr_format(self) -> dict:
+        """ Exports open period into a DoS change request accetped 
+            format
+        """
+        return {"start_time": self.start.strftime(change_request.TIME_FORMAT),
+                "end_time": self.end.strftime(change_request.TIME_FORMAT)}
         
 
 
@@ -83,11 +92,20 @@ class SpecifiedOpeningTime:
 
     def __eq__(self, other):
         return (isinstance(other, SpecifiedOpeningTime) and
-                set(self.open_periods) == set(other.open_periods) and
-                self.date == other.date)
+                self.date == other.date and
+                sorted(self.open_periods) == sorted(other.open_periods))
 
     def __hash__(self):
-        return hash(self.date_string() + self.openings_string())
+        return hash(repr(self))
+
+    def export_cr_format(self):
+        """ Exports Specified opening time into a DoS change request accetped 
+            format.
+        """
+        exp_open_periods = [op.export_cr_format() 
+                            for op in sorted(self.open_periods)]
+        key = self.date.strftime(change_request.DATE_FORMAT)
+        return {key: exp_open_periods}
 
 
 
@@ -116,7 +134,9 @@ class StandardOpeningTimes:
 
     def __eq__(self, other):
         for day in WEEKDAYS:
-            if getattr(self, day) != getattr(other, day):
+            self_day_open_periods = sorted(getattr(self, day))
+            other_day_open_periods = sorted(getattr(other, day))
+            if self_day_open_periods != other_day_open_periods:
                 return False
         return True
 
@@ -130,6 +150,19 @@ class StandardOpeningTimes:
         else:
             logger.error(f"Cannot add opening time for invalid weekday "
                          f"'{weekday}', open period not added.")
+
+
+    def export_cr_format(self) -> dict:
+        """ Exports standard opening times into a DoS change request 
+            accepted format
+        """
+        change = {}
+        for weekday in WEEKDAYS:
+            open_periods = sorted(getattr(self, weekday))
+            exp_open_periods = [op.export_cr_format() for op in open_periods]
+            change[weekday.capitalize()] = exp_open_periods
+        return exp_open_periods
+
 
 
 def open_periods_string(open_periods):

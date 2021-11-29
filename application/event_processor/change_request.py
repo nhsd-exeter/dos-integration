@@ -7,17 +7,25 @@ PUBLICNAME_CHANGE_KEY = "publicname"
 WEBSITE_CHANGE_KEY = "website"
 OPENING_DATES = "opening_dates"
 
+DATE_FORMAT = "%Y-%m-%d"
+TIME_FORMAT = "%H:%M"
+
 
 class ChangeRequest:
-    def __init__(self, service_id, changes) -> None:
+    def __init__(self, service_id, changes=[]):
         trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
-        self.change_request = {
-            "reference": str(trace_id),
-            "system": "DoS Integration",
-            "message": f"DoS Integration CR. AMZN-trace-id: {trace_id}",
-            "service_id": str(service_id),
-            "changes": changes,
-        }
+
+        self.reference =  str(trace_id)
+        self.system = "DoS Integration"
+        self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
+        self.service_id = service_id
+        self.changes = changes
 
     def get_change_request(self) -> dict:
-        return self.change_request
+        return {
+            "reference": self.reference,
+            "system": self.system,
+            "message": self.message,
+            "service_id": self.service_id,
+            "changes": self.changes
+        }
