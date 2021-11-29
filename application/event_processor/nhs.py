@@ -34,7 +34,9 @@ class NHSEntity:
 
 
     def get_standard_opening_times(self, opening_time_type) -> StandardOpeningTimes:
-        """Get all the Standard Opening Times"""
+        """ Filters the raw opening times data for standard weekly opening
+            times and returns it in a StandardOpeningTimes object.
+        """
         
         std_opening_times = StandardOpeningTimes()
         for opentime in self.OpeningTimes:
@@ -73,12 +75,18 @@ class NHSEntity:
         def specified_opening_times_filter(specified):
             return (specified["OpeningTimeType"] == opening_time_type and 
                     specified["AdditionalOpeningDate"] != "")
-        specified_times_list = list(filter(specified_opening_times_filter, self.OpeningTimes))
 
-        """sort the openingtimes  data"""
-        sort_specifiled = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item['Times']))
+        specified_times_list = list(filter(specified_opening_times_filter, 
+                                           self.OpeningTimes))
+
+        # Sort the openingtimes  data
+        sort_specifiled = sorted(
+            specified_times_list, 
+            key=lambda item: (item["AdditionalOpeningDate"],
+                              item['Times']))
         specified_opening_time_dict: Dict[datetime,List[OpenPeriod]] = {}
-        """ grouping data by date"""
+
+        # Grouping data by date
         key:date
         for key, value in groupby(sort_specifiled, lambda item: (item["AdditionalOpeningDate"])):
             op_list: List[OpenPeriod] = []

@@ -94,6 +94,7 @@ class SpecifiedOpeningTime:
         return (isinstance(other, SpecifiedOpeningTime) and
                 self.date == other.date and
                 sorted(self.open_periods) == sorted(other.open_periods))
+        
 
     def __hash__(self):
         return hash(repr(self))
@@ -104,11 +105,10 @@ class SpecifiedOpeningTime:
         """
         exp_open_periods = [op.export_cr_format() 
                             for op in sorted(self.open_periods)]
-        key = self.date.strftime(change_request.DATE_FORMAT)
-        return {key: exp_open_periods}
+        date_str = self.date.strftime(change_request.DATE_FORMAT)
+        return {date_str: exp_open_periods}
 
-
-
+    
 
 class StandardOpeningTimes:
     """ Represents the standard openings times for a week. Structured as a
@@ -198,5 +198,11 @@ def any_start_before_end(open_periods):
     return False
 
 
-
-
+def export_cr_format_spec_list(spec_opening_dates: List[SpecifiedOpeningTime]) -> dict:
+    """ Runs the export_cr_format on a list of SpecifiedOpeningTime
+        objects and combines them
+    """
+    opening_dates_cr_format = {}
+    for spec_open_date in spec_opening_dates:
+        opening_dates_cr_format.update(spec_open_date.export_cr_format())
+    return opening_dates_cr_format

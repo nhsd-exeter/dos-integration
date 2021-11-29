@@ -7,10 +7,25 @@ sys.path.append("../")
 from aws_lambda_powertools import Tracer
 from boto3 import client
 
-from change_request import ChangeRequest
 from common.logger import setup_logger
 from common.utilities import is_mock_mode, invoke_lambda_function
-from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, get_matching_dos_services
+from opening_times import export_cr_format_spec_list
+from change_request import (
+    ChangeRequest,
+    ADDRESS_CHANGE_KEY,
+    PHONE_CHANGE_KEY,
+    POSTCODE_CHANGE_KEY,
+    PUBLICNAME_CHANGE_KEY,
+    WEBSITE_CHANGE_KEY,
+    OPENING_DATES_KEY,
+    OPENING_DAYS_KEY
+)
+from dos import (
+    VALID_SERVICE_TYPES, 
+    VALID_STATUS_ID, 
+    DoSService, 
+    get_matching_dos_services
+)
 from nhs import NHSEntity
 
 logger = getLogger("lambda")
@@ -61,7 +76,7 @@ class EventProcessor:
         for service in self.matching_services:
 
             # Find changes, don't make a change req if none found
-            changes = service.get_changes(self.nhs_entity)
+            changes = get_changes(service, self.nhs_entity)
             if len(changes) > 0:
                 cr = ChangeRequest(service.id, changes).get_change_request()
                 change_requests.append(cr)
@@ -84,6 +99,84 @@ class EventProcessor:
         for change_payload in self.change_requests:
             invoke_lambda_function(environ["EVENT_SENDER_LAMBDA_NAME"], change_payload)
             logger.info(f"Sent off change payload for id={change_payload['service_id']}")
+
+
+
+def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
+        """Returns a dict of the changes that are required to get
+           the service inline with the given nhs_entity.
+        """
+        changes = {}
+        update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.Website)
+        update_changes(changes, POSTCODE_CHANGE_KEY, dos_service.postcode, nhs_entity.Postcode)
+        update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.Phone)
+        update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.OrganisationName)
+        update_changes_with_address(changes, ADDRESS_CHANGE_KEY, dos_service.address, nhs_entity)
+        update_changes_with_opening_times(changes, dos_service, nhs_entity)
+
+        return changes
+
+
+def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str):
+    """Adds field to the change request if the field is not equal
+    Args:
+        changes (dict): Change Request changes
+        change_key (str): Key to add to the change request
+        dos_value (str): Field from the DoS database for comparision
+        nhs_uk_value (str): NHS UK Entity value for comparision
+
+    Returns:
+        dict: Change Request changes
+    """
+    if str(dos_value) != str(nhs_uk_value):
+        logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
+        changes[change_key] = nhs_uk_value
+
+
+def update_changes_with_address(changes: dict, change_key: str, 
+    dos_address: str, nhs_uk_entity: NHSEntity) -> dict:
+    """Adds the address to the change request if the address is not equal
+
+    Args:
+        changes (dict): Change Request changes
+        change_key (str): Key to add to the change request
+        dos_address (str): Address from the DoS database for comparision
+        nhs_uk_entity (NHSEntity): NHS UK Entity for comparision
+
+    Returns:
+        dict: Change Request changes
+    """
+    nhs_uk_address_lines = [
+        nhs_uk_entity.Address1,
+        nhs_uk_entity.Address2,
+        nhs_uk_entity.Address3,
+        nhs_uk_entity.City,
+        nhs_uk_entity.County,
+    ]
+    nhs_uk_address = [
+        address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
+    nhs_uk_address_string = "$".join(nhs_uk_address)
+    if dos_address != nhs_uk_address_string:
+        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
+        changes[change_key] = nhs_uk_address
+    return changes
+
+
+def update_changes_with_opening_times(changes, dos_service: DoSService, nhs_entity: NHSEntity):
+
+    # SPECIFIED OPENING TIMES
+    dos_spec_open_dates = dos_service.specififed_opening_times()
+    nhs_spec_open_dates = nhs_entity.get_specified_opening_times()
+    if (len(dos_spec_open_dates) != len(nhs_spec_open_dates) or
+        set(dos_spec_open_dates) != set(nhs_spec_open_dates)):
+
+        changes[OPENING_DATES_KEY] = export_cr_format_spec_list(dos_spec_open_dates)
+
+    # STANDARD OPENING TIMES
+    dos_std_open_dates = dos_service.standard_opening_times()
+    nhs_std_open_dates = nhs_entity.get_standard_opening_times()
+    if dos_std_open_dates != nhs_std_open_dates:
+        changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
 
 
 @tracer.capture_lambda_handler()

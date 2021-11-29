@@ -9,15 +9,13 @@ from pprint import pprint as pp
 from psycopg2 import connect
 
 from nhs import NHSEntity
-from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from change_request import (
-    ADDRESS_CHANGE_KEY,
-    PHONE_CHANGE_KEY,
-    POSTCODE_CHANGE_KEY,
-    PUBLICNAME_CHANGE_KEY,
-    WEBSITE_CHANGE_KEY,
-    OPENING_DATES
+from opening_times import (
+    OpenPeriod, 
+    SpecifiedOpeningTime, 
+    StandardOpeningTimes,
+    export_cr_format_spec_list
 )
+
 
 
 
@@ -81,7 +79,8 @@ class DoSService:
         else:
             name = "NO-VALID-NAME"
 
-        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name[0:16]}'>"
+        return f"<DoSService: uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name[0:16]}'>"
+
 
     def standard_opening_times(self) -> StandardOpeningTimes:
         """ Retrieves values from db on first call. Returns stored
@@ -99,83 +98,7 @@ class DoSService:
             self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specififed_opening_times
 
-    def get_changes(self, nhs_entity: NHSEntity) -> dict:
-        """Returns a dict of the changes that are required to get
-        the service inline with the given nhs_entity
-        """
-        changes = {}
-        add_field_to_change_request_if_not_equal(changes, WEBSITE_CHANGE_KEY, self.web, nhs_entity.Website)
-        add_field_to_change_request_if_not_equal(changes, POSTCODE_CHANGE_KEY, self.postcode, nhs_entity.Postcode)
-        add_field_to_change_request_if_not_equal(changes, PHONE_CHANGE_KEY, self.publicphone, nhs_entity.Phone)
-        add_field_to_change_request_if_not_equal(changes, PUBLICNAME_CHANGE_KEY, self.publicname, nhs_entity.OrganisationName)
-        add_address_to_change_request_if_not_equal(changes, ADDRESS_CHANGE_KEY, self.address, nhs_entity)
-        add_specified_opening_times_to_change_request_if_not_equal(changes, OPENING_DATES, self.id,nhs_entity)
-        return changes
-
-def add_field_to_change_request_if_not_equal(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str) -> dict:
-    """Adds field to the change request if the field is not equal
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        dos_value (str): Field from the DoS database for comparision
-        nhs_uk_value (str): NHS UK Entity value for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-    if str(dos_value) != str(nhs_uk_value):
-        logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
-        changes[change_key] = nhs_uk_value
-    return changes
-
-
-def add_address_to_change_request_if_not_equal(
-    changes: dict, change_key: str, dos_address: str, nhs_uk_entity: NHSEntity
-) -> dict:
-    """Adds the address to the change request if the address is not equal
-
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        dos_address (str): Address from the DoS database for comparision
-        nhs_uk_entity (NHSEntity): NHS UK Entity for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-    nhs_uk_address_lines = [
-        nhs_uk_entity.Address1,
-        nhs_uk_entity.Address2,
-        nhs_uk_entity.Address3,
-        nhs_uk_entity.City,
-        nhs_uk_entity.County,
-    ]
-    nhs_uk_address = [
-        address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
-    nhs_uk_address_string = "$".join(nhs_uk_address)
-    if dos_address != nhs_uk_address_string:
-        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
-        changes[change_key] = nhs_uk_address
-    return changes
-def add_specified_opening_times_to_change_request_if_not_equal(changes: dict, change_key:str,serviceid: int,nhs_uk_entity: NHSEntity):
-    """Adds specified opening times to the change request if the fields are not equal
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        serviceid (int): Key to get the existing specified opening times from the db
-        nhs_entity (NHSEntity): NHSEntity Object
-        nhs_uk_value (str): NHS UK Entity value for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-
-    #nhs_specified_times = nhs_uk_entity.get_specified_opening_times("General")
-    #dos_specified_times = get_specified_opening_times_from_db(serviceid)
-    #if (nhs_specified_times.__eq__() != dos_specified_times.__eq__()):
-    #    changes[change_key] = [item.toJson() for item in nhs_specified_times]
-    return changes
-
+    
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
     """Retrieves DoS Services from DoS database
@@ -295,6 +218,3 @@ def query_dos_db(sql_command):
     c.execute(sql_command)
     return c
 
-
-x = get_specified_opening_times_from_db(28334)
-print(x)
