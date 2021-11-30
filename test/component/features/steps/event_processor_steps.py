@@ -69,7 +69,7 @@ def the_change_request_is_produced_and_logged(context):
                 "website": change_event["Website"],
                 "postcode": change_event["Postcode"],
                 "phone": change_event["Phone"],
-                "publicname": change_event["OrganisationName"],
+                "public_name": change_event["OrganisationName"],
                 "address": [
                     change_event["Address1"],
                     change_event["Address2"],

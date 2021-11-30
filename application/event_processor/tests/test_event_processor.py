@@ -4,6 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
+from ..change_request import (
+    ADDRESS_CHANGE_KEY,
+    PHONE_CHANGE_KEY,
+    POSTCODE_CHANGE_KEY,
+    PUBLICNAME_CHANGE_KEY,
+    WEBSITE_CHANGE_KEY,
+)
 from ..event_processor import EventProcessor, lambda_handler
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
@@ -63,10 +70,16 @@ def test_get_change_requests_full_change_request():
         assert field in cr, f"Field {field} not found in change request"
     assert cr["system"] == "DoS Integration", f"System should be DoS Integration but is {cr['system']}"
     assert cr["changes"] == {
-        "website": nhs_entity.Website,
-        "postcode": nhs_entity.Postcode,
-        "publicname": nhs_entity.OrganisationName,
-        "address": [nhs_entity.Address1, nhs_entity.Address2, nhs_entity.Address3, nhs_entity.City, nhs_entity.County],
+        WEBSITE_CHANGE_KEY: nhs_entity.Website,
+        POSTCODE_CHANGE_KEY: nhs_entity.Postcode,
+        PUBLICNAME_CHANGE_KEY: nhs_entity.OrganisationName,
+        ADDRESS_CHANGE_KEY: [
+            nhs_entity.Address1,
+            nhs_entity.Address2,
+            nhs_entity.Address3,
+            nhs_entity.City,
+            nhs_entity.County,
+        ],
     }, "Change Request Changes not as expected"
 
 
@@ -96,7 +109,11 @@ def test_send_changes(mock_invoke_lambda_function):
         "system": "Profile Updater (test)",
         "message": "Test message 1531816592293|@./",
         "service_id": "49016",
-        "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
+        "changes": {
+            "ods_code": "f0000",
+            PHONE_CHANGE_KEY: "0118 999 88199 9119 725 3",
+            WEBSITE_CHANGE_KEY: "https://www.google.pl",
+        },
     }
 
     nhs_entity = NHSEntity({})

@@ -9,6 +9,7 @@
       "address_lines": ["1 Gloucester Road", "Bristol"],
       "post_code": "BS1 4SB"
     },
+    "public_name": "Test Public Name",
     "phone": "0118 999 88199 9119 725 3",
     "website": "http://www.google.pl",
     "opening_days": {
