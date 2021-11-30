@@ -12,10 +12,12 @@ MOCK_MODE := false
 
 DB_SERVER_NAME := uec-core-dos-regression-db-9-replica-pu
 DB_PORT := 5432
-DB_NAME := postgres
-DB_USER_NAME := dbuser
+DB_NAME := pathwaysdos_regression
+DB_SCHEMA := pathwaysdos
 DB_SECRET_NAME := core-dos-dev/deployment
 DB_SECRET_KEY := DB_SF_READONLY_PASSWORD
+DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
+DB_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 
 # ==============================================================================

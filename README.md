@@ -21,6 +21,7 @@
     - [Performance Testing](#performance-testing)
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
+    - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [Deployment](#deployment)
     - [APIKey](#apikey)
     - [Artefact Versioning](#artefact-versioning)
@@ -235,6 +236,13 @@ Here are the steps to perform meaningful local system check:
 
 - Log in to the system using a well known username role
 
+### Extra test to check lambda access to DoS database read replica
+
+A make target has been added to check that a lambda can successful access the dos database read replica in non-prod. The target currently intend to be used to test the event processor. It can be run using the following:
+
+    make test-deployed-event-processor-db-connection LAMBDA_NAME=uec-dos-int-di-203-event-processor
+
+It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
 ## Deployment
 
 ### APIKey

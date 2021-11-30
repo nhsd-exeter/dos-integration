@@ -56,6 +56,7 @@ populate-deployment-variables:
 	eval "$$(make aws-assume-role-export-variables)"
 	echo "export DB_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DB_SECRET_NAME) KEY=$(DB_SECRET_KEY))"
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
+	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
 		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
@@ -95,6 +96,17 @@ component-test: # Runs whole project component tests
 		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
+
+test-deployed-event-processor-db-connection: # Use to test that the lambda can connect to the replica mandatory: LAMBDA_NAME
+	aws lambda invoke --function-name $(LAMBDA_NAME) \
+	--payload "$$(cat test/common/resources/nonprod_read_replica_event_processor_change_event_different_from_dos.json)" \
+	response.json
+	cat response.json
+	if [ "$$(cat response.json)" == "null" ]; then
+	exit 0
+	fi
+	exit 1
+	rm -rf response.json
 
 clean: # Runs whole project clean
 	make \

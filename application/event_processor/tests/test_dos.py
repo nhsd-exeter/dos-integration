@@ -220,11 +220,13 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     server = "test.db"
     port = "5432"
     db_name = "my-db"
+    db_schema = "my-schema"
     db_user = "my-user"
     db_password = "my-password"
     environ["DB_SERVER"] = server
     environ["DB_PORT"] = port
     environ["DB_NAME"] = db_name
+    environ["DB_SCHEMA"] = db_schema
     environ["DB_USER_NAME"] = db_user
     environ["DB_PASSWORD"] = db_password
     db_return = [
@@ -258,7 +260,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     # Assert
     assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
     mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+        host=server, port=port, dbname=db_name, user=db_user, options=f"-c search_path=dbo,{db_schema}", password=db_password, connect_timeout=30
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
@@ -269,6 +271,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
 
@@ -279,11 +282,13 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     server = "test.db"
     port = "5432"
     db_name = "my-db"
+    db_schema = "my-schema"
     db_user = "my-user"
     db_password = "my-password"
     environ["DB_SERVER"] = server
     environ["DB_PORT"] = port
     environ["DB_NAME"] = db_name
+    environ["DB_SCHEMA"] = db_schema
     environ["DB_USER_NAME"] = db_user
     environ["DB_PASSWORD"] = db_password
     mock_connect().cursor().fetchall.return_value = []
@@ -293,7 +298,7 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     response = get_matching_dos_services(odscode)
     # Assert
     mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+        host=server, port=port, dbname=db_name, user=db_user, password=db_password, options=f"-c search_path=dbo,{db_schema}", connect_timeout=30
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
@@ -305,5 +310,6 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
