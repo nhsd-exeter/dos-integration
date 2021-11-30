@@ -3,7 +3,7 @@ from typing import List,Dict
 from itertools import groupby
 from logging import getLogger
 
-from opening_times import SpecifiedOpeningTime, OpenPeriod, WEEKDAYS, StandardOpeningTimes
+from event_processor.opening_times import SpecifiedOpeningTime, OpenPeriod, WEEKDAYS, StandardOpeningTimes
 
 logger = getLogger("lambda")
 

@@ -52,4 +52,5 @@ PHARMACY_STANDARD_EVENT = {
     "Website": "https://my-pharmacy.com/health-service",
     "OrganisationSubType": None,
     "OrganisationAliases": [],
+    "OpeningTimes":[]
 }

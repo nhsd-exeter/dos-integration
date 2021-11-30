@@ -18,7 +18,13 @@ class TestChangeRequest:
         # Act
         change_request = ChangeRequest(self.service_id, self.changes)
         # Assert
-        assert expected_change_requests == change_request.change_request
+        assert expected_change_requests == {
+            "reference": change_request.reference,
+            "system": change_request.system,
+            "message": change_request.message,
+            "service_id": str(change_request.service_id),
+            "changes": change_request.changes,
+        }
 
     def test_get_change_request(self):
         # Arrange

@@ -1,13 +1,11 @@
 from datetime import time, date
 from typing import List
 from logging import getLogger
-
-import change_request
-
+import  event_processor.change_request
 logger = getLogger("lambda")
 
-TIME_FORMAT = "%H:%M:%S"
-DATE_FORMAT = "%Y/%m/%d"
+#TIME_FORMAT = "%H:%M:%S"
+#DATE_FORMAT = "%Y/%m/%d"
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", 
             "friday", "saturday", "sunday")
 
@@ -19,10 +17,10 @@ class OpenPeriod:
         self.end = end
 
     def start_string(self):
-        return self.start.strftime(TIME_FORMAT)
+        return self.start.strftime(event_processor.change_request.TIME_FORMAT)
 
     def end_string(self):
-        return self.end.strftime(TIME_FORMAT)
+        return self.end.strftime(event_processor.change_request.TIME_FORMAT)
 
     def __str__(self):
         return f"{self.start_string()}-{self.end_string()}"
@@ -69,8 +67,8 @@ class OpenPeriod:
         """ Exports open period into a DoS change request accetped 
             format
         """
-        return {"start_time": self.start.strftime(change_request.TIME_FORMAT),
-                "end_time": self.end.strftime(change_request.TIME_FORMAT)}
+        return {"start_time": self.start.strftime(event_processor.change_request.TIME_FORMAT),
+                "end_time": self.end.strftime(event_processor.change_request.TIME_FORMAT)}
         
 
 
@@ -81,7 +79,7 @@ class SpecifiedOpeningTime:
         self.date = date
 
     def date_string(self):
-        return self.date.strftime(DATE_FORMAT)
+        return self.date.strftime(event_processor.change_request.DATE_FORMAT)
 
     def openings_string(self):
         return open_periods_string(self.open_periods)
@@ -105,7 +103,7 @@ class SpecifiedOpeningTime:
         """
         exp_open_periods = [op.export_cr_format() 
                             for op in sorted(self.open_periods)]
-        date_str = self.date.strftime(change_request.DATE_FORMAT)
+        date_str = self.date.strftime(event_processor.change_request.DATE_FORMAT)
         return {date_str: exp_open_periods}
 
     

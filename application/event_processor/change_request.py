@@ -19,7 +19,7 @@ class ChangeRequest:
         self.reference =  str(trace_id)
         self.system = "DoS Integration"
         self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
-        self.service_id = service_id
+        self.service_id = str(service_id)
         self.changes = changes
 
     def get_change_request(self) -> dict:

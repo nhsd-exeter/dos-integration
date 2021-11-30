@@ -4,9 +4,16 @@ from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from ..event_processor import EventProcessor, lambda_handler
+from ..event_processor import (EventProcessor, lambda_handler, get_changes, update_changes,update_changes_with_address,update_changes_with_opening_times)
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
+from ..change_request import (
+    ADDRESS_CHANGE_KEY,
+    PHONE_CHANGE_KEY,
+    POSTCODE_CHANGE_KEY,
+    PUBLICNAME_CHANGE_KEY,
+    WEBSITE_CHANGE_KEY,
+)
 
 FILE_PATH = "application.event_processor.event_processor"
 
@@ -17,15 +24,34 @@ def test__init__():
     for i in range(10):
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[random_str] = random_str
+    test_data["OpeningTimes"] = [{
+      "Weekday": "Friday",
+      "Times": "08:45-17:00",
+      "OffsetOpeningTime": 525,
+      "OffsetClosingTime": 1020,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": True
+    },
+    {
+      "Weekday": "Friday",
+      "Times": "08:45-17:00",
+      "OffsetOpeningTime": 525,
+      "OffsetClosingTime": 1020,
+      "OpeningTimeType": "Surgery",
+      "AdditionalOpeningDate": "",
+      "IsOpen": True
+    },
+    ]
     nhs_entity = NHSEntity(test_data)
     # Act
     event_processor = EventProcessor(nhs_entity)
     # Assert
     assert event_processor.nhs_entity == nhs_entity
-    assert isinstance(event_processor.matching_services, list)
-    assert isinstance(event_processor.change_requests, list)
-    assert event_processor.matching_services == []
-    assert event_processor.change_requests == []
+    assert isinstance(event_processor.matching_services, type(None))
+    assert isinstance(event_processor.change_requests, type(None))
+    assert event_processor.matching_services == None
+    assert event_processor.change_requests == None
 
 
 def test_get_change_requests_full_change_request():
@@ -49,6 +75,7 @@ def test_get_change_requests_full_change_request():
     nhs_entity.Address3 = "Fake Street3"
     nhs_entity.City = "Fake City"
     nhs_entity.County = "Fake County"
+    nhs_entity.OpeningTimes = []
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.matching_services = [service_1]
@@ -110,6 +137,7 @@ def test_send_changes(mock_invoke_lambda_function):
     nhs_entity.Address3 = "Fake Street3"
     nhs_entity.City = "Fake City"
     nhs_entity.County = "Fake County"
+    nhs_entity.OpeningTimes = []
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
@@ -190,3 +218,134 @@ def test_lambda_handler_mock_mode_true(mock_nhs_entity, mock_event_processor, mo
     # Clean up
     for env in expected_env_vars:
         del environ[env]
+def test_get_changes_same_data():
+    # Act
+    dos_service = dummy_dos_service()
+    nhs_kwargs = {
+        "Website": dos_service.web,
+        "Postcode": dos_service.postcode,
+        "Phone": dos_service.publicphone,
+        "OrganisationName": dos_service.publicname,
+        "Address1": dos_service.address,
+        "Address2": "",
+        "Address3": "",
+        "City": "",
+        "County": "",
+        "OpeningTimes": []
+    }
+    nhs_entity = NHSEntity(nhs_kwargs)
+    # Act
+    response = get_changes(dos_service,nhs_entity)
+    # Assert
+    assert {} == response, f"Should return empty dict, actually: {response}"
+
+
+def test_get_changes_different_changes():
+    # Arrange
+    dos_service = dummy_dos_service()
+    website = "changed-website.com"
+    postcode = "TA1 TA1"
+    phone = "0123456789"
+    organisation_name = "changed-organisation-name"
+    address1 = "changed-address1"
+    address2 = "changed-address2"
+    address3 = "changed-address3"
+    city = "changed-city"
+    county = "changed-county"
+    nhs_kwargs = {
+        "Website": website,
+        "Postcode": postcode,
+        "Phone": phone,
+        "OrganisationName": organisation_name,
+        "Address1": address1,
+        "Address2": address2,
+        "Address3": address3,
+        "City": city,
+        "County": county,
+        "OpeningTimes": []
+    }
+    nhs_entity = NHSEntity(nhs_kwargs)
+    expected_changes = {
+        ADDRESS_CHANGE_KEY: [address1, address2, address3, city, county],
+        PUBLICNAME_CHANGE_KEY: organisation_name,
+        WEBSITE_CHANGE_KEY: website,
+        POSTCODE_CHANGE_KEY: postcode,
+        PHONE_CHANGE_KEY: phone,
+    }
+    # Act
+    response = get_changes(dos_service,nhs_entity)
+    # Assert
+    assert expected_changes == response, f"Should return {expected_changes} dict, actually: {response}"
+
+
+def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
+    # Arrange
+    changes = {}
+    nhs_uk_phone = "000000000"
+    dos_public_phone = "000000000"
+    # Act
+    actual_changes = update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
+    # Assert
+    assert changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
+
+
+def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
+    # Arrange
+    changes = {}
+    nhs_uk_phone = "000000000"
+    dos_public_phone = "123456789"
+    expected_changes = {"publicphone": nhs_uk_phone}
+    # Act
+    actual_changes = update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
+    # Assert
+    assert expected_changes == actual_changes, f"Should return {expected_changes} dict, actually: {actual_changes}"
+
+
+def test_update_changes_address_to_change_request_if_not_equal_is_equal():
+    # Arrange
+    changes = {}
+    test_data = {}
+    test_data["OpeningTimes"] = []
+    nhs_uk_entity = NHSEntity(test_data)
+    nhs_uk_entity.Address1 = "address1"
+    nhs_uk_entity.Address2 = "address2"
+    nhs_uk_entity.Address3 = "address3"
+    nhs_uk_entity.City = "city"
+    nhs_uk_entity.County = "county"
+    nhs_uk_entity.OpeningTimes= []
+    dos_address = (
+        f"{nhs_uk_entity.Address1}${nhs_uk_entity.Address2}$"
+        f"{nhs_uk_entity.Address3}${nhs_uk_entity.City}${nhs_uk_entity.County}"
+    )
+    # Act
+    actual_changes = update_changes_with_address(changes, "address", dos_address, nhs_uk_entity)
+    # Assert
+    assert changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
+
+
+def test_update_changes_address_to_change_request_if_not_equal_not_equal():
+    # Arrange
+    changes = {}
+    test_data = {}
+    test_data["OpeningTimes"] = []
+    nhs_uk_entity = NHSEntity(test_data)
+    nhs_uk_entity.Address1 = "address1"
+    nhs_uk_entity.Address2 = "address2"
+    nhs_uk_entity.Address3 = "address3"
+    nhs_uk_entity.City = "city"
+    nhs_uk_entity.County = "county"
+    dos_address = "Test RD$Testown$Testshire"
+    expected_changes = {
+        ADDRESS_CHANGE_KEY: [
+            nhs_uk_entity.Address1,
+            nhs_uk_entity.Address2,
+            nhs_uk_entity.Address3,
+            nhs_uk_entity.City,
+            nhs_uk_entity.County,
+        ]
+    }
+    # Act
+    actual_changes = update_changes_with_address(changes, "address", dos_address, nhs_uk_entity)
+    # Assert
+    assert expected_changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
+

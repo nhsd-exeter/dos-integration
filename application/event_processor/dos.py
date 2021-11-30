@@ -9,7 +9,7 @@ from pprint import pprint as pp
 from psycopg2 import connect
 
 from nhs import NHSEntity
-from opening_times import (
+from event_processor.opening_times import (
     OpenPeriod, 
     SpecifiedOpeningTime, 
     StandardOpeningTimes,

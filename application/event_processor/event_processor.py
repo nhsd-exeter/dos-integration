@@ -9,7 +9,7 @@ from boto3 import client
 
 from common.logger import setup_logger
 from common.utilities import is_mock_mode, invoke_lambda_function
-from opening_times import export_cr_format_spec_list
+from event_processor.opening_times import export_cr_format_spec_list
 from change_request import (
     ChangeRequest,
     ADDRESS_CHANGE_KEY,
@@ -131,6 +131,7 @@ def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value:
     if str(dos_value) != str(nhs_uk_value):
         logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
         changes[change_key] = nhs_uk_value
+    return changes   
 
 
 def update_changes_with_address(changes: dict, change_key: str, 

@@ -12,6 +12,7 @@ def test__init__():
     for attr_name in test_attr_names:
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[attr_name] = random_str
+    test_data["OpeningTimes"] = []
     # Act
     nhs_entity = NHSEntity(test_data)
     # Assert
@@ -22,8 +23,8 @@ def test__init__():
 @pytest.mark.parametrize("opening_time_type, expected", [("General", 1), ("Other", 0)])
 def test_get_specified_opening_times(opening_time_type, expected):
     # Arrange
-    nhs_entity = NHSEntity({})
-    nhs_entity.OpeningTimes = [
+    test_data = {}
+    test_data["OpeningTimes"] = [
         {
             "Weekday": "Friday",
             "Times": "08:45-17:00",
@@ -43,6 +44,8 @@ def test_get_specified_opening_times(opening_time_type, expected):
             "IsOpen": True
         },
     ]
+    nhs_entity = NHSEntity(test_data)
+    
     # Act
     actual = nhs_entity.get_specified_opening_times(opening_time_type)
     # Assert
@@ -54,14 +57,14 @@ def test_get_specified_opening_times(opening_time_type, expected):
 def test_get_standard_opening_times(opening_time_type, expected):
     # Arrange
     nhs_entity = NHSEntity({})
-    nhs_entity.OpeningTimes = [
+    nhs_entity["OpeningTimes"] = [
         {
             "Weekday": "Friday",
             "Times": "08:45-17:00",
             "OffsetOpeningTime": 525,
             "OffsetClosingTime": 1020,
             "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "2021-11-12",
+            "AdditionalOpeningDate": "",
             "IsOpen": True
         },
         {
@@ -69,7 +72,7 @@ def test_get_standard_opening_times(opening_time_type, expected):
             "Times": "08:45-18:00",
             "OffsetOpeningTime": 525,
             "OffsetClosingTime": 1080,
-            "OpeningTimeType": "General",
+            "OpeningTimeType": "Surgery",
             "AdditionalOpeningDate": "",
             "IsOpen": True
         },
@@ -77,5 +80,4 @@ def test_get_standard_opening_times(opening_time_type, expected):
     # Act
     actual = nhs_entity.get_standard_opening_times(opening_time_type)
     # Assert
-    assert expected == len(
-        actual), f"Should return {expected} , actually: {len(actual)}"
+    assert expected == actual, f"Should return {expected} , actually: {actual}"
