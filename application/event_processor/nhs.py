@@ -1,9 +1,9 @@
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time
 from typing import List,Dict
 from itertools import groupby
 from logging import getLogger
 
-from event_processor.opening_times import SpecifiedOpeningTime, OpenPeriod, WEEKDAYS, StandardOpeningTimes
+from opening_times import SpecifiedOpeningTime, OpenPeriod, WEEKDAYS, StandardOpeningTimes
 
 logger = getLogger("lambda")
 
@@ -25,14 +25,24 @@ class NHSEntity:
         for key, value in entity_data.items():
             setattr(self, key, value)
 
-        self.standard_opening_times = self.get_standard_opening_times("General")
-        self.specified_opening_times = self.get_specified_opening_times("General")
+        self._standard_opening_times = None
+        self._specified_opening_times = None
 
     def __repr__(self):
-        pass
+        return f"<NHSEntity: name={self.OrganisationName} odscode={self.ODSCode}>:"
+
+    def standard_opening_times(self):
+        if self._standard_opening_times is None:
+            self._standard_opening_times = self._get_standard_opening_times("General")
+        return self._standard_opening_times
+
+    def specified_opening_times(self):
+        if self._specified_opening_times is None:
+            self._specified_opening_times = self._get_specified_opening_times("General")
+        return self._specified_opening_times
 
 
-    def get_standard_opening_times(self, opening_time_type) -> StandardOpeningTimes:
+    def _get_standard_opening_times(self, opening_time_type) -> StandardOpeningTimes:
         """ Filters the raw opening times data for standard weekly opening
             times and returns it in a StandardOpeningTimes object.
         """
@@ -54,9 +64,7 @@ class NHSEntity:
 
         return std_opening_times
 
-
-
-    def get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
+    def _get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
         """ Get all the Specified Opening Times
             Args:
                 opening_time_type  (str): OpeningTimeType to filter the data
@@ -85,8 +93,13 @@ class NHSEntity:
         for key, value in groupby(sort_specifiled, lambda item: (item["AdditionalOpeningDate"])):
             op_list: List[OpenPeriod] = []
             for item in list(value):
-                times = str(item["Times"]).split("-")
-                op_list.append(OpenPeriod(times[0], times[1]))
+                start, end = [datetime.strptime(time_str, "%H:%M").time()
+                              for time_str in item["Times"].split("-")]
+                op_list.append(OpenPeriod(start, end))
                 specified_opening_time_dict[key] = op_list
-        specified_opening_times = [SpecifiedOpeningTime(value, key) for key, value in specified_opening_time_dict.items()]
+                
+        specified_opening_times = [
+            SpecifiedOpeningTime(value, datetime.strptime(key, "%Y-%m-%d").date()) 
+            for key, value in specified_opening_time_dict.items()
+            ]
         return specified_opening_times

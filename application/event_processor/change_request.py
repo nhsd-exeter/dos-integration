@@ -22,7 +22,8 @@ class ChangeRequest:
         self.service_id = str(service_id)
         self.changes = changes
 
-    def get_change_request(self) -> dict:
+
+    def create_payload(self) -> dict:
         return {
             "reference": self.reference,
             "system": self.system,

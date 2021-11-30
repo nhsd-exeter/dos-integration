@@ -1,5 +1,5 @@
 import pytest
-from event_processor.opening_times import OpenPeriod,SpecifiedOpeningTime
+from opening_times import OpenPeriod, SpecifiedOpeningTime
 from datetime import date,time
 
 

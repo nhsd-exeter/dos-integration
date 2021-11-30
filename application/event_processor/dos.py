@@ -1,29 +1,18 @@
-import logging
+from os import environ
 from logging import getLogger
-from os import environ, getenv, urandom
 from typing import List, Dict
 from datetime import datetime, date, time
 from itertools import groupby
-from pprint import pprint as pp
 
-from psycopg2 import connect
+import psycopg2
 
-from nhs import NHSEntity
-from event_processor.opening_times import (
-    OpenPeriod,
-    SpecifiedOpeningTime,
-    StandardOpeningTimes,
-    export_cr_format_spec_list
-)
-
-
+from opening_times import *
 
 
 logger = getLogger("lambda")
 db_connection = None
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
-
 
 
 class DoSService:
@@ -78,7 +67,8 @@ class DoSService:
         else:
             name = "NO-VALID-NAME"
 
-        return f"<DoSService: uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name[0:16]}'>"
+        return (f"<DoSService: name='{name[0:16]}' id={self.id} uid={self.uid} "
+                f"odscode={self.odscode} type={self.typeid} status={self.statusid}>")
 
 
     def standard_opening_times(self) -> StandardOpeningTimes:
@@ -111,14 +101,15 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     logger.info(f"Searching for DoS services with ODSCode that matches first "
                 f"5 digits of '{odscode}'")
 
-    sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
-    logger.info(f"Created SQL command to run: {sql_command}")
+    sql_command = (f"SELECT {', '.join(DoSService.db_columns)} "
+                   f"FROM services WHERE odscode LIKE '{odscode[0:5]}%'")
     c = query_dos_db(sql_command)
 
     # Create list of DoSService objects from returned rows
     services = [DoSService(row) for row in c.fetchall()]
     c.close()
     return services
+
 
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
     """Retrieves specified opening times from  DoS database
@@ -133,9 +124,12 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     logger.info(
         f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
-    sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
-                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-                    f"WHERE ssod.serviceid = {service_id}")
+    sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, "
+                   "       ssot.endtime, ssot.isclosed "
+                   "FROM servicespecifiedopeningdates ssod "
+                   "INNER JOIN servicespecifiedopeningtimes ssot "
+                   "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+                  f"WHERE ssod.serviceid = {service_id}")
     c = query_dos_db(sql_command)
 
     """sort by date and then by starttime"""
@@ -154,16 +148,17 @@ def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
     logger.info(f"Searching for standard opening times with serviceid that "
                 f"matches '{serviceid}'")
 
-    sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
+    sql_command = ( "SELECT sdo.serviceid,  sdo.dayid, otd.name, "
                     "sdot.starttime, sdot.endtime "
                     "FROM servicedayopenings sdo "
                     "INNER JOIN servicedayopeningtimes sdot "
                     "ON sdo.id = sdot.servicedayopeningid "
                     "LEFT JOIN openingtimedays otd "
                     "ON sdo.dayid = otd.id "
-                    f"WHERE sdo.serviceid = {serviceid}"
+                   f"WHERE sdo.serviceid = {serviceid}"
                     )
     c = query_dos_db(sql_command)
+
     standard_opening_times = StandardOpeningTimes()
     for row in c.fetchall():
         weekday = row[2].lower()
@@ -172,6 +167,7 @@ def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
     c.close()
+
     return standard_opening_times
 
 def _connect_dos_db():
@@ -189,9 +185,10 @@ def _connect_dos_db():
 
     logger.info(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, "
-                f"user={db_user}, password={db_password}")
-    db = connect(host=server, port=port, dbname=db_name, user=db_user,
-                password=db_password, connect_timeout=30)
+                 f"user={db_user}, password={db_password}")
+    db = psycopg2.connect(host=server, port=port, dbname=db_name, 
+                          user=db_user, password=db_password, 
+                          connect_timeout=30)
     return db
 
 def query_dos_db(sql_command):
@@ -199,14 +196,14 @@ def query_dos_db(sql_command):
         returns the resulting cursor object.
     """
 
-    # Check if new connection needed.
+    # Check if new connection needed. Or use exisiting.
     global db_connection
     if db_connection is None or db_connection.closed != 0:
         db_connection = _connect_dos_db()
     else:
         logger.info("Using existing open database connection.")
 
-    logger.info(f"Running SQL command: {sql_command}")
+    logger.debug(f"Running SQL command: {sql_command}")
     c = db_connection.cursor()
     c.execute(sql_command)
     return c

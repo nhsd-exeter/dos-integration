@@ -1,7 +1,7 @@
 import pytest
 from random import choices
 
-from event_processor.nhs import NHSEntity
+from nhs import NHSEntity
 
 test_attr_names = ("ODSCode", "Website", "PublicPhone", "Phone", "Postcode")
 

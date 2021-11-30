@@ -38,4 +38,4 @@ class TestChangeRequest:
         # Act
         change_request = ChangeRequest(self.service_id, self.changes)
         # Assert
-        assert expected_change_requests == change_request.get_change_request()
+        assert expected_change_requests == change_request.create_payload()

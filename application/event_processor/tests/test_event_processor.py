@@ -13,6 +13,7 @@ from ..change_request import (
     POSTCODE_CHANGE_KEY,
     PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
+    ChangeRequest,
 )
 
 FILE_PATH = "application.event_processor.event_processor"
@@ -87,9 +88,9 @@ def test_get_change_requests_full_change_request():
     ), f"Should have 1 change request but more found: {len(change_requests)} change requests"
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:
-        assert field in cr, f"Field {field} not found in change request"
-    assert cr["system"] == "DoS Integration", f"System should be DoS Integration but is {cr['system']}"
-    assert cr["changes"] == {
+        assert hasattr(cr, field), f"Attribute {field} not found in change request"
+    assert cr.system == "DoS Integration", f"System should be DoS Integration but is {cr['system']}"
+    assert cr.changes == {
         "website": nhs_entity.Website,
         "postcode": nhs_entity.Postcode,
         "publicname": nhs_entity.OrganisationName,
@@ -115,16 +116,14 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
 @patch(f"{FILE_PATH}.invoke_lambda_function")
 def test_send_changes(mock_invoke_lambda_function):
     # Arrange
-    function_name = "test"
-    environ["EVENT_SENDER_LAMBDA_NAME"] = function_name
+    environ["EVENT_SENDER_LAMBDA_NAME"] = function_name = "test"
 
-    change_request = {
-        "reference": "1",
-        "system": "Profile Updater (test)",
-        "message": "Test message 1531816592293|@./",
-        "service_id": "49016",
-        "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
-    }
+    change_request = ChangeRequest(service_id=49016)
+    change_request.reference = "1"
+    change_request.system = "Profile Updater (test)"
+    change_request.message = "Test message 1531816592293|@./"
+    change_request.changes = {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"}
+
 
     nhs_entity = NHSEntity({})
     nhs_entity.ODSCode = "SLC45"
@@ -218,6 +217,8 @@ def test_lambda_handler_mock_mode_true(mock_nhs_entity, mock_event_processor, mo
     # Clean up
     for env in expected_env_vars:
         del environ[env]
+
+
 def test_get_changes_same_data():
     # Act
     dos_service = dummy_dos_service()
@@ -235,7 +236,7 @@ def test_get_changes_same_data():
     }
     nhs_entity = NHSEntity(nhs_kwargs)
     # Act
-    response = get_changes(dos_service,nhs_entity)
+    response = get_changes(dos_service, nhs_entity)
     # Assert
     assert {} == response, f"Should return empty dict, actually: {response}"
 
@@ -281,24 +282,24 @@ def test_get_changes_different_changes():
 def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     # Arrange
     changes = {}
-    nhs_uk_phone = "000000000"
+    nhs_uk_phone =     "000000000"
     dos_public_phone = "000000000"
     # Act
-    actual_changes = update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
+    update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
     # Assert
-    assert changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
+    assert changes == {}, f"Should return empty dict, actually: {changes}"
 
 
 def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     # Arrange
     changes = {}
-    nhs_uk_phone = "000000000"
+    nhs_uk_phone =     "000000000"
     dos_public_phone = "123456789"
     expected_changes = {"publicphone": nhs_uk_phone}
     # Act
-    actual_changes = update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
+    update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
     # Assert
-    assert expected_changes == actual_changes, f"Should return {expected_changes} dict, actually: {actual_changes}"
+    assert changes == expected_changes, f"Should return {expected_changes} dict, actually: {changes}"
 
 
 def test_update_changes_address_to_change_request_if_not_equal_is_equal():
