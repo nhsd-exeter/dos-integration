@@ -212,17 +212,19 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         ),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
-    serviceid = 123456
+    service_id = 123456
     expected_response = "[<SpecifiedOpenTime: 2019-05-06 [08:00-20:00]>, <SpecifiedOpenTime: 2019-05-27 [08:00-20:00]>, <SpecifiedOpenTime: 2019-08-26 [08:00-20:00]>]"
     # Act
-    response = get_specified_opening_times_from_db(serviceid)
+    response = get_specified_opening_times_from_db(service_id)
     # Assert
     assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
     mock_connect.assert_called_with(
         host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
     )
-    mock_connect().cursor().execute.assert_called_with(
-        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
+    mock_connect().cursor().execute.assert_called_with("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
+                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+                    f"WHERE ssod.serviceid = {service_id}"
+        
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -245,16 +247,17 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     environ["DB_USER_NAME"] = db_user
     environ["DB_PASSWORD"] = db_password
     mock_connect().cursor().fetchall.return_value = []
-    serviceid = 123456
+    service_id = 123456
     expected_response = []
     # Act
-    response = get_specified_opening_times_from_db(serviceid)
+    response = get_specified_opening_times_from_db(service_id)
     # Assert
     mock_connect.assert_called_with(
         host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
     )
-    mock_connect().cursor().execute.assert_called_with(
-        f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {serviceid}"
+    mock_connect().cursor().execute.assert_called_with("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
+                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+                    f"WHERE ssod.serviceid = {service_id}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up

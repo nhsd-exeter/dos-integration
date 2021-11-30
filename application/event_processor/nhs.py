@@ -28,7 +28,6 @@ class NHSEntity:
         self.standard_opening_times = self.get_standard_opening_times("General")
         self.specified_opening_times = self.get_specified_opening_times("General")
 
-    
     def __repr__(self):
         pass
 
@@ -37,16 +36,13 @@ class NHSEntity:
         """ Filters the raw opening times data for standard weekly opening
             times and returns it in a StandardOpeningTimes object.
         """
-        
         std_opening_times = StandardOpeningTimes()
         for opentime in self.OpeningTimes:
-
             # Skips unwanted open times
             if not (opentime["Weekday"].lower() in WEEKDAYS and
                     opentime["AdditionalOpeningDate"] == "" and
                     opentime["OpeningTimeType"] == opening_time_type and
                     opentime["IsOpen"]):
-
                 continue
 
             weekday = opentime["Weekday"].lower()
@@ -63,25 +59,23 @@ class NHSEntity:
     def get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
         """ Get all the Specified Opening Times
             Args:
-                opening_time_type  (str): OpeningTimeType to filter the data 
+                opening_time_type  (str): OpeningTimeType to filter the data
                 e.g General for pharmacy
             Returns:
             dict: key=date and value = List[OpenPeriod] objects  in a sort
             order
         """
         logger.info(f"TODO")
-
-        # Filter 
+        # Filter
         def specified_opening_times_filter(specified):
-            return (specified["OpeningTimeType"] == opening_time_type and 
+            return (specified["OpeningTimeType"] == opening_time_type and
                     specified["AdditionalOpeningDate"] != "")
-
-        specified_times_list = list(filter(specified_opening_times_filter, 
+        specified_times_list = list(filter(specified_opening_times_filter,
                                            self.OpeningTimes))
 
         # Sort the openingtimes  data
         sort_specifiled = sorted(
-            specified_times_list, 
+            specified_times_list,
             key=lambda item: (item["AdditionalOpeningDate"],
                               item['Times']))
         specified_opening_time_dict: Dict[datetime,List[OpenPeriod]] = {}

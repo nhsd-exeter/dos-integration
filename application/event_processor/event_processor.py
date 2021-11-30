@@ -21,9 +21,9 @@ from change_request import (
     OPENING_DAYS_KEY
 )
 from dos import (
-    VALID_SERVICE_TYPES, 
-    VALID_STATUS_ID, 
-    DoSService, 
+    VALID_SERVICE_TYPES,
+    VALID_STATUS_ID,
+    DoSService,
     get_matching_dos_services
 )
 from nhs import NHSEntity
@@ -131,10 +131,9 @@ def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value:
     if str(dos_value) != str(nhs_uk_value):
         logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
         changes[change_key] = nhs_uk_value
-    return changes   
+    return changes
 
-
-def update_changes_with_address(changes: dict, change_key: str, 
+def update_changes_with_address(changes: dict, change_key: str,
     dos_address: str, nhs_uk_entity: NHSEntity) -> dict:
     """Adds the address to the change request if the address is not equal
 

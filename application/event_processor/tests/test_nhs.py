@@ -45,7 +45,6 @@ def test_get_specified_opening_times(opening_time_type, expected):
         },
     ]
     nhs_entity = NHSEntity(test_data)
-    
     # Act
     actual = nhs_entity.get_specified_opening_times(opening_time_type)
     # Assert

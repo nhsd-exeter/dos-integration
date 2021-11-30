@@ -10,8 +10,8 @@ from psycopg2 import connect
 
 from nhs import NHSEntity
 from event_processor.opening_times import (
-    OpenPeriod, 
-    SpecifiedOpeningTime, 
+    OpenPeriod,
+    SpecifiedOpeningTime,
     StandardOpeningTimes,
     export_cr_format_spec_list
 )
@@ -69,7 +69,6 @@ class DoSService:
         self._standard_opening_times = None
         self._specififed_opening_times = None
 
-
     def __repr__(self) -> str:
         """Returns a string representation of this object"""
         if self.publicname is not None:
@@ -98,8 +97,6 @@ class DoSService:
             self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specififed_opening_times
 
-    
-
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
     """Retrieves DoS Services from DoS database
 
@@ -123,7 +120,6 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     c.close()
     return services
 
-
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
     """Retrieves specified opening times from  DoS database
 
@@ -137,7 +133,9 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     logger.info(
         f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
-    sql_command = f"select d.serviceid, d.date, t.starttime, t.endtime, t.isclosed from servicespecifiedopeningdates d, servicespecifiedopeningtimes t where d.serviceid  =  t.servicespecifiedopeningdateid and d.serviceid = {service_id}"
+    sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
+                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+                    f"WHERE ssod.serviceid = {service_id}")
     c = query_dos_db(sql_command)
 
     """sort by date and then by starttime"""
@@ -151,23 +149,21 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     c.close()
     return specified_opening_times
 
-
 def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
 
     logger.info(f"Searching for standard opening times with serviceid that "
                 f"matches '{serviceid}'")
 
     sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
-                   "       sdot.starttime, sdot.endtime "
-                   "FROM servicedayopenings sdo "
-                   "INNER JOIN servicedayopeningtimes sdot "
-                   "ON sdo.id = sdot.servicedayopeningid "
-                   "LEFT JOIN openingtimedays otd "
-                   "ON sdo.dayid = otd.id "
-                  f"WHERE sdo.serviceid = {serviceid}"
-    )
+                    "sdot.starttime, sdot.endtime "
+                    "FROM servicedayopenings sdo "
+                    "INNER JOIN servicedayopeningtimes sdot "
+                    "ON sdo.id = sdot.servicedayopeningid "
+                    "LEFT JOIN openingtimedays otd "
+                    "ON sdo.dayid = otd.id "
+                    f"WHERE sdo.serviceid = {serviceid}"
+                    )
     c = query_dos_db(sql_command)
-
     standard_opening_times = StandardOpeningTimes()
     for row in c.fetchall():
         weekday = row[2].lower()
@@ -175,10 +171,8 @@ def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
         end = row[4]
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
-        
     c.close()
     return standard_opening_times
-
 
 def _connect_dos_db():
     """ Creates a new connection to the DoS DB and returns the
@@ -195,14 +189,13 @@ def _connect_dos_db():
 
     logger.info(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, "
-                 f"user={db_user}, password={db_password}")
-    db = connect(host=server, port=port, dbname=db_name, user=db_user, 
-                 password=db_password, connect_timeout=30)
+                f"user={db_user}, password={db_password}")
+    db = connect(host=server, port=port, dbname=db_name, user=db_user,
+                password=db_password, connect_timeout=30)
     return db
 
-
 def query_dos_db(sql_command):
-    """ Querys the dos database with given sql command and 
+    """ Querys the dos database with given sql command and
         returns the resulting cursor object.
     """
 
@@ -217,4 +210,3 @@ def query_dos_db(sql_command):
     c = db_connection.cursor()
     c.execute(sql_command)
     return c
-
