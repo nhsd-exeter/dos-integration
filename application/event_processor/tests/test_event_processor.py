@@ -110,7 +110,6 @@ def test_send_changes(mock_invoke_lambda_function):
         "message": "Test message 1531816592293|@./",
         "service_id": "49016",
         "changes": {
-            "ods_code": "f0000",
             PHONE_CHANGE_KEY: "0118 999 88199 9119 725 3",
             WEBSITE_CHANGE_KEY: "https://www.google.pl",
         },
