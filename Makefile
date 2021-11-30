@@ -26,17 +26,15 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-apply-auto-approve STACKS=api-key
+		make authoriser-build-and-push
+		make terraform-apply-auto-approve STACKS=api-key,mock-dos-api-gateway
 	fi
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=api-gateway-route53,splunk-logs
 
-sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
-	eval "$$(make populate-deployment-variables)"
-	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
@@ -44,7 +42,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key
+		make terraform-destroy-auto-approve STACKS=api-key,mock-dos-api-gateway
 	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
@@ -280,6 +278,34 @@ event-processor-run: ### A rebuild and restart of the event processor lambda.
 	make stop
 	make event-processor-build
 	make start
+
+# ==============================================================================
+# Authoriser
+
+authoriser-build-and-push: ### Build authoriser lambda docker image
+	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
+	cd $(APPLICATION_DIR)/authoriser
+	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
+		--exclude=tests \
+		*.py
+	cd $(PROJECT_DIR)
+	make docker-image NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make authoriser-clean
+	export VERSION=$$(make docker-image-get-version NAME=authoriser)
+	make docker-push NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+authoriser-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
+	make common-code-remove LAMBDA_DIR=event_processor
+
+
+# ==============================================================================
+# Deployments
+
+sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
+	eval "$$(make populate-deployment-variables)"
+	make serverless-deploy
 
 # ==============================================================================
 # Serverless

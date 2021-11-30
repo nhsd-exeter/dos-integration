@@ -51,3 +51,12 @@ TF_VAR_event_sender_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-eve
 TF_VAR_event_receiver_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-receiver
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
+
+# Mock DoS API Gateway
+TF_VAR_dos_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock
+TF_VAR_dos_api_gateway_stage := $(ENVIRONMENT)
+TF_VAR_dos_api_gateway_authoriser := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-authoriser
+TF_VAR_authoriser_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-authoriser
+TF_VAR_authoriser_image_version := latest
+TF_VAR_aws_lambda_ecr := $(AWS_SAME_ACCOUNT_DOCKER_REGISTRY)
+TF_VAR_dos_api_gateway_secret := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-secret

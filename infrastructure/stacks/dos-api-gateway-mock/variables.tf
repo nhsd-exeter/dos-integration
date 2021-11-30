@@ -39,14 +39,42 @@ variable "vpc_terraform_state_key" {
 }
 
 
-# ############################
-# # SECURITY GROUP / RULES
-# ############################
+# ##############
+# # API GATEWAY
+# ##############
 
-variable "lambda_security_group_name" {
-  description = "Name of the lambda security group"
+variable "dos_api_gateway_name" {
+  description = "The stage of the api gateway"
 }
 
-variable "dos_db_name" {
-  description = "Name of db dos instance to connect to"
+variable "dos_api_gateway_stage" {
+  description = "The stage of the api gateway"
+}
+
+variable "dos_api_gateway_authoriser" {
+  description = "The stage of the api gateway"
+}
+
+variable "event_sender_role_name" {
+  description = "Name of the event sender lambda role"
+}
+
+variable "dos_api_gateway_secret" {
+  description = "The secrets for the api gateway"
+}
+
+# ##############
+# # AUTHORISER LAMBDA
+# ##############
+
+variable "authoriser_lambda_name" {
+  description = "The authoriser lambda name"
+}
+
+variable "authoriser_image_version" {
+  description = ""
+}
+
+variable "aws_lambda_ecr" {
+  description = ""
 }
