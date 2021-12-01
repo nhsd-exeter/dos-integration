@@ -150,8 +150,18 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}, user={db_user}, password={db_password}")
-    db = connect(host=server, port=port, dbname=db_name, user=db_user, password=db_password, options=f"-c search_path=dbo,{db_schema}", connect_timeout=30)
+    logger.debug(
+        f"host={server}, port={port}, dbname={db_name}, schema={db_schema}, user={db_user}, password={db_password}"
+    )
+    db = connect(
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
+        options=f"-c search_path=dbo,{db_schema}",
+        connect_timeout=30,
+    )
 
     sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
     logger.info(f"Created SQL command to run: {sql_command}")

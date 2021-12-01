@@ -103,10 +103,12 @@ test-deployed-event-processor-db-connection: # Use to test that the lambda can c
 	response.json
 	cat response.json
 	if [ "$$(cat response.json)" == "null" ]; then
+	rm -f response.json
 	exit 0
 	fi
+	rm -f response.json
 	exit 1
-	rm -rf response.json
+
 
 clean: # Runs whole project clean
 	make \

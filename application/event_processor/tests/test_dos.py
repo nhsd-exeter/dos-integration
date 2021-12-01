@@ -260,7 +260,13 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     # Assert
     assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
     mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, options=f"-c search_path=dbo,{db_schema}", password=db_password, connect_timeout=30
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        options=f"-c search_path=dbo,{db_schema}",
+        password=db_password,
+        connect_timeout=30,
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
@@ -298,7 +304,13 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     response = get_matching_dos_services(odscode)
     # Assert
     mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, options=f"-c search_path=dbo,{db_schema}", connect_timeout=30
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
+        options=f"-c search_path=dbo,{db_schema}",
+        connect_timeout=30,
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
