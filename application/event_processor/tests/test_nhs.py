@@ -20,18 +20,36 @@ def test__init__():
         assert getattr(nhs_entity, attr_name) == test_data[attr_name]
 
 
-@pytest.mark.parametrize("opening_time_type, expected", [("General", 1), ("Other", 0)])
+@pytest.mark.parametrize("opening_time_type, expected", [("General", 3), ("Other", 0)])
 def test_get_specified_opening_times(opening_time_type, expected):
     # Arrange
     test_data = {}
     test_data["OpeningTimes"] = [
         {
-            "Weekday": "Friday",
+            "Weekday": "",
             "Times": "08:45-17:00",
             "OffsetOpeningTime": 525,
             "OffsetClosingTime": 1020,
             "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "2021-11-12",
+            "AdditionalOpeningDate": "Nov 12 2021",
+            "IsOpen": True
+        },
+        {
+            "Weekday": "",
+            "Times": "09:00-16:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 980,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "Jan  6    2022",
+            "IsOpen": True
+        },
+        {
+            "Weekday": "",
+            "Times": "09:00-16:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 980,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "Apr  01   2023",
             "IsOpen": True
         },
         {
