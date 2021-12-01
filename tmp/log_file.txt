@@ -1,0 +1,7 @@
+2021/12/01 12:19:58|INFO|test|event_processor.py:217|aws-request-id=test|x-ray-id=NA|Begun event processor function for NHS Entity: <MagicMock name='NHSEntity()' id='140418077604976'>
+2021/12/01 12:19:58|ERROR|test|event_processor.py:223|aws-request-id=test|x-ray-id=NA|No matching DOS services found that fit all criteria for ODSCode '<MagicMock name='NHSEntity().ODSCode' id='140418090218208'>'
+2021/12/01 12:19:58|INFO|test|event_processor.py:231|aws-request-id=test|x-ray-id=NA|Mock Mode on. Change requests will not be sent
+2021/12/01 12:19:58|INFO|test|nhs.py:76|aws-request-id=test|x-ray-id=NA|TODO
+2021/12/01 12:19:58|INFO|test|nhs.py:76|aws-request-id=test|x-ray-id=NA|TODO
+2021/12/01 12:19:58|INFO|test|nhs.py:76|aws-request-id=test|x-ray-id=NA|TODO
+2021/12/01 12:19:58|INFO|test|nhs.py:76|aws-request-id=test|x-ray-id=NA|TODO
