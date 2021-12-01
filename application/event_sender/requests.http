@@ -10,7 +10,8 @@ Accept: application/json
     "message":"Test message 1531816592293|@.\/",
     "service_id":"49016",
     "changes":{
-      "website":"http:\/\/www.google.pl"
+      "website":"http:\/\/www.google.pl",
+      "public_name": "Test Name"
     }
 }
 
