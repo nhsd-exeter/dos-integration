@@ -99,7 +99,7 @@ class NHSEntity:
                 specified_opening_time_dict[key] = op_list
                 
         specified_opening_times = [
-            SpecifiedOpeningTime(value, datetime.strptime(key, "%Y-%m-%d").date()) 
+            SpecifiedOpeningTime(value, datetime.strptime(key, "%b  %d  %Y").date()) 
             for key, value in specified_opening_time_dict.items()
             ]
         return specified_opening_times
