@@ -1,6 +1,6 @@
 import pytest
 from opening_times import OpenPeriod, SpecifiedOpeningTime
-from datetime import date,time
+from datetime import datetime, date, time, timedelta
 
 
 @pytest.mark.parametrize("start, end, other_start,other_end, expected",
@@ -46,3 +46,52 @@ def test_specified_opening_time_eq(open_periods, date, other_open_periods, other
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
+def test_open_period__lt__gt__():
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(9, 0, 0), time(12, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 1), time(12, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(12, 0, 1))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    assert not a < b
+    assert not a > b
+    assert not b < a
+    assert not b > a
+
+
+def test_open_period_hash():
+    open_period = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    equal_ops = (
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+        OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
+        OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), time(12, 0, 0)),
+        OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), 
+                   datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod((datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(), 
+                   time(12, 0, 0))
+    )
+
+    for op in equal_ops:
+        assert (open_period == op, 
+                f"{open_period} not found to be equal to {op}")
+        assert (hash(open_period) == hash(op), 
+                f"hash {hash(open_period)} not found to be equal to {hash(op)}")

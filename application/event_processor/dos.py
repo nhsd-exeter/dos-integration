@@ -118,11 +118,12 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         serviceid (int): serviceid to match on
 
     Returns:
-        List[SpecifiedOpeningTime]: List of Specified Opening times with matching serviceid
+        List[SpecifiedOpeningTime]: List of Specified Opening times with 
+        matching serviceid
     """
 
-    logger.info(
-        f"Searching for specified opening times with serviceid that matches '{service_id}'")
+    logger.info(f"Searching for specified opening times with serviceid that "
+                f"matches '{service_id}'")
 
     sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, "
                    "ssot.endtime, ssot.isclosed "
@@ -137,7 +138,8 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     specified_opening_time_dict : Dict[datetime,List[OpenPeriod]] = {}
     key:date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
-        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
+        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) 
+                                            for row in list(value)]
     specified_opening_times = [SpecifiedOpeningTime(
         value, key) for key, value in specified_opening_time_dict.items()]
     c.close()

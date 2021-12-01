@@ -46,7 +46,7 @@ class OpenPeriod:
 
     # A hashing function lets us compare sets correctly later
     def __hash__(self):
-        return hash(str(self))
+        return hash((self.start, self.end))
 
     def start_before_end(self):
         return self.start < self.end
