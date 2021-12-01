@@ -44,3 +44,5 @@ def test_specified_opening_time_eq(open_periods, date, other_open_periods, other
     actual = specified_open_period.__eq__(SpecifiedOpeningTime(other_open_periods, other_date))
     # Assert
     assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+

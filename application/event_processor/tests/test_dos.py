@@ -1,16 +1,15 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time, date
 from os import environ
 from random import choices
 from unittest.mock import patch
-from ..dos import (
-    DoSService,
-    get_matching_dos_services,
-    get_specified_opening_times_from_db,
-)
+from dos import *
+
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
 
 FILE_PATH = "application.event_processor.dos"
+FILE_PATH = "psycopg2"
+
 
 
 def test__init__():
@@ -72,7 +71,7 @@ def test__init__no_name():
 
 
 
-@patch(f"{FILE_PATH}.connect")
+@patch("psycopg2.connect")
 def test_get_matching_dos_services_services_returned(mock_connect):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
@@ -104,19 +103,22 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         ),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
-    odscode = "FQ038"
-    expected_response = "[<DoSService: uid=159514725 ods=FQ038 type=13 status=1 name='My Pharmacy'>]"
     # Act
-    response = get_matching_dos_services(odscode)
+    response = get_matching_dos_services('FQ038%')
     # Assert
-    assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
-    mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
-    )
+    assert len(response) == 1
+    assert response[0].odscode == "FQ038"
+    assert response[0].publicphone == "0123 012 012"
+    assert response[0].id == 22851351399
+    assert response[0].name == "My Pharmacy"
+
+    mock_connect.assert_called_with(host=server, port=port, dbname=db_name, user=db_user, 
+                                    password=db_password, connect_timeout=30)
+                                    
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
         "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, "
-        f"publicname FROM services WHERE odscode LIKE '{odscode}%'"
+        f"publicname FROM services WHERE odscode LIKE 'FQ038%'"
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -140,9 +142,10 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     # Act
     response = get_matching_dos_services(odscode)
     # Assert
-    mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
-    )
+    mock_connect.assert_called_with(host=server, port=port, dbname=db_name,
+                                    user=db_user, password=db_password, 
+                                    connect_timeout=30)
+
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
         "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, "
@@ -159,54 +162,59 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
 @patch(f"{FILE_PATH}.connect")
 def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     # Arrange
-    server = "test.db"
-    port = "5432"
-    db_name = "my-db"
-    db_user = "my-user"
-    db_password = "my-password"
-    environ["DB_SERVER"] = server
-    environ["DB_PORT"] = port
-    environ["DB_NAME"] = db_name
-    environ["DB_USER_NAME"] = db_user
-    environ["DB_PASSWORD"] = db_password
+    environ["DB_SERVER"] = server = "test.db"
+    environ["DB_PORT"] = port = "5432"
+    environ["DB_NAME"] = db_name = "my-db"
+    environ["DB_USER_NAME"] = db_user = "my-user"
+    environ["DB_PASSWORD"] = db_password = "my-password"
     db_return = [
         (
             28334,
-            datetime(2019, 5, 6),
-            datetime(1970,1,1,8,0,0),
-            datetime(1970,1,1,20,0,0),
+            date(2019, 5, 6),
+            time(8,0,0),
+            time(20,0,0),
             False
         ),
         (
             28334,
-            datetime(2019, 5, 27),
-            datetime(1970,1,1,8,0,0),
-            datetime(1970,1,1,20,0,0),
+            date(2019, 5, 27),
+            time(8,0,0),
+            time(20,0,0),
             False
         ),
         (
             28334,
-            datetime(2019, 8, 26),
-            datetime(1970,1,1,8,0,0),
-            datetime(1970,1,1,20,0,0),
+            date(2019, 8, 26),
+            time(8,0,0),
+            time(20,0,0),
             False
         ),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
     service_id = 123456
-    expected_response = "[<SpecifiedOpenTime: 2019-05-06 [08:00-20:00]>, <SpecifiedOpenTime: 2019-05-27 [08:00-20:00]>, <SpecifiedOpenTime: 2019-08-26 [08:00-20:00]>]"
+    expected_responses_set = sorted([
+        "<SpecifiedOpenTime: 06/05/2019 [08:00-20:00]>"
+        "<SpecifiedOpenTime: 27/05/2019 [08:00-20:00]>"
+        "<SpecifiedOpenTime: 26/08/2019 [08:00-20:00]>"
+    ])
     # Act
-    response = get_specified_opening_times_from_db(service_id)
+    responses = get_specified_opening_times_from_db(service_id)
+    responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert expected_response == str(response), f"Should return {expected_response} string, actually: {response}"
-    mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
+    assert (responses_str == expected_responses_set, 
+            f"Should return {expected_responses_set} string, actually: {responses_str}")
+
+    mock_connect.assert_called_with(host=server, port=port, dbname=db_name, user=db_user, 
+                                    password=db_password, connect_timeout=30)
+
+    mock_connect().cursor().execute.assert_called_with(
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        "FROM servicespecifiedopeningdates ssod "
+        "INNER JOIN servicespecifiedopeningtimes ssot "
+        "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+       f"WHERE ssod.serviceid = {service_id}"     
     )
-    mock_connect().cursor().execute.assert_called_with("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
-                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-                    f"WHERE ssod.serviceid = {service_id}"
-        
-    )
+
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
@@ -217,28 +225,27 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
 @patch(f"{FILE_PATH}.connect")
 def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     # Arrange
-    server = "test.db"
-    port = "5432"
-    db_name = "my-db"
-    db_user = "my-user"
-    db_password = "my-password"
-    environ["DB_SERVER"] = server
-    environ["DB_PORT"] = port
-    environ["DB_NAME"] = db_name
-    environ["DB_USER_NAME"] = db_user
-    environ["DB_PASSWORD"] = db_password
+    environ["DB_SERVER"] = server = "test.db"
+    environ["DB_PORT"] = port = "5432"
+    environ["DB_NAME"] = db_name = "my-db"
+    environ["DB_USER_NAME"] = db_user = "my-user"
+    environ["DB_PASSWORD"] = db_password = "my-password"
     mock_connect().cursor().fetchall.return_value = []
     service_id = 123456
     expected_response = []
     # Act
     response = get_specified_opening_times_from_db(service_id)
     # Assert
-    mock_connect.assert_called_with(
-        host=server, port=port, dbname=db_name, user=db_user, password=db_password, connect_timeout=30
-    )
-    mock_connect().cursor().execute.assert_called_with("SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed FROM servicespecifiedopeningdates ssod "
-                    "LEFT JOIN servicespecifiedopeningtimes ssot ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-                    f"WHERE ssod.serviceid = {service_id}"
+    mock_connect.assert_called_with(host=server, port=port, dbname=db_name,
+                                    user=db_user, password=db_password, 
+                                    connect_timeout=30)
+
+    mock_connect().cursor().execute.assert_called_with(
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        "FROM servicespecifiedopeningdates ssod "
+        "INNER JOIN servicespecifiedopeningtimes ssot "
+        "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+       f"WHERE ssod.serviceid = {service_id}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -247,4 +254,8 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     del environ["DB_NAME"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
+
+@patch("psycopg2.connect")
+def test_query_dos_db(mock_psycopg2):
+    assert True
 

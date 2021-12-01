@@ -125,6 +125,9 @@ class StandardOpeningTimes:
                             for day in WEEKDAYS]
         return ", ".join(day_opening_strs)
 
+    def __len__(self):
+        return sum([len(getattr(self, day)) for day in WEEKDAYS])
+
     def __eq__(self, other):
         for day in WEEKDAYS:
             if not open_periods_equal(getattr(self, day),

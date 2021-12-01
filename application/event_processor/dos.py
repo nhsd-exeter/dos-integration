@@ -125,7 +125,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
     sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, "
-                   "       ssot.endtime, ssot.isclosed "
+                   "ssot.endtime, ssot.isclosed "
                    "FROM servicespecifiedopeningdates ssod "
                    "INNER JOIN servicespecifiedopeningtimes ssot "
                    "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "

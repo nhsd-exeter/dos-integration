@@ -46,17 +46,16 @@ def test_get_specified_opening_times(opening_time_type, expected):
     ]
     nhs_entity = NHSEntity(test_data)
     # Act
-    actual = nhs_entity.get_specified_opening_times(opening_time_type)
+    actual = nhs_entity._get_specified_opening_times(opening_time_type)
     # Assert
-    assert expected == len(
-        actual), f"Should return {expected} , actually: {len(actual)}"
+    assert expected == len(actual), f"Should return {expected} , actually: {len(actual)}"
 
 
 @pytest.mark.parametrize("opening_time_type, expected", [("General", 1), ("Other", 0)])
 def test_get_standard_opening_times(opening_time_type, expected):
     # Arrange
     nhs_entity = NHSEntity({})
-    nhs_entity["OpeningTimes"] = [
+    nhs_entity.OpeningTimes = [
         {
             "Weekday": "Friday",
             "Times": "08:45-17:00",
@@ -77,6 +76,6 @@ def test_get_standard_opening_times(opening_time_type, expected):
         },
     ]
     # Act
-    actual = nhs_entity.get_standard_opening_times(opening_time_type)
+    actual = nhs_entity._get_standard_opening_times(opening_time_type)
     # Assert
-    assert expected == actual, f"Should return {expected} , actually: {actual}"
+    assert expected == len(actual), f"Should return {expected} , actually: {actual}"

@@ -122,7 +122,11 @@ def test_send_changes(mock_invoke_lambda_function):
     change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
     change_request.message = "Test message 1531816592293|@./"
-    change_request.changes = {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"}
+    change_request.changes = {
+            "ods_code": "f0000", 
+            "phone": "0118 999 88199 9119 725 3", 
+            "website": "https://www.google.pl"
+        }
 
 
     nhs_entity = NHSEntity({})
@@ -143,7 +147,8 @@ def test_send_changes(mock_invoke_lambda_function):
     # Act
     event_processor.send_changes()
     # Assert
-    mock_invoke_lambda_function.assert_called_once_with(function_name, change_request)
+    mock_invoke_lambda_function.assert_called_once_with(
+        function_name, change_request.create_payload())
     # Clean up
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
