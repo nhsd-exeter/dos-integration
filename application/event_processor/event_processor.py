@@ -13,7 +13,7 @@ from nhs import NHSEntity
 logger = getLogger("lambda")
 tracer = Tracer()
 lambda_client = client("lambda", region_name=getenv("AWS_REGION", default="eu-west-2"))
-expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
+expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_SCHEMA", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
 
 
 class EventProcessor:

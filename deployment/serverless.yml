@@ -128,6 +128,7 @@ functions:
       DB_SERVER: ${env:DB_SERVER}
       DB_PORT: ${env:DB_PORT}
       DB_NAME: ${env:DB_NAME}
+      DB_SCHEMA: ${env:DB_SCHEMA}
       DB_USER_NAME: ${env:DB_USER_NAME}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_PASSWORD: ${env:DB_PASSWORD}

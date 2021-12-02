@@ -39,6 +39,7 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=api-gateway-route53,splunk-logs
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
@@ -53,7 +54,9 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 
 populate-deployment-variables:
 	eval "$$(make aws-assume-role-export-variables)"
-	echo "export DB_PASSWORD=$$(make -s secret-fetch NAME=$(DB_SECRET_NAME))"
+	echo "export DB_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DB_SECRET_NAME) KEY=$(DB_SECRET_KEY))"
+	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
+	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
 		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
@@ -93,6 +96,19 @@ component-test: # Runs whole project component tests
 		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
+
+test-deployed-event-processor-db-connection: # Use to test that the lambda can connect to the replica mandatory: LAMBDA_NAME
+	aws lambda invoke --function-name $(LAMBDA_NAME) \
+	--payload "$$(cat test/common/resources/nonprod_read_replica_event_processor_change_event_different_from_dos.json)" \
+	response.json
+	cat response.json
+	if [ "$$(cat response.json)" == "null" ]; then
+	rm -f response.json
+	exit 0
+	fi
+	rm -f response.json
+	exit 1
+
 
 clean: # Runs whole project clean
 	make \

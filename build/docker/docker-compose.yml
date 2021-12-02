@@ -50,7 +50,6 @@ services:
     ports:
       - 9000:8080
 
-
   event-sender:
     image: $DOCKER_REGISTRY/event-sender:latest
     container_name: event-sender
@@ -84,6 +83,7 @@ services:
       DB_SERVER: $DB_SERVER
       DB_PORT: $DB_PORT
       DB_NAME: $DB_NAME
+      DB_SCHEMA: $DB_SCHEMA
       DB_USER_NAME: $DB_USER_NAME
       DB_PASSWORD: $DB_PASSWORD
       EVENT_SENDER_LAMBDA_NAME: event-sender
