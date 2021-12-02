@@ -312,7 +312,12 @@ Test
 
 #### dos-api-gateway-mock
 
-Test
+This terraform stack is to build an AWS API Gateway to mock the DoS API Gateway.
+Main Resources:
+
+- REST API
+- Authoriser Lambda
+- Route 53 Entry
 
 #### lambda-iam-roles
 

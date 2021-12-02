@@ -3,7 +3,7 @@ resource "aws_lambda_function" "authoriser_lambda" {
   role          = aws_iam_role.authoriser_lambda_role.arn
   package_type  = "Image"
   timeout       = "30"
-  image_uri     = "${var.aws_same_account_docker_registry}/authoriser:${var.authoriser_image_version}"
+  image_uri     = "${var.aws_same_account_docker_registry}/authoriser:${var.image_version}"
   tracing_config {
     mode = "Active"
   }

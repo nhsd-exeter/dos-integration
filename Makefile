@@ -27,7 +27,7 @@ log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ]; then
-		make authoriser-build-and-push
+		make authoriser-build-and-push dos-api-gateway-build-and-push
 		make terraform-apply-auto-approve STACKS=api-key,dos-api-gateway-mock
 	fi
 	eval "$$(make -s populate-deployment-variables)"
@@ -38,7 +38,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=api-gateway-route53,splunk-logs
+# make terraform-destroy-auto-approve STACKS=api-gateway-route53,splunk-logs
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
@@ -69,6 +69,8 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -79,6 +81,8 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		"
 
 component-test: # Runs whole project component tests
@@ -114,7 +118,8 @@ clean: # Runs whole project clean
 		event-receiver-clean \
 		event-processor-clean \
 		tester-clean \
-		authoriser-clean
+		authoriser-clean \
+		dos-api-gateway-clean
 
 # ==============================================================================
 # Tester
@@ -293,9 +298,26 @@ authoriser-build-and-push: ### Build authoriser lambda docker image
 	make docker-push NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 authoriser-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
-	make common-code-remove LAMBDA_DIR=event_processor
+	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/authoriser/assets/*.txt
+
+# ==============================================================================
+# DoS API Gateway Mock lambda
+
+dos-api-gateway-build-and-push:
+	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
+	cd $(APPLICATION_DIR)/dos_api_gateway
+	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
+		--exclude=tests \
+		*.py
+	cd $(PROJECT_DIR)
+	make docker-image NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make dos-api-gateway-clean
+	make docker-push NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+dos-api-gateway-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
 # ==============================================================================
 # Deployments

@@ -20,49 +20,13 @@ resource "aws_api_gateway_method" "dos_api_gateway_method" {
   authorizer_id = aws_api_gateway_authorizer.dos_api_gateway_authoriser.id
 }
 
-resource "aws_api_gateway_integration" "dos_api_gateway_mock_integration" {
-  http_method = aws_api_gateway_method.dos_api_gateway_method.http_method
-  resource_id = aws_api_gateway_resource.dos_api_gateway_resource.id
-  rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
-  type        = "MOCK"
-  request_templates = {
-    "application/json" = jsonencode(
-      {
-        statusCode = 200
-      }
-    )
-  }
-}
-
-resource "aws_api_gateway_method_response" "response_200" {
-  rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
-  resource_id = aws_api_gateway_resource.dos_api_gateway_resource.id
-  http_method = aws_api_gateway_method.dos_api_gateway_method.http_method
-  status_code = 200
-}
-
-resource "aws_api_gateway_integration_response" "dos_api_gateway_mock_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
-  resource_id = aws_api_gateway_resource.dos_api_gateway_resource.id
-  http_method = aws_api_gateway_method.dos_api_gateway_method.http_method
-  status_code = aws_api_gateway_method_response.response_200.status_code
-
-  response_templates = {
-    "application/json" = <<EOF
-{
-  "dosChanges": [
-    { "changeId": "Change_ID_1_here" },
-    { "changeId": "Change_ID_2_here" },
-    { "changeId": "Change_ID_3_here" },
-    { "changeId": "Change_ID_4_here" },
-    { "changeId": "Change_ID_5_here" },
-    { "changeId": "Change_ID_6_here" },
-    { "changeId": "Change_ID_7_here" }
-  ]
-}
-
-EOF
-  }
+resource "aws_api_gateway_integration" "dos_api_gateway_integration" {
+  http_method             = aws_api_gateway_method.dos_api_gateway_method.http_method
+  resource_id             = aws_api_gateway_resource.dos_api_gateway_resource.id
+  rest_api_id             = aws_api_gateway_rest_api.dos_api_gateway.id
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.dos_api_gateway_lambda.invoke_arn
 }
 
 resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
@@ -71,8 +35,7 @@ resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
     redeployment = sha1(jsonencode([
       aws_api_gateway_resource.dos_api_gateway_resource,
       aws_api_gateway_method.dos_api_gateway_method,
-      aws_api_gateway_integration.dos_api_gateway_mock_integration,
-      aws_api_gateway_integration_response.dos_api_gateway_mock_integration_response,
+      aws_api_gateway_integration.dos_api_gateway_integration,
     ]))
   }
 

@@ -75,19 +75,22 @@ variable "dos_api_gateway_secret_password_key" {
 }
 
 # ##############
-# # AUTHORISER LAMBDA
+# # LAMBDAS
 # ##############
 
 variable "authoriser_lambda_name" {
   description = "The authoriser lambda name"
 }
-
-variable "authoriser_image_version" {
-  description = "The authoriser image version"
+variable "image_version" {
+  description = "The image version"
 }
 
 variable "aws_same_account_docker_registry" {
   description = "ECR repository for authoriser lambda"
+}
+
+variable "dos_api_gateway_lambda_name" {
+  description = "The authoriser lambda name"
 }
 
 # ############################
