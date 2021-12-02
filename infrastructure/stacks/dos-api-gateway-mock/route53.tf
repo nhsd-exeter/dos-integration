@@ -23,4 +23,7 @@ resource "aws_api_gateway_base_path_mapping" "uec-dos-integration_api_mapping" {
   api_id      = aws_api_gateway_rest_api.dos_api_gateway.id
   stage_name  = var.dos_api_gateway_stage
   domain_name = "${var.dos_api_gateway_name}.${var.texas_hosted_zone}"
+  depends_on = [
+    aws_api_gateway_stage.dos_api_gateway_stage,
+  ]
 }

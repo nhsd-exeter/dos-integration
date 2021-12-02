@@ -1,6 +1,6 @@
 resource "aws_api_gateway_rest_api" "dos_api_gateway" {
   name        = var.dos_api_gateway_name
-  description = ""
+  description = "DoS API Gateway Mock for DI environment: ${var.dos_api_gateway_stage}"
   endpoint_configuration {
     types = ["REGIONAL"]
   }
@@ -49,7 +49,18 @@ resource "aws_api_gateway_integration_response" "dos_api_gateway_mock_integratio
 
   response_templates = {
     "application/json" = <<EOF
-"body": "{\"dosChanges\": [{\"changeId\": \"Change_ID_1_here\"},{\"changeId\": \"Change_ID_2_here\"}]}"
+{
+  "dosChanges": [
+    { "changeId": "Change_ID_1_here" },
+    { "changeId": "Change_ID_2_here" },
+    { "changeId": "Change_ID_3_here" },
+    { "changeId": "Change_ID_4_here" },
+    { "changeId": "Change_ID_5_here" },
+    { "changeId": "Change_ID_6_here" },
+    { "changeId": "Change_ID_7_here" }
+  ]
+}
+
 EOF
   }
 }

@@ -6,7 +6,7 @@ resource "aws_secretsmanager_secret" "dos_api_gateway_secret" {
 
 resource "aws_secretsmanager_secret_version" "dos_api_gateway_secret_version" {
   secret_id     = aws_secretsmanager_secret.dos_api_gateway_secret.id
-  secret_string = "{\"DOS_API_GATEWAY_USER\" : \"${random_password.dos_api_gateway_username.result}-user\",\"DOS_API_GATEWAY_PASSWORD\" : \"${random_password.dos_api_gateway_password.result}\"}"
+  secret_string = "{\"${var.dos_api_gateway_secret_username_key}\" : \"${random_password.dos_api_gateway_username.result}-user\",\"${var.dos_api_gateway_secret_password_key}\" : \"${random_password.dos_api_gateway_password.result}\"}"
 }
 
 resource "random_password" "dos_api_gateway_username" {

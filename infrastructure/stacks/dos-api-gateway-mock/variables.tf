@@ -66,6 +66,14 @@ variable "dos_api_gateway_secret" {
   description = "The secrets for the api gateway"
 }
 
+variable "dos_api_gateway_secret_username_key" {
+  description = ""
+}
+
+variable "dos_api_gateway_secret_password_key" {
+  description = ""
+}
+
 # ##############
 # # AUTHORISER LAMBDA
 # ##############

@@ -4,10 +4,13 @@
 # Service variables
 
 LOG_LEVEL := DEBUG
-DOS_API_GATEWAY_USERNAME := user
-DOS_API_GATEWAY_PASSWORD := password
+DOS_API_GATEWAY_SECRETS := $(TF_VAR_dos_api_gateway_secret)
+DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
+DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
+DOS_API_GATEWAY_USERNAME := $(or $(DOS_API_GATEWAY_USERNAME), "")
+DOS_API_GATEWAY_PASSWORD := $(or $(DOS_API_GATEWAY_PASSWORD), "")
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
-DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
+DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
 MOCK_MODE := false
 
 DB_SERVER_NAME := uec-core-dos-regression-db-9-replica-pu
@@ -52,11 +55,13 @@ TF_VAR_event_receiver_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-receiver
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 
-# Mock DoS API Gateway
+# Mock DoS API Gateway Mock
 TF_VAR_dos_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock
 TF_VAR_dos_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_dos_api_gateway_authoriser := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-authoriser
 TF_VAR_authoriser_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-authoriser
 TF_VAR_authoriser_image_version := $(or $(VERSION), latest)
 TF_VAR_dos_api_gateway_secret := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-secret
-DOS_API_MOCK_URL := $(TF_VAR_dos_api_gateway_name).$(TEXAS_HOSTED_ZONE)
+DOS_API_GATEWAY_MOCK_URL := https://$(TF_VAR_dos_api_gateway_name).$(TEXAS_HOSTED_ZONE)
+TF_VAR_dos_api_gateway_secret_username_key := $(DOS_API_GATEWAY_USERNAME_KEY)
+TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
