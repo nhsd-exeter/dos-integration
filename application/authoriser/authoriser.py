@@ -1,9 +1,5 @@
+from base64 import b64encode
 from os import getenv
-
-from boto3 import client
-from requests.auth import HTTPBasicAuth
-
-sm = client("secretsmanager")
 
 
 def lambda_handler(event, context):
@@ -14,20 +10,38 @@ def lambda_handler(event, context):
         context (LambdaContext): Lambda function context object
 
     """
-
-    response = {"isAuthorized": False}
+    print(event)
     try:
+
         basic_auth = get_basic_auth()
-        if event["headers"]["Authorization"] == basic_auth:
-            response = {"isAuthorized": True}
+        print(basic_auth)
+        print(event["authorizationToken"])
+        assert event["authorizationToken"] == basic_auth, "Invalid credentials"
     except Exception as e:
         print(f"Authentication method failed with error: {e}")
-    print(f"Response: {response}")
-    return response
+        return generatePolicy(None, "Deny", event["methodArn"])
+    return generatePolicy("*", "Allow", event["methodArn"])
 
 
 def get_basic_auth():
-    return HTTPBasicAuth(
-        getenv("DOS_API_GATEWAY_USERNAME"),
-        getenv("DOS_API_GATEWAY_PASSWORD"),
-    )
+    username = getenv("DOS_API_GATEWAY_USERNAME")
+    password = getenv("DOS_API_GATEWAY_PASSWORD")
+    encoded_credentials = b64encode(bytes(f"{username}:{password}", encoding="utf-8")).decode("utf-8")
+    return f"Basic {encoded_credentials}"
+
+
+def generatePolicy(principalId, effect, methodArn):
+    authResponse = {}
+    authResponse["principalId"] = principalId
+
+    if effect and methodArn:
+        policyDocument = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Sid": "FirstStatement", "Action": "execute-api:Invoke", "Effect": effect, "Resource": methodArn}
+            ],
+        }
+
+        authResponse["policyDocument"] = policyDocument
+
+    return authResponse

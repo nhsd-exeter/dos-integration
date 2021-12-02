@@ -38,6 +38,9 @@ variable "vpc_terraform_state_key" {
   description = "Texas Platform State store bucket key"
 }
 
+variable "route53_terraform_state_key" {
+  description = "terraform state key"
+}
 
 # ##############
 # # API GATEWAY
@@ -72,9 +75,17 @@ variable "authoriser_lambda_name" {
 }
 
 variable "authoriser_image_version" {
-  description = ""
+  description = "The authoriser image version"
 }
 
-variable "aws_lambda_ecr" {
-  description = ""
+variable "aws_same_account_docker_registry" {
+  description = "ECR repository for authoriser lambda"
+}
+
+# ############################
+# # ROUTE53
+# ############################
+
+variable "texas_hosted_zone" {
+  description = "hosted zone"
 }

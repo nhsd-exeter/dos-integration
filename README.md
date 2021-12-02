@@ -23,7 +23,7 @@
     - [Manual check](#manual-check)
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [Deployment](#deployment)
-    - [APIKey](#apikey)
+    - [API Key](#api-key)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
@@ -31,6 +31,13 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
+    - [Terraform Stacks](#terraform-stacks)
+      - [api-gateway-route53](#api-gateway-route53)
+      - [api-key](#api-key-1)
+      - [dos-api-gateway-mock](#dos-api-gateway-mock)
+      - [lambda-iam-roles](#lambda-iam-roles)
+      - [lambda-security-group](#lambda-security-group)
+      - [splunk-logs](#splunk-logs)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -245,9 +252,9 @@ A make target has been added to check that a lambda can successful access the do
 It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
 ## Deployment
 
-### APIKey
+### API Key
 
-API Key must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
+API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
 
 ### Artefact Versioning
 
@@ -292,6 +299,32 @@ To be able to interact with a remote environment, please make sure you have set 
 MFA to the right AWS account using the following command
 
     tx-mfa
+
+### Terraform Stacks
+
+#### api-gateway-route53
+
+Test
+
+#### api-key
+
+Test
+
+#### dos-api-gateway-mock
+
+Test
+
+#### lambda-iam-roles
+
+Test
+
+#### lambda-security-group
+
+Test
+
+#### splunk-logs
+
+Test
 
 ## Architecture
 

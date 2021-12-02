@@ -3,13 +3,13 @@ resource "aws_lambda_function" "authoriser_lambda" {
   role          = aws_iam_role.authoriser_lambda_role.arn
   package_type  = "Image"
   timeout       = "30"
-  image_uri     = "/authoriser-lambda:${var.authoriser_image_version}"
+  image_uri     = "${var.aws_same_account_docker_registry}/authoriser:${var.authoriser_image_version}"
   tracing_config {
     mode = "Active"
   }
   environment {
     variables = {
-      "DOS_API_GATEWAY_USER"     = "${random_password.dos_api_gateway_username.result}-user"
+      "DOS_API_GATEWAY_USERNAME" = "${random_password.dos_api_gateway_username.result}-user"
       "DOS_API_GATEWAY_PASSWORD" = random_password.dos_api_gateway_password.result
     }
   }
@@ -26,7 +26,7 @@ resource "aws_lambda_function_event_invoke_config" "authoriser_lambda_invoke_con
 }
 
 resource "aws_iam_role" "authoriser_lambda_role" {
-  name               = "${var.authoriser_lambda_name}-authoriser-role"
+  name               = "${var.authoriser_lambda_name}-role"
   path               = "/"
   assume_role_policy = <<EOF
 {
@@ -89,5 +89,5 @@ POLICY
 
 resource "aws_cloudwatch_log_group" "authoriser_lambda_log_group" {
   name              = "/aws/lambda/${var.authoriser_lambda_name}"
-  retention_in_days = "0"
+  retention_in_days = "1"
 }

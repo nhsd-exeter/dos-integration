@@ -13,10 +13,11 @@ resource "aws_api_gateway_resource" "dos_api_gateway_resource" {
 }
 
 resource "aws_api_gateway_method" "dos_api_gateway_method" {
-  authorization = "NONE"
   http_method   = "POST"
   resource_id   = aws_api_gateway_resource.dos_api_gateway_resource.id
   rest_api_id   = aws_api_gateway_rest_api.dos_api_gateway.id
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.dos_api_gateway_authoriser.id
 }
 
 resource "aws_api_gateway_integration" "dos_api_gateway_mock_integration" {
