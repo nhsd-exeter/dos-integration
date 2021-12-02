@@ -236,7 +236,7 @@ aws-rds-describe-instance: ### Describe RDS instance - mandatory: DB_INSTANCE
 		$(AWSCLI) rds describe-db-instances \
 			--region $(AWS_REGION) \
 			--db-instance-identifier=$(DB_INSTANCE) \
-	" | make -s docker-run-tools CMD="jq -r '.DBInstances[0].Endpoint.Address'"
+	" | make -s docker-run-tools CMD="jq -r '.DBInstances[0]'"
 
 aws-rds-describe-instance-value: ### Describe RDS instance - mandatory: DB_INSTANCE,KEY_DOT_PATH=[e.g. Endpoint.Address]
 	make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \

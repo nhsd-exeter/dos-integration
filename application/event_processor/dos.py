@@ -150,9 +150,7 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(
-        f"host={server}, port={port}, dbname={db_name}, schema={db_schema}"
-    )
+    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}")
     db = connect(
         host=server,
         port=port,
