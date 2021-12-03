@@ -42,6 +42,17 @@ variable "route53_terraform_state_key" {
   description = "terraform state key"
 }
 
+variable "programme" {
+  description = "Programme name"
+}
+
+variable "project_id" {
+  description = "Project ID"
+}
+variable "environment" {
+  description = "Environment name"
+}
+
 # ##############
 # # API GATEWAY
 # ##############

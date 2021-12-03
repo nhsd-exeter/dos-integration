@@ -4,10 +4,11 @@ provider "aws" {
 
   default_tags {
     tags = {
-      "Programme"   = "uec"
-      "Service"     = "uec-dos-int"
-      "Product"     = "uec-dos-int"
-      "Environment" = var.profile
+      "Profile"     = var.profile
+      "Programme"   = var.programme
+      "Service"     = var.project_id
+      "Product"     = var.project_id
+      "Environment" = var.environment
     }
   }
 }

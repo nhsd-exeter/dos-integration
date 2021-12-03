@@ -38,6 +38,17 @@ variable "vpc_terraform_state_key" {
   description = "vpc state key"
 }
 
+variable "programme" {
+  description = "Programme name"
+}
+
+variable "project_id" {
+  description = "Project ID"
+}
+variable "environment" {
+  description = "Environment name"
+}
+
 # ############################
 # # Common
 # ############################
@@ -47,12 +58,6 @@ variable "route53_terraform_state_key" {
 }
 variable "team_id" {
   description = "team id"
-}
-variable "programme" {
-  description = "programme"
-}
-variable "environment" {
-  description = "environment"
 }
 
 # ############################
@@ -67,4 +72,3 @@ variable "dos_integration_sub_domain_name" {
 variable "texas_hosted_zone" {
   description = "hosted zone"
 }
-
