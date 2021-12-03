@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from ..event_processor import (EventProcessor, lambda_handler, get_changes, update_changes,update_changes_with_address,update_changes_with_opening_times)
+from ..event_processor import *
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
 from ..change_request import (
@@ -83,18 +83,29 @@ def test_get_change_requests_full_change_request():
     # Act
     change_requests = event_processor.get_change_requests()
     # Assert
-    assert (
-        len(change_requests) == 1
-    ), f"Should have 1 change request but more found: {len(change_requests)} change requests"
+
+    assert (len(change_requests) == 1, 
+            f"Should have 1 change request but more found: "
+            f"{len(change_requests)} change requests")
+
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:
         assert hasattr(cr, field), f"Attribute {field} not found in change request"
-    assert cr.system == "DoS Integration", f"System should be DoS Integration but is {cr['system']}"
+
+    assert (cr.system == "DoS Integration", 
+            f"System should be DoS Integration but is {cr.system}")
+
     assert cr.changes == {
-        "website": nhs_entity.Website,
-        "postcode": nhs_entity.Postcode,
-        "publicname": nhs_entity.OrganisationName,
-        "address": [nhs_entity.Address1, nhs_entity.Address2, nhs_entity.Address3, nhs_entity.City, nhs_entity.County],
+        WEBSITE_CHANGE_KEY: nhs_entity.Website,
+        POSTCODE_CHANGE_KEY: nhs_entity.Postcode,
+        PUBLICNAME_CHANGE_KEY: nhs_entity.OrganisationName,
+        ADDRESS_CHANGE_KEY: [
+            nhs_entity.Address1,
+            nhs_entity.Address2,
+            nhs_entity.Address3,
+            nhs_entity.City,
+            nhs_entity.County,
+        ],
     }, "Change Request Changes not as expected"
 
 
@@ -116,18 +127,17 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
 @patch(f"{FILE_PATH}.invoke_lambda_function")
 def test_send_changes(mock_invoke_lambda_function):
     # Arrange
-    environ["EVENT_SENDER_LAMBDA_NAME"] = function_name = "test"
+    function_name = "test"
+    environ["EVENT_SENDER_LAMBDA_NAME"] = function_name
 
     change_request = ChangeRequest(service_id=49016)
-    change_request.reference = "1"
+    change_request.reference = "1"#
     change_request.system = "Profile Updater (test)"
     change_request.message = "Test message 1531816592293|@./"
     change_request.changes = {
-            "ods_code": "f0000", 
-            "phone": "0118 999 88199 9119 725 3", 
-            "website": "https://www.google.pl"
-        }
-
+            PHONE_CHANGE_KEY: "0118 999 88199 9119 725 3",
+            WEBSITE_CHANGE_KEY: "https://www.google.pl",
+    }
 
     nhs_entity = NHSEntity({})
     nhs_entity.ODSCode = "SLC45"
@@ -148,7 +158,9 @@ def test_send_changes(mock_invoke_lambda_function):
     event_processor.send_changes()
     # Assert
     mock_invoke_lambda_function.assert_called_once_with(
-        function_name, change_request.create_payload())
+        function_name, 
+        change_request.create_payload()
+    )
     # Clean up
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
@@ -241,7 +253,7 @@ def test_get_changes_same_data():
     }
     nhs_entity = NHSEntity(nhs_kwargs)
     # Act
-    response = get_changes(dos_service, nhs_entity)
+    response = get_changes(dos_service,nhs_entity)
     # Assert
     assert {} == response, f"Should return empty dict, actually: {response}"
 
@@ -287,10 +299,10 @@ def test_get_changes_different_changes():
 def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     # Arrange
     changes = {}
-    nhs_uk_phone =     "000000000"
-    dos_public_phone = "000000000"
     # Act
-    update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
+    update_changes(changes, PHONE_CHANGE_KEY, "000000000", "000000000")
+    update_changes(changes, PUBLICNAME_CHANGE_KEY, "boots", "boots")
+    update_changes(changes, WEBSITE_CHANGE_KEY, "www.wow.co.uk", "www.wow.co.uk")
     # Assert
     assert changes == {}, f"Should return empty dict, actually: {changes}"
 
@@ -298,13 +310,14 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
 def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     # Arrange
     changes = {}
-    nhs_uk_phone =     "000000000"
+    nhs_uk_phone = "000000000"
     dos_public_phone = "123456789"
     expected_changes = {"publicphone": nhs_uk_phone}
     # Act
     update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
     # Assert
-    assert changes == expected_changes, f"Should return {expected_changes} dict, actually: {changes}"
+    assert (changes == expected_changes, 
+            f"Should return {expected_changes} dict, actually: {changes}")
 
 
 def test_update_changes_address_to_change_request_if_not_equal_is_equal():

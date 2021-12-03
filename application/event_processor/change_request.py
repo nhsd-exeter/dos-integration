@@ -3,7 +3,7 @@ from os import environ
 ADDRESS_CHANGE_KEY = "address"
 PHONE_CHANGE_KEY = "phone"
 POSTCODE_CHANGE_KEY = "postcode"
-PUBLICNAME_CHANGE_KEY = "publicname"
+PUBLICNAME_CHANGE_KEY = "public_name"
 WEBSITE_CHANGE_KEY = "website"
 OPENING_DATES_KEY = "opening_dates"
 OPENING_DAYS_KEY = "opening_days"

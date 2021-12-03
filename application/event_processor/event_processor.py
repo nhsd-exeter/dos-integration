@@ -22,6 +22,7 @@ expected_env_vars = (
     "DB_SERVER", 
     "DB_PORT", 
     "DB_NAME", 
+    "DB_SCHEMA"
     "DB_USER_NAME", 
     "EVENT_SENDER_LAMBDA_NAME"
     )
