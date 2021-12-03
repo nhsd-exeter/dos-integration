@@ -31,13 +31,6 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
-    - [Terraform Stacks](#terraform-stacks)
-      - [api-gateway-route53](#api-gateway-route53)
-      - [api-key](#api-key-1)
-      - [dos-api-gateway-mock](#dos-api-gateway-mock)
-      - [lambda-iam-roles](#lambda-iam-roles)
-      - [lambda-security-group](#lambda-security-group)
-      - [splunk-logs](#splunk-logs)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -299,37 +292,6 @@ To be able to interact with a remote environment, please make sure you have set 
 MFA to the right AWS account using the following command
 
     tx-mfa
-
-### Terraform Stacks
-
-#### api-gateway-route53
-
-Test
-
-#### api-key
-
-Test
-
-#### dos-api-gateway-mock
-
-This terraform stack is to build an AWS API Gateway to mock the DoS API Gateway.
-Main Resources:
-
-- REST API
-- Authoriser Lambda
-- Route 53 Entry
-
-#### lambda-iam-roles
-
-Test
-
-#### lambda-security-group
-
-Test
-
-#### splunk-logs
-
-Test
 
 ## Architecture
 
