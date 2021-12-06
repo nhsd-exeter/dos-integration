@@ -6,7 +6,6 @@ PROJECT_NAME = integration
 PROJECT_NAME_SHORT = int
 PROJECT_DISPLAY_NAME = DoS Integration
 PROJECT_ID = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)
-
 TEAM_NAME = DoS Integration
 TEAM_ID = dos-integration
 
@@ -28,3 +27,5 @@ TF_VAR_team_id = $(TEAM_ID)
 TF_VAR_programme = $(PROGRAMME)
 TF_VAR_texas_hosted_zone = $(TEXAS_HOSTED_ZONE)
 TF_VAR_environment = $(ENVIRONMENT)
+TF_VAR_github_owner = nhsd-exeter
+TF_VAR_github_repo = dos-integration

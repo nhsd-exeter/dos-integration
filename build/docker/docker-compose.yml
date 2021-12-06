@@ -98,6 +98,7 @@ services:
       mock-dos:
         condition: service_healthy
 
+
   mock-dos:
     image: postgres:12
     hostname: mock-dos

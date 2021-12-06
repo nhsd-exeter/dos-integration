@@ -1,4 +1,5 @@
 from json import dumps, load
+from os import path, getcwd
 
 
 def load_json_file(filename: str) -> dict:
@@ -10,7 +11,7 @@ def load_json_file(filename: str) -> dict:
     Returns:
         dict: File as dictionary
     """
-    with open(f"features/resources/{filename}", "r", encoding="utf-8") as json_file:
+    with open(f"./features/resources/{filename}", "r", encoding="utf-8") as json_file:
         return load(json_file)
 
 

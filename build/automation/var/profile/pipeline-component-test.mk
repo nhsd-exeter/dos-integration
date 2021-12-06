@@ -10,18 +10,17 @@ CHANGE_REQUEST_ENDPOINT_TIMEOUT := 30
 LOG_LEVEL := DEBUG
 MOCK_MODE := True
 
-DB_SERVER := docker.for.mac.localhost
+DB_SERVER := 172.18.0.1
 DB_PORT := 5432
 DB_SCHEMA := public
 DB_NAME := postgres
 DB_USER_NAME := postgres
 DB_PASSWORD := postgres
-DB_SCHEMA := public
 
 # ==============================================================================
 # Component Test Variables
 
 MOCKSERVER_URL := http://mockserver:1080
-EVENT_RECEIVER_FUNCTION_URL := http://docker.for.mac.localhost:9000/2015-03-31/functions/function/invocations
-EVENT_PROCESSOR_FUNCTION_URL := http://docker.for.mac.localhost:9001/2015-03-31/functions/function/invocations
-EVENT_SENDER_FUNCTION_URL := http://docker.for.mac.localhost:9002/2015-03-31/functions/function/invocations
+EVENT_RECEIVER_FUNCTION_URL := http://172.18.0.1:9000/2015-03-31/functions/function/invocations
+EVENT_PROCESSOR_FUNCTION_URL := http://172.18.0.1:9001/2015-03-31/functions/function/invocations
+EVENT_SENDER_FUNCTION_URL := http://172.18.0.1:9002/2015-03-31/functions/function/invocations
