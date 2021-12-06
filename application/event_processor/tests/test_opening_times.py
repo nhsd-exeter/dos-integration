@@ -1,6 +1,7 @@
 import pytest
-from opening_times import OpenPeriod, SpecifiedOpeningTime
 from datetime import datetime, date, time, timedelta
+
+from ..opening_times import OpenPeriod, SpecifiedOpeningTime
 
 
 @pytest.mark.parametrize("start, end, other_start,other_end, expected",

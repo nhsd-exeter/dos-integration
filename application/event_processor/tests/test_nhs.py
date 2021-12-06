@@ -1,7 +1,8 @@
 import pytest
 from random import choices
 
-from nhs import NHSEntity
+
+from ..nhs import NHSEntity
 
 test_attr_names = ("ODSCode", "Website", "PublicPhone", "Phone", "Postcode")
 

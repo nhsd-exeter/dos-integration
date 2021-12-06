@@ -3,8 +3,8 @@ import random
 from pytest import fixture
 from testfixtures import LogCapture
 
-from dos import DoSService
-from opening_times import StandardOpeningTimes, SpecifiedOpeningTime
+from ..dos import DoSService
+from ..opening_times import StandardOpeningTimes, SpecifiedOpeningTime
 
 
 @fixture()

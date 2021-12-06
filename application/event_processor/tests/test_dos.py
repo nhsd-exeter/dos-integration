@@ -2,6 +2,7 @@ from datetime import datetime, timezone, date, time
 from os import environ
 from random import choices
 from unittest.mock import patch
+
 from ..dos import *
 from .conftest import dummy_dos_service
 
