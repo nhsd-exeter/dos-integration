@@ -28,6 +28,9 @@ log: project-log # Show project logs
 deploy-pipeline:
 		make terraform-apply-auto-approve STACKS=development-pipeline
 
+undeploy-pipeline:
+	make terraform-destroy-auto-approve STACKS=development-pipeline
+
 plan-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=GITHUB_TOKEN)
