@@ -7,3 +7,4 @@
 .scannerwork
 *.code-workspace
 !project.code-workspace
+tmp/*

@@ -1,22 +1,19 @@
+from os import environ
 from logging import getLogger
-from os import environ, getenv
-from typing import List
+from typing import List, Dict
+from datetime import datetime, date, time
+from itertools import groupby
 
-from boto3 import client
-from change_request import (
-    ADDRESS_CHANGE_KEY,
-    PHONE_CHANGE_KEY,
-    POSTCODE_CHANGE_KEY,
-    PUBLICNAME_CHANGE_KEY,
-    WEBSITE_CHANGE_KEY,
-)
-from nhs import NHSEntity
-from psycopg2 import connect
+import psycopg2
+
+from opening_times import *
+
 
 logger = getLogger("lambda")
-secrets_manager = client("secretsmanager", region_name=getenv("AWS_REGION", default="eu-west-2"))
+db_connection = None
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
+
 
 
 class DoSService:
@@ -58,6 +55,10 @@ class DoSService:
             attribute_value = db_cursor_row[i]
             setattr(self, attribute_name, attribute_value)
 
+        # Do not use these, access them via their corresponding methods
+        self._standard_opening_times = None
+        self._specififed_opening_times = None
+
     def __repr__(self) -> str:
         """Returns a string representation of this object"""
         if self.publicname is not None:
@@ -67,67 +68,26 @@ class DoSService:
         else:
             name = "NO-VALID-NAME"
 
-        return f"<uid={self.uid} ods={self.odscode} type={self.typeid} status={self.statusid} name='{name}'>"
+        return (f"<DoSService: name='{name[0:16]}' id={self.id} uid={self.uid} "
+                f"odscode={self.odscode} type={self.typeid} status={self.statusid}>")
 
-    def get_changes(self, nhs_entity: NHSEntity) -> dict:
-        """Returns a dict of the changes that are required to get
-        the service inline with the given nhs_entity
+
+    def standard_opening_times(self) -> StandardOpeningTimes:
+        """ Retrieves values from db on first call. Returns stored
+            values on subsequent calls
         """
-        changes = {}
-        add_field_to_change_request_if_not_equal(changes, WEBSITE_CHANGE_KEY, self.web, nhs_entity.Website)
-        add_field_to_change_request_if_not_equal(changes, POSTCODE_CHANGE_KEY, self.postcode, nhs_entity.Postcode)
-        add_field_to_change_request_if_not_equal(changes, PHONE_CHANGE_KEY, self.publicphone, nhs_entity.Phone)
-        add_field_to_change_request_if_not_equal(
-            changes, PUBLICNAME_CHANGE_KEY, self.publicname, nhs_entity.OrganisationName
-        )
-        add_address_to_change_request_if_not_equal(changes, ADDRESS_CHANGE_KEY, self.address, nhs_entity)
-        return changes
+        if self._standard_opening_times is None:
+            self._standard_opening_times = get_standard_opening_times_from_db(self.id)
+        return self._standard_opening_times
 
+    def specififed_opening_times(self) -> List[SpecifiedOpeningTime]:
+        """ Retrieves values from db on first call. Returns stored
+            values on subsequent calls
+        """
+        if self._specififed_opening_times is None:
+            self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
+        return self._specififed_opening_times
 
-def add_field_to_change_request_if_not_equal(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str) -> dict:
-    """Adds field to the change request if the field is not equal
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        dos_value (str): Field from the DoS database for comparision
-        nhs_uk_value (str): NHS UK Entity value for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-    if str(dos_value) != str(nhs_uk_value):
-        logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
-        changes[change_key] = nhs_uk_value
-    return changes
-
-
-def add_address_to_change_request_if_not_equal(
-    changes: dict, change_key: str, dos_address: str, nhs_uk_entity: NHSEntity
-) -> dict:
-    """Adds the address to the change request if the address is not equal
-
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        dos_address (str): Address from the DoS database for comparision
-        nhs_uk_entity (NHSEntity): NHS UK Entity for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-    nhs_uk_address_lines = [
-        nhs_uk_entity.Address1,
-        nhs_uk_entity.Address2,
-        nhs_uk_entity.Address3,
-        nhs_uk_entity.City,
-        nhs_uk_entity.County,
-    ]
-    nhs_uk_address = [address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
-    nhs_uk_address_string = "$".join(nhs_uk_address)
-    if dos_address != nhs_uk_address_string:
-        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
-        changes[change_key] = nhs_uk_address
-    return changes
 
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
@@ -137,10 +97,90 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
         odscode (str): ODScode to match on
 
     Returns:
-        list[DoSService]: List of DoSService objects with matching first 5 digits of odscode, taken from DoS database
+        list[DoSService]: List of DoSService objects with matching first 5
+        digits of odscode, taken from DoS database
     """
 
-    logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
+    logger.info(f"Searching for DoS services with ODSCode that matches first "
+                f"5 digits of '{odscode}'")
+
+    sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
+    logger.info(f"Created SQL command to run: {sql_command}")
+    c = query_dos_db(sql_command)
+
+    # Create list of DoSService objects from returned rows
+    services = [DoSService(row) for row in c.fetchall()]
+    c.close()
+    return services
+
+
+def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
+    """Retrieves specified opening times from  DoS database
+    Args:
+        serviceid (int): serviceid to match on
+    Returns:
+        List[SpecifiedOpeningTime]: List of Specified Opening times with 
+        matching serviceid
+    """
+
+    logger.info(f"Searching for specified opening times with serviceid that "
+                f"matches '{service_id}'")
+
+    sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, "
+                   "ssot.endtime, ssot.isclosed "
+                   "FROM servicespecifiedopeningdates ssod "
+                   "INNER JOIN servicespecifiedopeningtimes ssot "
+                   "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+                  f"WHERE ssod.serviceid = {service_id}")
+    c = query_dos_db(sql_command)
+
+    """sort by date and then by starttime"""
+    sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
+    specified_opening_time_dict : Dict[datetime,List[OpenPeriod]] = {}
+    key:date
+    for key, value in groupby(sorted_list, lambda row: (row[1])):
+        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) 
+                                            for row in list(value)]
+    specified_opening_times = [SpecifiedOpeningTime(
+        value, key) for key, value in specified_opening_time_dict.items()]
+    c.close()
+    return specified_opening_times
+
+
+def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
+
+    logger.info(f"Searching for standard opening times with serviceid that "
+                f"matches '{serviceid}'")
+
+    sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
+                   "       sdot.starttime, sdot.endtime "
+                   "FROM servicedayopenings sdo "
+                   "INNER JOIN servicedayopeningtimes sdot "
+                   "ON sdo.id = sdot.servicedayopeningid "
+                   "LEFT JOIN openingtimedays otd "
+                   "ON sdo.dayid = otd.id "
+                  f"WHERE sdo.serviceid = {serviceid}"
+    )
+    c = query_dos_db(sql_command)
+
+    standard_opening_times = StandardOpeningTimes()
+    for row in c.fetchall():
+        weekday = row[2].lower()
+        start = row[3]
+        end = row[4]
+        open_period = OpenPeriod(start, end)
+        standard_opening_times.add_open_period(open_period, weekday)
+        
+    c.close()
+    return standard_opening_times
+
+
+def _connect_dos_db():
+    """ Creates a new connection to the DoS DB and returns the
+        connection object
+
+        warning: Do not use. Should only be used by query_dos_db() func
+    """
 
     server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
@@ -150,22 +190,34 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}")
-    db = connect(
-        host=server,
-        port=port,
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        options=f"-c search_path=dbo,{db_schema}",
+    logger.debug(f"host={server}, port={port}, dbname={db_name}, "
+                 f"schema={db_schema} user={db_user}")
+                 
+    db = psycopg2.connect(
+        host=server, 
+        port=port, 
+        dbname=db_name, 
+        user=db_user, 
+        password=db_password, 
         connect_timeout=30,
-    )
+        options=f"-c search_path=dbo,{db_schema}")
 
-    sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
-    logger.info(f"Created SQL command to run: {sql_command}")
-    c = db.cursor()
+    return db
+
+
+def query_dos_db(sql_command):
+    """ Querys the dos database with given sql command and 
+        returns the resulting cursor object.
+    """
+
+    # Check if new connection needed.
+    global db_connection
+    if db_connection is None or db_connection.closed != 0:
+        db_connection = _connect_dos_db()
+    else:
+        logger.info("Using existing open database connection.")
+
+    logger.info(f"Running SQL command: {sql_command}")
+    c = db_connection.cursor()
     c.execute(sql_command)
-    # Create list of DoSService objects from returned rows
-    services = [DoSService(row) for row in c.fetchall()]
-    c.close()
-    return services
+    return c
