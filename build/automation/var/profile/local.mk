@@ -15,6 +15,7 @@ DB_PORT := 5432
 DB_NAME := postgres
 DB_USER_NAME := postgres
 DB_PASSWORD := postgres
+DB_SCHEMA := public
 
 # ==============================================================================
 # Component Test Variables

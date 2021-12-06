@@ -39,6 +39,16 @@ variable "vpc_terraform_state_key" {
   description = "Texas Platform State store bucket key"
 }
 
+variable "programme" {
+  description = "Programme name"
+}
+
+variable "project_id" {
+  description = "Project ID"
+}
+variable "environment" {
+  description = "Environment name"
+}
 
 # ############################
 # # IAM

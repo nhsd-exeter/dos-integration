@@ -26,17 +26,18 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key
 	fi
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+		make authoriser-build-and-push dos-api-gateway-build-and-push
+		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
+	fi
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=api-gateway-route53,splunk-logs
 
-sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
-	eval "$$(make populate-deployment-variables)"
-	make serverless-deploy
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
@@ -45,6 +46,9 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
+	fi
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
 	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
@@ -57,10 +61,8 @@ populate-deployment-variables:
 	echo "export DB_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DB_SECRET_NAME) KEY=$(DB_SECRET_KEY))"
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
-	if [ "$(PROFILE)" == "demo" ] || [ "$(PROFILE)" == "live" ] || [ "$(PROFILE)" == "dev" ]; then
-		echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
-		echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_DEPLOYMENT_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
-	fi
+	echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
+	echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 
 unit-test:
 	make -s docker-run-tools \
@@ -73,6 +75,8 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -83,6 +87,8 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		"
 
 component-test: # Runs whole project component tests
@@ -117,7 +123,9 @@ clean: # Runs whole project clean
 		event-sender-clean \
 		event-receiver-clean \
 		event-processor-clean \
-		tester-clean
+		tester-clean \
+		authoriser-clean \
+		dos-api-gateway-clean
 
 # ==============================================================================
 # Tester
@@ -280,6 +288,49 @@ event-processor-run: ### A rebuild and restart of the event processor lambda.
 	make stop
 	make event-processor-build
 	make start
+
+# ==============================================================================
+# Authoriser (for dos api gateway mock)
+
+authoriser-build-and-push: ### Build authoriser lambda docker image
+	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
+	cd $(APPLICATION_DIR)/authoriser
+	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
+		--exclude=tests \
+		*.py
+	cd $(PROJECT_DIR)
+	make docker-image NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make authoriser-clean
+	make docker-push NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+authoriser-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/authoriser/assets/*.txt
+
+# ==============================================================================
+# DoS API Gateway Mock lambda
+
+dos-api-gateway-build-and-push:
+	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
+	cd $(APPLICATION_DIR)/dos_api_gateway
+	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
+		--exclude=tests \
+		*.py
+	cd $(PROJECT_DIR)
+	make docker-image NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make dos-api-gateway-clean
+	make docker-push NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+dos-api-gateway-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
+
+# ==============================================================================
+# Deployments
+
+sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
+	eval "$$(make populate-deployment-variables)"
+	make serverless-deploy
 
 # ==============================================================================
 # Serverless

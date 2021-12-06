@@ -29,6 +29,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     Args:
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
+
+    Returns:
+        dict: Response to NHS UK Change Event
     """
     try:
         change_event = extract_event(event)

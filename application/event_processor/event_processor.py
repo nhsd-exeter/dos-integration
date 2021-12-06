@@ -1,12 +1,14 @@
 from json import dumps
 from logging import getLogger
 from os import environ, getenv
+from typing import Any, Dict
 
 from aws_lambda_powertools import Tracer
+from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 from change_request import ChangeRequest
 from common.logger import setup_logger
-from common.utilities import is_mock_mode, invoke_lambda_function
+from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, get_matching_dos_services
 from nhs import NHSEntity
 
@@ -74,7 +76,7 @@ class EventProcessor:
 
 @tracer.capture_lambda_handler()
 @setup_logger
-def lambda_handler(event, context):
+def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """Entrypoint handler for the event_receiver lambda
 
     Args:
@@ -84,7 +86,6 @@ def lambda_handler(event, context):
     Event: The event payload should contain a NHS Entity (Service)
 
     Some code may need to be changed if the exact input format is changed.
-
     """
 
     for env_var in expected_env_vars:

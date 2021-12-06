@@ -3,12 +3,10 @@ resource "aws_security_group" "uec_dos_int_lambda_sg" {
   name        = var.lambda_security_group_name
   description = "DI Lambda Security Group"
 
-  tags = merge(
-    local.standard_tags,
-    {
-      "Name" = var.lambda_security_group_name
-    },
-  )
+  tags = {
+    Name = var.lambda_security_group_name
+  }
+
 }
 
 resource "aws_security_group_rule" "allow_all_out" {

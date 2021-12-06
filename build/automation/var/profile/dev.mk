@@ -4,13 +4,13 @@
 # Service variables
 
 LOG_LEVEL := INFO
-DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
-DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
+DOS_API_GATEWAY_SECRETS := $(TF_VAR_dos_api_gateway_secret)
+DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_USERNAME := $(or $(DOS_API_GATEWAY_USERNAME), "")
 DOS_API_GATEWAY_PASSWORD := $(or $(DOS_API_GATEWAY_PASSWORD), "")
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
-DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_URL), "//")
+DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
 MOCK_MODE := False
 
 
@@ -36,3 +36,15 @@ TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
 # API Gateway Route53
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)
+
+# DoS API Gateway Mock
+TF_VAR_dos_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock
+TF_VAR_dos_api_gateway_stage := $(ENVIRONMENT)
+TF_VAR_dos_api_gateway_authoriser := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-authoriser
+TF_VAR_authoriser_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-authoriser
+TF_VAR_image_version := $(or $(VERSION), latest)
+TF_VAR_dos_api_gateway_secret := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock-secret
+DOS_API_GATEWAY_MOCK_URL := https://$(TF_VAR_dos_api_gateway_name).$(TEXAS_HOSTED_ZONE)/change-request
+TF_VAR_dos_api_gateway_secret_username_key := $(DOS_API_GATEWAY_USERNAME_KEY)
+TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
+TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda

@@ -35,6 +35,17 @@ variable "texas_s3_logs_bucket" {
   description = "The texas s3 log bucket for s3 bucket logs"
 }
 
+variable "programme" {
+  description = "Programme name"
+}
+
+variable "project_id" {
+  description = "Project ID"
+}
+variable "environment" {
+  description = "Environment name"
+}
+
 # ##############
 # # FIREHOSE
 # ##############
