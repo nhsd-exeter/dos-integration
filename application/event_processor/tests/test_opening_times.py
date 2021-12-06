@@ -1,0 +1,97 @@
+import pytest
+from opening_times import OpenPeriod, SpecifiedOpeningTime
+from datetime import datetime, date, time, timedelta
+
+
+@pytest.mark.parametrize("start, end, other_start,other_end, expected",
+[(time(8, 0), time(12, 0), time(8, 0), time(12, 0), True), (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
+def test_openperiod_eq(start, end, other_start, other_end, expected):
+    # Arrange
+    open_period = OpenPeriod(start, end)
+    # Act
+    actual = open_period.__eq__(OpenPeriod(other_start, other_end))
+    # Assert
+    assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+
+@pytest.mark.parametrize("start, end, expected", [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)])
+def test_openperiod_start_before_end(start, end, expected):
+    # Arrange
+    open_period = OpenPeriod(start, end)
+    # Act
+    actual = open_period.start_before_end()
+    # Assert
+    assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+
+@pytest.mark.parametrize("start, end, other_start,other_end, expected",
+[(time(8, 0), time(12, 0), time(8, 0), time(11, 0), True), (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
+def test_openperiod_overlaps(start, end, other_start, other_end, expected):
+    # Arrange
+    open_period = OpenPeriod(start, end)
+    # Act
+    actual = open_period.overlaps(OpenPeriod(other_start, other_end))
+    # Assert
+    assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+@pytest.mark.parametrize("open_periods, date, other_open_periods,other_date, expected",
+[([OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,21),[OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),False),
+([OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),[OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),True)])
+def test_specified_opening_time_eq(open_periods, date, other_open_periods, other_date, expected):
+    # Arrange
+    specified_open_period = SpecifiedOpeningTime(open_periods, date)
+    # Act
+    actual = specified_open_period.__eq__(SpecifiedOpeningTime(other_open_periods, other_date))
+    # Assert
+    assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+
+def test_open_period__lt__gt__():
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(9, 0, 0), time(12, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 1), time(12, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(12, 0, 1))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
+    assert a < b
+    assert b > a
+
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    assert not a < b
+    assert not a > b
+    assert not b < a
+    assert not b > a
+
+
+def test_open_period_hash():
+    open_period = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    equal_ops = (
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+        OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
+        OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), time(12, 0, 0)),
+        OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), 
+                   datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod((datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(), 
+                   time(12, 0, 0))
+    )
+
+    for op in equal_ops:
+        assert (open_period == op, 
+                f"{open_period} not found to be equal to {op}")
+        assert (hash(open_period) == hash(op), 
+                f"hash {hash(open_period)} not found to be equal to {hash(op)}")

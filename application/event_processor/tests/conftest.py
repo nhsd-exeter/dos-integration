@@ -3,7 +3,8 @@ import random
 from pytest import fixture
 from testfixtures import LogCapture
 
-from ..dos import DoSService
+from dos import DoSService
+from opening_times import StandardOpeningTimes, SpecifiedOpeningTime
 
 
 @fixture()
@@ -18,7 +19,10 @@ def dummy_dos_service() -> DoSService:
     for col in DoSService.db_columns:
         random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
         test_data.append(random_str)
-    return DoSService(test_data)
+    dos_service = DoSService(test_data)
+    dos_service._standard_opening_times = StandardOpeningTimes()
+    dos_service._specififed_opening_times = []
+    return dos_service
 
 
 @fixture
@@ -52,4 +56,5 @@ PHARMACY_STANDARD_EVENT = {
     "Website": "https://my-pharmacy.com/health-service",
     "OrganisationSubType": None,
     "OrganisationAliases": [],
+    "OpeningTimes":[]
 }
