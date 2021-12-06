@@ -1,6 +1,6 @@
 resource "aws_secretsmanager_secret" "dos_api_gateway_secret" {
   name                    = var.dos_api_gateway_secret
-  description             = "Password for the master database user"
+  description             = "Connection details for DoS API Gateway ${var.environment}"
   recovery_window_in_days = 0
 }
 

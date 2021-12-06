@@ -2,7 +2,9 @@ from base64 import b64encode
 from os import getenv
 from typing import Any, Dict
 
+from json import loads
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from boto3 import client
 
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
@@ -30,14 +32,19 @@ def get_basic_auth() -> str:
     Returns:
         str: Basic auth credentials
     """
-    username = getenv("DOS_API_GATEWAY_USERNAME")
-    password = getenv("DOS_API_GATEWAY_PASSWORD")
+    sm = client("secretsmanager")
+    secret_string = sm.get_secret_value(SecretId=getenv("DOS_API_GATEWAY_CREDENTIALS_SECRET_NAME"))["SecretString"]
+    secret_dict = loads(secret_string)
+    username_key = getenv("DOS_API_GATEWAY_USERNAME_KEY")
+    password_key = getenv("DOS_API_GATEWAY_PASSWORD_KEY")
+    username = secret_dict[username_key]
+    password = secret_dict[password_key]
     encoded_credentials = b64encode(bytes(f"{username}:{password}", encoding="utf-8")).decode("utf-8")
     return f"Basic {encoded_credentials}"
 
 
 def generate_policy(principal_id: Any, effect: str, method_arn: str) -> Dict[str, Any]:
-    """Generates policy to allow/deny connection to the API Gateway Mock
+    """Generates policy to allow/deny connection to the DoS API Gateway Mock
 
     Args:
         principal_id (str|None): Principal ID for Policy
@@ -45,7 +52,7 @@ def generate_policy(principal_id: Any, effect: str, method_arn: str) -> Dict[str
         method_arn (str): Method Arn for Resource
 
     Returns:
-        dict: Policy to allow/deny connection to the API Gateway Mock
+        dict: Policy to allow/deny connection to the DoS API Gateway Mock
     """
     auth_response = {}
     auth_response["principalId"] = principal_id

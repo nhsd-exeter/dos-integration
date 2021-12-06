@@ -9,8 +9,9 @@ resource "aws_lambda_function" "authoriser_lambda" {
   }
   environment {
     variables = {
-      "DOS_API_GATEWAY_USERNAME" = "${random_password.dos_api_gateway_username.result}-user"
-      "DOS_API_GATEWAY_PASSWORD" = random_password.dos_api_gateway_password.result
+      "DOS_API_GATEWAY_CREDENTIALS_SECRET_NAME" = var.dos_api_gateway_secret
+      "DOS_API_GATEWAY_USERNAME_KEY"            = var.dos_api_gateway_secret_username_key
+      "DOS_API_GATEWAY_PASSWORD_KEY"            = var.dos_api_gateway_secret_password_key
     }
   }
   depends_on = [

@@ -47,20 +47,28 @@ def test_lambda_handler_incorrect_auth(mock_get_basic_auth, mock_generate_policy
     mock_generate_policy.assert_called_once_with(None, "Deny", event["methodArn"])
 
 
-def test_get_basic_auth():
+@patch(f"{FILE_PATH}.client")
+def test_get_basic_auth(mock_sm_client):
     # Arrange
     username = "test_username"
     password = "test_password"
-    environ["DOS_API_GATEWAY_USERNAME"] = username
-    environ["DOS_API_GATEWAY_PASSWORD"] = password
+    secret_id = "test_secret_id"
+    environ["DOS_API_GATEWAY_CREDENTIALS_SECRET_NAME"] = secret_id
+    environ["DOS_API_GATEWAY_USERNAME_KEY"] = "test_username_key"
+    environ["DOS_API_GATEWAY_PASSWORD_KEY"] = "test_password_key"
+    secret_string = '{"test_username_key": "test_username", "test_password_key": "test_password"}'
+    mock_sm_client().get_secret_value.return_value = {"SecretString": secret_string}
     expected_auth = "Basic " + b64encode(bytes(f"{username}:{password}", encoding="utf-8")).decode("utf-8")
     # Act
     response = get_basic_auth()
     # Assert
     assert response == expected_auth
+    mock_sm_client.assert_called_with("secretsmanager")
+    mock_sm_client().get_secret_value.assert_called_once_with(SecretId=secret_id)
     # Clean up
-    del environ["DOS_API_GATEWAY_USERNAME"]
-    del environ["DOS_API_GATEWAY_PASSWORD"]
+    del environ["DOS_API_GATEWAY_CREDENTIALS_SECRET_NAME"]
+    del environ["DOS_API_GATEWAY_USERNAME_KEY"]
+    del environ["DOS_API_GATEWAY_PASSWORD_KEY"]
 
 
 def test_generate_policy():
