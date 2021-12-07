@@ -50,7 +50,7 @@ class EventProcessor:
         self.change_requests = None
 
     def get_matching_services(self) -> List[DoSService]:
-        """Using the nhs entity attributed to this object, it finds the 
+        """Using the nhs entity attributed to this object, it finds the
         matching DoS services from the db and filters the results
         """
 
@@ -61,8 +61,8 @@ class EventProcessor:
 
         # Filter for services with valid type and status
         matching_services = [s for s in matching_services
-                             if  int(s.typeid) in VALID_SERVICE_TYPES 
-                             and int(s.statusid) == VALID_STATUS_ID]
+                            if  int(s.typeid) in VALID_SERVICE_TYPES
+                            and int(s.statusid) == VALID_STATUS_ID]
 
         logger.info(f"Found {len(matching_services)} services with typeid in "
                     f"whitelist{VALID_SERVICE_TYPES} and status id = "
@@ -73,7 +73,7 @@ class EventProcessor:
 
 
     def get_change_requests(self) -> dict:
-        """Generates change requests needed for the found services to make 
+        """Generates change requests needed for the found services to make
         them inline with the NHS Entity
 
         Returns:
@@ -127,11 +127,11 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
         the service inline with the given nhs_entity.
         """
         changes = {}
-        update_changes(changes, WEBSITE_CHANGE_KEY, 
+        update_changes(changes, WEBSITE_CHANGE_KEY,
                        dos_service.web, nhs_entity.Website)
         update_changes(changes, POSTCODE_CHANGE_KEY,
                        dos_service.postcode, nhs_entity.Postcode)
-        update_changes(changes, PHONE_CHANGE_KEY, 
+        update_changes(changes, PHONE_CHANGE_KEY,
                        dos_service.publicphone, nhs_entity.Phone)
         update_changes(changes, PUBLICNAME_CHANGE_KEY,
                        dos_service.publicname, nhs_entity.OrganisationName)
@@ -141,7 +141,7 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
         return changes
 
 
-def update_changes(changes: dict, change_key: str, dos_value: str, 
+def update_changes(changes: dict, change_key: str, dos_value: str,
     nhs_uk_value: str) -> None:
     """Adds field to the change request if the field is not equal
     Args:
@@ -158,7 +158,7 @@ def update_changes(changes: dict, change_key: str, dos_value: str,
         changes[change_key] = nhs_uk_value
 
 
-def update_changes_with_address(changes: dict, change_key: str, 
+def update_changes_with_address(changes: dict, change_key: str,
     dos_address: str, nhs_uk_entity: NHSEntity) -> dict:
     """Adds the address to the change request if the address is not equal
 

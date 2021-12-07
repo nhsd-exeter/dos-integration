@@ -118,7 +118,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     Args:
         serviceid (int): serviceid to match on
     Returns:
-        List[SpecifiedOpeningTime]: List of Specified Opening times with 
+        List[SpecifiedOpeningTime]: List of Specified Opening times with
         matching serviceid
     """
 
@@ -178,8 +178,8 @@ def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
 
 
 def _connect_dos_db() -> None:
-    """ Creates a new connection to the DoS DB and returns the
-        connection object
+    """Creates a new connection to the DoS DB and returns the
+    connection object
 
         warning: Do not use. Should only be used by query_dos_db() func
     """
@@ -194,7 +194,7 @@ def _connect_dos_db() -> None:
     logger.info(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, "
                  f"schema={db_schema} user={db_user}")
-                 
+
     db = psycopg2.connect(
         host=server,
         port=port,
@@ -208,8 +208,8 @@ def _connect_dos_db() -> None:
 
 
 def query_dos_db(sql_command: str) -> cursor:
-    """ Querys the dos database with given sql command and 
-        returns the resulting cursor object.
+    """Querys the dos database with given sql command and
+    returns the resulting cursor object.
     """
 
     # Check if new connection needed.
