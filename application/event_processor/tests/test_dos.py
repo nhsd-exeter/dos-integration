@@ -3,7 +3,11 @@ from os import environ
 from random import choices
 from unittest.mock import patch
 
-from ..dos import *
+from ..dos import (
+    DoSService,
+    get_matching_dos_services,
+    get_specified_opening_times_from_db
+)
 from .conftest import dummy_dos_service
 
 FILE_PATH = "application.event_processor.dos"

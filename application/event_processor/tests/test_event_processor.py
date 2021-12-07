@@ -4,7 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from ..event_processor import *
+from ..event_processor import (
+    EventProcessor,
+    lambda_handler,
+    update_changes,
+    get_changes,
+    update_changes_with_address
+)
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
 from ..change_request import (

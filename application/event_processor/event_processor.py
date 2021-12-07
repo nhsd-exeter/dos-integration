@@ -7,6 +7,16 @@ import boto3
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
+from opening_times import spec_open_times_equal, spec_open_times_cr_format
+from common.logger import setup_logger
+from common.utilities import invoke_lambda_function, is_mock_mode
+from nhs import NHSEntity
+from dos import (
+    DoSService, 
+    VALID_SERVICE_TYPES, 
+    VALID_STATUS_ID, 
+    get_matching_dos_services
+    )
 from change_request import (
     ChangeRequest,
     OPENING_DATES_KEY,
@@ -17,16 +27,7 @@ from change_request import (
     POSTCODE_CHANGE_KEY,
     PUBLICNAME_CHANGE_KEY
     )
-from opening_times import spec_open_times_equal, spec_open_times_cr_format
-from common.logger import setup_logger
-from common.utilities import invoke_lambda_function, is_mock_mode
-from dos import (
-    DoSService, 
-    VALID_SERVICE_TYPES, 
-    VALID_STATUS_ID, 
-    get_matching_dos_services
-)
-from nhs import NHSEntity
+
 
 logger = getLogger("lambda")
 tracer = Tracer()
