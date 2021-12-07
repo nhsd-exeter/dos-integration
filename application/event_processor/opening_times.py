@@ -130,8 +130,6 @@ class StandardOpeningTimes:
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
     def __eq__(self, other: Any):
-        if not isinstance(other, SpecifiedOpeningTime):
-            return False
         for day in WEEKDAYS:
             if not open_periods_equal(getattr(self, day),
                                       getattr(other, day)):

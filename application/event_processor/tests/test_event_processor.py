@@ -374,3 +374,6 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Assert
     assert expected_changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
 
+
+
+test_get_changes_same_data()

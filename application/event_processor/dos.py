@@ -196,11 +196,11 @@ def _connect_dos_db() -> None:
                  f"schema={db_schema} user={db_user}")
                  
     db = psycopg2.connect(
-        host=server, 
-        port=port, 
-        dbname=db_name, 
-        user=db_user, 
-        password=db_password, 
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
         connect_timeout=30,
         options=f"-c search_path=dbo,{db_schema}")
 
