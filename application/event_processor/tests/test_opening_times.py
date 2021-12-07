@@ -85,10 +85,10 @@ def test_open_period_hash():
         OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
         OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), time(12, 0, 0)),
         OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),
-        OpenPeriod(datetime.strptime("8:00", "%H:%M").time(),
-                   datetime.strptime("12:00:00", "%H:%M:%S").time()),
-        OpenPeriod((datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(), 
-                   time(12, 0, 0))
+        OpenPeriod( datetime.strptime("8:00", "%H:%M").time(),
+                    datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod( (datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(),
+                    time(12, 0, 0))
     )
 
     for op in equal_ops:

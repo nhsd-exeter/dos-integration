@@ -4,9 +4,9 @@ from itertools import groupby
 from logging import getLogger
 
 from opening_times import (
-    OpenPeriod, 
-    StandardOpeningTimes, 
-    SpecifiedOpeningTime, 
+    OpenPeriod,
+    StandardOpeningTimes,
+    SpecifiedOpeningTime,
     WEEKDAYS
     )
 
@@ -61,8 +61,8 @@ class NHSEntity:
                 continue
 
             weekday = opentime["Weekday"].lower()
-            start, end = [datetime.strptime(time_str, "%H:%M").time()
-                          for time_str in opentime["Times"].split("-")]
+            start, end =    [datetime.strptime(time_str, "%H:%M").time()
+                            for time_str in opentime["Times"].split("-")]
 
             open_period = OpenPeriod(start, end)
             std_opening_times.add_open_period(open_period, weekday)
@@ -83,8 +83,8 @@ class NHSEntity:
         def specified_opening_times_filter(specified):
             return (specified["OpeningTimeType"] == opening_time_type and
                     specified["AdditionalOpeningDate"] != "")
-        specified_times_list = list(filter(specified_opening_times_filter,
-                                           self.OpeningTimes))
+        specified_times_list = list(filter( specified_opening_times_filter,
+                                            self.OpeningTimes))
 
         # Sort the openingtimes  data
         sort_specifiled = sorted(
@@ -102,9 +102,9 @@ class NHSEntity:
                               for time_str in item["Times"].split("-")]
                 op_list.append(OpenPeriod(start, end))
                 specified_opening_time_dict[key] = op_list
-                
+
         specified_opening_times = [
-            SpecifiedOpeningTime(value, datetime.strptime(key, "%b  %d  %Y").date()) 
+            SpecifiedOpeningTime(value, datetime.strptime(key, "%b  %d  %Y").date())
             for key, value in specified_opening_time_dict.items()
             ]
         return specified_opening_times

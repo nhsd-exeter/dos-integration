@@ -192,8 +192,8 @@ def _connect_dos_db() -> None:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, "
-                 f"schema={db_schema} user={db_user}")
+    logger.debug(   f"host={server}, port={port}, dbname={db_name}, "
+                    f"schema={db_schema} user={db_user}")
 
     db = psycopg2.connect(
         host=server,

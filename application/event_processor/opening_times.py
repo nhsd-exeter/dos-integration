@@ -91,10 +91,10 @@ class SpecifiedOpeningTime:
 
     def __hash__(self):
         return hash(repr(self))
-    
+
 
     def export_cr_format(self) -> dict:
-        """ Exports Specified opening time into a DoS change request accetped 
+        """ Exports Specified opening time into a DoS change request accetped
             format.
         """
         exp_open_periods = [op.export_cr_format()
@@ -131,8 +131,8 @@ class StandardOpeningTimes:
 
     def __eq__(self, other: Any):
         for day in WEEKDAYS:
-            if not open_periods_equal(getattr(self, day),
-                                      getattr(other, day)):
+            if not open_periods_equal(  getattr(self, day),
+                                        getattr(other, day)):
                 return False
         return True
 
@@ -143,8 +143,8 @@ class StandardOpeningTimes:
         if weekday in WEEKDAYS:
             getattr(self, weekday).append(open_period)
         else:
-            logger.error(f"Cannot add opening time for invalid weekday "
-                         f"'{weekday}', open period not added.")
+            logger.error(   f"Cannot add opening time for invalid weekday "
+                            f"'{weekday}', open period not added.")
 
     def export_cr_format(self) -> dict:
         """ Exports standard opening times into a DoS change request
@@ -153,7 +153,7 @@ class StandardOpeningTimes:
         change = {}
         for weekday in WEEKDAYS:
             open_periods = sorted(getattr(self, weekday))
-            change[weekday.capitalize()] = [op.export_cr_format() 
+            change[weekday.capitalize()] = [op.export_cr_format()
                                             for op in open_periods]
         return change
 
