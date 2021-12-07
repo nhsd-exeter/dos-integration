@@ -1,9 +1,10 @@
 from datetime import time, date, datetime
 from typing import Iterable, List
 from logging import getLogger
-import change_request
-logger = getLogger("lambda")
 
+import change_request
+
+logger = getLogger("lambda")
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday",
             "friday", "saturday", "sunday")
 

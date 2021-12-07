@@ -6,14 +6,12 @@ from itertools import groupby
 
 import psycopg2
 
-from opening_times import *
-
+from opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
 
 logger = getLogger("lambda")
 db_connection = None
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
-
 
 
 class DoSService:
