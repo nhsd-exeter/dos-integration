@@ -241,7 +241,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-        f"WHERE ssod.serviceid = {service_id}" 
+        f"WHERE ssod.serviceid = {service_id}"
     )
 
     # Clean up
@@ -354,7 +354,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-        f"WHERE ssod.serviceid = {service_id}"  
+        f"WHERE ssod.serviceid = {service_id}"
     )
 
     # Clean up
