@@ -190,7 +190,7 @@ def update_changes_with_address(changes: dict, change_key: str,
     return changes
 
 
-def update_changes_with_opening_times(changes: dict, dos_service: DoSService, 
+def update_changes_with_opening_times(changes: dict, dos_service: DoSService,
     nhs_entity: NHSEntity) -> None:
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)

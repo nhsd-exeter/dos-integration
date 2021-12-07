@@ -90,7 +90,7 @@ class NHSEntity:
         sort_specifiled = sorted(
             specified_times_list,
             key=lambda item: (item["AdditionalOpeningDate"],
-                              item['Times']))
+                            item['Times']))
         specified_opening_time_dict: Dict[datetime,List[OpenPeriod]] = {}
 
         # Grouping data by date
@@ -99,7 +99,7 @@ class NHSEntity:
             op_list: List[OpenPeriod] = []
             for item in list(value):
                 start, end = [datetime.strptime(time_str, "%H:%M").time()
-                              for time_str in item["Times"].split("-")]
+                            for time_str in item["Times"].split("-")]
                 op_list.append(OpenPeriod(start, end))
                 specified_opening_time_dict[key] = op_list
 

@@ -116,7 +116,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     assert service.odscode == odscode
     assert service.id == 22851351399
     assert service.name == "My Pharmacy"
-    
+
     mock_connect.assert_called_with(
         host=server,
         port=port,
@@ -130,7 +130,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
-       f"FROM services WHERE odscode LIKE '{odscode}%'"
+        f"FROM services WHERE odscode LIKE '{odscode}%'"
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -169,7 +169,7 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
-       f"FROM services WHERE odscode LIKE '{odscode}%'"
+        f"FROM services WHERE odscode LIKE '{odscode}%'"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -223,7 +223,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     responses = get_specified_opening_times_from_db(service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert (responses_str == expected_responses_set, 
+    assert (responses_str == expected_responses_set,
             f"Should return {expected_responses_set} string, actually: {responses_str}")
 
     mock_connect.assert_called_with(
@@ -241,7 +241,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-       f"WHERE ssod.serviceid = {service_id}"     
+        f"WHERE ssod.serviceid = {service_id}" 
     )
 
     # Clean up
@@ -282,7 +282,7 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         "ssot.isclosed FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-       f"WHERE ssod.serviceid = {service_id}"
+        f"WHERE ssod.serviceid = {service_id}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -336,7 +336,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     responses = get_specified_opening_times_from_db(service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert (responses_str == expected_responses_set, 
+    assert (responses_str == expected_responses_set,
             f"Should return {expected_responses_set} string, actually: {responses_str}")
 
     mock_connect.assert_called_with(
@@ -354,7 +354,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-       f"WHERE ssod.serviceid = {service_id}"     
+        f"WHERE ssod.serviceid = {service_id}"  
     )
 
     # Clean up
@@ -395,7 +395,7 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-       f"WHERE ssod.serviceid = {service_id}"
+        f"WHERE ssod.serviceid = {service_id}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
