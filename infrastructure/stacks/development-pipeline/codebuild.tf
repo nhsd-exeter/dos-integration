@@ -47,7 +47,7 @@ resource "aws_codebuild_project" "di_unit_tests" {
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.ENVIRONMENT
+      value = var.environment
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -113,7 +113,7 @@ resource "aws_codebuild_project" "di_build" {
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.ENVIRONMENT
+      value = var.environment
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -179,7 +179,7 @@ resource "aws_codebuild_project" "di_deploy" {
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.ENVIRONMENT
+      value = var.environment
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
