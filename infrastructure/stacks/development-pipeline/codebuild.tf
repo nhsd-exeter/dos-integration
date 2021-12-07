@@ -46,6 +46,10 @@ resource "aws_codebuild_project" "di_unit_tests" {
       value = var.profile
     }
     environment_variable {
+      name  = "ENVIRONMENT"
+      value = var.ENVIRONMENT
+    }
+    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
@@ -108,6 +112,10 @@ resource "aws_codebuild_project" "di_build" {
       value = var.profile
     }
     environment_variable {
+      name  = "ENVIRONMENT"
+      value = var.ENVIRONMENT
+    }
+    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
@@ -168,6 +176,10 @@ resource "aws_codebuild_project" "di_deploy" {
     environment_variable {
       name  = "PROFILE"
       value = var.profile
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = var.ENVIRONMENT
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
