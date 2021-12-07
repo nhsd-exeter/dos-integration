@@ -1,5 +1,5 @@
 from datetime import time, date, datetime
-from typing import Iterable, List
+from typing import List, Any
 from logging import getLogger
 
 import change_request
@@ -15,10 +15,10 @@ class OpenPeriod:
         self.start = start
         self.end = end
 
-    def start_string(self):
+    def start_string(self) -> str:
         return self.start.strftime("%H:%M:%S")
 
-    def end_string(self):
+    def end_string(self) -> str:
         return self.end.strftime("%H:%M:%S")
 
     def __str__(self):
@@ -27,7 +27,7 @@ class OpenPeriod:
     def __repr__(self):
         return f"<OpenPeriod: {str(self)}>"
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         return (isinstance(other, OpenPeriod) and
                 self.start == other.start and
                 self.end == other.end)
@@ -35,12 +35,12 @@ class OpenPeriod:
     """ For all comparison methods, check start value first or check
         end value if starts are equal
     """
-    def __lt__(self, other):
+    def __lt__(self, other: Any):
         if self.start == other.start:
             return self.end < other.end
         return self.start < other.start
 
-    def __gt__(self, other):
+    def __gt__(self, other: Any):
         if self.start == other.start:
             return self.end > other.end
         return self.start > other.start
@@ -49,10 +49,10 @@ class OpenPeriod:
     def __hash__(self):
         return hash((self.start, self.end))
 
-    def start_before_end(self):
+    def start_before_end(self) -> bool:
         return self.start < self.end
 
-    def overlaps(self, other):
+    def overlaps(self, other) -> bool:
         assert self.start_before_end()
         assert other.start_before_end()
 
@@ -74,10 +74,10 @@ class SpecifiedOpeningTime:
         self.open_periods = open_periods
         self.date = specified_date
 
-    def date_string(self):
+    def date_string(self) -> str:
         return self.date.strftime("%d-%m-%Y")
 
-    def openings_string(self):
+    def openings_string(self) -> str:
         return open_periods_string(self.open_periods)
 
     def __repr__(self):
@@ -93,7 +93,7 @@ class SpecifiedOpeningTime:
         return hash(repr(self))
     
 
-    def export_cr_format(self):
+    def export_cr_format(self) -> dict:
         """ Exports Specified opening time into a DoS change request accetped 
             format.
         """
@@ -129,7 +129,9 @@ class StandardOpeningTimes:
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
+        if not isinstance(other, SpecifiedOpeningTime):
+            return False
         for day in WEEKDAYS:
             if not open_periods_equal(getattr(self, day),
                                       getattr(other, day)):
@@ -139,7 +141,7 @@ class StandardOpeningTimes:
     def __hash__(self):
         return hash(str(self))
 
-    def add_open_period(self, open_period, weekday):
+    def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:
         if weekday in WEEKDAYS:
             getattr(self, weekday).append(open_period)
         else:
@@ -157,7 +159,7 @@ class StandardOpeningTimes:
                                             for op in open_periods]
         return change
 
-def open_periods_string(open_periods):
+def open_periods_string(open_periods: List[OpenPeriod]) -> str:
     """ Returns a string version of a list of open periods in
         a consistently sorted order.
 
@@ -167,7 +169,7 @@ def open_periods_string(open_periods):
     sorted_str_list = [str(op) for op in sorted(list(open_periods))]
     return f"[{', '.join(sorted_str_list)}]"
 
-def any_overlaps(open_periods):
+def any_overlaps(open_periods: List[OpenPeriod]) -> bool:
     """ Returns whether any OpenPeriod object in list overlaps
         any others in the list.
     """
@@ -179,7 +181,7 @@ def any_overlaps(open_periods):
                 return True
     return False
 
-def any_start_before_end(open_periods):
+def any_start_before_end(open_periods: List[OpenPeriod]) -> bool:
     """ Returns whether any OpenPeriod object in list starts
         before it ends.
     """

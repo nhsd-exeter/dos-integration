@@ -36,12 +36,12 @@ class NHSEntity:
     def __repr__(self):
         return f"<NHSEntity: name={self.OrganisationName} odscode={self.ODSCode}>:"
 
-    def standard_opening_times(self):
+    def standard_opening_times(self) -> StandardOpeningTimes:
         if self._standard_opening_times is None:
             self._standard_opening_times = self._get_standard_opening_times("General")
         return self._standard_opening_times
 
-    def specified_opening_times(self):
+    def specified_opening_times(self) -> List[SpecifiedOpeningTime]:
         if self._specified_opening_times is None:
             self._specified_opening_times = self._get_specified_opening_times("General")
         return self._specified_opening_times
@@ -49,7 +49,7 @@ class NHSEntity:
 
     def _get_standard_opening_times(self, opening_time_type) -> StandardOpeningTimes:
         """ Filters the raw opening times data for standard weekly opening
-            times and returns it in a StandardOpeningTimes object.
+        times and returns it in a StandardOpeningTimes object.
         """
         std_opening_times = StandardOpeningTimes()
         for opentime in self.OpeningTimes:
@@ -70,11 +70,11 @@ class NHSEntity:
         return std_opening_times
 
     def _get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
-        """ Get all the Specified Opening Times
-            Args:
-                opening_time_type  (str): OpeningTimeType to filter the data
-                e.g General for pharmacy
-            Returns:
+        """Get all the Specified Opening Times
+        Args:
+            opening_time_type  (str): OpeningTimeType to filter the data
+            e.g General for pharmacy
+        Returns:
             dict: key=date and value = List[OpenPeriod] objects  in a sort
             order
         """

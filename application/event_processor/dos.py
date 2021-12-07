@@ -5,6 +5,7 @@ from datetime import datetime, date, time
 from itertools import groupby
 
 import psycopg2
+from psycopg2.extensions import cursor
 
 from opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
 
@@ -44,7 +45,7 @@ class DoSService:
         "publicname",
     ]
 
-    def __init__(self, db_cursor_row):
+    def __init__(self, db_cursor_row: tuple):
         """Sets the attributes of this object to those found in the db row
         Args:
             db_cursor_row (dict): Change Request changes
@@ -57,7 +58,7 @@ class DoSService:
         self._standard_opening_times = None
         self._specififed_opening_times = None
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         """Returns a string representation of this object"""
         if self.publicname is not None:
             name = self.publicname
@@ -124,12 +125,14 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     logger.info(f"Searching for specified opening times with serviceid that "
                 f"matches '{service_id}'")
 
-    sql_command = ("SELECT ssod.serviceid, ssod.date, ssot.starttime, "
-                   "ssot.endtime, ssot.isclosed "
-                   "FROM servicespecifiedopeningdates ssod "
-                   "INNER JOIN servicespecifiedopeningtimes ssot "
-                   "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-                  f"WHERE ssod.serviceid = {service_id}")
+    sql_command = (
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, "
+        "ssot.endtime, ssot.isclosed "
+        "FROM servicespecifiedopeningdates ssod "
+        "INNER JOIN servicespecifiedopeningtimes ssot "
+        "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+        f"WHERE ssod.serviceid = {service_id}"
+        )
     c = query_dos_db(sql_command)
 
     """sort by date and then by starttime"""
@@ -137,7 +140,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     specified_opening_time_dict : Dict[datetime,List[OpenPeriod]] = {}
     key:date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
-        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) 
+        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3])
                                             for row in list(value)]
     specified_opening_times = [SpecifiedOpeningTime(
         value, key) for key, value in specified_opening_time_dict.items()]
@@ -145,19 +148,20 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     return specified_opening_times
 
 
-def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
+def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
 
     logger.info(f"Searching for standard opening times with serviceid that "
                 f"matches '{serviceid}'")
 
-    sql_command = ("SELECT sdo.serviceid,  sdo.dayid, otd.name, "
-                   "       sdot.starttime, sdot.endtime "
-                   "FROM servicedayopenings sdo "
-                   "INNER JOIN servicedayopeningtimes sdot "
-                   "ON sdo.id = sdot.servicedayopeningid "
-                   "LEFT JOIN openingtimedays otd "
-                   "ON sdo.dayid = otd.id "
-                  f"WHERE sdo.serviceid = {serviceid}"
+    sql_command = (
+        "SELECT sdo.serviceid,  sdo.dayid, otd.name, "
+        "       sdot.starttime, sdot.endtime "
+        "FROM servicedayopenings sdo "
+        "INNER JOIN servicedayopeningtimes sdot "
+        "ON sdo.id = sdot.servicedayopeningid "
+        "LEFT JOIN openingtimedays otd "
+        "ON sdo.dayid = otd.id "
+        f"WHERE sdo.serviceid = {serviceid}"
     )
     c = query_dos_db(sql_command)
 
@@ -168,12 +172,12 @@ def get_standard_opening_times_from_db(serviceid) -> StandardOpeningTimes:
         end = row[4]
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
-        
+
     c.close()
     return standard_opening_times
 
 
-def _connect_dos_db():
+def _connect_dos_db() -> None:
     """ Creates a new connection to the DoS DB and returns the
         connection object
 
@@ -203,7 +207,7 @@ def _connect_dos_db():
     return db
 
 
-def query_dos_db(sql_command):
+def query_dos_db(sql_command: str) -> cursor:
     """ Querys the dos database with given sql command and 
         returns the resulting cursor object.
     """

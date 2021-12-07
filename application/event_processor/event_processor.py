@@ -1,7 +1,7 @@
-from json import dumps, encoder
+from json import dumps
 from logging import getLogger
-from os import environ, getenv
-from typing import Any, Dict
+from os import environ
+from typing import Any, Dict, List
 
 import boto3
 from aws_lambda_powertools import Tracer
@@ -12,9 +12,9 @@ from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
 from nhs import NHSEntity
 from dos import (
-    DoSService, 
-    VALID_SERVICE_TYPES, 
-    VALID_STATUS_ID, 
+    DoSService,
+    VALID_SERVICE_TYPES,
+    VALID_STATUS_ID,
     get_matching_dos_services
     )
 from change_request import (
@@ -33,25 +33,25 @@ logger = getLogger("lambda")
 tracer = Tracer()
 lambda_client = boto3.client("lambda")
 expected_env_vars = (
-    "DB_SERVER", 
-    "DB_PORT", 
-    "DB_NAME", 
-    "DB_SCHEMA"
-    "DB_USER_NAME", 
+    "DB_SERVER",
+    "DB_PORT",
+    "DB_NAME",
+    "DB_SCHEMA",
+    "DB_USER_NAME",
     "EVENT_SENDER_LAMBDA_NAME"
     )
 
 
 class EventProcessor:
 
-    def __init__(self, nhs_entity):
+    def __init__(self, nhs_entity: NHSEntity):
         self.nhs_entity = nhs_entity
         self.matching_services = None
         self.change_requests = None
 
-    def get_matching_services(self):
+    def get_matching_services(self) -> List[DoSService]:
         """Using the nhs entity attributed to this object, it finds the 
-           matching DoS services from the db and filters the results
+        matching DoS services from the db and filters the results
         """
 
         # Check database for services with same first 5 digits of ODSCode
@@ -74,7 +74,7 @@ class EventProcessor:
 
     def get_change_requests(self) -> dict:
         """Generates change requests needed for the found services to make 
-           them inline with the NHS Entity
+        them inline with the NHS Entity
 
         Returns:
             dict: A dictionary of change requests
@@ -93,17 +93,17 @@ class EventProcessor:
             if len(changes) > 0:
                 change_requests.append(ChangeRequest(service.id, changes))
 
-        payload_list = dumps([cr.create_payload() for cr in change_requests], 
-                             indent=2, default=str)
+        payload_list = dumps(
+            [cr.create_payload() for cr in change_requests], default=str)
         logger.info(f"Created {len(change_requests)} change requests {payload_list}")
 
         # Assign to attribute and return
         self.change_requests = change_requests
         return self.change_requests
 
-    def send_changes(self):
+    def send_changes(self) -> None:
         """Sends change request payload off to next part of workflow
-           [Which at the moment is straight to the next lambda]
+        [Which at the moment is straight to the next lambda]
         """
         if self.change_requests is None:
             logger.error("Attempting to send change requests before "
@@ -124,7 +124,7 @@ class EventProcessor:
 
 def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
         """Returns a dict of the changes that are required to get
-           the service inline with the given nhs_entity.
+        the service inline with the given nhs_entity.
         """
         changes = {}
         update_changes(changes, WEBSITE_CHANGE_KEY, 
@@ -141,7 +141,8 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
         return changes
 
 
-def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str):
+def update_changes(changes: dict, change_key: str, dos_value: str, 
+    nhs_uk_value: str) -> None:
     """Adds field to the change request if the field is not equal
     Args:
         changes (dict): Change Request changes
@@ -177,7 +178,7 @@ def update_changes_with_address(changes: dict, change_key: str,
         nhs_uk_entity.City,
         nhs_uk_entity.County,
     ]
-    nhs_uk_address = [address for address in nhs_uk_address_lines 
+    nhs_uk_address = [address for address in nhs_uk_address_lines
                       if address is not None and address.strip() != ""]
     nhs_uk_address_string = "$".join(nhs_uk_address)
 
@@ -188,7 +189,8 @@ def update_changes_with_address(changes: dict, change_key: str,
     return changes
 
 
-def update_changes_with_opening_times(changes, dos_service, nhs_entity):
+def update_changes_with_opening_times(changes: dict, dos_service: DoSService, 
+    nhs_entity: NHSEntity) -> None:
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.specififed_opening_times()
@@ -211,7 +213,7 @@ def update_changes_with_opening_times(changes, dos_service, nhs_entity):
 
 @tracer.capture_lambda_handler()
 @setup_logger
-def lambda_handler(event: Dict[str, Any], context: LambdaContext):
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     """Entrypoint handler for the event_receiver lambda
 
     Args:

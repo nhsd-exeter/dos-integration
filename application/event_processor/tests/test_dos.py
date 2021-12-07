@@ -41,7 +41,7 @@ def test__init__public_name():
     dos_service.statusid = 1
     dos_service.publicname = "Test Public Name"
     # Assert
-    assert ("Test Public Name" in str(dos_service), 
+    assert ("Test Public Name" in str(dos_service),
             f"Should return 'Test Public Name' in string, actually: {dos_service}")
 
 
@@ -55,7 +55,7 @@ def test__init__name():
     dos_service.name = "Test Name"
     dos_service.publicname = None
     # Assert
-    assert ("Test Name" in str(dos_service), 
+    assert ("Test Name" in str(dos_service),
             f"Should return 'Test Name' in string, actually: {dos_service}")
 
 
@@ -69,7 +69,7 @@ def test__init__no_name():
     dos_service.publicname = None
     dos_service.name = None
     # Assert
-    assert ("NO-VALID-NAME" in str(dos_service), 
+    assert ("NO-VALID-NAME" in str(dos_service),
             f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}")
 
 
@@ -108,7 +108,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         ),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
-    
+
     # Act
     response = get_matching_dos_services('FQ038%')
     # Assert

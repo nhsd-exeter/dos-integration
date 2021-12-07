@@ -32,22 +32,22 @@ def test__init__():
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[random_str] = random_str
     test_data["OpeningTimes"] = [{
-      "Weekday": "Friday",
-      "Times": "08:45-17:00",
-      "OffsetOpeningTime": 525,
-      "OffsetClosingTime": 1020,
-      "OpeningTimeType": "General",
-      "AdditionalOpeningDate": "",
-      "IsOpen": True
+        "Weekday": "Friday",
+        "Times": "08:45-17:00",
+        "OffsetOpeningTime": 525,
+        "OffsetClosingTime": 1020,
+        "OpeningTimeType": "General",
+        "AdditionalOpeningDate": "",
+        "IsOpen": True
     },
     {
-      "Weekday": "Friday",
-      "Times": "08:45-17:00",
-      "OffsetOpeningTime": 525,
-      "OffsetClosingTime": 1020,
-      "OpeningTimeType": "Surgery",
-      "AdditionalOpeningDate": "",
-      "IsOpen": True
+        "Weekday": "Friday",
+        "Times": "08:45-17:00",
+        "OffsetOpeningTime": 525,
+        "OffsetClosingTime": 1020,
+        "OpeningTimeType": "Surgery",
+        "AdditionalOpeningDate": "",
+        "IsOpen": True
     },
     ]
     nhs_entity = NHSEntity(test_data)
@@ -90,7 +90,7 @@ def test_get_change_requests_full_change_request():
     change_requests = event_processor.get_change_requests()
     # Assert
 
-    assert (len(change_requests) == 1, 
+    assert (len(change_requests) == 1,
             f"Should have 1 change request but more found: "
             f"{len(change_requests)} change requests")
 
@@ -98,7 +98,7 @@ def test_get_change_requests_full_change_request():
     for field in ["system", "service_id", "changes"]:
         assert hasattr(cr, field), f"Attribute {field} not found in change request"
 
-    assert (cr.system == "DoS Integration", 
+    assert (cr.system == "DoS Integration",
             f"System should be DoS Integration but is {cr.system}")
 
     assert cr.changes == {
@@ -164,7 +164,7 @@ def test_send_changes(mock_invoke_lambda_function):
     event_processor.send_changes()
     # Assert
     mock_invoke_lambda_function.assert_called_once_with(
-        function_name, 
+        function_name,
         change_request.create_payload()
     )
     # Clean up
@@ -259,7 +259,7 @@ def test_get_changes_same_data():
     }
     nhs_entity = NHSEntity(nhs_kwargs)
     # Act
-    response = get_changes(dos_service,nhs_entity)
+    response = get_changes(dos_service, nhs_entity)
     # Assert
     assert {} == response, f"Should return empty dict, actually: {response}"
 
@@ -322,7 +322,7 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     # Act
     update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
     # Assert
-    assert (changes == expected_changes, 
+    assert (changes == expected_changes,
             f"Should return {expected_changes} dict, actually: {changes}")
 
 
