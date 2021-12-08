@@ -23,15 +23,11 @@ class ChangeRequestLogger:
             response (Response): Response object from posting the change request
         """
         if response.ok is True:
-            self.logger.info(self.default_log_format)
-            self.logger.append_keys(state="Success")
-            self.logger.append_keys(response_status_code=response.status_code)
-            self.logger.append_keys(response_text=response.text)
+            extra = {"state": "Success", "response_status_code": response.status_code, "response_text": response.text}
+            self.logger.info(self.default_log_format, extra=extra)
         else:
-            self.logger.error(self.default_log_format)
-            self.logger.append_keys(state="Failure")
-            self.logger.append_keys(response_status_code=response.status_code)
-            self.logger.append_keys(response_text=response.text)
+            extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}
+            self.logger.error(self.default_log_format, extra=extra)
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing
@@ -46,6 +42,5 @@ class ChangeRequestLogger:
             HTTPConnection.debuglevel = 1
 
     def log_change_request_exception(self) -> None:
-        self.logger.exception(self.default_log_format)
-        self.logger.append_keys(state="Exception")
-        self.logger.append_keys(exception_reason="Error posting change request")
+        extra = {"state": "Exception", "exception_reason": "Error posting change request"}
+        self.logger.exception(self.default_log_format, extra=extra)
