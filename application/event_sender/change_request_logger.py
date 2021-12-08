@@ -1,5 +1,5 @@
 from http.client import HTTPConnection
-from logging import getLogger
+from aws_lambda_powertools import Logger
 from typing import Any
 
 from common.utilities import is_debug_mode
@@ -13,7 +13,7 @@ class ChangeRequestLogger:
         ValueError: Raises ValueError if json response from api-gateway if json isn't valid
     """
 
-    logger = getLogger("lambda")
+    logger = Logger(service="lambda")
     default_log_format = "CHANGE_REQUEST"
 
     def log_change_request_response(self, response: Response) -> None:
@@ -23,9 +23,15 @@ class ChangeRequestLogger:
             response (Response): Response object from posting the change request
         """
         if response.ok is True:
-            self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.text}")
+            self.logger.info(self.default_log_format)
+            self.logger.append_keys(state="Success")
+            self.logger.append_keys(response_status_code=response.status_code)
+            self.logger.append_keys(response_text=response.text)
         else:
-            self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.text}")
+            self.logger.error(self.default_log_format)
+            self.logger.append_keys(state="Failure")
+            self.logger.append_keys(response_status_code=response.status_code)
+            self.logger.append_keys(response_text=response.text)
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing
@@ -33,9 +39,13 @@ class ChangeRequestLogger:
         Args:
             change_request_body (Any): Change request body to be logged
         """
-        self.logger.info(f"{self.default_log_format}|{change_request_body=}")
+        self.logger.info(self.default_log_format)
+        self.logger.append_keys(change_request_body=change_request_body)
+
         if is_debug_mode():
             HTTPConnection.debuglevel = 1
 
     def log_change_request_exception(self) -> None:
-        self.logger.exception(f"{self.default_log_format}|Exception|Error posting change request")
+        self.logger.exception(self.default_log_format)
+        self.logger.append_keys(state="Exception")
+        self.logger.append_keys(exception_reason="Error posting change request")

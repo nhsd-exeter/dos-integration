@@ -1,4 +1,3 @@
-from logging import Logger, getLogger
 from typing import Any, Dict
 
 from change_request_logger import ChangeRequestLogger
@@ -11,7 +10,6 @@ from requests.models import Response
 class ChangeRequest:
     """Change request class to send change requests"""
 
-    logger: Logger = getLogger("lambda")
     change_request_logger = ChangeRequestLogger()
     headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
     response: Response
