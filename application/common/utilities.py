@@ -62,11 +62,11 @@ def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> No
 
     lambda_payload = dumps(lambda_event).encode("utf-8")
     lambda_client = client("lambda")
-    context = {"custom":{"correlation_id":logger.get_correlation_id()}}
-    logger.debug(f"Invoking {lambda_name}", extra={"context":context})
+    context = {"custom": {"correlation_id": logger.get_correlation_id()}}
+    logger.debug(f"Invoking {lambda_name}", extra={"context": context})
     lambda_client.invoke(
         FunctionName=lambda_name,
         InvocationType="Event",
         Payload=lambda_payload,
-        ClientContext=base64.b64encode(dumps(context).encode('utf-8')).decode('utf-8')
-        )
+        ClientContext=base64.b64encode(dumps(context).encode("utf-8")).decode("utf-8"),
+    )

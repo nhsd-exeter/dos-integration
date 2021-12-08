@@ -35,7 +35,7 @@ class ChangeRequestLogger:
         Args:
             change_request_body (Any): Change request body to be logged
         """
-        self.logger.info(self.default_log_format, extra={"change_request_body":change_request_body})
+        self.logger.info(self.default_log_format, extra={"change_request_body": change_request_body})
 
         if is_debug_mode():
             HTTPConnection.debuglevel = 1

@@ -4,6 +4,8 @@ from common.utilities import get_environment_variable
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
+
+
 class ChangeRequest:
     """Change request class to send change requests"""
 
