@@ -4,8 +4,6 @@ from typing import Any
 
 from common.utilities import is_debug_mode
 from requests import Response
-
-
 class ChangeRequestLogger:
     """Change Request Logging class to log the change request for auditing
 
@@ -14,11 +12,15 @@ class ChangeRequestLogger:
     """
 
     logger = Logger(child=True)
+<<<<<<< HEAD
 
     def log_change_request_post_attempt(self, change_request_body: Any) -> None:
         """Log before attempting to POST change request to DoS API Gateway"""
 
         self.logger.info("Attempting to send change request to DoS", extra={"change_request_body": change_request_body})
+=======
+    default_log_format = "CHANGE_REQUEST"
+>>>>>>> 9c9aff9 (Sort out event_sender logger to use child tag)
 
     def log_change_request_response(self, response: Response) -> None:
         """Log the change request response for auditing
