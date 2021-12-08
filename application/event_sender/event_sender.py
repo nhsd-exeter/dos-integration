@@ -12,7 +12,7 @@ logger = Logger()
 
 
 @tracer.capture_lambda_handler()
-@logger.inject_lambda_context(correlation_id_path="context.custom.correlation_id")
+@logger.inject_lambda_context()
 # @setup_logger
 def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """Entrypoint handler for the event_sender lambda
@@ -21,5 +21,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
+    logger.debug("Checking out the context", extra={"context": context.client_context})
+    logger.set_correlation_id(context.client_context.custom.correlation_id)
     change_request = ChangeRequest(event)
     change_request.post_change_request()
