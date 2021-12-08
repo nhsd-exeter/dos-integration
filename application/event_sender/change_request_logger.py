@@ -39,7 +39,11 @@ class ChangeRequestLogger:
         Args:
             change_request_body (Any): Change request body to be logged
         """
+<<<<<<< HEAD
         self.logger.info("Change Request to DoS payload", extra={"change_request_body": change_request_body})
+=======
+        self.logger.info(self.default_log_format, extra={"change_request_body": change_request_body})
+>>>>>>> e92f952 (Correlation id get set)
 
         if is_debug_mode():
             HTTPConnection.debuglevel = 1

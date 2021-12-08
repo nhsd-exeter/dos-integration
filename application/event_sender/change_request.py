@@ -6,8 +6,11 @@ from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
 
+<<<<<<< HEAD
 logger = Logger(child=True)
 
+=======
+>>>>>>> e92f952 (Correlation id get set)
 
 class ChangeRequest:
     """Change request class to send change requests"""
