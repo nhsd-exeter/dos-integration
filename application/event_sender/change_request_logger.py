@@ -4,8 +4,6 @@ from typing import Any
 
 from common.utilities import is_debug_mode
 from requests import Response
-
-
 class ChangeRequestLogger:
     """Change Request Logging class to log the change request for auditing
 
@@ -13,7 +11,7 @@ class ChangeRequestLogger:
         ValueError: Raises ValueError if json response from api-gateway if json isn't valid
     """
 
-    logger = Logger(service="lambda")
+    logger = Logger(child=True)
     default_log_format = "CHANGE_REQUEST"
 
     def log_change_request_response(self, response: Response) -> None:
