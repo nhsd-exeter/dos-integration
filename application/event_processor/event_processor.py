@@ -5,10 +5,13 @@ from typing import Any, Dict, List
 
 import boto3
 from aws_lambda_powertools import Tracer
+from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from opening_times import spec_open_times_equal, spec_open_times_cr_format
 from common.logger import setup_logger
+
+
 from common.utilities import invoke_lambda_function, is_mock_mode
 from nhs import NHSEntity
 from dos import (
@@ -29,7 +32,7 @@ from change_request import (
     )
 
 
-logger = getLogger("lambda")
+logger = Logger()
 tracer = Tracer()
 lambda_client = boto3.client("lambda")
 expected_env_vars = (
@@ -232,16 +235,22 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
             logger.error(f"Environmental variable {env_var} not present")
 
     nhs_entity = NHSEntity(event)
-    logger.info(f"Begun event processor function for NHS Entity: {nhs_entity}")
+    logger.append_keys(ods_code=nhs_entity.ODSCode)
+    logger.append_keys(service_type=nhs_entity.ServiceType)
+    logger.append_keys(service_sub_type=nhs_entity.ServiceSubType)
+    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
 
     event_processor = EventProcessor(nhs_entity)
+    logger.info("Getting matching DoS Services")
     matching_services = event_processor.get_matching_services()
 
     if len(matching_services) == 0:
         logger.error(
             f"No matching DOS services found that fit all "
             f"criteria for ODSCode '{nhs_entity.ODSCode}'")
+        return
 
+    logger.info(f"Found {len(matching_services)} matching services, generating change requests")
     event_processor.get_change_requests()
 
     if not is_mock_mode():

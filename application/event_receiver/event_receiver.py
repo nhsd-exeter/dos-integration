@@ -1,5 +1,5 @@
 from json import loads
-from logging import getLogger
+
 from os import getenv
 from typing import Any, Dict
 
@@ -8,11 +8,13 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_event_exceptions import ValidationException
 from change_event_responses import set_return_value
 from change_event_validation import validate_event
-from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
 
+from aws_lambda_powertools import Logger
+
+logger = Logger()
 tracer = Tracer()
-logger = getLogger("lambda")
+
 
 SUCCESS_STATUS_CODE = 200
 FAILURE_STATUS_CODE = 400
@@ -22,7 +24,7 @@ UNEXPECTED_SERVER_ERROR_RESPONSE = "Unexpected server error"
 
 
 @tracer.capture_lambda_handler()
-@setup_logger
+@logger.inject_lambda_context(correlation_id_path="headers.x_correlation_id")
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     """Entrypoint handler for the event_receiver lambda
 
@@ -34,17 +36,22 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         dict: Response to NHS UK Change Event
     """
     try:
+
         change_event = extract_event(event)
+        logger.append_keys(ods_code=change_event["ODSCode"])
+        logger.append_keys(service_type=change_event["ServiceType"])
+        logger.append_keys(service_sub_type=change_event["ServiceSubType"])
+        logger.info("Message Received")
         validate_event(change_event)
         trigger_event_processor(change_event)
-        logger.info(f"{SUCCESS_STATUS_CODE}|{SUCCESS_STATUS_RESPONSE}")
+        logger.info("Message sent for processing")
         return set_return_value(SUCCESS_STATUS_CODE, SUCCESS_STATUS_RESPONSE)
     except ValidationException as exception:  # Expected Error (Deliberately Raised)
         logger.warning(f"{FAILURE_STATUS_CODE}|{str(exception)}")
         return set_return_value(FAILURE_STATUS_CODE, str(exception))
     except Exception as exception:  # Unexpected Error
         logger.critical(f"Expection Occurred: {str(exception)}")
-        logger.error(f"{UNEXPECTED_SERVER_ERROR_STATUS_CODE}|{UNEXPECTED_SERVER_ERROR_RESPONSE}")
+        logger.exception(f"{UNEXPECTED_SERVER_ERROR_STATUS_CODE}|{UNEXPECTED_SERVER_ERROR_RESPONSE}")
         return set_return_value(UNEXPECTED_SERVER_ERROR_STATUS_CODE, UNEXPECTED_SERVER_ERROR_RESPONSE)
 
 

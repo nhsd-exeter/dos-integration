@@ -3,14 +3,14 @@ from logging import getLogger
 from typing import List, Dict
 from datetime import datetime, date
 from itertools import groupby
-
+from aws_lambda_powertools import Logger
 import psycopg2
 from psycopg2.extensions import cursor
 
 from opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
 
-logger = getLogger("lambda")
 db_connection = None
+logger = Logger(child=True)
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
 
@@ -189,7 +189,7 @@ def _connect_dos_db() -> None:
     db_user = environ["DB_USER_NAME"]
     db_password = environ["DB_PASSWORD"]
 
-    logger.info(f"Attempting connection to database '{server}'")
+    logger.debug(f"Attempting connection to database '{server}'")
     logger.debug(
         f"host={server}, port={port}, dbname={db_name}, schema={db_schema} "
         f"user={db_user}")

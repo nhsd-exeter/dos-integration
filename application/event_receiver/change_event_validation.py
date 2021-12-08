@@ -1,11 +1,10 @@
-from logging import getLogger
 from typing import Any, Dict
-
+from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 from change_event_exceptions import ValidationException
 
-logger = getLogger("lambda")
+logger = Logger(child=True)
 
 
 def validate_event(event: Dict[str, Any]) -> None:
