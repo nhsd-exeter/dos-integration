@@ -126,6 +126,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     logger.append_keys(ods_code=nhs_entity.ODSCode)
     logger.append_keys(service_type=nhs_entity.ServiceType)
     logger.append_keys(service_sub_type=nhs_entity.ServiceSubType)
+    logger.debug("Checking out the context", extra={"context": context.client_context})
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
 
     event_processor = EventProcessor(nhs_entity)
