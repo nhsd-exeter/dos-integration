@@ -217,7 +217,7 @@ def update_changes_with_opening_times(
 
 
 @tracer.capture_lambda_handler()
-@setup_logger
+@logger.inject_lambda_context(correlation_id_path="context.custom.correlation_id")
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     """Entrypoint handler for the event_receiver lambda
 
