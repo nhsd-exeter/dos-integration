@@ -1,4 +1,3 @@
-from logging import getLogger
 from os import environ
 from unittest.mock import MagicMock, patch
 from pytest import raises
@@ -35,7 +34,6 @@ class TestChangeRequest:
         # Act
         change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         # Assert
-        assert change_request.logger == getLogger("lambda")
         assert change_request.headers == {"Content-Type": "application/json", "Accept": "application/json"}
         assert change_request.change_request_url == self.WEBSITE
         assert change_request.timeout == int(self.TIMEOUT)

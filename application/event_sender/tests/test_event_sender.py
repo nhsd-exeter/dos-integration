@@ -1,6 +1,8 @@
 from unittest.mock import patch
+from dataclasses import dataclass
 
-from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+import pytest
+
 
 from ..event_sender import lambda_handler
 
@@ -15,14 +17,23 @@ CHANGE_REQUEST = {
 FILE_PATH = "application.event_sender.event_sender"
 
 
+@pytest.fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-sender"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-sender"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()
+
+
 @patch(f"{FILE_PATH}.ChangeRequest")
-def test_lambda_handler(mock_change_request):
-    # Arrange
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
+def test_lambda_handler(mock_change_request, lambda_context):
+
     # Act
-    lambda_handler(CHANGE_REQUEST, context)
+    lambda_handler(CHANGE_REQUEST, lambda_context)
     # Assert
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()

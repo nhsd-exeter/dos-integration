@@ -30,7 +30,9 @@ class ChangeRequest:
         )
         self.change_request_body: Dict[str, Any] = change_request_body
         self.change_request_logger.log_change_request_body(self.change_request_body)
-        self.headers["x-correlation-id"] = logger.get_correlation_id()
+        correlation_id = logger.get_correlation_id()
+        if correlation_id is not None:
+            self.headers["x-correlation-id"] = logger.get_correlation_id()
 
     def post_change_request(self) -> None:
         self.change_request_logger.log_change_request_post_attempt(self.change_request_body)

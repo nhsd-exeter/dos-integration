@@ -1,9 +1,8 @@
 from os import environ
 from random import choices
 from unittest.mock import MagicMock, patch
-
-from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-
+import pytest
+from dataclasses import dataclass
 from ..event_processor import EventProcessor, lambda_handler, update_changes, get_changes, update_changes_with_address
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service
@@ -17,6 +16,18 @@ from ..change_request import (
 )
 
 FILE_PATH = "application.event_processor.event_processor"
+
+
+@pytest.fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-processor"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()
 
 
 def test__init__():
@@ -164,18 +175,18 @@ def test_send_changes(mock_invoke_lambda_function):
 
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_missing_environment_variable(mock_nhs_entity, mock_event_processor, change_event):
+def test_lambda_handler_missing_environment_variable(
+    mock_nhs_entity, mock_event_processor, change_event, lambda_context
+):
     # Arrange
     expected_env_vars = ("DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
+
     mock_entity = MagicMock()
     mock_nhs_entity.return_value = mock_entity
     for env in expected_env_vars:
         environ[env] = "test"
     # Act
-    response = lambda_handler(change_event, context)
+    response = lambda_handler(change_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
     mock_nhs_entity.assert_called_once_with(change_event)
@@ -187,18 +198,16 @@ def test_lambda_handler_missing_environment_variable(mock_nhs_entity, mock_event
 
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_mock_mode_false(mock_nhs_entity, mock_event_processor, change_event):
+def test_lambda_handler_mock_mode_false(mock_nhs_entity, mock_event_processor, change_event, lambda_context):
     # Arrange
     expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
+
     mock_entity = MagicMock()
     mock_nhs_entity.return_value = mock_entity
     for env in expected_env_vars:
         environ[env] = "test"
     # Act
-    response = lambda_handler(change_event, context)
+    response = lambda_handler(change_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
     mock_nhs_entity.assert_called_once_with(change_event)
@@ -211,19 +220,19 @@ def test_lambda_handler_mock_mode_false(mock_nhs_entity, mock_event_processor, c
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_mock_mode_true(mock_nhs_entity, mock_event_processor, mock_is_mock_mode, change_event):
+def test_lambda_handler_mock_mode_true(
+    mock_nhs_entity, mock_event_processor, mock_is_mock_mode, change_event, lambda_context
+):
     # Arrange
     expected_env_vars = ("DB_SERVER", "DB_PORT", "DB_NAME", "DB_USER_NAME", "EVENT_SENDER_LAMBDA_NAME")
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
+
     mock_entity = MagicMock()
     mock_nhs_entity.return_value = mock_entity
     for env in expected_env_vars:
         environ[env] = "test"
     mock_is_mock_mode.return_value = True
     # Act
-    response = lambda_handler(change_event, context)
+    response = lambda_handler(change_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
     mock_nhs_entity.assert_called_once_with(change_event)

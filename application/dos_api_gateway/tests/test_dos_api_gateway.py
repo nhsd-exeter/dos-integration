@@ -1,11 +1,23 @@
 from json import dumps, loads
-
-from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+import pytest
+from dataclasses import dataclass
 
 from ..dos_api_gateway import lambda_handler
 
 
-def test_lambda_handler():
+@pytest.fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-sender"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-sender"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()
+
+
+def test_lambda_handler(lambda_context):
     # Arrange
     change_request = {
         "reference": "1",
@@ -16,9 +28,8 @@ def test_lambda_handler():
     }
     lambda_event = {}
     lambda_event["body"] = dumps(change_request)
-    context = LambdaContext()
     # Act
-    response = lambda_handler(lambda_event, context)
+    response = lambda_handler(lambda_event, lambda_context)
     # Assert
     assert response["statusCode"] == 200
     assert loads(response["body"]) == {"dosChanges": [{"changeId": "1" * 9}, {"changeId": "2" * 9}]}

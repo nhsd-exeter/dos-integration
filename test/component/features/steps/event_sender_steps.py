@@ -54,31 +54,3 @@ def the_change_request_has_status_code_x(context, expected_status_code: int):
     assert (
         expected_status_code == actual_status_code
     ), f"Status code not as expected, Expected: {expected_status_code}, Actual {actual_status_code}"
-
-
-@then('the successful response is logged with status code "{expected_status_code:d}"')
-def the_successful_response_is_logged(context, expected_status_code: int):
-    """Checks if expected criteria is stored in the log file"""
-    response_status = "Success"
-    change_request_file_name = get_change_request_name(response_status)
-    change_request = load_json_file(change_request_file_name)
-    log_file = read_log_file()
-    assert str(change_request) in log_file, "Change Request body not logged as expected"
-    assert (
-        f"CHANGE_REQUEST|{response_status}|{expected_status_code}|"
-        + '{"dosChanges": [{"changeId": "Change_ID_1_here"},{"changeId": "Change_ID_2_here"}]}'
-        in log_file
-    ), "DoS API Gateway response not found in log file"
-
-
-@then('the failure response is logged with status code "{expected_status_code:d}"')
-def the_failure_response_is_logged(context, expected_status_code: int):
-    """Checks if expected criteria is stored in the log file"""
-    response_status = "Failure"
-    change_request_file_name = get_change_request_name(response_status)
-    change_request = load_json_file(change_request_file_name)
-    log_file = read_log_file()
-    assert str(change_request) in log_file, "Change Request body not logged as expected"
-    assert (
-        f"CHANGE_REQUEST|{response_status}|{expected_status_code}|" in log_file
-    ), "Change Request error not found in log file"

@@ -1,9 +1,8 @@
 from json import loads
 from os import environ
 from unittest.mock import patch
-
+from dataclasses import dataclass
 import pytest
-from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from change_event_validation import ValidationException
 from pytest import raises
 
@@ -22,22 +21,36 @@ from ..event_receiver import (
 FILE_PATH = "application.event_receiver.event_receiver"
 
 
+@pytest.fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-sender"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-sender"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()
+
+
 @patch(f"{FILE_PATH}.extract_event")
 @patch(f"{FILE_PATH}.set_return_value")
 @patch(f"{FILE_PATH}.trigger_event_processor")
 @patch(f"{FILE_PATH}.validate_event")
 def test_lambda_handler_valid_event(
-    mock_validate_event, mock_trigger_event_processor, mock_set_return_value, mock_extract_event, change_event
+    mock_validate_event,
+    mock_trigger_event_processor,
+    mock_set_return_value,
+    mock_extract_event,
+    change_event,
+    lambda_context,
 ):
     # Arrange
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
     mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
     mock_set_return_value.return_value = expected_return_value
     # Act
-    lambda_handler(change_event, context)
+    lambda_handler(change_event, lambda_context)
     # Assert
     mock_extract_event.assert_called_once_with(change_event)
     mock_validate_event.assert_called_once_with(change_event["body"])
@@ -50,19 +63,21 @@ def test_lambda_handler_valid_event(
 @patch(f"{FILE_PATH}.trigger_event_processor")
 @patch(f"{FILE_PATH}.validate_event")
 def test_lambda_handler_event_fails_validation(
-    mock_validate_event, mock_trigger_event_processor, set_return_value, mock_extract_event, change_event
+    mock_validate_event,
+    mock_trigger_event_processor,
+    set_return_value,
+    mock_extract_event,
+    change_event,
+    lambda_context,
 ):
     # Arrange
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
     mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
     set_return_value.return_value = expected_return_value
     error_message = "Invalid event"
     mock_validate_event.side_effect = ValidationException(error_message)
     # Act
-    lambda_handler(change_event, context)
+    lambda_handler(change_event, lambda_context)
     # Assert
     mock_extract_event.assert_called_once_with(change_event)
     mock_validate_event.assert_called_once_with(change_event["body"])
@@ -75,18 +90,20 @@ def test_lambda_handler_event_fails_validation(
 @patch(f"{FILE_PATH}.trigger_event_processor")
 @patch(f"{FILE_PATH}.validate_event")
 def test_lambda_handler_event_unexpected_failure(
-    mock_validate_event, mock_trigger_event_processor, set_return_value, mock_extract_event, change_event
+    mock_validate_event,
+    mock_trigger_event_processor,
+    set_return_value,
+    mock_extract_event,
+    change_event,
+    lambda_context,
 ):
     # Arrange
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
     mock_extract_event.return_value = change_event["body"]
     expected_return_value = {"statusCode": 100, "body": "example"}
     set_return_value.return_value = expected_return_value
     mock_validate_event.side_effect = KeyError("Test")
     # Act
-    lambda_handler(change_event, context)
+    lambda_handler(change_event, lambda_context)
     # Assert
     mock_extract_event.assert_called_once_with(change_event)
     mock_validate_event.assert_called_once_with(change_event["body"])
@@ -109,7 +126,6 @@ def test_extract_event_invalid_event(log_capture):
     # Act & Assert
     with raises(KeyError):
         extract_event(event)
-    log_capture.check(["lambda", "ERROR", "Change Event unable to be extracted"])
 
 
 @pytest.mark.parametrize("is_mock_mode_value", [True])
