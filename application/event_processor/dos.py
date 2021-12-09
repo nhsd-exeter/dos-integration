@@ -1,5 +1,4 @@
 from os import environ
-from logging import getLogger
 from typing import List, Dict
 from datetime import datetime, date
 from itertools import groupby
@@ -67,20 +66,22 @@ class DoSService:
         else:
             name = "NO-VALID-NAME"
 
-        return (f"<DoSService: name='{name[0:16]}' id={self.id} uid={self.uid} "
-                f"odscode={self.odscode} type={self.typeid} status={self.statusid}>")
+        return (
+            f"<DoSService: name='{name[0:16]}' id={self.id} uid={self.uid} "
+            f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
+        )
 
     def standard_opening_times(self) -> StandardOpeningTimes:
-        """ Retrieves values from db on first call. Returns stored
-            values on subsequent calls
+        """Retrieves values from db on first call. Returns stored
+        values on subsequent calls
         """
         if self._standard_opening_times is None:
             self._standard_opening_times = get_standard_opening_times_from_db(self.id)
         return self._standard_opening_times
 
     def specififed_opening_times(self) -> List[SpecifiedOpeningTime]:
-        """ Retrieves values from db on first call. Returns stored
-            values on subsequent calls
+        """Retrieves values from db on first call. Returns stored
+        values on subsequent calls
         """
         if self._specififed_opening_times is None:
             self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
@@ -98,8 +99,7 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
         digits of odscode, taken from DoS database
     """
 
-    logger.info(f"Searching for DoS services with ODSCode that matches first "
-                f"5 digits of '{odscode}'")
+    logger.info(f"Searching for DoS services with ODSCode that matches first " f"5 digits of '{odscode}'")
 
     sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
     logger.info(f"Created SQL command to run: {sql_command}")
@@ -120,8 +120,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         matching serviceid
     """
 
-    logger.info(f"Searching for specified opening times with serviceid that "
-                f"matches '{service_id}'")
+    logger.info(f"Searching for specified opening times with serviceid that " f"matches '{service_id}'")
 
     sql_command = (
         "SELECT ssod.serviceid, ssod.date, ssot.starttime, "
@@ -130,7 +129,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
         f"WHERE ssod.serviceid = {service_id}"
-        )
+    )
     c = query_dos_db(sql_command)
 
     """sort by date and then by starttime"""
@@ -138,18 +137,15 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     specified_opening_time_dict: Dict[datetime, List[OpenPeriod]] = {}
     key: date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
-        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3])
-                                            for row in list(value)]
-    specified_opening_times = [SpecifiedOpeningTime(
-        value, key) for key, value in specified_opening_time_dict.items()]
+        specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
+    specified_opening_times = [SpecifiedOpeningTime(value, key) for key, value in specified_opening_time_dict.items()]
     c.close()
     return specified_opening_times
 
 
 def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
 
-    logger.info(f"Searching for standard opening times with serviceid that "
-                f"matches '{serviceid}'")
+    logger.info(f"Searching for standard opening times with serviceid that " f"matches '{serviceid}'")
 
     sql_command = (
         "SELECT sdo.serviceid,  sdo.dayid, otd.name, "
@@ -190,9 +186,7 @@ def _connect_dos_db() -> None:
     db_password = environ["DB_PASSWORD"]
 
     logger.debug(f"Attempting connection to database '{server}'")
-    logger.debug(
-        f"host={server}, port={port}, dbname={db_name}, schema={db_schema} "
-        f"user={db_user}")
+    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} " f"user={db_user}")
 
     db = psycopg2.connect(
         host=server,
@@ -201,7 +195,8 @@ def _connect_dos_db() -> None:
         user=db_user,
         password=db_password,
         connect_timeout=30,
-        options=f"-c search_path=dbo,{db_schema}")
+        options=f"-c search_path=dbo,{db_schema}",
+    )
 
     return db
 

@@ -14,7 +14,7 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(correlation_id_path="correlation_id")
 # @setup_logger
-def lambda_handler(event: Dict[str, Any], context: LambdaContext):
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     """Entrypoint handler for the event_sender lambda
 
     Args:

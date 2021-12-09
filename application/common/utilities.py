@@ -1,5 +1,4 @@
 from json import dumps
-import base64
 from os import environ, getenv
 from typing import Any, Dict
 

@@ -5,12 +5,10 @@ from logging import getLogger
 import change_request
 
 logger = getLogger("lambda")
-WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday",
-            "friday", "saturday", "sunday")
+WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 
 
 class OpenPeriod:
-
     def __init__(self, start: time, end: time):
         assert isinstance(start, time) and isinstance(end, time)
         self.start = start
@@ -29,13 +27,12 @@ class OpenPeriod:
         return f"<OpenPeriod: {str(self)}>"
 
     def __eq__(self, other: Any):
-        return (isinstance(other, OpenPeriod) and
-                self.start == other.start and
-                self.end == other.end)
+        return isinstance(other, OpenPeriod) and self.start == other.start and self.end == other.end
 
     """ For all comparison methods, check start value first or check
         end value if starts are equal
     """
+
     def __lt__(self, other: Any):
         if self.start == other.start:
             return self.end < other.end
@@ -58,15 +55,16 @@ class OpenPeriod:
         assert other.start_before_end()
 
         # "2 people can meet if both were born before the other dies"
-        return (self.start < other.end and
-                other.start < self.end)
+        return self.start < other.end and other.start < self.end
 
     def export_cr_format(self) -> dict:
-        """ Exports open period into a DoS change request accetped
-            format
+        """Exports open period into a DoS change request accetped
+        format
         """
-        return {"start_time": self.start.strftime(change_request.TIME_FORMAT),
-                "end_time": self.end.strftime(change_request.TIME_FORMAT)}
+        return {
+            "start_time": self.start.strftime(change_request.TIME_FORMAT),
+            "end_time": self.end.strftime(change_request.TIME_FORMAT),
+        }
 
 
 class SpecifiedOpeningTime:
@@ -82,38 +80,38 @@ class SpecifiedOpeningTime:
         return open_periods_string(self.open_periods)
 
     def __repr__(self):
-        return (f"<SpecifiedOpenTime: {self.date_string()} "
-                f"{self.openings_string()}>")
+        return f"<SpecifiedOpenTime: {self.date_string()} " f"{self.openings_string()}>"
 
     def __eq__(self, other):
-        return (isinstance(other, SpecifiedOpeningTime) and
-                self.date == other.date and
-                open_periods_equal(self.open_periods, other.open_periods))
+        return (
+            isinstance(other, SpecifiedOpeningTime)
+            and self.date == other.date
+            and open_periods_equal(self.open_periods, other.open_periods)
+        )
 
     def __hash__(self):
         return hash(repr(self))
 
     def export_cr_format(self) -> dict:
-        """ Exports Specified opening time into a DoS change request accetped
-            format.
+        """Exports Specified opening time into a DoS change request accetped
+        format.
         """
-        exp_open_periods = [op.export_cr_format()
-                            for op in sorted(self.open_periods)]
+        exp_open_periods = [op.export_cr_format() for op in sorted(self.open_periods)]
         date_str = self.date.strftime(change_request.DATE_FORMAT)
         change = {date_str: exp_open_periods}
         return change
 
 
 class StandardOpeningTimes:
-    """ Represents the standard openings times for a week. Structured as a
-        set of OpenPeriods per day
+    """Represents the standard openings times for a week. Structured as a
+    set of OpenPeriods per day
 
-        monday: [OpenPeriod1, OpenPeriod2]
-        tuesday: [OpenPeriod1]
-        wednesday: [OpenPeriod1, OpenPeriod2]
-        etc etc...
+    monday: [OpenPeriod1, OpenPeriod2]
+    tuesday: [OpenPeriod1]
+    wednesday: [OpenPeriod1, OpenPeriod2]
+    etc etc...
 
-        An empty list that no open periods means CLOSED
+    An empty list that no open periods means CLOSED
     """
 
     def __init__(self):
@@ -122,8 +120,7 @@ class StandardOpeningTimes:
             setattr(self, day, [])
 
     def __str__(self):
-        day_opening_strs = [f"{day}:{open_periods_string(getattr(self, day))}"
-                            for day in WEEKDAYS]
+        day_opening_strs = [f"{day}:{open_periods_string(getattr(self, day))}" for day in WEEKDAYS]
         return ", ".join(day_opening_strs)
 
     def __len__(self):
@@ -142,36 +139,33 @@ class StandardOpeningTimes:
         if weekday in WEEKDAYS:
             getattr(self, weekday).append(open_period)
         else:
-            logger.error(
-                f"Cannot add opening time for invalid weekday "
-                f"'{weekday}', open period not added.")
+            logger.error(f"Cannot add opening time for invalid weekday " f"'{weekday}', open period not added.")
 
     def export_cr_format(self) -> dict:
-        """ Exports standard opening times into a DoS change request
-            accepted format
+        """Exports standard opening times into a DoS change request
+        accepted format
         """
         change = {}
         for weekday in WEEKDAYS:
             open_periods = sorted(getattr(self, weekday))
-            change[weekday.capitalize()] = [op.export_cr_format()
-                                            for op in open_periods]
+            change[weekday.capitalize()] = [op.export_cr_format() for op in open_periods]
         return change
 
 
 def open_periods_string(open_periods: List[OpenPeriod]) -> str:
-    """ Returns a string version of a list of open periods in
-        a consistently sorted order.
+    """Returns a string version of a list of open periods in
+    a consistently sorted order.
 
-        eg.
-        '[08:00:00-13:00:00, 14:00:00-17:00:00, 18:00:00-20:00:00]
+    eg.
+    '[08:00:00-13:00:00, 14:00:00-17:00:00, 18:00:00-20:00:00]
     """
     sorted_str_list = [str(op) for op in sorted(list(open_periods))]
     return f"[{', '.join(sorted_str_list)}]"
 
 
 def any_overlaps(open_periods: List[OpenPeriod]) -> bool:
-    """ Returns whether any OpenPeriod object in list overlaps
-        any others in the list.
+    """Returns whether any OpenPeriod object in list overlaps
+    any others in the list.
     """
     untested = open_periods.copy()
     while len(untested) > 1:
@@ -183,8 +177,8 @@ def any_overlaps(open_periods: List[OpenPeriod]) -> bool:
 
 
 def any_start_before_end(open_periods: List[OpenPeriod]) -> bool:
-    """ Returns whether any OpenPeriod object in list starts
-        before it ends.
+    """Returns whether any OpenPeriod object in list starts
+    before it ends.
     """
     for op in open_periods:
         if op.start_before_end():
@@ -193,8 +187,8 @@ def any_start_before_end(open_periods: List[OpenPeriod]) -> bool:
 
 
 def spec_open_times_cr_format(spec_opening_dates: List[SpecifiedOpeningTime]) -> dict:
-    """ Runs the export_cr_format on a list of SpecifiedOpeningTime
-        objects and combines the results
+    """Runs the export_cr_format on a list of SpecifiedOpeningTime
+    objects and combines the results
     """
     opening_dates_cr_format = {}
     for spec_open_date in spec_opening_dates:
@@ -204,15 +198,15 @@ def spec_open_times_cr_format(spec_opening_dates: List[SpecifiedOpeningTime]) ->
 
 
 def open_periods_equal(A: List[OpenPeriod], B: List[OpenPeriod]) -> bool:
-    """ Checks equality between 2 lists of open periods
-        Relies on sorting and eq functions in OpenPeriod
+    """Checks equality between 2 lists of open periods
+    Relies on sorting and eq functions in OpenPeriod
     """
     return sorted(A) == sorted(B)
 
 
 def spec_open_times_equal(A: List[SpecifiedOpeningTime], B: List[SpecifiedOpeningTime]) -> bool:
-    """ Checks equality between 2 lists of SpecifiedOpeningTime
-        Relies on equality, and hash functions of SpecifiedOpeningTime
+    """Checks equality between 2 lists of SpecifiedOpeningTime
+    Relies on equality, and hash functions of SpecifiedOpeningTime
     """
     hash_list_a = [hash(a) for a in A]
     hash_list_b = [hash(b) for b in B]

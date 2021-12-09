@@ -33,7 +33,7 @@ def test_get_specified_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 1020,
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "Nov 12 2021",
-            "IsOpen": True
+            "IsOpen": True,
         },
         {
             "Weekday": "",
@@ -42,7 +42,7 @@ def test_get_specified_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 980,
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "Jan  6    2022",
-            "IsOpen": True
+            "IsOpen": True,
         },
         {
             "Weekday": "",
@@ -51,7 +51,7 @@ def test_get_specified_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 980,
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "Apr  01   2023",
-            "IsOpen": True
+            "IsOpen": True,
         },
         {
             "Weekday": "Thursday",
@@ -60,7 +60,7 @@ def test_get_specified_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 1080,
             "OpeningTimeType": "Surgery",
             "AdditionalOpeningDate": "",
-            "IsOpen": True
+            "IsOpen": True,
         },
     ]
     nhs_entity = NHSEntity(test_data)
@@ -82,7 +82,7 @@ def test_get_standard_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 1020,
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
-            "IsOpen": True
+            "IsOpen": True,
         },
         {
             "Weekday": "Thursday",
@@ -91,7 +91,7 @@ def test_get_standard_opening_times(opening_time_type, expected):
             "OffsetClosingTime": 1080,
             "OpeningTimeType": "Surgery",
             "AdditionalOpeningDate": "",
-            "IsOpen": True
+            "IsOpen": True,
         },
     ]
     # Act
