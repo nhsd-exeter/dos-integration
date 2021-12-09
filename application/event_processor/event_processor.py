@@ -60,9 +60,10 @@ class EventProcessor:
                     f"matching first 5 chars of ODSCode: {matching_services}")
 
         # Filter for services with valid type and status
-        matching_services = [s for s in matching_services
-                            if  int(s.typeid) in VALID_SERVICE_TYPES
-                            and int(s.statusid) == VALID_STATUS_ID]
+        matching_services = [
+            s for s in matching_services
+            if int(s.typeid) in VALID_SERVICE_TYPES
+            and int(s.statusid) == VALID_STATUS_ID]
 
         logger.info(f"Found {len(matching_services)} services with typeid in "
                     f"whitelist{VALID_SERVICE_TYPES} and status id = "
@@ -70,7 +71,6 @@ class EventProcessor:
 
         self.matching_services = matching_services
         return self.matching_services
-
 
     def get_change_requests(self) -> dict:
         """Generates change requests needed for the found services to make
@@ -80,8 +80,9 @@ class EventProcessor:
             dict: A dictionary of change requests
         """
         if self.matching_services is None:
-            logger.error(   "Attempting to form change requests before "
-                            "matching services have been found.")
+            logger.error(
+                "Attempting to form change requests before "
+                "matching services have been found.")
             return
 
         change_requests = []
@@ -106,13 +107,15 @@ class EventProcessor:
         [Which at the moment is straight to the next lambda]
         """
         if self.change_requests is None:
-            logger.error(   "Attempting to send change requests before "
-                            "get_change_requests has been called.")
+            logger.error(
+                "Attempting to send change requests before "
+                "get_change_requests has been called.")
             return
 
         if "EVENT_SENDER_LAMBDA_NAME" not in environ:
-            logger.error(   "Attempting to send change requests but "
-                            "EVENT_SENDER_LAMBDA_NAME is not set.")
+            logger.error(
+                "Attempting to send change requests but "
+                "EVENT_SENDER_LAMBDA_NAME is not set.")
             return
 
         for change_request in self.change_requests:
@@ -121,28 +124,21 @@ class EventProcessor:
             logger.info(f"Sent off change payload for id={change_request.service_id}")
 
 
-
 def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
-        """Returns a dict of the changes that are required to get
-        the service inline with the given nhs_entity.
-        """
-        changes = {}
-        update_changes( changes, WEBSITE_CHANGE_KEY,
-                        dos_service.web, nhs_entity.Website)
-        update_changes( changes, POSTCODE_CHANGE_KEY,
-                        dos_service.postcode, nhs_entity.Postcode)
-        update_changes( changes, PHONE_CHANGE_KEY,
-                        dos_service.publicphone, nhs_entity.Phone)
-        update_changes( changes, PUBLICNAME_CHANGE_KEY,
-                        dos_service.publicname, nhs_entity.OrganisationName)
-        update_changes_with_address(changes, ADDRESS_CHANGE_KEY,
-                                    dos_service.address, nhs_entity)
-        update_changes_with_opening_times(changes, dos_service, nhs_entity)
-        return changes
+    """Returns a dict of the changes that are required to get
+    the service inline with the given nhs_entity.
+    """
+    changes = {}
+    update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.Website)
+    update_changes(changes, POSTCODE_CHANGE_KEY, dos_service.postcode, nhs_entity.Postcode)
+    update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.Phone)
+    update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.OrganisationName)
+    update_changes_with_address(changes, ADDRESS_CHANGE_KEY, dos_service.address, nhs_entity)
+    update_changes_with_opening_times(changes, dos_service, nhs_entity)
+    return changes
 
 
-def update_changes(changes: dict, change_key: str, dos_value: str,
-    nhs_uk_value: str) -> None:
+def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str) -> None:
     """Adds field to the change request if the field is not equal
     Args:
         changes (dict): Change Request changes
@@ -158,8 +154,9 @@ def update_changes(changes: dict, change_key: str, dos_value: str,
         changes[change_key] = nhs_uk_value
 
 
-def update_changes_with_address(changes: dict, change_key: str,
-    dos_address: str, nhs_uk_entity: NHSEntity) -> dict:
+def update_changes_with_address(
+        changes: dict, change_key: str, dos_address: str,
+        nhs_uk_entity: NHSEntity) -> dict:
     """Adds the address to the change request if the address is not equal
 
     Args:
@@ -178,37 +175,41 @@ def update_changes_with_address(changes: dict, change_key: str,
         nhs_uk_entity.City,
         nhs_uk_entity.County,
     ]
-    nhs_uk_address =    [address for address in nhs_uk_address_lines
-                        if address is not None and address.strip() != ""]
+
+    nhs_uk_address = [
+        address for address in nhs_uk_address_lines
+        if address is not None and address.strip() != ""]
+
     nhs_uk_address_string = "$".join(nhs_uk_address)
 
     if dos_address != nhs_uk_address_string:
-        logger.debug(   f"Address is not equal, {dos_address=} != "
-                        f"{nhs_uk_address_string=}")
+        logger.debug(
+            f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
         changes[change_key] = nhs_uk_address
 
     return changes
 
 
-def update_changes_with_opening_times(changes: dict, dos_service: DoSService,
-    nhs_entity: NHSEntity) -> None:
+def update_changes_with_opening_times(
+        changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.specififed_opening_times()
     nhs_spec_open_dates = nhs_entity.specified_opening_times()
     if not spec_open_times_equal(dos_spec_open_dates, nhs_spec_open_dates):
-        logger.debug(   f"Specified opening times not equal. "
-                        f"dos={dos_spec_open_dates} and "
-                        f"nhs={nhs_spec_open_dates}")
+        logger.debug(
+            f"Specified opening times not equal. "
+            f"dos={dos_spec_open_dates} and "
+            f"nhs={nhs_spec_open_dates}")
         changes[OPENING_DATES_KEY] = spec_open_times_cr_format(nhs_spec_open_dates)
 
     # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
     dos_std_open_dates = dos_service.standard_opening_times()
     nhs_std_open_dates = nhs_entity.standard_opening_times()
     if dos_std_open_dates != nhs_std_open_dates:
-        logger.debug(   f"Standard weekly opening times not equal. "
-                        f"dos={dos_std_open_dates} and "
-                        f"nhs={nhs_std_open_dates}")
+        logger.debug(
+            f"Standard weekly opening times not equal. dos={dos_std_open_dates} "
+            f"and nhs={nhs_std_open_dates}")
         changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
 
 
@@ -237,8 +238,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     matching_services = event_processor.get_matching_services()
 
     if len(matching_services) == 0:
-        logger.error(   f"No matching DOS services found that fit all "
-                        f"criteria for ODSCode '{nhs_entity.ODSCode}'")
+        logger.error(
+            f"No matching DOS services found that fit all "
+            f"criteria for ODSCode '{nhs_entity.ODSCode}'")
 
     event_processor.get_change_requests()
 

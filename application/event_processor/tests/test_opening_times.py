@@ -4,8 +4,9 @@ from datetime import datetime, date, time, timedelta
 from ..opening_times import OpenPeriod, SpecifiedOpeningTime
 
 
-@pytest.mark.parametrize("start, end, other_start,other_end, expected",
-[(time(8, 0), time(12, 0), time(8, 0), time(12, 0), True), (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
+@pytest.mark.parametrize("start, end, other_start,other_end, expected", [
+    (time(8, 0), time(12, 0), time(8, 0), time(12, 0), True),
+    (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
 def test_openperiod_eq(start, end, other_start, other_end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
@@ -15,7 +16,9 @@ def test_openperiod_eq(start, end, other_start, other_end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-@pytest.mark.parametrize("start, end, expected", [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)])
+@pytest.mark.parametrize("start, end, expected", [
+    (time(8, 0), time(12, 0), True),
+    (time(12, 0), time(8, 0), False)])
 def test_openperiod_start_before_end(start, end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
@@ -25,8 +28,9 @@ def test_openperiod_start_before_end(start, end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-@pytest.mark.parametrize("start, end, other_start,other_end, expected",
-[(time(8, 0), time(12, 0), time(8, 0), time(11, 0), True), (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
+@pytest.mark.parametrize("start, end, other_start,other_end, expected", [
+    (time(8, 0), time(12, 0), time(8, 0), time(11, 0), True),
+    (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False)])
 def test_openperiod_overlaps(start, end, other_start, other_end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
@@ -35,9 +39,20 @@ def test_openperiod_overlaps(start, end, other_start, other_end, expected):
     # Assert
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
-@pytest.mark.parametrize("open_periods, date, other_open_periods,other_date, expected",
-[([OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,21),[OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),False),
-([OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),[OpenPeriod(time(8, 0), time(12, 0)),OpenPeriod(time(13, 0), time(21, 0))],date(2019,5,23),True)])
+
+@pytest.mark.parametrize("open_periods, date, other_open_periods,other_date, expected", [
+    (
+        [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
+        date(2019, 5, 21),
+        [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
+        date(2019, 5, 23),
+        False),
+    (
+        [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
+        date(2019, 5, 23),
+        [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
+        date(2019, 5, 23),
+        True)])
 def test_specified_opening_time_eq(open_periods, date, other_open_periods, other_date, expected):
     # Arrange
     specified_open_period = SpecifiedOpeningTime(open_periods, date)
@@ -85,10 +100,12 @@ def test_open_period_hash():
         OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
         OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), time(12, 0, 0)),
         OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),
-        OpenPeriod( datetime.strptime("8:00", "%H:%M").time(),
-                    datetime.strptime("12:00:00", "%H:%M:%S").time()),
-        OpenPeriod( (datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(),
-                    time(12, 0, 0))
+        OpenPeriod(
+            datetime.strptime("8:00", "%H:%M").time(),
+            datetime.strptime("12:00:00", "%H:%M:%S").time()),
+        OpenPeriod(
+            (datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(),
+            time(12, 0, 0))
     )
 
     for op in equal_ops:

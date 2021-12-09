@@ -17,12 +17,11 @@ class ChangeRequest:
     def __init__(self, service_id: int, changes: dict = {}):
         trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
-        self.reference =  str(trace_id)
+        self.reference = str(trace_id)
         self.system = "DoS Integration"
         self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
         self.service_id = str(service_id)
         self.changes = changes
-
 
     def create_payload(self) -> dict:
         return {

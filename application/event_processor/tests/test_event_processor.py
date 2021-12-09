@@ -31,25 +31,25 @@ def test__init__():
     for i in range(10):
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[random_str] = random_str
-    test_data["OpeningTimes"] = [{
-        "Weekday": "Friday",
-        "Times": "08:45-17:00",
-        "OffsetOpeningTime": 525,
-        "OffsetClosingTime": 1020,
-        "OpeningTimeType": "General",
-        "AdditionalOpeningDate": "",
-        "IsOpen": True
-    },
-    {
-        "Weekday": "Friday",
-        "Times": "08:45-17:00",
-        "OffsetOpeningTime": 525,
-        "OffsetClosingTime": 1020,
-        "OpeningTimeType": "Surgery",
-        "AdditionalOpeningDate": "",
-        "IsOpen": True
-    },
-    ]
+    test_data["OpeningTimes"] = [
+        {
+            "Weekday": "Friday",
+            "Times": "08:45-17:00",
+            "OffsetOpeningTime": 525,
+            "OffsetClosingTime": 1020,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        {
+            "Weekday": "Friday",
+            "Times": "08:45-17:00",
+            "OffsetOpeningTime": 525,
+            "OffsetClosingTime": 1020,
+            "OpeningTimeType": "Surgery",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        }]
     nhs_entity = NHSEntity(test_data)
     # Act
     event_processor = EventProcessor(nhs_entity)
@@ -57,8 +57,8 @@ def test__init__():
     assert event_processor.nhs_entity == nhs_entity
     assert isinstance(event_processor.matching_services, type(None))
     assert isinstance(event_processor.change_requests, type(None))
-    assert event_processor.matching_services == None
-    assert event_processor.change_requests == None
+    assert event_processor.matching_services is None
+    assert event_processor.change_requests is None
 
 
 def test_get_change_requests_full_change_request():
@@ -137,7 +137,7 @@ def test_send_changes(mock_invoke_lambda_function):
     environ["EVENT_SENDER_LAMBDA_NAME"] = function_name
 
     change_request = ChangeRequest(service_id=49016)
-    change_request.reference = "1"#
+    change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
     change_request.message = "Test message 1531816592293|@./"
     change_request.changes = {
@@ -297,7 +297,7 @@ def test_get_changes_different_changes():
         PHONE_CHANGE_KEY: phone,
     }
     # Act
-    response = get_changes(dos_service,nhs_entity)
+    response = get_changes(dos_service, nhs_entity)
     # Assert
     assert expected_changes == response, f"Should return {expected_changes} dict, actually: {response}"
 
@@ -337,7 +337,7 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
     nhs_uk_entity.Address3 = "address3"
     nhs_uk_entity.City = "city"
     nhs_uk_entity.County = "county"
-    nhs_uk_entity.OpeningTimes= []
+    nhs_uk_entity.OpeningTimes = []
     dos_address = (
         f"{nhs_uk_entity.Address1}${nhs_uk_entity.Address2}$"
         f"{nhs_uk_entity.Address3}${nhs_uk_entity.City}${nhs_uk_entity.County}"

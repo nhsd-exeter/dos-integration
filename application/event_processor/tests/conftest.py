@@ -4,7 +4,7 @@ from pytest import fixture
 from testfixtures import LogCapture
 
 from ..dos import DoSService
-from ..opening_times import StandardOpeningTimes, SpecifiedOpeningTime
+from ..opening_times import StandardOpeningTimes
 
 
 @fixture()
@@ -56,5 +56,5 @@ PHARMACY_STANDARD_EVENT = {
     "Website": "https://my-pharmacy.com/health-service",
     "OrganisationSubType": None,
     "OrganisationAliases": [],
-    "OpeningTimes":[]
+    "OpeningTimes": []
 }

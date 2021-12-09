@@ -1,7 +1,7 @@
 from os import environ
 from logging import getLogger
 from typing import List, Dict
-from datetime import datetime, date, time
+from datetime import datetime, date
 from itertools import groupby
 
 import psycopg2
@@ -70,7 +70,6 @@ class DoSService:
         return (f"<DoSService: name='{name[0:16]}' id={self.id} uid={self.uid} "
                 f"odscode={self.odscode} type={self.typeid} status={self.statusid}>")
 
-
     def standard_opening_times(self) -> StandardOpeningTimes:
         """ Retrieves values from db on first call. Returns stored
             values on subsequent calls
@@ -86,7 +85,6 @@ class DoSService:
         if self._specififed_opening_times is None:
             self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specififed_opening_times
-
 
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
@@ -137,8 +135,8 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
 
     """sort by date and then by starttime"""
     sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
-    specified_opening_time_dict : Dict[datetime,List[OpenPeriod]] = {}
-    key:date
+    specified_opening_time_dict: Dict[datetime, List[OpenPeriod]] = {}
+    key: date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
         specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3])
                                             for row in list(value)]
@@ -192,8 +190,9 @@ def _connect_dos_db() -> None:
     db_password = environ["DB_PASSWORD"]
 
     logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(   f"host={server}, port={port}, dbname={db_name}, "
-                    f"schema={db_schema} user={db_user}")
+    logger.debug(
+        f"host={server}, port={port}, dbname={db_name}, schema={db_schema} "
+        f"user={db_user}")
 
     db = psycopg2.connect(
         host=server,
