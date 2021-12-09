@@ -7,7 +7,6 @@ from requests import Response
 
 logger = Logger(child=True)
 
-
 class ChangeRequestLogger:
     """Change Request Logging class to log the change request for auditing
 
@@ -28,10 +27,10 @@ class ChangeRequestLogger:
         """
         if response.ok is True:
             extra = {"state": "Success", "response_status_code": response.status_code, "response_text": response.text}
-            logger.info(self.default_log_format, extra=extra)
+            logger.info("Successfully send change request to DoS", extra=extra)
         else:
             extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}
-            logger.error(self.default_log_format, extra=extra)
+            logger.error("Failed to send change request to DoS", extra=extra)
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing
