@@ -38,9 +38,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     try:
 
         change_event = extract_event(event)
-        logger.append_keys(ods_code=change_event["ODSCode"])
-        logger.append_keys(service_type=change_event["ServiceType"])
-        logger.append_keys(service_sub_type=change_event["ServiceSubType"])
+        if "ODSCode" in change_event:
+            logger.append_keys(ods_code=change_event["ODSCode"])
+        if "ServiceType" in change_event:
+            logger.append_keys(service_type=change_event["ServiceType"])
+        if "ServiceSubType" in change_event:
+            logger.append_keys(service_sub_type=change_event["ServiceSubType"])
         logger.info("Message Received")
         validate_event(change_event)
         trigger_event_processor(change_event)

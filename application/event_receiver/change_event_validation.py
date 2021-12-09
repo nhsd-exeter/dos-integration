@@ -32,7 +32,7 @@ def check_service_type(service_type: str) -> None:
     """
     logger.debug("Checking Service Type")
     if service_type == "PHA":
-        logger.info(f"Checking Service Type: {service_type}")
+        logger.info(f"Service type: {service_type} validated")
     else:
         logger.error(f"Checking Service Type not in expected types: {service_type}")
         raise ValidationException("Unexpected Service Type")
@@ -46,7 +46,7 @@ def check_service_sub_type(service_sub_type: str) -> None:
     """
     logger.debug("Service Sub Type")
     if service_sub_type == "COMPH":
-        logger.info(f"Service Sub Type: {service_sub_type}")
+        logger.info(f"Service Sub Type: {service_sub_type} validated")
     else:
         logger.error(f"Service Sub Type not in expected types: {service_sub_type}")
         raise ValidationException("Unexpected Service Sub Type")

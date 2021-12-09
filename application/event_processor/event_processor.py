@@ -217,7 +217,7 @@ def update_changes_with_opening_times(
 
 
 @tracer.capture_lambda_handler()
-@logger.inject_lambda_context()
+@logger.inject_lambda_context(correlation_id_path="correlation_id")
 def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     """Entrypoint handler for the event_receiver lambda
 
@@ -229,8 +229,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
 
     Some code may need to be changed if the exact input format is changed.
     """
-    logger.debug("Checking out the context", extra={"context": context.client_context})
-    logger.set_correlation_id(context.client_context.custom.correlation_id)
+
+    # logger.set_correlation_id(custom_context.correlation_id)
     for env_var in expected_env_vars:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -239,7 +239,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext):
     logger.append_keys(ods_code=nhs_entity.ODSCode)
     logger.append_keys(service_type=nhs_entity.ServiceType)
     logger.append_keys(service_sub_type=nhs_entity.ServiceSubType)
-    logger.debug("Checking out the context", extra={"context": context.client_context})
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
 
     event_processor = EventProcessor(nhs_entity)
