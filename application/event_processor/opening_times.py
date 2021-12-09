@@ -101,7 +101,6 @@ class SpecifiedOpeningTime:
                             for op in sorted(self.open_periods)]
         date_str = self.date.strftime(change_request.DATE_FORMAT)
         change = {date_str: exp_open_periods}
-        print(f"CHANGE: {change}")
         return change
 
 
