@@ -90,16 +90,16 @@ def test_get_change_requests_full_change_request():
     change_requests = event_processor.get_change_requests()
     # Assert
 
-    assert (len(change_requests) == 1,
-            f"Should have 1 change request but more found: "
-            f"{len(change_requests)} change requests")
+    assert len(change_requests) == 1, (
+        f"Should have 1 change request but more found: "
+        f"{len(change_requests)} change requests")
 
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:
         assert hasattr(cr, field), f"Attribute {field} not found in change request"
 
-    assert (cr.system == "DoS Integration",
-            f"System should be DoS Integration but is {cr.system}")
+    assert cr.system == "DoS Integration",\
+        f"System should be DoS Integration but is {cr.system}"
 
     assert cr.changes == {
         WEBSITE_CHANGE_KEY: nhs_entity.Website,
@@ -322,8 +322,8 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     # Act
     update_changes(changes, "publicphone", dos_public_phone, nhs_uk_phone)
     # Assert
-    assert (changes == expected_changes,
-            f"Should return {expected_changes} dict, actually: {changes}")
+    assert changes == expected_changes,\
+        f"Should return {expected_changes} dict, actually: {changes}"
 
 
 def test_update_changes_address_to_change_request_if_not_equal_is_equal():
@@ -372,4 +372,5 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Act
     actual_changes = update_changes_with_address(changes, "address", dos_address, nhs_uk_entity)
     # Assert
-    assert expected_changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
+    assert expected_changes == actual_changes,\
+        f"Should return {changes} dict, actually: {actual_changes}"

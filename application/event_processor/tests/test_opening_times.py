@@ -148,10 +148,10 @@ def test_open_period_hash():
     )
 
     for op in equal_ops:
-        assert (open_period == op,
-                f"{open_period} not found to be equal to {op}")
-        assert (hash(open_period) == hash(op),
-                f"hash {hash(open_period)} not found to be equal to {hash(op)}")
+        assert open_period == op,\
+                f"{open_period} not found to be equal to {op}"
+        assert hash(open_period) == hash(op),\
+            f"hash {hash(open_period)} not found to be equal to {hash(op)}"
 
 
 @pytest.mark.parametrize("open_periods, date, other_open_periods,other_date, expected", [
@@ -215,7 +215,7 @@ def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_d
     ),
     (
         {
-            "2039-06-01":
+            "2060-06-01":
                 [
                     {
                         "start_time": "05:00",
@@ -241,8 +241,8 @@ def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_d
     )
     ])
 def test_specifiedopeningtime_export_cr_format(expected: dict, actual: SpecifiedOpeningTime):
-    assert (actual.export_cr_format() == expected,
-            f"expected {expected} SpecifiedOpeningTime change req format but got {actual}")
+    assert actual.export_cr_format() == expected,\
+        f"expected {expected} SpecifiedOpeningTime change req format but got {actual}"
 
 
 def test_standardopeningtimes_export_cr_format():

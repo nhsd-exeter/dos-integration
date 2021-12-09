@@ -41,8 +41,8 @@ def test__init__public_name():
     dos_service.statusid = 1
     dos_service.publicname = test_name
     # Assert
-    assert (test_name in str(dos_service),
-            f"Should return '{test_name}' in string, actually: {dos_service}")
+    assert test_name in str(dos_service),\
+        f"Should return '{test_name}' in string, actually: {dos_service}"
 
 
 def test__init__name():
@@ -55,8 +55,8 @@ def test__init__name():
     dos_service.name = "Test Name"
     dos_service.publicname = None
     # Assert
-    assert ("Test Name" in str(dos_service),
-            f"Should return 'Test Name' in string, actually: {dos_service}")
+    assert "Test Name" in str(dos_service),\
+        f"Should return 'Test Name' in string, actually: {dos_service}"
 
 
 def test__init__no_name():
@@ -69,8 +69,8 @@ def test__init__no_name():
     dos_service.publicname = None
     dos_service.name = None
     # Assert
-    assert ("NO-VALID-NAME" in str(dos_service),
-            f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}")
+    assert "NO-VALID-NAME" in str(dos_service),\
+        f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
 @patch("psycopg2.connect")
@@ -215,16 +215,16 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     mock_connect().cursor().fetchall.return_value = db_return
     service_id = 123456
     expected_responses_set = sorted([
-        "<SpecifiedOpenTime: 06/05/2019 [08:00-20:00]>"
-        "<SpecifiedOpenTime: 27/05/2019 [08:00-20:00]>"
-        "<SpecifiedOpenTime: 26/08/2019 [08:00-20:00]>"
+        "<SpecifiedOpenTime: 06-05-2019 [08:00:00-20:00:00]>",
+        "<SpecifiedOpenTime: 27-05-2019 [08:00:00-20:00:00]>",
+        "<SpecifiedOpenTime: 26-08-2019 [08:00:00-20:00:00]>",
     ])
     # Act
     responses = get_specified_opening_times_from_db(service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert (responses_str == expected_responses_set,
-            f"Should return {expected_responses_set} string, actually: {responses_str}")
+    assert responses_str == expected_responses_set,\
+        f"Should return {expected_responses_set} string, actually: {responses_str}"
 
     mock_connect.assert_called_with(
         host=server,
