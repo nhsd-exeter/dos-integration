@@ -83,7 +83,7 @@ class EventProcessor:
             logger.error(
                 "Attempting to form change requests before "
                 "matching services have been found.")
-            return
+            return None
 
         change_requests = []
         for service in self.matching_services:

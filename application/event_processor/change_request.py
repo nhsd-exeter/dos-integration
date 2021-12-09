@@ -14,7 +14,7 @@ TIME_FORMAT = "%H:%M"
 
 class ChangeRequest:
 
-    def __init__(self, service_id: int, changes: dict = {}):
+    def __init__(self, service_id: int, changes: dict = None):
         trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
         self.reference = str(trace_id)
@@ -22,6 +22,8 @@ class ChangeRequest:
         self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
         self.service_id = str(service_id)
         self.changes = changes
+        if self.changes is None:
+            self.changes = {}
 
     def create_payload(self) -> dict:
         return {
