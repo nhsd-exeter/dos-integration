@@ -33,6 +33,7 @@ class ChangeRequest:
         self.headers["x-correlation-id"] = logger.get_correlation_id()
 
     def post_change_request(self) -> None:
+        self.change_request_logger.log_change_request_post_attempt(self.change_request_body)
         """Post a change request to the API gateway"""
         try:
             self.response = post(

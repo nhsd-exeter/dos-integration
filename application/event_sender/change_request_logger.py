@@ -5,8 +5,6 @@ from typing import Any
 from common.utilities import is_debug_mode
 from requests import Response
 
-logger = Logger(child=True)
-
 
 class ChangeRequestLogger:
     """Change Request Logging class to log the change request for auditing
@@ -15,7 +13,12 @@ class ChangeRequestLogger:
         ValueError: Raises ValueError if json response from api-gateway if json isn't valid
     """
 
-    default_log_format = "CHANGE_REQUEST"
+    logger = Logger(child=True)
+
+    def log_change_request_post_attempt(self, change_request_body: Any) -> None:
+        """Log before attempting to POST change request to DoS API Gateway"""
+
+        self.logger.info("Attempting to send change request to DoS", extra={"change_request_body": change_request_body})
 
     def log_change_request_response(self, response: Response) -> None:
         """Log the change request response for auditing
@@ -25,10 +28,10 @@ class ChangeRequestLogger:
         """
         if response.ok is True:
             extra = {"state": "Success", "response_status_code": response.status_code, "response_text": response.text}
-            logger.info(self.default_log_format, extra=extra)
+            self.logger.info("Successfully send change request to DoS", extra=extra)
         else:
             extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}
-            logger.error(self.default_log_format, extra=extra)
+            self.logger.error("Failed to send change request to DoS", extra=extra)
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing
@@ -36,11 +39,11 @@ class ChangeRequestLogger:
         Args:
             change_request_body (Any): Change request body to be logged
         """
-        logger.info(self.default_log_format, extra={"change_request_body": change_request_body})
+        self.logger.info("Change Request to DoS payload", extra={"change_request_body": change_request_body})
 
         if is_debug_mode():
             HTTPConnection.debuglevel = 1
 
     def log_change_request_exception(self) -> None:
         extra = {"state": "Exception", "exception_reason": "Error posting change request"}
-        logger.exception(self.default_log_format, extra=extra)
+        self.logger.exception("Exception error posting change request to DoS", extra=extra)
