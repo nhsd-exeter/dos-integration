@@ -8,7 +8,6 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from opening_times import spec_open_times_equal, spec_open_times_cr_format
-from common.logger import setup_logger
 
 
 from common.utilities import invoke_lambda_function, is_mock_mode
