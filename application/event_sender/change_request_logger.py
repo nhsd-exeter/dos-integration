@@ -7,6 +7,7 @@ from requests import Response
 
 logger = Logger(child=True)
 
+
 class ChangeRequestLogger:
     """Change Request Logging class to log the change request for auditing
 
