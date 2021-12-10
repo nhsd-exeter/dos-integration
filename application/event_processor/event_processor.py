@@ -8,7 +8,7 @@ from boto3 import client
 from change_request import ChangeRequest
 from changes import get_changes
 
-from opening_times import spec_open_times_equal, spec_open_times_cr_format
+from common.middlewares import unhandled_exception_logging
 
 from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
@@ -106,6 +106,7 @@ class EventProcessor:
 
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(correlation_id_path="correlation_id")
+@unhandled_exception_logging()
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     """Entrypoint handler for the event_receiver lambda
 
