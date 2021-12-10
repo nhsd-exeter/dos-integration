@@ -1,5 +1,5 @@
 from http.client import HTTPConnection
-from logging import getLogger
+from aws_lambda_powertools import Logger
 from typing import Any
 
 from common.utilities import is_debug_mode
@@ -13,8 +13,12 @@ class ChangeRequestLogger:
         ValueError: Raises ValueError if json response from api-gateway if json isn't valid
     """
 
-    logger = getLogger("lambda")
-    default_log_format = "CHANGE_REQUEST"
+    logger = Logger(child=True)
+
+    def log_change_request_post_attempt(self, change_request_body: Any) -> None:
+        """Log before attempting to POST change request to DoS API Gateway"""
+
+        self.logger.info("Attempting to send change request to DoS", extra={"change_request_body": change_request_body})
 
     def log_change_request_response(self, response: Response) -> None:
         """Log the change request response for auditing
@@ -23,9 +27,11 @@ class ChangeRequestLogger:
             response (Response): Response object from posting the change request
         """
         if response.ok is True:
-            self.logger.info(f"{self.default_log_format}|Success|{response.status_code}|{response.text}")
+            extra = {"state": "Success", "response_status_code": response.status_code, "response_text": response.text}
+            self.logger.info("Successfully send change request to DoS", extra=extra)
         else:
-            self.logger.error(f"{self.default_log_format}|Failure|{response.status_code}|{response.text}")
+            extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}
+            self.logger.error("Failed to send change request to DoS", extra=extra)
 
     def log_change_request_body(self, change_request_body: Any) -> None:
         """Log the change request body for auditing
@@ -33,9 +39,11 @@ class ChangeRequestLogger:
         Args:
             change_request_body (Any): Change request body to be logged
         """
-        self.logger.info(f"{self.default_log_format}|{change_request_body=}")
+        self.logger.info("Change Request to DoS payload", extra={"change_request_body": change_request_body})
+
         if is_debug_mode():
             HTTPConnection.debuglevel = 1
 
     def log_change_request_exception(self) -> None:
-        self.logger.exception(f"{self.default_log_format}|Exception|Error posting change request")
+        extra = {"state": "Exception", "exception_reason": "Error posting change request"}
+        self.logger.exception("Exception error posting change request to DoS", extra=extra)

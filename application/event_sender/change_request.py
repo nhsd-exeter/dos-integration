@@ -1,17 +1,17 @@
-from logging import Logger, getLogger
 from typing import Any, Dict
-
+from aws_lambda_powertools import Logger
 from change_request_logger import ChangeRequestLogger
 from common.utilities import get_environment_variable
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
 
+logger = Logger(child=True)
+
 
 class ChangeRequest:
     """Change request class to send change requests"""
 
-    logger: Logger = getLogger("lambda")
     change_request_logger = ChangeRequestLogger()
     headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
     response: Response
@@ -30,8 +30,12 @@ class ChangeRequest:
         )
         self.change_request_body: Dict[str, Any] = change_request_body
         self.change_request_logger.log_change_request_body(self.change_request_body)
+        correlation_id = logger.get_correlation_id()
+        if correlation_id is not None:
+            self.headers["x-correlation-id"] = logger.get_correlation_id()
 
     def post_change_request(self) -> None:
+        self.change_request_logger.log_change_request_post_attempt(self.change_request_body)
         """Post a change request to the API gateway"""
         try:
             self.response = post(

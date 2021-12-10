@@ -35,7 +35,6 @@ def test_validate_event_missing_key(
     mock_check_ods_code_length.assert_not_called()
     mock_check_service_type.assert_not_called()
     mock_check_service_sub_type.assert_not_called()
-    assert "Input schema validation error|" in log_capture[0][2]
 
 
 @pytest.mark.parametrize("service_type", ["PHA"])

@@ -1,11 +1,11 @@
 from json import dumps
-from logging import getLogger
 from os import environ, getenv
 from typing import Any, Dict
 
+from aws_lambda_powertools import Logger
 from boto3 import client
 
-logger = getLogger("lambda")
+logger = Logger(child=True)
 
 
 def is_debug_mode() -> bool:
@@ -58,7 +58,8 @@ def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> No
         lambda_name (str): Name of lambda to invoke
         lambda_event (Dict[str, Any]): Event to pass to lambda
     """
-    logger.info(f"Invoking {lambda_name}")
+    lambda_event["correlation_id"] = logger.get_correlation_id()
     lambda_payload = dumps(lambda_event).encode("utf-8")
     lambda_client = client("lambda")
+    logger.debug(f"Invoking {lambda_name}")
     lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_payload)

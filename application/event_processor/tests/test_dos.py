@@ -3,11 +3,7 @@ from os import environ
 from random import choices
 from unittest.mock import patch
 
-from ..dos import (
-    DoSService,
-    get_matching_dos_services,
-    get_specified_opening_times_from_db
-)
+from ..dos import DoSService, get_matching_dos_services, get_specified_opening_times_from_db
 from .conftest import dummy_dos_service
 
 FILE_PATH = "application.event_processor.dos"
@@ -41,8 +37,7 @@ def test__init__public_name():
     dos_service.statusid = 1
     dos_service.publicname = test_name
     # Assert
-    assert test_name in str(dos_service),\
-        f"Should return '{test_name}' in string, actually: {dos_service}"
+    assert test_name in str(dos_service), f"Should return '{test_name}' in string, actually: {dos_service}"
 
 
 def test__init__name():
@@ -55,8 +50,7 @@ def test__init__name():
     dos_service.name = "Test Name"
     dos_service.publicname = None
     # Assert
-    assert "Test Name" in str(dos_service),\
-        f"Should return 'Test Name' in string, actually: {dos_service}"
+    assert "Test Name" in str(dos_service), f"Should return 'Test Name' in string, actually: {dos_service}"
 
 
 def test__init__no_name():
@@ -69,8 +63,7 @@ def test__init__no_name():
     dos_service.publicname = None
     dos_service.name = None
     # Assert
-    assert "NO-VALID-NAME" in str(dos_service),\
-        f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
+    assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
 @patch("psycopg2.connect")
@@ -109,7 +102,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     mock_connect().cursor().fetchall.return_value = db_return
 
     # Act
-    response = get_matching_dos_services('FQ038%')
+    response = get_matching_dos_services("FQ038%")
     # Assert
     service = response[0]
     assert service.odscode == odscode
@@ -190,41 +183,26 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     environ["DB_USER_NAME"] = db_user = "my-user"
     environ["DB_PASSWORD"] = db_password = "my-password"
     db_return = [
-        (
-            28334,
-            date(2019, 5, 6),
-            time(8, 0, 0),
-            time(20, 0, 0),
-            False
-        ),
-        (
-            28334,
-            date(2019, 5, 27),
-            time(8, 0, 0),
-            time(20, 0, 0),
-            False
-        ),
-        (
-            28334,
-            date(2019, 8, 26),
-            time(8, 0, 0),
-            time(20, 0, 0),
-            False
-        ),
+        (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
+        (28334, date(2019, 5, 27), time(8, 0, 0), time(20, 0, 0), False),
+        (28334, date(2019, 8, 26), time(8, 0, 0), time(20, 0, 0), False),
     ]
     mock_connect().cursor().fetchall.return_value = db_return
     service_id = 123456
-    expected_responses_set = sorted([
-        "<SpecifiedOpenTime: 06-05-2019 [08:00:00-20:00:00]>",
-        "<SpecifiedOpenTime: 27-05-2019 [08:00:00-20:00:00]>",
-        "<SpecifiedOpenTime: 26-08-2019 [08:00:00-20:00:00]>",
-    ])
+    expected_responses_set = sorted(
+        [
+            "<SpecifiedOpenTime: 06-05-2019 [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 27-05-2019 [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 26-08-2019 [08:00:00-20:00:00]>",
+        ]
+    )
     # Act
     responses = get_specified_opening_times_from_db(service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert responses_str == expected_responses_set,\
-        f"Should return {expected_responses_set} string, actually: {responses_str}"
+    assert (
+        responses_str == expected_responses_set
+    ), f"Should return {expected_responses_set} string, actually: {responses_str}"
 
     mock_connect.assert_called_with(
         host=server,

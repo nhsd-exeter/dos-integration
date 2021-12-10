@@ -13,7 +13,6 @@ TIME_FORMAT = "%H:%M"
 
 
 class ChangeRequest:
-
     def __init__(self, service_id: int, changes: dict = None):
         trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
@@ -31,5 +30,5 @@ class ChangeRequest:
             "system": self.system,
             "message": self.message,
             "service_id": self.service_id,
-            "changes": self.changes
+            "changes": self.changes,
         }
