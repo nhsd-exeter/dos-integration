@@ -19,6 +19,10 @@ provider:
     Product: ${env:PROJECT_GROUP_SHORT}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_GROUP_SHORT}
+    POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
+    POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
+    POWERTOOLS_TRACER_CAPTURE_ERROR: true
+    POWERTOOLS_TRACE_MIDDLEWARES: true
   apiGateway:
     apiKeySourceType: HEADER
     apiKeys:
@@ -70,12 +74,6 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
-      PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
-      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
-      POWERTOOLS_TRACER_CAPTURE_ERROR: true
-      POWERTOOLS_TRACE_MIDDLEWARES: true
-      LOG_LEVEL: ${env:LOG_LEVEL}
       EVENT_PROCESSOR_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-processor
       MOCK_MODE: ${env:MOCK_MODE}
     events:
@@ -99,12 +97,6 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
-      PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
-      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
-      POWERTOOLS_TRACER_CAPTURE_ERROR: true
-      POWERTOOLS_TRACE_MIDDLEWARES: true
-      LOG_LEVEL: ${env:LOG_LEVEL}
       DOS_API_GATEWAY_USERNAME: ${env:DOS_API_GATEWAY_USERNAME}
       DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
@@ -122,12 +114,6 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
-      PROFILE: ${env:PROFILE}
-      POWERTOOLS_SERVICE_NAME:  ${env:PROGRAMME}-${env:TEAM_ID}
-      POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
-      POWERTOOLS_TRACER_CAPTURE_ERROR: true
-      POWERTOOLS_TRACE_MIDDLEWARES: true
-      LOG_LEVEL: ${env:LOG_LEVEL}
       DB_SERVER: ${env:DB_SERVER}
       DB_PORT: ${env:DB_PORT}
       DB_NAME: ${env:DB_NAME}
