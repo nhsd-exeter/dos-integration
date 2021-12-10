@@ -85,6 +85,11 @@ resource "aws_lambda_function" "dos_api_gateway_lambda" {
     aws_iam_role_policy.dos_api_gateway_lambda_role_policy,
     aws_cloudwatch_log_group.dos_api_gateway_lambda_log_group
   ]
+  environment {
+    variables = {
+      "POWERTOOLS_SERVICE_NAME" = var.powertools_service_name
+    }
+  }
 }
 
 resource "aws_lambda_permission" "dos_api_gateway_lambda_permission" {

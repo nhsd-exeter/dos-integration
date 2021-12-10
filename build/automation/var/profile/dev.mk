@@ -67,7 +67,7 @@ TF_VAR_event_sender_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-eve
 TF_VAR_event_receiver_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-receiver
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
-
+TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 
 # Code Pipeline
 TF_VAR_code_pipeline_branch_name := master
