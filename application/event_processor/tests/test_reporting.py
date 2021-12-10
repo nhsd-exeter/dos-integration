@@ -20,8 +20,9 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
         HIDDEN_OR_CLOSED_REPORT_ID == "HIDDEN_OR_CLOSED"
     ), f"Report ID should be HIDDEN_OR_CLOSED but was {HIDDEN_OR_CLOSED_REPORT_ID}"
     mock_logger.assert_called_with(
-        HIDDEN_OR_CLOSED_REPORT_ID,
+        "NHS Service marked as closed or hidden, no change requests will be produced from this event",
         extra={
+            "report_key": HIDDEN_OR_CLOSED_REPORT_ID,
             "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
             "nhs_uk_odscode": nhs_entity.ODSCode,
