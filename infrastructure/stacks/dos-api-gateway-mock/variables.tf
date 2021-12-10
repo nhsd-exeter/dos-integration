@@ -105,7 +105,7 @@ variable "dos_api_gateway_lambda_name" {
 }
 
 variable "powertools_service_name" {
-  decription = "The name of the aws powertools service"
+  description = "The name of the aws powertools service"
 }
 
 # ############################
