@@ -98,3 +98,25 @@ def test_get_standard_opening_times(opening_time_type, expected):
     actual = nhs_entity._get_standard_opening_times(opening_time_type)
     # Assert
     assert expected == len(actual), f"Should return {expected} , actually: {actual}"
+
+
+@pytest.mark.parametrize("organisation_status", ["Visible", "OTHER"])
+def test_is_status_hidden_or_closed_open_service(organisation_status: str):
+    # Arrange
+    test_data = {"OrganisationStatus": organisation_status}
+    nhs_entity = NHSEntity(test_data)
+    # Act
+    result = nhs_entity.is_status_hidden_or_closed()
+    # Assert
+    assert not result
+
+
+@pytest.mark.parametrize("organisation_status", NHSEntity({}).CLOSED_AND_HIDDEN_STATUSES)
+def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
+    # Arrange
+    test_data = {"OrganisationStatus": organisation_status}
+    nhs_entity = NHSEntity(test_data)
+    # Act
+    result = nhs_entity.is_status_hidden_or_closed()
+    # Assert
+    assert result

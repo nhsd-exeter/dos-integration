@@ -1,4 +1,4 @@
-import random
+from random import choices
 
 from pytest import fixture
 from testfixtures import LogCapture
@@ -17,11 +17,11 @@ def dummy_dos_service() -> DoSService:
     """Creates a DoSService Object with random data for the unit testing"""
     test_data = []
     for col in DoSService.db_columns:
-        random_str = "".join(random.choices("ABCDEFGHIJKLM", k=8))
+        random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data.append(random_str)
     dos_service = DoSService(test_data)
     dos_service._standard_opening_times = StandardOpeningTimes()
-    dos_service._specififed_opening_times = []
+    dos_service._specified_opening_times = []
     return dos_service
 
 

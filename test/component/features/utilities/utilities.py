@@ -1,5 +1,4 @@
 from json import dumps, load
-from os import path, getcwd
 
 
 def load_json_file(filename: str) -> dict:

@@ -25,23 +25,6 @@ restart: stop start # Restart project
 
 log: project-log # Show project logs
 
-deploy-pipeline:
-		make terraform-apply-auto-approve STACKS=development-pipeline
-
-undeploy-pipeline:
-	make terraform-destroy-auto-approve STACKS=development-pipeline
-
-plan-pipeline:
-	if [ "$(PROFILE)" == "dev" ]; then
-		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=GITHUB_TOKEN)
-		echo $$TF_VAR_github_token
-		make terraform-plan STACKS=development-pipeline
-	fi
-	if [ "$(PROFILE)" != "dev" ]; then
-		echo "Only dev profile supported at present"
-	fi
-
-
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key
@@ -81,11 +64,6 @@ populate-deployment-variables:
 	echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
 	echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 
-docker-hub-signin: # Sign into Docker hub
-	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
-	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
-	make docker-login
-
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
@@ -93,12 +71,11 @@ unit-test:
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		-e TF_VAR_api_gateway_api_key_name=$(TF_VAR_api_gateway_api_key_name) \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -106,17 +83,17 @@ coverage-report: # Runs whole project coverage unit tests
 	IMAGE=$$(make _docker-get-reg)/tester \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
+		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
+		--volume $(APPLICATION_DIR)/event_receiver:/tmp/.packages/event_receiver \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		"
 
 component-test: # Runs whole project component tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --junit --no-capture " \
+	CMD="python -m behave --junit --no-capture --no-capture-stderr" \
 	DIR=./test/component \
 	ARGS=" \
 		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
@@ -126,22 +103,11 @@ component-test: # Runs whole project component tests
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
 
-test-deployed-event-processor-db-connection: # Use to test that the lambda can connect to the replica mandatory: LAMBDA_NAME
-	aws lambda invoke --function-name $(LAMBDA_NAME) \
-	--payload "$$(cat test/common/resources/nonprod_read_replica_event_processor_change_event_different_from_dos.json)" \
-	response.json
-	cat response.json
-	if [ "$$(cat response.json)" == "null" ]; then
-	rm -f response.json
-	exit 0
-	fi
-	rm -f response.json
-	exit 1
-
-
 clean: # Runs whole project clean
 	make \
+		docker-clean \
 		terraform-clean \
+		serverless-clean \
 		python-clean \
 		event-sender-clean \
 		event-receiver-clean \
@@ -149,74 +115,6 @@ clean: # Runs whole project clean
 		tester-clean \
 		authoriser-clean \
 		dos-api-gateway-clean
-
-# ==============================================================================
-# Tester
-
-tester-build: ### Build tester docker image
-	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-	cp -f $(APPLICATION_DIR)/kafka_demo/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-kafka.txt
-	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
-	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
-	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
-	make docker-image NAME=tester
-	make tester-clean
-
-tester-clean:
-	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
-
-# ==============================================================================
-# Other
-
-python-producer-run:
-	make docker-run-python \
-		CMD="python /project/application/producer.py"
-
-python-consumer-run:
-	make docker-run-python \
-		CMD="python /project/application/consumer.py"
-
-kafka-topic-create:
-	make docker-compose-exec CMD=" \
-		kafka kafka-topics --create --topic TestTopic \
-			--bootstrap-server kafka:9092 \
-			--replication-factor 1 \
-			--partitions 1 \
-	"
-
-kafka-consumer-run:
-	make docker-run \
-		IMAGE=confluentinc/cp-kafka:latest \
-		ARGS="--link kafka" \
-		CMD=" \
-			/bin/kafka-console-consumer \
-				--bootstrap-server kafka:9092 \
-				--topic TestTopic \
-		"
-
-kafka-producer-run:
-	make docker-run \
-		IMAGE=confluentinc/cp-kafka:latest \
-		ARGS="--link kafka" \
-		CMD=" \
-			/bin/kafka-console-producer \
-				--bootstrap-server kafka:9092 \
-				--topic TestTopic \
-		"
-
-python-consume-message-run:
-	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/kafka_demo/consume_message.py
-
-python-peek-message-run:
-	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/kafka_demo/peek_message.py
-
-python-put-message-run:
-	eval "$$(make secret-fetch-and-export-variables NAME=uec-dos-int-dev/deployment)"
-	python application/kafka_demo/put_message.py
 
 # ==============================================================================
 # Mocks Setup
@@ -357,6 +255,7 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 
 # ==============================================================================
 # Serverless
+
 push-tester-image:
 	make docker-push NAME=tester
 
@@ -370,7 +269,61 @@ serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-localstack"
 
 # ==============================================================================
+# Pipelines
+
+deploy-development-pipeline:
+		make terraform-apply-auto-approve STACKS=development-pipeline
+
+undeploy-development-pipeline:
+	make terraform-destroy-auto-approve STACKS=development-pipeline
+
+plan-development-pipeline:
+	if [ "$(PROFILE)" == "dev" ]; then
+		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-plan STACKS=development-pipeline
+	fi
+	if [ "$(PROFILE)" != "dev" ]; then
+		echo "Only dev profile supported at present"
+	fi
+
+docker-hub-signin: # Sign into Docker hub
+	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
+	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
+	make docker-login
+
+# ==============================================================================
+# Tester
+
+tester-build: ### Build tester docker image
+	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
+	cp -f $(APPLICATION_DIR)/event_receiver/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-receiver.txt
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
+	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
+	make docker-image NAME=tester
+	make tester-clean
+
+tester-clean:
+	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
+
+# ==============================================================================
 # Testing
+
+# ------------------------------
+# DB Connection Tests
+
+test-deployed-event-processor-db-connection: # Use to test that the lambda can connect to the replica mandatory: LAMBDA_NAME
+	aws lambda invoke --function-name $(LAMBDA_NAME) \
+	--payload "$$(cat test/common/resources/nonprod_read_replica_event_processor_change_event_different_from_dos.json)" \
+	response.json
+	cat response.json
+	if [ "$$(cat response.json)" == "null" ]; then
+		rm -f response.json
+	exit 0
+	fi
+		rm -f response.json
+	exit 1
 
 # -----------------------------
 # Performance Testing
@@ -391,6 +344,10 @@ performance-test:
 
 # -----------------------------
 # Other
+
+python-linting:
+	make python-code-check FILES=application
+	make python-code-check FILES=test
 
 create-ecr-repositories:
 	make docker-create-repository NAME=event-processor

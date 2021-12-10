@@ -1,4 +1,5 @@
-from os import environ
+from os import getenv
+from typing import Any, Dict
 
 ADDRESS_CHANGE_KEY = "address"
 PHONE_CHANGE_KEY = "phone"
@@ -13,10 +14,12 @@ TIME_FORMAT = "%H:%M"
 
 
 class ChangeRequest:
-    def __init__(self, service_id: int, changes: dict = None):
-        trace_id = environ.get("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
+    changes: Dict[str, Any]
 
-        self.reference = str(trace_id)
+    def __init__(self, service_id: int, changes: Any = None):
+        trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
+
+        self.reference = trace_id
         self.system = "DoS Integration"
         self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
         self.service_id = str(service_id)
@@ -24,7 +27,12 @@ class ChangeRequest:
         if self.changes is None:
             self.changes = {}
 
-    def create_payload(self) -> dict:
+    def create_payload(self) -> Dict[str, Any]:
+        """Creates the payload for the change request
+
+        Returns:
+            Dict[str, Any]: The change request payload
+        """
         return {
             "reference": self.reference,
             "system": self.system,

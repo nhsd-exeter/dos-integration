@@ -16,7 +16,7 @@ jobs:
           build/automation/etc/githooks/scripts/editorconfig-pre-commit.sh
       - name: Check Python files format
         run: |
-          build/automation/etc/githooks/scripts/python-code-pre-commit.sh
+          make python-linting
       - name: Check Terraform files format
         run: |
           build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
@@ -33,6 +33,6 @@ jobs:
           args: >
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**,kafka_demo/**
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9

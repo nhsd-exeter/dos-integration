@@ -4,6 +4,7 @@ from datetime import datetime, date
 from itertools import groupby
 from aws_lambda_powertools import Logger
 import psycopg2
+from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from psycopg2.extensions import cursor
 
 from opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
@@ -15,13 +16,10 @@ VALID_STATUS_ID = 1
 
 
 class DoSService:
-    """Class to represent a DoSService"""
+    """Class to represent a DoS Service"""
 
     # These values are which columns are selected from the database and then
     # are passed in as attributes into the DoSService object.
-    #
-    # example: Put 'postcode' in this list and you can use service.postcode in
-    # the object
     db_columns = [
         "id",
         "uid",
@@ -44,7 +42,7 @@ class DoSService:
         "publicname",
     ]
 
-    def __init__(self, db_cursor_row: tuple):
+    def __init__(self, db_cursor_row: tuple) -> None:
         """Sets the attributes of this object to those found in the db row
         Args:
             db_cursor_row (dict): Change Request changes
@@ -55,9 +53,9 @@ class DoSService:
 
         # Do not use these, access them via their corresponding methods
         self._standard_opening_times = None
-        self._specififed_opening_times = None
+        self._specified_opening_times = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a string representation of this object"""
         if self.publicname is not None:
             name = self.publicname
@@ -83,9 +81,9 @@ class DoSService:
         """Retrieves values from db on first call. Returns stored
         values on subsequent calls
         """
-        if self._specififed_opening_times is None:
-            self._specififed_opening_times = get_specified_opening_times_from_db(self.id)
-        return self._specififed_opening_times
+        if self._specified_opening_times is None:
+            self._specified_opening_times = get_specified_opening_times_from_db(self.id)
+        return self._specified_opening_times
 
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
@@ -115,6 +113,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     """Retrieves specified opening times from  DoS database
     Args:
         serviceid (int): serviceid to match on
+
     Returns:
         List[SpecifiedOpeningTime]: List of Specified Opening times with
         matching serviceid
@@ -144,6 +143,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
 
 
 def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
+    """Retrieves standard opening times from DoS database"""
 
     logger.info(f"Searching for standard opening times with serviceid that " f"matches '{serviceid}'")
 
@@ -172,10 +172,9 @@ def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
 
 
 def _connect_dos_db() -> None:
-    """Creates a new connection to the DoS DB and returns the
-    connection object
+    """Creates a new connection to the DoS DB and returns the connection object
 
-        warning: Do not use. Should only be used by query_dos_db() func
+    warning: Do not use. Should only be used by query_dos_db() func
     """
 
     server = environ["DB_SERVER"]
@@ -202,9 +201,7 @@ def _connect_dos_db() -> None:
 
 
 def query_dos_db(sql_command: str) -> cursor:
-    """Querys the dos database with given sql command and
-    returns the resulting cursor object.
-    """
+    """Queries the dos database with given sql command and returns the resulting cursor object"""
 
     # Check if new connection needed.
     global db_connection
