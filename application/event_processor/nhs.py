@@ -1,11 +1,11 @@
 from datetime import date, datetime
 from itertools import groupby
-from logging import getLogger
 from typing import Dict, List
 
+from aws_lambda_powertools import Logger
 from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
-logger = getLogger("lambda")
+logger = Logger(child=True)
 
 
 class NHSEntity:
