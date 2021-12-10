@@ -2,17 +2,14 @@ from json import dumps
 from os import environ
 from typing import Any, Dict, List, Union
 
-from aws_lambda_powertools import Tracer
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 from change_request import ChangeRequest
 from changes import get_changes
-from common.logger import setup_logger
 from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
-
 
 logger = Logger()
 tracer = Tracer()

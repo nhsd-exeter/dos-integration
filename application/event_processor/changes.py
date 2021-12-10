@@ -1,6 +1,6 @@
-from logging import getLogger
 from typing import Dict
 
+from aws_lambda_powertools import Logger
 from change_request import (
     ADDRESS_CHANGE_KEY,
     OPENING_DATES_KEY,
@@ -14,7 +14,7 @@ from dos import DoSService
 from nhs import NHSEntity
 from opening_times import spec_open_times_cr_format, spec_open_times_equal
 
-logger = getLogger("lambda")
+logger = Logger(child=True)
 
 
 def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str]:

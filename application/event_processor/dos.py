@@ -1,13 +1,12 @@
-from os import environ
-from typing import List, Dict
-from datetime import datetime, date
+from datetime import date, datetime
 from itertools import groupby
-from aws_lambda_powertools import Logger
+from os import environ
+from typing import Dict, List
+
 import psycopg2
+from aws_lambda_powertools import Logger
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from psycopg2.extensions import cursor
-
-from opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
 
 db_connection = None
 logger = Logger(child=True)
@@ -69,18 +68,14 @@ class DoSService:
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
 
-    def standard_opening_times(self) -> StandardOpeningTimes:
-        """Retrieves values from db on first call. Returns stored
-        values on subsequent calls
-        """
+    def get_standard_opening_times(self) -> StandardOpeningTimes:
+        """Retrieves values from db on first call. Returns stored values on subsequent calls"""
         if self._standard_opening_times is None:
             self._standard_opening_times = get_standard_opening_times_from_db(self.id)
         return self._standard_opening_times
 
-    def specififed_opening_times(self) -> List[SpecifiedOpeningTime]:
-        """Retrieves values from db on first call. Returns stored
-        values on subsequent calls
-        """
+    def get_specified_opening_times(self) -> List[SpecifiedOpeningTime]:
+        """Retrieves values from db on first call. Returns stored values on subsequent calls"""
         if self._specified_opening_times is None:
             self._specified_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specified_opening_times
@@ -97,7 +92,7 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
         digits of odscode, taken from DoS database
     """
 
-    logger.info(f"Searching for DoS services with ODSCode that matches first " f"5 digits of '{odscode}'")
+    logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
 
     sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
     logger.info(f"Created SQL command to run: {sql_command}")
@@ -119,7 +114,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         matching serviceid
     """
 
-    logger.info(f"Searching for specified opening times with serviceid that " f"matches '{service_id}'")
+    logger.info(f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
     sql_command = (
         "SELECT ssod.serviceid, ssod.date, ssot.starttime, "
@@ -145,7 +140,7 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
 def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
     """Retrieves standard opening times from DoS database"""
 
-    logger.info(f"Searching for standard opening times with serviceid that " f"matches '{serviceid}'")
+    logger.info(f"Searching for standard opening times with serviceid that matches '{serviceid}'")
 
     sql_command = (
         "SELECT sdo.serviceid,  sdo.dayid, otd.name, "
