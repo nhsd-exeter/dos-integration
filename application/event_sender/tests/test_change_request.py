@@ -1,7 +1,7 @@
 from os import environ
 from unittest.mock import MagicMock, patch
 from pytest import raises
-
+from aws_lambda_powertools import Logger
 from requests.auth import HTTPBasicAuth
 from responses import POST, activate, add
 
@@ -23,7 +23,8 @@ class TestChangeRequest:
     USERNAME = "username"
     PASSWORD = "password"
 
-    def test__init__(self):
+    @patch.object(Logger, "get_correlation_id", return_value=None)
+    def test__init__(self, get_correlation_id_mock):
         # Arrange
         environ["PROFILE"] = "remote"
         environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
@@ -39,6 +40,36 @@ class TestChangeRequest:
         assert change_request.timeout == int(self.TIMEOUT)
         assert change_request.authorisation == expected_auth
         assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
+        get_correlation_id_mock.assert_called()
+        # Clean up
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME"]
+        del environ["DOS_API_GATEWAY_PASSWORD"]
+        del environ["PROFILE"]
+
+    @patch.object(Logger, "get_correlation_id", return_value="CORRELATION")
+    def test__init__with_correlation_id(self, get_correlation_id_mock):
+        # Arrange
+        environ["PROFILE"] = "remote"
+        environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
+        environ["DOS_API_GATEWAY_USERNAME"] = self.USERNAME
+        environ["DOS_API_GATEWAY_PASSWORD"] = self.PASSWORD
+        expected_auth = HTTPBasicAuth(self.USERNAME, self.PASSWORD)
+        # Act
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        # Assert
+        assert change_request.headers == {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "x-correlation-id": "CORRELATION",
+        }
+        assert change_request.change_request_url == self.WEBSITE
+        assert change_request.timeout == int(self.TIMEOUT)
+        assert change_request.authorisation == expected_auth
+        assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
+        get_correlation_id_mock.assert_called()
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]

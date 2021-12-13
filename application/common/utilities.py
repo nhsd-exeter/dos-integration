@@ -61,5 +61,6 @@ def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> No
     lambda_event["correlation_id"] = logger.get_correlation_id()
     lambda_payload = dumps(lambda_event).encode("utf-8")
     lambda_client = client("lambda")
+
     logger.debug(f"Invoking {lambda_name}")
     lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_payload)

@@ -9,6 +9,7 @@ from change_event_exceptions import ValidationException
 from change_event_responses import set_return_value
 from change_event_validation import validate_event
 from common.utilities import invoke_lambda_function, is_mock_mode
+from common.middlewares import unhandled_exception_logging, set_correlation_id_if_none_set
 
 from aws_lambda_powertools import Logger
 
@@ -25,6 +26,8 @@ UNEXPECTED_SERVER_ERROR_RESPONSE = "Unexpected server error"
 
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(correlation_id_path="headers.x_correlation_id")
+@set_correlation_id_if_none_set
+@unhandled_exception_logging
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
     """Entrypoint handler for the event_receiver lambda
 
