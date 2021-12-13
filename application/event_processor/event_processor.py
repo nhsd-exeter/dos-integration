@@ -102,7 +102,6 @@ class EventProcessor:
             invoke_lambda_function(environ["EVENT_SENDER_LAMBDA_NAME"], change_payload)
             logger.info(f"Sent off change payload for id={change_request.service_id}")
 
-
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(correlation_id_path="correlation_id")
 @set_correlation_id_if_none_set
