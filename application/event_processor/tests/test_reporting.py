@@ -7,7 +7,7 @@ from ..reporting import report_closed_or_hidden_services, HIDDEN_OR_CLOSED_REPOR
 from .conftest import dummy_dos_service
 
 
-@patch.object(Logger, "info")
+@patch.object(Logger, "warning")
 def test_report_closed_or_hidden_services(mock_logger, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
