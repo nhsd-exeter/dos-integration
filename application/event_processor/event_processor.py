@@ -24,7 +24,7 @@ EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_USER_NAME",
     "EVENT_SENDER_LAMBDA_NAME",
 )
-
+UN_MATCHED_PHARMACY_LOG_ID = "UN_MATCHED_PHARMACY"
 
 class EventProcessor:
     matching_services = None

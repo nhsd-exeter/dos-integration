@@ -17,6 +17,7 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
+from aws_lambda_powertools import Logger
 
 
 FILE_PATH = "application.event_processor.event_processor"
