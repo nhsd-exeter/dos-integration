@@ -11,6 +11,7 @@ from common.middlewares import unhandled_exception_logging, set_correlation_id_i
 from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
+from reporting import report_closed_or_hidden_services
 
 logger = Logger()
 tracer = Tracer()
@@ -137,7 +138,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         return
 
     if nhs_entity.is_status_hidden_or_closed():
-        logger.info("Entity is hidden or closed")
+        report_closed_or_hidden_services(nhs_entity, matching_services)
         return
 
     event_processor.get_change_requests()
