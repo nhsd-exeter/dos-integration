@@ -9,7 +9,8 @@ from ..change_request import (
 )
 from ..changes import get_changes, update_changes, update_changes_with_address, update_changes_with_opening_times
 from ..nhs import NHSEntity
-from .conftest import dummy_dos_service
+from .conftest import dummy_dos_location, dummy_dos_service
+from dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.changes"
 
@@ -38,7 +39,6 @@ def test_get_changes_same_data():
 
 def test_get_changes_different_changes():
     # Arrange
-    dos_service = dummy_dos_service()
     website = "changed-website.com"
     postcode = "TA1 TA1"
     phone = "0123456789"
@@ -61,6 +61,13 @@ def test_get_changes_different_changes():
         "OpeningTimes": [],
     }
     nhs_entity = NHSEntity(nhs_kwargs)
+
+    dos_service = dummy_dos_service()
+
+    dos_location = dummy_dos_location()
+    dos_location.postcode = postcode
+    dos_location_cache[postcode.replace(" ", "").upper()] = [dos_location]
+
     expected_changes = {
         ADDRESS_CHANGE_KEY: [address1, address2, address3, city, county],
         PUBLICNAME_CHANGE_KEY: organisation_name,
@@ -109,12 +116,13 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
     nhs_uk_entity.City = "city"
     nhs_uk_entity.County = "county"
     nhs_uk_entity.OpeningTimes = []
-    dos_address = (
+    dos_service = dummy_dos_service()
+    dos_service.address = (
         f"{nhs_uk_entity.Address1}${nhs_uk_entity.Address2}$"
         f"{nhs_uk_entity.Address3}${nhs_uk_entity.City}${nhs_uk_entity.County}"
     )
     # Act
-    actual_changes = update_changes_with_address(changes, "address", dos_address, nhs_uk_entity)
+    actual_changes = update_changes_with_address(changes, dos_service, nhs_uk_entity)
     # Assert
     assert changes == actual_changes, f"Should return {changes} dict, actually: {actual_changes}"
 
@@ -129,7 +137,8 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     nhs_uk_entity.Address3 = "address3"
     nhs_uk_entity.City = "city"
     nhs_uk_entity.County = "county"
-    dos_address = "Test RD$Testown$Testshire"
+    dos_service = dummy_dos_service()
+    dos_service.address = "Test RD$Testown$Testshire"
     expected_changes = {
         ADDRESS_CHANGE_KEY: [
             nhs_uk_entity.Address1,
@@ -140,7 +149,7 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
         ]
     }
     # Act
-    changes = update_changes_with_address(expected_changes, "address", dos_address, nhs_uk_entity)
+    changes = update_changes_with_address(expected_changes, dos_service, nhs_uk_entity)
     # Assert
     assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"
 

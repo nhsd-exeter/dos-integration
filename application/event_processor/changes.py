@@ -10,7 +10,7 @@ from change_request import (
     PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
-from dos import DoSService
+from dos import DoSService, valid_dos_postcode
 from nhs import NHSEntity
 from opening_times import spec_open_times_cr_format, spec_open_times_equal
 
@@ -23,10 +23,10 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str
     """
     changes = {}
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.Website)
-    update_changes(changes, POSTCODE_CHANGE_KEY, dos_service.postcode, nhs_entity.Postcode)
     update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.Phone)
     update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.OrganisationName)
-    update_changes_with_address(changes, ADDRESS_CHANGE_KEY, dos_service.address, nhs_entity)
+    update_changes_with_postcode(changes, dos_service, nhs_entity)
+    update_changes_with_address(changes, dos_service, nhs_entity)
     update_changes_with_opening_times(changes, dos_service, nhs_entity)
     return changes
 
@@ -47,7 +47,7 @@ def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value:
         changes[change_key] = nhs_uk_value
 
 
-def update_changes_with_address(changes: dict, change_key: str, dos_address: str, nhs_uk_entity: NHSEntity) -> dict:
+def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_entity: NHSEntity) -> dict:
     """Adds the address to the change request if the address is not equal
 
     Args:
@@ -70,10 +70,11 @@ def update_changes_with_address(changes: dict, change_key: str, dos_address: str
     nhs_uk_address = [address for address in nhs_uk_address_lines if address is not None and address.strip() != ""]
 
     nhs_uk_address_string = "$".join(nhs_uk_address)
+    dos_address = dos_service.address
 
     if dos_address != nhs_uk_address_string:
         logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
-        changes[change_key] = nhs_uk_address
+        changes[ADDRESS_CHANGE_KEY] = nhs_uk_address
 
     return changes
 
@@ -99,3 +100,16 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     if dos_std_open_dates != nhs_std_open_dates:
         logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} and nhs={nhs_std_open_dates}")
         changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
+
+
+def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+
+    dos_postcode = dos_service.postcode
+    nhs_postcode = nhs_entity.Postcode
+
+    if dos_postcode != nhs_postcode:
+        logger.debug(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
+        if valid_dos_postcode(nhs_postcode):
+            changes[POSTCODE_CHANGE_KEY] = nhs_postcode
+        else:
+            logger.warning(f"NHS postcode is not a vlaid DoS postcode! {nhs_postcode=}")

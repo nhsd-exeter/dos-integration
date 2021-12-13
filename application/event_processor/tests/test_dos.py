@@ -2,9 +2,10 @@ from datetime import datetime, timezone, date, time
 from os import environ
 from random import choices
 from unittest.mock import patch
+import pytest
 
-from ..dos import DoSService, get_matching_dos_services, get_specified_opening_times_from_db
-from .conftest import dummy_dos_service
+from ..dos import DoSService, DoSLocation, get_matching_dos_services, get_specified_opening_times_from_db
+from .conftest import dummy_dos_location, dummy_dos_service
 
 FILE_PATH = "application.event_processor.dos"
 FILE_PATH = "psycopg2"
@@ -272,3 +273,36 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
+
+
+@pytest.mark.parametrize("dos_location, expected_result", [
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=None, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=1, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=None, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=1.1), True)
+])
+def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
+    actual_result = dos_location.is_valid()
+    assert actual_result is expected_result, (
+        f"is_valued check on {dos_location} was found to be {actual_result}, it should be {expected_result}.")
+
+
+@pytest.mark.parametrize("input_postcode, expected_result", [
+    ("TE57ER", "TE57ER"),
+    ("TE5 7ER", "TE57ER"),
+    ("T E57ER", "TE57ER"),
+    ("T E57E R", "TE57ER"),
+    ("T E 5 7 E R", "TE57ER"),
+    ("TE57ER  ", "TE57ER"),
+    ("   TE57ER", "TE57ER"),
+])
+def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
+    dos_location = dummy_dos_location()
+    dos_location.postcode = input_postcode
+    actual_output = dos_location.normal_postcode()
+    assert actual_output == expected_result, (
+        f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'.")

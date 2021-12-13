@@ -2,16 +2,20 @@ from datetime import date, datetime
 from itertools import groupby
 from os import environ
 from typing import Dict, List
+from dataclasses import dataclass, field, fields
 
 import psycopg2
+from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from psycopg2.extensions import cursor
 
-db_connection = None
+
 logger = Logger(child=True)
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
+
+db_connection = None
+dos_location_cache = {}
 
 
 class DoSService:
@@ -79,6 +83,23 @@ class DoSService:
         if self._specified_opening_times is None:
             self._specified_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specified_opening_times
+
+
+@dataclass(init=True, repr=True)
+class DoSLocation:
+    id: int
+    postcode: str
+    easting: int
+    northing: int
+    latitude: float
+    longitude: float
+    postaltown: str = field(default=None)
+
+    def normal_postcode(self) -> str:
+        return self.postcode.replace(" ", "").upper()
+
+    def is_valid(self) -> bool:
+        return None not in (self.easting, self.northing, self.latitude, self.longitude)
 
 
 def get_matching_dos_services(odscode: str) -> List[DoSService]:
@@ -195,7 +216,7 @@ def _connect_dos_db() -> None:
     return db
 
 
-def query_dos_db(sql_command: str) -> cursor:
+def query_dos_db(sql_command: str) -> DictCursor:
     """Queries the dos database with given sql command and returns the resulting cursor object"""
 
     # Check if new connection needed.
@@ -206,6 +227,35 @@ def query_dos_db(sql_command: str) -> cursor:
         logger.info("Using existing open database connection.")
 
     logger.info(f"Running SQL command: {sql_command}")
-    c = db_connection.cursor()
+    c = db_connection.cursor(cursor_factory=DictCursor)
     c.execute(sql_command)
     return c
+
+
+def get_dos_locations(postcode: str) -> List[DoSLocation]:
+    logger.info(f"Searching for DoS locations with postcode of '{postcode}'")
+
+    normalised_pc = postcode.replace(" ", "").upper()
+    global dos_location_cache
+    if normalised_pc in dos_location_cache:
+        logger.info(f"Postcode {normalised_pc} location/s found in local cache.")
+        return dos_location_cache[normalised_pc]
+
+    # Regex matches any combination of whitespace in postcode
+    pc_regex = " *".join(normalised_pc)
+    db_column_names = [f.name for f in fields(DoSLocation)]
+    sql_command = (
+        f"SELECT {', '.join(db_column_names)} "
+        f"FROM locations WHERE postcode ~* '{pc_regex}'"
+    )
+    c = query_dos_db(sql_command)
+
+    dos_locations = [DoSLocation(**row) for row in c.fetchall()]
+    dos_location_cache[normalised_pc] = dos_locations
+    logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
+
+    return dos_locations
+
+
+def valid_dos_postcode(postcode: str) -> bool:
+    return any([location.is_valid() for location in get_dos_locations(postcode)])
