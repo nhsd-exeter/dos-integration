@@ -5,13 +5,13 @@ from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTim
 
 
 @pytest.mark.parametrize(
-    "start, end, other_start,other_end, expected",
+    "start, end, other_start, other_end, expected",
     [
         (time(8, 0), time(12, 0), time(8, 0), time(12, 0), True),
         (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False),
     ],
 )
-def test_openperiod_eq(start, end, other_start, other_end, expected):
+def test_open_period_eq(start, end, other_start, other_end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
     # Act
@@ -21,7 +21,7 @@ def test_openperiod_eq(start, end, other_start, other_end, expected):
 
 
 @pytest.mark.parametrize("start, end, expected", [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)])
-def test_openperiod_start_before_end(start, end, expected):
+def test_open_period_start_before_end(start, end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
     # Act
@@ -31,13 +31,13 @@ def test_openperiod_start_before_end(start, end, expected):
 
 
 @pytest.mark.parametrize(
-    "start, end, other_start,other_end, expected",
+    "start, end, other_start, other_end, expected",
     [
         (time(8, 0), time(12, 0), time(8, 0), time(11, 0), True),
         (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False),
     ],
 )
-def test_openperiod_overlaps(start, end, other_start, other_end, expected):
+def test_open_period_overlaps(start, end, other_start, other_end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
     # Act
@@ -46,7 +46,7 @@ def test_openperiod_overlaps(start, end, other_start, other_end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-def test_openperiod_str():
+def test_open_period_str():
     assert str(OpenPeriod(time(8, 0, 0), time(15, 0, 0))) == "08:00:00-15:00:00"
     assert str(OpenPeriod(time(0, 0, 0), time(15, 0, 0))) == "00:00:00-15:00:00"
     assert str(OpenPeriod(time(8, 0, 0), time(23, 59, 59))) == "08:00:00-23:59:59"
@@ -55,7 +55,7 @@ def test_openperiod_str():
     assert str(OpenPeriod(time(13, 35, 23), time(13, 35, 24))) == "13:35:23-13:35:24"
 
 
-def test_openperiod_export_cr_format():
+def test_open_period_export_cr_format():
     assert OpenPeriod(time(8, 0, 0), time(15, 0, 0)).export_cr_format() == {"start_time": "08:00", "end_time": "15:00"}
     assert OpenPeriod(time(0, 0, 0), time(15, 0, 0)).export_cr_format() == {"start_time": "00:00", "end_time": "15:00"}
     assert OpenPeriod(time(8, 0, 0), time(23, 59, 0)).export_cr_format() == {"start_time": "08:00", "end_time": "23:59"}
@@ -75,7 +75,6 @@ def test_openperiod_export_cr_format():
 
 
 def test_open_period__lt__gt__():
-
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(9, 0, 0), time(12, 0, 0))
     assert a < b
@@ -104,9 +103,9 @@ def test_open_period__lt__gt__():
     assert not b > a
 
 
-def test_open_period_hash():
-    open_period = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    equal_ops = (
+@pytest.mark.parametrize(
+    "opening_period_2",
+    [
         OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
         OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
         OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
@@ -114,11 +113,15 @@ def test_open_period_hash():
         OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),
         OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), datetime.strptime("12:00:00", "%H:%M:%S").time()),
         OpenPeriod((datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(), time(12, 0, 0)),
-    )
+    ],
+)
+def test_open_period_hash(opening_period_2: OpenPeriod):
+    open_period_1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
 
-    for op in equal_ops:
-        assert open_period == op, f"{open_period} not found to be equal to {op}"
-        assert hash(open_period) == hash(op), f"hash {hash(open_period)} not found to be equal to {hash(op)}"
+    assert open_period_1 == opening_period_2, f"{open_period_1} not found to be equal to {opening_period_2}"
+    assert hash(open_period_1) == hash(
+        opening_period_2
+    ), f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
 @pytest.mark.parametrize(
@@ -188,13 +191,13 @@ def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_d
         ),
     ],
 )
-def test_specifiedopeningtime_export_cr_format(expected: dict, actual: SpecifiedOpeningTime):
+def test_specified_opening_time_export_cr_format(expected: dict, actual: SpecifiedOpeningTime):
     assert (
         actual.export_cr_format() == expected
     ), f"expected {expected} SpecifiedOpeningTime change req format but got {actual}"
 
 
-def test_standardopeningtimes_export_cr_format():
+def test_standard_opening_times_export_cr_format():
 
     # Start with empty
     std_opening_times = StandardOpeningTimes()

@@ -39,7 +39,6 @@ services:
     hostname: event-receiver
     environment:
       AWS_LAMBDA_FUNCTION_NAME: event-receiver
-      LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
       MOCK_MODE: $MOCK_MODE
@@ -60,7 +59,6 @@ services:
       DOS_API_GATEWAY_PASSWORD: password
       DOS_API_GATEWAY_URL: http://mockserver:1080/api/change-request
       DOS_API_GATEWAY_REQUEST_TIMEOUT: 30
-      LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
     volumes:
@@ -76,7 +74,6 @@ services:
     hostname: event-processor
     environment:
       AWS_LAMBDA_FUNCTION_NAME: event-processor
-      LOG_LEVEL: DEBUG
       POWERTOOLS_SERVICE_NAME: $TEAM_ID
       PROFILE: $PROFILE
       AWS_REGION: eu-west-2
@@ -97,7 +94,6 @@ services:
     depends_on:
       mock-dos:
         condition: service_healthy
-
 
   mock-dos:
     image: postgres:12

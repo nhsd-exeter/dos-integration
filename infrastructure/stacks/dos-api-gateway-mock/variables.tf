@@ -104,6 +104,10 @@ variable "dos_api_gateway_lambda_name" {
   description = "The authoriser lambda name"
 }
 
+variable "powertools_service_name" {
+  description = "The name of the aws powertools service"
+}
+
 # ############################
 # # ROUTE53
 # ############################

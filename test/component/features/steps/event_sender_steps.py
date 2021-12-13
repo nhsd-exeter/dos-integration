@@ -2,7 +2,7 @@ from os import getenv
 
 from behave import given, then, when
 from features.utilities.mockserver import MockServer
-from features.utilities.utilities import get_change_request_name, load_json_file, read_log_file
+from features.utilities.utilities import get_change_request_name, load_json_file
 from requests import post
 
 

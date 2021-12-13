@@ -21,7 +21,7 @@ def is_debug_mode() -> bool:
 
 
 def get_environment_variable(environment_key: str) -> str:
-    """[summary]
+    """This function gets an environment variable
 
     Args:
         environment_key (str): [description]

@@ -11,7 +11,7 @@ Accept: application/json
   "OrganisationName": "My Test Pharmacy",
   "OrganisationTypeId": "PH1",
   "OrganisationType": "Pharmacy",
-  "OrganisationStatus": "Visible",
+  "OrganisationStatus": "VISIBLE",
   "ServiceType": "PHA",
   "ServiceSubType": "COMPH",
   "SummaryText": "",
@@ -28,7 +28,8 @@ Accept: application/json
   "Email": "health.my-pharmacy@nhs.net",
   "Website": "https://my-pharmacy.com/health-service",
   "OrganisationSubType": null,
-  "OrganisationAliases": []
+  "OrganisationAliases": [],
+  "OpeningTimes": []
 }
 
 ###
@@ -97,4 +98,38 @@ Accept: application/json
   "Website": "https://my-pharmacy.com/health-service",
   "OrganisationSubType": null,
   "OrganisationAliases": []
+}
+
+###
+# Pass - Doesn't create Change Request (Hidden Service)
+# NOTE: All date is fake and should not be used as a real change event.
+POST http://localhost:9001/2015-03-31/functions/function/invocations HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "SearchKey": "ANEI1245",
+  "ODSCode": "FQ038",
+  "OrganisationName": "My Test Pharmacy",
+  "OrganisationTypeId": "PH1",
+  "OrganisationType": "Pharmacy",
+  "OrganisationStatus": "HIDDEN",
+  "ServiceType": "PHA",
+  "ServiceSubType": "COMPH",
+  "SummaryText": "",
+  "URL": "https://my-pharmacy.com/",
+  "Address1": "85 Peachfield Road",
+  "Address2": null,
+  "Address3": null,
+  "City": "CHAPEL ROW",
+  "County": "South Godshire",
+  "Latitude": 53.38030624389648,
+  "Longitude": -1.4826949834823608,
+  "Postcode": "RG7 1DB",
+  "Phone": "123456789",
+  "Email": "health.my-pharmacy@nhs.net",
+  "Website": "https://my-pharmacy.com/health-service",
+  "OrganisationSubType": null,
+  "OrganisationAliases": [],
+  "OpeningTimes": []
 }

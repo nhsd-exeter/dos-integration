@@ -12,6 +12,7 @@ resource "aws_lambda_function" "authoriser_lambda" {
       "DOS_API_GATEWAY_CREDENTIALS_SECRET_NAME" = var.dos_api_gateway_secret
       "DOS_API_GATEWAY_USERNAME_KEY"            = var.dos_api_gateway_secret_username_key
       "DOS_API_GATEWAY_PASSWORD_KEY"            = var.dos_api_gateway_secret_password_key
+      "POWERTOOLS_SERVICE_NAME"                 = var.powertools_service_name
     }
   }
   depends_on = [

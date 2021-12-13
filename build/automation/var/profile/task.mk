@@ -3,7 +3,7 @@
 # ==============================================================================
 # Service variables
 
-LOG_LEVEL := DEBUG
+
 DOS_API_GATEWAY_SECRETS = $(TF_VAR_dos_api_gateway_secret)
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
@@ -65,3 +65,4 @@ DOS_API_GATEWAY_MOCK_URL := https://$(TF_VAR_dos_api_gateway_name).$(TEXAS_HOSTE
 TF_VAR_dos_api_gateway_secret_username_key := $(DOS_API_GATEWAY_USERNAME_KEY)
 TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
 TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda
+TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
