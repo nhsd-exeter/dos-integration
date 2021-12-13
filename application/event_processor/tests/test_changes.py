@@ -61,12 +61,10 @@ def test_get_changes_different_changes():
         "OpeningTimes": [],
     }
     nhs_entity = NHSEntity(nhs_kwargs)
-
     dos_service = dummy_dos_service()
-
     dos_location = dummy_dos_location()
     dos_location.postcode = postcode
-    dos_location_cache[postcode.replace(" ", "").upper()] = [dos_location]
+    dos_location_cache[dos_location.normal_postcode()] = [dos_location]
 
     expected_changes = {
         ADDRESS_CHANGE_KEY: [address1, address2, address3, city, county],

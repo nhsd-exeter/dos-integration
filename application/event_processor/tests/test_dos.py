@@ -9,7 +9,8 @@ from ..dos import (
     DoSLocation,
     get_matching_dos_services,
     get_specified_opening_times_from_db,
-    get_standard_opening_times_from_db
+    get_standard_opening_times_from_db,
+    get_dos_locations
 )
 from .conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
@@ -349,6 +350,8 @@ def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
     ("T E 5 7 E R", "TE57ER"),
     ("TE57ER  ", "TE57ER"),
     ("   TE57ER", "TE57ER"),
+    ("te5 7er", "TE57ER"),
+    ("te5  7 e   r", "TE57ER"),
 ])
 def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
     dos_location = dummy_dos_location()
@@ -356,3 +359,46 @@ def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
     actual_output = dos_location.normal_postcode()
     assert actual_output == expected_result, (
         f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'.")
+
+
+@patch("psycopg2.connect")
+def test_get_dos_locations(mock_connect):
+    # Arrange
+    environ["DB_SERVER"] = server = "test.db"
+    environ["DB_PORT"] = port = "5432"
+    environ["DB_NAME"] = db_name = "my-db"
+    environ["DB_SCHEMA"] = db_schema = "db_schema"
+    environ["DB_USER_NAME"] = db_user = "my-user"
+    environ["DB_PASSWORD"] = db_password = "my-password"
+    db_return = [
+        {"id": 111, "postcode": "BA2 7AF", "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}
+    ]
+    mock_connect().cursor().fetchall.return_value = db_return
+
+    responses = get_dos_locations("BA2 7AF")
+    assert len(responses) == 1
+    dos_location = responses[0]
+    assert dos_location.id == 111
+    assert dos_location.postcode == "BA2 7AF"
+    assert dos_location.easting == 2
+    assert dos_location.northing == 3
+    assert dos_location.latitude == 4.0
+    assert dos_location.longitude == 2.0
+
+    mock_connect.assert_called_with(
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        options=f"-c search_path=dbo,{db_schema}",
+        password=db_password,
+        connect_timeout=30,
+    )
+
+    # Clean up
+    del environ["DB_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
+    del environ["DB_USER_NAME"]
+    del environ["DB_PASSWORD"]
