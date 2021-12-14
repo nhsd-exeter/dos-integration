@@ -105,9 +105,8 @@ def test_get_change_requests_full_change_request():
     # Act
     change_requests = event_processor.get_change_requests()
     # Assert
-    assert (
-        len(change_requests) == 1
-    ), f"Should have 1 change request but more found: {len(change_requests)} change requests"
+    assert len(change_requests) == 1, (
+        f"Should have 1 change request but more found: {len(change_requests)} change requests")
 
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:
