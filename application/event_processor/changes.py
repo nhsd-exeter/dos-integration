@@ -112,4 +112,4 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
         if valid_dos_postcode(nhs_postcode):
             changes[POSTCODE_CHANGE_KEY] = nhs_postcode
         else:
-            logger.warning(f"NHS postcode is not a vlaid DoS postcode! {nhs_postcode=}")
+            logger.warning(f"NHS postcode '{nhs_postcode}' is not a valid DoS postcode!")
