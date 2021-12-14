@@ -1,7 +1,6 @@
 from json import dumps
 from os import environ
 from typing import Any, Dict, List, Union
-
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
@@ -11,7 +10,7 @@ from common.middlewares import unhandled_exception_logging, set_correlation_id_i
 from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
-from reporting import report_closed_or_hidden_services
+from reporting import report_closed_or_hidden_services, log_unmatched_nhsuk_pharmacies
 
 logger = Logger()
 tracer = Tracer()
@@ -134,7 +133,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     matching_services = event_processor.get_matching_services()
 
     if len(matching_services) == 0:
-        logger.error(f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.ODSCode}'")
+        log_unmatched_nhsuk_pharmacies(nhs_entity)
         return
 
     if nhs_entity.is_status_hidden_or_closed():
