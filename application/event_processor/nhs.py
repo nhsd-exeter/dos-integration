@@ -3,8 +3,8 @@ from itertools import groupby
 from typing import Dict, List
 
 from aws_lambda_powertools import Logger
+
 from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from changes import normalise_postcode
 
 logger = Logger(child=True)
 
@@ -35,7 +35,7 @@ class NHSEntity:
         return f"<NHSEntity: name={self.OrganisationName} odscode={self.ODSCode}>:"
 
     def normal_postcode(self):
-        return normalise_postcode(self.Postcode)
+        return self.Postcode.replace(" ", "").upper()
 
     def get_standard_opening_times(self) -> StandardOpeningTimes:
         """[summary]

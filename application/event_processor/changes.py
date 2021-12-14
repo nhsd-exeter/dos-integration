@@ -115,8 +115,3 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
             logger.warning(f"NHS postcode '{nhs_postcode}' is not a valid DoS postcode!")
         else:
             changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode
-
-
-def normalise_postcode(postcode: str) -> str:
-    """Normalises a postcode into an easily comparable format."""
-    return postcode.replace(" ", "").upper()

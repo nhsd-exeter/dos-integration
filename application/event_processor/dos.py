@@ -8,7 +8,6 @@ import psycopg2
 from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from changes import normalise_postcode
 
 
 logger = Logger(child=True)
@@ -74,7 +73,7 @@ class DoSService:
         )
 
     def normal_postcode(self) -> str:
-        return normalise_postcode(self.postcode)
+        return self.postcode.replace(" ", "").upper()
 
     def get_standard_opening_times(self) -> StandardOpeningTimes:
         """Retrieves values from db on first call. Returns stored values on subsequent calls"""
@@ -100,7 +99,7 @@ class DoSLocation:
     postaltown: str = field(default=None)
 
     def normal_postcode(self) -> str:
-        return normalise_postcode(self.postcode)
+        return self.postcode.replace(" ", "").upper()
 
     def is_valid(self) -> bool:
         return None not in (self.easting, self.northing, self.latitude, self.longitude)
