@@ -1,13 +1,14 @@
 from datetime import date, datetime
 from itertools import groupby
 from os import environ
-from typing import Dict, List
+from typing import Dict, List, Union
 from dataclasses import dataclass, field, fields
 
 import psycopg2
 from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from changes import normalise_postcode
 
 
 logger = Logger(child=True)
@@ -72,6 +73,9 @@ class DoSService:
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
 
+    def normal_postcode(self) -> str:
+        return normalise_postcode(self.postcode)
+
     def get_standard_opening_times(self) -> StandardOpeningTimes:
         """Retrieves values from db on first call. Returns stored values on subsequent calls"""
         if self._standard_opening_times is None:
@@ -96,7 +100,7 @@ class DoSLocation:
     postaltown: str = field(default=None)
 
     def normal_postcode(self) -> str:
-        return self.postcode.replace(" ", "").upper()
+        return normalise_postcode(self.postcode)
 
     def is_valid(self) -> bool:
         return None not in (self.easting, self.northing, self.latitude, self.longitude)
@@ -257,5 +261,9 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
     return dos_locations
 
 
-def valid_dos_postcode(postcode: str) -> bool:
-    return any([location.is_valid() for location in get_dos_locations(postcode)])
+def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
+    """Finds the valid DoS formatted version of the given postcode. Or None if not a valid DoS postcode"""
+    dos_locations = get_dos_locations(postcode)
+    if len(dos_locations) == 0:
+        return None
+    return dos_locations[0].postcode

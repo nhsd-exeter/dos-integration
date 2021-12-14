@@ -10,7 +10,7 @@ from change_request import (
     PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
-from dos import DoSService, valid_dos_postcode
+from dos import DoSService, get_valid_dos_postcode
 from nhs import NHSEntity
 from opening_times import spec_open_times_cr_format, spec_open_times_equal
 
@@ -104,12 +104,19 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
 def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
 
-    dos_postcode = dos_service.postcode
-    nhs_postcode = nhs_entity.Postcode
+    dos_postcode = dos_service.normal_postcode()
+    nhs_postcode = nhs_entity.normal_postcode()
 
     if dos_postcode != nhs_postcode:
         logger.debug(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
-        if valid_dos_postcode(nhs_postcode):
-            changes[POSTCODE_CHANGE_KEY] = nhs_postcode
-        else:
+
+        valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
+        if valid_dos_postcode is None:
             logger.warning(f"NHS postcode '{nhs_postcode}' is not a valid DoS postcode!")
+        else:
+            changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode
+
+
+def normalise_postcode(postcode: str) -> str:
+    """Normalises a postcode into an easily comparable format."""
+    return postcode.replace(" ", "").upper()
