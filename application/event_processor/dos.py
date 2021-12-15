@@ -262,7 +262,7 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
 
 def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     """Finds the valid DoS formatted version of the given postcode. Or None if not a valid DoS postcode"""
-    dos_locations = get_dos_locations(postcode)
+    dos_locations = [l for l in get_dos_locations(postcode) if l.is_valid()]
     if len(dos_locations) == 0:
         return None
     return dos_locations[0].postcode
