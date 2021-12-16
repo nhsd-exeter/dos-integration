@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from pytest import fixture, raises
 
-from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
+from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES, extract_message
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
@@ -17,9 +17,7 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler, extract_message
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_service
+from dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.event_processor"
 
@@ -106,8 +104,9 @@ def test_get_change_requests_full_change_request():
     # Act
     change_requests = event_processor.get_change_requests()
     # Assert
-    assert len(change_requests) == 1, (
-        f"Should have 1 change request but more found: {len(change_requests)} change requests")
+    assert (
+        len(change_requests) == 1
+    ), f"Should have 1 change request but more found: {len(change_requests)} change requests"
 
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:

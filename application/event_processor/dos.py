@@ -247,10 +247,7 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
     # Regex matches any combination of whitespace in postcode
     pc_regex = " *".join(normalised_pc)
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = (
-        f"SELECT {', '.join(db_column_names)} "
-        f"FROM locations WHERE postcode ~* '{pc_regex}'"
-    )
+    sql_command = f"SELECT {', '.join(db_column_names)} " f"FROM locations WHERE postcode ~* '{pc_regex}'"
     c = query_dos_db(sql_command)
 
     dos_locations = [DoSLocation(**row) for row in c.fetchall()]

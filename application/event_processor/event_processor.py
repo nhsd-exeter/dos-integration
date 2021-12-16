@@ -6,6 +6,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
 from common.middlewares import set_correlation_id, unhandled_exception_logging
@@ -132,6 +133,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     message = next(event.records).body
     change_event = extract_message(message)
+    validate_event(change_event)
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.ODSCode)
     logger.append_keys(service_type=nhs_entity.ServiceType)
