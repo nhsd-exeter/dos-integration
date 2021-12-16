@@ -3,12 +3,12 @@ from random import choices
 from unittest.mock import MagicMock, patch
 import pytest
 from dataclasses import dataclass
-from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_service
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
+from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
+from ..nhs import NHSEntity
+from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     PHONE_CHANGE_KEY,
@@ -17,6 +17,7 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
+from dos import dos_location_cache
 
 
 FILE_PATH = "application.event_processor.event_processor"
@@ -96,13 +97,16 @@ def test_get_change_requests_full_change_request():
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.matching_services = [service_1]
+
+    dos_location = dummy_dos_location()
+    dos_location.postcode = nhs_entity.Postcode
+    dos_location_cache[dos_location.normal_postcode()] = [dos_location]
+
     # Act
     change_requests = event_processor.get_change_requests()
     # Assert
-
-    assert (
-        len(change_requests) == 1
-    ), f"Should have 1 change request but more found: {len(change_requests)} change requests"
+    assert len(change_requests) == 1, (
+        f"Should have 1 change request but more found: {len(change_requests)} change requests")
 
     cr = change_requests[0]
     for field in ["system", "service_id", "changes"]:

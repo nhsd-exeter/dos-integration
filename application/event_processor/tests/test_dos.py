@@ -2,12 +2,18 @@ from datetime import datetime, timezone, date, time
 from os import environ
 from random import choices
 from unittest.mock import patch
+import pytest
 
-from ..dos import DoSService, get_matching_dos_services, get_specified_opening_times_from_db
-from .conftest import dummy_dos_service
-
-FILE_PATH = "application.event_processor.dos"
-FILE_PATH = "psycopg2"
+from ..dos import (
+    DoSService,
+    DoSLocation,
+    get_matching_dos_services,
+    get_specified_opening_times_from_db,
+    get_standard_opening_times_from_db,
+    get_dos_locations
+)
+from .conftest import dummy_dos_location, dummy_dos_service
+from opening_times import OpenPeriod, StandardOpeningTimes
 
 
 def test__init__():
@@ -133,7 +139,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     del environ["DB_PASSWORD"]
 
 
-@patch(f"{FILE_PATH}.connect")
+@patch("psycopg2.connect")
 def test_get_matching_dos_services_no_services_returned(mock_connect):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
@@ -173,7 +179,7 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
     del environ["DB_PASSWORD"]
 
 
-@patch(f"{FILE_PATH}.connect")
+@patch("psycopg2.connect")
 def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
@@ -200,9 +206,8 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     responses = get_specified_opening_times_from_db(service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
-    assert (
-        responses_str == expected_responses_set
-    ), f"Should return {expected_responses_set} string, actually: {responses_str}"
+    assert responses_str == expected_responses_set, (
+        f"Should return {expected_responses_set} string, actually: {responses_str}")
 
     mock_connect.assert_called_with(
         host=server,
@@ -231,7 +236,54 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     del environ["DB_PASSWORD"]
 
 
-@patch(f"{FILE_PATH}.connect")
+@patch("psycopg2.connect")
+def test_get_standard_opening_times_from_db_times_returned(mock_connect):
+    # Arrange
+    environ["DB_SERVER"] = server = "test.db"
+    environ["DB_PORT"] = port = "5432"
+    environ["DB_NAME"] = db_name = "my-db"
+    environ["DB_SCHEMA"] = db_schema = "db_schema"
+    environ["DB_USER_NAME"] = db_user = "my-user"
+    environ["DB_PASSWORD"] = db_password = "my-password"
+    db_return = [
+        (28334, 1, "Tuesday", time(8, 0, 0), time(17, 0, 0)),
+        (28334, 1, "Friday", time(9, 0, 0), time(11, 30, 0)),
+        (28334, 1, "Friday", time(13, 0, 0), time(15, 30, 0))
+    ]
+    mock_connect().cursor().fetchall.return_value = db_return
+    service_id = 123456
+
+    expected_std_opening_times = StandardOpeningTimes()
+    expected_std_opening_times.add_open_period(OpenPeriod(time(8, 0, 0), time(17, 0, 0)), "tuesday")
+    expected_std_opening_times.add_open_period(OpenPeriod(time(9, 0, 0), time(11, 30, 0)), "friday")
+    expected_std_opening_times.add_open_period(OpenPeriod(time(13, 0, 0), time(15, 30, 0)), "friday")
+
+    # Act
+    response = get_standard_opening_times_from_db(service_id)
+    # Assert
+    assert response == expected_std_opening_times, (
+        f"Should return {expected_std_opening_times} string, actually: {response}")
+
+    mock_connect.assert_called_with(
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        options=f"-c search_path=dbo,{db_schema}",
+        password=db_password,
+        connect_timeout=30,
+    )
+
+    # Clean up
+    del environ["DB_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
+    del environ["DB_USER_NAME"]
+    del environ["DB_PASSWORD"]
+
+
+@patch("psycopg2.connect")
 def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
@@ -265,6 +317,84 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         f"WHERE ssod.serviceid = {service_id}"
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
+    # Clean up
+    del environ["DB_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
+    del environ["DB_USER_NAME"]
+    del environ["DB_PASSWORD"]
+
+
+@pytest.mark.parametrize("dos_location, expected_result", [
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=None, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=1, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=None, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=1.1, longitude=1.1), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=None), False),
+    (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=1.1), True)
+])
+def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
+    actual_result = dos_location.is_valid()
+    assert actual_result is expected_result, (
+        f"is_valued check on {dos_location} was found to be {actual_result}, it should be {expected_result}.")
+
+
+@pytest.mark.parametrize("input_postcode, expected_result", [
+    ("TE57ER", "TE57ER"),
+    ("TE5 7ER", "TE57ER"),
+    ("T E57ER", "TE57ER"),
+    ("T E57E R", "TE57ER"),
+    ("T E 5 7 E R", "TE57ER"),
+    ("TE57ER  ", "TE57ER"),
+    ("   TE57ER", "TE57ER"),
+    ("te5 7er", "TE57ER"),
+    ("te5  7 e   r", "TE57ER"),
+])
+def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
+    dos_location = dummy_dos_location()
+    dos_location.postcode = input_postcode
+    actual_output = dos_location.normal_postcode()
+    assert actual_output == expected_result, (
+        f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'.")
+
+
+@patch("psycopg2.connect")
+def test_get_dos_locations(mock_connect):
+    # Arrange
+    environ["DB_SERVER"] = server = "test.db"
+    environ["DB_PORT"] = port = "5432"
+    environ["DB_NAME"] = db_name = "my-db"
+    environ["DB_SCHEMA"] = db_schema = "db_schema"
+    environ["DB_USER_NAME"] = db_user = "my-user"
+    environ["DB_PASSWORD"] = db_password = "my-password"
+    db_return = [
+        {"id": 111, "postcode": "BA2 7AF", "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}
+    ]
+    mock_connect().cursor().fetchall.return_value = db_return
+
+    responses = get_dos_locations("BA2 7AF")
+    assert len(responses) == 1
+    dos_location = responses[0]
+    assert dos_location.id == 111
+    assert dos_location.postcode == "BA2 7AF"
+    assert dos_location.easting == 2
+    assert dos_location.northing == 3
+    assert dos_location.latitude == 4.0
+    assert dos_location.longitude == 2.0
+
+    mock_connect.assert_called_with(
+        host=server,
+        port=port,
+        dbname=db_name,
+        user=db_user,
+        options=f"-c search_path=dbo,{db_schema}",
+        password=db_password,
+        connect_timeout=30,
+    )
+
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]

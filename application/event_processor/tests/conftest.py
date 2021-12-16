@@ -1,9 +1,9 @@
-from random import choices
+from random import choices, randint, uniform
 
 from pytest import fixture
 from testfixtures import LogCapture
 
-from ..dos import DoSService
+from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
 
@@ -23,6 +23,19 @@ def dummy_dos_service() -> DoSService:
     dos_service._standard_opening_times = StandardOpeningTimes()
     dos_service._specified_opening_times = []
     return dos_service
+
+
+def dummy_dos_location() -> DoSLocation:
+    """Creates a DoSLocation Object with random data for the unit testing"""
+    return DoSLocation(
+        id=randint(1111, 9999),
+        postcode="".join(choices("01234567890ABCDEFGHIJKLM", k=6)),
+        easting=randint(1111, 9999),
+        northing=randint(1111, 9999),
+        latitude=uniform(-200.0, 200.0),
+        longitude=uniform(-200.0, 200.0),
+        postaltown="".join(choices("ABCDEFGHIJKLM", k=8)),
+    )
 
 
 @fixture

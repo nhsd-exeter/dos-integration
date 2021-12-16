@@ -3,6 +3,7 @@ from itertools import groupby
 from typing import Dict, List
 
 from aws_lambda_powertools import Logger
+
 from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 logger = Logger(child=True)
@@ -32,6 +33,9 @@ class NHSEntity:
 
     def __repr__(self) -> str:
         return f"<NHSEntity: name={self.OrganisationName} odscode={self.ODSCode}>:"
+
+    def normal_postcode(self):
+        return self.Postcode.replace(" ", "").upper()
 
     def get_standard_opening_times(self) -> StandardOpeningTimes:
         """[summary]
