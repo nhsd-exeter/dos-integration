@@ -45,6 +45,7 @@ variable "programme" {
 variable "project_id" {
   description = "Project ID"
 }
+
 variable "environment" {
   description = "Environment name"
 }
@@ -56,19 +57,57 @@ variable "environment" {
 variable "route53_terraform_state_key" {
   description = "terraform state key"
 }
+
 variable "team_id" {
   description = "team id"
+}
+
+# ############################
+# API GATEWAY
+# ############################
+
+variable "di_endpoint_api_gateway_name" {
+  description = ""
+}
+
+variable "di_endpoint_api_gateway_stage" {
+  description = ""
+}
+
+
+# ############################
+# SQS
+# ############################
+
+variable "fifo_queue_name" {
+  description = ""
+}
+
+variable "event_processor_lambda_name" {
+  description = ""
 }
 
 # ############################
 # # ROUTE53
 # ############################
 
-
 variable "dos_integration_sub_domain_name" {
   type        = string
   description = "sub domain name"
 }
+
 variable "texas_hosted_zone" {
   description = "hosted zone"
+}
+
+# ############################
+# # SECRETS
+# ############################
+
+variable "api_gateway_api_key_name" {
+  description = "API Key for DI AWS API Gateway"
+}
+
+variable "nhs_uk_api_key_key" {
+  description = "API Key key for secrets manager"
 }

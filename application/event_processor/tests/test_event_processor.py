@@ -1,10 +1,10 @@
+from dataclasses import dataclass
+from json import dumps, loads
 from os import environ
 from random import choices
-from unittest.mock import MagicMock, patch
-import pytest
-from dataclasses import dataclass
+from unittest.mock import patch
 
-from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+from pytest import fixture, raises
 
 from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
 from ..nhs import NHSEntity
@@ -17,13 +17,14 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from dos import dos_location_cache
-
+from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler, extract_message
+from ..nhs import NHSEntity
+from .conftest import dummy_dos_service
 
 FILE_PATH = "application.event_processor.event_processor"
 
 
-@pytest.fixture
+@fixture
 def lambda_context():
     @dataclass
     class LambdaContext:
@@ -181,67 +182,71 @@ def test_send_changes(mock_invoke_lambda_function):
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
 
-@patch(f"{FILE_PATH}.EventProcessor")
-@patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_missing_environment_variable(
-    mock_nhs_entity, mock_event_processor, change_event, lambda_context
-):
-    # Arrange
-    context = LambdaContext()
-    context._function_name = "test"
-    context._aws_request_id = "test"
-    mock_entity = MagicMock()
-    mock_nhs_entity.return_value = mock_entity
-    for env in EXPECTED_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(change_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_nhs_entity.assert_called_once_with(change_event)
-    mock_event_processor.assert_called_once_with(mock_entity)
-    # Clean up
-    for env in EXPECTED_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.EventProcessor")
-@patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_mock_mode_false(mock_nhs_entity, mock_event_processor, change_event, lambda_context):
-    # Arrange
-    mock_entity = MagicMock()
-    mock_nhs_entity.return_value = mock_entity
-    for env in EXPECTED_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(change_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_nhs_entity.assert_called_once_with(change_event)
-    mock_event_processor.assert_called_once_with(mock_entity)
-    # Clean up
-    for env in EXPECTED_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-def test_lambda_handler_mock_mode_true(
-    mock_nhs_entity, mock_event_processor, mock_is_mock_mode, change_event, lambda_context
+@patch(f"{FILE_PATH}.extract_message")
+def test_lambda_handler_unmatched_service(
+    mock_extract_message, mock_nhs_entity, mock_event_processor, mock_is_mock_mode, change_event, lambda_context
 ):
     # Arrange
-    mock_entity = MagicMock()
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    mock_extract_message.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
+    mock_is_mock_mode.return_value = False
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
-    mock_is_mock_mode.return_value = True
     # Act
-    response = lambda_handler(change_event, lambda_context)
+    response = lambda_handler(sqs_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
+    mock_is_mock_mode.assert_called_once
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
+    mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
+
+
+def test_extract_message():
+    # Arrange
+    expected_change_event = '{"test": "test"}'
+    # Act
+    change_event = extract_message(expected_change_event)
+    # Assert
+    assert (
+        loads(expected_change_event) == change_event
+    ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
+
+
+def test_extract_message_exception():
+    # Arrange
+    expected_change_event = {"test": "test"}
+    # Act & Assert
+    with raises(Exception):
+        extract_message(expected_change_event)
+
+
+SQS_EVENT = {
+    "Records": [
+        {
+            "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
+            "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
+            "body": "Test message.",
+            "attributes": {
+                "ApproximateReceiveCount": "1",
+                "SentTimestamp": "1545082649183",
+                "SenderId": "AIDAIENQZJOLO23YVJ4VO",
+                "ApproximateFirstReceiveTimestamp": "1545082649185",
+            },
+            "messageAttributes": {"correlation-id": {"stringValue": "1", "dataType": "String"}},
+            "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
+            "eventSource": "aws:sqs",
+            "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
+            "awsRegion": "us-east-2",
+        }
+    ]
+}

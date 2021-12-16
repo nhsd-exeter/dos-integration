@@ -10,6 +10,11 @@ data "aws_acm_certificate" "issued" {
   domain   = "*.${var.texas_hosted_zone}"
   statuses = ["ISSUED"]
 }
-data "aws_api_gateway_rest_api" "restapi" {
-  name = "${var.environment}-${var.programme}-${var.team_id}"
+
+data "aws_lambda_function" "event_processor" {
+  function_name = var.event_processor_lambda_name
+}
+
+data "aws_secretsmanager_secret_version" "api_key" {
+  secret_id = var.api_gateway_api_key_name
 }

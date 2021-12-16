@@ -19,7 +19,7 @@ resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
     evaluate_target_health = true
   }
 }
-resource "aws_api_gateway_base_path_mapping" "uec-dos-integration_api_mapping" {
+resource "aws_api_gateway_base_path_mapping" "uec_dos_integration_api_mapping" {
   api_id      = aws_api_gateway_rest_api.dos_api_gateway.id
   stage_name  = var.dos_api_gateway_stage
   domain_name = "${var.dos_api_gateway_name}.${var.texas_hosted_zone}"

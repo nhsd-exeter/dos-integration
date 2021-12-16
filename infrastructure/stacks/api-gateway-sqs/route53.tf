@@ -1,6 +1,12 @@
-# ################################
-# # Route53 and APIGateway Domain
-# ################################
+resource "aws_api_gateway_base_path_mapping" "uec_dos_integration_api_mapping" {
+  api_id      = aws_api_gateway_rest_api.di_endpoint.id
+  stage_name  = var.environment
+  domain_name = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
+  depends_on = [
+    aws_api_gateway_stage.di_endpoint_stage,
+  ]
+}
+
 resource "aws_api_gateway_domain_name" "api_gateway_domain_name" {
   regional_certificate_arn = data.aws_acm_certificate.issued.arn
   domain_name              = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
@@ -9,6 +15,7 @@ resource "aws_api_gateway_domain_name" "api_gateway_domain_name" {
     types = ["REGIONAL"]
   }
 }
+
 resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
   name    = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
   type    = "A"
@@ -18,9 +25,4 @@ resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
     zone_id                = aws_api_gateway_domain_name.api_gateway_domain_name.regional_zone_id
     evaluate_target_health = true
   }
-}
-resource "aws_api_gateway_base_path_mapping" "uec-dos-integration_api_mapping" {
-  api_id      = data.aws_api_gateway_rest_api.restapi.id
-  stage_name  = var.environment
-  domain_name = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
 }
