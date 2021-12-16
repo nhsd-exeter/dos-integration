@@ -19,9 +19,7 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler, extract_message
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_service
+from dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.event_processor"
 
