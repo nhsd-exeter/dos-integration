@@ -98,6 +98,12 @@ component-test: # Runs whole project component tests
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
 
+integration-test: # Runs whole project component tests
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m behave" \
+	DIR=./test/integration
+
 clean: # Runs whole project clean
 	make \
 		docker-clean \
