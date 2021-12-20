@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, date, time, timedelta
 
-from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes, any_overlaps
+from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 
 @pytest.mark.parametrize(
@@ -241,7 +241,7 @@ def test_any_overlaps():
         OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
         OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
     ]
-    assert any_overlaps(open_periods) is False
+    assert OpenPeriod.any_overlaps(open_periods) is False
 
     open_periods.append(OpenPeriod(time(7, 0, 0), time(12, 0, 0)))
-    assert any_overlaps(open_periods)
+    assert OpenPeriod.any_overlaps(open_periods)

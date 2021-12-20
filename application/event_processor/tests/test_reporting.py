@@ -32,11 +32,11 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
             "report_key": HIDDEN_OR_CLOSED_REPORT_ID,
             "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
-            "nhs_uk_odscode": nhs_entity.ODSCode,
+            "nhsuk_odscode": nhs_entity.odscode,
             "dos_publicname": dos_service.publicname,
-            "nhs_uk_service_status": nhs_entity.OrganisationStatus,
-            "nhs_uk_service_type": nhs_entity.OrganisationType,
-            "nhs_uk_service_sub_sector": nhs_entity.OrganisationSubType,
+            "nhsuk_service_status": nhs_entity.org_status,
+            "nhsuk_service_type": nhs_entity.org_type,
+            "nhsuk_service_sub_sector": nhs_entity.org_sub_type,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_type": dos_service.typeid,
         },
@@ -46,16 +46,18 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
 @patch.object(Logger, "warning")
 def test_log_unmatched_nhsuk_pharmacies(mock_logger):
     # Arrange
-    nhs_entity = NHSEntity({})
-    nhs_entity.ODSCode = "SLC4X"
-    nhs_entity.OrganisationName = "OrganisationName"
-    nhs_entity.ServiceType = "PHA"
-    nhs_entity.OrganisationStatus = "OrganisationStatus"
-    nhs_entity.OrganisationSubType = "OrganisationSubType"
-    nhs_entity.Address2 = "address2"
-    nhs_entity.Address3 = "address3"
-    nhs_entity.Address4 = "address4"
-    nhs_entity.Postcode = "MK2 4AX"
+    nhs_entity = NHSEntity({
+        "ODSCode": "SLC4X",
+        "OrganisationName": "OrganisationName",
+        "OrganisationTypeId": "PHA",
+        "OrganisationStatus": "OrganisationStatus",
+        "OrganisationSubType": "OrganisationSubType",
+        "Address2": "address2",
+        "Address3": "address3",
+        "City": "city",
+        "County": "country",
+        "Postcode": "MK2 4AX",
+    })
     # Act
     log_unmatched_nhsuk_pharmacies(nhs_entity)
     # Assert
@@ -63,20 +65,21 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
         UN_MATCHED_PHARMACY_REPORT_ID == "UN_MATCHED_PHARMACY"
     ), f"Log ID should be UN_MATCHED_PHARMACY but was {UN_MATCHED_PHARMACY_REPORT_ID}"
     mock_logger.assert_called_with(
-        f"No matching DOS services found that fit all " f"criteria for ODSCode '{nhs_entity.ODSCode}'",
+        f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
             "report_key": UN_MATCHED_PHARMACY_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.ODSCode,
-            "nhsuk_org_name": nhs_entity.OrganisationName,
-            "nhsuk_service_type": nhs_entity.ServiceType,
-            "nhsuk_service_status": nhs_entity.OrganisationStatus,
-            "nhsuk_service_sub_sector": nhs_entity.OrganisationSubType,
-            "nhsuk_address1": "",
-            "nhsuk_address2": nhs_entity.Address2,
-            "nhsuk_address3": nhs_entity.Address3,
-            "nhsuk_address4": nhs_entity.Address4,
-            "nhsuk_address5": "",
-            "nhsuk_postcode": nhs_entity.Postcode,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+            "nhsuk_organisation_status": nhs_entity.org_status,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+            "nhsuk_address1": nhs_entity.entity_data.get("Address1", ""),
+            "nhsuk_address2": nhs_entity.entity_data.get("Address2", ""),
+            "nhsuk_address3": nhs_entity.entity_data.get("Address3", ""),
+            "nhsuk_city": nhs_entity.entity_data.get("City", ""),
+            "nhsuk_county": nhs_entity.entity_data.get("County", ""),
+            "nhsuk_postcode": nhs_entity.postcode,
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name
         },
     )
 

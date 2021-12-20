@@ -50,8 +50,6 @@ class OpenPeriod:
 
     def export_cr_format(self) -> Union[Dict[str, str], None]:
         """Exports open period into a DoS change request accepted format"""
-        if not self.is_open:
-            return None
         return {
             "start_time": self.start.strftime(change_request.TIME_FORMAT),
             "end_time": self.end.strftime(change_request.TIME_FORMAT),

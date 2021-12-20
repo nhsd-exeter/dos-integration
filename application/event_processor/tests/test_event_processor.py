@@ -116,12 +116,13 @@ def test_get_change_requests_full_change_request():
 
     assert cr.system == "DoS Integration", f"System should be DoS Integration but is {cr.system}"
 
-    assert cr.changes == {
-        WEBSITE_CHANGE_KEY: nhs_entity.Website,
-        POSTCODE_CHANGE_KEY: nhs_entity.Postcode,
-        PUBLICNAME_CHANGE_KEY: nhs_entity.OrganisationName,
+    expected_changes = {
+        WEBSITE_CHANGE_KEY: nhs_entity.website,
+        POSTCODE_CHANGE_KEY: nhs_entity.postcode,
+        PUBLICNAME_CHANGE_KEY: nhs_entity.org_name,
         ADDRESS_CHANGE_KEY: nhs_entity.address_lines
-    }, "Change Request Changes not as expected"
+    }
+    assert cr.changes == expected_changes, f"Changes should be {expected_changes} but they are {cr.changes}"
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")

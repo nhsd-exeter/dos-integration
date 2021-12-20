@@ -38,6 +38,7 @@ class NHSEntity:
         self.odscode = entity_data.get("ODSCode")
         self.org_name = entity_data.get("OrganisationName")
         self.org_type_id = entity_data.get("OrganisationTypeId")
+        self.org_type = entity_data.get("OrganisationType")
         self.org_sub_type = entity_data.get("OrganisationSubType")
         self.org_status = entity_data.get("OrganisationStatus")
         self.odscode = entity_data.get("ODSCode")
@@ -62,7 +63,7 @@ class NHSEntity:
 
     def extract_contact(self, contact_type: str) -> Union[str, None]:
         """Returns the nested contact value within the input payload"""
-        for item in self.entity_data["Contacts"]:
+        for item in self.entity_data.get("Contacts", []):
             if (item.get("ContactMethodType", "").upper() == contact_type.upper() and
                 item.get("ContactType", "").upper() == "PRIMARY" and
                 item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
@@ -130,12 +131,12 @@ class NHSEntity:
                     op_list.append(OpenPeriod(start, end))
                     specified_opening_time_dict[date_str] = op_list
                 else:
-                    specified_closed_days.append(date_str)
+                    specified_closed_days.add(date_str)
 
         specified_opening_times = [
             SpecifiedOpeningTime(
                 open_periods=open_periods, 
-                date=datetime.strptime(date_str, "%b  %d  %Y").date(),
+                specified_date=datetime.strptime(date_str, "%b  %d  %Y").date(),
                 is_open=(date_str not in specified_closed_days))
             for date_str, open_periods in specified_opening_time_dict.items()
         ]

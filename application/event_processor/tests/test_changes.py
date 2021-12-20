@@ -131,10 +131,7 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
         ]
 
     dos_service = dummy_dos_service()
-    dos_service.address = (
-        f"{nhs_uk_entity.address_lines[0]}${nhs_uk_entity.address_lines[1]}$"
-        f"{nhs_uk_entity.address_lines[2]}${nhs_uk_entity.address_lines[3]}${nhs_uk_entity.address_lines[4]}"
-    )
+    dos_service.address = "$".join(nhs_uk_entity.address_lines)
     # Act
     actual_changes = update_changes_with_address(changes, dos_service, nhs_uk_entity)
     # Assert
@@ -143,29 +140,24 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
 
 def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Arrange
-
     nhs_uk_entity = NHSEntity({})
-    nhs_uk_entity.Address1 = "address1"
-    nhs_uk_entity.Address2 = "address2"
-    nhs_uk_entity.Address3 = "address3"
-    nhs_uk_entity.Address4 = "city"
-    nhs_uk_entity.Address5 = "county"
+    nhs_uk_entity.address_lines = [
+        "address1",
+        "address2",
+        "address3",
+        "city",
+        "county"]
 
     dos_service = dummy_dos_service()
     dos_service.address = "Test RD$Testown$Testshire"
-    expected_changes = {
-        ADDRESS_CHANGE_KEY: [
-            nhs_uk_entity.Address1,
-            nhs_uk_entity.Address2,
-            nhs_uk_entity.Address3,
-            nhs_uk_entity.City,
-            nhs_uk_entity.County,
-        ]
-    }
+
     # Act
-    changes = update_changes_with_address(expected_changes, dos_service, nhs_uk_entity)
+    actual_changes = {}
+    update_changes_with_address(actual_changes, dos_service, nhs_uk_entity)
+    expected_changes = {ADDRESS_CHANGE_KEY: nhs_uk_entity.address_lines}
     # Assert
-    assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"
+    assert actual_changes == expected_changes,\
+        f"Should return {expected_changes} dict, actually: {actual_changes}"
 
 
 def test_update_changes_with_opening_times():
@@ -188,7 +180,7 @@ def test_update_changes_with_opening_times():
                     "Times": "09:00-17:30",
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Nov 12 2021",
-                    "IsOpen": False,
+                    "IsOpen": True,
                 },
             ],
         }
