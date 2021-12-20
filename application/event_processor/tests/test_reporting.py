@@ -6,8 +6,10 @@ from ..nhs import NHSEntity
 from ..reporting import (
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
+    log_invalid_nhsuk_pharmacy_postcode,
     HIDDEN_OR_CLOSED_REPORT_ID,
     UN_MATCHED_PHARMACY_REPORT_ID,
+    INVALID_POSTCODE_REPORT_ID,
 )
 from .conftest import dummy_dos_service
 
@@ -75,5 +77,48 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
             "nhsuk_address4": nhs_entity.Address4,
             "nhsuk_address5": "",
             "nhsuk_postcode": nhs_entity.Postcode,
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
+    # Arrange
+    nhs_entity = NHSEntity({})
+    nhs_entity.ODSCode = "SLC4X"
+    nhs_entity.OrganisationName = "OrganisationName"
+    nhs_entity.ServiceType = "PHA"
+    nhs_entity.OrganisationStatus = "OrganisationStatus"
+    nhs_entity.OrganisationSubType = "OrganisationSubType"
+    nhs_entity.Address1 = "address1"
+    nhs_entity.Address2 = "address2"
+    nhs_entity.Address3 = "address3"
+    nhs_entity.Address4 = "address4"
+    nhs_entity.City = "city"
+    nhs_entity.County = "county"
+    nhs_entity.Postcode = "MK2 XXX"
+
+    dos_service = dummy_dos_service()
+    # Act
+    log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
+    # Assert
+    assert (
+        INVALID_POSTCODE_REPORT_ID == "INVALID_POSTCODE"
+    ), f"Log ID should be INVALID_POSTCODE but was {INVALID_POSTCODE_REPORT_ID}"
+    mock_logger.assert_called_with(
+        f"NHS postcode '{nhs_entity.Postcode}' is not a valid DoS postcode!"
+        f"criteria for ODSCode '{nhs_entity.ODSCode}'",
+        extra={
+            "report_key": INVALID_POSTCODE_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.ODSCode,
+            "nhsuk_organisation_name": nhs_entity.OrganisationName,
+            "nhsuk_address1": nhs_entity.Address1,
+            "nhsuk_address2": nhs_entity.Address2,
+            "nhsuk_address3": nhs_entity.Address3,
+            "nhsuk_city": nhs_entity.City,
+            "nhsuk_postcode": nhs_entity.Postcode,
+            "nhsuk_county": nhs_entity.County,
+            "validation_error_reason": "Postcode not valid/found on DoS",
+            "dos_services": dos_service.uid,
         },
     )
