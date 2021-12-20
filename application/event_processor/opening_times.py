@@ -125,8 +125,15 @@ class SpecifiedOpeningTime:
         """Returns whether the open flag contradicts the number of open periods present."""
         return self.is_open != len(self.open_periods) > 0
 
-    def any_overlaps(self):
+    def any_overlaps(self) -> bool:
         return OpenPeriod.any_overlaps(self.open_periods)
+
+    def any_start_before_end(self) -> bool:
+        return OpenPeriod.any_start_before_end(self.open_periods)
+
+    def is_valid(self) -> bool:
+        """Validates no overlaps, 'starts before ends' and contradictions."""
+        return not (self.any_overlaps() or self.any_start_before_end() or self.open_contradiction())
 
     @staticmethod
     def export_cr_format_list(spec_opening_dates: List['SpecifiedOpeningTime']) -> dict:
@@ -144,6 +151,10 @@ class SpecifiedOpeningTime:
         hash_list_a = [hash(a) for a in a]
         hash_list_b = [hash(b) for b in b]
         return sorted(hash_list_a) == sorted(hash_list_b)
+
+    @staticmethod
+    def valid_list(list: List['SpecifiedOpeningTime']) -> bool:
+        return all([x.is_valid() for x in list])
 
 
 @dataclass(unsafe_hash=True)
@@ -199,12 +210,21 @@ class StandardOpeningTimes:
                 return True
         return False
 
+    def any_start_before_end(self):
+        for weekday in WEEKDAYS:
+            if OpenPeriod.any_start_before_end(getattr(self, weekday)):
+                return True
+        return False
+
     def any_contradictions(self) -> bool:
         """Returns True if any open period falls on a day that is marked as closed."""
         for weekday in self.closed_days:
             if len(getattr(self, weekday)) > 0:
                 return True
         return False
+
+    def is_valid(self) -> bool:
+        return not (self.any_overlaps() or self.any_contradictions() or self.any_start_before_end())
 
     def export_cr_format(self) -> Dict[str, List[Dict[str, str]]]:
         """Exports standard opening times into a DoS change request accepted format"""
