@@ -142,9 +142,9 @@ project-list-profiles: ### List all the profiles
 		[ $$profile != local ] && echo $$profile ||:
 	done
 
-project-tag-as-environment-deployment: ### Tag environment deployment - mandatory: ARTEFACT|ARTEFACTS=[comma-separated image names],PROFILE=[profile name]; optional: COMMIT=[git release candidate tag name, defaults to master]
-	[ $(PROFILE) = local ] && (echo "ERROR: Please, specify the PROFILE"; exit 1)
-	commit=$(or $(COMMIT), master)
+project-tag-as-environment-deployment: ### Tag environment deployment - mandatory: ARTEFACT|ARTEFACTS=[comma-separated image names],PROFILE=[profile name]; optional: COMMIT=[git release candidate tag name, defaults to main]
+	[ $(PROFILE) == local ] && (echo "ERROR: Please, specify the PROFILE"; exit 1)
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	git_tag=$$(make git-tag-get-environment-deployment COMMIT=$$commit ENVIRONMENT=$(ENVIRONMENT))
 	for image in $$(echo $(or $(ARTEFACTS), $(ARTEFACT)) | tr "," "\n"); do
 		make docker-image-find-and-version-as \

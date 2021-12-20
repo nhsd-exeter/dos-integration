@@ -37,12 +37,12 @@ git-check-if-branch-name-is-correct: ### Check if the branch name meets the acce
 
 git-check-if-commit-msg-is-correct: ### Check if the commit message meets the accepted convention - optional: BUILD_BRANCH,BUILD_COMMIT_MESSAGE
 	if [[ $(BUILD_BRANCH) =~ $(GIT_BRANCH_PATTERN_MAIN) ]] && \
-			[[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | head -1)" =~ $(GIT_COMMIT_MESSAGE_PATTERN_MAIN) ]] && \
-			[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | head -1 | wc -m)" -le $(GIT_COMMIT_MESSAGE_MAX_LENGTH) ]; then
+			[[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | sed s/\'//g | head -1)" =~ $(GIT_COMMIT_MESSAGE_PATTERN_MAIN) ]] && \
+			[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | sed s/\'//g | head -1 | wc -m)" -le $(GIT_COMMIT_MESSAGE_MAX_LENGTH) ]; then
 		echo true
 	elif ! [[ $(BUILD_BRANCH) =~ $(GIT_BRANCH_PATTERN_MAIN) ]] && \
-			[[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | head -1)" =~ $(GIT_COMMIT_MESSAGE_PATTERN_ADDITIONAL) ]] && \
-			[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | head -1 | wc -m)" -le $(GIT_COMMIT_MESSAGE_MAX_LENGTH) ]; then
+			[[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | sed s/\'//g | head -1)" =~ $(GIT_COMMIT_MESSAGE_PATTERN_ADDITIONAL) ]] && \
+			[ "$$(echo '$(BUILD_COMMIT_MESSAGE)' | sed s/\'//g | head -1 | wc -m)" -le $(GIT_COMMIT_MESSAGE_MAX_LENGTH) ]; then
 		echo true
 	else
 		echo false
@@ -101,8 +101,8 @@ git-secrets-scan-repo-files: ### Scan repository files for any secrets
 git-check-if-commit-changed-directory: ### Check if any file changed in the given directory - mandatory: DIR=[directory]; optional: PRECOMMIT=true; return: true|false
 	if [ "$(PRECOMMIT)" == true ]; then
 		compare_to=HEAD
-	elif [ "$(BUILD_BRANCH)" != master ]; then
-		compare_to=master
+	elif [ "$(BUILD_BRANCH)" != main ] && [ "$(BUILD_BRANCH)" != master ]; then
+		compare_to=$$(make git-branch-get-main-name)
 	else
 		compare_to=HEAD^
 	fi
@@ -119,18 +119,18 @@ git-commit-get-message git-msg: ### Get commit message - optional: COMMIT=[comm
 
 # ==============================================================================
 
-git-tag-is-environment-deployment: ### Check if a commit is tagged as environment deployment - mandatory: PROFILE=[profile name]; optional: COMMIT=[commit, defaults to master]; return: true|false
-	commit=$(or $(COMMIT), master)
+git-tag-is-environment-deployment: ### Check if a commit is tagged as environment deployment - mandatory: PROFILE=[profile name]; optional: COMMIT=[commit, defaults to main]; return: true|false
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	(git show-ref --tags -d | grep $$(git rev-parse $$commit) | sed -e 's;.* refs/tags/;;' -e 's;\^{};;' | grep -- -$(ENVIRONMENT)$$) > /dev/null 2>&1 && echo true || echo false
 
-git-tag-create: ### Tag a commit - mandatory: TAG=[tag name]; optional: COMMIT=[commit, defaults to master]
-	commit=$(or $(COMMIT), master)
+git-tag-create: ### Tag a commit - mandatory: TAG=[tag name]; optional: COMMIT=[commit, defaults to main]
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	git tag $(TAG) $$commit
 	git push origin $(TAG)
 
-git-tag-create-environment-deployment: ### Tag environment deployment as `[YYYYmmddHHMMSS]-[env]` - mandatory: PROFILE=[profile name]; optional: COMMIT=[release candidate tag name, defaults to master]
+git-tag-create-environment-deployment: ### Tag environment deployment as `[YYYYmmddHHMMSS]-[env]` - mandatory: PROFILE=[profile name]; optional: COMMIT=[release candidate tag name, defaults to main]
 	[ $(PROFILE) == local ] && (echo "ERROR: Please, specify the PROFILE"; exit 1)
-	commit=$(or $(COMMIT), master)
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	tag=$(BUILD_TIMESTAMP)-$(ENVIRONMENT)
 	make git-tag-create TAG=$$tag COMMIT=$$commit
 
@@ -145,22 +145,26 @@ git-tag-get-environment-deployment: ### Get the latest environment deployment t
 git-tag-get-latest: ### Get the latest tag on the current branch - return [YYYYmmddHHMMSS]-[*]
 	git tag --sort version:refname | grep '^[0-9]*'| sort -r | head -n 1
 
-git-tag-list: ### List tags of a commit - optional: COMMIT=[commit, defaults to master],PROFILE=[profile name]
-	commit=$(or $(COMMIT), master)
+git-tag-list: ### List tags of a commit - optional: COMMIT=[commit, defaults to main],PROFILE=[profile name]
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	tags=$$(git show-ref --tags -d | grep $$(git rev-parse $$commit) | sed -e 's;.* refs/tags/;;' -e 's;\^{};;' | grep -Eo ^[0-9]*-[a-z]*$$ ||:)
 	[ $(PROFILE) != local ] && tags=$$(echo "$$tags" | grep -- -$(ENVIRONMENT)$$)
 	echo "$$tags"
 
-git-tag-clear: ### Remove tags from the specified commit - optional: COMMIT=[commit, defaults to master]
-	commit=$(or $(COMMIT), master)
+git-tag-clear: ### Remove tags from the specified commit - optional: COMMIT=[commit, defaults to main]
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	for tag in $$(git show-ref --tags -d | grep $$(git rev-parse $$commit) | sed -e 's;.* refs/tags/;;' -e 's;\^{};;' | grep -Eo ^[0-9]*-[a-z]*$$); do
 		git tag -d $$tag
 		git push --delete origin $$tag 2> /dev/null ||:
 	done
 
+git-branch-get-main-name: ### Get the name of the main branch
+	git rev-parse --verify main > /dev/null 2>&1 && echo main || echo master
+
 # ==============================================================================
 
 .SILENT: \
+	git-branch-get-main-name \
 	git-check-if-branch-name-is-correct \
 	git-check-if-commit-msg-is-correct \
 	git-check-if-pull-request-title-is-correct \
