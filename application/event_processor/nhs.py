@@ -25,6 +25,8 @@ class NHSEntity:
     org_status: str
     address_lines: List[str]
     postcode: str
+    website: str
+    phone: str
     standard_opening_times: Union[StandardOpeningTimes, None]
     specified_opening_times: Union[List[SpecifiedOpeningTime], None]
 
@@ -32,24 +34,41 @@ class NHSEntity:
 
     def __init__(self, entity_data: dict):
         self.entity_data = entity_data
-        self.odscode = entity_data["ODSCode"]
-        self.org_name = entity_data["OrganisationName"]
-        self.org_type_id = entity_data["OrganisationTypeId"]
-        self.org_sub_type = entity_data["OrganisationSubType"]
-        self.org_status = entity_data["OrganisationStatus"]
-        self.odscode = entity_data["ODSCode"]
-        self.postcode = entity_data["Postcode"]
+
+        self.odscode = entity_data.get("ODSCode")
+        self.org_name = entity_data.get("OrganisationName")
+        self.org_type_id = entity_data.get("OrganisationTypeId")
+        self.org_sub_type = entity_data.get("OrganisationSubType")
+        self.org_status = entity_data.get("OrganisationStatus")
+        self.odscode = entity_data.get("ODSCode")
+        self.postcode = entity_data.get("Postcode")
+        self.parent_org_name = entity_data.get("ParentOrganisation", {}).get("OrganisationName")
+        self.city = entity_data.get("City")
+        self.county = entity_data.get("County")
         self.address_lines = [
-            line for line in [entity_data.get(k) for k in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
+            line for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
             if isinstance(line, str) and line.strip() != ""]
+
         self.standard_opening_times = self._get_standard_opening_times()
         self.specified_opening_times = self._get_specified_opening_times()
+        self.phone = self.extract_contact("Telephone")
+        self.website = self.extract_contact("Website")
 
     def __repr__(self) -> str:
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
 
     def normal_postcode(self):
         return self.postcode.replace(" ", "").upper()
+
+    def extract_contact(self, contact_type: str) -> Union[str, None]:
+        """Returns the nested contact value within the input payload"""
+        for item in self.entity_data["Contacts"]:
+            if (item.get("ContactMethodType", "").upper() == contact_type.upper() and
+                item.get("ContactType", "").upper() == "PRIMARY" and
+                item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
+
+                return item.get("ContactValue")
+        return None
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening
@@ -62,7 +81,7 @@ class NHSEntity:
             StandardOpeningTimes: NHS UK standard opening times
         """
         std_opening_times = StandardOpeningTimes()
-        for open_time in self.OpeningTimes:
+        for open_time in self.entity_data.get("OpeningTimes", []):
             weekday = open_time["Weekday"].lower()
 
             # Skip times which are not Standard (General) Opening times
@@ -95,7 +114,7 @@ class NHSEntity:
         def specified_opening_times_filter(specified):
             return specified["OpeningTimeType"] == "Additional" and specified["AdditionalOpeningDate"] != ""
 
-        specified_times_list = list(filter(specified_opening_times_filter, self.entity_data["OpeningTimes"]))
+        specified_times_list = list(filter(specified_opening_times_filter, self.entity_data.get("OpeningTimes", [])))
 
         # Sort the openingtimes data
         sort_specified = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item["Times"]))

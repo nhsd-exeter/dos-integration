@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, fields
 import psycopg2
 from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
+
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 

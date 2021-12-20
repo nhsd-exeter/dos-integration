@@ -41,7 +41,7 @@ class EventProcessor:
         """
 
         # Check database for services with same first 5 digits of ODSCode
-        matching_services = get_matching_dos_services(self.nhs_entity.ODSCode)
+        matching_services = get_matching_dos_services(self.nhs_entity.odscode)
         logger.info(
             f"Found {len(matching_services)} services in DB with "
             f"matching first 5 chars of ODSCode: {matching_services}"
@@ -76,7 +76,7 @@ class EventProcessor:
 
             # Find changes, don't make a change req if none found
             changes = get_changes(service, self.nhs_entity)
-            print(f"CHANGES::: {changes}")
+            logger.info(f"Changes for nhs:{self.nhs_entity.odscode}/dos:{service.id} : {changes}")
             if len(changes) > 0:
                 change_requests.append(ChangeRequest(service.id, changes))
 
@@ -134,9 +134,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     message = next(event.records).body
     change_event = extract_message(message)
     nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.ODSCode)
-    logger.append_keys(service_type=nhs_entity.ServiceType)
-    logger.append_keys(service_sub_type=nhs_entity.ServiceSubType)
+    logger.append_keys(ods_code=nhs_entity.odscode)
+    logger.append_keys(org_type=nhs_entity.org_type)
+    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
     validate_event(change_event)
 

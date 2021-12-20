@@ -18,19 +18,24 @@ FILE_PATH = "application.event_processor.changes"
 def test_get_changes_same_data():
     # Act
     dos_service = dummy_dos_service()
-    nhs_kwargs = {
-        "Website": dos_service.web,
+    nhs_entity = NHSEntity({
         "Postcode": dos_service.postcode,
         "Phone": dos_service.publicphone,
         "OrganisationName": dos_service.publicname,
         "Address1": dos_service.address,
-        "Address2": "",
-        "Address3": "",
-        "City": "",
-        "County": "",
-        "OpeningTimes": [],
-    }
-    nhs_entity = NHSEntity(nhs_kwargs)
+        "Contacts": [{
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Website",
+            "ContactValue": dos_service.web},
+		    {
+			"ContactType": "Primary",
+			"ContactAvailabilityType": "Office hours",
+			"ContactMethodType": "Telephone",
+			"ContactValue": dos_service.publicphone},   
+	    ],
+        "OpeningTimes": []
+    })
     # Act
     response = get_changes(dos_service, nhs_entity)
     # Assert
@@ -48,19 +53,29 @@ def test_get_changes_different_changes():
     address3 = "changed-address3"
     city = "changed-city"
     county = "changed-county"
-    nhs_kwargs = {
-        "Website": website,
+
+    nhs_entity = NHSEntity({
         "Postcode": postcode,
-        "Phone": phone,
         "OrganisationName": organisation_name,
         "Address1": address1,
         "Address2": address2,
         "Address3": address3,
         "City": city,
         "County": county,
+        "Contacts": [{
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Website",
+            "ContactValue": website},
+		    {
+			"ContactType": "Primary",
+			"ContactAvailabilityType": "Office hours",
+			"ContactMethodType": "Telephone",
+			"ContactValue": phone},   
+	    ],
         "OpeningTimes": [],
-    }
-    nhs_entity = NHSEntity(nhs_kwargs)
+    })
+
     dos_service = dummy_dos_service()
     dos_location = dummy_dos_location()
     dos_location.postcode = postcode
@@ -105,19 +120,20 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
 def test_update_changes_address_to_change_request_if_not_equal_is_equal():
     # Arrange
     changes = {}
-    test_data = {}
-    test_data["OpeningTimes"] = []
-    nhs_uk_entity = NHSEntity(test_data)
-    nhs_uk_entity.Address1 = "address1"
-    nhs_uk_entity.Address2 = "address2"
-    nhs_uk_entity.Address3 = "address3"
-    nhs_uk_entity.City = "city"
-    nhs_uk_entity.County = "county"
-    nhs_uk_entity.OpeningTimes = []
+
+    nhs_uk_entity = NHSEntity({})
+    nhs_uk_entity.address_lines = [
+        "address1"
+        "address2"
+        "address3"
+        "city"
+        "county"
+        ]
+
     dos_service = dummy_dos_service()
     dos_service.address = (
-        f"{nhs_uk_entity.Address1}${nhs_uk_entity.Address2}$"
-        f"{nhs_uk_entity.Address3}${nhs_uk_entity.City}${nhs_uk_entity.County}"
+        f"{nhs_uk_entity.address_lines[0]}${nhs_uk_entity.address_lines[1]}$"
+        f"{nhs_uk_entity.address_lines[2]}${nhs_uk_entity.address_lines[3]}${nhs_uk_entity.address_lines[4]}"
     )
     # Act
     actual_changes = update_changes_with_address(changes, dos_service, nhs_uk_entity)
@@ -127,14 +143,14 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
 
 def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Arrange
-    test_data = {}
-    test_data["OpeningTimes"] = []
-    nhs_uk_entity = NHSEntity(test_data)
+
+    nhs_uk_entity = NHSEntity({})
     nhs_uk_entity.Address1 = "address1"
     nhs_uk_entity.Address2 = "address2"
     nhs_uk_entity.Address3 = "address3"
-    nhs_uk_entity.City = "city"
-    nhs_uk_entity.County = "county"
+    nhs_uk_entity.Address4 = "city"
+    nhs_uk_entity.Address5 = "county"
+
     dos_service = dummy_dos_service()
     dos_service.address = "Test RD$Testown$Testshire"
     expected_changes = {
@@ -157,7 +173,6 @@ def test_update_changes_with_opening_times():
     changes = {}
     nhs_uk_entity = NHSEntity(
         {
-            "OpeningTimeType": "General",
             "OpeningTimes": [
                 {
                     "Weekday": "Friday",
@@ -171,7 +186,7 @@ def test_update_changes_with_opening_times():
                 {
                     "Weekday": "Tuesday",
                     "Times": "09:00-17:30",
-                    "OpeningTimeType": "General",
+                    "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Nov 12 2021",
                     "IsOpen": False,
                 },
