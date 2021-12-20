@@ -96,6 +96,14 @@ variable "dead_letter_queue_from_fifo_queue_name" {
 }
 
 # ############################
+# SQS DEAD LETTER QUEUE
+# ############################
+
+variable "dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
+# ############################
 # # ROUTE53
 # ############################
 
