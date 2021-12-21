@@ -28,12 +28,12 @@ def test_get_changes_same_data():
             "ContactAvailabilityType": "Office hours",
             "ContactMethodType": "Website",
             "ContactValue": dos_service.web},
-		    {
-			"ContactType": "Primary",
-			"ContactAvailabilityType": "Office hours",
-			"ContactMethodType": "Telephone",
-			"ContactValue": dos_service.publicphone},   
-	    ],
+            {
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Telephone",
+            "ContactValue": dos_service.publicphone},   
+        ],
         "OpeningTimes": []
     })
     # Act
@@ -67,12 +67,12 @@ def test_get_changes_different_changes():
             "ContactAvailabilityType": "Office hours",
             "ContactMethodType": "Website",
             "ContactValue": website},
-		    {
-			"ContactType": "Primary",
-			"ContactAvailabilityType": "Office hours",
-			"ContactMethodType": "Telephone",
-			"ContactValue": phone},   
-	    ],
+            {
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Telephone",
+            "ContactValue": phone},   
+        ],
         "OpeningTimes": [],
     })
 

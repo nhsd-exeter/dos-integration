@@ -9,12 +9,13 @@ from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOp
 
 logger = Logger(child=True)
 
+
 @dataclass
 class NHSEntity:
     """This is an object to store an NHS Entity data
 
     Some fields are pulled straight from the payload while others are processed first. So attribute
-    names differ from paylod format for consistency within object.    
+    names differ from paylod format for consistency within object.
     """
     entity_data: dict
     odscode: str
