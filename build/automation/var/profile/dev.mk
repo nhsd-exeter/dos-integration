@@ -13,7 +13,7 @@ DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
 MOCK_MODE := False
 
 
-DB_SERVER_NAME := uec-core-dos-regression-db-9-replica-pu
+DB_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
 DB_PORT := 5432
 DB_NAME := pathwaysdos_regression
 DB_SCHEMA := pathwaysdos
