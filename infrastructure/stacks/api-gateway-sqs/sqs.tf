@@ -9,7 +9,7 @@ resource "aws_sqs_queue" "di_change_event_fifo_queue" {
   sqs_managed_sse_enabled     = true
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.di_dead_letter_queue_from_fifo_queue.arn
-    maxReceiveCount     = 1
+    maxReceiveCount     = 1000
   })
   depends_on = [aws_sqs_queue.di_dead_letter_queue_from_fifo_queue]
 }
