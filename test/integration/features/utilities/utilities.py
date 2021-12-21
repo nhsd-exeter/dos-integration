@@ -1,5 +1,9 @@
 import requests
 import json
+from os import getenv
+from features.utilities.get_secrets import get_secret
+
+# from utilities.get_secrets import get_secret
 
 url = "https://uec-dos-integration-di-238.k8s-nonprod.texasplatform.uk/v1/change-event"
 
@@ -29,11 +33,12 @@ payload = json.dumps({
     "OrganisationAliases": [],
     "OpeningTimes": []
 })
-headers = {
-    'x-api-key': '',
-    'Content-Type': 'application/json'
-}
+
 
 def get_response() -> str:
+    headers = {
+    'x-api-key': json.loads(get_secret())[getenv('NHS_UK_API_KEY_KEY')],
+    'Content-Type': 'application/json'
+    }
     response = requests.request("POST", url, headers=headers, data=payload)
     return response
