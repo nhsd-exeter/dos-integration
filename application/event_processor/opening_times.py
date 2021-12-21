@@ -77,12 +77,12 @@ class OpenPeriod:
         return f"[{', '.join(sorted_str_list)}]"
 
     @staticmethod
-    def any_start_before_end(open_periods: List['OpenPeriod']) -> bool:
-        """Returns whether any OpenPeriod object in list starts before it ends"""
+    def all_start_before_end(open_periods: List['OpenPeriod']) -> bool:
+        """Returns whether all OpenPeriod object in list start before they ends"""
         for op in open_periods:
-            if op.start_before_end():
-                return True
-        return False
+            if not op.start_before_end():
+                return False
+        return True
 
     @staticmethod
     def equal_lists(a: List['OpenPeriod'], b: List['OpenPeriod']) -> bool:
@@ -105,11 +105,12 @@ class SpecifiedOpeningTime:
         return OpenPeriod.list_string(self.open_periods)
 
     def __repr__(self):
-        return f"<SpecifiedOpenTime: {self.date_string()} {self.open_periods_string()}>"
+        return f"<SpecifiedOpenTime: {self.date_string()} open={self.is_open} {self.open_periods_string()}>"
 
     def __eq__(self, other):
         return (
             isinstance(other, SpecifiedOpeningTime)
+            and self.is_open == other.is_open
             and self.date == other.date
             and OpenPeriod.equal_lists(self.open_periods, other.open_periods)
         )
@@ -121,19 +122,19 @@ class SpecifiedOpeningTime:
         change = {date_str: exp_open_periods}
         return change
 
-    def open_contradiction(self) -> bool:
+    def contradiction(self) -> bool:
         """Returns whether the open flag contradicts the number of open periods present."""
-        return self.is_open != len(self.open_periods) > 0
+        return self.is_open != (len(self.open_periods) > 0)
 
     def any_overlaps(self) -> bool:
         return OpenPeriod.any_overlaps(self.open_periods)
 
-    def any_start_before_end(self) -> bool:
-        return OpenPeriod.any_start_before_end(self.open_periods)
+    def all_start_before_end(self) -> bool:
+        return OpenPeriod.all_start_before_end(self.open_periods)
 
     def is_valid(self) -> bool:
         """Validates no overlaps, 'starts before ends' and contradictions."""
-        return not (self.any_overlaps() or self.any_start_before_end() or self.open_contradiction())
+        return self.all_start_before_end() and (not self.any_overlaps()) and (not self.contradiction())
 
     @staticmethod
     def export_cr_format_list(spec_opening_dates: List['SpecifiedOpeningTime']) -> dict:
@@ -183,6 +184,8 @@ class StandardOpeningTimes:
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
     def __eq__(self, other: Any):
+        if self.closed_days != other.closed_days:
+            return False
         for day in WEEKDAYS:
             if not OpenPeriod.equal_lists(getattr(self, day), getattr(other, day)):
                 return False
@@ -210,11 +213,11 @@ class StandardOpeningTimes:
                 return True
         return False
 
-    def any_start_before_end(self):
+    def all_start_before_end(self):
         for weekday in WEEKDAYS:
-            if OpenPeriod.any_start_before_end(getattr(self, weekday)):
-                return True
-        return False
+            if not OpenPeriod.all_start_before_end(getattr(self, weekday)):
+                return False
+        return True
 
     def any_contradictions(self) -> bool:
         """Returns True if any open period falls on a day that is marked as closed."""
@@ -224,7 +227,7 @@ class StandardOpeningTimes:
         return False
 
     def is_valid(self) -> bool:
-        return not (self.any_overlaps() or self.any_contradictions() or self.any_start_before_end())
+        return self.all_start_before_end() and not self.any_overlaps() and not self.any_contradictions()
 
     def export_cr_format(self) -> Dict[str, List[Dict[str, str]]]:
         """Exports standard opening times into a DoS change request accepted format"""

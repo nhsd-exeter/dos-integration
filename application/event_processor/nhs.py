@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 from itertools import groupby
 from typing import Dict, List, Union
 from dataclasses import dataclass

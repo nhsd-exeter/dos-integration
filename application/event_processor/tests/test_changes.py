@@ -162,15 +162,12 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
 
 def test_update_changes_with_opening_times():
     # Arrange
-    changes = {}
     nhs_uk_entity = NHSEntity(
         {
             "OpeningTimes": [
                 {
                     "Weekday": "Friday",
                     "Times": "08:45-17:00",
-                    "OffsetOpeningTime": 525,
-                    "OffsetClosingTime": 1020,
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
@@ -199,6 +196,7 @@ def test_update_changes_with_opening_times():
     }
     dos_service = dummy_dos_service()
     # Act
+    changes = {}
     update_changes_with_opening_times(changes, dos_service, nhs_uk_entity)
     # Assert
     assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"

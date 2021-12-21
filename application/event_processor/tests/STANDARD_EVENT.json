@@ -6,7 +6,7 @@
 	"OrganisationType": "Pharmacy",
 	"OrganisationSubType": "Community",
 	"OrganisationStatus": "Visible",
-    "Address1": "Flat 619",
+	"Address1": "Flat 619",
 	"Address2": "62 Fake Street",
 	"Address3": "Hazel Grove",
 	"City": "Bath",
@@ -19,7 +19,6 @@
 		"OrganisationName": "Fake Pharmacy Corperation"
 	},
 	"OpeningTimes": [
-        
 		{
 			"Weekday": "Monday",
 			"Times": "09:00-13:00",
@@ -38,7 +37,7 @@
 			"AdditionalOpeningDate": "",
 			"IsOpen": true
 		},
-        {
+		{
 			"Weekday": "Tuesday",
 			"Times": "09:00-13:00",
 			"OffsetOpeningTime": 540,
@@ -56,7 +55,7 @@
 			"AdditionalOpeningDate": "",
 			"IsOpen": true
 		},
-        {
+		{
 			"Weekday": "Wednesday",
 			"Times": "09:00-13:00",
 			"OffsetOpeningTime": 540,
@@ -74,7 +73,7 @@
 			"AdditionalOpeningDate": "",
 			"IsOpen": true
 		},
-        {
+		{
 			"Weekday": "Thursday",
 			"Times": "09:00-13:00",
 			"OffsetOpeningTime": 540,
@@ -92,7 +91,7 @@
 			"AdditionalOpeningDate": "",
 			"IsOpen": true
 		},
-        {
+		{
 			"Weekday": "Friday",
 			"Times": "09:00-13:00",
 			"OffsetOpeningTime": 540,
@@ -119,7 +118,7 @@
 			"AdditionalOpeningDate": "",
 			"IsOpen": true
 		},
-        {
+		{
 			"Weekday": "",
 			"Times": "",
 			"OffsetOpeningTime": 0,
@@ -156,8 +155,7 @@
 			"IsOpen": false
 		}
 	],
-	"Contacts": [
-        {
+	"Contacts": [{
 			"ContactType": "Primary",
 			"ContactAvailabilityType": "Office hours",
 			"ContactMethodType": "Website",

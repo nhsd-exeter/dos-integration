@@ -30,20 +30,48 @@ def test_open_period_start_before_end(start, end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-@pytest.mark.parametrize(
-    "start, end, other_start, other_end, expected",
-    [
-        (time(8, 0), time(12, 0), time(8, 0), time(11, 0), True),
-        (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False),
-    ],
-)
-def test_open_period_overlaps(start, end, other_start, other_end, expected):
-    # Arrange
-    open_period = OpenPeriod(start, end)
-    # Act
-    actual = open_period.overlaps(OpenPeriod(other_start, other_end))
-    # Assert
-    assert expected == actual, f"Should return {expected} , actually: {actual}"
+def test_openperiod_any_overlaps():
+    open_periods = [
+        OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
+        OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+    ]
+    std = StandardOpeningTimes()
+    std.monday = open_periods
+    spec = SpecifiedOpeningTime(open_periods, date(2022, 12, 26))
+
+    assert OpenPeriod.any_overlaps(open_periods) is False
+    assert std.any_overlaps() is False
+    assert spec.any_overlaps() is False
+
+    new_op = OpenPeriod(time(7, 0, 0), time(12, 0, 0))
+    open_periods.append(new_op)
+
+    assert OpenPeriod.any_overlaps(open_periods)
+    assert std.any_overlaps()
+    assert spec.any_overlaps()
+
+
+def test_openperiod_all_start_before_end():
+    open_periods = [
+        OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
+        OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
+        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
+    ]
+    std = StandardOpeningTimes()
+    std.wednesday = open_periods
+    spec = SpecifiedOpeningTime(open_periods, date(2022, 12, 24))
+
+    assert OpenPeriod.all_start_before_end(open_periods)
+    assert std.all_start_before_end()
+    assert spec.all_start_before_end()
+
+    new_op = OpenPeriod(time(9, 0, 0), time(8, 59, 0))
+    open_periods.append(new_op)
+
+    assert OpenPeriod.all_start_before_end(open_periods) is False
+    assert std.all_start_before_end() is False
+    assert spec.all_start_before_end() is False
 
 
 def test_open_period_str():
@@ -72,6 +100,31 @@ def test_open_period_export_cr_format():
         "start_time": "13:35",
         "end_time": "13:36",
     }
+
+def test_openperiod_list_string():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+
+    assert OpenPeriod.list_string([a]) == "[08:00:00-12:00:00]"
+    assert OpenPeriod.list_string([a, b]) == "[08:00:00-12:00:00, 13:00:00-17:30:00]"
+    assert OpenPeriod.list_string([a, b, c]) == "[08:00:00-12:00:00, 13:00:00-17:30:00, 19:00:00-23:59:59]"
+    assert OpenPeriod.list_string([b, a, c]) == "[08:00:00-12:00:00, 13:00:00-17:30:00, 19:00:00-23:59:59]"
+    assert OpenPeriod.list_string([c, b, a]) == "[08:00:00-12:00:00, 13:00:00-17:30:00, 19:00:00-23:59:59]"
+
+
+def test_openperiod_equal_lists():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+
+    assert OpenPeriod.equal_lists([a], [a])
+    assert OpenPeriod.equal_lists([a, b], [a, b])
+    assert OpenPeriod.equal_lists([a, c], [a, c])
+    assert OpenPeriod.equal_lists([b, c], [c, b])
+    assert OpenPeriod.equal_lists([a, b, c], [a, b, c])
+    assert OpenPeriod.equal_lists([a, b, c], [c, b, a])
+    assert OpenPeriod.equal_lists([a, c, c], [c, a, c])
 
 
 def test_open_period__lt__gt__():
@@ -192,9 +245,92 @@ def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_d
     ],
 )
 def test_specified_opening_time_export_cr_format(expected: dict, actual: SpecifiedOpeningTime):
+    cr_format = actual.export_cr_format()
     assert (
-        actual.export_cr_format() == expected
-    ), f"expected {expected} SpecifiedOpeningTime change req format but got {actual}"
+        cr_format == expected
+    ), f"expected {expected} SpecifiedOpeningTime change req format but got {cr_format}"
+
+
+def test_specifiedopentime_contradiction():
+    spec = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
+    op = OpenPeriod(time(8, 0, 0), time(17, 0, 0))
+
+    assert spec.contradiction() is False
+
+    spec.is_open = True
+    assert spec.contradiction()
+
+    spec.open_periods.append(op)
+    assert spec.contradiction() is False
+
+    spec.is_open = False
+    assert spec.contradiction()
+
+
+def test_specifiedopentimes_is_valid():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+    d = OpenPeriod(time(9, 0, 0), time(18, 30, 0))      # Overlaps
+    e = OpenPeriod(time(9, 0, 0), time(2, 30, 0))       # Start not before end
+    
+    sp1 = SpecifiedOpeningTime([], date(2022, 12, 24), is_open=False)
+    assert sp1.is_valid()
+
+    sp1.is_open = True
+    assert sp1.is_valid() is False
+
+    sp1.open_periods.append(a)
+    assert sp1.is_valid()
+
+    sp1.is_open = False
+    assert sp1.is_valid() is False
+
+    sp1.open_periods.append(b)
+    sp1.open_periods.append(c)
+    assert sp1.is_valid() is False
+
+    sp1.is_open = True
+    assert sp1.is_valid()
+
+    sp1.open_periods.pop(0)
+    sp1.open_periods.insert(0, d)
+    assert sp1.is_valid() is False
+
+    sp1.is_open = False
+    assert sp1.is_valid() is False
+
+    sp1.open_periods.pop(0)
+    assert sp1.is_valid() is False
+
+    sp1.is_open = True
+    assert sp1.is_valid()
+
+    sp1.open_periods.insert(0, e)
+    assert sp1.is_valid() is False
+
+    sp1.is_open = False
+    assert sp1.is_valid() is False
+
+
+def test_specifiedopentimes_equal_lists():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
+    sp1 = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
+    sp2 = SpecifiedOpeningTime([a, b, c], date(2021, 12, 24))
+    sp2b = SpecifiedOpeningTime([a, b, c], date(2021, 12, 24))
+    sp3 = SpecifiedOpeningTime([b], date(2021, 12, 24))
+
+    assert sp2 == sp2b
+    assert SpecifiedOpeningTime.equal_lists([sp1], [sp1])
+    assert SpecifiedOpeningTime.equal_lists([sp1, sp2], [sp1, sp2])
+    assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp1, sp2, sp3])
+    assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp2, sp3, sp1])
+    assert SpecifiedOpeningTime.equal_lists([sp1, sp2], [sp2, sp1])
+    assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp2b, sp3, sp1])
+    assert SpecifiedOpeningTime.equal_lists([sp2], [sp2b])
+
 
 
 def test_standard_opening_times_export_cr_format():
@@ -234,14 +370,59 @@ def test_standard_opening_times_export_cr_format():
     assert std_opening_times.export_cr_format() == expected
 
 
-def test_any_overlaps():
+def test_stdopeningtimes_eq():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+    st1 = StandardOpeningTimes()
+    st2 = StandardOpeningTimes()
 
-    open_periods = [
-        OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
-        OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
-        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
-    ]
-    assert OpenPeriod.any_overlaps(open_periods) is False
+    assert st1 == st2
 
-    open_periods.append(OpenPeriod(time(7, 0, 0), time(12, 0, 0)))
-    assert OpenPeriod.any_overlaps(open_periods)
+    st1.monday.append(a)
+    assert st1 != st2
+
+    st2.monday.append(a)
+    assert st1 == st2
+
+    st2.friday += [a, b, c]
+    st1.friday += [a, b]
+    assert st1 != st2
+
+    st1.friday.append(c)
+    assert st1 == st2
+
+    st1.sunday += [b, a, c]
+    st2.sunday += [c, b, a]
+    assert st1 == st2
+
+
+def test_stdopeningtimes_any_contradiction():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+    st1 = StandardOpeningTimes()
+
+    assert st1.any_contradictions() is False
+
+    st1.monday.append(a)
+    assert st1.any_contradictions() is False
+
+    st1.closed_days.add("monday")
+    assert st1.any_contradictions()
+
+    st1.monday = []
+    assert st1.any_contradictions() is False
+
+    st1.saturday = [a, c]
+    st1.wednesday = [b]
+    assert st1.any_contradictions() is False
+
+    st1.closed_days.add("tuesday")
+    assert st1.any_contradictions() is False
+
+    st1.closed_days.add("saturday")
+    assert st1.any_contradictions()
+
+    st1.closed_days.add("wednesday")
+    assert st1.any_contradictions()
