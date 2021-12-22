@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 from aws_lambda_powertools import Logger
 from change_request import (
     ADDRESS_CHANGE_KEY,
@@ -13,7 +14,8 @@ from change_request import (
 from dos import DoSService, get_valid_dos_postcode
 from nhs import NHSEntity
 from opening_times import spec_open_times_cr_format, spec_open_times_equal
-from application.event_processor.reporting import log_invalid_nhsuk_pharmacy_postcode
+from reporting import log_invalid_nhsuk_pharmacy_postcode
+
 
 logger = Logger(child=True)
 
