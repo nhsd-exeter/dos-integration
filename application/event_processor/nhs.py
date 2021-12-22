@@ -66,8 +66,8 @@ class NHSEntity:
         """Returns the nested contact value within the input payload"""
         for item in self.entity_data.get("Contacts", []):
             if (item.get("ContactMethodType", "").upper() == contact_type.upper() and
-                item.get("ContactType", "").upper() == "PRIMARY" and
-                item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
+                    item.get("ContactType", "").upper() == "PRIMARY" and
+                    item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
 
                 return item.get("ContactValue")
         return None
@@ -88,10 +88,10 @@ class NHSEntity:
 
             # Skip times which are not Standard (General) Opening times
             if not (weekday in WEEKDAYS and
-                    open_time["AdditionalOpeningDate"] in ["", None] and 
+                    open_time["AdditionalOpeningDate"] in ["", None] and
                     open_time["OpeningTimeType"] == "General"):
                 continue
-            
+
             # Populate StandardOpeningTimes obj depending on IsOpen status
             if open_time["IsOpen"]:
                 start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in open_time["Times"].split("-")]
@@ -99,7 +99,7 @@ class NHSEntity:
                 std_opening_times.add_open_period(open_period, weekday)
             else:
                 std_opening_times.closed_days.add(weekday)
-        
+
         return std_opening_times
 
     def _get_specified_opening_times(self) -> List[SpecifiedOpeningTime]:
@@ -136,7 +136,7 @@ class NHSEntity:
 
         specified_opening_times = [
             SpecifiedOpeningTime(
-                open_periods=open_periods, 
+                open_periods=open_periods,
                 specified_date=datetime.strptime(date_str, "%b  %d  %Y").date(),
                 is_open=(date_str not in specified_closed_days))
             for date_str, open_periods in specified_opening_time_dict.items()

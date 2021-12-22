@@ -101,7 +101,7 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     nhs_std_open_dates = nhs_entity.standard_opening_times
     if dos_std_open_dates != nhs_std_open_dates:
         logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} nhs={nhs_std_open_dates}")
-        
+
         if nhs_std_open_dates.is_valid():
             changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
         else:

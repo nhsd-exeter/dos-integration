@@ -101,6 +101,7 @@ def test_open_period_export_cr_format():
         "end_time": "13:36",
     }
 
+
 def test_openperiod_list_string():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
@@ -117,14 +118,15 @@ def test_openperiod_equal_lists():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
+    a2 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
 
     assert OpenPeriod.equal_lists([a], [a])
     assert OpenPeriod.equal_lists([a, b], [a, b])
-    assert OpenPeriod.equal_lists([a, c], [a, c])
+    assert OpenPeriod.equal_lists([a2, c], [a, c])
     assert OpenPeriod.equal_lists([b, c], [c, b])
-    assert OpenPeriod.equal_lists([a, b, c], [a, b, c])
+    assert OpenPeriod.equal_lists([a, b, c], [a2, b, c])
     assert OpenPeriod.equal_lists([a, b, c], [c, b, a])
-    assert OpenPeriod.equal_lists([a, c, c], [c, a, c])
+    assert OpenPeriod.equal_lists([a2, c, c], [c, a, c])
 
 
 def test_open_period__lt__gt__():
@@ -271,9 +273,9 @@ def test_specifiedopentimes_is_valid():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
-    d = OpenPeriod(time(9, 0, 0), time(18, 30, 0))      # Overlaps
-    e = OpenPeriod(time(9, 0, 0), time(2, 30, 0))       # Start not before end
-    
+    d = OpenPeriod(time(9, 0, 0), time(18, 30, 0))  # Overlaps
+    e = OpenPeriod(time(9, 0, 0), time(2, 30, 0))  # Start not before end
+
     sp1 = SpecifiedOpeningTime([], date(2022, 12, 24), is_open=False)
     assert sp1.is_valid()
 
@@ -330,7 +332,6 @@ def test_specifiedopentimes_equal_lists():
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2], [sp2, sp1])
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp2b, sp3, sp1])
     assert SpecifiedOpeningTime.equal_lists([sp2], [sp2b])
-
 
 
 def test_standard_opening_times_export_cr_format():

@@ -13,6 +13,7 @@ json_path = os.path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
 with open(json_path, "r") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
+
 @fixture()
 def log_capture():
     with LogCapture(names="lambda") as capture:
@@ -43,10 +44,8 @@ def dummy_dos_location() -> DoSLocation:
         postaltown="".join(choices("ABCDEFGHIJKLM", k=8)),
     )
 
+
 @fixture
 def change_event():
     change_event = PHARMACY_STANDARD_EVENT.copy()
     yield change_event
-
-
-

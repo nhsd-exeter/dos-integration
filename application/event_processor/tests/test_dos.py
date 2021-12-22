@@ -197,9 +197,9 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     service_id = 123456
     expected_responses_set = sorted(
         [
-            "<SpecifiedOpenTime: 06-05-2019 [08:00:00-20:00:00]>",
-            "<SpecifiedOpenTime: 27-05-2019 [08:00:00-20:00:00]>",
-            "<SpecifiedOpenTime: 26-08-2019 [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>",
         ]
     )
     # Act

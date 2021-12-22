@@ -47,7 +47,7 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
             "report_key": UN_MATCHED_PHARMACY_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
-            "nhsuk_organisation_typeid": nhs_entity.org_type_id,    
+            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
             "nhsuk_organisation_status": nhs_entity.org_status,
             "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "nhsuk_address1": nhs_entity.entity_data.get("Address1", ""),

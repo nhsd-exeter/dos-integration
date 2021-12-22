@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 from datetime import date, time
-from inspect import getargs
-from os import stat
 from typing import Any, Dict, List, Union
 
 import change_request
@@ -92,7 +90,7 @@ class OpenPeriod:
 
 @dataclass(unsafe_hash=True)
 class SpecifiedOpeningTime:
-    def __init__(self, open_periods: List[OpenPeriod], specified_date: date, is_open: bool=True):
+    def __init__(self, open_periods: List[OpenPeriod], specified_date: date, is_open: bool = True):
         assert isinstance(specified_date, date)
         self.open_periods = open_periods
         self.date = specified_date
@@ -236,5 +234,3 @@ class StandardOpeningTimes:
             open_periods = sorted(getattr(self, weekday))
             change[weekday.capitalize()] = [op.export_cr_format() for op in open_periods]
         return change
-
-

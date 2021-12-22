@@ -32,7 +32,7 @@ def test_get_changes_same_data():
             "ContactType": "Primary",
             "ContactAvailabilityType": "Office hours",
             "ContactMethodType": "Telephone",
-            "ContactValue": dos_service.publicphone},   
+            "ContactValue": dos_service.publicphone},
         ],
         "OpeningTimes": []
     })
@@ -71,7 +71,7 @@ def test_get_changes_different_changes():
             "ContactType": "Primary",
             "ContactAvailabilityType": "Office hours",
             "ContactMethodType": "Telephone",
-            "ContactValue": phone},   
+            "ContactValue": phone},
         ],
         "OpeningTimes": [],
     })

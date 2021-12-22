@@ -1,5 +1,4 @@
 import pytest
-from random import choices
 from datetime import time, date
 
 from .conftest import PHARMACY_STANDARD_EVENT
@@ -34,46 +33,46 @@ def test_get_specified_opening_times():
     # Arrange
     nhs_entity = NHSEntity({
         "OpeningTimes": [
-        {
-            "Weekday": "",
-            "Times": "08:45-17:00",
-            "OffsetOpeningTime": 525,
-            "OffsetClosingTime": 1020,
-            "OpeningTimeType": "Additional",
-            "AdditionalOpeningDate": "Nov 12 2021",
-            "IsOpen": True,
-        },
-        {
-            "Weekday": "",
-            "Times": "09:00-16:00",
-            "OffsetOpeningTime": 540,
-            "OffsetClosingTime": 980,
-            "OpeningTimeType": "Additional",
-            "AdditionalOpeningDate": "Jan  6    2022",
-            "IsOpen": True,
-        },
-        {
-            "Weekday": "",
-            "Times": "09:00-16:00",
-            "OffsetOpeningTime": 540,
-            "OffsetClosingTime": 980,
-            "OpeningTimeType": "Additional",
-            "AdditionalOpeningDate": "Apr  01   2023",
-            "IsOpen": True,
-        },
-        {
-            "Weekday": "Thursday",
-            "Times": "08:45-18:00",
-            "OffsetOpeningTime": 525,
-            "OffsetClosingTime": 1080,
-            "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "",
-            "IsOpen": True,
-        },
-    ]})
+            {
+                "Weekday": "",
+                "Times": "08:45-17:00",
+                "OffsetOpeningTime": 525,
+                "OffsetClosingTime": 1020,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Nov 12 2021",
+                "IsOpen": True,
+            },
+            {
+                "Weekday": "",
+                "Times": "09:00-16:00",
+                "OffsetOpeningTime": 540,
+                "OffsetClosingTime": 980,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Jan  6    2022",
+                "IsOpen": True,
+            },
+            {
+                "Weekday": "",
+                "Times": "09:00-16:00",
+                "OffsetOpeningTime": 540,
+                "OffsetClosingTime": 980,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr  01   2023",
+                "IsOpen": True,
+            },
+            {
+                "Weekday": "Thursday",
+                "Times": "08:45-18:00",
+                "OffsetOpeningTime": 525,
+                "OffsetClosingTime": 1080,
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True,
+            },
+        ]})
     # Act
     # Assert
-    
+
     expected = [
         SpecifiedOpeningTime([OpenPeriod(time(8, 45, 0), time(17, 0, 0))], date(2021, 11, 12)),
         SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(16, 0, 0))], date(2022, 1, 6)),
@@ -81,9 +80,9 @@ def test_get_specified_opening_times():
     ]
 
     actual_spec_open_times = nhs_entity.specified_opening_times
-    assert len(actual_spec_open_times) == len(expected),(
-        f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}")
-    
+    assert len(actual_spec_open_times) == len(expected),\
+        f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
+
     for exp_spec_open_time in expected:
         assert exp_spec_open_time in actual_spec_open_times, (
             f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}")
