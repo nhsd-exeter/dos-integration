@@ -12,12 +12,12 @@ from ..change_event_validation import (
 )
 
 
-FILE_PATH = "application.event_receiver.change_event_validation"
+FILE_PATH = "application.event_processor.change_event_validation"
 
 
 def test_validate_event(change_event):
     # Act & Assert
-    validate_event(change_event["body"])
+    validate_event(change_event)
 
 
 @patch(f"{FILE_PATH}.check_service_sub_type")
@@ -27,10 +27,10 @@ def test_validate_event_missing_key(
     mock_check_ods_code_length, mock_check_service_type, mock_check_service_sub_type, change_event, log_capture
 ):
     # Arrange
-    del change_event["body"]["ODSCode"]
+    del change_event["ODSCode"]
     # Act
     with raises(ValidationException):
-        validate_event(change_event["body"])
+        validate_event(change_event)
     # Assert
     mock_check_ods_code_length.assert_not_called()
     mock_check_service_type.assert_not_called()

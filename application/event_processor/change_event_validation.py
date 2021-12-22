@@ -9,7 +9,6 @@ logger = Logger(child=True)
 
 def validate_event(event: Dict[str, Any]) -> None:
     """Validate event using business rules
-
     Args:
         event (Dict[str, Any]): Lambda function invocation event
     """
@@ -26,7 +25,6 @@ def validate_event(event: Dict[str, Any]) -> None:
 
 def check_service_type(service_type: str) -> None:
     """Check ServiceType if matches PHA, exception raise if error
-
     Args:
         service_type (str): service type of NHS UK service
     """
@@ -40,7 +38,6 @@ def check_service_type(service_type: str) -> None:
 
 def check_service_sub_type(service_sub_type: str) -> None:
     """Check Service Sub Type if matches COMPH, exception raise if error
-
     Args:
         service_sub_type (str): service sub type of NHS UK service
     """
@@ -55,7 +52,6 @@ def check_service_sub_type(service_sub_type: str) -> None:
 def check_ods_code_length(odscode: str) -> None:
     """Check ODS code length as expected, exception raise if error
     Note: ods code type is checked by schema validation
-
     Args:
         odscode (str): odscode of NHS UK service
     """

@@ -54,10 +54,6 @@ variable "environment" {
 # # IAM
 # ############################
 
-variable "event_receiver_role_name" {
-  description = "Role name for event receiver lambda"
-}
-
 variable "event_processor_role_name" {
   description = "Role name for event processor lambda"
 }

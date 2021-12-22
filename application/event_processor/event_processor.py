@@ -1,16 +1,19 @@
-from json import dumps
+from json import dumps, loads
 from os import environ
 from typing import Any, Dict, List, Union
+
 from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from common.middlewares import unhandled_exception_logging, set_correlation_id_if_none_set
+from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
-from reporting import report_closed_or_hidden_services, log_unmatched_nhsuk_pharmacies
+from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
 logger = Logger()
 tracer = Tracer()
@@ -103,30 +106,39 @@ class EventProcessor:
 
 
 @tracer.capture_lambda_handler()
-@logger.inject_lambda_context(correlation_id_path="correlation_id")
-@set_correlation_id_if_none_set
+@event_source(data_class=SQSEvent)
+@set_correlation_id()
+@logger.inject_lambda_context()
 @unhandled_exception_logging()
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
+def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     """Entrypoint handler for the event_receiver lambda
 
     Args:
-        event (Dict[str, Any]): Lambda function invocation event
+        event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
         context (LambdaContext): Lambda function context object
 
     Event: The event payload should contain a NHS Entity (Service)
 
     Some code may need to be changed if the exact input format is changed.
     """
-
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
 
-    nhs_entity = NHSEntity(event)
+    counter = 0
+    for record in event.records:
+        counter += 1
+        if counter > 1:
+            raise Exception("More than one record found in event")
+
+    message = next(event.records).body
+    change_event = extract_message(message)
+    nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.ODSCode)
     logger.append_keys(service_type=nhs_entity.ServiceType)
     logger.append_keys(service_sub_type=nhs_entity.ServiceSubType)
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
+    validate_event(change_event)
 
     event_processor = EventProcessor(nhs_entity)
     logger.info("Getting matching DoS Services")
@@ -146,3 +158,19 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
+
+
+def extract_message(message_body: str) -> Dict[str, Any]:
+    """Extracts the change event from the lambda function invocation event
+
+    Args:
+        message_body (str): One SQS message body (JSON string)
+    Returns:
+        Dict[str, Any]: Change event as a dictionary
+    """
+    try:
+        change_event = loads(message_body)
+    except Exception:
+        logger.exception("Change Event unable to be extracted")
+        raise
+    return change_event

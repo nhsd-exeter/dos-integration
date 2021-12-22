@@ -50,10 +50,6 @@ variable "environment" {
 # # FIREHOSE
 # ##############
 
-variable "event_receiver_subscription_filter_name" {
-  description = "Log filter name for event receiver lambda"
-}
-
 variable "event_processor_subscription_filter_name" {
   description = "Log filter name for event processor lambda"
 }
@@ -73,10 +69,6 @@ variable "firehose_role" {
 # ##############
 # # LAMBDA
 # ##############
-
-variable "event_receiver_lambda_name" {
-  description = "Name of event receiver lambda"
-}
 
 variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
