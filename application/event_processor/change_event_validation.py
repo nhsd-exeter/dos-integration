@@ -55,9 +55,10 @@ def check_ods_code_length(odscode: str) -> None:
     Args:
         odscode (str): odscode of NHS UK service
     """
+    expected_length = 5
     logger.debug("Checking ODS code type and length")
-    if len(odscode) != 5:
-        logger.error(f"ODSCode '{odscode}' is not expected length {len(odscode)}")
+    if len(odscode) != expected_length:
+        logger.error(f"ODSCode '{odscode}' is length {len(odscode)}, not the expected of {expected_length}")
         raise ValidationException("ODSCode Wrong Length")
 
 
