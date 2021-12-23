@@ -1,5 +1,6 @@
 from json import loads
 from os import getenv
+from typing import Dict, Any
 
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
