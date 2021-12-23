@@ -131,31 +131,24 @@ def test_openperiod_equal_lists():
 
 def test_open_period__lt__gt__():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    a2 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(9, 0, 0), time(12, 0, 0))
+    c = OpenPeriod(time(8, 0, 1), time(12, 0, 0))
+    d = OpenPeriod(time(8, 0, 0), time(12, 0, 1))
+    e = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
+
     assert a < b
     assert b > a
-
-    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    b = OpenPeriod(time(8, 0, 1), time(12, 0, 0))
-    assert a < b
-    assert b > a
-
-    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    b = OpenPeriod(time(8, 0, 0), time(12, 0, 1))
-    assert a < b
-    assert b > a
-
-    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    b = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
-    assert a < b
-    assert b > a
-
-    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    b = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
-    assert not a < b
-    assert not a > b
-    assert not b < a
-    assert not b > a
+    assert a < c
+    assert c > a
+    assert a < d
+    assert d > a
+    assert a < e
+    assert e > a
+    assert not a < a2
+    assert not a > a2
+    assert not a2 < a
+    assert not a2 > a
 
 
 @pytest.mark.parametrize(
@@ -174,9 +167,8 @@ def test_open_period_hash(opening_period_2: OpenPeriod):
     open_period_1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
 
     assert open_period_1 == opening_period_2, f"{open_period_1} not found to be equal to {opening_period_2}"
-    assert hash(open_period_1) == hash(
-        opening_period_2
-    ), f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
+    assert hash(open_period_1) == hash(opening_period_2),\
+        f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
 @pytest.mark.parametrize(
