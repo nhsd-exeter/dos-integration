@@ -6,8 +6,8 @@ from pytest import raises
 from ..change_event_validation import (
     ValidationException,
     check_ods_code_length,
-    check_service_sub_type,
-    check_service_type,
+    check_org_type_id,
+    check_org_sub_type,
     validate_event,
 )
 
@@ -20,11 +20,11 @@ def test_validate_event(change_event):
     validate_event(change_event)
 
 
-@patch(f"{FILE_PATH}.check_service_sub_type")
-@patch(f"{FILE_PATH}.check_service_type")
+@patch(f"{FILE_PATH}.check_org_sub_type")
+@patch(f"{FILE_PATH}.check_org_type_id")
 @patch(f"{FILE_PATH}.check_ods_code_length")
 def test_validate_event_missing_key(
-    mock_check_ods_code_length, mock_check_service_type, mock_check_service_sub_type, change_event, log_capture
+    mock_check_ods_code_length, mock_check_org_type_id, mock_check_org_sub_type, change_event, log_capture
 ):
     # Arrange
     del change_event["ODSCode"]
@@ -33,34 +33,34 @@ def test_validate_event_missing_key(
         validate_event(change_event)
     # Assert
     mock_check_ods_code_length.assert_not_called()
-    mock_check_service_type.assert_not_called()
-    mock_check_service_sub_type.assert_not_called()
+    mock_check_org_type_id.assert_not_called()
+    mock_check_org_sub_type.assert_not_called()
 
 
-@pytest.mark.parametrize("service_type", ["PHA"])
-def test_check_service_type(service_type):
+@pytest.mark.parametrize("org_type", ["PHA"])
+def test_check_org_type_id(org_type):
     # Act & Assert
-    check_service_type(service_type)
+    check_org_type_id(org_type)
 
 
-@pytest.mark.parametrize("service_type", ["Not Expected Type", "Dentist", "Pharmacy Out of hours", "PH1"])
-def test_check_service_type_wrong_service_type(service_type):
-    # Act & Assert
-    with raises(ValidationException):
-        check_service_type(service_type)
-
-
-@pytest.mark.parametrize("service_sub_type", ["COMPH"])
-def test_check_service_sub_type(service_sub_type):
-    # Act & Assert
-    check_service_sub_type(service_sub_type)
-
-
-@pytest.mark.parametrize("service_sub_type", ["Pharmacy", "PH1"])
-def test_check_service_sub_type_wrong_service_sub_type(service_sub_type):
+@pytest.mark.parametrize("org_type", ["Not Expected Type", "Dentist", "Pharmacy Out of hours", "PH1"])
+def test_check_org_type_id_wrong_org_type(org_type):
     # Act & Assert
     with raises(ValidationException):
-        check_service_sub_type(service_sub_type)
+        check_org_type_id(org_type)
+
+
+@pytest.mark.parametrize("org_sub_type", ["Community"])
+def test_check_org_sub_type(org_sub_type):
+    # Act & Assert
+    check_org_sub_type(org_sub_type)
+
+
+@pytest.mark.parametrize("org_sub_type", ["Pharmacy", "PH1"])
+def test_check_org_sub_type_wrong_org_sub_type(org_sub_type):
+    # Act & Assert
+    with raises(ValidationException):
+        check_org_sub_type(org_sub_type)
 
 
 @pytest.mark.parametrize("odscode", ["FXXX1", "AAAAA", "00000"])
