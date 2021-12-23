@@ -1,5 +1,4 @@
 {
-    "SearchKey": "X9999",
     "ODSCode": "TES7",
     "OrganisationName": "Fake Pharmacy",
     "OrganisationTypeId": "PHA",
@@ -11,13 +10,24 @@
     "Address3": "Hazel Grove",
     "City": "Bath",
     "County": "Somerset",
-    "Latitude": 53.3423793029785,
-    "Longitude": -2.91734055519104,
     "Postcode": "TE5 7ER",
     "ParentOrganisation": {
         "ODSCode": "TES",
         "OrganisationName": "Fake Pharmacy Corperation"
     },
+    "Contacts": [{
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Website",
+            "ContactValue": "http://www.FakePharmacy.co.uk/"
+        },
+        {
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Telephone",
+            "ContactValue": "01234 567890"
+        }
+    ],
     "OpeningTimes": [{
             "Weekday": "Monday",
             "Times": "09:00-13:00",
@@ -152,19 +162,6 @@
             "OpeningTimeType": "Additional",
             "AdditionalOpeningDate": "Dec 27 2021",
             "IsOpen": false
-        }
-    ],
-    "Contacts": [{
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Website",
-            "ContactValue": "http://www.FakePharmacy.co.uk/"
-        },
-        {
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Telephone",
-            "ContactValue": "01234 567890"
         }
     ]
 }
