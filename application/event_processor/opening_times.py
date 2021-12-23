@@ -220,7 +220,7 @@ class StandardOpeningTimes:
     def any_contradictions(self) -> bool:
         """Returns True if any open period falls on a day that is marked as closed."""
         for weekday in self.closed_days:
-            if len(getattr(self, weekday)) > 0:
+            if self.is_open(weekday):
                 return True
         return False
 
