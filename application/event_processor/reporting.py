@@ -28,7 +28,7 @@ def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: L
                 "dos_publicname": dos_service.publicname,
                 "nhsuk_service_status": nhs_entity.org_status,
                 "nhsuk_service_type": nhs_entity.org_type,
-                "nhsuk__sector": nhs_entity.org_sub_type,
+                "nhsuk_sector": nhs_entity.org_sub_type,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_type": dos_service.typeid,
             },

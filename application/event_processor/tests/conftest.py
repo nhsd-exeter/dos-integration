@@ -9,8 +9,8 @@ from testfixtures import LogCapture
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-json_path = os.path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
-with open(json_path, "r") as file:
+std_event_path = os.path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
+with open(std_event_path, "r") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 
