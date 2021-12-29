@@ -133,12 +133,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     message = next(event.records).body
     change_event = extract_message(message)
+    logger.info(f"Attempting to validate change_event: {change_event}")
+    validate_event(change_event)
+
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
     logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
-    validate_event(change_event)
 
     event_processor = EventProcessor(nhs_entity)
     logger.info("Getting matching DoS Services")

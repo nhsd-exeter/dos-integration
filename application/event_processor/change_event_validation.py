@@ -12,6 +12,7 @@ def validate_event(event: Dict[str, Any]) -> None:
     Args:
         event (Dict[str, Any]): Lambda function invocation event
     """
+    logger.info(f"Attempting to validate event payload: {event}")
     try:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
