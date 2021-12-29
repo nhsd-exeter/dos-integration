@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 from aws_lambda_powertools import Logger
 from change_request import (
     ADDRESS_CHANGE_KEY,
@@ -13,6 +14,8 @@ from change_request import (
 from dos import DoSService, get_valid_dos_postcode
 from nhs import NHSEntity
 from opening_times import spec_open_times_cr_format, spec_open_times_equal
+from reporting import log_invalid_nhsuk_pharmacy_postcode
+
 
 logger = Logger(child=True)
 
@@ -112,6 +115,6 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
 
         valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
         if valid_dos_postcode is None:
-            logger.warning(f"NHS postcode '{nhs_postcode}' is not a valid DoS postcode!")
+            log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
         else:
             changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode

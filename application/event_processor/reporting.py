@@ -5,6 +5,7 @@ from nhs import NHSEntity
 
 HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"
 UN_MATCHED_PHARMACY_REPORT_ID = "UN_MATCHED_PHARMACY"
+INVALID_POSTCODE_REPORT_ID = "INVALID_POSTCODE"
 
 logger = Logger(child=True)
 
@@ -55,5 +56,31 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
             "nhsuk_address4": nhs_entity.Address4 if hasattr(nhs_entity, "Address4") else "",
             "nhsuk_address5": nhs_entity.Address5 if hasattr(nhs_entity, "Address5") else "",
             "nhsuk_postcode": nhs_entity.Postcode,
+        },
+    )
+
+
+def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSService) -> None:
+    """Log invalid NHS pharmacy postcode
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        dos_service (List[DoSService]): The list of DoS matching services
+    """
+
+    logger.warning(
+        f"NHS postcode '{nhs_entity.Postcode}' is not a valid DoS postcode!"
+        f"criteria for ODSCode '{nhs_entity.ODSCode}'",
+        extra={
+            "report_key": INVALID_POSTCODE_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.ODSCode,
+            "nhsuk_organisation_name": nhs_entity.OrganisationName,
+            "nhsuk_address1": nhs_entity.Address1 if hasattr(nhs_entity, "Address1") else "",
+            "nhsuk_address2": nhs_entity.Address2 if hasattr(nhs_entity, "Address2") else "",
+            "nhsuk_address3": nhs_entity.Address3 if hasattr(nhs_entity, "Address3") else "",
+            "nhsuk_city": nhs_entity.City if hasattr(nhs_entity, "City") else "",
+            "nhsuk_county": nhs_entity.County if hasattr(nhs_entity, "County") else "",
+            "nhsuk_postcode": nhs_entity.Postcode,
+            "validation_error_reason": "Postcode not valid/found on DoS",
+            "dos_services": dos_service.uid,
         },
     )
