@@ -1,5 +1,7 @@
 from typing import List
+
 from aws_lambda_powertools.logging.logger import Logger
+
 from dos import DoSService, VALID_STATUS_ID
 from nhs import NHSEntity
 

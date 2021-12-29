@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from datetime import date, time
 from typing import Any, Dict, List, Union
 
-import change_request
 from aws_lambda_powertools import Logger
+
+import change_request
 
 logger = Logger(child=True)
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")

@@ -1,7 +1,11 @@
 from typing import Dict
 
-
 from aws_lambda_powertools import Logger
+
+from dos import DoSService, get_valid_dos_postcode
+from nhs import NHSEntity
+from opening_times import SpecifiedOpeningTime
+from reporting import log_invalid_nhsuk_pharmacy_postcode
 from change_request import (
     ADDRESS_CHANGE_KEY,
     OPENING_DATES_KEY,
@@ -11,15 +15,6 @@ from change_request import (
     PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
-from dos import DoSService, get_valid_dos_postcode
-from nhs import NHSEntity
-<<<<<<< HEAD
-from opening_times import spec_open_times_cr_format, spec_open_times_equal
-from reporting import log_invalid_nhsuk_pharmacy_postcode
-
-=======
-from opening_times import SpecifiedOpeningTime
->>>>>>> Some more changes
 
 logger = Logger(child=True)
 
@@ -77,8 +72,7 @@ def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_e
 
 
 def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
-    """Adds the standard opening times and specified opening times to the change request if not equal and
-    nhsuk times are valid.
+    """Adds the standard opening times and specified opening times to the change request if not equal
 
     Args:
         changes (dict): Change Request changes
@@ -89,23 +83,15 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     dos_spec_open_dates = dos_service.get_specified_opening_times()
     nhs_spec_open_dates = nhs_entity.specified_opening_times
     if not SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates):
-        logger.debug(f"Specified opening times not equal. dos={dos_spec_open_dates} nhs={nhs_spec_open_dates}")
-
-        if SpecifiedOpeningTime.valid_list(nhs_spec_open_dates):
-            changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
-        else:
-            logger.warn(f"Specified openings for NHS are not valid. No change added: {nhs_spec_open_dates}")
+        logger.debug(f"Specified opening times not equal. dos={dos_spec_open_dates} and nhs={nhs_spec_open_dates}")
+        changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
 
     # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
     dos_std_open_dates = dos_service.get_standard_opening_times()
     nhs_std_open_dates = nhs_entity.standard_opening_times
     if dos_std_open_dates != nhs_std_open_dates:
-        logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} nhs={nhs_std_open_dates}")
-
-        if nhs_std_open_dates.is_valid():
-            changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
-        else:
-            logger.warn(f"Standard openings for NHS are not valid. No change added: {nhs_std_open_dates}")
+        logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} and nhs={nhs_std_open_dates}")
+        changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
 
 
 def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
