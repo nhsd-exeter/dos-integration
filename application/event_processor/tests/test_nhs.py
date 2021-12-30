@@ -2,7 +2,7 @@ import pytest
 from datetime import time, date
 
 from .conftest import PHARMACY_STANDARD_EVENT
-from ..nhs import NHSEntity
+from ..nhs import NHSEntity, is_std_opening_json, is_spec_opening_json
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 test_attr_names = ("odscode", "website", "PublicPhone", "Phone", "Postcode")
@@ -154,3 +154,323 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
     result = nhs_entity.is_status_hidden_or_closed()
     # Assert
     assert result
+
+
+@pytest.mark.parametrize("open_time_json, expected", [
+    ({}, False),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Tuesday",
+            "Times": "01:00-23:59",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "blursday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "08:00-24:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "Apr 23 2012",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Wednesday",
+            "Times": "09:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Wednesday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Wednesday",
+            "Times": "",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Wednesday",
+            "Times": "",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": None,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Nov 23 2023",
+            "IsOpen": True
+        },
+        False
+    ),
+])
+def test_is_std_opening_json(open_time_json, expected):
+    actual = is_std_opening_json(open_time_json)
+    assert actual == expected, f"Std time should be valid={expected} but wasn't. open_time={open_time_json}"
+
+
+@pytest.mark.parametrize("open_time_json, expected", [
+    ({}, False),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 23 2021",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 14 2021",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 32 2021",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-25:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 14 2021",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 14 2021",
+            "IsOpen": True
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "Apr 14 2021",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "Apr 14 2021",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Jan 1 2021",
+            "IsOpen": False
+        },
+        True
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "12:00-13:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Jan 1 2021",
+            "IsOpen": False
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Jan 1 2021",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "Sunday",
+            "Times": "10:00-17:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Apr 23 20211",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "OpeningTimeType": "Additional",
+            "IsOpen": True
+        },
+        False
+    ),
+    (
+        {
+            "Weekday": "",
+            "Times": "10:00-17:00",
+            "AdditionalOpeningDate": "Jan 30 2033",
+            "IsOpen": True
+        },
+        False
+    ),
+])
+def test_is_spec_opening_json(open_time_json, expected):
+    actual = is_spec_opening_json(open_time_json)
+    assert actual == expected, f"Spec time should be valid={expected} but wasn't. open_time={open_time_json}"

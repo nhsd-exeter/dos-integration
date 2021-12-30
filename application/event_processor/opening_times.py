@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from datetime import date, time
+from datetime import date, time, datetime
 from typing import Any, Dict, List, Union
+import re
 
 from aws_lambda_powertools import Logger
 
@@ -87,6 +88,33 @@ class OpenPeriod:
     def equal_lists(a: List['OpenPeriod'], b: List['OpenPeriod']) -> bool:
         """Checks equality between 2 lists of open periodsRelies on sorting and eq functions in OpenPeriod"""
         return sorted(a) == sorted(b)
+
+    @staticmethod
+    def from_string(open_period_string: str) -> Union['OpenPeriod', None]:
+        """Builds an OpenPeriod object from a string that's in 1 of 2 formats."""
+
+        if not isinstance(open_period_string, str):
+            return None
+
+        # regex looks for HH:MM-HH:MM time format
+        if re.match(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]\-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$",
+                    open_period_string):
+
+            start, end = [
+                datetime.strptime(time_str, "%H:%M").time()
+                for time_str in open_period_string.split("-")]
+            return OpenPeriod(start, end)
+
+        # regex looks for HH:MM:SS-HH:MM:SS time format
+        if re.match(r"^(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)\-(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)$",
+                    open_period_string):
+
+            start, end = [
+                datetime.strptime(time_str, "%H:%M:%S").time()
+                for time_str in open_period_string.split("-")]
+            return OpenPeriod(start, end)
+
+        return None
 
 
 @dataclass(unsafe_hash=True)

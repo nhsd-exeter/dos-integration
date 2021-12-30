@@ -80,27 +80,27 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
         dos_service (DoSService): DoS Service for comparision
         nhs_entity (NHSEntity): NHS UK Entity for comparision
     """
+
+    # If anything in OpeningTimes list field doesn't appear right, no open times changes are created.
+    if not nhs_entity.all_times_valid():
+        logger.warn(
+            "Opening Times for NHS are not in expected format or are logically invalid. No open times changes added.",
+            f"OpenTimes={nhs_entity.entity_data.get('OpeningTimes')}")
+        return
+
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.get_specified_opening_times()
     nhs_spec_open_dates = nhs_entity.specified_opening_times
     if not SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates):
         logger.debug(f"Specified opening times not equal. dos={dos_spec_open_dates} nhs={nhs_spec_open_dates}")
-
-        if SpecifiedOpeningTime.valid_list(nhs_spec_open_dates):
-            changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
-        else:
-            logger.warn(f"Specified openings for NHS are not valid. No change added: {nhs_spec_open_dates}")
+        changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
 
     # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
     dos_std_open_dates = dos_service.get_standard_opening_times()
     nhs_std_open_dates = nhs_entity.standard_opening_times
     if dos_std_open_dates != nhs_std_open_dates:
         logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} nhs={nhs_std_open_dates}")
-
-        if nhs_std_open_dates.is_valid():
-            changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
-        else:
-            logger.warn(f"Standard openings for NHS are not valid. No change added: {nhs_std_open_dates}")
+        changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
 
 
 def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:

@@ -83,19 +83,12 @@ class NHSEntity:
             StandardOpeningTimes: NHS UK standard opening times
         """
         std_opening_times = StandardOpeningTimes()
-        for open_time in self.entity_data.get("OpeningTimes", []):
+        for open_time in filter(is_std_opening_json, self.entity_data.get("OpeningTimes", [])):
             weekday = open_time["Weekday"].lower()
-
-            # Skip times which are not Standard (General) Opening times
-            if not (weekday in WEEKDAYS and
-                    open_time["AdditionalOpeningDate"] in ["", None] and
-                    open_time["OpeningTimeType"] == "General"):
-                continue
 
             # Populate StandardOpeningTimes obj depending on IsOpen status
             if open_time["IsOpen"]:
-                start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in open_time["Times"].split("-")]
-                open_period = OpenPeriod(start, end)
+                open_period = OpenPeriod.from_string(open_time["Times"])
                 std_opening_times.add_open_period(open_period, weekday)
             else:
                 std_opening_times.closed_days.add(weekday)
@@ -111,12 +104,7 @@ class NHSEntity:
         Returns:
             dict: key=date and value = List[OpenPeriod] objects in a sort order
         """
-
-        # Filter
-        def specified_opening_times_filter(specified):
-            return specified["OpeningTimeType"] == "Additional" and specified["AdditionalOpeningDate"] != ""
-
-        specified_times_list = list(filter(specified_opening_times_filter, self.entity_data.get("OpeningTimes", [])))
+        specified_times_list = list(filter(is_spec_opening_json, self.entity_data.get("OpeningTimes", [])))
 
         # Sort the openingtimes data
         sort_specified = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item["Times"]))
@@ -151,3 +139,62 @@ class NHSEntity:
             bool: True if status is hidden or closed, False otherwise
         """
         return self.org_status.upper() in self.CLOSED_AND_HIDDEN_STATUSES
+
+    def all_times_valid(self) -> bool:
+        """Does checks on all opening times for correct format, business rules, overlaps"""
+
+        # Check format matches either spec or std format
+        for item in self.entity_data.get("OpeningTimes", []):
+            if not (is_std_opening_json(item) or is_spec_opening_json(item)):
+                return False
+
+        # Check validity of both types of open times
+        return (
+            self.standard_opening_times.is_valid() and
+            SpecifiedOpeningTime.valid_list(self.specified_opening_times))
+
+
+def is_std_opening_json(item: dict) -> bool:
+    """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
+
+    # Check values
+    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or
+            str(item.get("Weekday")).lower() not in WEEKDAYS or
+            item.get("AdditionalOpeningDate") not in [None, ""]):
+
+        return False
+
+    # Check is_open value corresponds to time period being present
+    is_open = item.get("IsOpen")
+    if not isinstance(is_open, bool):
+        return False
+
+    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
+            (not is_open and item.get("Times") not in [None, ""])):
+        return False
+
+    return True
+
+
+def is_spec_opening_json(item: dict) -> bool:
+    """Checks EXACT match to definition of Additional/Spec opening time for NHS Open time payload object"""
+
+    # Check values
+    if str(item.get("OpeningTimeType")).upper() != "ADDITIONAL":
+        return False
+
+    try:
+        datetime.strptime(str(item.get("AdditionalOpeningDate")), "%b  %d  %Y")
+    except ValueError:
+        return False
+
+    # Check is_open value corresponds to time period being present
+    is_open = item.get("IsOpen")
+    if not isinstance(is_open, bool):
+        return False
+
+    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
+            (not is_open and item.get("Times") not in [None, ""])):
+        return False
+
+    return True

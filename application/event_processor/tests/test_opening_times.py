@@ -171,6 +171,36 @@ def test_open_period_hash(opening_period_2: OpenPeriod):
         f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
+def test_openperiod_from_string():
+    a = OpenPeriod.from_string("08:34-15:13")
+    assert a.start == time(8, 34, 0)
+    assert a.end == time(15, 13, 0)
+
+    b = OpenPeriod.from_string("04:45:55-09:32:22")
+    assert b.start == time(4, 45, 55)
+    assert b.end == time(9, 32, 22)
+
+    c = OpenPeriod.from_string("00:00:00-09:32:22")
+    assert c.start == time(0, 0, 0)
+    assert c.end == time(9, 32, 22)
+
+    d = OpenPeriod.from_string("00:00-23:59")
+    assert d.start == time(0, 0, 0)
+    assert d.end == time(23, 59, 00)
+
+    assert OpenPeriod.from_string("") is None
+    assert OpenPeriod.from_string("hello") is None
+    assert OpenPeriod.from_string("12:0015:32") is None
+    assert OpenPeriod.from_string("12:00 15:32") is None
+    assert OpenPeriod.from_string("12:00") is None
+    assert OpenPeriod.from_string("08:00-24:00") is None
+    assert OpenPeriod.from_string("38:00-12:00") is None
+    assert OpenPeriod.from_string("08:00-44:00") is None
+    assert OpenPeriod.from_string(231892) is None
+    assert OpenPeriod.from_string(None) is None
+    assert OpenPeriod.from_string(2.38) is None
+
+
 @pytest.mark.parametrize(
     "open_periods, date, other_open_periods,other_date, expected",
     [
