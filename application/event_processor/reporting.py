@@ -71,18 +71,18 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
     """
 
     logger.warning(
-        f"NHS postcode '{nhs_entity.Postcode}' is not a valid DoS postcode!"
-        f"criteria for ODSCode '{nhs_entity.ODSCode}'",
+        f"NHS postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
+        f"criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.ODSCode,
-            "nhsuk_organisation_name": nhs_entity.OrganisationName,
-            "nhsuk_address1": nhs_entity.Address1 if hasattr(nhs_entity, "Address1") else "",
-            "nhsuk_address2": nhs_entity.Address2 if hasattr(nhs_entity, "Address2") else "",
-            "nhsuk_address3": nhs_entity.Address3 if hasattr(nhs_entity, "Address3") else "",
-            "nhsuk_city": nhs_entity.City if hasattr(nhs_entity, "City") else "",
-            "nhsuk_county": nhs_entity.County if hasattr(nhs_entity, "County") else "",
-            "nhsuk_postcode": nhs_entity.Postcode,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_address1": nhs_entity.entity_data.get("Address1", ""),
+            "nhsuk_address2": nhs_entity.entity_data.get("Address2", ""),
+            "nhsuk_address3": nhs_entity.entity_data.get("Address3", ""),
+            "nhsuk_city": nhs_entity.entity_data.get("City", ""),
+            "nhsuk_county": nhs_entity.entity_data.get("County", ""),
+            "nhsuk_postcode": nhs_entity.postcode,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_services": dos_service.uid,
         },

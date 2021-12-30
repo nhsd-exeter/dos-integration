@@ -87,19 +87,19 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
 @patch.object(Logger, "warning")
 def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
     # Arrange
-    nhs_entity = NHSEntity({})
-    nhs_entity.ODSCode = "SLC4X"
-    nhs_entity.OrganisationName = "OrganisationName"
-    nhs_entity.ServiceType = "PHA"
-    nhs_entity.OrganisationStatus = "OrganisationStatus"
-    nhs_entity.OrganisationSubType = "OrganisationSubType"
-    nhs_entity.Address1 = "address1"
-    nhs_entity.Address2 = "address2"
-    nhs_entity.Address3 = "address3"
-    nhs_entity.Address4 = "address4"
-    nhs_entity.City = "city"
-    nhs_entity.County = "county"
-    nhs_entity.Postcode = "MK2 XXX"
+    nhs_entity = NHSEntity({
+        "Address1": "address1",
+        "Address2": "address2",
+        "Address3": "address3",
+        "City": "city",
+        "County": "county"
+    })
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    nhs_entity.org_type_id = "PHA"
+    nhs_entity.org_status = "OrganisationStatus"
+    nhs_entity.org_sub_type = "OrganisationSubType"
+    nhs_entity.postcode = "MK2 XXX"
 
     dos_service = dummy_dos_service()
     # Act
@@ -109,18 +109,18 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
         INVALID_POSTCODE_REPORT_ID == "INVALID_POSTCODE"
     ), f"Log ID should be INVALID_POSTCODE but was {INVALID_POSTCODE_REPORT_ID}"
     mock_logger.assert_called_with(
-        f"NHS postcode '{nhs_entity.Postcode}' is not a valid DoS postcode!"
-        f"criteria for ODSCode '{nhs_entity.ODSCode}'",
+        f"NHS postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
+        f"criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.ODSCode,
-            "nhsuk_organisation_name": nhs_entity.OrganisationName,
-            "nhsuk_address1": nhs_entity.Address1,
-            "nhsuk_address2": nhs_entity.Address2,
-            "nhsuk_address3": nhs_entity.Address3,
-            "nhsuk_city": nhs_entity.City,
-            "nhsuk_postcode": nhs_entity.Postcode,
-            "nhsuk_county": nhs_entity.County,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_address1": nhs_entity.address_lines[0],
+            "nhsuk_address2": nhs_entity.address_lines[1],
+            "nhsuk_address3": nhs_entity.address_lines[2],
+            "nhsuk_city": nhs_entity.city,
+            "nhsuk_postcode": nhs_entity.postcode,
+            "nhsuk_county": nhs_entity.county,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_services": dos_service.uid,
         },
