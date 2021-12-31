@@ -1,6 +1,7 @@
-from datetime import date, datetime
+from datetime import datetime
 from itertools import groupby
-from typing import Dict, List
+from typing import Dict, List, Union
+from dataclasses import dataclass
 
 from aws_lambda_powertools import Logger
 
@@ -9,55 +10,69 @@ from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOp
 logger = Logger(child=True)
 
 
+@dataclass
 class NHSEntity:
     """This is an object to store an NHS Entity data
 
-    When passed in a payload (dict) with the NHS data, it will
-    pass those fields in to the object as attributes.
-
-    This object may be added to with methods to make the
-    comparions with services easier in future tickets.
-
+    Some fields are pulled straight from the payload while others are processed first. So attribute
+    names differ from paylod format for consistency within object.
     """
+    entity_data: dict
+    odscode: str
+    org_name: str
+    org_type_id: str
+    org_type: str
+    org_sub_type: str
+    org_status: str
+    address_lines: List[str]
+    postcode: str
+    website: str
+    phone: str
+    standard_opening_times: Union[StandardOpeningTimes, None]
+    specified_opening_times: Union[List[SpecifiedOpeningTime], None]
 
-    CLOSED_AND_HIDDEN_STATUSES = ["Hidden", "Closed"]
+    CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
 
-    def __init__(self, entity_data: dict) -> None:
-        # Set attributes for each value in dict
-        self.data = entity_data
-        for key, value in entity_data.items():
-            setattr(self, key, value)
+    def __init__(self, entity_data: dict):
+        self.entity_data = entity_data
 
-        self._standard_opening_times = None
-        self._specified_opening_times = None
+        self.odscode = entity_data.get("ODSCode")
+        self.org_name = entity_data.get("OrganisationName")
+        self.org_type_id = entity_data.get("OrganisationTypeId")
+        self.org_type = entity_data.get("OrganisationType")
+        self.org_sub_type = entity_data.get("OrganisationSubType")
+        self.org_status = entity_data.get("OrganisationStatus")
+        self.odscode = entity_data.get("ODSCode")
+        self.postcode = entity_data.get("Postcode")
+        self.parent_org_name = entity_data.get("ParentOrganisation", {}).get("OrganisationName")
+        self.city = entity_data.get("City")
+        self.county = entity_data.get("County")
+        self.address_lines = [
+            line for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
+            if isinstance(line, str) and line.strip() != ""]
+
+        self.standard_opening_times = self._get_standard_opening_times()
+        self.specified_opening_times = self._get_specified_opening_times()
+        self.phone = self.extract_contact("Telephone")
+        self.website = self.extract_contact("Website")
 
     def __repr__(self) -> str:
-        return f"<NHSEntity: name={self.OrganisationName} odscode={self.ODSCode}>:"
+        return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
 
     def normal_postcode(self):
-        return self.Postcode.replace(" ", "").upper()
+        return self.postcode.replace(" ", "").upper()
 
-    def get_standard_opening_times(self) -> StandardOpeningTimes:
-        """[summary]
+    def extract_contact(self, contact_type: str) -> Union[str, None]:
+        """Returns the nested contact value within the input payload"""
+        for item in self.entity_data.get("Contacts", []):
+            if (item.get("ContactMethodType", "").upper() == contact_type.upper() and
+                    item.get("ContactType", "").upper() == "PRIMARY" and
+                    item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
 
-        Returns:
-            StandardOpeningTimes: [description]
-        """
-        if self._standard_opening_times is None:
-            self._standard_opening_times = self._get_standard_opening_times("General")
-        return self._standard_opening_times
+                return item.get("ContactValue")
+        return None
 
-    def get_specified_opening_times(self) -> List[SpecifiedOpeningTime]:
-        """[summary]
-
-        Returns:
-            List[SpecifiedOpeningTime]: [description]
-        """
-        if self._specified_opening_times is None:
-            self._specified_opening_times = self._get_specified_opening_times("General")
-        return self._specified_opening_times
-
-    def _get_standard_opening_times(self, opening_time_type: str) -> StandardOpeningTimes:
+    def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening
         times and returns it in a StandardOpeningTimes object.
 
@@ -68,24 +83,19 @@ class NHSEntity:
             StandardOpeningTimes: NHS UK standard opening times
         """
         std_opening_times = StandardOpeningTimes()
-        for open_time in self.OpeningTimes:
-            # Skips unwanted open times
-            if not (
-                open_time["Weekday"].lower() in WEEKDAYS
-                and open_time["AdditionalOpeningDate"] == ""
-                and open_time["OpeningTimeType"] == opening_time_type
-                and open_time["IsOpen"]
-            ):
-                continue
-
+        for open_time in filter(is_std_opening_json, self.entity_data.get("OpeningTimes", [])):
             weekday = open_time["Weekday"].lower()
-            start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in open_time["Times"].split("-")]
-            open_period = OpenPeriod(start, end)
-            std_opening_times.add_open_period(open_period, weekday)
+
+            # Populate StandardOpeningTimes obj depending on IsOpen status
+            if open_time["IsOpen"]:
+                open_period = OpenPeriod.from_string(open_time["Times"])
+                std_opening_times.add_open_period(open_period, weekday)
+            else:
+                std_opening_times.closed_days.add(weekday)
 
         return std_opening_times
 
-    def _get_specified_opening_times(self, opening_time_type: str) -> List[SpecifiedOpeningTime]:
+    def _get_specified_opening_times(self) -> List[SpecifiedOpeningTime]:
         """Get all the Specified Opening Times
 
         Args:
@@ -94,30 +104,30 @@ class NHSEntity:
         Returns:
             dict: key=date and value = List[OpenPeriod] objects in a sort order
         """
-
-        # Filter
-        def specified_opening_times_filter(specified):
-            return specified["OpeningTimeType"] == opening_time_type and specified["AdditionalOpeningDate"] != ""
-
-        specified_times_list = list(filter(specified_opening_times_filter, self.OpeningTimes))
+        specified_times_list = list(filter(is_spec_opening_json, self.entity_data.get("OpeningTimes", [])))
 
         # Sort the openingtimes data
         sort_specified = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item["Times"]))
-        specified_opening_time_dict: Dict[datetime, List[OpenPeriod]] = {}
+        specified_opening_time_dict: Dict[str, List[OpenPeriod]] = {}
+        specified_closed_days = set()
 
         # Grouping data by date
-        key: date
-
-        for key, value in groupby(sort_specified, lambda item: (item["AdditionalOpeningDate"])):
+        for date_str, values in groupby(sort_specified, lambda item: (item["AdditionalOpeningDate"])):
             op_list: List[OpenPeriod] = []
-            for item in list(value):
-                start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in item["Times"].split("-")]
-                op_list.append(OpenPeriod(start, end))
-                specified_opening_time_dict[key] = op_list
+            for item in list(values):
+                if item["IsOpen"]:
+                    start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in item["Times"].split("-")]
+                    op_list.append(OpenPeriod(start, end))
+                    specified_opening_time_dict[date_str] = op_list
+                else:
+                    specified_closed_days.add(date_str)
 
         specified_opening_times = [
-            SpecifiedOpeningTime(value, datetime.strptime(key, "%b  %d  %Y").date())
-            for key, value in specified_opening_time_dict.items()
+            SpecifiedOpeningTime(
+                open_periods=open_periods,
+                specified_date=datetime.strptime(date_str, "%b  %d  %Y").date(),
+                is_open=(date_str not in specified_closed_days))
+            for date_str, open_periods in specified_opening_time_dict.items()
         ]
 
         return specified_opening_times
@@ -128,4 +138,63 @@ class NHSEntity:
         Returns:
             bool: True if status is hidden or closed, False otherwise
         """
-        return self.OrganisationStatus in self.CLOSED_AND_HIDDEN_STATUSES
+        return self.org_status.upper() in self.CLOSED_AND_HIDDEN_STATUSES
+
+    def all_times_valid(self) -> bool:
+        """Does checks on all opening times for correct format, business rules, overlaps"""
+
+        # Check format matches either spec or std format
+        for item in self.entity_data.get("OpeningTimes", []):
+            if not (is_std_opening_json(item) or is_spec_opening_json(item)):
+                return False
+
+        # Check validity of both types of open times
+        return (
+            self.standard_opening_times.is_valid() and
+            SpecifiedOpeningTime.valid_list(self.specified_opening_times))
+
+
+def is_std_opening_json(item: dict) -> bool:
+    """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
+
+    # Check values
+    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or
+            str(item.get("Weekday")).lower() not in WEEKDAYS or
+            item.get("AdditionalOpeningDate") not in [None, ""]):
+
+        return False
+
+    # Check is_open value corresponds to time period being present
+    is_open = item.get("IsOpen")
+    if not isinstance(is_open, bool):
+        return False
+
+    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
+            (not is_open and item.get("Times") not in [None, ""])):
+        return False
+
+    return True
+
+
+def is_spec_opening_json(item: dict) -> bool:
+    """Checks EXACT match to definition of Additional/Spec opening time for NHS Open time payload object"""
+
+    # Check values
+    if str(item.get("OpeningTimeType")).upper() != "ADDITIONAL":
+        return False
+
+    try:
+        datetime.strptime(str(item.get("AdditionalOpeningDate")), "%b  %d  %Y")
+    except ValueError:
+        return False
+
+    # Check is_open value corresponds to time period being present
+    is_open = item.get("IsOpen")
+    if not isinstance(is_open, bool):
+        return False
+
+    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
+            (not is_open and item.get("Times") not in [None, ""])):
+        return False
+
+    return True

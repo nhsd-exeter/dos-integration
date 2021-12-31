@@ -1,0 +1,167 @@
+{
+    "ODSCode": "TES73",
+    "OrganisationName": "Fake Pharmacy",
+    "OrganisationTypeId": "PHA",
+    "OrganisationType": "Pharmacy",
+    "OrganisationSubType": "Community",
+    "OrganisationStatus": "Visible",
+    "Address1": "Flat 619",
+    "Address2": "62 Fake Street",
+    "Address3": "Hazel Grove",
+    "City": "Bath",
+    "County": "Somerset",
+    "Postcode": "TE5 7ER",
+    "ParentOrganisation": {
+        "ODSCode": "TES",
+        "OrganisationName": "Fake Pharmacy Corperation"
+    },
+    "Contacts": [{
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Website",
+            "ContactValue": "http://www.FakePharmacy.co.uk/"
+        },
+        {
+            "ContactType": "Primary",
+            "ContactAvailabilityType": "Office hours",
+            "ContactMethodType": "Telephone",
+            "ContactValue": "01234 567890"
+        }
+    ],
+    "OpeningTimes": [{
+            "Weekday": "Monday",
+            "Times": "09:00-13:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Monday",
+            "Times": "14:00-17:30",
+            "OffsetOpeningTime": 840,
+            "OffsetClosingTime": 1050,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Tuesday",
+            "Times": "09:00-13:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Tuesday",
+            "Times": "14:00-17:30",
+            "OffsetOpeningTime": 840,
+            "OffsetClosingTime": 1050,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Wednesday",
+            "Times": "09:00-13:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Wednesday",
+            "Times": "14:00-17:30",
+            "OffsetOpeningTime": 840,
+            "OffsetClosingTime": 1050,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Thursday",
+            "Times": "09:00-13:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Thursday",
+            "Times": "14:00-17:30",
+            "OffsetOpeningTime": 840,
+            "OffsetClosingTime": 1050,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Friday",
+            "Times": "09:00-13:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 780,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Friday",
+            "Times": "14:00-17:30",
+            "OffsetOpeningTime": 840,
+            "OffsetClosingTime": 1050,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "Saturday",
+            "Times": "09:00-12:00",
+            "OffsetOpeningTime": 540,
+            "OffsetClosingTime": 720,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": true
+        },
+        {
+            "Weekday": "",
+            "Times": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Dec 24 2021",
+            "IsOpen": false
+        },
+        {
+            "Weekday": "",
+            "Times": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Dec 25 2021",
+            "IsOpen": false
+        },
+        {
+            "Weekday": "",
+            "Times": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Dec 26 2021",
+            "IsOpen": false
+        },
+        {
+            "Weekday": "",
+            "Times": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": "Dec 27 2021",
+            "IsOpen": false
+        }
+    ]
+}

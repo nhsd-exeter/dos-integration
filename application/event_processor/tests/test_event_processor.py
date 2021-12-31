@@ -82,23 +82,25 @@ def test_get_change_requests_full_change_request():
     service_1.postcode = "S45 1AB"
 
     nhs_entity = NHSEntity({})
-    nhs_entity.ODSCode = "SLC45"
-    nhs_entity.Website = "www.site.com"
-    nhs_entity.Phone = "01462622435"
-    nhs_entity.Postcode = "S45 1AA"
-    nhs_entity.OrganisationName = "Fake NHS Service"
-    nhs_entity.Address1 = "Fake Street1"
-    nhs_entity.Address2 = "Fake Street2"
-    nhs_entity.Address3 = "Fake Street3"
-    nhs_entity.City = "Fake City"
-    nhs_entity.County = "Fake County"
+    nhs_entity.odscode = "SLC45"
+    nhs_entity.website = "www.site.com"
+    nhs_entity.phone = "01462622435"
+    nhs_entity.postcode = "S45 1AA"
+    nhs_entity.org_name = "Fake NHS Service"
+    nhs_entity.address_lines = [
+        "Fake Street1",
+        "Fake Street2",
+        "Fake Street3",
+        "Fake City",
+        "Fake County"
+    ]
     nhs_entity.OpeningTimes = []
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.matching_services = [service_1]
 
     dos_location = dummy_dos_location()
-    dos_location.postcode = nhs_entity.Postcode
+    dos_location.postcode = nhs_entity.postcode
     dos_location_cache[dos_location.normal_postcode()] = [dos_location]
 
     # Act
@@ -114,18 +116,13 @@ def test_get_change_requests_full_change_request():
 
     assert cr.system == "DoS Integration", f"System should be DoS Integration but is {cr.system}"
 
-    assert cr.changes == {
-        WEBSITE_CHANGE_KEY: nhs_entity.Website,
-        POSTCODE_CHANGE_KEY: nhs_entity.Postcode,
-        PUBLICNAME_CHANGE_KEY: nhs_entity.OrganisationName,
-        ADDRESS_CHANGE_KEY: [
-            nhs_entity.Address1,
-            nhs_entity.Address2,
-            nhs_entity.Address3,
-            nhs_entity.City,
-            nhs_entity.County,
-        ],
-    }, "Change Request Changes not as expected"
+    expected_changes = {
+        WEBSITE_CHANGE_KEY: nhs_entity.website,
+        POSTCODE_CHANGE_KEY: nhs_entity.postcode,
+        PUBLICNAME_CHANGE_KEY: nhs_entity.org_name,
+        ADDRESS_CHANGE_KEY: nhs_entity.address_lines
+    }
+    assert cr.changes == expected_changes, f"Changes should be {expected_changes} but they are {cr.changes}"
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
@@ -159,17 +156,18 @@ def test_send_changes(mock_invoke_lambda_function):
     }
 
     nhs_entity = NHSEntity({})
-    nhs_entity.ODSCode = "SLC45"
-    nhs_entity.Website = "www.site.com"
-    nhs_entity.Phone = "01462622435"
-    nhs_entity.Postcode = "S45 1AA"
-    nhs_entity.OrganisationName = "Fake NHS Service"
-    nhs_entity.Address1 = "Fake Street1"
-    nhs_entity.Address2 = "Fake Street2"
-    nhs_entity.Address3 = "Fake Street3"
-    nhs_entity.City = "Fake City"
-    nhs_entity.County = "Fake County"
-    nhs_entity.OpeningTimes = []
+    nhs_entity.odscode = "SLC45"
+    nhs_entity.website = "www.site.com"
+    nhs_entity.phone = "01462622435"
+    nhs_entity.postcode = "S45 1AA"
+    nhs_entity.org_name = "Fake NHS Service"
+    nhs_entity.address_lines = [
+        "Fake Street1",
+        "Fake Street2",
+        "Fake Street3",
+        "Fake City",
+        "Fake County"
+    ]
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
