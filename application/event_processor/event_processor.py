@@ -16,6 +16,8 @@ from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_d
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
+from time import time
+
 logger = Logger()
 tracer = Tracer()
 lambda_client = client("lambda", region_name=environ["AWS_REGION"])
@@ -132,10 +134,22 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         if counter > 1:
             raise Exception("More than one record found in event")
 
-    message = next(event.records).body
+    record = next(event.records)
+    message = record.body
     change_event = extract_message(message)
-    logger.info(f"Attempting to validate change_event: {change_event}")
-    validate_event(change_event)
+    # PUSH message to dynamodb here but store the message and use the event for details
+    dynamodb = client('dynamodb')
+    ttl = int((365*5)*24*60*60)
+    dynamodb.put_item(
+        TableName = environ["CHANGE_EVENTS_TABLE_NAME"],
+        Item = {
+            'request_id':  {"S": change_event["SequenceId"] },
+            'ods_code': {"S": change_event["ODSCode"] },
+            'message': {"S": message },
+            'event_received_time': {"N": str(record.attributes["SentTimestamp"]) },
+            'event_expiry_epoch': {"N": str(ttl + int(time())) }
+        }
+    )
 
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)

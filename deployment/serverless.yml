@@ -86,3 +86,4 @@ functions:
       DB_PASSWORD: ${env:DB_PASSWORD}
       EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       MOCK_MODE: ${env:MOCK_MODE}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}

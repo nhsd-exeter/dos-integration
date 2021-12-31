@@ -53,7 +53,14 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords",
         "lambda:InvokeFunction",
-        "sqs:*"
+        "sqs:*",
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
       ],
       "Resource": ["*"]
     }
