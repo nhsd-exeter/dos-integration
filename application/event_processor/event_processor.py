@@ -134,10 +134,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     record = next(event.records)
     message = record.body
     change_event = extract_message(message)
-    sequence_id = change_event["SequenceId"]
-    odscode = change_event["ODSCode"]
     sqs_timestamp = str(record.attributes["SentTimestamp"])
-    add_change_request_to_dynamodb(sequence_id, odscode, message, sqs_timestamp)
+    add_change_request_to_dynamodb(change_event, sqs_timestamp)
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)

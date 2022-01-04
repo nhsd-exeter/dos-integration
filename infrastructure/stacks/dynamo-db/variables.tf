@@ -59,7 +59,3 @@ variable "environment" {
 variable "change_events_table_name" {
   description = "Name of the table that stores received pharmacy change events"
 }
-
-variable "ods_sequence_pointer" {
-  description = "Name of the table that stores ods codes in change event sequence order"
-}

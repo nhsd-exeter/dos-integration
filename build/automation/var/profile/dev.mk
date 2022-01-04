@@ -43,7 +43,6 @@ TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
-TF_VAR_ods_sequence_pointer := $(PROJECT_ID)-$(ENVIRONMENT)-ods-sequence-pointer
 
 # IAM Roles
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
