@@ -1,6 +1,9 @@
 from pytest import fixture
 from os import environ
-from dynamodb import add_change_request_to_dynamodb, TTL
+from json import dumps, loads
+from decimal import Decimal
+from dynamodb import add_change_request_to_dynamodb, dict_hash, TTL
+from boto3.dynamodb.types import TypeDeserializer
 from time import time
 
 
@@ -11,34 +14,36 @@ def dynamodb_table_create(dynamodb_client):
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         BillingMode="PAY_PER_REQUEST",
         KeySchema=[
-            {"AttributeName": "request_id", "KeyType": "HASH"},
-            {"AttributeName": "ods_code", "KeyType": "RANGE"},
+            {"AttributeName": "Id", "KeyType": "HASH"},
+            {"AttributeName": "ODSCode", "KeyType": "RANGE"},
         ],
         AttributeDefinitions=[
-            {"AttributeName": "request_id", "AttributeType": "S"},
-            {"AttributeName": "ods_code", "AttributeType": "S"},
+            {"AttributeName": "Id", "AttributeType": "S"},
+            {"AttributeName": "ODSCode", "AttributeType": "S"},
         ],
     )
     return table
 
 
-def test_add_change_request_to_dynamodb(dynamodb_table_create, dynamodb_client):
+def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):
     # Arrange
-    sequence_id = "3"
-    odscode = "FX111"
-    message = "TEST  MESSAGE"
     event_received_time = int(time())
     # Act
-    response_add = add_change_request_to_dynamodb(sequence_id, odscode, message, str(event_received_time))
-    response_query = dynamodb_client.query(
-        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
-        KeyConditionExpression="request_id =:request_id AND ods_code = :ods_code",
-        ExpressionAttributeValues={":request_id": {"S": sequence_id}, ":ods_code": {"S": odscode}},
-    )
-    items = response_query["Items"]
-    # Assert
+    id = dict_hash(change_event)
+    response_add = add_change_request_to_dynamodb(change_event.copy(), str(event_received_time))
+
+    item = dynamodb_client.get_item(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Key={"Id": {"S": id}, "ODSCode": {"S": change_event["ODSCode"]}}
+    )["Item"]
+    deserializer = TypeDeserializer()
+    deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
+    expected = loads(dumps(change_event), parse_float=Decimal)
+
     assert response_add["ResponseMetadata"]["HTTPStatusCode"] == 200
-    assert items[0]["message"]["S"] == "TEST  MESSAGE"
-    assert items[0]["event_received_time"]["N"] == str(event_received_time)
-    assert items[0]["event_expiry_epoch"]["N"] == str(event_received_time + TTL)
-    assert len(items) == 1
+    assert deserialized["EventReceived"] == str(event_received_time)
+    assert deserialized["TTL"] == str(event_received_time + TTL)
+    assert deserialized["Id"] == id
+    del deserialized["EventReceived"]
+    del deserialized["TTL"]
+    del deserialized["Id"]
+    assert deserialized == expected
