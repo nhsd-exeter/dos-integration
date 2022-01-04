@@ -8,6 +8,9 @@ from testfixtures import LogCapture
 
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
+import boto3
+from moto import mock_dynamodb2
+from os import environ
 
 
 std_event_path = os.path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
@@ -50,3 +53,21 @@ def dummy_dos_location() -> DoSLocation:
 def change_event():
     change_event = PHARMACY_STANDARD_EVENT.copy()
     yield change_event
+
+
+@fixture
+def aws_credentials():
+    """Mocked AWS Credentials for moto."""
+    environ["AWS_ACCESS_KEY_ID"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    environ["AWS_SECURITY_TOKEN"] = "testing"
+    environ["AWS_SESSION_TOKEN"] = "testing"
+    environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
+    environ["AWS_REGION"] = "us-east-2"
+
+
+@fixture
+def dynamodb_client(aws_credentials):
+    with mock_dynamodb2():
+        conn = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        yield conn
