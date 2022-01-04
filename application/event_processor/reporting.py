@@ -58,7 +58,7 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
             "nhsuk_city": nhs_entity.entity_data.get("City", ""),
             "nhsuk_county": nhs_entity.entity_data.get("County", ""),
             "nhsuk_postcode": nhs_entity.postcode,
-            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )
 

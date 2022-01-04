@@ -1,26 +1,23 @@
 from json import dumps, loads
 from os import environ
 from typing import Any, Dict, List, Union
+from dynamodb import add_change_request_to_dynamodb
 
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from boto3 import client
-
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import invoke_lambda_function, is_mock_mode
-from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
-from time import time
 
 logger = Logger()
 tracer = Tracer()
-lambda_client = client("lambda", region_name=environ["AWS_REGION"])
+# lambda_client = client("lambda", region_name=environ["AWS_REGION"])
 EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_SERVER",
     "DB_PORT",
@@ -137,20 +134,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     record = next(event.records)
     message = record.body
     change_event = extract_message(message)
-    # PUSH message to dynamodb here but store the message and use the event for details
-    dynamodb = client('dynamodb')
-    ttl = int((365*5)*24*60*60)
-    dynamodb.put_item(
-        TableName = environ["CHANGE_EVENTS_TABLE_NAME"],
-        Item = {
-            'request_id':  {"S": change_event["SequenceId"] },
-            'ods_code': {"S": change_event["ODSCode"] },
-            'message': {"S": message },
-            'event_received_time': {"N": str(record.attributes["SentTimestamp"]) },
-            'event_expiry_epoch': {"N": str(ttl + int(time())) }
-        }
-    )
-
+    sequence_id = change_event["SequenceId"]
+    odscode = change_event["ODSCode"]
+    sqs_timestamp = str(record.attributes["SentTimestamp"])
+    add_change_request_to_dynamodb(sequence_id, odscode, message, sqs_timestamp)
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)

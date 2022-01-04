@@ -46,18 +46,20 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
 @patch.object(Logger, "warning")
 def test_log_unmatched_nhsuk_pharmacies(mock_logger):
     # Arrange
-    nhs_entity = NHSEntity({
-        "ODSCode": "SLC4X",
-        "OrganisationName": "OrganisationName",
-        "OrganisationTypeId": "PHA",
-        "OrganisationStatus": "OrganisationStatus",
-        "OrganisationSubType": "OrganisationSubType",
-        "Address2": "address2",
-        "Address3": "address3",
-        "City": "city",
-        "County": "country",
-        "Postcode": "MK2 4AX",
-    })
+    nhs_entity = NHSEntity(
+        {
+            "ODSCode": "SLC4X",
+            "OrganisationName": "OrganisationName",
+            "OrganisationTypeId": "PHA",
+            "OrganisationStatus": "OrganisationStatus",
+            "OrganisationSubType": "OrganisationSubType",
+            "Address2": "address2",
+            "Address3": "address3",
+            "City": "city",
+            "County": "country",
+            "Postcode": "MK2 4AX",
+        }
+    )
     # Act
     log_unmatched_nhsuk_pharmacies(nhs_entity)
     # Assert
@@ -79,7 +81,7 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
             "nhsuk_city": nhs_entity.entity_data.get("City", ""),
             "nhsuk_county": nhs_entity.entity_data.get("County", ""),
             "nhsuk_postcode": nhs_entity.postcode,
-            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )
 
@@ -87,13 +89,9 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
 @patch.object(Logger, "warning")
 def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
     # Arrange
-    nhs_entity = NHSEntity({
-        "Address1": "address1",
-        "Address2": "address2",
-        "Address3": "address3",
-        "City": "city",
-        "County": "county"
-    })
+    nhs_entity = NHSEntity(
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+    )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
     nhs_entity.org_type_id = "PHA"
