@@ -6,8 +6,10 @@ from typing import Any, Dict
 from boto3.dynamodb.types import TypeSerializer
 from time import time
 from os import environ
+from aws_lambda_powertools.logging.logger import Logger
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
+logger = Logger(child=True)
 
 
 def dict_hash(change_event: Dict[str, Any]) -> str:
@@ -31,11 +33,16 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], event_received_
     change_event["TTL"] = str(int(time()) + TTL)
     change_event["EventReceived"] = event_received_time
     change_event = loads(dumps(change_event), parse_float=Decimal)
-    dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-    serializer = TypeSerializer()
-    put_item = {k: serializer.serialize(v) for k, v in change_event.items()}
-    response = dynamodb.put_item(
-        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
-        Item=put_item,
-    )
+    try:
+        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        serializer = TypeSerializer()
+        put_item = {k: serializer.serialize(v) for k, v in change_event.items()}
+        response = dynamodb.put_item(
+            TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+            Item=put_item,
+        )
+        logger.info(f"Added record to dynamodb. {put_item}")
+    except Exception as err:
+        logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
+        raise
     return response
