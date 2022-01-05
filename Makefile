@@ -101,11 +101,12 @@ component-test: # Runs whole project component tests
 integration-test: # Runs whole project component tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave" \
+	CMD="python -m behave --no-capture" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(API_GATEWAY_API_KEY_NAME) \
 		-e NHS_UK_API_KEY_KEY=$(NHS_UK_API_KEY_KEY) \
+		-e URL=$(DOS_INTEGRATION_URL) \
 		"
 
 clean: # Runs whole project clean
