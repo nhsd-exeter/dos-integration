@@ -3,12 +3,10 @@ import json
 from os import getenv
 from features.utilities.get_secrets import get_secret
 
-# from utilities.get_secrets import get_secret
-
-url = "https://uec-dos-integration-di-238.k8s-nonprod.texasplatform.uk/v1/change-event"
+url = "https://"+getenv("URL")
 
 payload = json.dumps({
-    "SearchKey": "ANEI1245",
+    "SearchKey": "ANEI1247",
     "ODSCode": "FC766",
     "OrganisationName": None,
     "OrganisationTypeId": "PHA",
@@ -35,10 +33,10 @@ payload = json.dumps({
 })
 
 
-def get_response() -> str:
+def process_change_event() -> str:
     headers = {
     'x-api-key': json.loads(get_secret())[getenv('NHS_UK_API_KEY_KEY')],
     'Content-Type': 'application/json'
     }
     response = requests.request("POST", url, headers=headers, data=payload)
-    return response
+    return response.json()
