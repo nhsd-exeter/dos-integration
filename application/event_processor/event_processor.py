@@ -1,6 +1,7 @@
 from json import dumps, loads
 from os import environ
 from typing import Any, Dict, List, Union
+from change_event_validation import validate_event
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -142,10 +143,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     sqs_timestamp = str(record.attributes["SentTimestamp"])
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+    logger.info(f"Attempting to validate change_event: {change_event}")
+    validate_event(change_event)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored")
         return
-
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
