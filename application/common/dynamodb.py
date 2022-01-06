@@ -20,7 +20,9 @@ def dict_hash(change_event: Dict[str, Any]) -> str:
     return change_event_hash.hexdigest()
 
 
-def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: str, event_received_time: str) -> dict:
+def add_change_request_to_dynamodb(
+    change_event: Dict[str, Any], sequence_number: str, event_received_time: str
+) -> dict:
     """Add change request to dynamodb but store the message and use the event for details
     Args:
         change_event (Dict[str, Any]): sequence id for given ODSCode
@@ -32,10 +34,10 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
     dynamo_record = {
         "Id": dict_hash(change_event),
         "ODSCode": change_event["ODSCode"],
-        "TTL":  str(int(time()) + TTL),
+        "TTL": str(int(time()) + TTL),
         "EventReceived": event_received_time,
         "SequenceNumber": sequence_number,
-        "Event": loads(dumps(change_event), parse_float=Decimal)
+        "Event": loads(dumps(change_event), parse_float=Decimal),
     }
     try:
         dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])

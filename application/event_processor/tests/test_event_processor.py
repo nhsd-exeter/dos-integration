@@ -205,7 +205,6 @@ def test_lambda_handler_unmatched_service(
         del environ[env]
 
 
-
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
@@ -278,7 +277,10 @@ SQS_EVENT = {
                 "SenderId": "AIDAIENQZJOLO23YVJ4VO",
                 "ApproximateFirstReceiveTimestamp": "1545082649185",
             },
-            "messageAttributes": {"correlation-id": {"stringValue": "1", "dataType": "String"}, "sequence-number": {"stringValue": "1", "dataType": "Number"}},
+            "messageAttributes": {
+                "correlation-id": {"stringValue": "1", "dataType": "String"},
+                "sequence-number": {"stringValue": "1", "dataType": "Number"},
+            },
             "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
