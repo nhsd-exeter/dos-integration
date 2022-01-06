@@ -1,10 +1,3 @@
-import hashlib
-from decimal import Decimal
-from json import dumps, loads
-from os import environ
-from time import time
-from typing import Any, Dict
-
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
