@@ -1,13 +1,12 @@
 from json import dumps, loads
 from os import environ
 from typing import Any, Dict, List, Union
-from dynamodb import add_change_request_to_dynamodb
-
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import invoke_lambda_function, is_mock_mode
+from common.dynamodb import add_change_request_to_dynamodb
 from change_request import ChangeRequest
 from changes import get_changes
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services

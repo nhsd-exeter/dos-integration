@@ -2,7 +2,7 @@ from pytest import fixture
 from os import environ
 from json import dumps, loads
 from decimal import Decimal
-from dynamodb import add_change_request_to_dynamodb, dict_hash, TTL
+from common.dynamodb import add_change_request_to_dynamodb, dict_hash, TTL
 from boto3.dynamodb.types import TypeDeserializer
 from time import time
 
