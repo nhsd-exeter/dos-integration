@@ -14,6 +14,11 @@ resource "aws_dynamodb_table" "message-history-table" {
     type = "S"
   }
 
+  attribute {
+    name = "SequenceNumber"
+    type = "N"
+  }
+
   ttl {
     attribute_name = "TTL"
     enabled        = true
