@@ -29,11 +29,11 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     # Arrange
     event_received_time = int(time())
     # Act
-    id = dict_hash(change_event)
-    response_add = add_change_request_to_dynamodb(change_event.copy(), str(event_received_time))
+    change_id = dict_hash(change_event)
+    response_add = add_change_request_to_dynamodb(change_event.copy(),1, str(event_received_time))
 
     item = dynamodb_client.get_item(
-        TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Key={"Id": {"S": id}, "ODSCode": {"S": change_event["ODSCode"]}}
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Key={"Id": {"S": change_id}, "ODSCode": {"S": change_event["ODSCode"]}}
     )["Item"]
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -42,8 +42,6 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     assert response_add["ResponseMetadata"]["HTTPStatusCode"] == 200
     assert deserialized["EventReceived"] == str(event_received_time)
     assert deserialized["TTL"] == str(event_received_time + TTL)
-    assert deserialized["Id"] == id
-    del deserialized["EventReceived"]
-    del deserialized["TTL"]
-    del deserialized["Id"]
-    assert deserialized == expected
+    assert deserialized["Id"] == change_id
+    assert deserialized["SequenceNumber"] == 1
+    assert deserialized["Event"] == expected

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from json import dumps, loads
 from os import environ
 from random import choices
+from aws_lambda_powertools import Logger
 from unittest.mock import patch
 
 from pytest import fixture, raises
@@ -204,6 +205,48 @@ def test_lambda_handler_unmatched_service(
         del environ[env]
 
 
+
+@patch.object(Logger, "error")
+@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.is_mock_mode")
+@patch(f"{FILE_PATH}.EventProcessor")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_message")
+def test_lambda_handler_no_sequence_number(
+    mock_extract_message,
+    mock_nhs_entity,
+    mock_event_processor,
+    mock_is_mock_mode,
+    mock_add_change_request_to_dynamodb,
+    mock_logger,
+    change_event,
+    lambda_context,
+):
+    # Arrange
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
+    mock_extract_message.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_is_mock_mode.return_value = False
+    mock_add_change_request_to_dynamodb.return_value = None
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    response = lambda_handler(sqs_event, lambda_context)
+    # Assert
+    assert response is None, f"Response should be None but is {response}"
+    mock_is_mock_mode.assert_called_once
+    mock_nhs_entity.assert_not_called()
+    mock_event_processor.assert_not_called()
+    mock_event_processor.send_changes.assert_not_called()
+    mock_logger.assert_called_with("No sequence number provided, so message will be ignored")
+    # Clean up
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
 def test_extract_message():
     # Arrange
     expected_change_event = '{"test": "test"}'
@@ -235,7 +278,7 @@ SQS_EVENT = {
                 "SenderId": "AIDAIENQZJOLO23YVJ4VO",
                 "ApproximateFirstReceiveTimestamp": "1545082649185",
             },
-            "messageAttributes": {"correlation-id": {"stringValue": "1", "dataType": "String"}},
+            "messageAttributes": {"correlation-id": {"stringValue": "1", "dataType": "String"}, "sequence-number": {"stringValue": "1", "dataType": "Number"}},
             "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",

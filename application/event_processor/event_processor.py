@@ -132,9 +132,17 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     record = next(event.records)
     message = record.body
+    sequence_number: Union(int, None) = None
+    if record.message_attributes["sequence-number"] is not None and record.message_attributes["sequence-number"]["stringValue"] is not None:
+        sequence_number = int(record.message_attributes["sequence-number"]["stringValue"])
     change_event = extract_message(message)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
-    add_change_request_to_dynamodb(change_event, sqs_timestamp)
+    # Save Event to dynamo so can be retrieved later
+    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+    if (sequence_number is None):
+        logger.error("No sequence number provided, so message will be ignored")
+        return
+
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
