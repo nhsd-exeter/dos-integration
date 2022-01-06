@@ -1,0 +1,81 @@
+{
+  "SearchKey": "ANEI1245",
+  "ODSCode": "FAT91",
+  "OrganisationName": null,
+  "OrganisationTypeId": "PHA",
+  "OrganisationType": "Pharmacy",
+  "OrganisationStatus": "Visible",
+  "SummaryText": "",
+  "URL": "https://my-pharmacy.com/",
+  "Address1": "501-503 MANSFIELD ROAD, NOTTINGHAM",
+  "Address2": null,
+  "Address3": null,
+  "City": null,
+  "County": null,
+  "Latitude": 53.38030624389648,
+  "Longitude": -1.4826949834823608,
+  "Postcode": "NG5 2JJ",
+  "Phone": "0115 9606272",
+  "Email": "health.my-pharmacy@nhs.net",
+  "Website": null,
+  "OrganisationSubType": null,
+  "OrganisationAliases": [],
+  "OpeningTimes": [{
+    "Weekday": "Monday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": false
+  },{
+    "Weekday": "Tuesday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Wednesday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Thursday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Friday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Saturday",
+    "Times": "07:30-23:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Sunday",
+    "Times": "10:00-17:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  }
+  ]
+}

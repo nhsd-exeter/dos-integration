@@ -1,0 +1,89 @@
+{
+  "SearchKey": "ANEI1245",
+  "ODSCode": "FA945",
+  "OrganisationName": null,
+  "OrganisationTypeId": "PHA",
+  "OrganisationType": "Pharmacy",
+  "OrganisationStatus": "Visible",
+  "SummaryText": "",
+  "URL": null,
+  "Address1": "12 HIGH STREET, RUDDINGTON, RUDDINGTON",
+  "Address2": null,
+  "Address3": null,
+  "City": null,
+  "County": null,
+  "Latitude": 53.38030624389648,
+  "Longitude": -1.4826949834823608,
+  "Postcode": "NG11 6EH",
+  "Phone": "0115 921 1086",
+  "Email": null,
+  "Website": null,
+  "OrganisationSubType": null,
+  "OrganisationAliases": [],
+  "OpeningTimes": [{
+    "Weekday": "Monday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Tuesday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Wednesday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },
+  {
+    "Weekday": "Wednesday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 840,
+    "OffsetClosingTime": 1050,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Thursday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Friday",
+    "Times": "08:30-18:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Saturday",
+    "Times": "09:00-13:00",
+    "OffsetOpeningTime": 540,
+    "OffsetClosingTime": 780,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": true
+  },{
+    "Weekday": "Sunday",
+    "Times": "14:00-17:00",
+    "OffsetOpeningTime": 840,
+    "OffsetClosingTime": 1050,
+    "OpeningTimeType": "General",
+    "AdditionalOpeningDate": "",
+    "IsOpen": false
+  }]
+}
