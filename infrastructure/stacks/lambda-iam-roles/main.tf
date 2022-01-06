@@ -53,7 +53,13 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords",
         "lambda:InvokeFunction",
-        "sqs:*",
+        "sqs:*"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "dynamodb:BatchGetItem",
         "dynamodb:GetItem",
         "dynamodb:Query",
@@ -62,7 +68,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource": ["*"]
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
     }
   ]
 }

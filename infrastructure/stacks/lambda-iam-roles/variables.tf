@@ -61,3 +61,10 @@ variable "event_processor_role_name" {
 variable "event_sender_role_name" {
   description = "Role name for event sender lambda"
 }
+
+# ##############
+# # DYNAMO DB
+# ##############
+variable "change_events_table_name" {
+  description = "Name of the table that stores received pharmacy change events"
+}
