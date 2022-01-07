@@ -7,6 +7,10 @@
   "OrganisationStatus": "Visible",
   "SummaryText": "",
   "URL": null,
+  "ParentOrganisation": {
+    "ODSCode": "QOP",
+    "OrganisationName": "Greater Manchester Health and Social Care Partnership (STP)"
+  },
   "Address1": "12 HIGH STREET, RUDDINGTON, RUDDINGTON",
   "Address2": null,
   "Address3": null,
@@ -15,9 +19,15 @@
   "Latitude": 53.38030624389648,
   "Longitude": -1.4826949834823608,
   "Postcode": "NG11 6EH",
-  "Phone": "0115 921 1086",
   "Email": null,
-  "Website": null,
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "0115 921 1086"
+    }
+  ],
   "OrganisationSubType": null,
   "OrganisationAliases": [],
   "OpeningTimes": [{

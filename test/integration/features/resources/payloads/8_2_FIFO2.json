@@ -7,6 +7,10 @@
   "OrganisationStatus": "Visible",
   "SummaryText": "",
   "URL": "https://my-pharmacy.com/",
+  "ParentOrganisation": {
+    "ODSCode": "QOP",
+    "OrganisationName": "Greater Manchester Health and Social Care Partnership (STP)"
+  },
   "Address1": "501-503 MANSFIELD ROAD, NOTTINGHAM",
   "Address2": null,
   "Address3": null,
@@ -15,9 +19,15 @@
   "Latitude": 53.38030624389648,
   "Longitude": -1.4826949834823608,
   "Postcode": "NG5 2JJ",
-  "Phone": "0115 9606272",
   "Email": "health.my-pharmacy@nhs.net",
-  "Website": null,
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "0115 9606272"
+    }
+  ],
   "OrganisationSubType": null,
   "OrganisationAliases": [],
   "OpeningTimes": [{
