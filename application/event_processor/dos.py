@@ -1,11 +1,12 @@
 from datetime import date, datetime
 from itertools import groupby
-from os import environ
+from os import environ, getenv
 from typing import Dict, List, Union
 from dataclasses import dataclass, field, fields
 
 import psycopg2
 from psycopg2.extras import DictCursor
+from psycopg2.extensions import connection
 from aws_lambda_powertools import Logger
 
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -191,7 +192,7 @@ def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
     return standard_opening_times
 
 
-def _connect_dos_db() -> None:
+def _connect_dos_db() -> connection:
     """Creates a new connection to the DoS DB and returns the connection object
 
     warning: Do not use. Should only be used by query_dos_db() func
@@ -203,6 +204,7 @@ def _connect_dos_db() -> None:
     db_schema = environ["DB_SCHEMA"]
     db_user = environ["DB_USER_NAME"]
     db_password = environ["DB_PASSWORD"]
+    trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
     logger.debug(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} " f"user={db_user}")
@@ -215,9 +217,21 @@ def _connect_dos_db() -> None:
         password=db_password,
         connect_timeout=30,
         options=f"-c search_path=dbo,{db_schema}",
+        application_name=f"DI-event-processor <psycopg2> tid={trace_id}"
     )
 
     return db
+
+
+def disconnect_dos_db() -> None:
+    """Closes the DoS database connection if it exists and is open"""
+    global db_connection
+    if db_connection is not None and db_connection.closed == 0:
+        try:
+            db_connection.close()
+            logger.info("The DoS database connection was closed.")
+        except Exception as e:
+            logger.warn(f"There was an exception while trying to close DoS database connection: {e}")
 
 
 def query_dos_db(sql_command: str) -> DictCursor:

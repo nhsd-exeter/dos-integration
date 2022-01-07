@@ -170,8 +170,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         return
 
     event_processor.get_change_requests()
+    disconnect_dos_db()
 
     if not is_mock_mode():
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
+
+    
