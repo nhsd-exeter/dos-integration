@@ -335,19 +335,29 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-performance-test:
+performance-test-create-change-events:
 	TIME_DATE=$$(date +%Y-%m-%d_%H-%M-%S)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f locustfile.py --headless \
-			--users 10 --spawn-rate 1 --run-time 30s \
-			-H https://$(DOS_INTEGRATION_URL) --stop-timeout 99 \
-			--csv=results/$$TIME_DATE" \
-		DIR=./test/performance \
+			--users 10 --spawn-rate 1 --run-time 5s \
+			-H https://$(DOS_INTEGRATION_URL) \
+			--csv=results/create_change_events_$$TIME_DATE" \
+		DIR=./test/performance/create_change_events \
 		ARGS="\
 			-p 8089:8089 \
 			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key)"
+			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+			"
+
+performance-test-data-collection:
+	make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python -m data_collection" \
+		DIR=./test/performance/data_collection \
+
+performance-test-clean:
+	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
 
 # -----------------------------
 # Other
