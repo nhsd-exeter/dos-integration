@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, date, time
-from os import environ
+from os import environ, getenv
 from random import choices
 from unittest.mock import patch
 import pytest
@@ -123,6 +123,7 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
@@ -162,6 +163,7 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
         password=db_password,
         options=f"-c search_path=dbo,{db_schema}",
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
@@ -218,6 +220,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
 
     mock_connect().cursor().execute.assert_called_with(
@@ -274,6 +277,7 @@ def test_get_standard_opening_times_from_db_times_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
 
     # Clean up
@@ -308,6 +312,7 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
 
     mock_connect().cursor().execute.assert_called_with(
@@ -401,6 +406,7 @@ def test_get_dos_locations(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
     )
 
     # Clean up

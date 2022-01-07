@@ -12,7 +12,7 @@ from common.utilities import invoke_lambda_function, is_mock_mode
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
@@ -161,6 +161,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
+
+    disconnect_dos_db()
 
 
 def extract_message(message_body: str) -> Dict[str, Any]:
