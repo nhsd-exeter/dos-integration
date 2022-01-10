@@ -126,11 +126,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
 
-    counter = 0
-    for record in event.records:
-        counter += 1
-        if counter > 1:
-            raise Exception("More than one record found in event")
+    if len(list(event.records)) != 1:
+        raise Exception(f"{len(event.records)} records found in event. Expected only 1.")
 
     message = next(event.records).body
     change_event = extract_message(message)

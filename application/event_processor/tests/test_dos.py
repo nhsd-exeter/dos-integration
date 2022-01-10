@@ -129,7 +129,8 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
-        f"FROM services WHERE odscode LIKE '{odscode}%'"
+        "FROM services WHERE odscode LIKE %(ODS_5)s",
+        {"ODS_5": f"{odscode}%"}
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -169,7 +170,8 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
-        f"FROM services WHERE odscode LIKE '{odscode}%'"
+        "FROM services WHERE odscode LIKE %(ODS_5)s",
+        {"ODS_5": f"{odscode}%"}
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -228,7 +230,8 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-        f"WHERE ssod.serviceid = {service_id}"
+        "WHERE ssod.serviceid = %(service_id)s",
+        {"service_id": service_id}
     )
 
     # Clean up
@@ -316,12 +319,12 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
     )
 
     mock_connect().cursor().execute.assert_called_with(
-        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, "
-        "ssot.isclosed "
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-        f"WHERE ssod.serviceid = {service_id}"
+        "WHERE ssod.serviceid = %(service_id)s",
+        {"service_id": service_id}
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
