@@ -226,7 +226,7 @@ def _connect_dos_db() -> connection:
 def disconnect_dos_db() -> None:
     """Closes the DoS database connection if it exists and is open"""
     global db_connection
-    if db_connection is not None and db_connection.closed == 0:
+    if db_connection is not None:
         try:
             db_connection.close()
             logger.info("The DoS database connection was closed.")
