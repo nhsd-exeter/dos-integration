@@ -7,7 +7,6 @@ import pytest
 from ..dos import (
     DoSService,
     DoSLocation,
-    disconnect_dos_db,
     get_matching_dos_services,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
