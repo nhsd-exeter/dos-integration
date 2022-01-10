@@ -12,7 +12,7 @@ from changes import get_changes
 from common.dynamodb import add_change_request_to_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
-from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
@@ -127,12 +127,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
             logger.error(f"Environmental variable {env_var} not present")
             return
 
-    counter = 0
-    for record in event.records:
-        counter += 1
-        if counter > 1:
-            logger.error("More than one record found in event", extra={"event": event})
-            return
+    if len(list(event.records)) != 1:
+        raise Exception(f"{len(event.records)} records found in event. Expected only 1.")
 
     record = next(event.records)
     message = record.body
