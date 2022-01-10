@@ -24,6 +24,8 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
+LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor
+EVENT_PROCESSOR_LAMBDA := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 
 # Change Event Receiver API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key

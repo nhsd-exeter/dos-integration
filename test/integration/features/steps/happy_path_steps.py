@@ -1,23 +1,38 @@
 from os import getenv
 from behave import given, then, when
-from features.utilities.utilities import process_change_event, get_response
-# from features.utilities.get_secrets import get_secret
-# import json
+from features.utilities.utilities import process_change_event, get_response, get_lambda_info
+from features.utilities.log_stream import get_data_logs, get_logs
+import json
 
 
-@given("a valid change request endpoint")
-def a_valid_change_request_endpoint(context):
+@given("a valid change event endpoint")
+def a_valid_change_event_endpoint(context):
     pass
 
+@when('a "{valid}" change event is sent to the event sender')
+def a_valid_change_event_is_sent_to_the_event_sender(context, valid: str):
+    response = get_response(valid)
+    assert response == "Change event received", "ERROR! Invalid Payload received.."
 
-@when('a valid change request is sent to the event sender')
-def a_valid_change_request_is_sent_to_the_event_sender(context):
-    response = process_change_event()
-    assert response['Message'] == "Change event received", "ERROR! Invalid Payload received.."
+@when('an "{invalid}" change event is processed')
+def an_invalid_change_event_is_processed(context, invalid: str):
+    pass
+    # response = get_response(invalid)
+    # assert response['Message'] != "Change event received", "ERROR! Payload received not invalid.."
 
+@when('an "{expected}" change event is sent to the event sender')
+def an_expected_change_event_is_sent_to_the_event_sender(context, expected: str):
+    response = get_response(expected)
+    assert response == "Change event received", "ERROR! Invalid Payload received.."
 
-@when('a "{change_request_status}" change request is sent to the event sender')
-def a_valid_change_request_is_sent_to_the_event_sender(context, change_request_status: str):
-    response = get_response(change_request_status)
-    assert response['Message'] == "Change event received", "ERROR! Invalid Payload received.."
+@then('the event processor logs are generated')
+def the_event_processor_logs_are_generated(context):
+    logs = get_logs()
+    print(logs)
 
+@then('the lambda is confirmed active')
+def the_lambda_is_confirmed_active(context):
+    status = get_lambda_info("status")
+    assert status == "Active" or "Successful", "ERROR! Invocation either unsuccessful or Lambda is inactive"
+    print(status)
+    print(status)
