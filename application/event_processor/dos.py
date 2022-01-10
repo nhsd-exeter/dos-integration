@@ -245,7 +245,6 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
         logger.info("Using existing open database connection.")
 
     c = db_connection.cursor(cursor_factory=DictCursor)
-    print(f"Running SQL command: {c.mogrify(query, vars)}")
     logger.info(f"Running SQL command: {c.mogrify(query, vars)}")
     c.execute(query, vars)
     return c
