@@ -172,5 +172,3 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
-
-    

@@ -7,10 +7,12 @@ import pytest
 from ..dos import (
     DoSService,
     DoSLocation,
+    disconnect_dos_db,
     get_matching_dos_services,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
     get_dos_locations,
+    disconnect_dos_db
 )
 from .conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
@@ -419,3 +421,7 @@ def test_get_dos_locations(mock_connect):
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
     del environ["DB_PASSWORD"]
+
+
+def test_disconnect_dos_db():
+    disconnect_dos_db()
