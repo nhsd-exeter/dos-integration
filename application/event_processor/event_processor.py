@@ -160,8 +160,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
 
-    
-
 
 def extract_message(message_body: str) -> Dict[str, Any]:
     """Extracts the change event from the lambda function invocation event
