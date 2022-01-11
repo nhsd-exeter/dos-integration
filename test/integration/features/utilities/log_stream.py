@@ -2,7 +2,10 @@ from datetime import datetime
 from os import getenv as get_env
 from time import sleep
 from boto3 import client
-# from features.utilities.utilities import event_request_start_time
+from datetime import datetime
+from datetime import timedelta
+
+import json
 
 lambda_client_logs = client("logs")
 log_group_name_event_processor = get_env("LOG_GROUP_NAME_EVENT_PROCESSOR")
@@ -41,14 +44,33 @@ def get_logs() -> str:
     event_log = lambda_client_logs.get_log_events(
             logGroupName=log_group_name_event_processor,
             logStreamName=get_processor_log_stream_name(),
-            startTime=event_request_start_time
+            # startTime= int((datetime.now() - timedelta(seconds=1)).timestamp())
             # endTime=int(datetime.now().timestamp()),
     )
-    messages=[]
-    inverse_event_log=event_log["events"]
-    for item in inverse_event_log:
-        messages.append(item["message"])
-    return event_request_start_time
+    requests={}
+    last_request_id = 0
+    for item in event_log["events"]:
+        try:
+            dict_msg = json.loads(item["message"])
+            requests[dict_msg["function_request_id"]] = requests.get(dict_msg["function_request_id"], [])
+            requests[dict_msg["function_request_id"]].append(dict_msg)
+        except ValueError as e:
+            if item["message"].find("RequestId:") != -1:
+                item_parts = item["message"].split()
+                found_request_id = False
+                for part in item_parts:
+                    if found_request_id is True:
+                        requests[part] = requests.get(part, [])
+                        requests[part].append(item["message"])
+                        last_request_id = part
+                        found_request_id = False
+                    if part == "RequestId:":
+                        found_request_id = True
+            else:
+                requests[last_request_id] = requests.get(last_request_id, [])
+                requests[last_request_id].append(item["message"])
+
+    return  requests[list(requests.keys())[-1]]
 
 
     # for item in event_log["events"]:
