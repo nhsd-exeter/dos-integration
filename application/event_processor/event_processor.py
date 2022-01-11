@@ -42,10 +42,11 @@ class EventProcessor:
         """
 
         # Check database for services with same first 5 digits of ODSCode
+        logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
         logger.info(
             f"Found {len(matching_services)} services in DB with "
-            f"matching first 5 chars of ODSCode: {matching_services}"
+            f"match first 5 chars of ODSCode: {matching_services}"
         )
 
         # Filter for services with valid type and status
@@ -128,7 +129,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
             return
 
     if len(list(event.records)) != 1:
-        raise Exception(f"{len(list(event.records))} records found in event. Expected only 1.")
+        raise Exception(f"{len(list(event.records))} records found in event. Expected 1.")
 
     record = next(event.records)
     message = record.body
@@ -136,12 +137,15 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
+    change_event = extract_message(message)
+
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    logger.info(f"Attempting to validate change_event: {change_event}")
+    
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored")
         return
+
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
@@ -156,6 +160,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor = EventProcessor(nhs_entity)
         matching_services = event_processor.get_matching_services()
 
+        matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
             log_unmatched_nhsuk_pharmacies(nhs_entity)
             return
