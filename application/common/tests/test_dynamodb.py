@@ -2,7 +2,12 @@ from pytest import fixture
 from os import environ
 from json import dumps, loads
 from decimal import Decimal
-from common.dynamodb import add_change_request_to_dynamodb, dict_hash, TTL
+from common.dynamodb import (
+    add_change_request_to_dynamodb,
+    get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    dict_hash,
+    TTL,
+)
 from boto3.dynamodb.types import TypeDeserializer
 from time import time
 
@@ -20,6 +25,17 @@ def dynamodb_table_create(dynamodb_client):
         AttributeDefinitions=[
             {"AttributeName": "Id", "AttributeType": "S"},
             {"AttributeName": "ODSCode", "AttributeType": "S"},
+            {"AttributeName": "SequenceNumber", "AttributeType": "N"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "gsi_ods_sequence",
+                "KeySchema": [
+                    {"AttributeName": "ODSCode", "KeyType": "HASH"},
+                    {"AttributeName": "SequenceNumber", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            }
         ],
     )
     return table
@@ -46,3 +62,20 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     assert deserialized["Id"] == change_id
     assert deserialized["SequenceNumber"] == 1
     assert deserialized["Event"] == expected
+
+
+def test_get_latest_sequence_id_for_a_given_odscode_from_dynamodb(dynamodb_table_create, change_event):
+    event_received_time = int(time())
+    add_change_request_to_dynamodb(change_event.copy(), 1, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 2, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 4, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 20, str(event_received_time))
+
+    latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    assert latest_sequence_number == 20
+
+
+def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_event):
+    latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    assert latest_sequence_number is None

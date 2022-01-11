@@ -134,11 +134,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     record = next(event.records)
     message = record.body
     change_event = extract_body(message)
-    nhs_entity = NHSEntity(change_event)
-
     sequence_number = get_sequence_number(record)
-    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(nhs_entity.odscode)
-    if sequence_number < db_latest_sequence_number:
+    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    if int(0 if sequence_number is None else sequence_number) < int(
+        0 if db_latest_sequence_number is None else db_latest_sequence_number
+    ):
         logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
         return
     sqs_timestamp = str(record.attributes["SentTimestamp"])
@@ -148,6 +148,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+    nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
     logger.append_keys(org_sub_type=nhs_entity.org_sub_type)

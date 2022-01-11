@@ -168,6 +168,7 @@ def test_send_changes(mock_invoke_lambda_function):
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
 
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
@@ -179,6 +180,7 @@ def test_lambda_handler_unmatched_service(
     mock_event_processor,
     mock_is_mock_mode,
     mock_add_change_request_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
     lambda_context,
 ):
@@ -190,6 +192,7 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = None
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
@@ -207,6 +210,7 @@ def test_lambda_handler_unmatched_service(
 
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -217,6 +221,7 @@ def test_lambda_handler_no_sequence_number(
     mock_event_processor,
     mock_is_mock_mode,
     mock_add_change_request_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_logger,
     change_event,
     lambda_context,
@@ -230,6 +235,7 @@ def test_lambda_handler_no_sequence_number(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = None
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
