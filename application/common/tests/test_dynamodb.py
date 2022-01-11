@@ -55,7 +55,6 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         Key={"Id": {"S": change_id}, "ODSCode": {"S": change_event["ODSCode"]}},
     )["Item"]
-
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
     expected = loads(dumps(change_event), parse_float=Decimal)
