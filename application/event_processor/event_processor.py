@@ -146,27 +146,27 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
     logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
 
     try:
         validate_event(change_event)
     except ValidationException:
         return
 
-    event_processor = EventProcessor(nhs_entity)
-    logger.info("Getting matching DoS Services")
-    matching_services = event_processor.get_matching_services()
+    try:
+        event_processor = EventProcessor(nhs_entity)
+        matching_services = event_processor.get_matching_services()
 
-    if len(matching_services) == 0:
-        log_unmatched_nhsuk_pharmacies(nhs_entity)
-        return
+        if len(matching_services) == 0:
+            log_unmatched_nhsuk_pharmacies(nhs_entity)
+            return
 
-    if nhs_entity.is_status_hidden_or_closed():
-        report_closed_or_hidden_services(nhs_entity, matching_services)
-        return
+        if nhs_entity.is_status_hidden_or_closed():
+            report_closed_or_hidden_services(nhs_entity, matching_services)
+            return
 
-    event_processor.get_change_requests()
-    disconnect_dos_db()
+        event_processor.get_change_requests()
+    finally:
+        disconnect_dos_db()
 
     if not is_mock_mode():
         event_processor.send_changes()
