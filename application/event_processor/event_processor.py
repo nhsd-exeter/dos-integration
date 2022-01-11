@@ -46,7 +46,7 @@ class EventProcessor:
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
         logger.info(
             f"Found {len(matching_services)} services in DB with "
-            f"match first 5 chars of ODSCode: {matching_services}"
+            f"matching first 5 chars of ODSCode: {matching_services}"
         )
 
         # Filter for services with valid type and status
