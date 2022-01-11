@@ -192,7 +192,7 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
@@ -235,7 +235,7 @@ def test_lambda_handler_no_sequence_number(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act

@@ -2,7 +2,7 @@ import boto3
 from json import dumps, loads
 import hashlib
 from decimal import Decimal
-from typing import Any, Dict, Union
+from typing import Any, Dict
 from boto3.dynamodb.types import TypeSerializer
 from time import time
 from os import environ
@@ -54,13 +54,13 @@ def add_change_request_to_dynamodb(
     return response
 
 
-def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> Union[int, None]:
+def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> int:
 
     """Get latest sequence id for a given odscode from dynamodb
     Args:
         odscode (str): odscode for the change event
     Returns:
-        Union[int, None]: Sequence number of the message or None if not present
+        int: Sequence number of the message or None if not present
     """
     try:
         dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
@@ -71,11 +71,13 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> Un
             ExpressionAttributeValues={
                 ":odscode": {"S": odscode},
             },
-            ProjectionExpression="SequenceNumber",
+            Limit=1,
+            ScanIndexForward=False,
+            ProjectionExpression="ODSCode,SequenceNumber",
         )
-        sequence_number = None
+        sequence_number = 0
         if resp.get("Count") > 0:
-            sequence_number = int(resp.get("Items")[::-1][0]["SequenceNumber"]["N"])
+            sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
     except Exception as err:
         logger.exception(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
         raise

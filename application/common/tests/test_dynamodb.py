@@ -10,6 +10,7 @@ from common.dynamodb import (
 )
 from boto3.dynamodb.types import TypeDeserializer
 from time import time
+from random import randint
 
 
 @fixture
@@ -64,18 +65,105 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     assert deserialized["Event"] == expected
 
 
-def test_get_latest_sequence_id_for_a_given_odscode_from_dynamodb(dynamodb_table_create, change_event):
+def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
+    dynamodb_table_create, change_event, dynamodb_client
+):
     event_received_time = int(time())
     add_change_request_to_dynamodb(change_event.copy(), 1, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 2, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 4, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 20, str(event_received_time))
-
+    resp = dynamodb_client.query(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={
+            ":odscode": {"S": change_event["ODSCode"]},
+        },
+        ScanIndexForward=False,
+    )
+    assert resp.get("Count") == 1
     latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     assert latest_sequence_number == 20
 
 
 def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_event):
     latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
-    assert latest_sequence_number is None
+    assert latest_sequence_number == 0
+
+
+def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
+    dynamodb_table_create, change_event, dynamodb_client
+):
+    event_received_time = int(time())
+    odscode = change_event["ODSCode"]
+    cevent = change_event.copy()
+    add_change_request_to_dynamodb(cevent, 1, str(event_received_time))
+    add_change_request_to_dynamodb(random_change_event(cevent), 2, str(event_received_time))
+    add_change_request_to_dynamodb(random_change_event(cevent), 3, str(event_received_time))
+    add_change_request_to_dynamodb(random_change_event(cevent), 4, str(event_received_time))
+    add_change_request_to_dynamodb(random_change_event(cevent), 44, str(event_received_time))
+    resp = dynamodb_client.query(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={
+            ":odscode": {"S": odscode},
+        },
+        ScanIndexForward=False,
+        ProjectionExpression="ODSCode,SequenceNumber",
+    )
+    expected_latest_sequence_number = 44
+    expected_count = 5
+    expected_items = [
+        {
+            "ODSCode": {
+                "S": "TES73",
+            },
+            "SequenceNumber": {
+                "N": "44",
+            },
+        },
+        {
+            "ODSCode": {
+                "S": "TES73",
+            },
+            "SequenceNumber": {
+                "N": "4",
+            },
+        },
+        {
+            "ODSCode": {
+                "S": "TES73",
+            },
+            "SequenceNumber": {
+                "N": "3",
+            },
+        },
+        {
+            "ODSCode": {
+                "S": "TES73",
+            },
+            "SequenceNumber": {
+                "N": "2",
+            },
+        },
+        {
+            "ODSCode": {
+                "S": "TES73",
+            },
+            "SequenceNumber": {
+                "N": "1",
+            },
+        },
+    ]
+    assert resp.get("Items") == expected_items
+    assert resp.get("Count") == expected_count
+    latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode)
+    assert latest_sequence_number == expected_latest_sequence_number
+
+
+def random_change_event(ce):
+    ce["City"] = f"{ce['City']}{str(randint(1,9))}"
+    return ce
