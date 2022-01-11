@@ -17,9 +17,9 @@ from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_d
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
+
 logger = Logger()
 tracer = Tracer()
-
 EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_SERVER",
     "DB_PORT",
