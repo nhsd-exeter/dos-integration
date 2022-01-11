@@ -26,7 +26,6 @@ variable "profile" {
   description = "The tag used to identify profile e.g. dev, test, live, ..."
 }
 
-
 variable "texas_s3_logs_bucket" {
   description = "The texas s3 log bucket for s3 bucket logs"
 }
@@ -39,6 +38,10 @@ variable "vpc_terraform_state_key" {
   description = "Texas Platform State store bucket key"
 }
 
+variable "route53_terraform_state_key" {
+  description = "terraform state key"
+}
+
 variable "programme" {
   description = "Programme name"
 }
@@ -48,18 +51,6 @@ variable "project_id" {
 }
 variable "environment" {
   description = "Environment name"
-}
-
-# ############################
-# # IAM
-# ############################
-
-variable "event_processor_role_name" {
-  description = "Role name for event processor lambda"
-}
-
-variable "event_sender_role_name" {
-  description = "Role name for event sender lambda"
 }
 
 # ##############

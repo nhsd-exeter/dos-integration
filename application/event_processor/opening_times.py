@@ -56,7 +56,7 @@ class OpenPeriod:
         }
 
     @staticmethod
-    def any_overlaps(open_periods: List['OpenPeriod']) -> bool:
+    def any_overlaps(open_periods: List["OpenPeriod"]) -> bool:
         """Returns whether any OpenPeriod object in list overlaps any others in the list"""
         untested = open_periods.copy()
         while len(untested) > 1:
@@ -67,7 +67,7 @@ class OpenPeriod:
         return False
 
     @staticmethod
-    def list_string(open_periods: List['OpenPeriod']) -> str:
+    def list_string(open_periods: List["OpenPeriod"]) -> str:
         """Returns a string version of a list of open periods in a consistently sorted order
 
         eg.
@@ -77,7 +77,7 @@ class OpenPeriod:
         return f"[{', '.join(sorted_str_list)}]"
 
     @staticmethod
-    def all_start_before_end(open_periods: List['OpenPeriod']) -> bool:
+    def all_start_before_end(open_periods: List["OpenPeriod"]) -> bool:
         """Returns whether all OpenPeriod object in list start before they ends"""
         for op in open_periods:
             if not op.start_before_end():
@@ -85,33 +85,30 @@ class OpenPeriod:
         return True
 
     @staticmethod
-    def equal_lists(a: List['OpenPeriod'], b: List['OpenPeriod']) -> bool:
+    def equal_lists(a: List["OpenPeriod"], b: List["OpenPeriod"]) -> bool:
         """Checks equality between 2 lists of open periodsRelies on sorting and eq functions in OpenPeriod"""
         return sorted(a) == sorted(b)
 
     @staticmethod
-    def from_string(open_period_string: str) -> Union['OpenPeriod', None]:
+    def from_string(open_period_string: str) -> Union["OpenPeriod", None]:
         """Builds an OpenPeriod object from a string that's in 1 of 2 formats."""
 
         if not isinstance(open_period_string, str):
             return None
 
         # regex looks for HH:MM-HH:MM time format
-        if re.match(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]\-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$",
-                    open_period_string):
+        if re.match(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]\-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", open_period_string):
 
-            start, end = [
-                datetime.strptime(time_str, "%H:%M").time()
-                for time_str in open_period_string.split("-")]
+            start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in open_period_string.split("-")]
             return OpenPeriod(start, end)
 
         # regex looks for HH:MM:SS-HH:MM:SS time format
-        if re.match(r"^(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)\-(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)$",
-                    open_period_string):
+        if re.match(
+            r"^(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)\-(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)$",
+            open_period_string,
+        ):
 
-            start, end = [
-                datetime.strptime(time_str, "%H:%M:%S").time()
-                for time_str in open_period_string.split("-")]
+            start, end = [datetime.strptime(time_str, "%H:%M:%S").time() for time_str in open_period_string.split("-")]
             return OpenPeriod(start, end)
 
         return None
@@ -164,7 +161,7 @@ class SpecifiedOpeningTime:
         return self.all_start_before_end() and (not self.any_overlaps()) and (not self.contradiction())
 
     @staticmethod
-    def export_cr_format_list(spec_opening_dates: List['SpecifiedOpeningTime']) -> dict:
+    def export_cr_format_list(spec_opening_dates: List["SpecifiedOpeningTime"]) -> dict:
         """Runs the export_cr_format on a list of SpecifiedOpeningTime objects and combines the results"""
         opening_dates_cr_format = {}
         for spec_open_date in spec_opening_dates:
@@ -173,7 +170,7 @@ class SpecifiedOpeningTime:
         return opening_dates_cr_format
 
     @staticmethod
-    def equal_lists(a: List['SpecifiedOpeningTime'], b: List['SpecifiedOpeningTime']) -> bool:
+    def equal_lists(a: List["SpecifiedOpeningTime"], b: List["SpecifiedOpeningTime"]) -> bool:
         """Checks equality between 2 lists of SpecifiedOpeningTime Relies on equality,
         and hash functions of SpecifiedOpeningTime"""
         hash_list_a = [hash(a) for a in a]
@@ -181,7 +178,7 @@ class SpecifiedOpeningTime:
         return sorted(hash_list_a) == sorted(hash_list_b)
 
     @staticmethod
-    def valid_list(list: List['SpecifiedOpeningTime']) -> bool:
+    def valid_list(list: List["SpecifiedOpeningTime"]) -> bool:
         return all([x.is_valid() for x in list])
 
 

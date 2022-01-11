@@ -18,24 +18,29 @@ FILE_PATH = "application.event_processor.changes"
 def test_get_changes_same_data():
     # Act
     dos_service = dummy_dos_service()
-    nhs_entity = NHSEntity({
-        "Postcode": dos_service.postcode,
-        "Phone": dos_service.publicphone,
-        "OrganisationName": dos_service.publicname,
-        "Address1": dos_service.address,
-        "Contacts": [{
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Website",
-            "ContactValue": dos_service.web},
-            {
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Telephone",
-            "ContactValue": dos_service.publicphone},
-        ],
-        "OpeningTimes": []
-    })
+    nhs_entity = NHSEntity(
+        {
+            "Postcode": dos_service.postcode,
+            "Phone": dos_service.publicphone,
+            "OrganisationName": dos_service.publicname,
+            "Address1": dos_service.address,
+            "Contacts": [
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Website",
+                    "ContactValue": dos_service.web,
+                },
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Telephone",
+                    "ContactValue": dos_service.publicphone,
+                },
+            ],
+            "OpeningTimes": [],
+        }
+    )
     # Act
     response = get_changes(dos_service, nhs_entity)
     # Assert
@@ -54,27 +59,32 @@ def test_get_changes_different_changes():
     city = "changed-city"
     county = "changed-county"
 
-    nhs_entity = NHSEntity({
-        "Postcode": postcode,
-        "OrganisationName": organisation_name,
-        "Address1": address1,
-        "Address2": address2,
-        "Address3": address3,
-        "City": city,
-        "County": county,
-        "Contacts": [{
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Website",
-            "ContactValue": website},
-            {
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Telephone",
-            "ContactValue": phone},
-        ],
-        "OpeningTimes": [],
-    })
+    nhs_entity = NHSEntity(
+        {
+            "Postcode": postcode,
+            "OrganisationName": organisation_name,
+            "Address1": address1,
+            "Address2": address2,
+            "Address3": address3,
+            "City": city,
+            "County": county,
+            "Contacts": [
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Website",
+                    "ContactValue": website,
+                },
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Telephone",
+                    "ContactValue": phone,
+                },
+            ],
+            "OpeningTimes": [],
+        }
+    )
 
     dos_service = dummy_dos_service()
     dos_location = dummy_dos_location()
@@ -122,13 +132,7 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
     changes = {}
 
     nhs_uk_entity = NHSEntity({})
-    nhs_uk_entity.address_lines = [
-        "address1"
-        "address2"
-        "address3"
-        "city"
-        "county"
-        ]
+    nhs_uk_entity.address_lines = ["address1" "address2" "address3" "city" "county"]
 
     dos_service = dummy_dos_service()
     dos_service.address = "$".join(nhs_uk_entity.address_lines)
@@ -141,12 +145,7 @@ def test_update_changes_address_to_change_request_if_not_equal_is_equal():
 def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Arrange
     nhs_uk_entity = NHSEntity({})
-    nhs_uk_entity.address_lines = [
-        "address1",
-        "address2",
-        "address3",
-        "city",
-        "county"]
+    nhs_uk_entity.address_lines = ["address1", "address2", "address3", "city", "county"]
 
     dos_service = dummy_dos_service()
     dos_service.address = "Test RD$Testown$Testshire"
@@ -156,8 +155,7 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     update_changes_with_address(actual_changes, dos_service, nhs_uk_entity)
     expected_changes = {ADDRESS_CHANGE_KEY: nhs_uk_entity.address_lines}
     # Assert
-    assert actual_changes == expected_changes,\
-        f"Should return {expected_changes} dict, actually: {actual_changes}"
+    assert actual_changes == expected_changes, f"Should return {expected_changes} dict, actually: {actual_changes}"
 
 
 def test_update_changes_with_opening_times():

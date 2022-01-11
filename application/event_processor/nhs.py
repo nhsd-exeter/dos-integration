@@ -17,6 +17,7 @@ class NHSEntity:
     Some fields are pulled straight from the payload while others are processed first. So attribute
     names differ from paylod format for consistency within object.
     """
+
     entity_data: dict
     odscode: str
     org_name: str
@@ -48,8 +49,10 @@ class NHSEntity:
         self.city = entity_data.get("City")
         self.county = entity_data.get("County")
         self.address_lines = [
-            line for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
-            if isinstance(line, str) and line.strip() != ""]
+            line
+            for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
+            if isinstance(line, str) and line.strip() != ""
+        ]
 
         self.standard_opening_times = self._get_standard_opening_times()
         self.specified_opening_times = self._get_specified_opening_times()
@@ -65,9 +68,11 @@ class NHSEntity:
     def extract_contact(self, contact_type: str) -> Union[str, None]:
         """Returns the nested contact value within the input payload"""
         for item in self.entity_data.get("Contacts", []):
-            if (item.get("ContactMethodType", "").upper() == contact_type.upper() and
-                    item.get("ContactType", "").upper() == "PRIMARY" and
-                    item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"):
+            if (
+                item.get("ContactMethodType", "").upper() == contact_type.upper()
+                and item.get("ContactType", "").upper() == "PRIMARY"
+                and item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"
+            ):
 
                 return item.get("ContactValue")
         return None
@@ -126,7 +131,8 @@ class NHSEntity:
             SpecifiedOpeningTime(
                 open_periods=open_periods,
                 specified_date=datetime.strptime(date_str, "%b  %d  %Y").date(),
-                is_open=(date_str not in specified_closed_days))
+                is_open=(date_str not in specified_closed_days),
+            )
             for date_str, open_periods in specified_opening_time_dict.items()
         ]
 
@@ -149,18 +155,18 @@ class NHSEntity:
                 return False
 
         # Check validity of both types of open times
-        return (
-            self.standard_opening_times.is_valid() and
-            SpecifiedOpeningTime.valid_list(self.specified_opening_times))
+        return self.standard_opening_times.is_valid() and SpecifiedOpeningTime.valid_list(self.specified_opening_times)
 
 
 def is_std_opening_json(item: dict) -> bool:
     """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
 
     # Check values
-    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or
-            str(item.get("Weekday")).lower() not in WEEKDAYS or
-            item.get("AdditionalOpeningDate") not in [None, ""]):
+    if (
+        str(item.get("OpeningTimeType")).upper() != "GENERAL"
+        or str(item.get("Weekday")).lower() not in WEEKDAYS
+        or item.get("AdditionalOpeningDate") not in [None, ""]
+    ):
 
         return False
 
@@ -169,8 +175,9 @@ def is_std_opening_json(item: dict) -> bool:
     if not isinstance(is_open, bool):
         return False
 
-    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
-            (not is_open and item.get("Times") not in [None, ""])):
+    if (is_open and OpenPeriod.from_string(item.get("Times")) is None) or (
+        not is_open and item.get("Times") not in [None, ""]
+    ):
         return False
 
     return True
@@ -193,8 +200,9 @@ def is_spec_opening_json(item: dict) -> bool:
     if not isinstance(is_open, bool):
         return False
 
-    if ((is_open and OpenPeriod.from_string(item.get("Times")) is None) or
-            (not is_open and item.get("Times") not in [None, ""])):
+    if (is_open and OpenPeriod.from_string(item.get("Times")) is None) or (
+        not is_open and item.get("Times") not in [None, ""]
+    ):
         return False
 
     return True

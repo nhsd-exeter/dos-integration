@@ -58,14 +58,23 @@ variable "event_sender_subscription_filter_name" {
   description = "Log filter name for event sender lambda"
 }
 
+variable "change_event_gateway_subscription_filter_name" {
+  description = "Log filter name for change event api gateway logs"
+}
+
 variable "dos_integration_firehose" {
   description = "The firehose delivery stream name"
+}
+variable "di_endpoint_api_gateway_name" {
+  description = "DI Endpoint"
 }
 
 variable "firehose_role" {
   description = "The firehose delivery stream role name"
 }
-
+variable "di_endpoint_api_gateway_stage" {
+  description = ""
+}
 # ##############
 # # LAMBDA
 # ##############

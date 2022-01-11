@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from json import dumps, loads
 from os import environ
 from random import choices
+from aws_lambda_powertools import Logger
 from unittest.mock import patch
 
 from pytest import fixture, raises
@@ -87,13 +88,7 @@ def test_get_change_requests_full_change_request():
     nhs_entity.phone = "01462622435"
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
-    nhs_entity.address_lines = [
-        "Fake Street1",
-        "Fake Street2",
-        "Fake Street3",
-        "Fake City",
-        "Fake County"
-    ]
+    nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     nhs_entity.OpeningTimes = []
 
     event_processor = EventProcessor(nhs_entity)
@@ -120,7 +115,7 @@ def test_get_change_requests_full_change_request():
         WEBSITE_CHANGE_KEY: nhs_entity.website,
         POSTCODE_CHANGE_KEY: nhs_entity.postcode,
         PUBLICNAME_CHANGE_KEY: nhs_entity.org_name,
-        ADDRESS_CHANGE_KEY: nhs_entity.address_lines
+        ADDRESS_CHANGE_KEY: nhs_entity.address_lines,
     }
     assert cr.changes == expected_changes, f"Changes should be {expected_changes} but they are {cr.changes}"
 
@@ -161,13 +156,7 @@ def test_send_changes(mock_invoke_lambda_function):
     nhs_entity.phone = "01462622435"
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
-    nhs_entity.address_lines = [
-        "Fake Street1",
-        "Fake Street2",
-        "Fake Street3",
-        "Fake City",
-        "Fake County"
-    ]
+    nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
@@ -179,12 +168,19 @@ def test_send_changes(mock_invoke_lambda_function):
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
 
+@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_message")
 def test_lambda_handler_unmatched_service(
-    mock_extract_message, mock_nhs_entity, mock_event_processor, mock_is_mock_mode, change_event, lambda_context
+    mock_extract_message,
+    mock_nhs_entity,
+    mock_event_processor,
+    mock_is_mock_mode,
+    mock_add_change_request_to_dynamodb,
+    change_event,
+    lambda_context,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
@@ -193,6 +189,7 @@ def test_lambda_handler_unmatched_service(
     mock_extract_message.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
+    mock_add_change_request_to_dynamodb.return_value = None
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
@@ -203,6 +200,47 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
     mock_event_processor.send_changes.assert_not_called()
+    # Clean up
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
+@patch.object(Logger, "error")
+@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.is_mock_mode")
+@patch(f"{FILE_PATH}.EventProcessor")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_message")
+def test_lambda_handler_no_sequence_number(
+    mock_extract_message,
+    mock_nhs_entity,
+    mock_event_processor,
+    mock_is_mock_mode,
+    mock_add_change_request_to_dynamodb,
+    mock_logger,
+    change_event,
+    lambda_context,
+):
+    # Arrange
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
+    mock_extract_message.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_is_mock_mode.return_value = False
+    mock_add_change_request_to_dynamodb.return_value = None
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    response = lambda_handler(sqs_event, lambda_context)
+    # Assert
+    assert response is None, f"Response should be None but is {response}"
+    mock_is_mock_mode.assert_called_once
+    mock_nhs_entity.assert_not_called()
+    mock_event_processor.assert_not_called()
+    mock_event_processor.send_changes.assert_not_called()
+    mock_logger.assert_called_with("No sequence number provided, so message will be ignored")
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
@@ -239,7 +277,10 @@ SQS_EVENT = {
                 "SenderId": "AIDAIENQZJOLO23YVJ4VO",
                 "ApproximateFirstReceiveTimestamp": "1545082649185",
             },
-            "messageAttributes": {"correlation-id": {"stringValue": "1", "dataType": "String"}},
+            "messageAttributes": {
+                "correlation-id": {"stringValue": "1", "dataType": "String"},
+                "sequence-number": {"stringValue": "1", "dataType": "Number"},
+            },
             "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",

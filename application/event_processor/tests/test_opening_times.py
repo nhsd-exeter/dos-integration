@@ -167,8 +167,9 @@ def test_open_period_hash(opening_period_2: OpenPeriod):
     open_period_1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
 
     assert open_period_1 == opening_period_2, f"{open_period_1} not found to be equal to {opening_period_2}"
-    assert hash(open_period_1) == hash(opening_period_2),\
-        f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
+    assert hash(open_period_1) == hash(
+        opening_period_2
+    ), f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
 def test_openperiod_from_string():
@@ -270,9 +271,7 @@ def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_d
 )
 def test_specified_opening_time_export_cr_format(expected: dict, actual: SpecifiedOpeningTime):
     cr_format = actual.export_cr_format()
-    assert (
-        cr_format == expected
-    ), f"expected {expected} SpecifiedOpeningTime change req format but got {cr_format}"
+    assert cr_format == expected, f"expected {expected} SpecifiedOpeningTime change req format but got {cr_format}"
 
 
 def test_specifiedopentime_contradiction():

@@ -8,5 +8,6 @@ pytest
 pytest-cov
 pytest-icdiff
 pytest-sugar
+moto
 responses
 testfixtures

@@ -1,24 +1,23 @@
 from json import dumps, loads
 from os import environ
 from typing import Any, Dict, List, Union
-
+from change_event_validation import validate_event
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from boto3 import client
-
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import invoke_lambda_function, is_mock_mode
-from change_event_validation import validate_event
+from common.dynamodb import add_change_request_to_dynamodb
 from change_request import ChangeRequest
 from changes import get_changes
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
+
 logger = Logger()
 tracer = Tracer()
-lambda_client = client("lambda", region_name=environ["AWS_REGION"])
+# lambda_client = client("lambda", region_name=environ["AWS_REGION"])
 EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_SERVER",
     "DB_PORT",
@@ -132,11 +131,23 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         if counter > 1:
             raise Exception("More than one record found in event")
 
-    message = next(event.records).body
+    record = next(event.records)
+    message = record.body
+    sequence_number: Union(int, None) = None
+    if (
+        record.message_attributes["sequence-number"] is not None
+        and record.message_attributes["sequence-number"]["stringValue"] is not None
+    ):
+        sequence_number = int(record.message_attributes["sequence-number"]["stringValue"])
     change_event = extract_message(message)
+    sqs_timestamp = str(record.attributes["SentTimestamp"])
+    # Save Event to dynamo so can be retrieved later
+    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     logger.info(f"Attempting to validate change_event: {change_event}")
     validate_event(change_event)
-
+    if sequence_number is None:
+        logger.error("No sequence number provided, so message will be ignored")
+        return
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
