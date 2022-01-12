@@ -5,6 +5,7 @@ from change_request_logger import ChangeRequestLogger
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
+from common.aws import get_secret
 
 logger = Logger(child=True)
 
@@ -24,9 +25,10 @@ class ChangeRequest:
         """
         self.change_request_url: str = getenv("DOS_API_GATEWAY_URL")
         self.timeout: int = int(getenv("DOS_API_GATEWAY_REQUEST_TIMEOUT"))
+        secrets = get_secret(getenv("DOS_API_GATEWAY_SECRETS"))
         self.authorisation = HTTPBasicAuth(
-            getenv("DOS_API_GATEWAY_USERNAME"),
-            getenv("DOS_API_GATEWAY_PASSWORD"),
+            secrets[getenv("DOS_API_GATEWAY_USERNAME_KEY")],
+            secrets[getenv("DOS_API_GATEWAY_PASSWORD_KEY")],
         )
         self.change_request_body: Dict[str, Any] = change_request_body
         correlation_id = logger.get_correlation_id()

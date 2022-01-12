@@ -98,20 +98,26 @@ class EventProcessor:
             return
 
         eventbridge = client("events")
+        events = []
         for change_request in self.change_requests:
             change_payload = change_request.create_payload()
-            response = eventbridge.put_events(
-                Entries=[
-                    {
-                        "Source": "event-processor",
-                        "DetailType": "change-request",
-                        "Detail": dumps(change_payload),
-                        "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
-                    },
-                ]
+            events.append(
+                {
+                    "Source": "event-processor",
+                    "DetailType": "change-request",
+                    "Detail": dumps(
+                        {
+                            "change_payload": change_payload,
+                            "correlation_id": logger.get_correlation_id(),
+                        }
+                    ),
+                    "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
+                }
             )
-            logger.info("Response from eventbridge put_events", extra={"response": response})
-            logger.info(f"Sent off change payload for id={change_request.service_id}")
+
+        response = eventbridge.put_events(Entries=events)
+        logger.info("Response from eventbridge put_events", extra={"response": response})
+        logger.info(f"Sent off change payload for id={change_request.service_id}")
 
 
 @unhandled_exception_logging()
