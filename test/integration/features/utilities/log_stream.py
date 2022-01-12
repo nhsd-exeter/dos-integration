@@ -1,11 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import getenv as get_env
 from time import sleep
 from boto3 import client
 from datetime import datetime
-from datetime import timedelta
-
 import json
+from json.decoder import JSONDecodeError
 
 lambda_client_logs = client("logs")
 log_group_name_event_processor = get_env("LOG_GROUP_NAME_EVENT_PROCESSOR")
@@ -40,12 +39,17 @@ def get_data_logs(search_string: str) -> str:
         if time_delta.total_seconds() >= 10:
             raise TimeoutError("Unable to find log data")
 
-def get_logs() -> str:
+def get_logs(seconds_ago: int=0) -> str:
+
+    # Work out timestamps
+    now = datetime.utcnow()
+    past = now - timedelta(seconds=seconds_ago)
+
     event_log = lambda_client_logs.get_log_events(
             logGroupName=log_group_name_event_processor,
             logStreamName=get_processor_log_stream_name(),
-            # startTime= int((datetime.now() - timedelta(seconds=1)).timestamp())
-            # endTime=int(datetime.now().timestamp()),
+            startTime=int(past.timestamp() * 1000),
+            endTime=int(now.timestamp() * 1000)
     )
     requests={}
     last_request_id = 0
@@ -70,17 +74,34 @@ def get_logs() -> str:
                 requests[last_request_id] = requests.get(last_request_id, [])
                 requests[last_request_id].append(item["message"])
 
-    return  requests[list(requests.keys())[-1]]
+    return  requests.keys()
 
 
-    # for item in event_log["events"]:
-    #         if "CR" in item["message"]:
-    #             return item["message"]
-    #         elif "ERROR" in item["message"]:
-    #             event_log["events"][-1]["message"]
-                # return event_log["events"]
-            # else:
-                # event_log["events"][-1]["message"]
-                # raise Exception("Unable to find log data")
+def get_logs_list(seconds_ago: int=0) -> list:
 
-# return event_log["events"][-1]["message"]
+    # Work out timestamps
+    now = datetime.utcnow()
+    past = now - timedelta(seconds=seconds_ago)
+
+    # Get log events
+    event_log = lambda_client_logs.get_log_events(
+            logGroupName=log_group_name_event_processor,
+            logStreamName=get_processor_log_stream_name(),
+            startTime=int(past.timestamp() * 1000),
+            endTime=int(now.timestamp() * 1000)
+    )
+
+    # If a message is a JSON string, format the string before returning.
+    messages = []
+    for event in event_log["events"]:
+        try:
+            messages.append(json.dumps(json.loads(event["message"]), indent=2))
+        except JSONDecodeError:
+            messages.append(event["message"])
+
+    return messages
+
+def get_logs_new() -> str:
+    logs = get_logs_list(seconds_ago=120)
+    for m in logs:
+        print(m)

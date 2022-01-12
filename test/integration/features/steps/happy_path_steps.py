@@ -9,8 +9,8 @@ import json
 def a_valid_change_event_endpoint(context):
     pass
 
-@when('a "{valid}" change event is sent to the event sender')
-def a_valid_change_event_is_sent_to_the_event_sender(context, valid: str):
+@when('a "{valid}" change event is sent to the event procesor')
+def a_valid_change_event_is_sent_to_the_event_procesor(context, valid: str):
     response = get_response(valid)
     assert response == "Change event received", "ERROR! Invalid Payload received.."
 
@@ -20,14 +20,14 @@ def an_invalid_change_event_is_processed(context, invalid: str):
     # response = get_response(invalid)
     # assert response['Message'] != "Change event received", "ERROR! Payload received not invalid.."
 
-@when('an "{expected}" change event is sent to the event sender')
-def an_expected_change_event_is_sent_to_the_event_sender(context, expected: str):
+@when('an "{expected}" change event is sent to the event procesor')
+def an_expected_change_event_is_sent_to_the_event_procesor(context, expected: str):
     response = get_response(expected)
     assert response == "Change event received", "ERROR! Invalid Payload received.."
 
 @then('the event processor logs are generated')
 def the_event_processor_logs_are_generated(context):
-    logs = get_logs()
+    logs = get_logs(seconds_ago=120)
     print(logs)
 
 @then('the lambda is confirmed active')
