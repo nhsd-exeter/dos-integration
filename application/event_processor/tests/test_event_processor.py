@@ -186,7 +186,7 @@ def test_send_changes(mock_client, get_correlation_id_mock):
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_unmatched_service(
-    mock_extract_body,
+    mock_extract_message,
     mock_nhs_entity,
     mock_event_processor,
     mock_add_change_request_to_dynamodb,
