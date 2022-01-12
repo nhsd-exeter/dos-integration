@@ -10,7 +10,8 @@ from common.dynamodb import (
 )
 from boto3.dynamodb.types import TypeDeserializer
 from time import time
-from random import randint
+from aws_lambda_powertools import Logger
+from unittest.mock import patch
 
 
 @fixture
@@ -93,8 +94,9 @@ def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_even
     assert latest_sequence_number == 0
 
 
+@patch.object(Logger, "error")
 def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
-    dynamodb_table_create, change_event, dynamodb_client
+    mock_logger, dynamodb_table_create, change_event, dynamodb_client
 ):
     event_received_time = int(time())
     odscode = change_event["ODSCode"]
@@ -165,5 +167,5 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
 
 
 def random_change_event(ce):
-    ce["City"] = f"{ce['City']}{str(randint(1,9))}"
+    ce["dummy_data"] = str(time())
     return ce
