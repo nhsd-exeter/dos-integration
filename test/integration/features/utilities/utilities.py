@@ -16,8 +16,6 @@ def process_change_event(payload_name: str) -> str:
     'Content-Type': 'application/json'
     }
     payload = get_payload(payload_name)
-    global event_request_start_time
-    event_request_start_time = datetime.now().timestamp()
     output = requests.request("POST", url, headers=headers, data=payload)
     return output.json()
 
