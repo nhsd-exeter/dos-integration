@@ -69,10 +69,6 @@ variable "dos_api_gateway_authoriser" {
   description = "The stage of the api gateway"
 }
 
-variable "event_sender_role_name" {
-  description = "Name of the event sender lambda role"
-}
-
 variable "dos_api_gateway_secret" {
   description = "The secrets for the api gateway"
 }

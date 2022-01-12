@@ -14,56 +14,21 @@ from ..utilities import (
     get_sequence_number,
 )
 
-FILE_PATH = "application.common.utilities"
 
-
-def test_is_debug_mode_true_local():
+def test_extract_body():
     # Arrange
-    environ["PROFILE"] = "local"
+    expected_change_event = '{"test": "test"}'
     # Act
-    result = is_debug_mode()
+    change_event = extract_body(expected_change_event)
     # Assert
-    assert result is True
-    # Clean up
-    del environ["PROFILE"]
+    assert (
+        loads(expected_change_event) == change_event
+    ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
 
 
-def test_is_debug_mode_true_task():
+def test_extract_message_exception():
     # Arrange
-    environ["PROFILE"] = "task"
-    # Act
-    result = is_debug_mode()
-    # Assert
-    assert result is True
-    # Clean up
-    del environ["PROFILE"]
-
-
-def test_is_debug_mode_false():
-    # Arrange
-    environ["PROFILE"] = "remote"
-    # Act
-    result = is_debug_mode()
-    # Assert
-    assert result is False
-    # Clean up
-    del environ["PROFILE"]
-
-
-def test_is_get_environment_variable():
-    # Arrange
-    other_variable_key = "OTHER_VAR"
-    other_variable_value = "my-var"
-    environ[other_variable_key] = other_variable_value
-    # Act
-    env_var = get_environment_variable(other_variable_key)
-    # Assert
-    assert env_var == other_variable_value
-    # Clean up
-    del environ[other_variable_key]
-
-
-def test_get_environment_variable_key_error():
+    expected_change_event = {"test": "test"}
     # Act & Assert
     with raises(KeyError):
         get_environment_variable("UNKNOWN_VARIABLE")

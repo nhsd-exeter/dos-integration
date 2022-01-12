@@ -52,7 +52,9 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "ec2:DescribeVpcs",
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords",
-        "lambda:InvokeFunction"
+        "lambda:InvokeFunction",
+        "sqs:*",
+        "events:PutEvents"
       ],
       "Resource": ["*"]
     },
@@ -118,6 +120,15 @@ resource "aws_iam_role_policy" "event_sender_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:Describe*",
+        "secretsmanager:Get*",
+        "secretsmanager:List*"
+      ],
+      "Resource": "*"
+    },
     {
       "Effect": "Allow",
       "Action": [

@@ -1,12 +1,12 @@
 from json import dumps, loads
 from os import environ, getenv
 from typing import Any, Dict, Union
-
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from boto3 import client
 
-logger = Logger(child=True)
+
+logger = Logger()
 
 
 def is_debug_mode() -> bool:
@@ -22,13 +22,9 @@ def get_environment_variable(environment_key: str) -> str:
     """This function gets an environment variable
 
     Args:
-        environment_key (str): [description]
-
-    Raises:
-        KeyError: If environment variable not set
-
+        message_body (str): A JSON string body
     Returns:
-        str: environment variable value
+        Dict[str, Any]: Message body as a dictionary
     """
     try:
         return environ[environment_key]

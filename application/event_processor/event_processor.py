@@ -1,7 +1,7 @@
-from json import dumps
-from os import environ
-from typing import Dict, List, Union
-
+from json import dumps, loads
+from os import environ, getenv
+from typing import Any, Dict, List, Union
+from boto3 import client
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -25,7 +25,7 @@ EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_NAME",
     "DB_SCHEMA",
     "DB_USER_NAME",
-    "EVENT_SENDER_LAMBDA_NAME",
+    "EVENTBRIDGE_BUS_NAME",
 )
 
 
@@ -97,13 +97,20 @@ class EventProcessor:
             logger.error("Attempting to send change requests before get_change_requests has been called.")
             return
 
-        if "EVENT_SENDER_LAMBDA_NAME" not in environ:
-            logger.error("Attempting to send change requests but EVENT_SENDER_LAMBDA_NAME is not set.")
-            return
-
+        eventbridge = client("events")
         for change_request in self.change_requests:
             change_payload = change_request.create_payload()
-            invoke_lambda_function(environ["EVENT_SENDER_LAMBDA_NAME"], change_payload)
+            response = eventbridge.put_events(
+                Entries=[
+                    {
+                        "Source": "event-processor",
+                        "DetailType": "change-request",
+                        "Detail": dumps(change_payload),
+                        "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
+                    },
+                ]
+            )
+            logger.info("Response from eventbridge put_events", extra={"response": response})
             logger.info(f"Sent off change payload for id={change_request.service_id}")
 
 
@@ -123,6 +130,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
+    logger.info("Change Event received", extra={"event": event})
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -133,6 +141,24 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     record = next(event.records)
     message = record.body
+    change_event = extract_message(message)
+    logger.info(f"Attempting to validate change_event: {change_event}")
+    validate_event(change_event)
+    nhs_entity = NHSEntity(change_event)
+    logger.append_keys(ods_code=nhs_entity.odscode)
+    logger.append_keys(org_type=nhs_entity.org_type)
+    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
+    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
+
+    event_processor = EventProcessor(nhs_entity)
+    logger.info("Getting matching DoS Services")
+    matching_services = event_processor.get_matching_services()
+
+    if len(matching_services) == 0:
+        log_unmatched_nhsuk_pharmacies(nhs_entity)
+        return
+
+    sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
@@ -174,3 +200,19 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
+
+
+def extract_message(message_body: str) -> Dict[str, Any]:
+    """Extracts the change event from the lambda function invocation event
+
+    Args:
+        message_body (str): One SQS message body (JSON string)
+    Returns:
+        Dict[str, Any]: Change event as a dictionary
+    """
+    try:
+        change_event = loads(message_body)
+    except Exception:
+        logger.exception("Change Event unable to be extracted")
+        raise
+    return change_event

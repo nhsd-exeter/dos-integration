@@ -1,24 +1,5 @@
 version: "3.9"
 services:
-  event-sender:
-    image: $DOCKER_REGISTRY/event-sender:latest
-    container_name: event-sender
-    hostname: event-sender
-    environment:
-      AWS_LAMBDA_FUNCTION_NAME: event-sender
-      DOS_API_GATEWAY_USERNAME: user
-      DOS_API_GATEWAY_PASSWORD: password
-      DOS_API_GATEWAY_URL: http://mockserver:1080/api/change-request
-      DOS_API_GATEWAY_REQUEST_TIMEOUT: 30
-      POWERTOOLS_SERVICE_NAME: $TEAM_ID
-      PROFILE: $PROFILE
-    volumes:
-      - type: bind
-        source: $TMP_DIR
-        target: /tmp
-    ports:
-      - 9002:8080
-
   event-processor:
     image: $DOCKER_REGISTRY/event-processor:latest
     container_name: event-processor
@@ -34,7 +15,6 @@ services:
       DB_SCHEMA: $DB_SCHEMA
       DB_USER_NAME: $DB_USER_NAME
       DB_PASSWORD: $DB_PASSWORD
-      EVENT_SENDER_LAMBDA_NAME: event-sender
       MOCK_MODE: $MOCK_MODE
     volumes:
       - type: bind

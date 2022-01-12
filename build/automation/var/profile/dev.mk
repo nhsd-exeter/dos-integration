@@ -9,7 +9,6 @@ DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_USERNAME := $(or $(DOS_API_GATEWAY_USERNAME), "")
 DOS_API_GATEWAY_PASSWORD := $(or $(DOS_API_GATEWAY_PASSWORD), "")
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
-DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
 MOCK_MODE := false
 
 DB_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
@@ -73,6 +72,18 @@ TF_VAR_dos_api_gateway_secret_username_key := $(DOS_API_GATEWAY_USERNAME_KEY)
 TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
 TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
+
+# Event Bridge
+TF_VAR_eventbridge_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-bus
+TF_VAR_change_request_eventbridge_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-rule
+TF_VAR_dos_api_gateway_eventbridge_connection_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-connection
+TF_VAR_dos_api_gateway_api_destination_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-api-destination
+TF_VAR_dos_api_gateway_api_destination_url := $(DOS_API_GATEWAY_MOCK_URL)
+TF_VAR_dos_api_gateway_secret_name := $(TF_VAR_dos_api_gateway_secret)
+TF_VAR_dos_api_gateway_username_key := $(DOS_API_GATEWAY_USERNAME_KEY)
+TF_VAR_dos_api_gateway_password_key	:= $(DOS_API_GATEWAY_PASSWORD_KEY)
+TF_VAR_eventbridge_target_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-role
+TF_VAR_eventbridge_target_policy_name	:= $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-policy
 
 # Code Pipeline
 TF_VAR_code_pipeline_branch_name := master
