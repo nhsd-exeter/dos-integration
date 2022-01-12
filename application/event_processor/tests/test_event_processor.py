@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-from json import dumps, loads
+from json import dumps
 from os import environ
 from random import choices
 from aws_lambda_powertools import Logger
 from unittest.mock import patch
 
-from pytest import fixture, raises
+from pytest import fixture
 
-from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES, extract_message
+from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
@@ -172,9 +172,9 @@ def test_send_changes(mock_invoke_lambda_function):
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_message")
+@patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_unmatched_service(
-    mock_extract_message,
+    mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
     mock_is_mock_mode,
@@ -186,7 +186,7 @@ def test_lambda_handler_unmatched_service(
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_message.return_value = change_event
+    mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
@@ -210,9 +210,9 @@ def test_lambda_handler_unmatched_service(
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_message")
+@patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_no_sequence_number(
-    mock_extract_message,
+    mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
     mock_is_mock_mode,
@@ -226,7 +226,7 @@ def test_lambda_handler_no_sequence_number(
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
     del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
-    mock_extract_message.return_value = change_event
+    mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
@@ -244,25 +244,6 @@ def test_lambda_handler_no_sequence_number(
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
-
-
-def test_extract_message():
-    # Arrange
-    expected_change_event = '{"test": "test"}'
-    # Act
-    change_event = extract_message(expected_change_event)
-    # Assert
-    assert (
-        loads(expected_change_event) == change_event
-    ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
-
-
-def test_extract_message_exception():
-    # Arrange
-    expected_change_event = {"test": "test"}
-    # Act & Assert
-    with raises(Exception):
-        extract_message(expected_change_event)
 
 
 SQS_EVENT = {

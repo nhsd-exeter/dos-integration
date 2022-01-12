@@ -1,8 +1,9 @@
-from json import dumps
+from json import dumps, loads
 from os import environ, getenv
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from boto3 import client
 
 logger = Logger(child=True)
@@ -62,3 +63,37 @@ def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> No
     lambda_client = client("lambda")
     logger.debug(f"Invoking {lambda_name}")
     lambda_client.invoke(FunctionName=lambda_name, InvocationType="Event", Payload=lambda_payload)
+
+
+def extract_body(body: str) -> Dict[str, Any]:
+    """Extracts the event body from the lambda function invocation event
+
+    Args:
+        message_body (str): A JSON string body
+    Returns:
+        Dict[str, Any]: Message body as a dictionary
+    """
+    try:
+        body = loads(body)
+    except Exception:
+        logger.exception("Change Event unable to be extracted")
+        raise
+    return body
+
+
+def get_sequence_number(record: SQSRecord) -> Union[int, None]:
+    """Gets the sequence number from the SQS record
+
+    Args:
+        record (SQSRecord): SQS record
+
+    Returns:
+        Optional[int]: Sequence number of the message or None if not present
+    """
+    sequence_number = None
+    if (
+        record.message_attributes["sequence-number"] is not None
+        and record.message_attributes["sequence-number"]["stringValue"] is not None
+    ):
+        sequence_number = int(record.message_attributes["sequence-number"]["stringValue"])
+    return sequence_number

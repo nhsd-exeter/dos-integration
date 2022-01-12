@@ -13,6 +13,7 @@ setup: project-config # Set up project
 build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s event-processor-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s fifo-dlq-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -74,6 +75,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/fifo_dlq_handler \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -85,6 +87,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
+		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/fifo_dlq_handler \
 		"
 
 component-test: # Runs whole project component tests
@@ -180,6 +183,27 @@ event-processor-run: ### A rebuild and restart of the event processor lambda.
 	make start
 
 # ==============================================================================
+# First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
+
+fifo-dlq-handler-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=fifo_dlq_handler
+	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/fifo-dlq-handler/assets/requirements.txt
+	cd $(APPLICATION_DIR)/fifo_dlq_handler
+	tar -czf $(DOCKER_DIR)/fifo-dlq-handler/assets/fifo-dlq-handler-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make fifo-dlq-handler-clean
+	export VERSION=$$(make docker-image-get-version NAME=fifo-dlq-handler)
+
+fifo-dlq-handler-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/fifo-dlq-handler/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/fifo-dlq-handler/assets/*.txt
+	make common-code-remove LAMBDA_DIR=fifo_dlq_handler
+
+# ==============================================================================
 # Authoriser (for dos api gateway mock)
 
 authoriser-build-and-push: ### Build authoriser lambda docker image
@@ -236,6 +260,7 @@ push-tester-image:
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
@@ -245,7 +270,7 @@ serverless-requirements: # Install serverless plugins
 # Pipelines
 
 deploy-development-pipeline:
-		make terraform-apply-auto-approve STACKS=development-pipeline
+	make terraform-apply-auto-approve STACKS=development-pipeline
 
 undeploy-development-pipeline:
 	make terraform-destroy-auto-approve STACKS=development-pipeline
@@ -271,6 +296,7 @@ tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
 	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
 	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
 	make docker-image NAME=tester
@@ -309,3 +335,4 @@ python-linting:
 create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
 	make docker-create-repository NAME=event-sender
+	make docker-create-repository NAME=fifo-dlq-handler
