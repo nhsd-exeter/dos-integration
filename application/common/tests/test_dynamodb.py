@@ -102,10 +102,10 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     odscode = change_event["ODSCode"]
     cevent = change_event.copy()
     add_change_request_to_dynamodb(cevent, 1, str(event_received_time))
-    add_change_request_to_dynamodb(random_change_event(cevent), 2, str(event_received_time))
-    add_change_request_to_dynamodb(random_change_event(cevent), 3, str(event_received_time))
-    add_change_request_to_dynamodb(random_change_event(cevent), 4, str(event_received_time))
-    add_change_request_to_dynamodb(random_change_event(cevent), 44, str(event_received_time))
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test1.com"), 2, str(event_received_time))
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test2.com"), 3, str(event_received_time))
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test3.com"), 4, str(event_received_time))
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test4.com"), 44, str(event_received_time))
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         IndexName="gsi_ods_sequence",
@@ -166,6 +166,7 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     assert latest_sequence_number == expected_latest_sequence_number
 
 
-def random_change_event(ce):
-    ce["dummy_data"] = str(time())
-    return ce
+def copy_and_modify_website(ce, new_website: str):
+    copy = ce.copy()
+    copy["Contacts"][0]["ContactValue"] = new_website
+    return copy
