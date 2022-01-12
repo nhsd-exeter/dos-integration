@@ -127,7 +127,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
         "Effect": "Allow",
         "Action": "cloudwatch:*",
-        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}${var.aws_account_id_nonprod}:*uec-dos-int*"
+        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:*uec-dos-int*"
     },
     {
         "Effect": "Allow",
