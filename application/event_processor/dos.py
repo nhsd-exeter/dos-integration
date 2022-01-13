@@ -1,11 +1,12 @@
 from datetime import date, datetime
 from itertools import groupby
-from os import environ
+from os import environ, getenv
 from typing import Dict, List, Union
 from dataclasses import dataclass, field, fields
 
 import psycopg2
 from psycopg2.extras import DictCursor
+from psycopg2.extensions import connection
 from aws_lambda_powertools import Logger
 
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -119,9 +120,9 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
 
     logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
 
-    sql_command = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE '{odscode[0:5]}%'"
-    logger.info(f"Created SQL command to run: {sql_command}")
-    c = query_dos_db(sql_command)
+    sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
+    named_args = {"ODS_5": f"{odscode[0:5]}%"}
+    c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
     services = [DoSService(row) for row in c.fetchall()]
@@ -141,15 +142,15 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
 
     logger.info(f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
-    sql_command = (
-        "SELECT ssod.serviceid, ssod.date, ssot.starttime, "
-        "ssot.endtime, ssot.isclosed "
+    sql_query = (
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
-        f"WHERE ssod.serviceid = {service_id}"
+        "WHERE ssod.serviceid = %(service_id)s"
     )
-    c = query_dos_db(sql_command)
+    named_args = {"service_id": service_id}
+    c = query_dos_db(sql_query, named_args)
 
     """sort by date and then by starttime"""
     sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
@@ -162,22 +163,22 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     return specified_opening_times
 
 
-def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
+def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
     """Retrieves standard opening times from DoS database"""
 
-    logger.info(f"Searching for standard opening times with serviceid that matches '{serviceid}'")
+    logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
 
     sql_command = (
-        "SELECT sdo.serviceid,  sdo.dayid, otd.name, "
-        "       sdot.starttime, sdot.endtime "
+        "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
         "FROM servicedayopenings sdo "
         "INNER JOIN servicedayopeningtimes sdot "
         "ON sdo.id = sdot.servicedayopeningid "
         "LEFT JOIN openingtimedays otd "
         "ON sdo.dayid = otd.id "
-        f"WHERE sdo.serviceid = {serviceid}"
+        "WHERE sdo.serviceid = %(service_id)s"
     )
-    c = query_dos_db(sql_command)
+    named_args = {"service_id": service_id}
+    c = query_dos_db(sql_command, named_args)
 
     standard_opening_times = StandardOpeningTimes()
     for row in c.fetchall():
@@ -191,7 +192,7 @@ def get_standard_opening_times_from_db(serviceid: int) -> StandardOpeningTimes:
     return standard_opening_times
 
 
-def _connect_dos_db() -> None:
+def _connect_dos_db() -> connection:
     """Creates a new connection to the DoS DB and returns the connection object
 
     warning: Do not use. Should only be used by query_dos_db() func
@@ -203,6 +204,7 @@ def _connect_dos_db() -> None:
     db_schema = environ["DB_SCHEMA"]
     db_user = environ["DB_USER_NAME"]
     db_password = environ["DB_PASSWORD"]
+    trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
     logger.debug(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} " f"user={db_user}")
@@ -215,12 +217,24 @@ def _connect_dos_db() -> None:
         password=db_password,
         connect_timeout=30,
         options=f"-c search_path=dbo,{db_schema}",
+        application_name=f"DI-event-processor <psycopg2> tid={trace_id}"
     )
 
     return db
 
 
-def query_dos_db(sql_command: str) -> DictCursor:
+def disconnect_dos_db() -> None:
+    """Closes the DoS database connection if it exists and is open"""
+    global db_connection
+    if db_connection is not None:
+        try:
+            db_connection.close()
+            logger.info("The DoS database connection was closed.")
+        except Exception as e:
+            logger.exception(f"There was an exception while trying to close DoS database connection: {e}")
+
+
+def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCursor:
     """Queries the dos database with given sql command and returns the resulting cursor object"""
 
     # Check if new connection needed.
@@ -230,9 +244,9 @@ def query_dos_db(sql_command: str) -> DictCursor:
     else:
         logger.info("Using existing open database connection.")
 
-    logger.info(f"Running SQL command: {sql_command}")
     c = db_connection.cursor(cursor_factory=DictCursor)
-    c.execute(sql_command)
+    logger.info(f"Running SQL command: {c.mogrify(query, vars)}")
+    c.execute(query, vars)
     return c
 
 
@@ -248,8 +262,10 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
     # Regex matches any combination of whitespace in postcode
     pc_regex = " *".join(normalised_pc)
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode ~* '{pc_regex}'"
-    c = query_dos_db(sql_command)
+    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode ~* %(pc_regex)s"
+    named_args = {"pc_regex": pc_regex}
+    c = query_dos_db(sql_command, named_args)
+
     dos_locations = [DoSLocation(**row) for row in c.fetchall()]
     dos_location_cache[normalised_pc] = dos_locations
     logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
@@ -263,3 +279,12 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     if len(dos_locations) == 0:
         return None
     return dos_locations[0].postcode
+
+
+def _set_db_connection(value):
+    global db_connection
+    db_connection = value
+
+
+def _get_db_connection():
+    return db_connection

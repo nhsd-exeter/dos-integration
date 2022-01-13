@@ -240,7 +240,7 @@ def test_lambda_handler_no_sequence_number(
     mock_nhs_entity.assert_not_called()
     mock_event_processor.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()
-    mock_logger.assert_called_with("No sequence number provided, so message will be ignored")
+    mock_logger.assert_called_with("No sequence number provided, so message will be ignored.")
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]

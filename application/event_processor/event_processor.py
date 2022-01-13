@@ -12,7 +12,7 @@ from changes import get_changes
 from common.dynamodb import add_change_request_to_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
-from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
@@ -42,6 +42,7 @@ class EventProcessor:
         """
 
         # Check database for services with same first 5 digits of ODSCode
+        logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
         logger.info(
             f"Found {len(matching_services)} services in DB with "
@@ -66,7 +67,7 @@ class EventProcessor:
         """Generates change requests needed for the found services to make them inline with the NHS Entity
 
         Returns:
-            Union[Dict[str, str], None]: A dictionary of change requests or none
+            Union[Dict[str, str], None]: A dictionary of change requests or none.
         """
         if self.matching_services is None:
             logger.error("Attempting to form change requests before matching services have been found.")
@@ -127,12 +128,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
             logger.error(f"Environmental variable {env_var} not present")
             return
 
-    counter = 0
-    for record in event.records:
-        counter += 1
-        if counter > 1:
-            logger.error("More than one record found in event", extra={"event": event})
-            return
+    if len(list(event.records)) != 1:
+        raise Exception(f"{len(list(event.records))} records found in event. Expected 1.")
 
     record = next(event.records)
     message = record.body
@@ -140,36 +137,37 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
+    if sequence_number is None:
+        logger.error("No sequence number provided, so message will be ignored.")
+        return
+
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    logger.info(f"Attempting to validate change_event: {change_event}")
-    if sequence_number is None:
-        logger.error("No sequence number provided, so message will be ignored")
-        return
-    nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.odscode)
-    logger.append_keys(org_type=nhs_entity.org_type)
-    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
 
     try:
         validate_event(change_event)
+
+        nhs_entity = NHSEntity(change_event)
+        logger.append_keys(ods_code=nhs_entity.odscode)
+        logger.append_keys(org_type=nhs_entity.org_type)
+        logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
+
+        event_processor = EventProcessor(nhs_entity)
+        matching_services = event_processor.get_matching_services()
+        if len(matching_services) == 0:
+            log_unmatched_nhsuk_pharmacies(nhs_entity)
+            return
+
+        if nhs_entity.is_status_hidden_or_closed():
+            report_closed_or_hidden_services(nhs_entity, matching_services)
+            return
+
+        event_processor.get_change_requests()
+
     except ValidationException:
         return
-
-    event_processor = EventProcessor(nhs_entity)
-    logger.info("Getting matching DoS Services")
-    matching_services = event_processor.get_matching_services()
-
-    if len(matching_services) == 0:
-        log_unmatched_nhsuk_pharmacies(nhs_entity)
-        return
-
-    if nhs_entity.is_status_hidden_or_closed():
-        report_closed_or_hidden_services(nhs_entity, matching_services)
-        return
-
-    event_processor.get_change_requests()
+    finally:
+        disconnect_dos_db()
 
     if not is_mock_mode():
         event_processor.send_changes()
