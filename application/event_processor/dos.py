@@ -231,7 +231,7 @@ def disconnect_dos_db() -> None:
             db_connection.close()
             logger.info("The DoS database connection was closed.")
         except Exception as e:
-            logger.error(f"There was an exception while trying to close DoS database connection: {e}")
+            logger.exception(f"There was an exception while trying to close DoS database connection: {e}")
 
 
 def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCursor:
@@ -279,3 +279,12 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     if len(dos_locations) == 0:
         return None
     return dos_locations[0].postcode
+
+
+def _set_db_connection(value):
+    global db_connection
+    db_connection = value
+
+
+def _get_db_connection():
+    return db_connection

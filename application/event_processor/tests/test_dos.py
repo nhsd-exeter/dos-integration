@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, date, time
 from os import environ, getenv
 from random import choices
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import pytest
 
 from ..dos import (
@@ -11,7 +11,9 @@ from ..dos import (
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
     get_dos_locations,
-    disconnect_dos_db
+    disconnect_dos_db,
+    _set_db_connection,
+    _get_db_connection
 )
 from .conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
@@ -423,4 +425,6 @@ def test_get_dos_locations(mock_connect):
 
 
 def test_disconnect_dos_db():
+    _set_db_connection(Mock())
     disconnect_dos_db()
+    _get_db_connection().close.assert_called()
