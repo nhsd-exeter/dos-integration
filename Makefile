@@ -109,6 +109,7 @@ integration-test: # Runs whole project component tests
 		-e URL=$(DOS_INTEGRATION_URL) \
 		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
 		-e EVENT_PROCESSOR=$(EVENT_PROCESSOR_LAMBDA) \
+		-e SQS_URL=$(SQS_QUEUE_URL) \
 		"
 
 clean: # Runs whole project clean

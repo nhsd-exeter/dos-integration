@@ -5,31 +5,45 @@ from features.utilities.get_secrets import get_secret
 from json import load, dumps
 from boto3 import client
 from datetime import datetime
+from time import sleep
 
 url = "https://"+getenv("URL")
+SQS_URL = getenv("SQS_URL")
 event_processor = getenv("EVENT_PROCESSOR")
 lambda_client_functions = client("lambda")
+sqs_client = client("sqs")
 
-def process_change_event(payload_name: str) -> str:
+
+
+def process_change_event(payload_name: str, correlationId: str) -> str:
     headers = {
     'x-api-key': json.loads(get_secret())[getenv('NHS_UK_API_KEY_KEY')],
+    'correlation-id': correlationId,
     'Content-Type': 'application/json'
     }
     payload = get_payload(payload_name)
     output = requests.request("POST", url, headers=headers, data=payload)
-    return output.json()
+    sleep(12)
+    return output
 
-def get_response(payload: str) -> str:
+
+def purge_queue():
+    # try:
+    sqs_client.purge_queue(QueueUrl=SQS_URL)
+    # except Exception as e:
+    #     print("ERROR!..UNABLE TO PURGE")
+
+def get_response(payload: str, corr_id: str) -> str:
     payload_name = payload
-    response = process_change_event(payload_name)
-    return response['Message']
+    correlation_id = corr_id
+    response = process_change_event(payload_name, correlation_id)
+    return response.json()['message']
 
 # This matches a payload file with a string describing it from the Steps
 
 def get_payload(payload_name: str) -> str:
-    values = {"valid" : "9_valid.json",
-            "invalid" : "10_invalid.json",
-            "expected": "11_expected_schema.json"
+    values = {"valid" : "11_expected_schema.json",
+            "invalid" : "10_invalid.json"
     }
     payload_file_name = values[payload_name]
     with open(f"./features/resources/payloads/{payload_file_name}", "r", encoding="utf-8") as json_file:

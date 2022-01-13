@@ -74,7 +74,7 @@ def get_logs(seconds_ago: int=0) -> str:
                 requests[last_request_id] = requests.get(last_request_id, [])
                 requests[last_request_id].append(item["message"])
 
-    return  requests.keys()
+    return  requests[list(requests.keys())[-1]]
 
 
 def get_logs_list(seconds_ago: int=0) -> list:
@@ -101,7 +101,9 @@ def get_logs_list(seconds_ago: int=0) -> list:
 
     return messages
 
-def get_logs_new() -> str:
-    logs = get_logs_list(seconds_ago=120)
+def get_logs_within_time_frame(time_in_seconds: int=0) -> dict:
+    logs = get_logs_list(time_in_seconds)
+    # values = {}
     for m in logs:
         print(m)
+        # values.append(m["message"])
