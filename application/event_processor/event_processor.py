@@ -67,7 +67,7 @@ class EventProcessor:
         """Generates change requests needed for the found services to make them inline with the NHS Entity
 
         Returns:
-            Union[Dict[str, str], None]: A dictionary of change requests or none
+            Union[Dict[str, str], None]: A dictionary of change requests or none.
         """
         if self.matching_services is None:
             logger.error("Attempting to form change requests before matching services have been found.")
