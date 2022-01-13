@@ -72,9 +72,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "dynamodb:CreateTable"
-      ],
+      "Action": "dynamodb:*",
       "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id_nonprod}:table/uec-dos-int*"
     },
     {
@@ -90,11 +88,9 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       "Effect": "Allow",
       "Action": [
         "lambda:GetEventSourceMapping",
-        "lambda:CreateEventSourceMapping",
-      ]
-      "Resource": [
-        "*"
-      ]
+        "lambda:CreateEventSourceMapping"
+      ],
+      "Resource": "*"
     },
     {
       "Effect": "Allow",
