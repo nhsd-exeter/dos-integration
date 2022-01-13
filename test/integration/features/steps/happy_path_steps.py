@@ -1,7 +1,7 @@
 from os import getenv
 from behave import given, then, when
-from features.utilities.utilities import process_change_event, get_response, get_lambda_info
-from features.utilities.log_stream import get_data_logs, get_logs
+from features.utilities.utilities import get_response, get_lambda_info, purge_queue, process_change_event
+from features.utilities.log_stream import get_data_logs, get_logs, get_logs_within_time_frame
 import json
 
 
@@ -9,16 +9,22 @@ import json
 def a_valid_change_event_endpoint(context):
     pass
 
-@when('a "{valid}" change event is sent to the event procesor')
-def a_valid_change_event_is_sent_to_the_event_procesor(context, valid: str):
-    response = get_response(valid)
-    assert response == "Change event received", "ERROR! Invalid Payload received.."
-
-@when('an "{invalid}" change event is processed')
-def an_invalid_change_event_is_processed(context, invalid: str):
+@given(" the endpoint connection is established")
+def the_endpoint_connection_is_established(context):
     pass
-    # response = get_response(invalid)
-    # assert response['Message'] != "Change event received", "ERROR! Payload received not invalid.."
+
+@when('a "{valid}" change event with correlation id "{corrid}" is sent to the event procesor')
+def a_valid_change_event_with_correlation_id_is_sent_to_the_event_procesor(context, valid: str, corrid: str):
+    response = process_change_event(valid, corrid)
+    message = response.json()
+    assert response.status_code == 200, f"Status code not as expected.. Status code: {response.status_code} Error: {message}"
+
+@when('an "{invalid}" change event with correlation id "{corrid}" is processed')
+def an_invalid_change_event_with_correlation_id_is_processed(context, invalid: str, corrid: str):
+    response = process_change_event(invalid, corrid)
+    message = response.json()
+    assert response.status_code == 200, f"Status code not as expected.. Status code: {response.status_code} Error: {message}"
+    purge_queue()
 
 @when('an "{expected}" change event is sent to the event procesor')
 def an_expected_change_event_is_sent_to_the_event_procesor(context, expected: str):
@@ -28,6 +34,8 @@ def an_expected_change_event_is_sent_to_the_event_procesor(context, expected: st
 @then('the event processor logs are generated')
 def the_event_processor_logs_are_generated(context):
     logs = get_logs(seconds_ago=120)
+    assert logs != [], "ERROR!! No logs found!.."
+
     print(logs)
 
 @then('the lambda is confirmed active')
