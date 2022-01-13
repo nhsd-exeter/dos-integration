@@ -52,10 +52,17 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "ec2:DescribeVpcs",
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords",
-        "lambda:InvokeFunction",
-        "sqs:*"
+        "lambda:InvokeFunction"
       ],
       "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
     },
     {
       "Effect": "Allow",
@@ -170,11 +177,30 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
         "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords",
-        "sqs:*",
-        "dynamodb:*"
+        "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
+    },
+        {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
     }
   ]
 }
