@@ -12,10 +12,10 @@ TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 logger = Logger(child=True)
 
 
-def dict_hash(change_event: Dict[str, Any]) -> str:
+def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     """MD5 hash of a dictionary."""
     change_event_hash = hashlib.md5()
-    encoded = dumps(change_event, sort_keys=True).encode()
+    encoded = dumps([change_event, sequence_number], sort_keys=True).encode()
     change_event_hash.update(encoded)
     return change_event_hash.hexdigest()
 
@@ -32,7 +32,7 @@ def add_change_request_to_dynamodb(
         dict: returns response from dynamodb
     """
     dynamo_record = {
-        "Id": dict_hash(change_event),
+        "Id": dict_hash(change_event, sequence_number),
         "ODSCode": change_event["ODSCode"],
         "TTL": str(int(time()) + TTL),
         "EventReceived": event_received_time,
@@ -46,8 +46,12 @@ def add_change_request_to_dynamodb(
         response = dynamodb.put_item(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             Item=put_item,
+            ReturnValues="ALL_OLD",
         )
-        logger.info(f"Added record to dynamodb. {put_item}")
+        Id = None
+        if hasattr(response["Attributes"], "Id"):
+            Id = response["Attributes"]["Id"]["S"]
+        logger.info(f"Added record to dynamodb. Id:{Id} {put_item}")
     except Exception as err:
         logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
         raise

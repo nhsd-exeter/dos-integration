@@ -47,13 +47,15 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     # Arrange
     event_received_time = int(time())
     # Act
-    change_id = dict_hash(change_event)
-    response_add = add_change_request_to_dynamodb(change_event.copy(), 1, str(event_received_time))
+    sequence_number = 1
+    change_id = dict_hash(change_event, sequence_number)
+    response_add = add_change_request_to_dynamodb(change_event.copy(), sequence_number, str(event_received_time))
 
     item = dynamodb_client.get_item(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         Key={"Id": {"S": change_id}, "ODSCode": {"S": change_event["ODSCode"]}},
     )["Item"]
+
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
     expected = loads(dumps(change_event), parse_float=Decimal)
@@ -72,9 +74,30 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
     event_received_time = int(time())
     add_change_request_to_dynamodb(change_event.copy(), 1, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 2, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 20, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
     add_change_request_to_dynamodb(change_event.copy(), 4, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 20, str(event_received_time))
+
+    resp = dynamodb_client.query(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={
+            ":odscode": {"S": change_event["ODSCode"]},
+        },
+        ScanIndexForward=False,
+    )
+    assert resp.get("Count") == 5
+    latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    assert latest_sequence_number == 20
+
+
+def test_same_sequence_id_and_same_change_event_multiple_times(dynamodb_table_create, change_event, dynamodb_client):
+    event_received_time = int(time())
+    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         IndexName="gsi_ods_sequence",
@@ -86,7 +109,7 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
     )
     assert resp.get("Count") == 1
     latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
-    assert latest_sequence_number == 20
+    assert latest_sequence_number == 3
 
 
 def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_event):
