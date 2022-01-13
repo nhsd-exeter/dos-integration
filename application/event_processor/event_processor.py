@@ -136,13 +136,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
+    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
-
     # Save Event to dynamo so can be retrieved later
-    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     if sequence_number < db_latest_sequence_number:
         logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
         return

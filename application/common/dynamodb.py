@@ -43,15 +43,8 @@ def add_change_request_to_dynamodb(
         dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
-        response = dynamodb.put_item(
-            TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
-            Item=put_item,
-            ReturnValues="ALL_OLD",
-        )
-        Id = None
-        if hasattr(response["Attributes"], "Id"):
-            Id = response["Attributes"]["Id"]["S"]
-        logger.info(f"Added record to dynamodb. Id:{Id} {put_item}")
+        response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
+        logger.info(f"Added record to dynamodb. {put_item}")
     except Exception as err:
         logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
         raise

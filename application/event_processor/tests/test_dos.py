@@ -13,7 +13,7 @@ from ..dos import (
     get_dos_locations,
     disconnect_dos_db,
     _set_db_connection,
-    _get_db_connection
+    _get_db_connection,
 )
 from .conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
@@ -126,14 +126,14 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
         "FROM services WHERE odscode LIKE %(ODS_5)s",
-        {"ODS_5": f"{odscode}%"}
+        {"ODS_5": f"{odscode}%"},
     )
     # Clean up
     del environ["DB_SERVER"]
@@ -167,14 +167,14 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
         password=db_password,
         options=f"-c search_path=dbo,{db_schema}",
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
     mock_connect().cursor().execute.assert_called_with(
         "SELECT id, uid, name, odscode, address, town, postcode, web, email, "
         "fax, nonpublicphone, typeid, parentid, subregionid, statusid, "
         "createdtime, modifiedtime, publicphone, publicname "
         "FROM services WHERE odscode LIKE %(ODS_5)s",
-        {"ODS_5": f"{odscode}%"}
+        {"ODS_5": f"{odscode}%"},
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -225,7 +225,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
 
     mock_connect().cursor().execute.assert_called_with(
@@ -234,7 +234,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(service_id)s",
-        {"service_id": service_id}
+        {"service_id": service_id},
     )
 
     # Clean up
@@ -283,7 +283,7 @@ def test_get_standard_opening_times_from_db_times_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
 
     # Clean up
@@ -318,7 +318,7 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
 
     mock_connect().cursor().execute.assert_called_with(
@@ -327,7 +327,7 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(service_id)s",
-        {"service_id": service_id}
+        {"service_id": service_id},
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
     # Clean up
@@ -412,7 +412,7 @@ def test_get_dos_locations(mock_connect):
         options=f"-c search_path=dbo,{db_schema}",
         password=db_password,
         connect_timeout=30,
-        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}"
+        application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
 
     # Clean up
