@@ -99,6 +99,14 @@ variable "dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }
 
+variable "fifo_dlq_handler_lambda_name" {
+  description = ""
+}
+
+variable "dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
 # ############################
 # # ROUTE53
 # ############################
