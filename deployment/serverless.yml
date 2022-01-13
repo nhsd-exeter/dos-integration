@@ -10,15 +10,16 @@ provider:
   lambdaHashingVersion: 20201221
   architecture: x86_64
   region: ${env:AWS_REGION}
+  versionFunctions: false
   deploymentBucket:
     blockPublicAccess: true
     skipPolicySetup: true
   tags:
     Environment: ${env:ENVIRONMENT}
     PROFILE: ${env:PROFILE}
-    Product: ${env:PROJECT_GROUP_SHORT}
+    Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
-    Service: ${env:PROJECT_GROUP_SHORT}
+    Service: ${env:PROJECT_ID}
   environment:
     POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
     POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
@@ -71,9 +72,10 @@ functions:
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
-    memorySize: 256
+    memorySize: 128
     timeout: 120
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
+    maximumRetryAttempts: 0
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
@@ -86,4 +88,18 @@ functions:
       DB_PASSWORD: ${env:DB_PASSWORD}
       EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       MOCK_MODE: ${env:MOCK_MODE}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+
+  fifo-dlq-handler:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-fifo-dlq-handler
+    description: ${sls:stage} FIFO DLQ Handler lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_fifo_dlq_handler_role_name}
+    maximumRetryAttempts: 0
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}

@@ -62,6 +62,10 @@ variable "event_sender_role_name" {
   description = "Role name for event sender lambda"
 }
 
+variable "fifo_dlq_handler_role_name" {
+  description = "Role name for fifo dlq handler lambda"
+}
+
 # ##############
 # # DYNAMO DB
 # ##############

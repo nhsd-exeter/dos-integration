@@ -76,7 +76,7 @@ variable "di_endpoint_api_gateway_stage" {
 
 
 # ############################
-# SQS
+# SQS FIFO QUEUE
 # ############################
 
 variable "fifo_queue_name" {
@@ -84,6 +84,14 @@ variable "fifo_queue_name" {
 }
 
 variable "event_processor_lambda_name" {
+  description = ""
+}
+
+variable "fifo_dlq_handler_lambda_name" {
+  description = ""
+}
+
+variable "dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }
 

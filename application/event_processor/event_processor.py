@@ -1,23 +1,24 @@
-from json import dumps, loads
+from json import dumps
 from os import environ
-from typing import Any, Dict, List, Union
-from change_event_validation import validate_event
+from typing import Dict, List, Union
+
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.utilities import invoke_lambda_function, is_mock_mode
-from common.dynamodb import add_change_request_to_dynamodb
+from change_event_exceptions import ValidationException
+from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
+from common.dynamodb import add_change_request_to_dynamodb
+from common.middlewares import set_correlation_id, unhandled_exception_logging
+from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 
-
 logger = Logger()
 tracer = Tracer()
-# lambda_client = client("lambda", region_name=environ["AWS_REGION"])
+
 EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_SERVER",
     "DB_PORT",
@@ -105,13 +106,13 @@ class EventProcessor:
             logger.info(f"Sent off change payload for id={change_request.service_id}")
 
 
+@unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
 @set_correlation_id()
 @logger.inject_lambda_context()
-@unhandled_exception_logging()
 def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
-    """Entrypoint handler for the event_receiver lambda
+    """Entrypoint handler for the event_processor lambda
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
@@ -124,27 +125,24 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
+            return
 
     counter = 0
     for record in event.records:
         counter += 1
         if counter > 1:
-            raise Exception("More than one record found in event")
+            logger.error("More than one record found in event", extra={"event": event})
+            return
 
     record = next(event.records)
     message = record.body
-    sequence_number: Union(int, None) = None
-    if (
-        record.message_attributes["sequence-number"] is not None
-        and record.message_attributes["sequence-number"]["stringValue"] is not None
-    ):
-        sequence_number = int(record.message_attributes["sequence-number"]["stringValue"])
-    change_event = extract_message(message)
+
+    sequence_number = get_sequence_number(record)
+    change_event = extract_body(message)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     logger.info(f"Attempting to validate change_event: {change_event}")
-    validate_event(change_event)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored")
         return
@@ -153,6 +151,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     logger.append_keys(org_type=nhs_entity.org_type)
     logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
     logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
+
+    try:
+        validate_event(change_event)
+    except ValidationException:
+        return
 
     event_processor = EventProcessor(nhs_entity)
     logger.info("Getting matching DoS Services")
@@ -172,19 +175,3 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
-
-
-def extract_message(message_body: str) -> Dict[str, Any]:
-    """Extracts the change event from the lambda function invocation event
-
-    Args:
-        message_body (str): One SQS message body (JSON string)
-    Returns:
-        Dict[str, Any]: Change event as a dictionary
-    """
-    try:
-        change_event = loads(message_body)
-    except Exception:
-        logger.exception("Change Event unable to be extracted")
-        raise
-    return change_event
