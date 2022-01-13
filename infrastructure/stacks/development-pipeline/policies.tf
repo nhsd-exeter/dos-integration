@@ -83,8 +83,17 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       "Resource": [
         "arn:aws:lambda:${var.aws_region}:${var.aws_account_id_nonprod}:function:uec-dos-int*",
         "arn:aws:lambda:${var.aws_region}:${var.aws_account_id_nonprod}:layer:uec-dos-int*",
-        "arn:aws:lambda:${var.aws_region}:${var.aws_account_id_nonprod}:event-source-mapping:uec-dos-int*",
         "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:/aws/lambda/uec-dos-int*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetEventSourceMapping",
+        "lambda:CreateEventSourceMapping",
+      ]
+      "Resource": [
+        "*"
       ]
     },
     {
