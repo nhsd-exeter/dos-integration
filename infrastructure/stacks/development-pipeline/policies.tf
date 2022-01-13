@@ -72,6 +72,13 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     },
     {
       "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable"
+      ],
+      "Resource": "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id_nonprod}:table/uec-dos-int*"
+    },
+    {
+      "Effect": "Allow",
       "Action": "lambda:*",
       "Resource": [
         "arn:aws:lambda:${var.aws_region}:${var.aws_account_id_nonprod}:function:uec-dos-int*",
