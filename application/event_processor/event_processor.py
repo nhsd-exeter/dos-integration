@@ -137,29 +137,22 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
-    change_event = extract_message(message)
+    if sequence_number is None:
+        logger.error("No sequence number provided, so message will be ignored.")
+        return
 
     # Save Event to dynamo so can be retrieved later
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    
-    if sequence_number is None:
-        logger.error("No sequence number provided, so message will be ignored")
-        return
-
-    nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.odscode)
-    logger.append_keys(org_type=nhs_entity.org_type)
-    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
 
     try:
         validate_event(change_event)
-    except ValidationException:
-        return
 
-    try:
+        nhs_entity = NHSEntity(change_event)
+        logger.append_keys(ods_code=nhs_entity.odscode)
+        logger.append_keys(org_type=nhs_entity.org_type)
+        logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
+
         event_processor = EventProcessor(nhs_entity)
-        matching_services = event_processor.get_matching_services()
-
         matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
             log_unmatched_nhsuk_pharmacies(nhs_entity)
@@ -170,6 +163,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
             return
 
         event_processor.get_change_requests()
+
+    except ValidationException:
+        return
     finally:
         disconnect_dos_db()
 

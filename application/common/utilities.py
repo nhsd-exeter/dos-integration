@@ -15,10 +15,7 @@ def is_debug_mode() -> bool:
     Returns:
         bool: Should debug mode be on?
     """
-    response = False
-    if environ["PROFILE"] in ["local", "task"]:
-        response = True
-    return response
+    return environ["PROFILE"] in ["local", "task"]
 
 
 def get_environment_variable(environment_key: str) -> str:
@@ -46,10 +43,7 @@ def is_mock_mode() -> bool:
     Returns:
         bool: Should mock mode be on?
     """
-    if getenv("MOCK_MODE") in ["true", "True"]:
-        return True
-    else:
-        return False
+    return getenv("MOCK_MODE", "").upper() == "TRUE"
 
 
 def invoke_lambda_function(lambda_name: str, lambda_event: Dict[str, Any]) -> None:
@@ -83,17 +77,10 @@ def extract_body(body: str) -> Dict[str, Any]:
 
 def get_sequence_number(record: SQSRecord) -> Union[int, None]:
     """Gets the sequence number from the SQS record
-
     Args:
         record (SQSRecord): SQS record
-
     Returns:
         Optional[int]: Sequence number of the message or None if not present
     """
-    sequence_number = None
-    if (
-        record.message_attributes["sequence-number"] is not None
-        and record.message_attributes["sequence-number"]["stringValue"] is not None
-    ):
-        sequence_number = int(record.message_attributes["sequence-number"]["stringValue"])
-    return sequence_number
+    seq_num_str = record.message_attributes.get("sequence-number", {}).get("stringValue")
+    return None if seq_num_str is None else int(seq_num_str)
