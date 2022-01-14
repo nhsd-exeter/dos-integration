@@ -145,12 +145,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     if sequence_number < db_latest_sequence_number:
         logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
         return
-    nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.odscode)
-    logger.append_keys(org_type=nhs_entity.org_type)
-    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
-
     try:
         validate_event(change_event)
 
