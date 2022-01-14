@@ -60,6 +60,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
       "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
@@ -185,6 +186,7 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
       "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
