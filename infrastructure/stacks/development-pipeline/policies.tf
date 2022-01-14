@@ -88,7 +88,9 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       "Effect": "Allow",
       "Action": [
         "lambda:GetEventSourceMapping",
-        "lambda:CreateEventSourceMapping"
+        "lambda:CreateEventSourceMapping",
+        "lambda:DeleteEventSourceMapping",
+        "lambda:UpdateEventSourceMapping"
       ],
       "Resource": "*"
     },
