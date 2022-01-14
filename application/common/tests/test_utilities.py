@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 from pytest import raises
-
+from application.common import utilities
 from ..utilities import (
     extract_body,
     get_environment_variable,
@@ -55,7 +55,7 @@ def test_is_mock_mode_none():
     assert response == expected_response
 
 
-@patch(f"{FILE_PATH}.client")
+@patch.object(utilities, "client")
 def test_invoke_lambda_function(mock_client):
     # Arrange
     lambda_function_name = "my-lambda-function"

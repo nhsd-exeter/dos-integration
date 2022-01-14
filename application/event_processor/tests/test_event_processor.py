@@ -135,8 +135,9 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
+@patch.object(Logger, "get_correlation_id", return_value = 1)
 @patch(f"{FILE_PATH}.client")
-def test_send_changes(mock_client):
+def test_send_changes(mock_client, get_correlation_id_mock):
     # Arrange
     bus_name = "test"
     environ["EVENTBRIDGE_BUS_NAME"] = bus_name
@@ -164,12 +165,13 @@ def test_send_changes(mock_client):
     event_processor.send_changes()
     # Assert
     mock_client.assert_called_with("events")
+    entry_details = {"change_payload" : change_request.create_payload(), "correlation_id": 1}
     mock_client.return_value.put_events.assert_called_with(
         Entries=[
             {
                 "Source": "event-processor",
                 "DetailType": "change-request",
-                "Detail": dumps(change_request.create_payload()),
+                "Detail": dumps(entry_details),
                 "EventBusName": bus_name,
             },
         ]
@@ -185,7 +187,7 @@ def test_send_changes(mock_client):
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_unmatched_service(
-    mock_extract_message,
+    mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
     mock_is_mock_mode,
@@ -198,7 +200,6 @@ def test_lambda_handler_unmatched_service(
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
@@ -211,6 +212,7 @@ def test_lambda_handler_unmatched_service(
     assert response is None, f"Response should be None but is {response}"
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
+    mock_extract_body.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:

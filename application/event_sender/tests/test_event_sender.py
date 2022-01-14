@@ -1,9 +1,7 @@
 from unittest.mock import patch
 from dataclasses import dataclass
-
 import pytest
-
-
+import json
 from ..event_sender import lambda_handler
 
 CHANGE_REQUEST = {
@@ -13,6 +11,8 @@ CHANGE_REQUEST = {
     "service_id": "49016",
     "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
 }
+BODY = json.dumps({"change_payload" : CHANGE_REQUEST, "correlation_id" : "dummy_correlation_id"})
+EVENT = {"body" : BODY}
 
 FILE_PATH = "application.event_sender.event_sender"
 
@@ -33,7 +33,7 @@ def lambda_context():
 def test_lambda_handler(mock_change_request, lambda_context):
 
     # Act
-    lambda_handler(CHANGE_REQUEST, lambda_context)
+    lambda_handler(EVENT, lambda_context)
     # Assert
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
