@@ -3,7 +3,6 @@
 # ==============================================================================
 # Service variables
 
-
 DOS_API_GATEWAY_SECRETS = $(TF_VAR_dos_api_gateway_secret)
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
@@ -45,7 +44,6 @@ TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-de
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
-
 
 # IAM Roles
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
