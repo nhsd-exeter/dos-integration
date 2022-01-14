@@ -77,6 +77,13 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "dynamodb:UpdateItem"
       ],
       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query",
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }
@@ -203,6 +210,13 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
         "dynamodb:UpdateItem"
       ],
       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query",
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }
