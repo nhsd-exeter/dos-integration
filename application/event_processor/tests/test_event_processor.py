@@ -186,7 +186,7 @@ def test_send_changes(mock_client, get_correlation_id_mock):
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_unmatched_service(
-    mock_extract_message,
+    mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
     mock_add_change_request_to_dynamodb,
@@ -198,7 +198,6 @@ def test_lambda_handler_unmatched_service(
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_add_change_request_to_dynamodb.return_value = None
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
@@ -211,7 +210,6 @@ def test_lambda_handler_unmatched_service(
     mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
-
     mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:

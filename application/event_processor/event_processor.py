@@ -148,6 +148,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     record = next(event.records)
     message = record.body
     change_event = extract_message(message)
+    sequence_number = get_sequence_number(record)
+    sqs_timestamp = str(record.attributes["SentTimestamp"])
+    if sequence_number is None:
+        logger.error("No sequence number provided, so message will be ignored.")
+        return
+
     logger.info(f"Attempting to validate change_event: {change_event}")
     validate_event(change_event)
     nhs_entity = NHSEntity(change_event)
@@ -159,7 +165,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     event_processor = EventProcessor(nhs_entity)
     logger.info("Getting matching DoS Services")
     matching_services = event_processor.get_matching_services()
-
     if len(matching_services) == 0:
         log_unmatched_nhsuk_pharmacies(nhs_entity)
         return
