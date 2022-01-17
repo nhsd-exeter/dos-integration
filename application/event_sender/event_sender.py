@@ -26,6 +26,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         "Received change request",
         extra={"change_request": body["change_payload"], "correlation_id": logger.get_correlation_id()},
     )
-    change_request = ChangeRequest(body["change_payload"], body["correlation_id"])
+    change_request = ChangeRequest(body["change_payload"])
     change_request.post_change_request()
     return change_request.get_response()

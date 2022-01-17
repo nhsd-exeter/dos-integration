@@ -198,6 +198,7 @@ def test_lambda_handler_unmatched_service(
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
+    mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
     mock_add_change_request_to_dynamodb.return_value = None
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0

@@ -28,7 +28,7 @@ class TestChangeRequestLogger:
             "response_text": test_response.text,
         }
         # Act
-        change_request_logger.log_change_request_response(test_response, self.CORRELATION_ID)
+        change_request_logger.log_change_request_response(test_response)
         # Assert
         info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=expected_extra)
 
@@ -46,7 +46,7 @@ class TestChangeRequestLogger:
             "response_text": test_response.text,
         }
         # Act
-        change_request_logger.log_change_request_response(test_response, self.CORRELATION_ID)
+        change_request_logger.log_change_request_response(test_response)
         # Assert
         error_logger_mock.assert_called_with("Failed to send change request to DoS", extra=expected_extra)
 
@@ -66,7 +66,7 @@ class TestChangeRequestLogger:
         response_add(RESPONSE_POST, "https://dummy_url", json=response_json, status=status_code)
         change_request_response = request_post("https://dummy_url", data=response_json)
         # Act
-        change_request_logger.log_change_request_response(change_request_response, self.CORRELATION_ID)
+        change_request_logger.log_change_request_response(change_request_response)
         # Assert
         info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=info_logger_expected)
 
@@ -79,6 +79,6 @@ class TestChangeRequestLogger:
             "exception_reason": "Error posting change request",
         }
         # Act
-        change_request_logger.log_change_request_exception(self.CORRELATION_ID)
+        change_request_logger.log_change_request_exception()
         # Assert
         exception_logger_mock.assert_called_with("Exception error posting change request to DoS", extra=expected_extra)
