@@ -1,3 +1,7 @@
+from unittest.mock import patch
+
+from dos import dos_location_cache
+
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     OPENING_DATES_KEY,
@@ -7,10 +11,15 @@ from ..change_request import (
     PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
-from ..changes import get_changes, update_changes, update_changes_with_address, update_changes_with_opening_times
+from ..changes import (
+    get_changes,
+    update_changes,
+    update_changes_with_address,
+    update_changes_with_opening_times,
+    update_changes_with_postcode,
+)
 from ..nhs import NHSEntity
 from .conftest import dummy_dos_location, dummy_dos_service
-from dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.changes"
 
@@ -156,6 +165,20 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     expected_changes = {ADDRESS_CHANGE_KEY: nhs_uk_entity.address_lines}
     # Assert
     assert actual_changes == expected_changes, f"Should return {expected_changes} dict, actually: {actual_changes}"
+
+
+@patch(f"{FILE_PATH}.get_valid_dos_postcode")
+def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, change_event):
+    # Arrange
+    nhs_entity = NHSEntity(change_event)
+    dos_service = dummy_dos_service()
+    mock_get_valid_dos_postcode.return_value = None
+    # Act
+    existing_changes = {ADDRESS_CHANGE_KEY: ["address1", "address2", "address3", "city", "county"]}
+    update_changes_with_postcode(existing_changes, dos_service, nhs_entity)
+    # Assert
+    mock_get_valid_dos_postcode.assert_called_once_with(nhs_entity.normal_postcode())
+    assert existing_changes == {}, f"Should return empty dict, actually: {existing_changes}"
 
 
 def test_update_changes_with_opening_times():
