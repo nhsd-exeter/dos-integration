@@ -6,7 +6,7 @@ from requests import post as request_post
 from json import dumps
 import pytest
 
-from ..change_request_logger import ChangeRequestLogger, logger
+from ..change_request_logger import ChangeRequestLogger
 
 
 class TestChangeRequestLogger:
