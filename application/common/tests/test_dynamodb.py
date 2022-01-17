@@ -49,7 +49,7 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     # Act
     sequence_number = 1
     change_id = dict_hash(change_event, sequence_number)
-    response_add = add_change_request_to_dynamodb(change_event.copy(), sequence_number, str(event_received_time))
+    response_add = add_change_request_to_dynamodb(change_event.copy(), sequence_number, event_received_time)
 
     item = dynamodb_client.get_item(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
@@ -61,8 +61,8 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     expected = loads(dumps(change_event), parse_float=Decimal)
 
     assert response_add["ResponseMetadata"]["HTTPStatusCode"] == 200
-    assert deserialized["EventReceived"] == str(event_received_time)
-    assert deserialized["TTL"] == str(event_received_time + TTL)
+    assert deserialized["EventReceived"] == int(event_received_time)
+    assert deserialized["TTL"] == int(event_received_time + TTL)
     assert deserialized["Id"] == change_id
     assert deserialized["SequenceNumber"] == 1
     assert deserialized["Event"] == expected
@@ -72,11 +72,11 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
     dynamodb_table_create, change_event, dynamodb_client
 ):
     event_received_time = int(time())
-    add_change_request_to_dynamodb(change_event.copy(), 1, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 2, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 20, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 4, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 1, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 2, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 20, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 3, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 4, event_received_time)
 
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
@@ -94,10 +94,10 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
 
 def test_same_sequence_id_and_same_change_event_multiple_times(dynamodb_table_create, change_event, dynamodb_client):
     event_received_time = int(time())
-    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
-    add_change_request_to_dynamodb(change_event.copy(), 3, str(event_received_time))
+    add_change_request_to_dynamodb(change_event.copy(), 3, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 3, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 3, event_received_time)
+    add_change_request_to_dynamodb(change_event.copy(), 3, event_received_time)
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         IndexName="gsi_ods_sequence",
@@ -124,11 +124,11 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     event_received_time = int(time())
     odscode = change_event["ODSCode"]
     cevent = change_event.copy()
-    add_change_request_to_dynamodb(cevent, 1, str(event_received_time))
-    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test1.com"), 2, str(event_received_time))
-    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test2.com"), 3, str(event_received_time))
-    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test3.com"), 4, str(event_received_time))
-    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test4.com"), 44, str(event_received_time))
+    add_change_request_to_dynamodb(cevent, 1, event_received_time)
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test1.com"), 2, event_received_time)
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test2.com"), 3, event_received_time)
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test3.com"), 4, event_received_time)
+    add_change_request_to_dynamodb(copy_and_modify_website(cevent, "www.test4.com"), 44, event_received_time)
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         IndexName="gsi_ods_sequence",

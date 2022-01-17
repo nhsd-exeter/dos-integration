@@ -33,6 +33,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         },
     )
     change_event = extract_body(message)
-    sqs_timestamp = str(record.attributes["SentTimestamp"])
+    sqs_timestamp = int(record.attributes["SentTimestamp"])
     sequence_number = get_sequence_number(record)
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)

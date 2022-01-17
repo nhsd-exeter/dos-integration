@@ -63,5 +63,5 @@ def test_lambda_handler(
     lambda_handler(dead_letter_change_event, lambda_context)
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_change_event["Records"][0]["body"])
-    expected_timestamp = dead_letter_change_event["Records"][0]["attributes"]["SentTimestamp"]
+    expected_timestamp = int(dead_letter_change_event["Records"][0]["attributes"]["SentTimestamp"])
     mock_add_change_request_to_dynamodb.assert_called_once_with(extracted_body, None, expected_timestamp)
