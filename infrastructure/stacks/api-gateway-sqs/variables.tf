@@ -91,6 +91,10 @@ variable "fifo_dlq_handler_lambda_name" {
   description = ""
 }
 
+# ############################
+# SQS DEAD LETTER QUEUE
+# ############################
+
 variable "dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }

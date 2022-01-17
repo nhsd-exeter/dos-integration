@@ -168,6 +168,7 @@ def test_send_changes(mock_invoke_lambda_function):
     del environ["EVENT_SENDER_LAMBDA_NAME"]
 
 
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
@@ -179,6 +180,7 @@ def test_lambda_handler_unmatched_service(
     mock_event_processor,
     mock_is_mock_mode,
     mock_add_change_request_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
     lambda_context,
 ):
@@ -190,6 +192,7 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
@@ -207,6 +210,7 @@ def test_lambda_handler_unmatched_service(
 
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -216,6 +220,7 @@ def test_lambda_handler_no_sequence_number(
     mock_nhs_entity,
     mock_event_processor,
     mock_is_mock_mode,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_add_change_request_to_dynamodb,
     mock_logger,
     change_event,
@@ -230,6 +235,7 @@ def test_lambda_handler_no_sequence_number(
     mock_nhs_entity.return_value = mock_entity
     mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
@@ -241,6 +247,55 @@ def test_lambda_handler_no_sequence_number(
     mock_event_processor.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()
     mock_logger.assert_called_with("No sequence number provided, so message will be ignored.")
+    # Clean up
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
+@patch.object(Logger, "error")
+@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
+@patch(f"{FILE_PATH}.get_sequence_number")
+@patch(f"{FILE_PATH}.is_mock_mode")
+@patch(f"{FILE_PATH}.EventProcessor")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_event_processor,
+    mock_is_mock_mode,
+    mock_get_sequence_number,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    mock_add_change_request_to_dynamodb,
+    mock_logger,
+    change_event,
+    lambda_context,
+):
+    # Arrange
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    # sequence_number = sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
+    mock_extract_body.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_is_mock_mode.return_value = False
+    mock_add_change_request_to_dynamodb.return_value = None
+    mock_get_sequence_number.return_value = 1
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 3
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    response = lambda_handler(sqs_event, lambda_context)
+    # Assert
+    assert response is None, f"Response should be None but is {response}"
+    mock_is_mock_mode.assert_called_once
+    mock_nhs_entity.assert_not_called()
+    mock_event_processor.assert_not_called()
+    mock_event_processor.send_changes.assert_not_called()
+    mock_logger.assert_called_with(
+        "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored"
+    )
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]

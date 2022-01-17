@@ -217,7 +217,7 @@ def _connect_dos_db() -> connection:
         password=db_password,
         connect_timeout=30,
         options=f"-c search_path=dbo,{db_schema}",
-        application_name=f"DI-event-processor <psycopg2> tid={trace_id}"
+        application_name=f"DI-event-processor <psycopg2> tid={trace_id}",
     )
 
     return db

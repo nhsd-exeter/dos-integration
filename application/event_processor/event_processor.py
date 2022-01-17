@@ -9,7 +9,7 @@ from change_event_exceptions import ValidationException
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from common.dynamodb import add_change_request_to_dynamodb
+from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
@@ -133,17 +133,18 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     record = next(event.records)
     message = record.body
-
-    sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
+    sequence_number = get_sequence_number(record)
     sqs_timestamp = str(record.attributes["SentTimestamp"])
+    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
-
     # Save Event to dynamo so can be retrieved later
-    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-
+    if sequence_number < db_latest_sequence_number:
+        logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
+        return
     try:
         validate_event(change_event)
 
