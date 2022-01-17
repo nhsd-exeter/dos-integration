@@ -19,6 +19,7 @@ class TestChangeRequest:
         "service_id": "49016",
         "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
     }
+    CORRELATION_ID = 1
     WEBSITE = "https://test.com"
     TIMEOUT = "10"
     USERNAME_KEY = "username_sm_key"
@@ -26,9 +27,8 @@ class TestChangeRequest:
     SECRETS = {USERNAME_KEY: "username", PASSWORD_KEY: "password"}
     AWS_SM_API_GATEWAY_SECRET = "api-gateway-secrets"
 
-    @patch.object(Logger, "get_correlation_id", return_value=None)
     @patch.object(change_request, "get_secret", return_value = SECRETS )
-    def test__init__(self, get_secret_mock, get_correlation_id_mock):
+    def test__init__(self, get_secret_mock):
         # Arrange
         environ["PROFILE"] = "remote"
         environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
@@ -38,15 +38,18 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_SECRETS"] = self.AWS_SM_API_GATEWAY_SECRET
         expected_auth = HTTPBasicAuth(self.SECRETS[self.USERNAME_KEY], self.SECRETS[self.PASSWORD_KEY])
         # Act
-        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT, None)
         # Assert
         assert change_request.headers == {"Content-Type": "application/json", "Accept": "application/json"}
         assert change_request.change_request_url == self.WEBSITE
         assert change_request.timeout == int(self.TIMEOUT)
         assert change_request.authorisation == expected_auth
         assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
+        assert change_request.headers == {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
         get_secret_mock.assert_called_with(self.AWS_SM_API_GATEWAY_SECRET)
-        get_correlation_id_mock.assert_called()
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
@@ -65,19 +68,18 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_PASSWORD_KEY"] = self.PASSWORD_KEY
         expected_auth = HTTPBasicAuth(self.SECRETS[self.USERNAME_KEY], self.SECRETS[self.PASSWORD_KEY])
         # Act
-        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT, self.CORRELATION_ID)
         # Assert
         assert change_request.headers == {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "x-correlation-id": "CORRELATION",
+            "x-correlation-id": 1,
         }
         assert change_request.change_request_url == self.WEBSITE
         assert change_request.timeout == int(self.TIMEOUT)
         assert change_request.authorisation == expected_auth
         assert change_request.change_request_body == self.CHANGE_REQUEST_EVENT
         get_secret_mock.assert_called_with(self.AWS_SM_API_GATEWAY_SECRET)
-        get_correlation_id_mock.assert_called()
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
@@ -94,7 +96,7 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
         environ["DOS_API_GATEWAY_USERNAME_KEY"] = self.USERNAME_KEY
         environ["DOS_API_GATEWAY_PASSWORD_KEY"] = self.PASSWORD_KEY
-        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT, self.CORRELATION_ID)
         expected_response_body = {"my-key": "my-val"}
         status_code = 200
         add(POST, self.WEBSITE, json=expected_response_body, status=status_code)
@@ -123,7 +125,7 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
         environ["DOS_API_GATEWAY_USERNAME_KEY"] = self.USERNAME_KEY
         environ["DOS_API_GATEWAY_PASSWORD_KEY"] = self.PASSWORD_KEY
-        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT, self.CORRELATION_ID)
         cr_logger_mock = MagicMock()
         change_request.change_request_logger = cr_logger_mock
         mock_post.side_effect = Exception("Test exception")

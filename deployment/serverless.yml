@@ -79,6 +79,7 @@ functions:
       DB_PASSWORD: ${env:DB_PASSWORD}
       MOCK_MODE: ${env:MOCK_MODE}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
 
   fifo-dlq-handler:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
@@ -92,7 +93,6 @@ functions:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
     maximumRetryAttempts: 0
 
   event-sender:

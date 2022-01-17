@@ -51,7 +51,7 @@ resource "aws_api_gateway_integration" "di_endpoint_integration" {
   }
   request_templates = {
     "application/json" = <<EOF
-#if( $input.params().header.get('correlation-id').toString() != "" )
+#if( $input.params('correlation-id').toString() != "" )
 #set($correlation_id = $util.escapeJavaScript($input.params("correlation-id")))
 #else
 #set($correlation_id = $context.requestId)
