@@ -1,6 +1,5 @@
 from os import environ
 from unittest.mock import MagicMock, patch
-from pytest import raises
 from aws_lambda_powertools import Logger
 from requests.auth import HTTPBasicAuth
 from responses import POST, activate, add

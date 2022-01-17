@@ -1,6 +1,4 @@
-from http.client import HTTPConnection
-from os import environ
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from aws_lambda_powertools import Logger
 from requests.models import Response
 from responses import add as response_add, POST as RESPONSE_POST, activate as responses_activate
@@ -8,7 +6,7 @@ from requests import post as request_post
 from json import dumps
 import pytest
 
-from ..change_request_logger import ChangeRequestLogger, logger
+from ..change_request_logger import ChangeRequestLogger
 
 
 class TestChangeRequestLogger:

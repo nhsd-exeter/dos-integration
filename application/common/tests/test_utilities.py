@@ -9,7 +9,6 @@ from ..utilities import (
     extract_body,
     get_environment_variable,
     invoke_lambda_function,
-    is_debug_mode,
     is_mock_mode,
     get_sequence_number,
 )
@@ -27,8 +26,6 @@ def test_extract_body():
 
 
 def test_extract_message_exception():
-    # Arrange
-    expected_change_event = {"test": "test"}
     # Act & Assert
     with raises(KeyError):
         get_environment_variable("UNKNOWN_VARIABLE")
@@ -67,17 +64,6 @@ def test_invoke_lambda_function(mock_client):
     mock_client.return_value.invoke.assert_called_once_with(
         FunctionName=lambda_function_name, InvocationType="Event", Payload=dumps(payload).encode("utf-8")
     )
-
-
-def test_extract_body():
-    # Arrange
-    expected_change_event = '{"test": "test"}'
-    # Act
-    change_event = extract_body(expected_change_event)
-    # Assert
-    assert (
-        loads(expected_change_event) == change_event
-    ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
 
 
 def test_extract_body_exception():

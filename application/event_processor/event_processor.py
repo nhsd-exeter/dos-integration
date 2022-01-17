@@ -11,7 +11,7 @@ from change_request import ChangeRequest
 from changes import get_changes
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
+from common.utilities import extract_body, get_sequence_number, is_mock_mode
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services

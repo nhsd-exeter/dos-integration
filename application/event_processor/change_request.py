@@ -1,4 +1,3 @@
-from os import getenv
 from typing import Any, Dict
 from aws_lambda_powertools import Logger
 
