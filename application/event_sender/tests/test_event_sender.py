@@ -11,8 +11,8 @@ CHANGE_REQUEST = {
     "service_id": "49016",
     "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
 }
-BODY = json.dumps({"change_payload" : CHANGE_REQUEST, "correlation_id" : "dummy_correlation_id"})
-EVENT = {"body" : BODY}
+BODY = json.dumps({"change_payload": CHANGE_REQUEST, "correlation_id": "dummy_correlation_id"})
+EVENT = {"body": BODY}
 
 FILE_PATH = "application.event_sender.event_sender"
 

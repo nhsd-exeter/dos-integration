@@ -147,41 +147,19 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     record = next(event.records)
     message = record.body
-    change_event = extract_message(message)
-    sequence_number = get_sequence_number(record)
-    sqs_timestamp = str(record.attributes["SentTimestamp"])
-    if sequence_number is None:
-        logger.error("No sequence number provided, so message will be ignored.")
-        return
-
-    logger.info(f"Attempting to validate change_event: {change_event}")
-    validate_event(change_event)
-    nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.odscode)
-    logger.append_keys(org_type=nhs_entity.org_type)
-    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-    logger.info("Begun event processor function", extra={"nhs_entity": nhs_entity})
-
-    event_processor = EventProcessor(nhs_entity)
-    logger.info("Getting matching DoS Services")
-    matching_services = event_processor.get_matching_services()
-    if len(matching_services) == 0:
-        log_unmatched_nhsuk_pharmacies(nhs_entity)
-        return
-
-    sequence_number = get_sequence_number(record)
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
-    # Save Event to dynamo so can be retrieved later
-    if sequence_number < db_latest_sequence_number:
+    elif sequence_number < db_latest_sequence_number:
         logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
         return
+
     try:
         validate_event(change_event)
 
@@ -189,7 +167,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)
         logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-
+        logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
         matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
