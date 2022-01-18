@@ -21,7 +21,7 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
 
 
 def add_change_request_to_dynamodb(
-    change_event: Dict[str, Any], sequence_number: int, event_received_time: str
+    change_event: Dict[str, Any], sequence_number: int, event_received_time: int
 ) -> dict:
     """Add change request to dynamodb but store the message and use the event for details
     Args:
@@ -34,7 +34,7 @@ def add_change_request_to_dynamodb(
     dynamo_record = {
         "Id": dict_hash(change_event, sequence_number),
         "ODSCode": change_event["ODSCode"],
-        "TTL": str(int(time()) + TTL),
+        "TTL": int(time()) + TTL,
         "EventReceived": event_received_time,
         "SequenceNumber": sequence_number,
         "Event": loads(dumps(change_event), parse_float=Decimal),

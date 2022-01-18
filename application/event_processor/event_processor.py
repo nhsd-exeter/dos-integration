@@ -135,7 +135,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     message = record.body
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
-    sqs_timestamp = str(record.attributes["SentTimestamp"])
+    sqs_timestamp = int(record.attributes["SentTimestamp"])
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     if sequence_number is None:
