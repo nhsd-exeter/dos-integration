@@ -135,11 +135,12 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
-@patch(f"{FILE_PATH}.invoke_lambda_function")
-def test_send_changes(mock_invoke_lambda_function):
+@patch.object(Logger, "get_correlation_id", return_value=1)
+@patch(f"{FILE_PATH}.client")
+def test_send_changes(mock_client, get_correlation_id_mock):
     # Arrange
-    function_name = "test"
-    environ["EVENT_SENDER_LAMBDA_NAME"] = function_name
+    bus_name = "test"
+    environ["EVENTBRIDGE_BUS_NAME"] = bus_name
 
     change_request = ChangeRequest(service_id=49016)
     change_request.reference = "1"
@@ -163,14 +164,24 @@ def test_send_changes(mock_invoke_lambda_function):
     # Act
     event_processor.send_changes()
     # Assert
-    mock_invoke_lambda_function.assert_called_once_with(function_name, change_request.create_payload())
+    mock_client.assert_called_with("events")
+    entry_details = {"change_payload": change_request.create_payload(), "correlation_id": 1}
+    mock_client.return_value.put_events.assert_called_with(
+        Entries=[
+            {
+                "Source": "event-processor",
+                "DetailType": "change-request",
+                "Detail": dumps(entry_details),
+                "EventBusName": bus_name,
+            },
+        ]
+    )
     # Clean up
-    del environ["EVENT_SENDER_LAMBDA_NAME"]
+    del environ["EVENTBRIDGE_BUS_NAME"]
 
 
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
-@patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
@@ -178,7 +189,6 @@ def test_lambda_handler_unmatched_service(
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
-    mock_is_mock_mode,
     mock_add_change_request_to_dynamodb,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
@@ -190,7 +200,6 @@ def test_lambda_handler_unmatched_service(
     sqs_event["Records"][0]["body"] = dumps(change_event)
     mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
-    mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
@@ -199,9 +208,10 @@ def test_lambda_handler_unmatched_service(
     response = lambda_handler(sqs_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
-    mock_is_mock_mode.assert_called_once
+    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
+
     mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
@@ -211,7 +221,6 @@ def test_lambda_handler_unmatched_service(
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
@@ -219,7 +228,6 @@ def test_lambda_handler_no_sequence_number(
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
-    mock_is_mock_mode,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_add_change_request_to_dynamodb,
     mock_logger,
@@ -233,7 +241,6 @@ def test_lambda_handler_no_sequence_number(
     del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
     mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
-    mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
@@ -242,7 +249,6 @@ def test_lambda_handler_no_sequence_number(
     response = lambda_handler(sqs_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
-    mock_is_mock_mode.assert_called_once
     mock_nhs_entity.assert_not_called()
     mock_event_processor.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()
@@ -256,7 +262,6 @@ def test_lambda_handler_no_sequence_number(
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.is_mock_mode")
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
@@ -264,7 +269,6 @@ def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
-    mock_is_mock_mode,
     mock_get_sequence_number,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_add_change_request_to_dynamodb,
@@ -276,10 +280,8 @@ def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"][0]["body"] = dumps(change_event)
-    # sequence_number = sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
     mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
-    mock_is_mock_mode.return_value = False
     mock_add_change_request_to_dynamodb.return_value = None
     mock_get_sequence_number.return_value = 1
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 3
@@ -289,7 +291,6 @@ def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
     response = lambda_handler(sqs_event, lambda_context)
     # Assert
     assert response is None, f"Response should be None but is {response}"
-    mock_is_mock_mode.assert_called_once
     mock_nhs_entity.assert_not_called()
     mock_event_processor.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()

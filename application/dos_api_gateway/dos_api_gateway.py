@@ -19,7 +19,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     """
     event = loads(event["body"])
     change_request_response = {"dosChanges": []}
-    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_event": event})
+    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
     counter = 1
     for row in event["changes"]:
         change_request_response["dosChanges"].append({"changeId": str(counter) * 9})

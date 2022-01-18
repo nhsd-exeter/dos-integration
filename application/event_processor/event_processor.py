@@ -1,7 +1,7 @@
 from json import dumps
-from os import environ
+from os import environ, getenv
 from typing import Dict, List, Union
-
+from boto3 import client
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -11,7 +11,7 @@ from change_request import ChangeRequest
 from changes import get_changes
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.utilities import extract_body, get_sequence_number, invoke_lambda_function, is_mock_mode
+from common.utilities import extract_body, get_sequence_number
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
@@ -25,7 +25,7 @@ EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_NAME",
     "DB_SCHEMA",
     "DB_USER_NAME",
-    "EVENT_SENDER_LAMBDA_NAME",
+    "EVENTBRIDGE_BUS_NAME",
 )
 
 
@@ -97,14 +97,27 @@ class EventProcessor:
             logger.error("Attempting to send change requests before get_change_requests has been called.")
             return
 
-        if "EVENT_SENDER_LAMBDA_NAME" not in environ:
-            logger.error("Attempting to send change requests but EVENT_SENDER_LAMBDA_NAME is not set.")
-            return
-
+        eventbridge = client("events")
+        events = []
         for change_request in self.change_requests:
             change_payload = change_request.create_payload()
-            invoke_lambda_function(environ["EVENT_SENDER_LAMBDA_NAME"], change_payload)
-            logger.info(f"Sent off change payload for id={change_request.service_id}")
+            events.append(
+                {
+                    "Source": "event-processor",
+                    "DetailType": "change-request",
+                    "Detail": dumps(
+                        {
+                            "change_payload": change_payload,
+                            "correlation_id": logger.get_correlation_id(),
+                        }
+                    ),
+                    "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
+                }
+            )
+
+        response = eventbridge.put_events(Entries=events)
+        logger.info("Response from eventbridge put_events", extra={"response": response})
+        logger.info(f"Sent off change payload for id={change_request.service_id}")
 
 
 @unhandled_exception_logging()
@@ -123,6 +136,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
+    logger.info("Change Event received", extra={"event": event})
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -138,13 +152,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
-    # Save Event to dynamo so can be retrieved later
-    if sequence_number < db_latest_sequence_number:
+    elif sequence_number < db_latest_sequence_number:
         logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored")
         return
+
     try:
         validate_event(change_event)
 
@@ -152,7 +167,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)
         logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-
+        logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
         matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
@@ -170,7 +185,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     finally:
         disconnect_dos_db()
 
-    if not is_mock_mode():
-        event_processor.send_changes()
-    else:
-        logger.info("Mock Mode on. Change requests will not be sent")
+    event_processor.send_changes()

@@ -27,9 +27,17 @@ provider:
     POWERTOOLS_TRACE_MIDDLEWARES: true
   tracing:
     lambda: true
+    apiGateway: true
+  apiGateway:
+    apiKeySourceType: HEADER
+    apiKeys:
+      - name: ${env:TF_VAR_change_request_receiver_api_key_name}
+        value: ${self:custom.secret.${env:TF_VAR_change_request_receiver_api_key_key}}
+  endpointType: regional
+  apiName: ${env:TF_VAR_change_request_receiver_api_name}
 
 custom:
-  custom:
+  secret: ${ssm:/aws/reference/secretsmanager/${env:TF_VAR_change_request_receiver_api_key_name}}
   localstack:
     stages: local
   vpcDiscovery:
@@ -50,23 +58,6 @@ plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 functions:
-  event-sender:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
-    description: ${sls:stage} Event Sender lambda
-    memorySize: 512
-    timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      DOS_API_GATEWAY_USERNAME: ${env:DOS_API_GATEWAY_USERNAME}
-      DOS_API_GATEWAY_PASSWORD: ${env:DOS_API_GATEWAY_PASSWORD}
-      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
-      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
-      MOCK_MODE: ${env:MOCK_MODE}
-
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
     architecture: x86_64
@@ -86,9 +77,9 @@ functions:
       DB_USER_NAME: ${env:DB_USER_NAME}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_PASSWORD: ${env:DB_PASSWORD}
-      EVENT_SENDER_LAMBDA_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       MOCK_MODE: ${env:MOCK_MODE}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
 
   fifo-dlq-handler:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
@@ -98,8 +89,32 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_fifo_dlq_handler_role_name}
-    maximumRetryAttempts: 0
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+    maximumRetryAttempts: 0
+
+  event-sender:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
+    description: ${sls:stage} Event Sender lambda
+    memorySize: 512
+    timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      DOS_API_GATEWAY_SECRETS: ${env:DOS_API_GATEWAY_SECRETS}
+      DOS_API_GATEWAY_USERNAME_KEY: ${env:DOS_API_GATEWAY_USERNAME_KEY}
+      DOS_API_GATEWAY_PASSWORD_KEY: ${env:DOS_API_GATEWAY_PASSWORD_KEY}
+      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
+      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
+      MOCK_MODE: ${env:MOCK_MODE}
+    events:
+      - http:
+          path: /change-request
+          method: post
+          private: true
+    maximumRetryAttempts: 0

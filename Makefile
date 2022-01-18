@@ -27,7 +27,7 @@ log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-apply-auto-approve STACKS=api-key
+		make terraform-apply-auto-approve STACKS=api-key,change-request-receiver-api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make authoriser-build-and-push dos-api-gateway-build-and-push
@@ -36,16 +36,15 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=api-gateway-sqs,splunk-logs
-
+	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=api-gateway-sqs,splunk-logs
+	make terraform-destroy-auto-approve STACKS=evenbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key
+		make terraform-destroy-auto-approve STACKS=api-key,change-request-receiver-api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock,dynamo-db
@@ -61,8 +60,6 @@ populate-deployment-variables:
 	echo "export DB_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DB_SECRET_NAME) KEY=$(DB_SECRET_KEY))"
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
-	echo "export DOS_API_GATEWAY_USERNAME=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_USERNAME_KEY))"
-	echo "export DOS_API_GATEWAY_PASSWORD=$$(make -s secret-get-existing-value NAME=$(DOS_API_GATEWAY_SECRETS) KEY=$(DOS_API_GATEWAY_PASSWORD_KEY))"
 
 unit-test:
 	make -s docker-run-tools \

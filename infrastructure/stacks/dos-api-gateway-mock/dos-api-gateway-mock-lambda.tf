@@ -1,4 +1,3 @@
-
 resource "aws_lambda_function_event_invoke_config" "dos_api_gateway_lambda_invoke_config" {
   function_name          = aws_lambda_function.dos_api_gateway_lambda.function_name
   maximum_retry_attempts = 0

@@ -67,11 +67,11 @@ variable "team_id" {
 # ############################
 
 variable "di_endpoint_api_gateway_name" {
-  description = ""
+  description = "Name for the API Gateway endpoint"
 }
 
 variable "di_endpoint_api_gateway_stage" {
-  description = ""
+  description = "Name for the API Gateway stage"
 }
 
 
@@ -80,11 +80,11 @@ variable "di_endpoint_api_gateway_stage" {
 # ############################
 
 variable "fifo_queue_name" {
-  description = ""
+  description = "FIFO queue name feed by API Gateway"
 }
 
 variable "event_processor_lambda_name" {
-  description = ""
+  description = "Name of event processor lambda"
 }
 
 variable "fifo_dlq_handler_lambda_name" {

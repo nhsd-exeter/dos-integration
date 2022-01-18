@@ -1,10 +1,11 @@
+from os import getenv
 from typing import Any, Dict
 from aws_lambda_powertools import Logger
 from change_request_logger import ChangeRequestLogger
-from common.utilities import get_environment_variable
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
+from common.aws import get_secret
 
 logger = Logger(child=True)
 
@@ -22,17 +23,14 @@ class ChangeRequest:
         Args:
             change_request_body (Dict[str, Any]): The change request
         """
-        self.change_request_url: str = get_environment_variable("DOS_API_GATEWAY_URL")
-        self.timeout: int = int(get_environment_variable("DOS_API_GATEWAY_REQUEST_TIMEOUT"))
+        self.change_request_url: str = getenv("DOS_API_GATEWAY_URL")
+        self.timeout: int = int(getenv("DOS_API_GATEWAY_REQUEST_TIMEOUT"))
+        secrets = get_secret(getenv("DOS_API_GATEWAY_SECRETS"))
         self.authorisation = HTTPBasicAuth(
-            get_environment_variable("DOS_API_GATEWAY_USERNAME"),
-            get_environment_variable("DOS_API_GATEWAY_PASSWORD"),
+            secrets[getenv("DOS_API_GATEWAY_USERNAME_KEY")],
+            secrets[getenv("DOS_API_GATEWAY_PASSWORD_KEY")],
         )
         self.change_request_body: Dict[str, Any] = change_request_body
-        self.change_request_logger.log_change_request_body(self.change_request_body)
-        correlation_id = logger.get_correlation_id()
-        if correlation_id is not None:
-            self.headers["x-correlation-id"] = logger.get_correlation_id()
 
     def post_change_request(self) -> None:
         self.change_request_logger.log_change_request_post_attempt(self.change_request_body)
@@ -48,4 +46,7 @@ class ChangeRequest:
             self.change_request_logger.log_change_request_response(self.response)
         except Exception:
             self.change_request_logger.log_change_request_exception()
-            raise
+
+    def get_response(self) -> Dict[str, Any]:
+        """Get the response from the API gateway"""
+        return {"statusCode": self.response.status_code, "body": self.response.text}

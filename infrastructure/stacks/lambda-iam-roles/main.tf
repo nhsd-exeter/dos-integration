@@ -51,8 +51,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "ec2:DescribeSubnets",
         "ec2:DescribeVpcs",
         "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords",
-        "lambda:InvokeFunction"
+        "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
     },
@@ -64,6 +63,11 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["events:PutEvents"],
+      "Resource": "arn:aws:events:${var.aws_region}:${var.aws_account_id}:event-bus/uec-dos-int-*"
     },
     {
       "Effect": "Allow",
@@ -118,6 +122,15 @@ resource "aws_iam_role_policy" "event_sender_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:Describe*",
+        "secretsmanager:Get*",
+        "secretsmanager:List*"
+      ],
+      "Resource": "*"
+    },
     {
       "Effect": "Allow",
       "Action": [

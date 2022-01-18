@@ -1,9 +1,10 @@
-from http.client import HTTPConnection
-from os import environ
 from unittest.mock import patch
 from aws_lambda_powertools import Logger
-import pytest
 from requests.models import Response
+from responses import add as response_add, POST as RESPONSE_POST, activate as responses_activate
+from requests import post as request_post
+from json import dumps
+import pytest
 
 from ..change_request_logger import ChangeRequestLogger
 
@@ -11,6 +12,7 @@ from ..change_request_logger import ChangeRequestLogger
 class TestChangeRequestLogger:
     SUCCESS_STATUS_CODES = [200, 201, 202]
     FAILURE_STATUS_CODES = [400, 401, 404, 500]
+    CORRELATION_ID = 2
 
     @patch.object(Logger, "info")
     @pytest.mark.parametrize("status_code", SUCCESS_STATUS_CODES)
@@ -20,7 +22,11 @@ class TestChangeRequestLogger:
         test_response = Response()
         test_response.status_code = int(status_code)
         test_response._content = b'{ "key" : "a" }'
-        expected_extra = {"state": "Success", "response_status_code": status_code, "response_text": test_response.text}
+        expected_extra = {
+            "state": "Success",
+            "response_status_code": status_code,
+            "response_text": test_response.text,
+        }
         # Act
         change_request_logger.log_change_request_response(test_response)
         # Assert
@@ -34,50 +40,44 @@ class TestChangeRequestLogger:
         test_response = Response()
         test_response.status_code = int(status_code)
         test_response._content = b'{ "key" : "a" }'
-        expected_extra = {"state": "Failure", "response_status_code": status_code, "response_text": test_response.text}
+        expected_extra = {
+            "state": "Failure",
+            "response_status_code": status_code,
+            "response_text": test_response.text,
+        }
         # Act
         change_request_logger.log_change_request_response(test_response)
         # Assert
         error_logger_mock.assert_called_with("Failed to send change request to DoS", extra=expected_extra)
 
     @patch.object(Logger, "info")
-    def test_log_change_request_body_development(self, info_logger_mock):
+    @responses_activate
+    def test_log_change_request_response(self, info_logger_mock):
         # Arrange
         change_request_logger = ChangeRequestLogger()
-        change_request_body = '{"my-key": "my-var"}'
-        environ["PROFILE"] = "task"
+        status_code = 200
+        response_json = {"dummy_key": "dummy_value"}
+        response_text = dumps(response_json)
+        info_logger_expected = {
+            "state": "Success",
+            "response_status_code": status_code,
+            "response_text": response_text,
+        }
+        response_add(RESPONSE_POST, "https://dummy_url", json=response_json, status=status_code)
+        change_request_response = request_post("https://dummy_url", data=response_json)
         # Act
-        change_request_logger.log_change_request_body(change_request_body)
+        change_request_logger.log_change_request_response(change_request_response)
         # Assert
-        info_logger_mock.assert_called_with(
-            "Change Request to DoS payload", extra={"change_request_body": change_request_body}
-        )
-        assert HTTPConnection.debuglevel == 1
-        # Clean up
-        HTTPConnection.debuglevel = 0
-        del environ["PROFILE"]
-
-    @patch.object(Logger, "info")
-    def test_log_change_request_body_production(self, info_logger_mock):
-        # Arrange
-        change_request_logger = ChangeRequestLogger()
-        change_request_body = '{"my-key": "my-var"}'
-        environ["PROFILE"] = "dev"
-        # Act
-        change_request_logger.log_change_request_body(change_request_body)
-        # Assert
-        info_logger_mock.assert_called_with(
-            "Change Request to DoS payload", extra={"change_request_body": change_request_body}
-        )
-        assert HTTPConnection.debuglevel == 0
-        # Clean up
-        del environ["PROFILE"]
+        info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=info_logger_expected)
 
     @patch.object(Logger, "exception")
     def test_log_change_request_exception(self, exception_logger_mock):
         # Arrange
         change_request_logger = ChangeRequestLogger()
-        expected_extra = {"state": "Exception", "exception_reason": "Error posting change request"}
+        expected_extra = {
+            "state": "Exception",
+            "exception_reason": "Error posting change request",
+        }
         # Act
         change_request_logger.log_change_request_exception()
         # Assert

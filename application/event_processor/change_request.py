@@ -1,5 +1,6 @@
-from os import getenv
 from typing import Any, Dict
+from aws_lambda_powertools import Logger
+
 
 ADDRESS_CHANGE_KEY = "address"
 PHONE_CHANGE_KEY = "phone"
@@ -12,16 +13,18 @@ OPENING_DAYS_KEY = "opening_days"
 DATE_FORMAT = "%Y-%m-%d"
 TIME_FORMAT = "%H:%M"
 
+logger = Logger(child=True)
+
 
 class ChangeRequest:
     changes: Dict[str, Any]
 
     def __init__(self, service_id: int, changes: Any = None):
-        trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
+        correlation_id = logger.get_correlation_id()
 
-        self.reference = trace_id
+        self.reference = correlation_id
         self.system = "DoS Integration"
-        self.message = f"DoS Integration CR. AMZN-trace-id: {trace_id}"
+        self.message = f"DoS Integration CR. correlation-id: {correlation_id}"
         self.service_id = str(service_id)
         self.changes = changes
         if self.changes is None:
