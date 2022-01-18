@@ -63,8 +63,8 @@ class TestChangeRequestLogger:
             "response_status_code": status_code,
             "response_text": response_text,
         }
-        response_add(RESPONSE_POST, "http://dummy_url", json=response_json, status=status_code)
-        change_request_response = request_post("http://dummy_url", data=response_json)
+        response_add(RESPONSE_POST, "https://dummy_url", json=response_json, status=status_code)
+        change_request_response = request_post("https://dummy_url", data=response_json)
         # Act
         change_request_logger.log_change_request_response(change_request_response)
         # Assert
