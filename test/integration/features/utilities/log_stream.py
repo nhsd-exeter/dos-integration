@@ -3,12 +3,15 @@ from os import getenv as get_env
 from time import sleep
 from boto3 import client
 from datetime import datetime
+from json import dumps
 import json
 from json.decoder import JSONDecodeError
 
 lambda_client_logs = client("logs")
 log_group_name_event_processor = get_env("LOG_GROUP_NAME_EVENT_PROCESSOR")
+log_group_name_event_sender = get_env("LOG_GROUP_NAME_EVENT_SENDER")
 event_processor = get_env("EVENT_PROCESSOR")
+event_sender = get_env("EVENT_SENDER")
 
 
 def get_processor_log_stream_name() -> str:
@@ -20,64 +23,40 @@ def get_processor_log_stream_name() -> str:
     )
     return log_stream["logStreams"][0]["logStreamName"]
 
-def get_data_logs(search_string: str) -> str:
-    log_present = False
-    start_time = datetime.now()
-    while log_present is False:
-        time_delta = datetime.now() - start_time
-        event_log = lambda_client_logs.get_log_events(
-            logGroupName=log_group_name_event_processor,
-            logStreamName=get_processor_log_stream_name(),
-        )
-        for item in event_log["events"]:
-            if search_string in item["message"]:
-                return item["message"]
-            elif "ERROR" in item["message"]:
-                raise Exception("event_processor failed to process Change Event: {0}".format(item["message"]))
-        sleep(3)
-        print("Searching for log data... Time elapsed: " + str(time_delta.seconds) + " Seconds")
-        if time_delta.total_seconds() >= 10:
-            raise TimeoutError("Unable to find log data")
-
-def get_logs(seconds_ago: int=0) -> str:
-
-    # Work out timestamps
-    now = datetime.utcnow()
-    past = now - timedelta(seconds=seconds_ago)
-
-    event_log = lambda_client_logs.get_log_events(
-            logGroupName=log_group_name_event_processor,
-            logStreamName=get_processor_log_stream_name(),
-            startTime=int(past.timestamp() * 1000),
-            endTime=int(now.timestamp() * 1000)
+def get_sender_log_stream_name() -> str:
+    sleep(1)
+    log_stream = lambda_client_logs.describe_log_streams(
+        logGroupName=log_group_name_event_sender,
+        orderBy="LastEventTime",
+        descending=True,
     )
-    requests={}
-    last_request_id = 0
-    for item in event_log["events"]:
-        try:
-            dict_msg = json.loads(item["message"])
-            requests[dict_msg["function_request_id"]] = requests.get(dict_msg["function_request_id"], [])
-            requests[dict_msg["function_request_id"]].append(dict_msg)
-        except ValueError as e:
-            if item["message"].find("RequestId:") != -1:
-                item_parts = item["message"].split()
-                found_request_id = False
-                for part in item_parts:
-                    if found_request_id is True:
-                        requests[part] = requests.get(part, [])
-                        requests[part].append(item["message"])
-                        last_request_id = part
-                        found_request_id = False
-                    if part == "RequestId:":
-                        found_request_id = True
-            else:
-                requests[last_request_id] = requests.get(last_request_id, [])
-                requests[last_request_id].append(item["message"])
+    return log_stream["logStreams"][0]["logStreamName"]
 
-    return  requests[list(requests.keys())[-1]]
+def get_logs(query: str) -> str:
+    logs_found = False
+    counter = 0
+    while logs_found is False:
+        start_query_response = lambda_client_logs.start_query(
+            logGroupName=log_group_name_event_processor,
+            startTime=int((datetime.today() - timedelta(minutes=5)).timestamp()),
+            endTime=int(datetime.now().timestamp()),
+            queryString=query
+        )
+        query_id = start_query_response['queryId']
+        response = None
+        while response == None or response['status'] != 'Complete':
+            sleep(15)
+            response = lambda_client_logs.get_query_results(
+                queryId=query_id
+            )
+        counter +=1
+        if response["results"] != []:
+            logs_found = True
+        elif counter == 6:
+            raise Exception("Log search retries exceeded")
+    return (dumps(response, indent=2))
 
-
-def get_logs_list(seconds_ago: int=0) -> list:
+def get_processor_logs_list_for_debug(seconds_ago: int=0) -> list:
 
     # Work out timestamps
     now = datetime.utcnow()
@@ -101,8 +80,8 @@ def get_logs_list(seconds_ago: int=0) -> list:
 
     return messages
 
-def get_logs_within_time_frame(time_in_seconds: int=0) -> dict:
-    logs = get_logs_list(time_in_seconds)
+def get_processor_logs_within_time_frame_for_debug(time_in_seconds: int=0) -> dict:
+    logs = get_processor_logs_list(time_in_seconds)
     # values = {}
     for m in logs:
         print(m)

@@ -24,10 +24,8 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
-API_GATEWAY_API_KEY_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
-NHS_UK_API_KEY_KEY := NHS_UK_API_KEY
 LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor
-EVENT_PROCESSOR_LAMBDA := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
+LOG_GROUP_NAME_SENDER := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 
 # Change Event Receiver API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
@@ -38,7 +36,7 @@ TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
 
 # Change Event Receiver API Gateway Route53 & SQS
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
-DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)/v1/change-event
+DOS_INTEGRATION_API_URL := https://$(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)/v1/change-event
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
