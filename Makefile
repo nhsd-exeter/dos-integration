@@ -353,8 +353,12 @@ performance-test-create-change-events:
 performance-test-data-collection:
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python -m data_collection" \
+		CMD="python data_collection.py" \
 		DIR=./test/performance/data_collection \
+		ARGS="\
+			-e FIFO_QUEUE_NAME=$(TF_VAR_fifo_queue_name) \
+			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
+			"
 
 performance-test-clean:
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv

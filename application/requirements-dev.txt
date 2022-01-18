@@ -5,6 +5,7 @@ coverage
 locust
 moto
 mutmut
+pandas
 pytest
 pytest-cov
 pytest-icdiff
