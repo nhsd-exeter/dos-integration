@@ -2,6 +2,7 @@ from json import dumps
 from os import environ, getenv
 from typing import Dict, List, Union
 from boto3 import client
+from time import strftime, gmtime
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -125,7 +126,7 @@ class EventProcessor:
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
 @set_correlation_id()
-@logger.inject_lambda_context()
+@logger.inject_lambda_context
 def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     """Entrypoint handler for the event_processor lambda
 
@@ -137,6 +138,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
+    logger.append_keys(ods_code=None)
+    logger.append_keys(org_type=None)
+    logger.append_keys(org_sub_type=None)
     logger.info("Change Event received", extra={"event": event})
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
@@ -151,6 +155,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
+    s, ms = divmod(sqs_timestamp, 1000)
+    message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
+    logger.append_keys(message_received=message_received_pretty)
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
 

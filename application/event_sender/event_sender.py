@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools import Logger
-from time import time_ns
+from time import time_ns, strftime, gmtime
 from os import environ
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -16,6 +16,7 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
+@logger.inject_lambda_context
 @metric_scope
 def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the event_sender lambda
@@ -26,11 +27,14 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> No
     """
     body = extract_body(event["body"])
     logger.set_correlation_id(body["correlation_id"])
+    message_received = body["message_received"]
+    s, ms = divmod(message_received, 1000)
+    message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
+    logger.append_keys(message_received=message_received_pretty)
     logger.info(
         "Received change request",
-        extra={"change_request": body["change_payload"], "correlation_id": logger.get_correlation_id()},
+        extra={"change_request": body["change_payload"]},
     )
-    message_received = body["message_received"]
 
     change_request = ChangeRequest(body["change_payload"])
     change_request.post_change_request()
