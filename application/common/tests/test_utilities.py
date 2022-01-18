@@ -1,15 +1,10 @@
-from json import dumps, loads
-from os import environ
+from json import loads
 from unittest.mock import patch
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 from pytest import raises
-from application.common import utilities
 from ..utilities import (
     extract_body,
-    get_environment_variable,
-    invoke_lambda_function,
-    is_mock_mode,
     get_sequence_number,
 )
 
@@ -23,47 +18,6 @@ def test_extract_body():
     assert (
         loads(expected_change_event) == change_event
     ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
-
-
-def test_extract_message_exception():
-    # Act & Assert
-    with raises(KeyError):
-        get_environment_variable("UNKNOWN_VARIABLE")
-
-
-def test_is_mock_mode():
-    # Arrange
-    mock_mode = True
-    environ["MOCK_MODE"] = str(mock_mode)
-    # Act
-    response = is_mock_mode()
-    # Assert
-    assert response == mock_mode
-    # Clean up
-    del environ["MOCK_MODE"]
-
-
-def test_is_mock_mode_none():
-    # Arrange
-    expected_response = False
-    # Act
-    response = is_mock_mode()
-    # Assert
-    assert response == expected_response
-
-
-@patch.object(utilities, "client")
-def test_invoke_lambda_function(mock_client):
-    # Arrange
-    lambda_function_name = "my-lambda-function"
-    payload = {"test": "test"}
-    # Act
-    invoke_lambda_function(lambda_function_name, payload)
-    # Assert
-    mock_client.assert_called_once_with("lambda")
-    mock_client.return_value.invoke.assert_called_once_with(
-        FunctionName=lambda_function_name, InvocationType="Event", Payload=dumps(payload).encode("utf-8")
-    )
 
 
 def test_extract_body_exception():
