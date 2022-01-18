@@ -1,5 +1,5 @@
 from json import loads
-from os import getenv
+from os import environ
 from typing import Dict
 
 from aws_lambda_powertools import Logger
@@ -21,7 +21,7 @@ def get_secret(secret_name: str) -> Dict[str, str]:
     Returns:
         Dict[str, str]: Secrets as a dictionary
     """
-    sm = client(service_name="secretsmanager", region_name=getenv("AWS_REGION"))
+    sm = client(service_name="secretsmanager", region_name=environ["AWS_REGION"])
     try:
         get_secret_value_response = sm.get_secret_value(SecretId=secret_name)
     except ClientError as e:

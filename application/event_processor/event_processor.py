@@ -1,6 +1,6 @@
-from json import dumps, loads
+from json import dumps
 from os import environ, getenv
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 from boto3 import client
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
@@ -189,19 +189,3 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         event_processor.send_changes()
     else:
         logger.info("Mock Mode on. Change requests will not be sent")
-
-
-def extract_message(message_body: str) -> Dict[str, Any]:
-    """Extracts the change event from the lambda function invocation event
-
-    Args:
-        message_body (str): One SQS message body (JSON string)
-    Returns:
-        Dict[str, Any]: Change event as a dictionary
-    """
-    try:
-        change_event = loads(message_body)
-    except Exception:
-        logger.exception("Change Event unable to be extracted")
-        raise
-    return change_event
