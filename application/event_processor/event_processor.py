@@ -89,7 +89,7 @@ class EventProcessor:
         self.change_requests = change_requests
         return self.change_requests
 
-    def send_changes(self) -> None:
+    def send_changes(self, message_received: int) -> None:
         """Sends change request payload off to next part of workflow
         [Which at the moment is straight to the next lambda]
         """
@@ -109,6 +109,7 @@ class EventProcessor:
                         {
                             "change_payload": change_payload,
                             "correlation_id": logger.get_correlation_id(),
+                            "message_received": message_received,
                         }
                     ),
                     "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
