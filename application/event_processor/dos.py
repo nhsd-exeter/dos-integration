@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, fields
 import psycopg2
 from psycopg2.extras import DictCursor
 from psycopg2.extensions import connection
+from common.aws import get_secret
 from aws_lambda_powertools import Logger
 
 from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -197,13 +198,13 @@ def _connect_dos_db() -> connection:
 
     warning: Do not use. Should only be used by query_dos_db() func
     """
-
+    db_secret = get_secret(environ["DB_SECRET_NAME"])
     server = environ["DB_SERVER"]
     port = environ["DB_PORT"]
     db_name = environ["DB_NAME"]
     db_schema = environ["DB_SCHEMA"]
     db_user = environ["DB_USER_NAME"]
-    db_password = environ["DB_PASSWORD"]
+    db_password = db_secret[getenv("DB_SECRET_KEY")]
     trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
 
     logger.debug(f"Attempting connection to database '{server}'")
