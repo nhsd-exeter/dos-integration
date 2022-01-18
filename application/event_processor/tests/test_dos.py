@@ -87,9 +87,9 @@ def test_get_matching_dos_services_services_returned(mock_connect, mock_get_secr
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
+    db_password = "my-password"
     mock_get_secret.return_value = {"my_secret_key": "my-password"}
     db_return = [
         (
@@ -148,7 +148,6 @@ def test_get_matching_dos_services_services_returned(mock_connect, mock_get_secr
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
@@ -162,11 +161,10 @@ def test_get_matching_dos_services_no_services_returned(mock_connect, mock_get_s
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {"my_secret_key": "my-password"}
-
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
     mock_connect().cursor().fetchall.return_value = []
     odscode = "FQ038"
     expected_response = []
@@ -198,7 +196,6 @@ def test_get_matching_dos_services_no_services_returned(mock_connect, mock_get_s
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
@@ -212,10 +209,10 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect, mock_g
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {"my_secret_key": "my-password"}
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
 
     db_return = [
         (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
@@ -266,7 +263,6 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect, mock_g
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
@@ -280,10 +276,10 @@ def test_get_standard_opening_times_from_db_times_returned(mock_connect, mock_ge
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {"my_secret_key": "my-password"}
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
 
     db_return = [
         (28334, 1, "Tuesday", time(8, 0, 0), time(17, 0, 0)),
@@ -322,7 +318,6 @@ def test_get_standard_opening_times_from_db_times_returned(mock_connect, mock_ge
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
@@ -336,10 +331,10 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect, 
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {"my_secret_key": "my-password"}
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
 
     mock_connect().cursor().fetchall.return_value = []
     service_id = 123456
@@ -374,7 +369,6 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect, 
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
@@ -431,10 +425,10 @@ def test_get_dos_locations(mock_connect, mock_get_secret):
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
     environ["DB_SECRET_NAME"] = "my_secret_name"
     environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {"my_secret_key": "my-password"}
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
 
     db_return = [{"id": 111, "postcode": "BA2 7AF", "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}]
     mock_connect().cursor().fetchall.return_value = db_return
@@ -466,7 +460,6 @@ def test_get_dos_locations(mock_connect, mock_get_secret):
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
     del environ["DB_SECRET_NAME"]
     del environ["DB_SECRET_KEY"]
 
