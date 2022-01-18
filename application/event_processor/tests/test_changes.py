@@ -173,8 +173,22 @@ def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, 
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
     mock_get_valid_dos_postcode.return_value = None
-    # Act
     existing_changes = {ADDRESS_CHANGE_KEY: ["address1", "address2", "address3", "city", "county"]}
+    # Act
+    update_changes_with_postcode(existing_changes, dos_service, nhs_entity)
+    # Assert
+    mock_get_valid_dos_postcode.assert_called_once_with(nhs_entity.normal_postcode())
+    assert existing_changes == {}, f"Should return empty dict, actually: {existing_changes}"
+
+
+@patch(f"{FILE_PATH}.get_valid_dos_postcode")
+def test_do_not_update_address_if_postcode_invalid_no_address(mock_get_valid_dos_postcode, change_event):
+    # Arrange
+    nhs_entity = NHSEntity(change_event)
+    dos_service = dummy_dos_service()
+    mock_get_valid_dos_postcode.return_value = None
+    existing_changes = {}
+    # Act
     update_changes_with_postcode(existing_changes, dos_service, nhs_entity)
     # Assert
     mock_get_valid_dos_postcode.assert_called_once_with(nhs_entity.normal_postcode())
