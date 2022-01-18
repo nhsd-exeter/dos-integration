@@ -1,5 +1,7 @@
 from unittest.mock import patch
 from dataclasses import dataclass
+from os import environ
+from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 import pytest
 import json
 from ..event_sender import lambda_handler
@@ -11,11 +13,20 @@ CHANGE_REQUEST = {
     "service_id": "49016",
     "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
 }
-BODY = json.dumps({"change_payload": CHANGE_REQUEST, "correlation_id": "dummy_correlation_id"})
-EVENT = {"body": BODY}
+BODY = json.dumps({"change_payload": CHANGE_REQUEST, "correlation_id": "dummy_correlation_id", "message_received":1642501355616})
+EVENT = {"body": BODY }
 
 FILE_PATH = "application.event_sender.event_sender"
 
+@pytest.fixture
+def mock_logger():
+    InvocationTracker.reset()
+
+    async def flush(self):
+        print("flush called")
+        InvocationTracker.record()
+
+    MetricsLogger.flush = flush
 
 @pytest.fixture
 def lambda_context():
@@ -30,10 +41,23 @@ def lambda_context():
 
 
 @patch(f"{FILE_PATH}.ChangeRequest")
-def test_lambda_handler(mock_change_request, lambda_context):
+def test_lambda_handler(mock_change_request, lambda_context, mock_logger):
 
+    environ["ENV"] = "test"
     # Act
     lambda_handler(EVENT, lambda_context)
     # Assert
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
+
+
+class InvocationTracker(object):
+    invocations = 0
+
+    @staticmethod
+    def record():
+        InvocationTracker.invocations += 1
+
+    @staticmethod
+    def reset():
+        InvocationTracker.invocations = 0

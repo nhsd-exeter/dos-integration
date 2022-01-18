@@ -150,7 +150,7 @@ def test_send_changes(mock_client, get_correlation_id_mock):
         PHONE_CHANGE_KEY: "0118 999 88199 9119 725 3",
         WEBSITE_CHANGE_KEY: "https://www.google.pl",
     }
-
+    message_received = 1642501355616
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -162,10 +162,10 @@ def test_send_changes(mock_client, get_correlation_id_mock):
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
     # Act
-    event_processor.send_changes()
+    event_processor.send_changes(message_received)
     # Assert
     mock_client.assert_called_with("events")
-    entry_details = {"change_payload": change_request.create_payload(), "correlation_id": 1}
+    entry_details = {"change_payload": change_request.create_payload(), "correlation_id": 1, "message_received": message_received}
     mock_client.return_value.put_events.assert_called_with(
         Entries=[
             {
