@@ -1,5 +1,4 @@
 from json import loads
-from unittest.mock import patch
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 from pytest import raises

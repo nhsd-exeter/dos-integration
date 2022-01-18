@@ -1,9 +1,7 @@
-from json import dumps, loads
-from os import environ, getenv
+from json import loads
 from typing import Any, Dict, Union
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
-from boto3 import client
 
 
 logger = Logger()
