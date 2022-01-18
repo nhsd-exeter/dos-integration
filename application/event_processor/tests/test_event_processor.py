@@ -165,7 +165,11 @@ def test_send_changes(mock_client, get_correlation_id_mock):
     event_processor.send_changes(message_received)
     # Assert
     mock_client.assert_called_with("events")
-    entry_details = {"change_payload": change_request.create_payload(), "correlation_id": 1, "message_received": message_received}
+    entry_details = {
+        "change_payload": change_request.create_payload(),
+        "correlation_id": 1,
+        "message_received": message_received,
+    }
     mock_client.return_value.put_events.assert_called_with(
         Entries=[
             {
