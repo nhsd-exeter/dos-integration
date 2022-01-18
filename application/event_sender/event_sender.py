@@ -3,6 +3,7 @@ from typing import Any, Dict
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools import Logger
 from time import time_ns
+from os import environ
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_request import ChangeRequest
@@ -35,5 +36,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> No
     change_request.post_change_request()
     now_ms = time_ns() // 1000000
     # TODO: Only record latency for success?
+    metrics.put_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
     return change_request.get_response()
