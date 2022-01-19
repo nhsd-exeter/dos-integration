@@ -45,6 +45,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     response = change_request.post_change_request()
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
+    metrics.set_property("function_name", context.function_name)
     metrics.set_property("message_received", message_received_pretty)
 
     metrics.set_property("ods_code", odscode)

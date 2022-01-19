@@ -144,7 +144,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     logger.append_keys(org_type=None)
     logger.append_keys(org_sub_type=None)
     logger.append_keys(dynamo_record_id=None)
-    logger.info("Change Event received", extra={"event": event})
+    logger.append_keys(message_received=None)
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -158,9 +158,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     change_event = extract_body(message)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
+
     s, ms = divmod(sqs_timestamp, 1000)
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
+    logger.info("Change Event received", extra={"event": event})
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     logger.append_keys(dynamo_record_id=record_id)
