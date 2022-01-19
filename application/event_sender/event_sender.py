@@ -18,7 +18,7 @@ logger = Logger()
 @unhandled_exception_logging
 @logger.inject_lambda_context
 @metric_scope
-def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> None:
+def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Dict:
     """Entrypoint handler for the event_sender lambda
 
     Args:
@@ -37,9 +37,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> No
     )
 
     change_request = ChangeRequest(body["change_payload"])
-    change_request.post_change_request()
-    now_ms = time_ns() // 1000000
-    # TODO: Only record latency for success?
-    metrics.put_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
-    return change_request.get_response()
+    response = change_request.post_change_request()
+    if (response.status_code == 200):
+        now_ms = time_ns() // 1000000
+        metrics.put_dimensions({"ENV": environ["ENV"]})
+        metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
+    return {"statusCode": response.status_code, "body": response.text}
+
