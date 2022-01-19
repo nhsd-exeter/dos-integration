@@ -118,10 +118,12 @@ class EventProcessor:
                     "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
                 }
             )
-
-        response = eventbridge.put_events(Entries=events)
-        logger.info("Response from eventbridge put_events", extra={"response": response})
-        logger.info(f"Sent off change payload for id={change_request.service_id}")
+        if (len(events) > 0):
+            response = eventbridge.put_events(Entries=events)
+            logger.info("Response from eventbridge put_events", extra={"response": response})
+            logger.info(f"Sent off change payload for id={change_request.service_id}")
+        else:
+            logger.info('No changes identified')
 
 
 @unhandled_exception_logging()
