@@ -25,7 +25,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
+
     body = extract_body(event["body"])
+    odscode = body["ods_code"]
+    logger.append_keys(ods_code=odscode)
+    dynamo_record_id = body["dynamo_record_id"]
+    logger.append_keys(dynamo_record_id=dynamo_record_id)
     logger.set_correlation_id(body["correlation_id"])
     message_received = body["message_received"]
     s, ms = divmod(message_received, 1000)
@@ -39,6 +44,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     change_request = ChangeRequest(body["change_payload"])
     response = change_request.post_change_request()
     metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("StatusCode", response.status_code)
+    metrics.set_property("ods_code", odscode)
+    metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.set_property("dynamo_record_id", dynamo_record_id)
     metrics.put_dimensions({"ENV": environ["ENV"]})
     if response.status_code == 200:
         now_ms = time_ns() // 1000000

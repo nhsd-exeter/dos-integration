@@ -90,7 +90,7 @@ class EventProcessor:
         self.change_requests = change_requests
         return self.change_requests
 
-    def send_changes(self, message_received: int) -> None:
+    def send_changes(self, message_received: int, record_id: str) -> None:
         """Sends change request payload off to next part of workflow
         [Which at the moment is straight to the next lambda]
         """
@@ -111,6 +111,8 @@ class EventProcessor:
                             "change_payload": change_payload,
                             "correlation_id": logger.get_correlation_id(),
                             "message_received": message_received,
+                            "dynamo_record_id": record_id,
+                            "ods_code": self.nhs_entity.odscode,
                         }
                     ),
                     "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
@@ -141,6 +143,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     logger.append_keys(ods_code=None)
     logger.append_keys(org_type=None)
     logger.append_keys(org_sub_type=None)
+    logger.append_keys(dynamo_record_id=None)
     logger.info("Change Event received", extra={"event": event})
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
@@ -159,8 +162,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
-    add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-
+    record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+    logger.append_keys(dynamo_record_id=record_id)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
@@ -193,4 +196,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     finally:
         disconnect_dos_db()
 
-    event_processor.send_changes(sqs_timestamp)
+    event_processor.send_changes(sqs_timestamp, record_id)

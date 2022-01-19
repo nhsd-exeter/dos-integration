@@ -14,7 +14,13 @@ CHANGE_REQUEST = {
     "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
 }
 BODY = json.dumps(
-    {"change_payload": CHANGE_REQUEST, "correlation_id": "dummy_correlation_id", "message_received": 1642501355616}
+    {
+        "change_payload": CHANGE_REQUEST,
+        "correlation_id": "dummy_correlation_id",
+        "message_received": 1642501355616,
+        "ods_code": "FX100",
+        "dynamo_record_id": "EXAMPLE",
+    }
 )
 EVENT = {"body": BODY}
 
