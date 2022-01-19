@@ -43,7 +43,7 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
-        logger.info("Added record to dynamodb", extra={"response":response, "item":put_item})
+        logger.info("Added record to dynamodb", extra={"response": response, "item": put_item})
     except Exception as err:
         logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
         raise
