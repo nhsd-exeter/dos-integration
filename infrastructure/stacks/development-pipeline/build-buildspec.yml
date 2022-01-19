@@ -63,13 +63,13 @@ phases:
   #     - echo "[Pushing images to ECR]"
   #     - echo $CODEBUILD_SOURCE_VERSION
   #     - make push-images VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=dev
-reports: #New
-  BehaveReports: # CodeBuild will create a report group called "BehaveReports".
-    files: #Store all of the files
-      - '**/*'
-    base-directory: $CODEBUILD_SRC_DIR/test/component/reports
-    discard-paths: yes
-    file-format: JUNITXML
+# reports: #New
+#   BehaveReports: # CodeBuild will create a report group called "BehaveReports".
+#     files: #Store all of the files
+#       - '**/*'
+#     base-directory: $CODEBUILD_SRC_DIR/test/component/reports
+#     discard-paths: yes
+#     file-format: JUNITXML
 #artifacts:
   #files:
     # - location
