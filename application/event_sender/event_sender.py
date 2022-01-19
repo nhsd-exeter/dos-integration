@@ -44,15 +44,20 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     change_request = ChangeRequest(body["change_payload"])
     response = change_request.post_change_request()
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("StatusCode", response.status_code)
+    metrics.set_property("level", "INFO")
+    metrics.set_property("message_received", message_received_pretty)
+
     metrics.set_property("ods_code", odscode)
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", dynamo_record_id)
     metrics.put_dimensions({"ENV": environ["ENV"]})
     if response.status_code == 200:
         now_ms = time_ns() // 1000000
-        metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
+        diff = now_ms - message_received
+        metrics.set_property("message", f"Recording change request latency of {diff}")
+        metrics.put_metric("ProcessingLatency", diff, "Milliseconds")
     else:
         metrics.set_property("StatusCode", response.status_code)
+        metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
         metrics.put_metric("DoSApiFail", 1, "Count")
     return {"statusCode": response.status_code, "body": response.text}
