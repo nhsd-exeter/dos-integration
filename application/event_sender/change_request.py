@@ -46,4 +46,3 @@ class ChangeRequest:
             return response
         except Exception:
             self.change_request_logger.log_change_request_exception()
-

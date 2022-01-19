@@ -38,9 +38,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
 
     change_request = ChangeRequest(body["change_payload"])
     response = change_request.post_change_request()
-    if (response.status_code == 200):
+    if response.status_code == 200:
         now_ms = time_ns() // 1000000
         metrics.put_dimensions({"ENV": environ["ENV"]})
         metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
     return {"statusCode": response.status_code, "body": response.text}
-
