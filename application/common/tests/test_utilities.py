@@ -4,12 +4,6 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from pytest import raises
 from ..utilities import (
     extract_body,
-<<<<<<< HEAD
-=======
-    get_environment_variable,
-    invoke_lambda_function,
-    is_mock_mode,
->>>>>>> 86bda63 (Fix python lint issues)
     get_sequence_number,
 )
 
