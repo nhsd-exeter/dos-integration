@@ -27,8 +27,8 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.website)
     update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.phone)
     update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.org_name)
-    update_changes_with_postcode(changes, dos_service, nhs_entity)
     update_changes_with_address(changes, dos_service, nhs_entity)
+    update_changes_with_postcode(changes, dos_service, nhs_entity)
     update_changes_with_opening_times(changes, dos_service, nhs_entity)
     return changes
 
@@ -115,5 +115,13 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
         valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
         if valid_dos_postcode is None:
             log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
+            try:
+                if changes[ADDRESS_CHANGE_KEY]:
+                    del changes[ADDRESS_CHANGE_KEY]
+                    logger.info("Deleted address change as postcode is invalid")
+            except KeyError:
+                logger.info(
+                    "Attempted to delete address change as postcode is invalid however address change does not exist"
+                )
         else:
             changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode

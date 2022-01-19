@@ -3,6 +3,8 @@
 # ==============================================================================
 # Service variables
 
+LOG_LEVEL:= INFO
+
 DOS_API_GATEWAY_SECRETS = $(TF_VAR_dos_api_gateway_secret)
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD

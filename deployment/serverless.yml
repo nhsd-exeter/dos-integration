@@ -25,6 +25,7 @@ provider:
     POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
+    LOG_LEVEL: ${env:LOG_LEVEL}
   tracing:
     lambda: true
     apiGateway: true
