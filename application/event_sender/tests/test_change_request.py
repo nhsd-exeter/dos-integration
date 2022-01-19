@@ -104,9 +104,7 @@ class TestChangeRequest:
         # Assert
         get_secret_mock.assert_called_with(self.AWS_SM_API_GATEWAY_SECRET)
         assert response.status_code == status_code
-        change_request.change_request_logger.log_change_request_response.assert_called_once_with(
-            response
-        )
+        change_request.change_request_logger.log_change_request_response.assert_called_once_with(response)
         # Clean up
         del environ["DOS_API_GATEWAY_URL"]
         del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
