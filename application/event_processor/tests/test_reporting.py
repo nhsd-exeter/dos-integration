@@ -107,8 +107,7 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
         INVALID_POSTCODE_REPORT_ID == "INVALID_POSTCODE"
     ), f"Log ID should be INVALID_POSTCODE but was {INVALID_POSTCODE_REPORT_ID}"
     mock_logger.assert_called_with(
-        f"NHS postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
-        f"criteria for ODSCode '{nhs_entity.odscode}'",
+        f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!",
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
@@ -120,6 +119,6 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
             "nhsuk_postcode": nhs_entity.postcode,
             "nhsuk_county": nhs_entity.county,
             "validation_error_reason": "Postcode not valid/found on DoS",
-            "dos_services": dos_service.uid,
+            "dos_service": dos_service.uid,
         },
     )

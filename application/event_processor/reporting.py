@@ -71,8 +71,7 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
     """
 
     logger.warning(
-        f"NHS postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
-        f"criteria for ODSCode '{nhs_entity.odscode}'",
+        f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!",
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
@@ -84,6 +83,6 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
             "nhsuk_county": nhs_entity.entity_data.get("County", ""),
             "nhsuk_postcode": nhs_entity.postcode,
             "validation_error_reason": "Postcode not valid/found on DoS",
-            "dos_services": dos_service.uid,
+            "dos_service": dos_service.uid,
         },
     )

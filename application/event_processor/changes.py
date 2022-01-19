@@ -115,13 +115,8 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
         valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
         if valid_dos_postcode is None:
             log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
-            try:
-                if changes[ADDRESS_CHANGE_KEY]:
-                    del changes[ADDRESS_CHANGE_KEY]
-                    logger.info("Deleted address change as postcode is invalid")
-            except KeyError:
-                logger.info(
-                    "Attempted to delete address change as postcode is invalid however address change does not exist"
-                )
+            if ADDRESS_CHANGE_KEY in changes:
+                del changes[ADDRESS_CHANGE_KEY]
+                logger.info("Deleted address change as postcode is invalid")
         else:
             changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode
