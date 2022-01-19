@@ -195,8 +195,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
         event_processor.get_change_requests()
 
-    except ValidationException:
-        return
+    except ValidationException as err:
+        logger.exception("Something went wrong", extra={"error": err})
+        raise
     finally:
         disconnect_dos_db()
 
