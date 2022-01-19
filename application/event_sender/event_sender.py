@@ -38,8 +38,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
 
     change_request = ChangeRequest(body["change_payload"])
     response = change_request.post_change_request()
+    metrics.set_namespace('UEC-DOS-INT')
+    metrics.put_dimensions({"ENV": environ["ENV"]})
     if response.status_code == 200:
         now_ms = time_ns() // 1000000
-        metrics.put_dimensions({"ENV": environ["ENV"]})
         metrics.put_metric("ProcessingLatency", now_ms - message_received, "Milliseconds")
+    else:
+        metrics.set_property("StatusCode", response.status_code)
+        metrics.put_metric("DoSApiFail", 1, "Count")
     return {"statusCode": response.status_code, "body": response.text}
