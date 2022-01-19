@@ -42,7 +42,7 @@ class ChangeRequest:
                 json=self.change_request_body,
                 timeout=self.timeout,
             )
-            self.change_request_logger.log_change_request_response(self.response)
+            self.change_request_logger.log_change_request_response(response)
             return response
         except Exception:
             self.change_request_logger.log_change_request_exception()
