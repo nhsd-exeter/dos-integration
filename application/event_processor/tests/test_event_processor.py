@@ -157,8 +157,9 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
 
 
 @patch.object(Logger, "get_correlation_id", return_value=1)
+@patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes(mock_client, get_correlation_id_mock):
+def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     # Arrange
     bus_name = "test"
     environ["EVENTBRIDGE_BUS_NAME"] = bus_name
@@ -204,6 +205,7 @@ def test_send_changes(mock_client, get_correlation_id_mock):
             },
         ]
     )
+    mock_logger.assert_called_with(f"Sent off change payload for id={change_request.service_id}")
     # Clean up
     del environ["EVENTBRIDGE_BUS_NAME"]
 
@@ -212,6 +214,8 @@ def test_send_changes(mock_client, get_correlation_id_mock):
 @patch(f"{FILE_PATH}.client")
 def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     # Arrange
+    record_id = "someid"
+    message_received = 1642501355616
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -223,7 +227,7 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = None
     # Act
-    event_processor.send_changes()
+    event_processor.send_changes(message_received, record_id)
     # Assert
     mock_logger.assert_called_with("Attempting to send change requests before get_change_requests has been called.")
 
@@ -265,6 +269,7 @@ def test_lambda_handler_unmatched_service(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.disconnect_dos_db")
 @patch(f"{FILE_PATH}.log_unmatched_nhsuk_pharmacies")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
@@ -278,6 +283,7 @@ def test_lambda_handler_no_matching_dos_services(
     mock_add_change_request_to_dynamodb,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_unmatched_nhsuk_pharmacies,
+    mock_disconnect_dos_db,
     change_event,
     lambda_context,
 ):
@@ -297,6 +303,7 @@ def test_lambda_handler_no_matching_dos_services(
     # Assert
     mock_log_unmatched_nhsuk_pharmacies.assert_called_once()
     mock_event_processor.get_change_requests.assert_not_called()
+    mock_disconnect_dos_db.assert_called_once()
     mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
@@ -394,6 +401,31 @@ def test_lambda_handler_should_throw_exception(
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
+
+
+def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context):
+    # Arrange
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"] = []
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+
+    with raises(Exception):
+        lambda_handler(sqs_event, lambda_context)
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
+@patch.object(Logger, "error")
+def test_lambda_handler_given_env_variable_should_exists_in_given_list(mock_logger, change_event, lambda_context):
+    # Arrange
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    environ["dummy"] = "test"
+    # Act
+    lambda_handler(sqs_event, lambda_context)
+    mock_logger.assert_called_with("Environmental variable DB_SERVER not present")
+    del environ["dummy"]
 
 
 @patch.object(Logger, "error")
