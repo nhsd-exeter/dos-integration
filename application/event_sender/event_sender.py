@@ -51,7 +51,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", dynamo_record_id)
     metrics.put_dimensions({"ENV": environ["ENV"]})
-    if response.status_code == 200:
+    if response.ok:
         now_ms = time_ns() // 1000000
         diff = now_ms - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")

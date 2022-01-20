@@ -31,10 +31,10 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make authoriser-build-and-push dos-api-gateway-build-and-push
-		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock,dynamo-db
+		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles
+	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs
 
