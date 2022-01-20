@@ -1,7 +1,6 @@
 from typing import Any, Dict
 
-from aws_lambda_powertools import Tracer
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Logger, Tracer
 from time import time_ns, strftime, gmtime
 from os import environ
 from aws_embedded_metrics import metric_scope
