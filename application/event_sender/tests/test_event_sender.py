@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, call
 from dataclasses import dataclass
 from os import environ
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
@@ -55,6 +55,10 @@ class MockResponse:
         self.status_code = status_code
         self.text = text
 
+    @property
+    def ok(self):
+        return self.status_code < 400
+
 
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
@@ -76,16 +80,18 @@ def test_lambda_handler_dos_api_success(
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_instance.post_change_request.assert_called_once_with()
     mock_put_dimension.assert_called_once_with({"ENV": "test"})
-    mock_put_metric.assert_called_once_with("ProcessingLatency", 3000, "Milliseconds")
+
+    mock_put_metric.assert_has_calls([call("DosApiLayency", 0, "Milliseconds"),call("ProcessingLatency", 3000, "Milliseconds")])
     assert response["statusCode"] == 200
     assert response["body"] == "success"
 
 
 @patch(f"{FILE_PATH}.ChangeRequest")
+@patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "put_dimensions")
 def test_lambda_handler_dos_api_fail(
-    mock_put_dimension, mock_put_metric, mock_change_request, lambda_context, mock_logger
+    mock_put_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
 ):
 
     mock_instance = mock_change_request.return_value
@@ -99,7 +105,7 @@ def test_lambda_handler_dos_api_fail(
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
     mock_put_dimension.assert_called_once_with({"ENV": "test"})
-    mock_put_metric.assert_called_once_with("DoSApiFail", 1, "Count")
+    mock_put_metric.assert_has_calls([call("DosApiLayency", 0, "Milliseconds"),call("DoSApiFail", 1, "Count")])
     assert response["statusCode"] == 500
     assert response["body"] == "something went wrong"
 
