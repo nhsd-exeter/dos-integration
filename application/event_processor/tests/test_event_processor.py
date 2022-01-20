@@ -231,6 +231,7 @@ def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger)
     # Assert
     mock_logger.assert_called_with("Attempting to send change requests before get_change_requests has been called.")
 
+
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
 def test_send_changes_when_no_change_requests(mock_client, mock_logger):
