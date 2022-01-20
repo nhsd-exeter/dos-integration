@@ -78,7 +78,7 @@ functions:
       DB_SCHEMA: ${env:DB_SCHEMA}
       DB_USER_NAME: ${env:DB_USER_NAME}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
-      DB_PASSWORD: ${env:DB_PASSWORD}
+      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
       MOCK_MODE: ${env:MOCK_MODE}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}

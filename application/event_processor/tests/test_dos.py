@@ -18,6 +18,8 @@ from ..dos import (
 from .conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
 
+FILE_PATH = "application.event_processor.dos"
+
 
 def test__init__():
     """Pass in random list of values as a mock database row then make sure
@@ -75,8 +77,9 @@ def test__init__no_name():
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_matching_dos_services_services_returned(mock_connect):
+def test_get_matching_dos_services_services_returned(mock_connect, mock_get_secret):
     # Arrange
     odscode = "FQ038"
     environ["DB_SERVER"] = server = "test.db"
@@ -84,7 +87,10 @@ def test_get_matching_dos_services_services_returned(mock_connect):
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    db_password = "my-password"
+    mock_get_secret.return_value = {"my_secret_key": "my-password"}
     db_return = [
         (
             22851351399,
@@ -135,24 +141,30 @@ def test_get_matching_dos_services_services_returned(mock_connect):
         "FROM services WHERE odscode LIKE %(ODS_5)s",
         {"ODS_5": f"{odscode}%"},
     )
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_matching_dos_services_no_services_returned(mock_connect):
+def test_get_matching_dos_services_no_services_returned(mock_connect, mock_get_secret):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
     environ["DB_PORT"] = port = "5432"
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
     mock_connect().cursor().fetchall.return_value = []
     odscode = "FQ038"
     expected_response = []
@@ -177,24 +189,31 @@ def test_get_matching_dos_services_no_services_returned(mock_connect):
         {"ODS_5": f"{odscode}%"},
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_specified_opening_times_from_db_times_returned(mock_connect):
+def test_get_specified_opening_times_from_db_times_returned(mock_connect, mock_get_secret):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
     environ["DB_PORT"] = port = "5432"
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
+
     db_return = [
         (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
         (28334, date(2019, 5, 27), time(8, 0, 0), time(20, 0, 0), False),
@@ -236,6 +255,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
         "WHERE ssod.serviceid = %(service_id)s",
         {"service_id": service_id},
     )
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
 
     # Clean up
     del environ["DB_SERVER"]
@@ -243,18 +263,24 @@ def test_get_specified_opening_times_from_db_times_returned(mock_connect):
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_standard_opening_times_from_db_times_returned(mock_connect):
+def test_get_standard_opening_times_from_db_times_returned(mock_connect, mock_get_secret):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
     environ["DB_PORT"] = port = "5432"
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
+
     db_return = [
         (28334, 1, "Tuesday", time(8, 0, 0), time(17, 0, 0)),
         (28334, 1, "Friday", time(9, 0, 0), time(11, 30, 0)),
@@ -285,25 +311,31 @@ def test_get_standard_opening_times_from_db_times_returned(mock_connect):
         connect_timeout=30,
         application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
-
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
+def test_get_specified_opening_times_from_db_no_services_returned(mock_connect, mock_get_secret):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
     environ["DB_PORT"] = port = "5432"
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
+
     mock_connect().cursor().fetchall.return_value = []
     service_id = 123456
     expected_response = []
@@ -330,13 +362,15 @@ def test_get_specified_opening_times_from_db_no_services_returned(mock_connect):
         {"service_id": service_id},
     )
     assert expected_response == response, f"Should return {expected_response} string, actually: {response}"
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
 @pytest.mark.parametrize(
@@ -382,15 +416,20 @@ def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
     ), f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'."
 
 
+@patch(f"{FILE_PATH}.get_secret")
 @patch("psycopg2.connect")
-def test_get_dos_locations(mock_connect):
+def test_get_dos_locations(mock_connect, mock_get_secret):
     # Arrange
     environ["DB_SERVER"] = server = "test.db"
     environ["DB_PORT"] = port = "5432"
     environ["DB_NAME"] = db_name = "my-db"
     environ["DB_SCHEMA"] = db_schema = "db_schema"
     environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_PASSWORD"] = db_password = "my-password"
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SECRET_KEY"] = "my_secret_key"
+    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
+    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
+
     db_return = [{"id": 111, "postcode": "BA2 7AF", "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}]
     mock_connect().cursor().fetchall.return_value = db_return
 
@@ -414,14 +453,15 @@ def test_get_dos_locations(mock_connect):
         connect_timeout=30,
         application_name=f"DI-event-processor <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
     )
-
+    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
     # Clean up
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_USER_NAME"]
-    del environ["DB_PASSWORD"]
+    del environ["DB_SECRET_NAME"]
+    del environ["DB_SECRET_KEY"]
 
 
 def test_disconnect_dos_db():
