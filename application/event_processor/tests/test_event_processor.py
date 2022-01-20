@@ -150,7 +150,8 @@ def test_send_changes(mock_client, get_correlation_id_mock):
         PHONE_CHANGE_KEY: "0118 999 88199 9119 725 3",
         WEBSITE_CHANGE_KEY: "https://www.google.pl",
     }
-
+    record_id = "someid"
+    message_received = 1642501355616
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -162,10 +163,16 @@ def test_send_changes(mock_client, get_correlation_id_mock):
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
     # Act
-    event_processor.send_changes()
+    event_processor.send_changes(message_received, record_id)
     # Assert
     mock_client.assert_called_with("events")
-    entry_details = {"change_payload": change_request.create_payload(), "correlation_id": 1}
+    entry_details = {
+        "change_payload": change_request.create_payload(),
+        "correlation_id": 1,
+        "message_received": message_received,
+        "dynamo_record_id": record_id,
+        "ods_code": nhs_entity.odscode,
+    }
     mock_client.return_value.put_events.assert_called_with(
         Entries=[
             {
@@ -211,7 +218,6 @@ def test_lambda_handler_unmatched_service(
     mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
-
     mock_event_processor.send_changes.assert_not_called()
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:

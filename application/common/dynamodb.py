@@ -20,9 +20,7 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     return change_event_hash.hexdigest()
 
 
-def add_change_request_to_dynamodb(
-    change_event: Dict[str, Any], sequence_number: int, event_received_time: int
-) -> dict:
+def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
     """Add change request to dynamodb but store the message and use the event for details
     Args:
         change_event (Dict[str, Any]): sequence id for given ODSCode
@@ -31,8 +29,9 @@ def add_change_request_to_dynamodb(
     Returns:
         dict: returns response from dynamodb
     """
+    record_id = dict_hash(change_event, sequence_number)
     dynamo_record = {
-        "Id": dict_hash(change_event, sequence_number),
+        "Id": record_id,
         "ODSCode": change_event["ODSCode"],
         "TTL": int(time()) + TTL,
         "EventReceived": event_received_time,
@@ -44,11 +43,11 @@ def add_change_request_to_dynamodb(
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
-        logger.info(f"Added record to dynamodb. {put_item}")
+        logger.info("Added record to dynamodb", extra={"response": response, "item": put_item})
     except Exception as err:
         logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
         raise
-    return response
+    return record_id
 
 
 def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> int:

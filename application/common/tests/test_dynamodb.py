@@ -49,7 +49,7 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     # Act
     sequence_number = 1
     change_id = dict_hash(change_event, sequence_number)
-    response_add = add_change_request_to_dynamodb(change_event.copy(), sequence_number, event_received_time)
+    response_id = add_change_request_to_dynamodb(change_event.copy(), sequence_number, event_received_time)
 
     item = dynamodb_client.get_item(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
@@ -60,7 +60,7 @@ def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dyn
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
     expected = loads(dumps(change_event), parse_float=Decimal)
 
-    assert response_add["ResponseMetadata"]["HTTPStatusCode"] == 200
+    assert response_id == change_id
     assert deserialized["EventReceived"] == int(event_received_time)
     assert deserialized["TTL"] == int(event_received_time + TTL)
     assert deserialized["Id"] == change_id

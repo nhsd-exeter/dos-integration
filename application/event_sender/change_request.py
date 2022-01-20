@@ -15,7 +15,6 @@ class ChangeRequest:
 
     change_request_logger = ChangeRequestLogger()
     headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
-    response: Response
 
     def __init__(self, change_request_body: Dict[str, Any]) -> None:
         """Initialise the change request class, get environment variables and log change request body
@@ -32,21 +31,18 @@ class ChangeRequest:
         )
         self.change_request_body: Dict[str, Any] = change_request_body
 
-    def post_change_request(self) -> None:
+    def post_change_request(self) -> Response:
         self.change_request_logger.log_change_request_post_attempt(self.change_request_body)
         """Post a change request to the API gateway"""
         try:
-            self.response = post(
+            response = post(
                 url=self.change_request_url,
                 headers=self.headers,
                 auth=self.authorisation,
                 json=self.change_request_body,
                 timeout=self.timeout,
             )
-            self.change_request_logger.log_change_request_response(self.response)
+            self.change_request_logger.log_change_request_response(response)
+            return response
         except Exception:
             self.change_request_logger.log_change_request_exception()
-
-    def get_response(self) -> Dict[str, Any]:
-        """Get the response from the API gateway"""
-        return {"statusCode": self.response.status_code, "body": self.response.text}
