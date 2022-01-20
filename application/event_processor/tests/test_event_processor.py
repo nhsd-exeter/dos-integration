@@ -212,7 +212,7 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
 
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes_when_no_change_requests(mock_client, mock_logger):
+def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger):
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
@@ -230,6 +230,29 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     event_processor.send_changes(message_received, record_id)
     # Assert
     mock_logger.assert_called_with("Attempting to send change requests before get_change_requests has been called.")
+
+@patch.object(Logger, "info")
+@patch(f"{FILE_PATH}.client")
+def test_send_changes_when_no_change_requests(mock_client, mock_logger):
+    # Arrange
+    record_id = "someid"
+    message_received = 1642501355616
+    nhs_entity = NHSEntity({})
+    nhs_entity.odscode = "SLC45"
+    nhs_entity.website = "www.site.com"
+    nhs_entity.phone = "01462622435"
+    nhs_entity.postcode = "S45 1AA"
+    nhs_entity.org_name = "Fake NHS Service"
+    nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
+
+    event_processor = EventProcessor(nhs_entity)
+    event_processor.change_requests = []
+    # Act
+    event_processor.send_changes(message_received, record_id)
+    # Assert
+    mock_logger.assert_called_with("No changes identified")
+    mock_client.assert_called_with("events")
+    mock_client.return_value.put_events.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
