@@ -20,7 +20,7 @@ def setup_change_event_request() -> tuple[dict[str, str], dict[str, Any]]:
     return headers, payload
 
 
-def setup_headers() -> dict:
+def setup_headers() -> dict[str, str]:
     headers = {"sequence-number": str(round(time() * 1000))}
     api_key_json = get_secret(getenv("API_KEY_SECRET_NAME"))
     api_key = loads(api_key_json)[getenv("API_KEY_SECRET_KEY")]
@@ -28,7 +28,7 @@ def setup_headers() -> dict:
     return headers
 
 
-def make_change_event_unique(payload: dict) -> dict:
+def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
     """Make the change event unique by adding a unique id to the payload
 
     Args:

@@ -12,7 +12,7 @@ def data_collection():
 
 def write_sqs_results_to_csv(sqs_queue_name: str, csv_name: str) -> None:
     queue_details = get_queue_details(sqs_queue_name)["Attributes"]
-    queue_details = DataFrame.from_dict(queue_details, orient="index", columns=["Attribute Name"])
+    queue_details = DataFrame.from_dict(queue_details, orient="index", columns=["Attribute Value"])
     queue_details.to_csv(f"results/{csv_name}", index=True)
 
 

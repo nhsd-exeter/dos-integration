@@ -337,12 +337,13 @@ tester-clean:
 
 performance-test-create-change-events:
 	TIME_DATE=$$(date +%Y-%m-%d_%H-%M-%S)
+	export START_TIME=$$TIME_DATE
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f locustfile.py --headless \
 			--users 10 --spawn-rate 1 --run-time 5s \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/create_change_events_$$TIME_DATE" \
+			--csv=results/"$$TIME_DATE"_create_change_events" \
 		DIR=./test/performance/create_change_events \
 		ARGS="\
 			-p 8089:8089 \
@@ -360,8 +361,18 @@ performance-test-data-collection:
 			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
 			"
 
+generate-performance-test-details:
+	rm -r $(TMP_DIR)/performance
+	mkdir $(TMP_DIR)/performance
+	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
+	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
+	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
+	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
+# aws s3 $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-nonprod-performance/
+
 performance-test-clean:
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
+	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
 
 # -----------------------------
 # Other
