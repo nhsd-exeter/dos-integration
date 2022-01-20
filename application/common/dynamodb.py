@@ -49,6 +49,7 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         raise
     return record_id
 
+
 def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> int:
 
     """Get latest sequence id for a given odscode from dynamodb
