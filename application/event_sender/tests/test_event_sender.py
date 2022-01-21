@@ -81,7 +81,9 @@ def test_lambda_handler_dos_api_success(
     mock_instance.post_change_request.assert_called_once_with()
     mock_put_dimension.assert_called_once_with({"ENV": "test"})
 
-    mock_put_metric.assert_has_calls([call("DosApiLayency", 0, "Milliseconds"),call("ProcessingLatency", 3000, "Milliseconds")])
+    mock_put_metric.assert_has_calls(
+        [call("DosApiLayency", 0, "Milliseconds"), call("ProcessingLatency", 3000, "Milliseconds")]
+    )
     assert response["statusCode"] == 200
     assert response["body"] == "success"
 
@@ -105,7 +107,7 @@ def test_lambda_handler_dos_api_fail(
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
     mock_put_dimension.assert_called_once_with({"ENV": "test"})
-    mock_put_metric.assert_has_calls([call("DosApiLayency", 0, "Milliseconds"),call("DoSApiFail", 1, "Count")])
+    mock_put_metric.assert_has_calls([call("DosApiLayency", 0, "Milliseconds"), call("DoSApiFail", 1, "Count")])
     assert response["statusCode"] == 500
     assert response["body"] == "something went wrong"
 
