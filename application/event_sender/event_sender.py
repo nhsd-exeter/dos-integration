@@ -41,7 +41,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     )
 
     change_request = ChangeRequest(body["change_payload"])
+    before = time_ns() // 1000000
     response = change_request.post_change_request()
+    after = time_ns() // 1000000
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
@@ -50,10 +52,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     metrics.set_property("ods_code", odscode)
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", dynamo_record_id)
+    dos_time = after - before
+    metrics.put_metric("DosApiLayency", dos_time, "Milliseconds")
     metrics.put_dimensions({"ENV": environ["ENV"]})
-    if response.status_code == 200:
-        now_ms = time_ns() // 1000000
-        diff = now_ms - message_received
+    if response.ok:
+        diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("ProcessingLatency", diff, "Milliseconds")
     else:
