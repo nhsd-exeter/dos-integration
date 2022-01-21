@@ -341,7 +341,7 @@ performance-test-create-change-events:
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f locustfile.py --headless \
-			--users 10 --spawn-rate 1 --run-time 5s \
+			--users 40 --spawn-rate 40 --run-time 1m --stop-timeout 10 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/"$$TIME_DATE"_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -349,6 +349,7 @@ performance-test-create-change-events:
 			-p 8089:8089 \
 			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
 			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
 performance-test-data-collection:
@@ -357,6 +358,7 @@ performance-test-data-collection:
 		CMD="python data_collection.py" \
 		DIR=./test/performance/data_collection \
 		ARGS="\
+			-e START_TIME=$(START_TIME) \
 			-e FIFO_QUEUE_NAME=$(TF_VAR_fifo_queue_name) \
 			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
 			"

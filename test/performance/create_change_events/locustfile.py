@@ -1,29 +1,30 @@
 from typing import Any, Dict, Union
 
-from locust import HttpUser, task
-from utilities import setup_change_event_request, ODSCODES
-from time import sleep
+from locust import FastHttpUser, task
+from utilities import setup_change_event_request, ODSCODES, setup_headers, get_api_key
 
 
-class AllChangesChangeEvent(HttpUser):
+class AllChangesChangeEvent(FastHttpUser):
     """This class is to test a working change event"""
 
-    weight = 3
+    weight = 19
     trace_id: Union[str, None] = None
     headers: Union[Dict[str, str], None] = None
     payload: Union[Dict[str, Any], None] = None
 
     def on_start(self):
-        self.headers, self.payload = setup_change_event_request()
-        self.payload["ODSCode"] = ODSCODES.get_valid_ods_code()
+        self.api_key = get_api_key()
 
     @task
     def change_event(self):
+        self.payload = setup_change_event_request()
+        self.payload["ODSCode"] = ODSCODES.get_valid_ods_code()
+        self.headers = setup_headers(self.payload["ODSCode"])
+        self.headers["x-api-key"] = self.api_key
         self.client.post("", headers=self.headers, json=self.payload, name="AllChangesChangeEvent")
-        sleep(1)
 
 
-class OdscodeDoesNotExistInDoS(HttpUser):
+class OdscodeDoesNotExistInDoS(FastHttpUser):
     """This class is to test a change event with an ods code that doesn't exist in DoSs"""
 
     weight = 1
@@ -32,10 +33,12 @@ class OdscodeDoesNotExistInDoS(HttpUser):
     payload: Union[Dict[str, Any], None] = None
 
     def on_start(self):
-        self.headers, self.payload = setup_change_event_request()
-        self.payload["ODSCode"] = ODSCODES.get_invalid_ods_code()
+        self.api_key = get_api_key()
 
     @task
     def change_event(self):
+        self.payload = setup_change_event_request()
+        self.payload["ODSCode"] = ODSCODES.get_invalid_ods_code()
+        self.headers = setup_headers(self.payload["ODSCode"])
+        self.headers["x-api-key"] = self.api_key
         self.client.post("", headers=self.headers, json=self.payload, name="OdscodeDoesNotExistInDoS")
-        sleep(1)
