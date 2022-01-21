@@ -56,7 +56,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     metrics.put_metric("DosApiLayency", dos_time, "Milliseconds")
     metrics.put_dimensions({"ENV": environ["ENV"]})
     if response.ok:
-
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("ProcessingLatency", diff, "Milliseconds")
