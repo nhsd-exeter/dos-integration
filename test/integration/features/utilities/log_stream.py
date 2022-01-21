@@ -34,12 +34,19 @@ def get_sender_log_stream_name() -> str:
     return log_stream["logStreams"][0]["logStreamName"]
 
 
-def get_logs(query: str) -> str:
+def get_logs(query: str, event_lambda: str) -> str:
+    log_groups = {"processor": log_group_name_event_processor, "sender": log_group_name_event_sender}
+    if event_lambda == "processor" or "sender":
+        log_group_name = log_groups[event_lambda]
+    else:
+        raise Exception("Error.. log group name not correctly specified")
     logs_found = False
     counter = 0
+    print(query)
+    print(query)
     while logs_found is False:
         start_query_response = lambda_client_logs.start_query(
-            logGroupName=log_group_name_event_processor,
+            logGroupName=log_group_name,
             startTime=int((datetime.today() - timedelta(minutes=5)).timestamp()),
             endTime=int(datetime.now().timestamp()),
             queryString=query,
@@ -52,7 +59,7 @@ def get_logs(query: str) -> str:
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 6:
+        elif counter == 12:
             raise Exception("Log search retries exceeded")
     return dumps(response, indent=2)
 
@@ -70,7 +77,6 @@ def get_processor_logs_list_for_debug(seconds_ago: int = 0) -> list:
         startTime=int(past.timestamp() * 1000),
         endTime=int(now.timestamp() * 1000),
     )
-
     # If a message is a JSON string, format the string before returning.
     messages = []
     for event in event_log["events"]:

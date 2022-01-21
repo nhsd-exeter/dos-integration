@@ -1,16 +1,34 @@
 Feature: E2E Happy Path
 
-  # Scenario: TESTS
-  #   Given a valid change event is provided
-  #   When the Event Processor receives the request
+  @logs_checked
+  Scenario: A VALID CHANGED EVENT IS PROCESSED AND ACCEPTED BY DOS
+    Given a Changed Event is valid
+    When the Changed Event is sent for processing
+    Then the Changed Event is processed
+    And the Changed Request is accepted by Dos
 
-  # Scenario: VALID TESTS
-  #   Given a valid change event is provided
+  @logs_checked
+  Scenario: UNMATCHED SERVICE EXCEPTION IS LOGGED
+    Given a Changed Event has no matching DoS services
+    When the Changed Event is sent for processing
+    Then the unmatched service exception is reported to cloudwatch
 
-  Scenario: INVALID ODSCODE TESTS
-    Given a change event with invalid ODSCode is provided
-    When the change event is sent to the event processor
-    Then the processor lambda logs are generated
+  @no_logs_checked
+  Scenario: ALL RECEIVED CHANGED EVENT ARCHIVED IN DYNAMO
+    Given a Changed Event is valid
+    When the Changed Event is sent for processing
+    Then the Changed Event is stored in dynamo db
+
+
+# Scenario: VALID TESTS
+#   Given a Change Event is valid
+#   When the Change Event is sent for processing
+#   Then the "processor" logs are generated
+
+# Scenario: INVALID ODSCODE TESTS
+#   Given a change event with invalid ODSCode is provided
+#   When the change event is sent to the event processor
+#   Then the processor lambda logs are generated
 
 # Scenario: INVALID ORGANISATIONSUBTYPE TESTS
 #   Given a change event with invalid OrganisationSubType is provided

@@ -98,7 +98,41 @@ component-test: # Runs whole project component tests
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
 
-integration-test: # Runs whole project component tests
+integration-test-moderate: # Runs whole project component tests
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m behave --no-capture --tags=logs_checked" \
+	DIR=./test/integration \
+	ARGS=" \
+		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
+		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e URL=$(DOS_INTEGRATION_API_URL) \
+		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
+		-e LOG_GROUP_NAME_EVENT_SENDER=$(LOG_GROUP_NAME_SENDER) \
+		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
+		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+		-e SQS_URL=$(SQS_QUEUE_URL) \
+		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		"
+
+integration-test-lite: # Runs whole project component tests
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m behave --no-capture --tags=no_logs_checked" \
+	DIR=./test/integration \
+	ARGS=" \
+		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
+		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e URL=$(DOS_INTEGRATION_API_URL) \
+		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
+		-e LOG_GROUP_NAME_EVENT_SENDER=$(LOG_GROUP_NAME_SENDER) \
+		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
+		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+		-e SQS_URL=$(SQS_QUEUE_URL) \
+		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		"
+
+integration-test-full: # Runs whole project component tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m behave --no-capture" \

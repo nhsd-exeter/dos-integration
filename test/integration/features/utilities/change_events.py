@@ -8,7 +8,7 @@ def load_json_file() -> dict:
 
 def get_change_event_string() -> str:
     change_event = load_json_file()
-    change_event = dumps(change_event)
+    # change_event = dumps(change_event)
     return change_event
 
 
