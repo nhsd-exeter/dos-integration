@@ -91,6 +91,7 @@ TF_VAR_dos_api_gateway_api_destination_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-
 TF_VAR_dos_api_gateway_api_destination_url :=  https://$(TF_VAR_change_request_receiver_subdomain_name).$(TEXAS_HOSTED_ZONE)/change-request
 TF_VAR_eventbridge_target_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-role
 TF_VAR_eventbridge_target_policy_name	:= $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-policy
+TF_VAR_dead_letter_queue_from_event_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-bus-dead-letter-queue
 
 
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias

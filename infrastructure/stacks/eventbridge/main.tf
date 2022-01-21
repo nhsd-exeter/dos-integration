@@ -14,6 +14,13 @@ EOF
   depends_on     = [aws_cloudwatch_event_bus.change_request_bus]
 }
 
+resource "aws_sqs_queue" "di_dead_letter_queue_from_event_bus" {
+  name                      = var.dead_letter_queue_from_event_bus_name
+  fifo_queue                = false
+  sqs_managed_sse_enabled   = true
+  message_retention_seconds = 1209600 # 14 days
+}
+
 resource "aws_cloudwatch_event_target" "api_destination_target" {
   rule           = aws_cloudwatch_event_rule.change_request_rule.name
   arn            = aws_cloudwatch_event_api_destination.dos_api_gateway_destination.arn
@@ -21,6 +28,9 @@ resource "aws_cloudwatch_event_target" "api_destination_target" {
   role_arn       = aws_iam_role.target_role.arn
   input_path     = "$.detail"
   depends_on     = [aws_cloudwatch_event_api_destination.dos_api_gateway_destination]
+  dead_letter_config {
+    arn = aws_sqs_queue.di_dead_letter_queue_from_event_bus.arn
+  }
 }
 
 resource "aws_cloudwatch_event_connection" "dos_api_gateway_connection" {

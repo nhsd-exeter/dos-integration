@@ -91,6 +91,14 @@ variable "eventbridge_target_policy_name" {
 }
 
 # ############################
+# EVENTBRIDGE DEAD LETTER QUEUE
+# ############################
+
+variable "dead_letter_queue_from_event_bus_name" {
+  description = ""
+}
+
+# ############################
 # # LAMBDA
 # ############################
 
