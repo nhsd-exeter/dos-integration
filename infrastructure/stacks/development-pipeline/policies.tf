@@ -187,6 +187,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         "secretsmanager:*"
       ],
       "Resource": [
+        "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:events!connection/uec-dos-int-*",
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:uec-dos-int-*",
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:core-dos-dev/deployment*",
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:uec-pu-updater/deployment*"
