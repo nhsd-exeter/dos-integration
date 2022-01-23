@@ -1,23 +1,55 @@
-Feature: E2E Happy Path
+Feature: DOS INTEGRATION E2E TESTS
 
-  @logs_checked
+  @smoke @complete @test
   Scenario: A VALID CHANGED EVENT IS PROCESSED AND ACCEPTED BY DOS
     Given a Changed Event is valid
     When the Changed Event is sent for processing
-    Then the Changed Event is processed
-    And the Changed Request is accepted by Dos
+    Then the processed Changed Request is sent to Dos
+    Then the Changed Request is accepted by Dos
 
-  @logs_checked
+  @complete @dev @test
+  Scenario: A VALID CHANGED EVENT WITH INVALID ODSCODE IS NOT SENT TO DOS
+    Given a Changed Event with invalid ODSCode is provided
+    When the Changed Event is sent for processing
+    Then the Changed Event is not processed any further
+
+  @complete @dev @temp
+  Scenario: A VALID CHANGED EVENT IS PROCESSED AND SENT TO DOS
+    Given a Changed Event is valid
+    When the Changed Event is sent for processing
+    Then the processed Changed Request is sent to Dos
+
+  @complete @dev
   Scenario: UNMATCHED SERVICE EXCEPTION IS LOGGED
     Given a Changed Event has no matching DoS services
     When the Changed Event is sent for processing
     Then the unmatched service exception is reported to cloudwatch
+    And the Changed Event is not processed any further
 
-  @no_logs_checked
+
+  @complete @dev
   Scenario: ALL RECEIVED CHANGED EVENT ARCHIVED IN DYNAMO
     Given a Changed Event is valid
     When the Changed Event is sent for processing
     Then the Changed Event is stored in dynamo db
+
+# Then the Changed Event is processed
+
+# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+
+# And there are no changes identified
+
+# Then there is no Change Request produced
+
+# When the postcode is invalid
+
+# Then the Address change is not included in the Change request
+
+# When the postcode does not exist in DoS
+
+# When the postcode has no LAT/Long values
+
+# Then the Postcode is not included in the Change Request
 
 
 # Scenario: VALID TESTS

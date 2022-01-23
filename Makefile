@@ -98,55 +98,64 @@ component-test: # Runs whole project component tests
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
 
-integration-test-moderate: # Runs whole project component tests
+integration-test-smoke: # PROFILE=test Runs whole project smoke/integration tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=logs_checked" \
+	CMD="python -m behave --no-capture --tags=test" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e URL=$(DOS_INTEGRATION_API_URL) \
-		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
-		-e LOG_GROUP_NAME_EVENT_SENDER=$(LOG_GROUP_NAME_SENDER) \
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
-integration-test-lite: # Runs whole project component tests
+integration-test-task: # PROFILE=dev/task Runs whole project systems test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=no_logs_checked" \
+	CMD="python -m behave --no-capture --tags=temp" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e URL=$(DOS_INTEGRATION_API_URL) \
-		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
-		-e LOG_GROUP_NAME_EVENT_SENDER=$(LOG_GROUP_NAME_SENDER) \
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
-integration-test-full: # Runs whole project component tests
+integration-test-full: # PROFILE=dev/task Runs whole project integration tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture" \
+	CMD="python -m behave --no-capture --tags=complete" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e URL=$(DOS_INTEGRATION_API_URL) \
-		-e LOG_GROUP_NAME_EVENT_PROCESSOR=$(LOG_GROUP_NAME_PROCESSOR) \
-		-e LOG_GROUP_NAME_EVENT_SENDER=$(LOG_GROUP_NAME_SENDER) \
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
 clean: # Runs whole project clean

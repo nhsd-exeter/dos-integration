@@ -8,6 +8,8 @@ from time import sleep
 from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
+import psycopg2
+from psycopg2.extras import DictCursor
 
 url = getenv("URL")
 SQS_URL = getenv("SQS_URL")
@@ -17,22 +19,18 @@ lambda_client_functions = client("lambda")
 sqs_client = client("sqs")
 dynamo_client = client("dynamodb")
 dynamodb = boto3.resource("dynamodb")
+rds_db_client = client("rds")
 
 
 def process_payload(payload: dict) -> str:
     sequence_no = generate_unique_int(payload["ODSCode"])
-    # sequence_no = str(get_latest_sequence_id_for_a_given_odscode(payload["ODSCode"]))
-    print(sequence_no)
-    # sequence_no = "50"
     headers = {
-        "x-api-key": json.loads(get_secret())[getenv("NHS_UK_API_KEY")],
+        "x-api-key": json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")],
         "sequence-number": sequence_no,
         "Content-Type": "application/json",
     }
     payload["Address1"] = sequence_no+" MANSFIELD ROAD"
-    print(payload["Address1"])
     output = requests.request("POST", url, headers=headers, data=dumps(payload))
-    sleep(5)
     return output
 
 
@@ -43,7 +41,7 @@ def debug_purge_queue():
         print(f"ERROR!..UNABLE TO PURGE. {e}")
 
 
-def get_stored_events_from_db(odscode: str, sequence_number: Decimal) -> dict:
+def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
     table = dynamodb.Table(dynamo_db_table)
     response = table.scan(
         FilterExpression=Attr("ODSCode").eq(odscode)& Attr("SequenceNumber").eq(sequence_number)
@@ -54,33 +52,6 @@ def get_stored_events_from_db(odscode: str, sequence_number: Decimal) -> dict:
     return item
     # return json.loads(items, indent=2, default=str)
 
-# def get_dynamo_record(odscode: str, sequence_no: str) -> int:
-#     # Get latest sequence id for a given odscode from dynamodb
-#     try:
-#         table = dynamodb.Table(dynamo_db_table)
-#         resp = table.query(
-#         KeyConditionExpression=Key("ODSCode").eq(odscode) & Key("SequenceNumber").eq(Decimal(sequence_no)
-#         )
-    #     resp = dynamo_client.query(
-    #         TableName=dynamo_db_table,
-    #         IndexName="gsi_ods_sequence",
-    #         KeyConditionExpression=("ODSCode = :odscode", "SequenceNumber = :sequencenumber"),
-    #         ExpressionAttributeValues={
-    #             ":odscode": {"S": odscode}, ":sequencenumber": {"N": sequence_no}
-    #         },
-    # KeyConditionExpression=Key('ODSCode').eq(odscode) & Key('SequenceNumber').eq(sequence_no)
-
-    #         Limit=1,
-    #         ScanIndexForward=False,
-    #         ProjectionExpression="ODSCode,SequenceNumber,Event",
-    #     )
-    #     sequence_number = 0
-    #     if resp.get("Count") > 0:
-    #         sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
-    # except Exception as err:
-    #     print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
-    #     raise
-    # return resp
 
 def get_response(payload: str) -> str:
     response = process_payload(payload)
@@ -129,3 +100,24 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
 
 def generate_unique_int(odscode: str)-> str:
     return str(get_latest_sequence_id_for_a_given_odscode(odscode)+1)
+
+def search_dos_db(query: str)-> list:
+    db_username = json.loads(get_secret(getenv("DOS_DB_USERNAME_SECRET_NAME")))[getenv("DOS_DB_USERNAME_KEY")]
+    db_password = json.loads(get_secret(getenv("DOS_DB_PASSWORD_SECRET_NAME")))[getenv("DOS_DB_PASSWORD_KEY")]
+    sleep(5)
+    response = rds_db_client.describe_db_instances(DBInstanceIdentifier=getenv("DOS_DB_IDENTIFIER_NAME"))
+    server_url = response['DBInstances'][0]["Endpoint"]["Address"]
+    db_connection = psycopg2.connect(
+        host=server_url,
+        port="5432",
+        dbname="pathwaysdos_regressiondi",
+        user=db_username,
+        password=db_password,
+        connect_timeout=30,
+        options=f"-c search_path=dbo,pathwaysdos",
+    )
+    db_cursor = db_connection.cursor(cursor_factory=DictCursor)
+    db_cursor.execute(query)
+    rows=db_cursor.fetchall()
+    db_cursor.close()
+    return rows

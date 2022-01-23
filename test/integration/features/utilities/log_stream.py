@@ -8,10 +8,10 @@ import json
 from json.decoder import JSONDecodeError
 
 lambda_client_logs = client("logs")
-log_group_name_event_processor = get_env("LOG_GROUP_NAME_EVENT_PROCESSOR")
-log_group_name_event_sender = get_env("LOG_GROUP_NAME_EVENT_SENDER")
 event_processor = get_env("EVENT_PROCESSOR")
 event_sender = get_env("EVENT_SENDER")
+log_group_name_event_processor = f'/aws/lambda/{event_processor}'
+log_group_name_event_sender = f'/aws/lambda/{event_sender}'
 
 
 def get_processor_log_stream_name() -> str:
@@ -42,8 +42,6 @@ def get_logs(query: str, event_lambda: str) -> str:
         raise Exception("Error.. log group name not correctly specified")
     logs_found = False
     counter = 0
-    print(query)
-    print(query)
     while logs_found is False:
         start_query_response = lambda_client_logs.start_query(
             logGroupName=log_group_name,
@@ -59,8 +57,8 @@ def get_logs(query: str, event_lambda: str) -> str:
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 12:
-            raise Exception("Log search retries exceeded")
+        elif counter == 14:
+            raise Exception("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
 
 
