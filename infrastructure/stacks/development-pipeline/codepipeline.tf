@@ -81,6 +81,18 @@ resource "aws_codepipeline" "codepipeline" {
         ProjectName = "${var.project_id}-${var.environment}-deploy-test-stage"
       }
     }
+    action {
+      name            = "Deploy_Performance"
+      category        = "Build"
+      run_order       = 1
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-deploy-performance-stage"
+      }
+    }
   }
 }
 resource "aws_codestarconnections_connection" "github" {

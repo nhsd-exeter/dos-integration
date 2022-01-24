@@ -45,7 +45,7 @@ phases:
     commands:
       - docker --version
       - echo "[Building docker containers]"
-      - make build VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=dev
+      - make build VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "[Running Component Tests]"
       # - make tester-build
       # - make mock-dos-db-setup
@@ -55,14 +55,14 @@ phases:
       # - make component-test PROFILE=pipeline-component-test
       - echo "[Pushing images to ECR]"
       - echo $CODEBUILD_SOURCE_VERSION
-      - make push-images VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=dev
+      - make push-images VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
 
       # - command
   # post_build:
   #   commands:
   #     - echo "[Pushing images to ECR]"
   #     - echo $CODEBUILD_SOURCE_VERSION
-  #     - make push-images VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=dev
+  #     - make push-images VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
 # reports: #New
 #   BehaveReports: # CodeBuild will create a report group called "BehaveReports".
 #     files: #Store all of the files
