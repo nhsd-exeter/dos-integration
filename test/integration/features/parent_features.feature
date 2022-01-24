@@ -1,7 +1,6 @@
 Feature: DOS INTEGRATION E2E TESTS
 
-
-  @complete @dev @temp
+@complete @dev
   Scenario: A VALID CHANGED EVENT IS PROCESSED AND SENT TO DOS
     Given a Changed Event is valid
     When the Changed Event is sent for processing
@@ -13,7 +12,6 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing
     Then the unmatched service exception is reported to cloudwatch
     And the Changed Event is not processed any further
-
 
   @complete @dev
   Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB

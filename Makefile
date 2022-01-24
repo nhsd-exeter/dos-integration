@@ -86,19 +86,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/fifo_dlq_handler \
 		"
 
-component-test: # Runs whole project component tests
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --junit --no-capture --no-capture-stderr" \
-	DIR=./test/component \
-	ARGS=" \
-		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e AWS_DEFAULT_REGION=$(AWS_REGION) \
-		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
-		"
-
-e2e-test-smoke: # PROFILE=test ENVIRONMENT=test Runs whole project smoke/integration tests
+e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m behave features/e2e_di_test.feature --no-capture" \
@@ -118,7 +106,7 @@ e2e-test-smoke: # PROFILE=test ENVIRONMENT=test Runs whole project smoke/integra
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
-e2e-test: # PROFILE=dev/task/test Runs whole project
+e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="python -m behave --no-capture --tags=$(TAGS)" \
