@@ -29,7 +29,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key,change-request-receiver-api-key
 	fi
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make authoriser-build-and-push dos-api-gateway-build-and-push
 		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 	fi
