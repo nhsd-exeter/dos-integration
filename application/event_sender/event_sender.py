@@ -53,7 +53,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", dynamo_record_id)
     dos_time = after - before
-    metrics.put_metric("DosApiLayency", dos_time, "Milliseconds")
+    metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
     metrics.put_dimensions({"ENV": environ["ENV"]})
     if response.ok:
         diff = after - message_received
