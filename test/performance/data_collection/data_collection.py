@@ -1,4 +1,3 @@
-from datetime import datetime
 from os import getenv
 
 from aws import get_metric_data_to_csv, get_queue_details_to_csv
@@ -24,7 +23,7 @@ def data_collection():
     get_metric_data_to_csv(
         namespace="AWS/RDS",
         metric_name="DatabaseConnections",
-        dimensions=[{"Name": "DBInstanceIdentifier", "Value": "uec-core-dos-regression-db-12-replica-di"}],
+        dimensions=[{"Name": "DBInstanceIdentifier", "Value": getenv("RDS_INSTANCE_IDENTIFIER")}],
         file_name=f"{now}_db_connections.csv",
     )
     get_metric_data_to_csv(
@@ -35,16 +34,16 @@ def data_collection():
     )
     get_metric_data_to_csv(
         namespace="UEC-DOS-INT",
-        metric_name="DosApiLayency",
+        metric_name="DosApiLatency",
         dimensions=CUSTOM_DIMENSIONS,
         file_name=f"{now}_dos_api_latency.csv",
     )
-    # get_metric_data_to_csv(
-    #     namespace="UEC-DOS-INT",
-    #     metric_name="DoSApiFail",
-    #     dimensions=CUSTOM_DIMENSIONS,
-    #     file_name=f"{now}_dos_api_fail.csv",
-    # )
+    get_metric_data_to_csv(
+        namespace="UEC-DOS-INT",
+        metric_name="DoSApiFail",
+        dimensions=CUSTOM_DIMENSIONS,
+        file_name=f"{now}_dos_api_fail.csv",
+    )
     get_metric_data_to_csv(
         namespace="AWS/Lambda",
         metric_name="ConcurrentExecutions",

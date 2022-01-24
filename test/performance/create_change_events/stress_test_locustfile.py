@@ -25,7 +25,7 @@ class AllChangesChangeEvent(FastHttpUser):
 
 
 class OdscodeDoesNotExistInDoS(FastHttpUser):
-    """This class is to test a change event with an ods code that doesn't exist in DoSs"""
+    """This class is to test a change event with an ods code that doesn't exist in DoS"""
 
     weight = 1
     trace_id: Union[str, None] = None

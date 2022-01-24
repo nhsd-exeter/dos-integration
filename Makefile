@@ -335,10 +335,11 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-performance-test-create-change-events: # Create change events for performance testing - mandatory: PROFILE, ENVIRONMENT
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT
+# Roughly 20k change events per minute
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python -m locust -f locustfile.py --headless \
+		CMD="python -m locust -f stress_test_locustfile.py --headless \
 			--users 40 --spawn-rate 40 --run-time 1m --stop-timeout 10 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
@@ -350,6 +351,21 @@ performance-test-create-change-events: # Create change events for performance te
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT
+# Roughly 4 change events per minute (1 change event per 15 seconds)
+	make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python -m locust -f load_test_locustfile.py --headless \
+			--users 2 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
+			-H https://$(DOS_INTEGRATION_URL) \
+			--csv=results/$(START_TIME)_create_change_events" \
+		DIR=./test/performance/create_change_events \
+		ARGS="\
+			-p 8089:8089 \
+			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
+			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
+			"
 
 performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	make -s docker-run-tools \
@@ -363,6 +379,7 @@ performance-test-data-collection: # Runs data collection for performance tests -
 			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
 			-e EVENT_SENDER_NAME=$(TF_VAR_event_sender_lambda_name) \
 			-e EVENT_PROCESSOR_NAME=$(TF_VAR_event_processor_lambda_name) \
+			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
 			"
 
 generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
