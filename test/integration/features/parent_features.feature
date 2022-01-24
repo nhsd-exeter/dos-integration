@@ -7,11 +7,12 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the processed Changed Request is sent to Dos
 
   @complete @dev
-  Scenario: UNMATCHED SERVICE EXCEPTION IS LOGGED
-    Given a Changed Event has no matching DoS services
+  Scenario: UNMATCHED DOS SERVICES EXCEPTION IS LOGGED
+    Given a Changed Event with invalid ODSCode is provided
     When the Changed Event is sent for processing
-    Then the unmatched service exception is reported to cloudwatch
-    And the Changed Event is not processed any further
+    Then no matched services were found
+    And the unmatched service exception is reported to cloudwatch
+    Then the Changed Event is not processed any further
 
   @complete @dev
   Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB

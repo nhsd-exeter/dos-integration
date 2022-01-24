@@ -1,36 +1,38 @@
 {
-    "SearchKey": "ANEI1245",
-    "ODSCode": "FAT91",
-    "OrganisationName": null,
-    "OrganisationTypeId": "PHA",
-    "OrganisationType": "Pharmacy",
-    "OrganisationStatus": "Visible",
-    "SummaryText": "",
-    "URL": "https://my-pharmacy.com/",
-    "ParentOrganisation": {
-      "ODSCode": "QOP",
-      "OrganisationName": "Greater Manchester Health and Social Care Partnership (STP)"
-    },
-    "Address1": "501-503 MANSFIELD ROAD, NOTTINGHAM",
-    "Address2": null,
-    "Address3": null,
-    "City": null,
-    "County": null,
-    "Latitude": 53.38030624389648,
-    "Longitude": -1.4826949834823608,
-    "Postcode": "NG5 2JJ",
-    "Email": "health.my-pharmacy@nhs.net",
-    "Contacts": [
-      {
-        "ContactType": "Primary",
-        "ContactAvailabilityType": "Office hours",
-        "ContactMethodType": "Telephone",
-        "ContactValue": "0115 9606272"
-      }
-    ],
-    "OrganisationSubType": null,
-    "OrganisationAliases": [],
-    "OpeningTimes": [{
+  "description": "Payload for scenario with opening day changes",
+  "SearchKey": "ANEI1245",
+  "ODSCode": "FAT91",
+  "OrganisationName": null,
+  "OrganisationTypeId": "PHA",
+  "OrganisationType": "Pharmacy",
+  "OrganisationStatus": "Visible",
+  "SummaryText": "",
+  "URL": "https://my-pharmacy.com/",
+  "ParentOrganisation": {
+    "ODSCode": "QOP",
+    "OrganisationName": "Greater Manchester Health and Social Care Partnership (STP)"
+  },
+  "Address1": "501-503 MANSFIELD ROAD, NOTTINGHAM",
+  "Address2": null,
+  "Address3": null,
+  "City": null,
+  "County": null,
+  "Latitude": 53.38030624389648,
+  "Longitude": -1.4826949834823608,
+  "Postcode": "NG5 2JJ",
+  "Email": "health.my-pharmacy@nhs.net",
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "0115 9606272"
+    }
+  ],
+  "OrganisationSubType": null,
+  "OrganisationAliases": [],
+  "OpeningTimes": [
+    {
       "Weekday": "Monday",
       "Times": "09:00-23:00",
       "OffsetOpeningTime": 540,
@@ -38,15 +40,17 @@
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Tuesday",
-      "Times": "07:30-23:00",
+      "Times": "09:00-23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Wednesday",
       "Times": "07:30-23:00",
       "OffsetOpeningTime": 540,
@@ -54,7 +58,8 @@
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Thursday",
       "Times": "07:30-23:00",
       "OffsetOpeningTime": 540,
@@ -62,7 +67,8 @@
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Friday",
       "Times": "07:30-23:00",
       "OffsetOpeningTime": 540,
@@ -70,7 +76,8 @@
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Saturday",
       "Times": "07:30-23:00",
       "OffsetOpeningTime": 540,
@@ -78,7 +85,8 @@
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
-    },{
+    },
+    {
       "Weekday": "Sunday",
       "Times": "10:00-17:00",
       "OffsetOpeningTime": 540,
@@ -87,5 +95,5 @@
       "AdditionalOpeningDate": "",
       "IsOpen": true
     }
-    ]
+  ]
 }

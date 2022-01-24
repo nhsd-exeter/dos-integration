@@ -16,17 +16,11 @@ def a_change_event_is_valid(context):
     context.change_event = get_change_event()
 
 
-@given("a Changed Event has no matching DoS services")
-def a_change_event_with_no_matching_dos_services(context):
-    context.change_event = get_change_event()
-    context.change_event["ODSCode"] = "CODE1"
-
-
 @given("a Changed Event with invalid ODSCode is provided")
 def a_change_event_with_invalid_odscode(context):
     """Creates a valid change event"""
     context.change_event = get_change_event()
-    context.change_event["ODSCode"] = "FAKE6"
+    context.change_event["ODSCode"] = "F8KE1"
 
 
 @given("a Changed Event with invalid OrganisationSubType is provided")
@@ -52,6 +46,16 @@ def the_change_event_is_sent_for_processing(context):
     assert (
         context.response.status_code == 200
     ), f"Status code not as expected.. Status code: {context.response.status_code} Error: {message}"
+
+
+@then("no matched services were found")
+def no_matched_services_found(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "Found 0 services in DB"'
+    )
+    event_logs = get_logs(query, "processor")
+    assert event_logs != [], "ERROR!! No unmatched services log found.."
 
 
 @then('the "{event}" logs are generated')

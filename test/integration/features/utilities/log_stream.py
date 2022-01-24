@@ -6,17 +6,16 @@ from json import dumps
 import json
 from json.decoder import JSONDecodeError
 
-lambda_client_logs = client("logs")
-event_processor = get_env("EVENT_PROCESSOR")
-event_sender = get_env("EVENT_SENDER")
-log_group_name_event_processor = f"/aws/lambda/{event_processor}"
-log_group_name_event_sender = f"/aws/lambda/{event_sender}"
+LAMBDA_CLIENT_LOGS = client("logs")
+EVENT_PROCESSOR = get_env("EVENT_PROCESSOR")
+EVENT_SENDER = get_env("EVENT_SENDER")
+LOG_GROUP_NAME_EVENT_PROCESSOR = f"/aws/lambda/{EVENT_PROCESSOR}"
+LOG_GROUP_NAME_EVENT_SENDER = f"/aws/lambda/{EVENT_SENDER}"
 
 
 def get_processor_log_stream_name() -> str:
-    sleep(1)
-    log_stream = lambda_client_logs.describe_log_streams(
-        logGroupName=log_group_name_event_processor,
+    log_stream = LAMBDA_CLIENT_LOGS.describe_log_streams(
+        logGroupName=LOG_GROUP_NAME_EVENT_PROCESSOR,
         orderBy="LastEventTime",
         descending=True,
     )
@@ -24,9 +23,8 @@ def get_processor_log_stream_name() -> str:
 
 
 def get_sender_log_stream_name() -> str:
-    sleep(1)
-    log_stream = lambda_client_logs.describe_log_streams(
-        logGroupName=log_group_name_event_sender,
+    log_stream = LAMBDA_CLIENT_LOGS.describe_log_streams(
+        logGroupName=LOG_GROUP_NAME_EVENT_SENDER,
         orderBy="LastEventTime",
         descending=True,
     )
@@ -34,7 +32,7 @@ def get_sender_log_stream_name() -> str:
 
 
 def get_logs(query: str, event_lambda: str) -> str:
-    log_groups = {"processor": log_group_name_event_processor, "sender": log_group_name_event_sender}
+    log_groups = {"processor": LOG_GROUP_NAME_EVENT_PROCESSOR, "sender": LOG_GROUP_NAME_EVENT_SENDER}
     if event_lambda == "processor" or "sender":
         log_group_name = log_groups[event_lambda]
     else:
@@ -42,7 +40,7 @@ def get_logs(query: str, event_lambda: str) -> str:
     logs_found = False
     counter = 0
     while logs_found is False:
-        start_query_response = lambda_client_logs.start_query(
+        start_query_response = LAMBDA_CLIENT_LOGS.start_query(
             logGroupName=log_group_name,
             startTime=int((datetime.today() - timedelta(minutes=5)).timestamp()),
             endTime=int(datetime.now().timestamp()),
@@ -52,7 +50,7 @@ def get_logs(query: str, event_lambda: str) -> str:
         response = None
         while response is None or response["status"] != "Complete":
             sleep(15)
-            response = lambda_client_logs.get_query_results(queryId=query_id)
+            response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
         counter += 1
         if response["results"] != []:
             logs_found = True
@@ -68,8 +66,8 @@ def get_processor_logs_list_for_debug(seconds_ago: int = 0) -> list:
     past = now - timedelta(seconds=seconds_ago)
 
     # Get log events
-    event_log = lambda_client_logs.get_log_events(
-        logGroupName=log_group_name_event_processor,
+    event_log = LAMBDA_CLIENT_LOGS.get_log_events(
+        logGroupName=LOG_GROUP_NAME_EVENT_PROCESSOR,
         logStreamName=get_processor_log_stream_name(),
         startTime=int(past.timestamp() * 1000),
         endTime=int(now.timestamp() * 1000),
