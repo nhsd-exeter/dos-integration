@@ -58,14 +58,39 @@ resource "aws_codepipeline" "codepipeline" {
   stage {
     name = "Deploy"
     action {
-      name            = "Deploy"
+      name            = "Deploy_Dev"
       category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-deploy-dev-stage"
+      }
+    }
+    action {
+      name            = "Deploy_Test"
+      category        = "Build"
+      run_order       = 1
       owner           = "AWS"
       provider        = "CodeBuild"
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-deploy-stage"
+        ProjectName = "${var.project_id}-${var.environment}-deploy-test-stage"
+      }
+    }
+    action {
+      name            = "Deploy_Performance"
+      category        = "Build"
+      run_order       = 1
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-deploy-performance-stage"
       }
     }
   }

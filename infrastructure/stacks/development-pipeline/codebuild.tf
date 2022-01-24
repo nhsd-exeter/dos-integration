@@ -149,8 +149,8 @@ resource "aws_codebuild_project" "di_build" {
   }
 }
 
-resource "aws_codebuild_project" "di_deploy" {
-  name           = "${var.project_id}-${var.environment}-deploy-stage"
+resource "aws_codebuild_project" "di_deploy_dev" {
+  name           = "${var.project_id}-${var.environment}-deploy-dev-stage"
   description    = "Builds docker container images"
   build_timeout  = "10"
   queued_timeout = "10"
@@ -175,11 +175,11 @@ resource "aws_codebuild_project" "di_deploy" {
 
     environment_variable {
       name  = "PROFILE"
-      value = var.profile
+      value = "dev"
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.environment
+      value = "dev"
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -205,7 +205,140 @@ resource "aws_codebuild_project" "di_deploy" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-dev-stage"
+      stream_name = ""
+    }
+  }
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = data.template_file.deploy_buildspec.rendered
+  }
+}
+
+resource "aws_codebuild_project" "di_deploy_test" {
+  name           = "${var.project_id}-${var.environment}-deploy-test-stage"
+  description    = "Builds docker container images"
+  build_timeout  = "10"
+  queued_timeout = "10"
+  service_role   = aws_iam_role.codebuild_role.arn
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  cache {
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+  }
+
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = true
+
+    environment_variable {
+      name  = "PROFILE"
+      value = "test"
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "test"
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
+      value = var.aws_account_id_live_parent
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_MGMT"
+      value = var.aws_account_id_mgmt
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_NONPROD"
+      value = var.aws_account_id_nonprod
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_PROD"
+      value = var.aws_account_id_prod
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_IDENTITIES"
+      value = var.aws_account_id_identities
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-test-stage"
+      stream_name = ""
+    }
+  }
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = data.template_file.deploy_buildspec.rendered
+  }
+}
+
+
+resource "aws_codebuild_project" "di_deploy_performance" {
+  name           = "${var.project_id}-${var.environment}-deploy-performance-stage"
+  description    = "Builds docker container images"
+  build_timeout  = "10"
+  queued_timeout = "10"
+  service_role   = aws_iam_role.codebuild_role.arn
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  cache {
+    type  = "LOCAL"
+    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+  }
+
+
+  environment {
+    compute_type                = "BUILD_GENERAL1_SMALL"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+    type                        = "LINUX_CONTAINER"
+    image_pull_credentials_type = "CODEBUILD"
+    privileged_mode             = true
+
+    environment_variable {
+      name  = "PROFILE"
+      value = "perf"
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "perf"
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
+      value = var.aws_account_id_live_parent
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_MGMT"
+      value = var.aws_account_id_mgmt
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_NONPROD"
+      value = var.aws_account_id_nonprod
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_PROD"
+      value = var.aws_account_id_prod
+    }
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID_IDENTITIES"
+      value = var.aws_account_id_identities
+    }
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-performance-stage"
       stream_name = ""
     }
   }
