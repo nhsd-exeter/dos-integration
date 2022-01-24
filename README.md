@@ -202,7 +202,10 @@ This testing is generally done by a tester
 To run the performance tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
 
     make tester-build
-    make performance-test
+    make performance-test-create-change-events PROFILE=perf ENVIRONMENT=perf START_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+    Wait for the test to complete
+    make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+
 ### Test data and mock services
 
 - How the test data set is produced

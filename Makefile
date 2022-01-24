@@ -335,15 +335,13 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-performance-test-create-change-events:
-	TIME_DATE=$$(date +%Y-%m-%d_%H-%M-%S)
-	export START_TIME=$$TIME_DATE
+performance-test-create-change-events: # Create change events for performance testing - mandatory: PROFILE, ENVIRONMENT
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f locustfile.py --headless \
 			--users 40 --spawn-rate 40 --run-time 1m --stop-timeout 10 \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/"$$TIME_DATE"_create_change_events" \
+			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
 		ARGS="\
 			-p 8089:8089 \
@@ -352,7 +350,8 @@ performance-test-create-change-events:
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
-performance-test-data-collection:
+
+performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python data_collection.py" \
@@ -366,16 +365,18 @@ performance-test-data-collection:
 			-e EVENT_PROCESSOR_NAME=$(TF_VAR_event_processor_lambda_name) \
 			"
 
-generate-performance-test-details:
+generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	rm -r $(TMP_DIR)/performance
 	mkdir $(TMP_DIR)/performance
 	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
 	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
 	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
 	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
-# aws s3 $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-nonprod-performance/
+	aws s3 cp $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-performance-tests-nonprod/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip
 
 performance-test-clean:
+	rm -rf $(TMP_DIR)/performance
+	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
 	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
 

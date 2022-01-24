@@ -12,7 +12,7 @@ CUSTOM_DIMENSIONS = [
 
 
 def data_collection():
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    now = getenv("START_TIME")
     get_queue_details_to_csv(
         queue_name=getenv("FIFO_QUEUE_NAME"),
         file_name=f"{now}_{getenv('FIFO_QUEUE_NAME')}_details.csv",
