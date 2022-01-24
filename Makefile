@@ -359,8 +359,11 @@ performance-test-data-collection:
 		DIR=./test/performance/data_collection \
 		ARGS="\
 			-e START_TIME=$(START_TIME) \
+			-e END_TIME=$(END_TIME) \
 			-e FIFO_QUEUE_NAME=$(TF_VAR_fifo_queue_name) \
 			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
+			-e EVENT_SENDER_NAME=$(TF_VAR_event_sender_lambda_name) \
+			-e EVENT_PROCESSOR_NAME=$(TF_VAR_event_processor_lambda_name) \
 			"
 
 generate-performance-test-details:

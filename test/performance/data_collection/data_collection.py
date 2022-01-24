@@ -1,19 +1,66 @@
-from os import getenv
-from pandas import DataFrame
-from aws import get_queue_details
 from datetime import datetime
+from os import getenv
+
+from aws import get_metric_data_to_csv, get_queue_details_to_csv
+
+CUSTOM_DIMENSIONS = [
+    {"Name": "ServiceName", "Value": getenv("EVENT_SENDER_NAME")},
+    {"Name": "LogGroup", "Value": getenv("EVENT_SENDER_NAME")},
+    {"Name": "ServiceType", "Value": "AWS::Lambda::Function"},
+    {"Name": "ENV", "Value": getenv("ENVIRONMENT")},
+]
 
 
 def data_collection():
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    write_sqs_results_to_csv(getenv("FIFO_QUEUE_NAME"), f"{now}_fifo_queue_details.csv")
-    write_sqs_results_to_csv(getenv("FIFO_DLQ_NAME"), f"{now}_fifo_dlq_details.csv")
-
-
-def write_sqs_results_to_csv(sqs_queue_name: str, csv_name: str) -> None:
-    queue_details = get_queue_details(sqs_queue_name)["Attributes"]
-    queue_details = DataFrame.from_dict(queue_details, orient="index", columns=["Attribute Value"])
-    queue_details.to_csv(f"results/{csv_name}", index=True)
+    get_queue_details_to_csv(
+        queue_name=getenv("FIFO_QUEUE_NAME"),
+        file_name=f"{now}_{getenv('FIFO_QUEUE_NAME')}_details.csv",
+    )
+    get_queue_details_to_csv(
+        queue_name=getenv("FIFO_DLQ_NAME"),
+        file_name=f"{now}_{getenv('FIFO_DLQ_NAME')}_details.csv",
+    )
+    get_metric_data_to_csv(
+        namespace="AWS/RDS",
+        metric_name="DatabaseConnections",
+        dimensions=[{"Name": "DBInstanceIdentifier", "Value": "uec-core-dos-regression-db-12-replica-di"}],
+        file_name=f"{now}_db_connections.csv",
+    )
+    get_metric_data_to_csv(
+        namespace="UEC-DOS-INT",
+        metric_name="ProcessingLatency",
+        dimensions=CUSTOM_DIMENSIONS,
+        file_name=f"{now}_processing_latency.csv",
+    )
+    get_metric_data_to_csv(
+        namespace="UEC-DOS-INT",
+        metric_name="DosApiLayency",
+        dimensions=CUSTOM_DIMENSIONS,
+        file_name=f"{now}_dos_api_latency.csv",
+    )
+    # get_metric_data_to_csv(
+    #     namespace="UEC-DOS-INT",
+    #     metric_name="DoSApiFail",
+    #     dimensions=CUSTOM_DIMENSIONS,
+    #     file_name=f"{now}_dos_api_fail.csv",
+    # )
+    get_metric_data_to_csv(
+        namespace="AWS/Lambda",
+        metric_name="ConcurrentExecutions",
+        dimensions=[
+            {"Name": "FunctionName", "Value": getenv("EVENT_PROCESSOR_NAME")},
+        ],
+        file_name=f'{now}_{getenv("EVENT_PROCESSOR_NAME")}_concurrent_executions.csv',
+    )
+    get_metric_data_to_csv(
+        namespace="AWS/Lambda",
+        metric_name="Invocations",
+        dimensions=[
+            {"Name": "FunctionName", "Value": getenv("EVENT_PROCESSOR_NAME")},
+        ],
+        file_name=f'{now}_{getenv("EVENT_PROCESSOR_NAME")}_invocations.csv',
+    )
 
 
 if __name__ == "__main__":
