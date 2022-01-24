@@ -2,12 +2,12 @@ import requests
 import json
 from os import getenv
 from features.utilities.get_secrets import get_secret
-from json import load, dumps
+from json import dumps
 from boto3 import client
 from time import sleep
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr, Key
+from boto3.dynamodb.conditions import Attr
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -29,7 +29,7 @@ def process_payload(payload: dict) -> str:
         "sequence-number": sequence_no,
         "Content-Type": "application/json",
     }
-    payload["Address1"] = sequence_no+" MANSFIELD ROAD"
+    payload["Address1"] = sequence_no + " MANSFIELD ROAD"
     output = requests.request("POST", url, headers=headers, data=dumps(payload))
     return output
 
@@ -43,30 +43,14 @@ def debug_purge_queue():
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
     table = dynamodb.Table(dynamo_db_table)
-    response = table.scan(
-        FilterExpression=Attr("ODSCode").eq(odscode)& Attr("SequenceNumber").eq(sequence_number)
-    )
-    #  & Attr("SequenceNumber").eq(Decimal(sequence_number))
+    response = table.scan(FilterExpression=Attr("ODSCode").eq(odscode) & Attr("SequenceNumber").eq(sequence_number))
     item = response["Items"][0]
-    # for item in items:
     return item
-    # return json.loads(items, indent=2, default=str)
 
 
 def get_response(payload: str) -> str:
     response = process_payload(payload)
     return response.json()["message"]
-
-
-# This matches a payload file with a string describing it from the Steps
-def get_payload(payload_name: str) -> str:
-    values = {"valid": "11_expected_schema.json", "invalid": "10_invalid.json"}
-    if payload_name in ["valid", "invalid"]:
-        payload_file_name = values[payload_name]
-    else:
-        raise Exception("Unable to find Payload by request name")
-    with open(f"./features/resources/payloads/{payload_file_name}", "r", encoding="utf-8") as json_file:
-        return dumps(load(json_file))
 
 
 def get_lambda_info(info_param: str) -> str:
@@ -77,7 +61,7 @@ def get_lambda_info(info_param: str) -> str:
 
 
 def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
-    # Get latest sequence id for a given odscode from dynamodb
+    """Get latest sequence id for a given odscode from dynamodb"""
     try:
         resp = dynamo_client.query(
             TableName=dynamo_db_table,
@@ -98,15 +82,17 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
         raise
     return sequence_number
 
-def generate_unique_int(odscode: str)-> str:
-    return str(get_latest_sequence_id_for_a_given_odscode(odscode)+1)
 
-def search_dos_db(query: str)-> list:
+def generate_unique_int(odscode: str) -> str:
+    return str(get_latest_sequence_id_for_a_given_odscode(odscode) + 1)
+
+
+def search_dos_db(query: str) -> list:
     db_username = json.loads(get_secret(getenv("DOS_DB_USERNAME_SECRET_NAME")))[getenv("DOS_DB_USERNAME_KEY")]
     db_password = json.loads(get_secret(getenv("DOS_DB_PASSWORD_SECRET_NAME")))[getenv("DOS_DB_PASSWORD_KEY")]
     sleep(5)
     response = rds_db_client.describe_db_instances(DBInstanceIdentifier=getenv("DOS_DB_IDENTIFIER_NAME"))
-    server_url = response['DBInstances'][0]["Endpoint"]["Address"]
+    server_url = response["DBInstances"][0]["Endpoint"]["Address"]
     db_connection = psycopg2.connect(
         host=server_url,
         port="5432",
@@ -114,10 +100,10 @@ def search_dos_db(query: str)-> list:
         user=db_username,
         password=db_password,
         connect_timeout=30,
-        options=f"-c search_path=dbo,pathwaysdos",
+        options="-c search_path=dbo,pathwaysdos",
     )
     db_cursor = db_connection.cursor(cursor_factory=DictCursor)
     db_cursor.execute(query)
-    rows=db_cursor.fetchall()
+    rows = db_cursor.fetchall()
     db_cursor.close()
     return rows

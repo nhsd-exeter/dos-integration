@@ -98,10 +98,10 @@ component-test: # Runs whole project component tests
 		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
 		"
 
-integration-test-smoke: # PROFILE=test Runs whole project smoke/integration tests
+e2e-test-smoke: # PROFILE=test ENVIRONMENT=test Runs whole project smoke/integration tests
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=test" \
+	CMD="python -m behave features/e2e_di_test.feature --no-capture" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -118,30 +118,10 @@ integration-test-smoke: # PROFILE=test Runs whole project smoke/integration test
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
-integration-test-task: # PROFILE=dev/task Runs whole project systems test
+e2e-test: # PROFILE=dev/task/test Runs whole project
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=temp" \
-	DIR=./test/integration \
-	ARGS=" \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e SQS_URL=$(SQS_QUEUE_URL) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		"
-
-integration-test-full: # PROFILE=dev/task Runs whole project integration tests
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=complete" \
+	CMD="python -m behave --no-capture --tags=$(TAGS)" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \

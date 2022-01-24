@@ -16,7 +16,6 @@
     - [Code Quality](#code-quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
-    - [Component Testing](#component-testing)
     - [Integration Testing](#integration-testing)
     - [Performance Testing](#performance-testing)
     - [Test data and mock services](#test-data-and-mock-services)
@@ -143,13 +142,11 @@ To connect to the local postgres database use these connection
     make python-code-check FILES=./application
     make python-code-check FILES=./test
 
-
 ## Testing
 
 List all the type of test suites included and provide instructions how to execute them
 
 - Unit
-- Component
 - Integration
 - Contract
 - End-to-end
@@ -179,25 +176,6 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
-
-### Component Testing
-
-Component Testing is to test the functional capabilities of the individual component(lambda). This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
-
-This testing includes:
-
-- Logging
-- Input & Output of component
-- Calls to Mocks (DB/DoS API Gateway)
-- Erroneous data passed into component
-- Meets business needs of the ticket
-
-This testing is generally done by a developer
-
-To run components tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
-
-    make tester-build mock-dos-db-setup
-    make start component-test
 
 ### Integration Testing
 
