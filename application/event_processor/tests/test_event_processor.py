@@ -3,8 +3,10 @@ from json import dumps
 from os import environ
 from random import choices
 from change_event_exceptions import ValidationException
+from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
 from unittest.mock import patch
+
 
 from pytest import fixture, raises
 
@@ -22,6 +24,17 @@ from ..change_request import (
 from dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.event_processor"
+
+
+@fixture
+def mock_metric_logger():
+    InvocationTracker.reset()
+
+    async def flush(self):
+        print("flush called")
+        InvocationTracker.record()
+
+    MetricsLogger.flush = flush
 
 
 @fixture
@@ -261,7 +274,13 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger):
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
+@patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
+@patch.object(MetricsLogger, "put_metric")
+@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_unmatched_service(
+    mock_set_dimension,
+    mock_put_metric,
+    mock_time,
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
@@ -269,10 +288,12 @@ def test_lambda_handler_unmatched_service(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
     lambda_context,
+    mock_metric_logger,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
+    environ["ENV"] = "test"
     sqs_event["Records"][0]["body"] = dumps(change_event)
     mock_extract_body.return_value = change_event
     mock_nhs_entity.return_value = mock_entity
@@ -288,6 +309,9 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_event_processor.assert_called_once_with(mock_entity)
     mock_event_processor.send_changes.assert_not_called()
+    mock_set_dimension.assert_called_once_with({"ENV": "test"})
+
+    mock_put_metric.assert_called_with("QueueToProcessorLatency", 3000, "Milliseconds")
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
@@ -329,6 +353,7 @@ def test_lambda_handler_no_matching_dos_services(
     mock_event_processor.get_change_requests.assert_not_called()
     mock_disconnect_dos_db.assert_called_once()
     mock_event_processor.send_changes.assert_not_called()
+
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
@@ -544,7 +569,7 @@ SQS_EVENT = {
             "body": "Test message.",
             "attributes": {
                 "ApproximateReceiveCount": "1",
-                "SentTimestamp": "1545082649183",
+                "SentTimestamp": "1642619743522",
                 "SenderId": "AIDAIENQZJOLO23YVJ4VO",
                 "ApproximateFirstReceiveTimestamp": "1545082649185",
             },
@@ -559,3 +584,15 @@ SQS_EVENT = {
         }
     ]
 }
+
+
+class InvocationTracker(object):
+    invocations = 0
+
+    @staticmethod
+    def record():
+        InvocationTracker.invocations += 1
+
+    @staticmethod
+    def reset():
+        InvocationTracker.invocations = 0
