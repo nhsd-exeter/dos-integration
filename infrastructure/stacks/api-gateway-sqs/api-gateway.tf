@@ -54,7 +54,7 @@ resource "aws_api_gateway_integration" "di_endpoint_integration" {
 #if( $input.params('correlation-id').toString() != "" )
 #set($correlation_id = $util.escapeJavaScript($input.params("correlation-id")))
 #else
-#set($correlation_id = $context.requestId)
+#set($correlation_id = $context.extendedRequestId)
 #end
 Action=SendMessage&MessageGroupId=$input.json("ODSCode")&MessageBody=$input.body&MessageAttribute.1.Name=correlation-id&MessageAttribute.1.Value.DataType=String&MessageAttribute.1.Value.StringValue=$correlation_id&MessageAttribute.2.Name=sequence-number&MessageAttribute.2.Value.DataType=Number&MessageAttribute.2.Value.StringValue=$util.escapeJavaScript($input.params("sequence-number"))
 EOF

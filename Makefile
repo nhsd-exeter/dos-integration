@@ -86,16 +86,44 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/fifo_dlq_handler \
 		"
 
-component-test: # Runs whole project component tests
+e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --junit --no-capture --no-capture-stderr" \
-	DIR=./test/component \
+	CMD="python -m behave features/e2e_di_test.feature --no-capture" \
+	DIR=./test/integration \
 	ARGS=" \
-		-e MOCKSERVER_URL=$(MOCKSERVER_URL) \
-		-e AWS_DEFAULT_REGION=$(AWS_REGION) \
-		-e EVENT_PROCESSOR_FUNCTION_URL=$(EVENT_PROCESSOR_FUNCTION_URL) \
-		-e EVENT_SENDER_FUNCTION_URL=$(EVENT_SENDER_FUNCTION_URL) \
+		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
+		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e URL=https://$(DOS_INTEGRATION_URL) \
+		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
+		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+		-e SQS_URL=$(SQS_QUEUE_URL) \
+		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+		"
+
+e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester \
+	CMD="python -m behave --no-capture --tags=$(TAGS)" \
+	DIR=./test/integration \
+	ARGS=" \
+		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
+		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e URL=https://$(DOS_INTEGRATION_URL) \
+		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
+		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+		-e SQS_URL=$(SQS_QUEUE_URL) \
+		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		"
 
 clean: # Runs whole project clean

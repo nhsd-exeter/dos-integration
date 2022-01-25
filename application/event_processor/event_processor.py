@@ -19,7 +19,6 @@ from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_se
 
 logger = Logger()
 tracer = Tracer()
-
 EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_SERVER",
     "DB_PORT",
