@@ -7,7 +7,7 @@ from utilities import setup_change_event_request, ODSCODES, setup_headers, get_a
 class AllChangesChangeEvent(FastHttpUser):
     """This class is to test a working change event"""
 
-    weight = 1
+    weight = 9
     trace_id: Union[str, None] = None
     headers: Union[Dict[str, str], None] = None
     payload: Union[Dict[str, Any], None] = None

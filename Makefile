@@ -352,11 +352,11 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 			"
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT
-# Roughly 4 change events per minute (1 change event per 15 seconds)
+# Roughly 20 change events per minute
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 2 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
