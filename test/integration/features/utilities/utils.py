@@ -8,7 +8,6 @@ from time import sleep
 from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Key
 import psycopg2
 from psycopg2.extras import DictCursor
 
