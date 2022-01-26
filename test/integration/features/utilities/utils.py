@@ -5,9 +5,9 @@ from features.utilities.get_secrets import get_secret
 from json import dumps
 from boto3 import client
 from time import sleep
+from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -42,10 +42,27 @@ def debug_purge_queue():
 
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
-    table = DYNAMODB.Table(DYNAMO_DB_TABLE)
-    response = table.scan(FilterExpression=Attr("ODSCode").eq(odscode) & Attr("SequenceNumber").eq(sequence_number))
-    item = response["Items"][0]
-    return item
+    print(f"{DYNAMO_DB_TABLE} {odscode} {sequence_number}")
+    resp = DYNAMO_CLIENT.query(
+        TableName=DYNAMO_DB_TABLE,
+        IndexName="gsi_ods_sequence",
+        ProjectionExpression="ODSCode,SequenceNumber",
+        ExpressionAttributeValues={
+            ":v1": {
+                "S": odscode,
+            },
+            ":v2": {
+                "N": str(sequence_number),
+            },
+        },
+        KeyConditionExpression="ODSCode = :v1 and SequenceNumber = :v2 ",
+        Limit=1,
+        ScanIndexForward=False,
+    )
+    item = resp["Items"][0]
+    deserializer = TypeDeserializer()
+    deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
+    return deserialized
 
 
 def get_response(payload: str) -> str:
@@ -78,7 +95,7 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
         if resp.get("Count") > 0:
             sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
     except Exception as err:
-        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
+        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} { DYNAMO_DB_TABLE} .Error: {err}")
         raise
     return sequence_number
 

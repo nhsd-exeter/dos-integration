@@ -1,4 +1,5 @@
 from behave import given, then, when
+from time import sleep
 from features.utilities.utils import (
     get_lambda_info,
     process_payload,
@@ -70,11 +71,14 @@ def the_lambda_logs_are_generated(context, event: str):
 
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
+    sleep(3)
     odscode = context.change_event["ODSCode"]
     sequence_num = Decimal(context.sequence_no)
     db_event_record = get_stored_events_from_dynamo_db(odscode, sequence_num)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
-    assert odscode == db_event_record["ODSCode"], "ERROR!!.. Change event record(odscode) mismatch!!"
+    assert (
+        odscode == db_event_record["ODSCode"]
+    ), f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
     assert sequence_num == db_event_record["SequenceNumber"], "ERROR!!.. Change event record(sequence no) mismatch!!"
 
 

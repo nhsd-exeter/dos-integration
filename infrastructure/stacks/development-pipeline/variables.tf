@@ -17,7 +17,9 @@ variable "aws_region" {
 variable "aws_account_id" {
   description = "AWS account Number for Athena log location"
 }
-
+variable "lambda_security_group_name" {
+  description = "Name of the lambda security group"
+}
 variable "aws_account_id_nonprod" {
   description = ""
 }
@@ -29,6 +31,9 @@ variable "aws_account_id_prod" {
 }
 
 variable "aws_account_id_identities" {
+  description = ""
+}
+variable "aws_vpc_name" {
   description = ""
 }
 
