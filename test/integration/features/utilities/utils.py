@@ -7,7 +7,7 @@ from boto3 import client
 from time import sleep
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -31,6 +31,7 @@ def process_payload(payload: dict) -> str:
     }
     payload["Address1"] = sequence_no + " MANSFIELD ROAD"
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    sleep(3)
     return output
 
 
@@ -41,10 +42,19 @@ def debug_purge_queue():
         print(f"ERROR!..UNABLE TO PURGE. {e}")
 
 
-def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
-    table = DYNAMODB.Table(DYNAMO_DB_TABLE)
-    response = table.scan(FilterExpression=Attr("ODSCode").eq(odscode) & Attr("SequenceNumber").eq(sequence_number))
-    item = response["Items"][0]
+def get_stored_events_from_dynamo_db(odscode: str) -> dict:
+    resp = DYNAMO_CLIENT.query(
+    TableName=DYNAMO_DB_TABLE,
+    IndexName="gsi_ods_sequence",
+    KeyConditionExpression="ODSCode = :odscode",
+    ExpressionAttributeValues={
+        ":odscode": {"S": odscode},
+    },
+    Limit=1,
+    ScanIndexForward=False,
+    ProjectionExpression="ODSCode,SequenceNumber",
+    )
+    item = resp["Items"][0]
     return item
 
 
