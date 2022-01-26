@@ -76,7 +76,9 @@ def stored_dynamo_db_events_are_pulled(context):
     sequence_num = Decimal(context.sequence_no)
     db_event_record = get_stored_events_from_dynamo_db(odscode, sequence_num)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
-    assert odscode == db_event_record["ODSCode"], f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
+    assert (
+        odscode == db_event_record["ODSCode"]
+    ), f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
     assert sequence_num == db_event_record["SequenceNumber"], "ERROR!!.. Change event record(sequence no) mismatch!!"
 
 

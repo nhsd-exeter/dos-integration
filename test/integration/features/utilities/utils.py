@@ -48,14 +48,14 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
         IndexName="gsi_ods_sequence",
         ProjectionExpression="ODSCode,SequenceNumber",
         ExpressionAttributeValues={
-            ':v1': {
-                'S': odscode,
+            ":v1": {
+                "S": odscode,
             },
-            ':v2': {
-                'N': str(sequence_number),
+            ":v2": {
+                "N": str(sequence_number),
             },
         },
-        KeyConditionExpression='ODSCode = :v1 and SequenceNumber = :v2 ',
+        KeyConditionExpression="ODSCode = :v1 and SequenceNumber = :v2 ",
         Limit=1,
         ScanIndexForward=False,
     )
