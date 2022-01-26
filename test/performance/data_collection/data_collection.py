@@ -3,9 +3,6 @@ from os import getenv
 from aws import get_metric_data_to_csv, get_queue_details_to_csv
 
 CUSTOM_DIMENSIONS = [
-    {"Name": "ServiceName", "Value": getenv("EVENT_SENDER_NAME")},
-    {"Name": "LogGroup", "Value": getenv("EVENT_SENDER_NAME")},
-    {"Name": "ServiceType", "Value": "AWS::Lambda::Function"},
     {"Name": "ENV", "Value": getenv("ENVIRONMENT")},
 ]
 
