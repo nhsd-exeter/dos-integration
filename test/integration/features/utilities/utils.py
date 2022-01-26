@@ -5,6 +5,7 @@ from features.utilities.get_secrets import get_secret
 from json import dumps
 from boto3 import client
 from time import sleep
+from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -42,15 +43,27 @@ def debug_purge_queue():
 
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
+    print(f"{DYNAMO_DB_TABLE} {odscode} {sequence_number}")
     resp = DYNAMO_CLIENT.query(
         TableName=DYNAMO_DB_TABLE,
         IndexName="gsi_ods_sequence",
-        KeyConditionExpression=Key('ODSCode').eq(odscode) & Key('SequenceNumber').eq(sequence_number),
+        ProjectionExpression="ODSCode,SequenceNumber",
+        ExpressionAttributeValues={
+            ':v1': {
+                'S': odscode,
+            },
+            ':v2': {
+                'N': str(sequence_number),
+            },
+        },
+        KeyConditionExpression='ODSCode = :v1 and SequenceNumber = :v2 ',
         Limit=1,
         ScanIndexForward=False,
     )
     item = resp["Items"][0]
-    return item
+    deserializer = TypeDeserializer()
+    deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
+    return deserialized
 
 
 def get_response(payload: str) -> str:

@@ -14,7 +14,7 @@ Feature: DOS INTEGRATION E2E TESTS
     And the unmatched service exception is reported to cloudwatch
     Then the Changed Event is not processed any further
 
-  @complete @dev
+  @complete @dev @only
   Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
     Given a Changed Event is valid
     When the Changed Event is sent for processing
