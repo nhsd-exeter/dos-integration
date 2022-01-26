@@ -52,13 +52,14 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
     metrics.set_property("ods_code", odscode)
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", dynamo_record_id)
+    metrics.set_dimensions({"ENV": environ["ENV"]})
     dos_time = after - before
     metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
-    metrics.put_dimensions({"ENV": environ["ENV"]})
+
     if response.ok:
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
-        metrics.put_metric("ProcessingLatency", diff, "Milliseconds")
+        metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
     else:
         metrics.set_property("StatusCode", response.status_code)
         metrics.set_property("message", f"DoS API failed with status code {response.status_code}")

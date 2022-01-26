@@ -2,9 +2,10 @@ from unittest.mock import patch, call
 from dataclasses import dataclass
 from os import environ
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
-import pytest
 import json
 from ..event_sender import lambda_handler
+
+from pytest import fixture
 
 CHANGE_REQUEST = {
     "reference": "1",
@@ -27,7 +28,7 @@ EVENT = {"body": BODY}
 FILE_PATH = "application.event_sender.event_sender"
 
 
-@pytest.fixture
+@fixture
 def mock_logger():
     InvocationTracker.reset()
 
@@ -38,7 +39,7 @@ def mock_logger():
     MetricsLogger.flush = flush
 
 
-@pytest.fixture
+@fixture
 def lambda_context():
     @dataclass
     class LambdaContext:
@@ -63,9 +64,9 @@ class MockResponse:
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "put_dimensions")
+@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_dos_api_success(
-    mock_put_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
+    mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
 ):
 
     mock_instance = mock_change_request.return_value
@@ -79,10 +80,10 @@ def test_lambda_handler_dos_api_success(
 
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_instance.post_change_request.assert_called_once_with()
-    mock_put_dimension.assert_called_once_with({"ENV": "test"})
+    mock_set_dimension.assert_called_once_with({"ENV": "test"})
 
     mock_put_metric.assert_has_calls(
-        [call("DosApiLatency", 0, "Milliseconds"), call("ProcessingLatency", 3000, "Milliseconds")]
+        [call("DosApiLatency", 0, "Milliseconds"), call("QueueToDoSLatency", 3000, "Milliseconds")]
     )
     assert response["statusCode"] == 200
     assert response["body"] == "success"
@@ -91,9 +92,9 @@ def test_lambda_handler_dos_api_success(
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "put_dimensions")
+@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_dos_api_fail(
-    mock_put_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
+    mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
 ):
 
     mock_instance = mock_change_request.return_value
@@ -106,7 +107,7 @@ def test_lambda_handler_dos_api_fail(
 
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
-    mock_put_dimension.assert_called_once_with({"ENV": "test"})
+    mock_set_dimension.assert_called_once_with({"ENV": "test"})
     mock_put_metric.assert_has_calls([call("DosApiLatency", 0, "Milliseconds"), call("DoSApiFail", 1, "Count")])
     assert response["statusCode"] == 500
     assert response["body"] == "something went wrong"

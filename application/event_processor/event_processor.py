@@ -2,7 +2,8 @@ from json import dumps
 from os import environ, getenv
 from typing import Dict, List, Union
 from boto3 import client
-from time import strftime, gmtime
+from time import strftime, gmtime, time_ns
+from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -130,7 +131,8 @@ class EventProcessor:
 @event_source(data_class=SQSEvent)
 @set_correlation_id()
 @logger.inject_lambda_context
-def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
+@metric_scope
+def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the event_processor lambda
 
     Args:
@@ -141,6 +143,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
+    now_ms = time_ns() // 1000000
     logger.append_keys(ods_code=None)
     logger.append_keys(org_type=None)
     logger.append_keys(org_sub_type=None)
@@ -164,8 +167,17 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
     logger.info("Change Event received", extra={"event": event})
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "INFO")
+    metrics.set_property("function_name", context.function_name)
+    metrics.set_property("message_received", message_received_pretty)
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+
+    metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.set_property("dynamo_record_id", record_id)
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.put_metric("QueueToProcessorLatency", now_ms - sqs_timestamp, "Milliseconds")
     logger.append_keys(dynamo_record_id=record_id)
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
@@ -181,6 +193,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)
         logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
+        metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
         matching_services = event_processor.get_matching_services()
