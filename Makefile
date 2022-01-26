@@ -89,7 +89,7 @@ coverage-report: # Runs whole project coverage unit tests
 e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave features/e2e_di_test.feature --no-capture" \
+	CMD="python -m behave features/e2e_di_test.feature --junit --no-capture" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -109,7 +109,7 @@ e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=te
 e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --no-capture --tags=$(TAGS)" \
+	CMD="python -m behave --junit --no-capture --tags=$(TAGS)" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \

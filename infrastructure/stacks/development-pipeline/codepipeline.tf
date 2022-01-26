@@ -94,6 +94,22 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
+
+  stage {
+    name = "Integration_Test"
+    action {
+      name            = "Integration_Test"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-integration-test-stage"
+      }
+    }
+  }
+
 }
 resource "aws_codestarconnections_connection" "github" {
   name          = "${var.project_id}-codestarconnection"

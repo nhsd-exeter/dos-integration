@@ -7,7 +7,7 @@ from boto3 import client
 from time import sleep
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Attr, Key
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -42,9 +42,14 @@ def debug_purge_queue():
 
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
-    table = DYNAMODB.Table(DYNAMO_DB_TABLE)
-    response = table.scan(FilterExpression=Attr("ODSCode").eq(odscode) & Attr("SequenceNumber").eq(sequence_number))
-    item = response["Items"][0]
+    resp = DYNAMO_CLIENT.query(
+        TableName=DYNAMO_DB_TABLE,
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression=Key('ODSCode').eq(odscode) & Key('SequenceNumber').eq(sequence_number),
+        Limit=1,
+        ScanIndexForward=False,
+    )
+    item = resp["Items"][0]
     return item
 
 
