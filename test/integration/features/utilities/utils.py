@@ -7,7 +7,7 @@ from boto3 import client
 from time import sleep
 from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr, Key
+from boto3.dynamodb.conditions import Key
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -83,7 +83,7 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
         if resp.get("Count") > 0:
             sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
     except Exception as err:
-        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
+        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} { DYNAMO_DB_TABLE} .Error: {err}")
         raise
     return sequence_number
 
