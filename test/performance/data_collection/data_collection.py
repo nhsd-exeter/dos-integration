@@ -28,9 +28,15 @@ def data_collection():
     )
     get_metric_data_to_csv(
         namespace="UEC-DOS-INT",
-        metric_name="ProcessingLatency",
+        metric_name="QueueToDoSLatency",
         dimensions=CUSTOM_DIMENSIONS,
-        file_name=f"{now}_processing_latency.csv",
+        file_name=f"{now}_queue_to_dos_latency.csv",
+    )
+    get_metric_data_to_csv(
+        namespace="UEC-DOS-INT",
+        metric_name="QueueToProcessorLatency",
+        dimensions=CUSTOM_DIMENSIONS,
+        file_name=f"{now}_queue_to_processor_latency.csv",
     )
     get_metric_data_to_csv(
         namespace="UEC-DOS-INT",
