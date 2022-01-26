@@ -1,10 +1,20 @@
+import json
 from json import load, dumps
+import csv
+import itertools
+import random
 
 
 def load_payload_file() -> dict:
     with open("./features/resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         return load(json_file)
 
+def random_odscode()-> str:
+    with open('./features/resources/valid_ods_codes.csv') as csv_file:
+        csv_data = csv.reader(csv_file, delimiter=',')
+        ods_list= list(itertools.chain(*list(csv_data)))
+        valid_odscode=random.choices(ods_list, k=1)
+        return valid_odscode[0]
 
 def get_change_event() -> dict:
     return load_payload_file()

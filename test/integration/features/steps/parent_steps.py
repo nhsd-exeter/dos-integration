@@ -7,7 +7,7 @@ from features.utilities.utils import (
     search_dos_db,
 )
 from decimal import Decimal
-from features.utilities.change_events import get_change_event
+from features.utilities.change_events import get_change_event, random_odscode
 from features.utilities.log_stream import get_logs
 
 
@@ -15,6 +15,7 @@ from features.utilities.log_stream import get_logs
 def a_change_event_is_valid(context):
     """Creates a valid change event"""
     context.change_event = get_change_event()
+    context.change_event["ODSCode"] = random_odscode()
 
 
 @given("a Changed Event with invalid ODSCode is provided")
@@ -43,6 +44,8 @@ def the_change_event_is_sent_for_processing(context):
     context.response = process_payload(context.change_event)
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]
+    print(context.sequence_no)
+    print(context.sequence_no)
     message = context.response.json()
     assert (
         context.response.status_code == 200
