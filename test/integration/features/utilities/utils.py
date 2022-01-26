@@ -5,9 +5,7 @@ from features.utilities.get_secrets import get_secret
 from json import dumps
 from boto3 import client
 from time import sleep
-from decimal import Decimal
 import boto3
-from boto3.dynamodb.conditions import Attr, Key
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -44,15 +42,15 @@ def debug_purge_queue():
 
 def get_stored_events_from_dynamo_db(odscode: str) -> dict:
     resp = DYNAMO_CLIENT.query(
-    TableName=DYNAMO_DB_TABLE,
-    IndexName="gsi_ods_sequence",
-    KeyConditionExpression="ODSCode = :odscode",
-    ExpressionAttributeValues={
-        ":odscode": {"S": odscode},
-    },
-    Limit=1,
-    ScanIndexForward=False,
-    ProjectionExpression="ODSCode,SequenceNumber",
+        TableName=DYNAMO_DB_TABLE,
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={
+            ":odscode": {"S": odscode},
+        },
+        Limit=1,
+        ScanIndexForward=False,
+        ProjectionExpression="ODSCode,SequenceNumber",
     )
     item = resp["Items"][0]
     return item

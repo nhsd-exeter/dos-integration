@@ -5,7 +5,6 @@ from features.utilities.utils import (
     get_stored_events_from_dynamo_db,
     search_dos_db,
 )
-from decimal import Decimal
 from features.utilities.change_events import get_change_event
 from features.utilities.log_stream import get_logs
 
@@ -75,7 +74,9 @@ def stored_dynamo_db_events_are_pulled(context):
     db_event_record = get_stored_events_from_dynamo_db(odscode)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
     assert odscode == str(db_event_record["ODSCode"]["S"]), "ERROR!!.. Change event record(odscode) mismatch!!"
-    assert sequence_num == int(db_event_record["SequenceNumber"]["N"]), "ERROR!!.. Change event record(sequence no) mismatch!!"
+    assert sequence_num == int(
+        db_event_record["SequenceNumber"]["N"]
+    ), "ERROR!!.. Change event record(sequence no) mismatch!!"
 
 
 @then("the lambda is confirmed active")
