@@ -31,9 +31,12 @@ def get_metric_data_to_csv(namespace: str, metric_name: str, dimensions: list, f
             Period=60,
             Statistics=["SampleCount", "Average", "Sum", "Minimum", "Maximum"],
         )
-        dataframe = DataFrame(response["Datapoints"])
-        dataframe.sort_values("Timestamp", inplace=True)
-        dataframe.to_csv(f"results/{file_name}", index=False)
+        if len(response["Datapoints"]) > 0:
+            dataframe = DataFrame(response["Datapoints"])
+            dataframe.sort_values("Timestamp", inplace=True)
+            dataframe.to_csv(f"results/{file_name}", index=False)
+        else:
+            print(f'No metrics {metric_name} found')
     except Exception as e:
         print(f"Exception Occurred when getting metrics results: Metric={metric_name} Exception={str(e)}")
     return response
