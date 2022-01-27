@@ -46,8 +46,6 @@ def the_change_event_is_sent_for_processing(context):
     context.response = process_payload(context.change_event)
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]
-    print(context.sequence_no)
-    print(context.sequence_no)
     message = context.response.json()
     assert (
         context.response.status_code == 200
@@ -66,12 +64,11 @@ def no_matched_services_found(context):
 
 @then('the "{event}" logs are generated')
 def the_lambda_logs_are_generated(context, event: str):
-    start_time = context.start_time
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"',
         ' | filter message="Event has been validated"',
     )
-    event_logs = get_logs(query, event, start_time)
+    event_logs = get_logs(query, event, context.start_time)
     assert event_logs != [], "ERROR!! No logs found!.."
 
 
