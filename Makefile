@@ -383,7 +383,7 @@ performance-test-data-collection: # Runs data collection for performance tests -
 			"
 
 generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
-	rm -r $(TMP_DIR)/performance
+	rm -rf $(TMP_DIR)/performance
 	mkdir $(TMP_DIR)/performance
 	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
 	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
