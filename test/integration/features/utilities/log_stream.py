@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from os import getenv as get_env
+from sqlite3 import Timestamp
 from time import sleep
 from boto3 import client
 from json import dumps
@@ -31,7 +32,7 @@ def get_sender_log_stream_name() -> str:
     return log_stream["logStreams"][0]["logStreamName"]
 
 
-def get_logs(query: str, event_lambda: str) -> str:
+def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
     log_groups = {"processor": LOG_GROUP_NAME_EVENT_PROCESSOR, "sender": LOG_GROUP_NAME_EVENT_SENDER}
     if event_lambda == "processor" or "sender":
         log_group_name = log_groups[event_lambda]
@@ -42,7 +43,7 @@ def get_logs(query: str, event_lambda: str) -> str:
     while logs_found is False:
         start_query_response = LAMBDA_CLIENT_LOGS.start_query(
             logGroupName=log_group_name,
-            startTime=int((datetime.today() - timedelta(minutes=5)).timestamp()),
+            startTime=int(start_time),
             endTime=int(datetime.now().timestamp()),
             queryString=query,
         )
@@ -87,4 +88,3 @@ def get_processor_logs_within_time_frame_for_debug(time_in_seconds: int = 0) -> 
     logs = get_processor_logs_list_for_debug(time_in_seconds)
     for m in logs:
         print(m)
-        # values.append(m["message"])

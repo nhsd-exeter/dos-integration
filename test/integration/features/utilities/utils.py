@@ -7,7 +7,6 @@ from boto3 import client
 from time import sleep
 from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
-import boto3
 import psycopg2
 from psycopg2.extras import DictCursor
 
@@ -18,7 +17,6 @@ DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs")
 DYNAMO_CLIENT = client("dynamodb")
-DYNAMODB = boto3.resource("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
