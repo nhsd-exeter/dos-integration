@@ -7,14 +7,16 @@ from features.utilities.utils import (
     search_dos_db,
 )
 from decimal import Decimal
-from features.utilities.change_events import get_change_event
+from features.utilities.change_events import get_change_event, random_odscode
 from features.utilities.log_stream import get_logs
+from datetime import datetime
 
 
 @given("a Changed Event is valid")
 def a_change_event_is_valid(context):
     """Creates a valid change event"""
     context.change_event = get_change_event()
+    context.change_event["ODSCode"] = random_odscode()
 
 
 @given("a Changed Event with invalid ODSCode is provided")
@@ -40,6 +42,7 @@ def a_change_event_with_invalid_organisationtypeid(context):
 
 @when("the Changed Event is sent for processing")
 def the_change_event_is_sent_for_processing(context):
+    context.start_time = datetime.today().timestamp()
     context.response = process_payload(context.change_event)
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]
@@ -55,7 +58,7 @@ def no_matched_services_found(context):
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         ' | filter message like "Found 0 services in DB"'
     )
-    event_logs = get_logs(query, "processor")
+    event_logs = get_logs(query, "processor", context.start_time)
     assert event_logs != [], "ERROR!! No unmatched services log found.."
 
 
@@ -65,7 +68,7 @@ def the_lambda_logs_are_generated(context, event: str):
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"',
         ' | filter message="Event has been validated"',
     )
-    event_logs = get_logs(query, event)
+    event_logs = get_logs(query, event, context.start_time)
     assert event_logs != [], "ERROR!! No logs found!.."
 
 
@@ -95,7 +98,7 @@ def the_changed_event_is_processed(context):
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         f' | filter message like "{search_param}"'
     )
-    logs = get_logs(query, "processor")
+    logs = get_logs(query, "processor", context.start_time)
     assert logs != [], "ERROR!!.. logs not found"
 
 
@@ -105,7 +108,7 @@ def unmatched_service_exception(context):
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         ' | filter message like "No matching DOS services"'
     )
-    logs = get_logs(query, "processor")
+    logs = get_logs(query, "processor", context.start_time)
     odscode = context.change_event["ODSCode"]
     assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
@@ -122,9 +125,9 @@ def processed_changed_request_sent_to_dos(context):
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         f' | filter message like "{cr_sent_search_param}"'
     )
-    cr_received_logs = get_logs(cr_received_query, "sender")
+    cr_received_logs = get_logs(cr_received_query, "sender", context.start_time)
     assert cr_received_logs != [], "ERROR!!.. Expected Sender logs not found."
-    cr_sent_logs = get_logs(cr_sent_query, "sender")
+    cr_sent_logs = get_logs(cr_sent_query, "sender", context.start_time)
     assert cr_sent_logs != [], "ERROR!!.. Expected sent event confirmation in service logs not found."
 
 
@@ -132,7 +135,7 @@ def processed_changed_request_sent_to_dos(context):
 def the_changed_event_is_not_processed(context):
     cr_received_search_param = "Received change request"
     query = f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-    logs = get_logs(query, "processor")
+    logs = get_logs(query, "processor", context.start_time)
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected unmatched service logs not found."
 
 
