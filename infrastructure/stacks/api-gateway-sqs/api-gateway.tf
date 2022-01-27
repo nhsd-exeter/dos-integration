@@ -90,6 +90,9 @@ EOF
 
 resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
+  depends_on = [
+    aws_api_gateway_rest_api_policy.di_endpoint_policy
+  ]
   triggers = {
     redeployment = join("", [md5(jsonencode([
       aws_api_gateway_resource.di_endpoint_change_event_path,
