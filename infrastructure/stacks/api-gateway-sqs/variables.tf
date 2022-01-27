@@ -123,3 +123,11 @@ variable "api_gateway_api_key_name" {
 variable "nhs_uk_api_key_key" {
   description = "API Key key for secrets manager"
 }
+
+variable "ip_address_secret" {
+  description = "IP Address secret"
+}
+
+variable "ip_address_secret_key" {
+  description = "IP Address secret key"
+}

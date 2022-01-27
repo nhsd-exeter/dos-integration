@@ -22,3 +22,7 @@ data "aws_lambda_function" "fifo_dlq_handler" {
 data "aws_secretsmanager_secret_version" "api_key" {
   secret_id = var.api_gateway_api_key_name
 }
+
+data "aws_secretsmanager_secret_version" "ip_address_secret" {
+  secret_id = var.ip_address_secret
+}

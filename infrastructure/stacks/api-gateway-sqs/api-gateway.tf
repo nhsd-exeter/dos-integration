@@ -6,6 +6,33 @@ resource "aws_api_gateway_rest_api" "di_endpoint" {
   }
 }
 
+resource "aws_api_gateway_rest_api_policy" "di_endpoint_policy" {
+  rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "execute-api:Invoke",
+      "Resource": "execute-api:/*/*/*"
+    },
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "execute-api:Invoke",
+      "Resource": "execute-api:/*/*/*",
+      "Condition": {
+        "NotIpAddress": {
+          "aws:SourceIp": ${jsonencode(local.ip_addresses)}
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_api_gateway_resource" "di_endpoint_version_path" {
   parent_id   = aws_api_gateway_rest_api.di_endpoint.root_resource_id
   path_part   = "v1"
@@ -64,17 +91,18 @@ EOF
 resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
   triggers = {
-    redeployment = sha1(jsonencode([
+    redeployment = join("", [md5(jsonencode([
       aws_api_gateway_resource.di_endpoint_change_event_path,
       aws_api_gateway_method.di_endpoint_method,
       aws_api_gateway_integration.di_endpoint_integration,
       aws_api_gateway_integration.di_endpoint_integration.request_templates,
-    ]))
+    ])), local.allowlist_ips_hash])
   }
   lifecycle {
     create_before_destroy = true
   }
 }
+
 
 resource "aws_api_gateway_stage" "di_endpoint_stage" {
   deployment_id        = aws_api_gateway_deployment.di_endpoint_deployment.id
