@@ -175,6 +175,17 @@ def unmatched_service_exception(context):
     odscode = context.change_event["ODSCode"]
     assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
+@then("the invalid postcode exception is reported to cloudwatch")
+def unmatched_postcode_exception(context):
+    #odscode = context.change_event["ODSCode"]
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "is not a valid DoS postcode"'
+    )
+    logs = get_logs(query, "processor", context.start_time)
+    postcode = context.change_event["Postcode"]
+    assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
+
 
 @then("the processed Changed Request is sent to Dos")
 def processed_changed_request_sent_to_dos(context):

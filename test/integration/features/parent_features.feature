@@ -20,6 +20,14 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
+@complete @dev @kit
+  Scenario: EF3_4 Invalid Lat/Long Values
+    Given a Changed Event is valid
+    When the postcode has no LAT/Long values
+#   Should the above be a Given statement?
+    And the Changed Event is sent for processing
+    Then the invalid postcode exception is reported to cloudwatch
+
 
 # @complete @dev @test
 # Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
