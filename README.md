@@ -208,6 +208,8 @@ To run a stress test
     Wait for the test to complete
     make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 
+Note: if you have any errors consider reducing number of users or increasing the docker resources
+
 To run a load test
 
     make tester-build
