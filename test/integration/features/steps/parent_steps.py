@@ -216,3 +216,13 @@ def the_changed_event_is_not_sent_to_dos(context):
     query = "select * from changes"
     response = search_dos_db(query)
     assert context.correlation_id not in response, "ERROR!!.. Event data found in Dos."
+
+# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+@when('the OrganisationStatus is equal to "{orgStatus}"')
+def a_change_event_with_orgstatus_value(context, orgStatus: str):
+    context.change_event["OrganisationSubType"] = orgStatus
+
+# When the postcode has no LAT/Long values
+@when('the postcode has no LAT/Long values')
+def postcode_with_no_lat_long_values(context):
+    context.change_event["Postcode"] = "BT4 2HU"
