@@ -42,7 +42,7 @@ def a_change_event_with_invalid_organisationtypeid(context):
 
 @when("the Changed Event is sent for processing")
 def the_change_event_is_sent_for_processing(context):
-    context.start_time= datetime.today().timestamp()
+    context.start_time = datetime.today().timestamp()
     context.response = process_payload(context.change_event)
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]

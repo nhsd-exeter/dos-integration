@@ -9,6 +9,8 @@ from boto3.dynamodb.types import TypeDeserializer
 from decimal import Decimal
 import psycopg2
 from psycopg2.extras import DictCursor
+import random
+
 
 URL = getenv("URL")
 SQS_URL = getenv("SQS_URL")
@@ -21,13 +23,13 @@ RDS_DB_CLIENT = client("rds")
 
 
 def process_payload(payload: dict) -> str:
-    sequence_no = generate_unique_int(payload["ODSCode"])
+    sequence_number = generate_unique_sequence_number(payload["ODSCode"])
     headers = {
         "x-api-key": json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")],
-        "sequence-number": sequence_no,
+        "sequence-number": sequence_number,
         "Content-Type": "application/json",
     }
-    payload["Address1"] = sequence_no + " MANSFIELD ROAD"
+    payload["Address1"] = generate_random_int() + " MANSFIELD ROAD"
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
     return output
 
@@ -63,11 +65,6 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
     return deserialized
 
 
-def get_response(payload: str) -> str:
-    response = process_payload(payload)
-    return response.json()["message"]
-
-
 def get_lambda_info(info_param: str) -> str:
     values = {"state": "State", "status": "LastUpdateStatus", "description": "Description"}
     param = values[info_param]
@@ -98,8 +95,12 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
     return sequence_number
 
 
-def generate_unique_int(odscode: str) -> str:
+def generate_unique_sequence_number(odscode: str) -> str:
     return str(get_latest_sequence_id_for_a_given_odscode(odscode) + 1)
+
+
+def generate_random_int() -> str:
+    return str(random.sample(range(1000), 1)[0])
 
 
 def search_dos_db(query: str) -> list:
