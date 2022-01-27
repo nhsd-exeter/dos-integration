@@ -12,7 +12,7 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
         response = handler(event, context)
         return response
     except BaseException as err:
-        logger.exception("Something went wrong", extra={"error": err})
+        logger.exception("Something went wrong", extra={"error": err, "event": event})
         raise
 
 

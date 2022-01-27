@@ -3,12 +3,13 @@ behave
 boto3
 coverage
 locust
+moto
 mutmut
+pandas
 pytest
 pytest-cov
 pytest-icdiff
 pytest-sugar
-moto
 responses
 testfixtures
 requests

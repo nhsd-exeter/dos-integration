@@ -76,6 +76,7 @@ resource "aws_lambda_function" "dos_api_gateway_lambda" {
   package_type  = "Image"
   timeout       = "30"
   image_uri     = "${var.aws_same_account_docker_registry}/dos-api-gateway:${var.image_version}"
+  memory_size   = 1024
   tracing_config {
     mode = "Active"
   }

@@ -335,19 +335,67 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-performance-test:
-	TIME_DATE=$$(date +%Y-%m-%d_%H-%M-%S)
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT
+# Roughly 20k change events per minute
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python -m locust -f locustfile.py --headless \
-			--users 10 --spawn-rate 1 --run-time 30s \
-			-H https://$(DOS_INTEGRATION_URL) --stop-timeout 99 \
-			--csv=results/$$TIME_DATE" \
-		DIR=./test/performance \
+		CMD="python -m locust -f stress_test_locustfile.py --headless \
+			--users 20 --spawn-rate 20 --run-time 1m --stop-timeout 10 \
+			-H https://$(DOS_INTEGRATION_URL) \
+			--csv=results/$(START_TIME)_create_change_events" \
+		DIR=./test/performance/create_change_events \
 		ARGS="\
 			-p 8089:8089 \
 			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key)"
+			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
+			"
+
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT
+# Roughly 20 change events per minute
+	make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python -m locust -f load_test_locustfile.py --headless \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
+			-H https://$(DOS_INTEGRATION_URL) \
+			--csv=results/$(START_TIME)_create_change_events" \
+		DIR=./test/performance/create_change_events \
+		ARGS="\
+			-p 8089:8089 \
+			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
+			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
+			"
+
+performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
+	make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python data_collection.py" \
+		DIR=./test/performance/data_collection \
+		ARGS="\
+			-e START_TIME=$(START_TIME) \
+			-e END_TIME=$(END_TIME) \
+			-e FIFO_QUEUE_NAME=$(TF_VAR_fifo_queue_name) \
+			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
+			-e EVENT_SENDER_NAME=$(TF_VAR_event_sender_lambda_name) \
+			-e EVENT_PROCESSOR_NAME=$(TF_VAR_event_processor_lambda_name) \
+			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
+			"
+
+generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
+	rm -rf $(TMP_DIR)/performance
+	mkdir $(TMP_DIR)/performance
+	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
+	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
+	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
+	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
+	aws s3 cp $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-performance-tests-nonprod/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip
+
+performance-test-clean:
+	rm -rf $(TMP_DIR)/performance
+	rm -f $(TMP_DIR)/*.zip
+	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
+	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
 
 # -----------------------------
 # Other
