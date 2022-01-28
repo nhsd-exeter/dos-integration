@@ -20,7 +20,7 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
-@complete @dev @kit
+@complete @dev
   Scenario: EF3_4 Invalid Lat/Long Values
     Given a Changed Event is valid
     When the postcode has no LAT/Long values
@@ -42,6 +42,21 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
+@complete @dev @kit
+  Scenario: Hidden Organisation exception reporting
+    Given a Changed Event is valid
+    When the OrganisationStatus is equal to "Hidden"
+    And the Changed Event is sent for processing
+    Then the hidden or closed exception is reported to cloudwatch
+
+
+@complete @dev @kit
+  Scenario: Closed Organisation does not process
+    Given a Changed Event is valid
+    When the OrganisationStatus is equal to "Closed"
+    And the Changed Event is sent for processing
+    Then the Changed Event is not processed any further
+
 
 # @complete @dev @test
 # Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB

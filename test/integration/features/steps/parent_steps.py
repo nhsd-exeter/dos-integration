@@ -192,7 +192,6 @@ def service_exception(context):
 
 @then("the invalid postcode exception is reported to cloudwatch")
 def unmatched_postcode_exception(context):
-    #odscode = context.change_event["ODSCode"]
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         ' | filter message like "is not a valid DoS postcode"'
@@ -200,6 +199,16 @@ def unmatched_postcode_exception(context):
     logs = get_logs(query, "processor", context.start_time)
     postcode = context.change_event["Postcode"]
     assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
+
+
+@then("the hidden or closed exception is reported to cloudwatch")
+def hidden_or_closed_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "NHS Service marked as closed or hidden"'
+    )
+    logs = get_logs(query, "processor", context.start_time)
+    assert "no change requests will be produced" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
 
 @then("the processed Changed Request is sent to Dos")
@@ -242,3 +251,13 @@ def the_changed_event_is_not_sent_to_dos(context):
     query = "select * from changes"
     response = search_dos_db(query)
     assert context.correlation_id not in response, "ERROR!!.. Event data found in Dos."
+
+# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+@when('the OrganisationStatus is equal to "{org_status}"')
+def a_change_event_with_orgstatus_value(context, org_status: str):
+    context.change_event["OrganisationStatus"] = org_status
+
+# When the postcode has no LAT/Long values
+@when('the postcode has no LAT/Long values')
+def postcode_with_no_lat_long_values(context):
+    context.change_event["Postcode"] = "BT4 2HU"
