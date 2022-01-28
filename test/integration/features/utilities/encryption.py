@@ -30,6 +30,3 @@ def initialise_encryption_client():
         return encrypted_text
 
     return encrypt_string
-
-
-

@@ -8,7 +8,7 @@ from features.utilities.utils import (
     process_payload,
     get_stored_events_from_dynamo_db,
     search_dos_db,
-    process_change_request_payload
+    process_change_request_payload,
 )
 from decimal import Decimal
 from features.utilities.change_events import get_change_event, get_change_request, random_odscode
@@ -21,6 +21,7 @@ def a_change_event_is_valid(context):
     """Creates a valid change event"""
     context.change_event = get_change_event()
     context.change_event["ODSCode"] = random_odscode()
+
 
 @given("a valid unsigned change request")
 def a_change_request_is_valid(context):
@@ -40,12 +41,13 @@ def has_valid_signature(context):
         "ods_code": context.change_request["ods_code"],
         "dynamo_record_id": context.change_request["dynamo_record_id"],
         "message_received": context.change_request["message_received"],
-        "time": time()
+        "time": time(),
     }
     encrypt_string = initialise_encryption_client()
     signing_key = encrypt_string(dumps(key_data))
     b64_mystring = b64encode(signing_key).decode("utf-8")
     context.change_request["signing_key"] = b64_mystring
+
 
 @given("change request has invalid signature")
 def has_invalid_signature(context):
@@ -53,12 +55,13 @@ def has_invalid_signature(context):
         "ods_code": "Dave",
         "dynamo_record_id": context.change_request["dynamo_record_id"],
         "message_received": context.change_request["message_received"],
-        "time": time()
+        "time": time(),
     }
     encrypt_string = initialise_encryption_client()
     signing_key = encrypt_string(dumps(key_data))
     b64_mystring = b64encode(signing_key).decode("utf-8")
     context.change_request["signing_key"] = b64_mystring
+
 
 @given("change request has expired signature")
 def has_expired_signature(context):
@@ -66,12 +69,13 @@ def has_expired_signature(context):
         "ods_code": "Dave",
         "dynamo_record_id": context.change_request["dynamo_record_id"],
         "message_received": context.change_request["message_received"],
-        "time": time() - 100_000
+        "time": time() - 100_000,
     }
     encrypt_string = initialise_encryption_client()
     signing_key = encrypt_string(dumps(key_data))
     b64_mystring = b64encode(signing_key).decode("utf-8")
     context.change_request["signing_key"] = b64_mystring
+
 
 @given("a Changed Event with invalid OrganisationSubType is provided")
 def a_change_event_with_invalid_organisationsubtype(context):
@@ -112,6 +116,7 @@ def step_then_should_transform_into(context, status):
     assert (
         str(context.response.status_code) == status
     ), f"Status code not as expected.. Status code: {context.response.status_code} Error: {message} - {status}"
+
 
 @then("no matched services were found")
 def no_matched_services_found(context):

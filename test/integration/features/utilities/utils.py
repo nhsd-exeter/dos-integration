@@ -36,6 +36,7 @@ def process_payload(payload: dict) -> Response:
 
     return output
 
+
 def process_change_request_payload(payload: dict) -> Response:
     secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
 
