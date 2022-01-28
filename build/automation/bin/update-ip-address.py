@@ -28,7 +28,7 @@ def update_secret():
     ip_allowlist = loads(secret)
     ip_allowlist[username] = ip_address
     sm.put_secret_value(SecretId=getenv("IP_SECRET"), SecretString=dumps(ip_allowlist))
-    print(f'Updated secret with "{username}": "{ip_address}"')
+    print(f'Updated {getenv("PROFILE")} secret with "{username}": "{ip_address}"')
 
 
 if __name__ == "__main__":
