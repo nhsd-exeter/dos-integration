@@ -10,9 +10,11 @@ from decimal import Decimal
 import psycopg2
 from psycopg2.extras import DictCursor
 import random
+from requests import Response
 
 
 URL = getenv("URL")
+CR_URL = getenv("CR_URL")
 SQS_URL = getenv("SQS_URL")
 EVENT_PROCESSOR = getenv("EVENT_PROCESSOR")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
@@ -22,7 +24,7 @@ DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
-def process_payload(payload: dict) -> str:
+def process_payload(payload: dict) -> Response:
     sequence_number = generate_unique_sequence_number(payload["ODSCode"])
     headers = {
         "x-api-key": json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")],
@@ -31,6 +33,20 @@ def process_payload(payload: dict) -> str:
     }
     payload["Address1"] = generate_random_int() + " MANSFIELD ROAD"
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+
+    return output
+
+def process_change_request_payload(payload: dict) -> Response:
+    secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
+
+    headers = {
+        "x-api-key": secret[getenv("CR_API_KEY_KEY")],
+        "Content-Type": "application/json",
+    }
+
+    print(CR_URL)
+    output = requests.request("POST", CR_URL, headers=headers, data=dumps(payload))
+    print(output)
     return output
 
 

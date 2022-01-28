@@ -74,14 +74,6 @@ TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
 TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 
-# Event Bridge
-TF_VAR_eventbridge_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-bus
-TF_VAR_change_request_eventbridge_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-rule
-TF_VAR_dos_api_gateway_eventbridge_connection_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-connection
-TF_VAR_dos_api_gateway_api_destination_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-api-destination
-TF_VAR_dos_api_gateway_api_destination_url :=  https://$(TF_VAR_change_request_receiver_subdomain_name).$(TEXAS_HOSTED_ZONE)/change-request
-TF_VAR_eventbridge_target_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-role
-TF_VAR_eventbridge_target_policy_name	:= $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-policy
 
 # Change Request Receiver API Key
 TF_VAR_change_request_receiver_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver-api-key
@@ -91,6 +83,18 @@ TF_VAR_change_request_receiver_api_key_key := CHANGE_REQUEST_RECEIVER_API_KEY
 CHANGE_REQUEST_RECEIVER_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver
 TF_VAR_change_request_receiver_api_name := $(CHANGE_REQUEST_RECEIVER_NAME)
 TF_VAR_change_request_receiver_subdomain_name := $(CHANGE_REQUEST_RECEIVER_NAME)
+
+# Event Bridge
+TF_VAR_eventbridge_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-bus
+TF_VAR_change_request_eventbridge_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-rule
+TF_VAR_dos_api_gateway_eventbridge_connection_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-connection
+TF_VAR_dos_api_gateway_api_destination_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-api-destination
+TF_VAR_dos_api_gateway_api_destination_url :=  https://$(TF_VAR_change_request_receiver_subdomain_name).$(TEXAS_HOSTED_ZONE)/change-request
+TF_VAR_eventbridge_target_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-role
+TF_VAR_eventbridge_target_policy_name	:= $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-policy
+
+
+TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
 
 # Code Pipeline
 TF_VAR_code_pipeline_branch_name := master

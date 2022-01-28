@@ -95,16 +95,20 @@ e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=te
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
+		-e CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
 		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
 		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 		-e URL=https://$(DOS_INTEGRATION_URL) \
+		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		"
 
 e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
@@ -115,16 +119,20 @@ e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev];
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
+		-e CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
 		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
 		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 		-e URL=https://$(DOS_INTEGRATION_URL) \
+		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		"
 
 clean: # Runs whole project clean

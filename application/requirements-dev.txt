@@ -1,3 +1,4 @@
+aws_encryption_sdk
 aws-lambda-context
 behave
 boto3
