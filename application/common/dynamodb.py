@@ -77,23 +77,3 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         logger.exception(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
         raise
     return sequence_number
-
-
-def get_record_from_dynamodb(record_id: str) -> dict or None:
-    """Get a Change Event for a given record id from dynamodb
-    Args:
-        record_id (str): id of the dynamodb record to get the change event for
-    Returns:
-        dict: Change Event associate with the given record id
-    """
-    try:
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        resp = dynamodb.get_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Key={"Id": record_id})
-        record = None
-        if "Item" in resp:
-            record = resp.get("Item")
-
-    except Exception as err:
-        logger.exception(f"Unable to get change event from dynamodb for a given record id {record_id} .Error: {err}")
-        raise
-    return record
