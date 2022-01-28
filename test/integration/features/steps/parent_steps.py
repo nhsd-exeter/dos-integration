@@ -210,6 +210,24 @@ def hidden_or_closed_exception(context):
     logs = get_logs(query, "processor", context.start_time)
     assert "no change requests will be produced" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
+@then("the address change is not included in the change request")
+def address_change_is_discarded_in_event_proc(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "Deleted address change as postcode is invalid"'
+    )
+    logs = get_logs(query, "processor", context.start_time)
+    assert "postcode is invalid" in logs, "ERROR!!.. Expected unmatched service logs not found."
+
+@then("the event sender does not contain address changes")
+def address_change_is_discarded_in_event_sender(context):
+    query = (
+        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "Attempting to send change request to DoS"'
+    )
+    logs = get_logs(query, "sender", context.start_time)
+    assert "postcode" not in logs, "ERROR!!.. Expected unmatched service logs not found."
+
 
 @then("the processed Changed Request is sent to Dos")
 def processed_changed_request_sent_to_dos(context):
@@ -261,3 +279,8 @@ def a_change_event_with_orgstatus_value(context, org_status: str):
 @when('the postcode has no LAT/Long values')
 def postcode_with_no_lat_long_values(context):
     context.change_event["Postcode"] = "BT4 2HU"
+
+# When the postcode is invalid
+@when('the postcode is invalid')
+def postcode_is_invalid(context):
+    context.change_event["Postcode"] = "AAAA 123"

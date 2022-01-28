@@ -29,34 +29,41 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing
     Then the invalid postcode exception is reported to cloudwatch
 
-  @complete @dev
+@complete @dev
   Scenario: EF1_1 OrganisationTypeID is NOT PHA
     Given a Changed Event contains an incorrect OrganisationTypeID
     When the Changed Event is sent for processing
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
 
-  @complete @dev @mik3
+@complete @dev @mik3
   Scenario: EF2_1	Changed Event OrganisationSubType is NOT "Community"
     Given a Changed Event contains an incorrect OrganisationSubtype
     When the Changed Event is sent for processing
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
-@complete @dev @kit
+
+@complete @dev
   Scenario: Hidden Organisation exception reporting
     Given a Changed Event is valid
     When the OrganisationStatus is equal to "Hidden"
     And the Changed Event is sent for processing
     Then the hidden or closed exception is reported to cloudwatch
 
-
-@complete @dev @kit
+@complete @dev
   Scenario: Closed Organisation does not process
     Given a Changed Event is valid
     When the OrganisationStatus is equal to "Closed"
     And the Changed Event is sent for processing
     Then the Changed Event is not processed any further
 
+@complete @dev
+  Scenario: Address changes are discarded when postcode is invalid
+    Given a Changed Event is valid
+    When the postcode is invalid
+    And the Changed Event is sent for processing
+    Then the address change is not included in the change request
+    And the event sender does not contain address changes
 
 # @complete @dev @test
 # Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
@@ -64,19 +71,19 @@ Feature: DOS INTEGRATION E2E TESTS
 
 # Then the Changed Event is processed
 
-# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+# When the OrganisationStatus is equal to "Hidden" OR "Closed" #Done
 
 # And there are no changes identified
 
 # Then there is no Change Request produced
 
-# When the postcode is invalid
+# When the postcode is invalid #Kit
 
 # Then the Address change is not included in the Change request
 
 # When the postcode does not exist in DoS
 
-# When the postcode has no LAT/Long values
+# When the postcode has no LAT/Long values #Done
 
 # Then the Postcode is not included in the Change Request
 
