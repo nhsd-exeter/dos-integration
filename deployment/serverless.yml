@@ -27,6 +27,8 @@ provider:
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
+  logs:
+    restApi: true
   tracing:
     lambda: true
     apiGateway: true
@@ -35,6 +37,10 @@ provider:
     apiKeys:
       - name: ${env:TF_VAR_change_request_receiver_api_key_name}
         value: ${self:custom.secret.${env:TF_VAR_change_request_receiver_api_key_key}}
+    usagePlan:
+      throttle:
+        rateLimit: 3
+        burstLimit: 5
   endpointType: regional
   apiName: ${env:TF_VAR_change_request_receiver_api_name}
 
@@ -82,6 +88,7 @@ functions:
       MOCK_MODE: ${env:MOCK_MODE}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
+      KEYALIAS: ${env:TF_VAR_signing_key_alias}
 
   fifo-dlq-handler:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
@@ -96,6 +103,7 @@ functions:
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
+
 
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
@@ -114,6 +122,7 @@ functions:
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
       MOCK_MODE: ${env:MOCK_MODE}
+      KEYALIAS: ${env:TF_VAR_signing_key_alias}
     events:
       - http:
           path: /change-request
