@@ -400,7 +400,7 @@ performance-test-clean:
 # -----------------------------
 # Other
 
-update-ip-address: # Update your IP address in AWS secrets manager to acesss non-prod environments and then redeploy environment - mandatory: PROFILE, ENVIRONMENT
+update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments and then redeploy environment - mandatory: PROFILE, ENVIRONMENT
 	GIT_USERNAME=$$(git config user.name)
 	make -s docker-run-python IMAGE=$$(make _docker-get-reg)/tester CMD="python update-ip-address.py $$GIT_USERNAME" DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
 	make -s terraform-clean

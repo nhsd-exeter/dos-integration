@@ -11,6 +11,7 @@
     - [Local Project Setup](#local-project-setup)
   - [Contributing](#contributing)
   - [Development](#development)
+    - [Add IP Address to IP Allow List](#add-ip-address-to-ip-allow-list)
     - [Database Connection](#database-connection)
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
@@ -112,12 +113,21 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 ## Development
 
-- Describe how to
-  - Connect to a local database
-  - Interact with mock components
-  - Switch each individual component to the dev mode
-  - Reference the [TODO.md](documentation/TODO.md) file
-  - Provide guidance on how to use feature toggles and branching by abstraction
+### Add IP Address to IP Allow List
+
+Prerequisites (first setup only)
+
+    make tester-build
+
+Requirements to update IP allow list (Every time)
+
+    tx-mfa
+
+To add an IP address to the IP allow list, run the following command. The `PROFILE` delineates which environment to update with the latest IP allow list. Set `ENVIRONMENT` if you are changing an environment not linked to your branch
+
+    make update-ip-allowlist PROFILE=task
+
+Note: IP Addresses are held in the AWS Secrets Manager with the secret name being the variable `TF_VAR_ip_address_secret`
 
 ### Database Connection
 
