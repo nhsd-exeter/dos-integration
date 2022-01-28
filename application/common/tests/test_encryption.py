@@ -3,7 +3,7 @@ from pytest import fixture
 from dataclasses import dataclass
 from os import environ
 from json import dumps
-from common.encryption import validate_signing_key, validate_event_is_signed, initialise_encryption_client
+from common.encryption import validate_signing_key, validate_event_is_signed, initialise_encryption_client, BAD_REQUEST
 from aws_encryption_sdk.exceptions import SerializationError
 
 
@@ -112,26 +112,25 @@ def test_validation_decorator(mock_client, lambda_context):
 def test_validation_decorator_no_signing_key(mock_client, lambda_context):
     # Arrange
     mock_handler = MagicMock()
-    expected_response = {"statusCode": 403, "body": "Not authorized"}
+
     mock_body = {}
     # Act
     response = validate_event_is_signed.__wrapped__(mock_handler, {"body": dumps(mock_body)}, lambda_context)
     # Assert
     mock_handler.assert_not_called()
-    assert response == expected_response
+    assert response == BAD_REQUEST
 
 
 @patch("common.encryption.validate_signing_key", return_value=False)
 def test_validation_decorator_invalid_key(mock_client, lambda_context):
     # Arrange
     mock_handler = MagicMock()
-    expected_response = {"statusCode": 403, "body": "Not authorized"}
     mock_body = {}
     # Act
     response = validate_event_is_signed.__wrapped__(mock_handler, {"body": dumps(mock_body)}, lambda_context)
     # Assert
     mock_handler.assert_not_called()
-    assert response == expected_response
+    assert response == BAD_REQUEST
 
 
 @patch("common.encryption.StrictAwsKmsMasterKeyProvider")
