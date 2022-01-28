@@ -21,7 +21,7 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the Changed Event is stored in dynamo db
 
 @complete @dev
-  Scenario: EF3_4 Invalid Lat/Long Values
+  Scenario: A Changed Event with no postcode Lat/Long Values is reported
     Given a Changed Event is valid
     When the postcode has no LAT/Long values
 #   Should the above be a Given statement?
@@ -30,14 +30,14 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the invalid postcode exception is reported to cloudwatch
 
 @complete @dev
-  Scenario: EF1_1 OrganisationTypeID is NOT PHA
+  Scenario: A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
     Given a Changed Event contains an incorrect OrganisationTypeID
     When the Changed Event is sent for processing
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
 
-@complete @dev @mik3
-  Scenario: EF2_1	Changed Event OrganisationSubType is NOT "Community"
+  @complete @dev
+  Scenario: A Changed Event where OrganisationSubType is NOT Community is reported and ignored
     Given a Changed Event contains an incorrect OrganisationSubtype
     When the Changed Event is sent for processing
     Then the exception is reported to cloudwatch
@@ -46,14 +46,14 @@ Feature: DOS INTEGRATION E2E TESTS
 @complete @dev
   Scenario: Hidden Organisation exception reporting
     Given a Changed Event is valid
-    When the OrganisationStatus is equal to "Hidden"
+    When the OrganisationStatus is defined as 'Hidden'
     And the Changed Event is sent for processing
     Then the hidden or closed exception is reported to cloudwatch
 
-@complete @dev
+@complete @dev @mik3
   Scenario: Closed Organisation does not process
     Given a Changed Event is valid
-    When the OrganisationStatus is equal to "Closed"
+    When the OrganisationStatus is defined as 'Closed'
     And the Changed Event is sent for processing
     Then the Changed Event is not processed any further
 
