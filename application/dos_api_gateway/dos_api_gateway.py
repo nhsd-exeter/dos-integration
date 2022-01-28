@@ -22,7 +22,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     logger.set_correlation_id(correlation_id)
     if "bad request" in correlation_id.lower():
         logger.info("Bad Request  - MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
-        return {"statusCode": 400, "body" : "Fake Bad Request trigged by correlation-id"}
+        return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
 
     change_request_response = {"dosChanges": []}
     logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})

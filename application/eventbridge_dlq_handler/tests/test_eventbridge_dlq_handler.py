@@ -54,11 +54,14 @@ def lambda_context():
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler(mock_extract_body, dead_letter_message, lambda_context):
     # Arrange
-    extracted_body = {"correlation_id": "dummy_correlation_id", "dynamo_record_id": "adf382c13e1f265bbc5eb5fe59630390",
-    "message_received": 1643272884341, "ods_code": "DUMMY" }
+    extracted_body = {
+        "correlation_id": "dummy_correlation_id",
+        "dynamo_record_id": "adf382c13e1f265bbc5eb5fe59630390",
+        "message_received": 1643272884341,
+        "ods_code": "DUMMY",
+    }
     mock_extract_body.return_value = extracted_body
     # Act
     lambda_handler(dead_letter_message, lambda_context)
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_message["Records"][0]["body"])
-    expected_timestamp = int(dead_letter_message["Records"][0]["attributes"]["SentTimestamp"])

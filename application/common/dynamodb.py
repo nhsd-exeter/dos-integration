@@ -78,6 +78,7 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         raise
     return sequence_number
 
+
 def get_record_from_dynamodb(record_id: str) -> dict or None:
     """Get a Change Event for a given record id from dynamodb
     Args:
@@ -87,10 +88,7 @@ def get_record_from_dynamodb(record_id: str) -> dict or None:
     """
     try:
         dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        resp = dynamodb.get_item(
-            TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
-            Key={"Id": record_id}
-            )
+        resp = dynamodb.get_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Key={"Id": record_id})
         record = None
         if "Item" in resp:
             record = resp.get("Item")
