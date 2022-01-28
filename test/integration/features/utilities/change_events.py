@@ -7,7 +7,9 @@ from typing import Dict, Any
 
 def load_payload_file() -> dict:
     with open("./features/resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
-        return load(json_file)
+        payload = (load(json_file))
+        payload["ODSCode"] = random_odscode()
+        return payload
 
 
 def get_change_request() -> Dict[str, Any]:

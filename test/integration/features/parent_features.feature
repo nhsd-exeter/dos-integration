@@ -6,7 +6,7 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
-  @complete @dev
+@complete @dev
   Scenario: UNMATCHED DOS SERVICES EXCEPTION IS LOGGED
     Given a Changed Event with invalid ODSCode is provided
     When the Changed Event is sent for processing with "valid" api key
@@ -25,9 +25,23 @@ Feature: DOS INTEGRATION E2E TESTS
     Given a Changed Event is valid
     When the postcode has no LAT/Long values
 #   Should the above be a Given statement?
+#   Given a Changed event with no postcode LAT/Long values ???
     And the Changed Event is sent for processing
     Then the invalid postcode exception is reported to cloudwatch
 
+  @complete @dev
+  Scenario: EF1_1 OrganisationTypeID is NOT PHA
+    Given a Changed Event contains an incorrect OrganisationTypeID
+    When the Changed Event is sent for processing
+    Then the exception is reported to cloudwatch
+    And the Changed Event is not processed any further
+
+  @complete @dev @mik3
+  Scenario: EF2_1	Changed Event OrganisationSubType is NOT "Community"
+    Given a Changed Event contains an incorrect OrganisationSubtype
+    When the Changed Event is sent for processing
+    Then the exception is reported to cloudwatch
+    And the Changed Event is not processed any further
 
 # @complete @dev @test
 # Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB

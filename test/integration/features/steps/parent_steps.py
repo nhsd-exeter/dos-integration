@@ -11,16 +11,14 @@ from features.utilities.utils import (
     process_change_request_payload,
 )
 from decimal import Decimal
-from features.utilities.change_events import get_change_event, get_change_request, random_odscode
+from features.utilities.change_events import get_change_event, get_change_request
 from features.utilities.log_stream import get_logs
 from datetime import datetime
 
 
 @given("a Changed Event is valid")
 def a_change_event_is_valid(context):
-    """Creates a valid change event"""
     context.change_event = get_change_event()
-    context.change_event["ODSCode"] = random_odscode()
 
 
 @given("a valid unsigned change request")
@@ -30,7 +28,6 @@ def a_change_request_is_valid(context):
 
 @given("a Changed Event with invalid ODSCode is provided")
 def a_change_event_with_invalid_odscode(context):
-    """Creates a valid change event"""
     context.change_event = get_change_event()
     context.change_event["ODSCode"] = "F8KE1"
 
@@ -76,19 +73,16 @@ def has_expired_signature(context):
     b64_mystring = b64encode(signing_key).decode("utf-8")
     context.change_request["signing_key"] = b64_mystring
 
-
-@given("a Changed Event with invalid OrganisationSubType is provided")
+@given("a Changed Event contains an incorrect OrganisationSubType")
 def a_change_event_with_invalid_organisationsubtype(context):
-    """Creates a valid change event"""
     context.change_event = get_change_event()
     context.change_event["OrganisationSubType"] = "com"
 
 
-@given("a Changed Event with invalid OrganisationTypeID is provided")
+@given("a Changed Event contains an incorrect OrganisationTypeID")
 def a_change_event_with_invalid_organisationtypeid(context):
-    """Creates a valid change event"""
     context.change_event = get_change_event()
-    context.change_event["OrganisationTypeID"] = "DEN"
+    context.change_event["OrganisationTypeId"] = "DEN"
 
 
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
@@ -113,6 +107,18 @@ def step_then_should_transform_into(context, status):
     assert (
         str(context.response.status_code) == status
     ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
+
+
+# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+@when('the OrganisationStatus is equal to "{orgStatus}"')
+def a_change_event_with_orgstatus_value(context, orgStatus: str):
+    context.change_event["OrganisationSubType"] = orgStatus
+
+
+# When the postcode has no LAT/Long values
+@when('the postcode has no LAT/Long values')
+def postcode_with_no_lat_long_values(context):
+    context.change_event["Postcode"] = "BT4 2HU"
 
 
 @then("no matched services were found")
@@ -175,6 +181,15 @@ def unmatched_service_exception(context):
     odscode = context.change_event["ODSCode"]
     assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
+@then("the exception is reported to cloudwatch")
+def service_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter level="ERROR"'
+    )
+    logs = get_logs(query, "processor", context.start_time)
+    assert logs != [], "ERROR!!.. Expected exception not logged."
+
 @then("the invalid postcode exception is reported to cloudwatch")
 def unmatched_postcode_exception(context):
     #odscode = context.change_event["ODSCode"]
@@ -210,7 +225,7 @@ def the_changed_event_is_not_processed(context):
     cr_received_search_param = "Received change request"
     query = f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
     logs = get_logs(query, "processor", context.start_time)
-    assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected unmatched service logs not found."
+    assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
 # The below step definition answers to a corresponding 'AND' annotation within the feature file
@@ -227,13 +242,3 @@ def the_changed_event_is_not_sent_to_dos(context):
     query = "select * from changes"
     response = search_dos_db(query)
     assert context.correlation_id not in response, "ERROR!!.. Event data found in Dos."
-
-# When the OrganisationStatus is equal to "Hidden" OR "Closed"
-@when('the OrganisationStatus is equal to "{orgStatus}"')
-def a_change_event_with_orgstatus_value(context, orgStatus: str):
-    context.change_event["OrganisationSubType"] = orgStatus
-
-# When the postcode has no LAT/Long values
-@when('the postcode has no LAT/Long values')
-def postcode_with_no_lat_long_values(context):
-    context.change_event["Postcode"] = "BT4 2HU"
