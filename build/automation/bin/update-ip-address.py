@@ -11,10 +11,12 @@ def get_ip_address() -> str:
 
 
 def get_username():
-    if sys.argv[1:]:
-        return sys.argv[1]
+    username = " ".join(sys.argv[1:])
+    if username != "":
+        return username
     else:
-        Exception("No username provided")
+        print("No username provided")
+        exit(2)
 
 
 def update_secret():
