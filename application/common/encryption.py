@@ -1,23 +1,23 @@
 # app.py
-
-from base64 import b64decode
-import binascii
-from typing import Any, Dict
-from json import loads
-from time import time
-from common.utilities import extract_body
 from aws_encryption_sdk import CommitmentPolicy, EncryptionSDKClient, StrictAwsKmsMasterKeyProvider
-from os import environ
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
-from aws_lambda_powertools.utilities.typing import LambdaContext
-from boto3 import client
 from aws_encryption_sdk.exceptions import (
     MaxEncryptedDataKeysExceeded,
     NotSupportedError,
     SerializationError,
     UnknownIdentityError,
 )
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
+from aws_lambda_powertools.utilities.typing import LambdaContext
+from base64 import b64decode
+from binascii import Error as binasciiError
+from boto3 import client
+from json import loads
+from os import environ
+from time import time
+from typing import Any, Dict
+
+from common.utilities import extract_body
 
 logger = Logger(child=True)
 
@@ -75,7 +75,7 @@ def validate_signing_key(signing_key: Any, body: Dict[str, Any]) -> bool:
         logger.info("Signing key validated")
         return True
     except (
-        binascii.Error,
+        binasciiError,
         TypeError,
         AssertionError,
         MaxEncryptedDataKeysExceeded,
