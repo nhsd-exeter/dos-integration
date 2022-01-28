@@ -63,12 +63,17 @@ variable "change_event_gateway_subscription_filter_name" {
 }
 
 variable "fifo_dlq_handler_subscription_filter_name" {
-  description = "Log filter name for event sender lambda"
+  description = "Log filter name for fifo dlq lambda"
+}
+
+variable "eventbridge_dlq_handler_subscription_filter_name" {
+  description = "Log filter name for eventbridge dlq lambda"
 }
 
 variable "dos_integration_firehose" {
   description = "The firehose delivery stream name"
 }
+
 variable "di_endpoint_api_gateway_name" {
   description = "DI Endpoint"
 }
@@ -93,4 +98,8 @@ variable "event_sender_lambda_name" {
 
 variable "fifo_dlq_handler_lambda_name" {
   description = "Name of event processor lambda"
+}
+
+variable "eventbridge_dlq_handler_lambda_name" {
+  description = "Name of eventbridge lambda"
 }

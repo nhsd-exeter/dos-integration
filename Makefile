@@ -14,6 +14,7 @@ build: # Build lambdas
 	make -s event-sender-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s event-processor-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s fifo-dlq-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s eventbridge-dlq-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -41,7 +42,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=evenbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs
+	make terraform-destroy-auto-approve STACKS=eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
@@ -237,6 +238,27 @@ fifo-dlq-handler-clean: ### Clean event processor lambda docker image directory
 	make common-code-remove LAMBDA_DIR=fifo_dlq_handler
 
 # ==============================================================================
+# Eventbridge Dead Letter Queue Handler (eventbridge-dlq-handler)
+
+eventbridge-dlq-handler-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=eventbridge_dlq_handler
+	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/eventbridge-dlq-handler/assets/requirements.txt
+	cd $(APPLICATION_DIR)/eventbridge_dlq_handler
+	tar -czf $(DOCKER_DIR)/eventbridge-dlq-handler/assets/eventbridge-dlq-handler-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make eventbridge-dlq-handler-clean
+	export VERSION=$$(make docker-image-get-version NAME=eventbridge-dlq-handler)
+
+eventbridge-dlq-handler-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.txt
+	make common-code-remove LAMBDA_DIR=eventbridge-dlq-handler
+
+# ==============================================================================
 # Authoriser (for dos api gateway mock)
 
 authoriser-build-and-push: ### Build authoriser lambda docker image
@@ -294,6 +316,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"

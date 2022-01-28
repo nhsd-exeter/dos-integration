@@ -129,3 +129,17 @@ functions:
           method: post
           private: true
     maximumRetryAttempts: 0
+
+  eventbridge-dlq-handler:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/eventbridge-dlq-handler:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-eventbridge-dlq-handler
+    description: ${sls:stage} EventBridge DLQ Handler lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_eventbridge_dlq_handler_role_name}
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+    maximumRetryAttempts: 0

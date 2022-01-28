@@ -95,7 +95,7 @@ variable "eventbridge_target_policy_name" {
 # ############################
 
 variable "dead_letter_queue_from_event_bus_name" {
-  description = ""
+  description = "Name of the eventbridge dead letter queue"
 }
 
 # ############################
@@ -104,4 +104,7 @@ variable "dead_letter_queue_from_event_bus_name" {
 
 variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
+}
+variable "eventbridge_dlq_handler_lambda_name" {
+  description = "Name of eventbridge dead letter queue lambda handler"
 }
