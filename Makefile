@@ -26,6 +26,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
+	make -s terraform-clean
 	if [ "$(PROFILE)" == "task" ]; then
 		make terraform-apply-auto-approve STACKS=api-key,change-request-receiver-api-key
 	fi
@@ -399,6 +400,28 @@ performance-test-clean:
 
 # -----------------------------
 # Other
+
+update-all-ip-allowlists: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
+	USERNAME=$$(git config user.name)
+	make -s update-ip-allowlist PROFILE=task USERNAME=$$USERNAME
+	make -s update-ip-allowlist PROFILE=dev USERNAME=$$USERNAME
+
+update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python update-ip-address.py $(USERNAME)" \
+		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
+
+update-ip-allowlists-and-deploy-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments and then redeploy environment - mandatory: PROFILE, ENVIRONMENT
+	make update-all-ip-allowlists
+	make -s terraform-clean
+	make -s terraform-apply-auto-approve STACKS=api-gateway-sqs
+
+delete-ip-from-allowlist: # Update your IP address in AWS secrets manager to acesss test environment - mandatory: PROFILE, ENVIRONMENT, USERNAME
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="python delete-ip-address.py $(USERNAME)" \
+		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
 
 python-linting:
 	make python-code-check FILES=application
