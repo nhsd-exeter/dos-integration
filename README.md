@@ -127,7 +127,7 @@ To add an IP address to the IP allow list, run the following command. The `PROFI
 
     make update-ip-allowlist PROFILE=task
 
-Note: IP Addresses are held in the AWS Secrets Manager with the secret name being the variable `TF_VAR_ip_address_secret`
+Note: IP Addresses are held in the AWS Secrets Manager with the secret name being the variable `TF_VAR_ip_address_secret`. You can find your IP address in the AWS console with your Git username as the key and the IP address as the value
 
 ### Database Connection
 
