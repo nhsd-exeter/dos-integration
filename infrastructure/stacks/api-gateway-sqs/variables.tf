@@ -127,7 +127,3 @@ variable "nhs_uk_api_key_key" {
 variable "ip_address_secret" {
   description = "IP Address secret"
 }
-
-variable "ip_address_secret_key" {
-  description = "IP Address secret key"
-}
