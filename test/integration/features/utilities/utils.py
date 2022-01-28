@@ -24,10 +24,13 @@ DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
-def process_payload(payload: dict) -> Response:
+def process_payload(payload: dict, valid_api_key: bool) -> Response:
+    api_key = "invalid"
+    if valid_api_key:
+        api_key = json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     sequence_number = generate_unique_sequence_number(payload["ODSCode"])
     headers = {
-        "x-api-key": json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")],
+        "x-api-key": api_key,
         "sequence-number": sequence_number,
         "Content-Type": "application/json",
     }
@@ -37,11 +40,14 @@ def process_payload(payload: dict) -> Response:
     return output
 
 
-def process_change_request_payload(payload: dict) -> Response:
-    secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
+def process_change_request_payload(payload: dict, api_key_valid: bool) -> Response:
+    api_key = "invalid"
+    if (api_key_valid):
+        secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
+        api_key = secret[getenv("CR_API_KEY_KEY")]
 
     headers = {
-        "x-api-key": secret[getenv("CR_API_KEY_KEY")],
+        "x-api-key": api_key,
         "Content-Type": "application/json",
     }
 

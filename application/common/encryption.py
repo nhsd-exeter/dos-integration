@@ -1,4 +1,3 @@
-# app.py
 from aws_encryption_sdk import CommitmentPolicy, EncryptionSDKClient, StrictAwsKmsMasterKeyProvider
 from aws_encryption_sdk.exceptions import (
     MaxEncryptedDataKeysExceeded,
@@ -12,7 +11,7 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from base64 import b64decode
 from binascii import Error as binasciiError
 from boto3 import client
-from json import loads
+from json import loads, dumps
 from os import environ
 from time import time
 from typing import Any, Dict
@@ -22,7 +21,7 @@ from common.utilities import extract_body
 logger = Logger(child=True)
 
 SIGNING_KEY_KEY = "signing_key"
-NOT_AUTHORIZED = {"statusCode": 403, "body": "Not authorized"}
+BAD_REQUEST = {"statusCode": 400, "body": dumps({"message": "Invalid payload"})}
 
 
 def initialise_encryption_client():
@@ -93,11 +92,11 @@ def validate_event_is_signed(handler, event, context: LambdaContext):
     body = extract_body(event["body"])
     if SIGNING_KEY_KEY not in body:
         logger.error("No signing key in body")
-        return NOT_AUTHORIZED
+        return BAD_REQUEST
     signing_key = body[SIGNING_KEY_KEY]
     is_valid = validate_signing_key(signing_key, body)
     if is_valid:
         response = handler(event, context)
         return response
     else:
-        return NOT_AUTHORIZED
+        return BAD_REQUEST
