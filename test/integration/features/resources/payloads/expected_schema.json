@@ -2,7 +2,7 @@
   "description": "Default valid schema payload",
   "SearchKey": "X3618",
   "ODSCode": "FD189",
-  "OrganisationName": "Test Pharmacy 1",
+  "OrganisationName": "Test Pharmacy",
   "OrganisationTypeId": "PHA",
   "OrganisationType": "Pharmacy",
   "OrganisationSubType": "Community",
@@ -81,6 +81,24 @@
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "Times": "10:00-17:00",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Dec 24 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "Times": "10:00-17:00",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Dec 25 2022",
       "IsOpen": true
     }
   ],

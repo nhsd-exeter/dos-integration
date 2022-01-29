@@ -44,14 +44,14 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is not processed any further
 
 @complete @dev
-  Scenario: Hidden Organisation exception reporting
+  Scenario: Changed Event with Hidden Organisation status is reported
     Given a Changed Event is valid
     When the OrganisationStatus is defined as 'Hidden'
     And the Changed Event is sent for processing
     Then the hidden or closed exception is reported to cloudwatch
 
-@complete @dev @mik3
-  Scenario: Closed Organisation does not process
+  @complete @dev
+  Scenario: Changed Event with Closed Organisation status is not processed
     Given a Changed Event is valid
     When the OrganisationStatus is defined as 'Closed'
     And the Changed Event is sent for processing
@@ -62,39 +62,42 @@ Feature: DOS INTEGRATION E2E TESTS
     Given a Changed Event is valid
     When the postcode is invalid
     And the Changed Event is sent for processing
-    Then the address change is not included in the change request
-    And the event sender does not contain address changes
+    Then the 'address' from the changes is not included in the change request
 
-# @complete @dev @test
-# Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
-#   Given a Changed Event is valid
+  @complete @dev
+  Scenario: Postcode not included in Changes when postcode is invalid
+    Given a Changed Event is valid
+    When the postcode is invalid
+    And the Changed Event is sent for processing
+    Then the 'postcode' from the changes is not included in the change request
 
-# Then the Changed Event is processed
+  @complete @dev
+  Scenario: Invalid Opening Times reported where Weekday is not identified
+    Given a Changed Event with the Weekday NOT present in the Opening Times data
+    When the Changed Event is sent for processing
+# Then the exception is reported to cloudwatch
 
-# When the OrganisationStatus is equal to "Hidden" OR "Closed" #Done
+  @complete @dev
+  Scenario: Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
+    Given a Changed Event where OpeningTimeType is NOT defined correctly
+    When the Changed Event is sent for processing
+# Then the exception is reported to cloudwatch
 
-# And there are no changes identified
-
-# Then there is no Change Request produced
-
-# When the postcode is invalid #Kit
-
-# Then the Address change is not included in the Change request
-
-# When the postcode does not exist in DoS
-
-# When the postcode has no LAT/Long values #Done
-
-# Then the Postcode is not included in the Change Request
+  @complete @dev @mik3
+  Scenario: IsOpen is true AND Times is blank
+    Given a Changed Event with the openingTimes IsOpen status set to false
+    When the OpeningTimes Times data is not defined
 
 
-# Scenario: INVALID ODSCODE TESTS
-#   Given a change event with invalid ODSCode is provided
-#   When the change event is sent to the event processor
-#   Then the processor lambda logs are generated
+test/performance/data_collection/aws.py
+# Then the exception is reported to cloudwatch
 
-# Scenario: INVALID ORGANISATIONSUBTYPE TESTS
-#   Given a change event with invalid OrganisationSubType is provided
+
+
+
+
+
+
 
 
 # Scenario: Happy Path message to DOS

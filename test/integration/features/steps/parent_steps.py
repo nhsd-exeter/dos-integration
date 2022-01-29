@@ -14,9 +14,6 @@ from decimal import Decimal
 from features.utilities.changed_events import changed_event
 from features.utilities.log_stream import get_logs
 from datetime import datetime
-# import sys
-# sys.path.append('application/common/aws.py')
-# from application.common.aws import get_secret
 
 
 @given("a Changed Event is valid")
@@ -88,6 +85,67 @@ def a_change_event_with_invalid_organisationtypeid(context):
     context.change_event["OrganisationTypeId"] = "DEN"
 
 
+
+# IsOpen is true AND Times is blank
+
+# OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+# An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
+
+
+@given("a Changed Event with the Weekday NOT present in the Opening Time")
+def a_change_event_with_no_openingtimes_weekday(context):
+    context.change_event = changed_event()
+    del context.change_event["OpeningTimes"][0]["Weekday"]
+
+
+@given("a Changed Event where OpeningTimeType is NOT defined correctly")
+def a_change_event_with_invalid_openingtimetype(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
+
+
+# IsOpen is true AND Times is blank
+@given("a Changed Event with the OpeningTimes Times data is not defined")
+def a_change_event_with_no_times_data_within_openingtimes(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][0]["Times"] = ""
+
+
+# isOpen is false AND Times in NOT blank
+@given("a Changed Event with the openingTimes IsOpen status set to false")
+def a_change_event_with_isopen_status_set_to_false(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][0]["IsOpen"] is False
+
+
+@when("the OpeningTimes Times data is not defined")
+def no_times_data_within_openingtimes(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][0]["Times"] = ""
+
+
+# "OpeningTimes": [
+#     {
+#       "Weekday": "Sunday",
+#       "Times": "10:00-17:00",
+#       "OffsetOpeningTime": 540,
+#       "OffsetClosingTime": 780,
+#       "OpeningTimeType": "General",
+#       "AdditionalOpeningDate": "",
+#       "IsOpen": true
+#     },
+#     {
+#       "Weekday": "",
+#       "Times": "10:00-17:00",
+#       "OffsetOpeningTime": 0,
+#       "OffsetClosingTime": 0,
+#       "OpeningTimeType": "Additional",
+#       "AdditionalOpeningDate": "Dec 24 2022",
+#       "IsOpen": true
+#     }
+# ]
+
+
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
@@ -113,18 +171,19 @@ def step_then_should_transform_into(context, status):
 
 
 # When the postcode has no LAT/Long values
-@when('the postcode has no LAT/Long values')
+@when("the postcode has no LAT/Long values")
 def postcode_with_no_lat_long_values(context):
     context.change_event["Postcode"] = "BT4 2HU"
 
+
 # When the OrganisationStatus is equal to "Hidden" OR "Closed"
-@when('the OrganisationStatus is defined as {org_status}')
+@when("the OrganisationStatus is defined as {org_status}")
 def a_change_event_with_orgstatus_value(context, org_status: str):
     context.change_event["OrganisationStatus"] = org_status
 
 
 # When the postcode is invalid
-@when('the postcode is invalid')
+@when("the postcode is invalid")
 def postcode_is_invalid(context):
     context.change_event["Postcode"] = "AAAA 123"
 
@@ -189,6 +248,7 @@ def unmatched_service_exception(context):
     odscode = context.change_event["ODSCode"]
     assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
+
 @then("the exception is reported to cloudwatch")
 def service_exception(context):
     query = (
@@ -197,6 +257,7 @@ def service_exception(context):
     )
     logs = get_logs(query, "processor", context.start_time)
     assert logs != [], "ERROR!!.. Expected exception not logged."
+
 
 @then("the invalid postcode exception is reported to cloudwatch")
 def unmatched_postcode_exception(context):
@@ -216,25 +277,19 @@ def hidden_or_closed_exception(context):
         ' | filter message like "NHS Service marked as closed or hidden"'
     )
     logs = get_logs(query, "processor", context.start_time)
-    assert "no change requests will be produced" in logs, "ERROR!!.. Expected unmatched service logs not found."
+    assert (
+        "no change requests will be produced" in logs
+    ), "ERROR!!.. Expected hidden or closed exception logs not found."
 
-@then("the address change is not included in the change request")
-def address_change_is_discarded_in_event_proc(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        ' | filter message like "Deleted address change as postcode is invalid"'
-    )
-    logs = get_logs(query, "processor", context.start_time)
-    assert "postcode is invalid" in logs, "ERROR!!.. Expected unmatched service logs not found."
 
-@then("the event sender does not contain address changes")
-def address_change_is_discarded_in_event_sender(context):
+@then("the {address} from the changes is not included in the change request")
+def address_change_is_discarded_in_event_sender(context, address: str):
     query = (
         f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         ' | filter message like "Attempting to send change request to DoS"'
     )
     logs = get_logs(query, "sender", context.start_time)
-    assert "postcode" not in logs, "ERROR!!.. Expected unmatched service logs not found."
+    assert f"{address}" not in logs, "ERROR!!.. Unexpected Address change found in logs."
 
 
 @then("the processed Changed Request is sent to Dos")
