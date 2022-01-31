@@ -331,15 +331,30 @@ serverless-requirements: # Install serverless plugins
 # Pipelines
 
 deploy-development-pipeline:
-	make terraform-apply-auto-approve STACKS=development-pipeline
+	make terraform-apply-auto-approve STACKS=development-pipeline PROFILE=dev
 
 undeploy-development-pipeline:
-	make terraform-destroy-auto-approve STACKS=development-pipeline
+	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=dev
 
 plan-development-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=development-pipeline
+	fi
+	if [ "$(PROFILE)" != "dev" ]; then
+		echo "Only dev profile supported at present"
+	fi
+
+deploy-performance-pipeline:
+	make terraform-apply-auto-approve STACKS=performance-pipeline PROFILE=dev
+
+undeploy-performance-pipeline:
+	make terraform-destroy-auto-approve STACKS=performance-pipeline PROFILE=dev
+
+plan-performance-pipeline:
+	if [ "$(PROFILE)" == "dev" ]; then
+		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-plan STACKS=performance-pipeline
 	fi
 	if [ "$(PROFILE)" != "dev" ]; then
 		echo "Only dev profile supported at present"
@@ -373,12 +388,12 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT
-# Roughly 20k change events per minute
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+# Roughly 4.2k change events per minute
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
-			--users 20 --spawn-rate 20 --run-time 1m --stop-timeout 10 \
+			--users 4 --spawn-rate 4 --run-time 1m --stop-timeout 10 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -389,7 +404,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
-load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 # Roughly 20 change events per minute
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
@@ -434,6 +449,22 @@ performance-test-clean:
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
 	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
+
+stress-test-in-pipeline:
+	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	make stress-test START_TIME=$$(START_TIME)
+	sleep 60
+	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	make performance-test-data-collection START_TIME=$$(START_TIME) END_TIME=$$(END_TIME)
+	make generate-performance-test-details START_TIME=$$(START_TIME) END_TIME=$$(END_TIME)
+
+load-test-in-pipeline:
+	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	make load-test START_TIME=$$(START_TIME)
+	sleep 60
+	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	make performance-test-data-collection START_TIME=$$(START_TIME) END_TIME=$$(END_TIME)
+	make generate-performance-test-details START_TIME=$$(START_TIME) END_TIME=$$(END_TIME)
 
 # -----------------------------
 # Other
