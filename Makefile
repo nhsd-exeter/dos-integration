@@ -393,7 +393,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
-			--users 4 --spawn-rate 4 --run-time 1m --stop-timeout 10 \
+			--users 4 --spawn-rate 4 --run-time 1m --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -409,7 +409,7 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
