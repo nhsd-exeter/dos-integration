@@ -30,4 +30,4 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     for row in change_event["changes"]:
         change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
         counter += 1
-    return {"statusCode": 200, "body": dumps(change_request_response)}
+    return {"statusCode": 201, "body": dumps(change_request_response)}
