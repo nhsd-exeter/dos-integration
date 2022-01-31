@@ -453,8 +453,10 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "kms:GenerateRandom",
           "kms:Get*",
           "kms:List*",
+          "kms:Update*",
           "kms:TagResource",
           "kms:UntagResource",
+          "kms:PutKeyPolicy",
           "iam:ListGroups",
           "iam:ListRoles",
           "iam:ListUsers"
