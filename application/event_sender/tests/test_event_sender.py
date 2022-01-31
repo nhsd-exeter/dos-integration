@@ -69,7 +69,7 @@ def test_lambda_handler_dos_api_success(
 ):
 
     mock_instance = mock_change_request.return_value
-    mock_instance.post_change_request.return_value = MockResponse(status_code=200, text="success")
+    mock_instance.post_change_request.return_value = MockResponse(status_code=201, text="success")
     environ["ENV"] = "test"
     environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = "1"
 
@@ -84,7 +84,7 @@ def test_lambda_handler_dos_api_success(
     mock_put_metric.assert_has_calls(
         [call("DosApiLatency", 0, "Milliseconds"), call("QueueToDoSLatency", 3000, "Milliseconds")]
     )
-    assert response["statusCode"] == 200
+    assert response["statusCode"] == 201
     assert response["body"] == "success"
 
 

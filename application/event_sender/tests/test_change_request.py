@@ -96,7 +96,7 @@ class TestChangeRequest:
         environ["DOS_API_GATEWAY_PASSWORD_KEY"] = self.PASSWORD_KEY
         change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
         expected_response_body = {"my-key": "my-val"}
-        status_code = 200
+        status_code = 201
         add(POST, self.WEBSITE, json=expected_response_body, status=status_code)
         change_request.change_request_logger = MagicMock()
         # Act
