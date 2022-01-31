@@ -73,6 +73,7 @@ def has_expired_signature(context):
     b64_mystring = b64encode(signing_key).decode("utf-8")
     context.change_request["signing_key"] = b64_mystring
 
+
 @given("a Changed Event contains an incorrect OrganisationSubType")
 def a_change_event_with_invalid_organisationsubtype(context):
     context.change_event = changed_event()
@@ -83,7 +84,6 @@ def a_change_event_with_invalid_organisationsubtype(context):
 def a_change_event_with_invalid_organisationtypeid(context):
     context.change_event = changed_event()
     context.change_event["OrganisationTypeId"] = "DEN"
-
 
 
 # IsOpen is true AND Times is blank
