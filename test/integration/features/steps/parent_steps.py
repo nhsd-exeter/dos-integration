@@ -11,7 +11,7 @@ from features.utilities.utils import (
     process_change_request_payload,
 )
 from decimal import Decimal
-from features.utilities.changed_events import changed_event
+from features.utilities.changed_events import changed_event, change_request
 from features.utilities.log_stream import get_logs
 from datetime import datetime
 
@@ -23,7 +23,7 @@ def a_change_event_is_valid(context):
 
 @given("a valid unsigned change request")
 def a_change_request_is_valid(context):
-    context.change_request = get_change_request()
+    context.change_request = change_request()
 
 
 @given("a Changed Event with invalid ODSCode is provided")
