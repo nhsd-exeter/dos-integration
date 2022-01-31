@@ -49,6 +49,7 @@ TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
 TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
 TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handler-role
+TF_VAR_eventbridge_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dql-handler-role
 
 # Kinisis Firehose (Splunk Logs)
 TF_VAR_dos_integration_firehose := $(PROJECT_ID)-cw-logs-firehose
@@ -57,9 +58,11 @@ TF_VAR_event_processor_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-
 TF_VAR_event_sender_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-cw-logs-firehose-subscription
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
 TF_VAR_fifo_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_eventbridge_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
+TF_VAR_eventbridge_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler
 
 # Mock DoS API Gateway Mock
 TF_VAR_dos_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock
@@ -101,4 +104,3 @@ TF_VAR_code_pipeline_branch_name := master
 TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
-
