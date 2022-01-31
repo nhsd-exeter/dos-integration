@@ -83,14 +83,33 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing
 # Then the exception is reported to cloudwatch
 
-  @complete @dev @mik3
+@complete @dev
   Scenario: IsOpen is true AND Times is blank
-    Given a Changed Event with the openingTimes IsOpen status set to false
+    Given a Changed Event is valid
     When the OpeningTimes Times data is not defined
-
-
-test/performance/data_collection/aws.py
+    And the Changed Event is sent for processing
 # Then the exception is reported to cloudwatch
+
+  @complete @dev
+  Scenario: IsOpen is false AND Times in NOT blank
+    Given a Changed Event with the openingTimes IsOpen status set to false
+    When the Changed Event is sent for processing
+# Then the exception is reported to cloudwatch
+
+  @complete @dev
+  Scenario:  OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+    Given a Changed Event is valid
+    When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
+    And the Changed Event is sent for processing
+  # Then the exception is reported to cloudwatch
+
+  @complete @dev
+  Scenario: An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
+    Given a Changed Event is valid
+    When an AdditionalOpeningDate contains data with both true and false IsOpen status
+    And the Changed Event is sent for processing
+# Then the exception is reported to cloudwatch
+
 
 
 

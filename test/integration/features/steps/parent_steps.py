@@ -92,36 +92,47 @@ def a_change_event_with_invalid_organisationtypeid(context):
 # An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
 
 
+# Weekday NOT present on the Opening Time
 @given("a Changed Event with the Weekday NOT present in the Opening Time")
 def a_change_event_with_no_openingtimes_weekday(context):
     context.change_event = changed_event()
     del context.change_event["OpeningTimes"][0]["Weekday"]
 
 
+# OpeningTimeType is NOT "General" or "Additional"
 @given("a Changed Event where OpeningTimeType is NOT defined correctly")
 def a_change_event_with_invalid_openingtimetype(context):
     context.change_event = changed_event()
     context.change_event["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
 
 
-# IsOpen is true AND Times is blank
-@given("a Changed Event with the OpeningTimes Times data is not defined")
-def a_change_event_with_no_times_data_within_openingtimes(context):
-    context.change_event = changed_event()
-    context.change_event["OpeningTimes"][0]["Times"] = ""
-
-
 # isOpen is false AND Times in NOT blank
 @given("a Changed Event with the openingTimes IsOpen status set to false")
 def a_change_event_with_isopen_status_set_to_false(context):
     context.change_event = changed_event()
-    context.change_event["OpeningTimes"][0]["IsOpen"] is False
+    context.change_event["OpeningTimes"][0]["IsOpen"] = False
 
 
+# IsOpen is true AND Times is blank
 @when("the OpeningTimes Times data is not defined")
 def no_times_data_within_openingtimes(context):
     context.change_event = changed_event()
     context.change_event["OpeningTimes"][0]["Times"] = ""
+
+
+# OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+@when("the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined")
+def specified_opening_date_not_defined(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][7]["AdditionalOpeningDate"] = ""
+
+
+# An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
+@when("an AdditionalOpeningDate contains data with both true and false IsOpen status")
+def same_specified_opening_date_with_true_and_false_isopen_status(context):
+    context.change_event = changed_event()
+    context.change_event["OpeningTimes"][7]["AdditionalOpeningDate"] = "Dec 25 2022"
+    context.change_event["OpeningTimes"][7]["IsOpen"] = False
 
 
 # "OpeningTimes": [
