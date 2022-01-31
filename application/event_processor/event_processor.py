@@ -2,7 +2,8 @@ from json import dumps
 from os import environ, getenv
 from typing import Dict, List, Union
 from boto3 import client
-from time import strftime, gmtime, time_ns
+from base64 import b64encode
+from time import strftime, gmtime, time_ns, time
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
@@ -17,6 +18,8 @@ from common.utilities import extract_body, get_sequence_number
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
+from common.encryption import initialise_encryption_client
+
 
 logger = Logger()
 tracer = Tracer()
@@ -98,6 +101,16 @@ class EventProcessor:
             logger.error("Attempting to send change requests before get_change_requests has been called.")
             return
 
+        key_data = {
+            "message_received": message_received,
+            "dynamo_record_id": record_id,
+            "ods_code": self.nhs_entity.odscode,
+            "time": time(),
+        }
+        encrypt_string, decrypt_string = initialise_encryption_client()
+        signing_key = encrypt_string(dumps(key_data))
+        b64_mystring = b64encode(signing_key).decode("utf-8")
+        logger.debug(f"signing key : {b64_mystring}")
         eventbridge = client("events")
         events = []
         for change_request in self.change_requests:
@@ -108,6 +121,7 @@ class EventProcessor:
                     "DetailType": "change-request",
                     "Detail": dumps(
                         {
+                            "signing_key": b64_mystring,
                             "change_payload": change_payload,
                             "correlation_id": logger.get_correlation_id(),
                             "message_received": message_received,
@@ -143,6 +157,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
+
     now_ms = time_ns() // 1000000
     logger.append_keys(ods_code=None)
     logger.append_keys(org_type=None)

@@ -3,9 +3,8 @@ from dataclasses import dataclass
 from os import environ
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 import json
-from ..event_sender import lambda_handler
-
 from pytest import fixture
+from ..event_sender import lambda_handler
 
 CHANGE_REQUEST = {
     "reference": "1",

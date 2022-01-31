@@ -66,6 +66,24 @@ resource "aws_iam_role_policy" "event_processor_policy" {
     },
     {
       "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+    },
+    {
+      "Effect": "Allow",
       "Action": ["events:PutEvents"],
       "Resource": "arn:aws:events:${var.aws_region}:${var.aws_account_id}:event-bus/uec-dos-int-*"
     },
@@ -130,6 +148,15 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "secretsmanager:List*"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -234,4 +261,20 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
   ]
 }
 EOF
+}
+
+
+resource "aws_kms_key" "signing_key" {
+  description              = ""
+  key_usage                = "ENCRYPT_DECRYPT"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  policy                   = data.aws_iam_policy_document.key.json
+  deletion_window_in_days  = 7
+  is_enabled               = true
+  enable_key_rotation      = false
+}
+
+resource "aws_kms_alias" "signing_key" {
+  name          = "alias/${var.signing_key_alias}"
+  target_key_id = aws_kms_key.signing_key.key_id
 }

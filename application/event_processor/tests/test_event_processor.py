@@ -169,14 +169,15 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
+@patch(f"{FILE_PATH}.initialise_encryption_client")
 @patch.object(Logger, "get_correlation_id", return_value=1)
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
+def test_send_changes(mock_client, mock_logger, get_correlation_id_mock, encryption_client_mock):
     # Arrange
     bus_name = "test"
     environ["EVENTBRIDGE_BUS_NAME"] = bus_name
-
+    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
     change_request = ChangeRequest(service_id=49016)
     change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
@@ -202,6 +203,7 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     # Assert
     mock_client.assert_called_with("events")
     entry_details = {
+        "signing_key": "ZW5jcnlwdGVk",
         "change_payload": change_request.create_payload(),
         "correlation_id": 1,
         "message_received": message_received,
@@ -223,12 +225,14 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     del environ["EVENTBRIDGE_BUS_NAME"]
 
 
+@patch(f"{FILE_PATH}.initialise_encryption_client")
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger):
+def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger, encryption_client_mock):
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
+    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -245,13 +249,15 @@ def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger)
     mock_logger.assert_called_with("Attempting to send change requests before get_change_requests has been called.")
 
 
+@patch(f"{FILE_PATH}.initialise_encryption_client")
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes_when_no_change_requests(mock_client, mock_logger):
+def test_send_changes_when_no_change_requests(mock_client, mock_logger, encryption_client_mock):
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
     nhs_entity = NHSEntity({})
+    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
     nhs_entity.phone = "01462622435"

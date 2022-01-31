@@ -1,20 +1,35 @@
-# Feature: Test Event Sender Features
+Feature: Test Event Sender Features
 
-#   Scenario: A valid change request sent to event sender
-#     Given a valid change request endpoint
-#     When a "valid" change request is sent to the event sender
-#     Then a change request is received "1" times
-#     And the change request has status code "200"
-#     And the successful response is logged with status code "200"
+  @complete @event_sender @security
+  Scenario: No api key sent to change request endpoint
+    Given a valid unsigned change request
+    When the change request is sent with "invalid" api key
+    Then the change request has status code "403"
 
-#   Scenario: An invalid change request sent to event sender
-#     Given a valid change request endpoint
-#     When a "invalid" change request is sent to the event sender
-#     Then a change request is received "1" times
-#     And the change request has status code "400"
-#     And the failure response is logged with status code "400"
 
-#   Scenario: Proccessed Valid CE are sent to the Sender lambda as CR
-#     Given a valid change event endpoint
-#     When a "valid" change event with sequence id "101" is sent to the event procesor
-#     Then the event sender logs are generated
+  @complete @event_sender @security
+  Scenario: An unsigned valid change request sent to event sender
+    Given a valid unsigned change request
+    When the change request is sent with "valid" api key
+    Then the change request has status code "400"
+
+  @complete @event_sender
+  Scenario: An signed valid change request sent to event sender
+    Given a valid unsigned change request
+    And change request has valid signature
+    When the change request is sent with "valid" api key
+    Then the change request has status code "200"
+
+  @complete @event_sender @security
+  Scenario: An signed valid change request sent to event sender with invalid signature
+    Given a valid unsigned change request
+    And change request has invalid signature
+    When the change request is sent with "valid" api key
+    Then the change request has status code "400"
+
+  @complete @event_sender @security
+  Scenario: An signed valid change request sent to event sender with expired signature
+    Given a valid unsigned change request
+    And change request has expired signature
+    When the change request is sent with "valid" api key
+    Then the change request has status code "400"

@@ -3,13 +3,13 @@ Feature: DOS INTEGRATION E2E TESTS
 @complete @dev
   Scenario: A VALID CHANGED EVENT IS PROCESSED AND SENT TO DOS
     Given a Changed Event is valid
-    When the Changed Event is sent for processing
+    When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
   @complete @dev
   Scenario: UNMATCHED DOS SERVICES EXCEPTION IS LOGGED
     Given a Changed Event with invalid ODSCode is provided
-    When the Changed Event is sent for processing
+    When the Changed Event is sent for processing with "valid" api key
     Then no matched services were found
     And the unmatched service exception is reported to cloudwatch
     Then the Changed Event is not processed any further
@@ -17,7 +17,7 @@ Feature: DOS INTEGRATION E2E TESTS
 @complete @dev
   Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
     Given a Changed Event is valid
-    When the Changed Event is sent for processing
+    When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
 
