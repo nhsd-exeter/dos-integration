@@ -8,4 +8,9 @@ if [ $(make git-check-if-commit-changed-directory DIR=application PRECOMMIT=true
     FILES=application
 fi
 
+if [ $(make git-check-if-commit-changed-directory DIR=test PRECOMMIT=true) == true ]; then
+  make -s python-code-format python-code-check \
+    FILES=test
+fi
+
 exit 0
