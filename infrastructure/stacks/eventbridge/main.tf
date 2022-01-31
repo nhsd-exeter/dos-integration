@@ -14,6 +14,44 @@ EOF
   depends_on     = [aws_cloudwatch_event_bus.change_request_bus]
 }
 
+resource "aws_sqs_queue" "eventbridge_dlq_queue_from_event_bus" {
+  name                      = var.dead_letter_queue_from_event_bus_name
+  fifo_queue                = false
+  sqs_managed_sse_enabled   = true
+  message_retention_seconds = 1209600 # 14 days
+}
+
+resource "aws_lambda_event_source_mapping" "dead_letter_event_source_mapping" {
+  batch_size       = 1
+  event_source_arn = aws_sqs_queue.eventbridge_dlq_queue_from_event_bus.arn
+  enabled          = true
+  function_name    = data.aws_lambda_function.eventbridge_dlq_handler.arn
+}
+
+resource "aws_sqs_queue_policy" "eventbridge_dlq_queue_from_event_bus_policy" {
+  queue_url = aws_sqs_queue.eventbridge_dlq_queue_from_event_bus.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "sqspolicy",
+  "Statement": [
+    {
+      "Sid": "First",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "sqs:SendMessage",
+      "Resource": "${aws_sqs_queue.eventbridge_dlq_queue_from_event_bus.arn}",
+      "Condition": {
+        "ArnEquals": {
+          "aws:SourceArn": "${aws_cloudwatch_event_rule.change_request_rule.arn}"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
 resource "aws_cloudwatch_event_target" "api_destination_target" {
   rule           = aws_cloudwatch_event_rule.change_request_rule.name
   arn            = aws_cloudwatch_event_api_destination.dos_api_gateway_destination.arn
@@ -21,6 +59,9 @@ resource "aws_cloudwatch_event_target" "api_destination_target" {
   role_arn       = aws_iam_role.target_role.arn
   input_path     = "$.detail"
   depends_on     = [aws_cloudwatch_event_api_destination.dos_api_gateway_destination]
+  dead_letter_config {
+    arn = aws_sqs_queue.eventbridge_dlq_queue_from_event_bus.arn
+  }
 }
 
 resource "aws_cloudwatch_event_connection" "dos_api_gateway_connection" {
@@ -80,6 +121,11 @@ resource "aws_iam_role_policy" "target_role_policy" {
         "events:*"
       ],
       "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["sqs:SendMessage"],
+      "Resource": "${aws_sqs_queue.eventbridge_dlq_queue_from_event_bus.arn}"
     }
   ]
 }

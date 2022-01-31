@@ -29,6 +29,7 @@ resource "aws_api_gateway_integration" "dos_api_gateway_integration" {
   uri                     = aws_lambda_function.dos_api_gateway_lambda.invoke_arn
 }
 
+
 resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
   triggers = {
