@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_rule" "nightly_cron" {
   name                = var.nightly_rule_name
   description         = "Trigger performance pipeline nightly"
-  schedule_expression = "cron(45 14 * * ? *)"
+  schedule_expression = "cron(00 0 * * ? *)" # every day at midnight
 }
 
 resource "aws_cloudwatch_event_target" "trigger_lambda" {
