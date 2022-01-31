@@ -32,7 +32,7 @@ def dead_letter_message():
                 },
                 "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
                 "eventSource": "aws:sqs",
-                "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
+                "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:eventbridge-dlq-queue",
                 "awsRegion": "us-east-2",
             }
         ]
@@ -43,9 +43,9 @@ def dead_letter_message():
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "event-processor"
+        function_name: str = "eventbridge-dlq-handler"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:eventbridge-dlq-handler"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
