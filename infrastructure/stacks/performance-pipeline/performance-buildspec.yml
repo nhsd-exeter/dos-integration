@@ -37,15 +37,15 @@ phases:
       - make docker-hub-signin
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - make tester-build
+      - make update-ip-allowlist PROFILE=perf ENVIRONMENT=perf USERNAME="performance_codebuild"
+      - make -s terraform-apply-auto-approve STACKS=api-gateway-sqs PROFILE=perf ENVIRONMENT=perf
   build:
     commands:
       - echo "[Running Performance Tests]"
       - make stress-test-in-pipeline PROFILE=perf ENVIRONMENT=perf
-      # - command
-  #post_build:
-    #commands:
-      # - command
-      # - command
+  post_build:
+    commands:
+      - make delete-ip-from-allowlist PROFILE=perf ENVIRONMENT=perf USERNAME="performance_codebuild"
 #artifacts:
   #files:
     # - location
