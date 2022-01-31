@@ -1,6 +1,6 @@
 Feature: E2E DOS INTEGRATION ON TEST ENV
 
-  @complete  @secutity
+  @complete  @security
   Scenario: No api key sent to change event endpoint
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "invalid" api key

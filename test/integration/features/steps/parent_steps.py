@@ -97,10 +97,6 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.response = process_payload(context.change_event, valid_or_invalid == "valid")
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]
-    message = context.response.json()
-    assert (
-        context.response.status_code == 200
-    ), f"Status code not as expected.. Status code: {context.response.status_code} Error: {message}"
 
 
 @when('the change request is sent with "{valid_or_invalid}" api key')
@@ -116,7 +112,7 @@ def step_then_should_transform_into(context, status):
     message = context.response.json
     assert (
         str(context.response.status_code) == status
-    ), f"Status code not as expected.. Status code: {context.response.status_code} Error: {message} - {status}"
+    ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
 
 
 @then("no matched services were found")
