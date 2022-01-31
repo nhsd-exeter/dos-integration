@@ -45,7 +45,7 @@ phases:
       - make tester-build
       - make update-ip-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
       - make terraform-apply-auto-approve STACKS=api-gateway-sqs PROFILE=test ENVIRONMENT=test
-      - make e2e-test-smoke PROFILE=test ENVIRONMENT=test
+      - make e2e-test TAGS=complete PROFILE=test ENVIRONMENT=test
   post_build:
     commands:
       - make delete-ip-from-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
