@@ -140,6 +140,4 @@ functions:
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_eventbridge_dlq_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0

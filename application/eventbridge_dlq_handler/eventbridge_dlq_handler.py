@@ -29,7 +29,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
     logger.append_keys(message_received=body["message_received"])
     logger.append_keys(ods_code=body["ods_code"])
     logger.warning(
-        "Dead Letter Queue Handler received event",
+        "Eventbridge Dead Letter Queue Handler received event",
         extra={
             "report_key": DLQ_HANDLER_REPORT_ID,
             "dlq_event": body,

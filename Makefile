@@ -355,6 +355,7 @@ tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
+	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-eventbridge-dlq-hander.txt
 	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
 	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
 	make docker-image NAME=tester
@@ -436,8 +437,8 @@ performance-test-clean:
 
 update-all-ip-allowlists: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	USERNAME=$$(git config user.name)
-	make -s update-ip-allowlist PROFILE=task USERNAME=$$USERNAME
-	make -s update-ip-allowlist PROFILE=dev USERNAME=$$USERNAME
+	make -s update-ip-allowlist PROFILE=task USERNAME="$$USERNAME"
+	make -s update-ip-allowlist PROFILE=dev USERNAME="$$USERNAME"
 
 update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	make -s docker-run-python \

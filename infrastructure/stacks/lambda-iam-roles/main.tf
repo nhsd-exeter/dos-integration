@@ -333,26 +333,6 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
         "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:GetItem",
-        "dynamodb:Query",
-        "dynamodb:Scan",
-        "dynamodb:BatchWriteItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem"
-      ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:Query"
-      ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }
