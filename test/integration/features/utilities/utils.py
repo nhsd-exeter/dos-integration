@@ -42,7 +42,7 @@ def process_payload(payload: dict, valid_api_key: bool) -> Response:
 
 def process_change_request_payload(payload: dict, api_key_valid: bool) -> Response:
     api_key = "invalid"
-    if (api_key_valid):
+    if api_key_valid:
         secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
         api_key = secret[getenv("CR_API_KEY_KEY")]
 
