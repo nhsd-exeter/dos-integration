@@ -2,15 +2,17 @@ from json import load, dumps
 import csv
 import itertools
 import random
-from typing import Dict, Any
+from typing import Any, Dict
 
 
-def load_payload_file() -> dict:
+def changed_event() -> Dict[str, Any]:
     with open("./features/resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
-        return load(json_file)
+        payload = load(json_file)
+        payload["ODSCode"] = random_odscode()
+        return payload
 
 
-def get_change_request() -> Dict[str, Any]:
+def change_request() -> Dict[str, Any]:
     return {
         "change_payload": {
             "reference": "EDFA07-16",
@@ -47,10 +49,6 @@ def random_odscode() -> str:
         ods_list = list(itertools.chain(*list(csv_data)))
         valid_odscode = random.choices(ods_list, k=1)
         return valid_odscode[0]
-
-
-def get_change_event() -> dict:
-    return load_payload_file()
 
 
 def get_payload(payload_name: str) -> str:

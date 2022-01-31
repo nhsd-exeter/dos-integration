@@ -6,7 +6,7 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
-  @complete @dev
+@complete @dev
   Scenario: UNMATCHED DOS SERVICES EXCEPTION IS LOGGED
     Given a Changed Event with invalid ODSCode is provided
     When the Changed Event is sent for processing with "valid" api key
@@ -20,37 +20,103 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
+@complete @dev
+  Scenario: A Changed Event with no postcode Lat/Long Values is reported
+    Given a Changed Event is valid
+    When the postcode has no LAT/Long values
+#   Should the above be a Given statement?
+#   Given a Changed event with no postcode LAT/Long values ???
+    And the Changed Event is sent for processing with "valid" api key
+    Then the invalid postcode exception is reported to cloudwatch
 
-# @complete @dev @test
-# Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
-#   Given a Changed Event is valid
+@complete @dev
+  Scenario: A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
+    Given a Changed Event contains an incorrect OrganisationTypeID
+    When the Changed Event is sent for processing with "valid" api key
+    Then the exception is reported to cloudwatch
+    And the Changed Event is not processed any further
 
-# Then the Changed Event is processed
+  @complete @dev
+  Scenario: A Changed Event where OrganisationSubType is NOT Community is reported and ignored
+    Given a Changed Event contains an incorrect OrganisationSubtype
+    When the Changed Event is sent for processing with "valid" api key
+    Then the exception is reported to cloudwatch
+    And the Changed Event is not processed any further
 
-# When the OrganisationStatus is equal to "Hidden" OR "Closed"
+@complete @dev
+  Scenario: Changed Event with Hidden Organisation status is reported
+    Given a Changed Event is valid
+    When the OrganisationStatus is defined as 'Hidden'
+    And the Changed Event is sent for processing with "valid" api key
+    Then the hidden or closed exception is reported to cloudwatch
 
-# And there are no changes identified
+  @complete @dev
+  Scenario: Changed Event with Closed Organisation status is not processed
+    Given a Changed Event is valid
+    When the OrganisationStatus is defined as 'Closed'
+    And the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event is not processed any further
 
-# Then there is no Change Request produced
+@complete @dev
+  Scenario: Address changes are discarded when postcode is invalid
+    Given a Changed Event is valid
+    When the postcode is invalid
+    And the Changed Event is sent for processing with "valid" api key
+    Then the 'address' from the changes is not included in the change request
 
-# When the postcode is invalid
+  @complete @dev
+  Scenario: Postcode not included in Changes when postcode is invalid
+    Given a Changed Event is valid
+    When the postcode is invalid
+    And the Changed Event is sent for processing with "valid" api key
+    Then the 'postcode' from the changes is not included in the change request
 
-# Then the Address change is not included in the Change request
+  @complete @dev
+  Scenario: Invalid Opening Times reported where Weekday is not identified
+    Given a Changed Event with the Weekday NOT present in the Opening Times data
+    When the Changed Event is sent for processing with "valid" api key
+# Then the exception is reported to cloudwatch
 
-# When the postcode does not exist in DoS
+  @complete @dev
+  Scenario: Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
+    Given a Changed Event where OpeningTimeType is NOT defined correctly
+    When the Changed Event is sent for processing with "valid" api key
+# Then the exception is reported to cloudwatch
 
-# When the postcode has no LAT/Long values
+@complete @dev
+  Scenario: IsOpen is true AND Times is blank
+    Given a Changed Event is valid
+    When the OpeningTimes Times data is not defined
+    And the Changed Event is sent for processing with "valid" api key
+# Then the exception is reported to cloudwatch
 
-# Then the Postcode is not included in the Change Request
+  @complete @dev
+  Scenario: IsOpen is false AND Times in NOT blank
+    Given a Changed Event with the openingTimes IsOpen status set to false
+    When the Changed Event is sent for processing with "valid" api key
+# Then the exception is reported to cloudwatch
+
+  @complete @dev
+  Scenario:  OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+    Given a Changed Event is valid
+    When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
+    And the Changed Event is sent for processing with "valid" api key
+  # Then the exception is reported to cloudwatch
+
+  @complete @dev
+  Scenario: An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
+    Given a Changed Event is valid
+    When an AdditionalOpeningDate contains data with both true and false IsOpen status
+    And the Changed Event is sent for processing with "valid" api key
+# Then the exception is reported to cloudwatch
 
 
-# Scenario: INVALID ODSCODE TESTS
-#   Given a change event with invalid ODSCode is provided
-#   When the change event is sent to the event processor
-#   Then the processor lambda logs are generated
 
-# Scenario: INVALID ORGANISATIONSUBTYPE TESTS
-#   Given a change event with invalid OrganisationSubType is provided
+
+
+
+
+
 
 
 # Scenario: Happy Path message to DOS

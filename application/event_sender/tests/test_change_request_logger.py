@@ -55,7 +55,7 @@ class TestChangeRequestLogger:
     def test_log_change_request_response(self, info_logger_mock):
         # Arrange
         change_request_logger = ChangeRequestLogger()
-        status_code = 200
+        status_code = 201
         response_json = {"dummy_key": "dummy_value"}
         response_text = dumps(response_json)
         info_logger_expected = {

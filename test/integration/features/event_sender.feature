@@ -18,7 +18,7 @@ Feature: Test Event Sender Features
     Given a valid unsigned change request
     And change request has valid signature
     When the change request is sent with "valid" api key
-    Then the change request has status code "200"
+    Then the change request has status code "201"
 
   @complete @event_sender @security
   Scenario: An signed valid change request sent to event sender with invalid signature

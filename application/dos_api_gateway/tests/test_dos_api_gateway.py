@@ -31,7 +31,7 @@ def test_lambda_handler(lambda_context):
     # Act
     response = lambda_handler(lambda_event, lambda_context)
     # Assert
-    assert response["statusCode"] == 200
+    assert response["statusCode"] == 201
     assert loads(response["body"]) == {"dosChanges": [{"changeId": "1" * 9}, {"changeId": "2" * 9}]}
 
 
