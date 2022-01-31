@@ -446,6 +446,24 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
       "Effect": "Allow",
       "Action": [
+          "kms:CreateAlias",
+          "kms:CreateKey",
+          "kms:DeleteAlias",
+          "kms:Describe*",
+          "kms:GenerateRandom",
+          "kms:Get*",
+          "kms:List*",
+          "kms:TagResource",
+          "kms:UntagResource",
+          "iam:ListGroups",
+          "iam:ListRoles",
+          "iam:ListUsers"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "ec2:Describe*",
         "ec2:Create*",
         "ec2:AuthorizeSecurityGroupIngress",
