@@ -112,7 +112,7 @@ def step_then_should_transform_into(context, status):
     message = context.response.json
     assert (
         str(context.response.status_code) == status
-    ), f"Status code not as expected.. Status code: {context.response.status_code} != {status} Error: {message} - {status}"
+    ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
 
 
 @then("no matched services were found")
