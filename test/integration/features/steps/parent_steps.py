@@ -336,3 +336,13 @@ def the_changed_event_is_not_sent_to_dos(context):
     query = "select * from changes"
     response = search_dos_db(query)
     assert context.correlation_id not in response, "ERROR!!.. Event data found in Dos."
+
+
+@then("the event is sent to the DLQ")
+def event_sender_triggers_DLQ(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        f' | filter response_text like "Fake Bad Request"'
+    )
+    logs = get_logs(query, "sender", context.start_time)
+    assert "Failed to send change request to DoS" in logs, "ERROR!!.. expected exception logs not found."
