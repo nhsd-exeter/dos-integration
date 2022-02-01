@@ -250,6 +250,16 @@ def service_exception(context):
     assert logs != [], "ERROR!!.. Expected exception not logged."
 
 
+@then("the OpeningTimes exception is reported to cloudwatch")
+def openingtimes_service_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        ' | filter message like "Changes for nhs"'
+    )
+    logs = get_logs(query, "processor", context.start_time)
+    assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not logged."
+
+
 @then("the invalid postcode exception is reported to cloudwatch")
 def unmatched_postcode_exception(context):
     query = (
