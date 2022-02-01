@@ -114,7 +114,7 @@ Feature: DOS INTEGRATION E2E TESTS
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
     Then the event is sent to the DLQ
-#   And the DLQ logs the error for Splunk
+    And the DLQ logs the error for Splunk
 
 
 
