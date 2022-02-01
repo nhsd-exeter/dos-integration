@@ -456,7 +456,7 @@ performance-test-clean:
 stress-test-in-pipeline:
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make stress-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 60
+	sleep 105m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
 	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME
