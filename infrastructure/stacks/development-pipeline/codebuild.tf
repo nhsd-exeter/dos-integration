@@ -87,7 +87,7 @@ resource "aws_codebuild_project" "di_build" {
   name           = "${var.project_id}-${var.environment}-build-stage"
   description    = "Builds docker container images"
   build_timeout  = "10"
-  queued_timeout = "10"
+  queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -151,9 +151,9 @@ resource "aws_codebuild_project" "di_build" {
 
 resource "aws_codebuild_project" "di_deploy_dev" {
   name           = "${var.project_id}-${var.environment}-deploy-dev-stage"
-  description    = "Builds docker container images"
+  description    = "Deploy to the dev environment"
   build_timeout  = "10"
-  queued_timeout = "10"
+  queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -217,9 +217,9 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 
 resource "aws_codebuild_project" "di_deploy_test" {
   name           = "${var.project_id}-${var.environment}-deploy-test-stage"
-  description    = "Builds docker container images"
+  description    = "Deploy to the test environment"
   build_timeout  = "10"
-  queued_timeout = "10"
+  queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -284,9 +284,9 @@ resource "aws_codebuild_project" "di_deploy_test" {
 
 resource "aws_codebuild_project" "di_deploy_performance" {
   name           = "${var.project_id}-${var.environment}-deploy-performance-stage"
-  description    = "Builds docker container images"
+  description    = "Deploy to the performance environment"
   build_timeout  = "10"
-  queued_timeout = "10"
+  queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -352,8 +352,8 @@ resource "aws_codebuild_project" "di_deploy_performance" {
 resource "aws_codebuild_project" "di_integration_tests" {
   name           = "${var.project_id}-${var.environment}-integration-test-stage"
   description    = "Runs the integration tests for the DI Project"
-  build_timeout  = "5"
-  queued_timeout = "5"
+  build_timeout  = "15"
+  queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
   artifacts {
