@@ -15,6 +15,9 @@ data "template_file" "integration_tests_buildspec" {
   template = file("integration-tests-buildspec.yml")
 }
 
+data "aws_kms_key" "singing_key" {
+  key_id = "alias/${var.test_signing_key_alias}"
+}
 
 data "aws_security_group" "lambdagroup" {
   name = var.lambda_security_group_name

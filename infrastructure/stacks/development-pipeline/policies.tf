@@ -466,6 +466,13 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
       "Effect": "Allow",
       "Action": [
+          "kms:GenerateDataKey"
+      ],
+      "Resource": "${data.aws_kms_key.singing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "ec2:Describe*",
         "ec2:Create*",
         "ec2:AuthorizeSecurityGroupIngress",

@@ -352,7 +352,7 @@ resource "aws_codebuild_project" "di_deploy_performance" {
 resource "aws_codebuild_project" "di_integration_tests" {
   name           = "${var.project_id}-${var.environment}-integration-test-stage"
   description    = "Runs the integration tests for the DI Project"
-  build_timeout  = "15"
+  build_timeout  = "30"
   queued_timeout = "30"
   service_role   = aws_iam_role.codebuild_role.arn
 
