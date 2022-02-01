@@ -14,9 +14,9 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "ProcessingLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-perf-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "perf" ]
+                    [ "UEC-DOS-INT", "ProcessingLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-${var.environment}-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "${var.environment}" ]
                 ],
-                "region": "eu-west-2"
+                "region": "${var.aws_region}"
             }
         },
         {
@@ -29,9 +29,9 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "DosApiLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-perf-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "perf" ]
+                    [ "UEC-DOS-INT", "DosApiLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-${var.environment}-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "${var.environment}" ]
                 ],
-                "region": "eu-west-2"
+                "region": "${var.aws_region}"
             }
         },
         {
@@ -42,7 +42,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-perf-event-processor" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-perf-event-processor" ],
                     [ ".", "Errors", ".", ".", { "stat": "Sum" } ],
                     [ ".", "Invocations", ".", "." ],
                     [ ".", "Duration", ".", "." ],
@@ -53,7 +53,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 ],
                 "view": "timeSeries",
                 "stacked": false,
-                "region": "eu-west-2",
+                "region": "${var.aws_region}",
                 "title": "Event Processor",
                 "period": 300,
                 "stat": "Average"
@@ -69,13 +69,13 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.project_id}-perf-fifo-queue.fifo" ],
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.project_id}-${var.environment}-perf-fifo-queue.fifo" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
                     [ ".", "ApproximateAgeOfOldestMessage", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
                 ],
-                "region": "eu-west-2",
+                "region": "${var.aws_region}",
                 "title": "SQS"
             }
         },
@@ -87,13 +87,13 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.project_id}-perf-db-12-replica-di", { "stat": "Maximum" } ],
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.project_id}-${var.environment}-perf-${var.dos_db_name}", { "stat": "Maximum" } ],
                     [ "..." ],
                     [ "...", { "stat": "Average" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
-                "region": "eu-west-2",
+                "region": "${var.aws_region}",
                 "period": 300,
                 "stat": "Minimum",
                 "title": "Max DB Connections"
@@ -107,11 +107,11 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.project_id}-perf-db-12-replica-di" ]
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.project_id}-${var.environment}-perf-${var.dos_db_name}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
-                "region": "eu-west-2",
+                "region": "${var.aws_region}",
                 "period": 300,
                 "stat": "Maximum"
             }
@@ -126,11 +126,11 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-perf-event-sender" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-perf-event-sender" ],
                     [ ".", "Duration", ".", "." ],
                     [ ".", "Errors", ".", "." ]
                 ],
-                "region": "eu-west-2",
+                "region": "${var.aws_region}",
                 "title": "Event Sender",
                 "period": 300
             }
@@ -138,7 +138,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
     ]
 }
 EOF
-  
+
   tags = {
     service = var.project_id
   }

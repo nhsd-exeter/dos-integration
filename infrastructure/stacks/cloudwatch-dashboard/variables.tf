@@ -59,3 +59,7 @@ variable "environment" {
 variable "cloudwatch_performance_dashboard_name" {
   description = "Name of the dashboard to see the various performance metrics in AWS"
 }
+
+variable "dos_db_name" {
+  description = "Name of db dos instance to connect to"
+}
