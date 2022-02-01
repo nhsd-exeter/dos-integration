@@ -188,7 +188,7 @@ def postcode_with_no_lat_long_values(context):
 
 
 # When the OrganisationStatus is equal to "Hidden" OR "Closed"
-@when("the OrganisationStatus is defined as {org_status}")
+@when('the OrganisationStatus is defined as "{org_status}"')
 def a_change_event_with_orgstatus_value(context, org_status: str):
     context.change_event["OrganisationStatus"] = org_status
 
