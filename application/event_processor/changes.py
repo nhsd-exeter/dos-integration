@@ -84,8 +84,8 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     # If anything in OpeningTimes list field doesn't appear right, no open times changes are created.
     if not nhs_entity.all_times_valid():
         logger.warning(
-            "Opening Times for NHS are not in expected format or are logically invalid. No open times changes added.",
-            f"OpenTimes={nhs_entity.entity_data.get('OpeningTimes')}",
+            "Opening Times for NHS are not in expected format or are logically invalid. No open times changes added. "
+            f"OpenTimes={nhs_entity.entity_data.get('OpeningTimes')}"
         )
         return
 
