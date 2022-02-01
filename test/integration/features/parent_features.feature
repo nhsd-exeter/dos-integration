@@ -46,14 +46,14 @@ Feature: DOS INTEGRATION E2E TESTS
 @complete @dev
   Scenario: Changed Event with Hidden Organisation status is reported
     Given a Changed Event is valid
-    When the OrganisationStatus is defined as 'Hidden'
+    When the OrganisationStatus is defined as "Hidden"
     And the Changed Event is sent for processing with "valid" api key
     Then the hidden or closed exception is reported to cloudwatch
 
   @complete @dev
   Scenario: Changed Event with Closed Organisation status is not processed
     Given a Changed Event is valid
-    When the OrganisationStatus is defined as 'Closed'
+    When the OrganisationStatus is defined as "Closed"
     And the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is not processed any further
 

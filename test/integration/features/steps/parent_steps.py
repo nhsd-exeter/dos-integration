@@ -1,3 +1,4 @@
+from os import getenv
 from behave import given, then, when
 from time import sleep, time
 from json import dumps
@@ -93,7 +94,7 @@ def a_change_event_with_invalid_organisationtypeid(context):
 
 
 # Weekday NOT present on the Opening Time
-@given("a Changed Event with the Weekday NOT present in the Opening Time")
+@given("a Changed Event with the Weekday NOT present in the Opening Times data")
 def a_change_event_with_no_openingtimes_weekday(context):
     context.change_event = changed_event()
     del context.change_event["OpeningTimes"][0]["Weekday"]
@@ -160,8 +161,11 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
-    context.response = process_payload(context.change_event, valid_or_invalid == "valid")
-    context.correlation_id = context.response.headers["x-amz-apigw-id"]
+    name_no_space = context.scenario.name.replace(" ", "_")
+    run_id = getenv("RUN_ID")
+    correlation_id = f"{run_id}_{name_no_space}"
+    context.response = process_payload(context.change_event, valid_or_invalid == "valid", correlation_id)
+    context.correlation_id = correlation_id
     context.sequence_no = context.response.request.headers["sequence-number"]
 
 
@@ -188,7 +192,7 @@ def postcode_with_no_lat_long_values(context):
 
 
 # When the OrganisationStatus is equal to "Hidden" OR "Closed"
-@when("the OrganisationStatus is defined as {org_status}")
+@when('the OrganisationStatus is defined as "{org_status}"')
 def a_change_event_with_orgstatus_value(context, org_status: str):
     context.change_event["OrganisationStatus"] = org_status
 

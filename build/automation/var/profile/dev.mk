@@ -98,6 +98,7 @@ TF_VAR_dead_letter_queue_from_event_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eve
 
 
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
+TF_VAR_test_signing_key_alias := $(PROJECT_ID)-test-signing-key-alias
 
 # Code Pipeline
 TF_VAR_code_pipeline_branch_name := master

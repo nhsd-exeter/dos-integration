@@ -59,6 +59,9 @@ variable "pipeline_notification_name" {
 variable "pipeline_chatbot_channel" {
   description = ""
 }
+variable "test_signing_key_alias" {
+  description = "Alias of key used for signing"
+}
 
 variable "pipeline_topic_name" {
   description = ""

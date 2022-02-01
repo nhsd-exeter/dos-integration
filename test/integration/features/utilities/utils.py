@@ -24,7 +24,7 @@ DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
-def process_payload(payload: dict, valid_api_key: bool) -> Response:
+def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
@@ -32,6 +32,7 @@ def process_payload(payload: dict, valid_api_key: bool) -> Response:
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
+        "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
     payload["Address1"] = generate_random_int() + " MANSFIELD ROAD"
