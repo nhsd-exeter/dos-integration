@@ -30,14 +30,14 @@ resource "aws_codepipeline" "load_test_codepipeline" {
   stage {
     name = "PerformanceTests"
     action {
-      name            = "StressTests"
+      name            = "LoadTests"
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-stress-test-stage"
+        ProjectName = "${var.project_id}-${var.environment}-load-test-stage"
       }
     }
   }

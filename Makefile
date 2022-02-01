@@ -390,7 +390,7 @@ tester-clean:
 
 stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
 	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 5 --spawn-rate 5 --run-time 10s)
+		PERFORMANCE_ARGS=$$(echo --users 5 --spawn-rate 5 --run-time 30s)
 	else
 		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
 	fi
@@ -408,16 +408,11 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
-load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
-	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 1 --spawn-rate 1 --run-time 10m)
-	else
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
-	fi
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -452,27 +447,46 @@ generate-performance-test-details: # Generates performance test details - mandat
 	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
 	aws s3 cp $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-performance-tests-nonprod/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip
 
-performance-test-clean:
+performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
 	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
 
-stress-test-in-pipeline:
+stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_START_TIME=$$(date +%FT%TZ)
 	make stress-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 105m
+	sleep 6h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
 	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test"
+	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
-load-test-in-pipeline:
+load-test-in-pipeline: # An all in one load test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	make load-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 20m
+	AWS_START_TIME=$$(date +%FT%TZ)
+	make load-test START_TIME=$$START_TIME
+	sleep 1h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
 	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test"
+	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
+
+send-performance-dashboard-slack-message:
+	aws sns publish --topic-arn arn:aws:sns:$(AWS_REGION):$(AWS_ACCOUNT_ID_NONPROD):uec-dos-int-dev-pipeline-topic --message '{
+	"version": "0",
+	"id": "13cde686-328b-6117-af20-0e5566167482",
+	"detail-type": "Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)",
+	"source": "aws.ecr",
+	"account": "$(AWS_ACCOUNT_ID_NONPROD)",
+	"time": "2019-11-16T01:54:34Z",
+	"region": "$(AWS_REGION)",
+	"resources": [],
+	"detail": {}
+	}'
 
 # -----------------------------
 # Other
