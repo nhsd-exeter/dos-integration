@@ -38,11 +38,11 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs
+	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs,cloudwatch_dashboard
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs
+	make terraform-destroy-auto-approve STACKS=eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs,cloudwatch_dashboard
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
