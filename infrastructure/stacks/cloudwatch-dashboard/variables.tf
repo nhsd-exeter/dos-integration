@@ -56,10 +56,22 @@ variable "environment" {
 # ######################
 # # CLOUDWATCH DASHBOARD
 # #######################
-variable "cloudwatch_performance_dashboard_name" {
+variable "cloudwatch_monitoring_dashboard_name" {
   description = "Name of the dashboard to see the various performance metrics in AWS"
 }
 
 variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
+}
+
+variable "fifo_queue_name" {
+  description = "FIFO queue name feed by API Gateway"
+}
+
+variable "event_processor_lambda_name" {
+  description = "Name of event processor lambda"
+}
+
+variable "event_sender_lambda_name" {
+  description = "Name of event sender lambda"
 }

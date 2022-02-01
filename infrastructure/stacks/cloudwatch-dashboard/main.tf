@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
 
-  dashboard_name = var.cloudwatch_performance_dashboard_name
+  dashboard_name = var.cloudwatch_monitoring_dashboard_name
   dashboard_body = <<EOF
 {
     "widgets": [
@@ -43,7 +43,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-event-processor" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.event_processor_lambda_name}" ],
                     [ ".", "Errors", ".", ".", { "stat": "Sum" } ],
                     [ ".", "Invocations", ".", "." ],
                     [ ".", "Duration", ".", "." ],
@@ -70,7 +70,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.project_id}-${var.environment}-fifo-queue.fifo" ],
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.fifo_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
                     [ ".", "ApproximateAgeOfOldestMessage", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
@@ -127,7 +127,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-event-sender" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.event_sender_lambda_name}" ],
                     [ ".", "Duration", ".", "." ],
                     [ ".", "Errors", ".", "." ]
                 ],

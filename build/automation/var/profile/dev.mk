@@ -106,5 +106,5 @@ TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
 
-# Cloudwatch performance dashboard
-TF_VAR_cloudwatch_performance_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance
+# Cloudwatch monitoring dashboard
+TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
