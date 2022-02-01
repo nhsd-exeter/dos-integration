@@ -345,16 +345,16 @@ plan-development-pipeline:
 		echo "Only dev profile supported at present"
 	fi
 
-deploy-performance-pipeline:
-	make terraform-apply-auto-approve STACKS=performance-pipeline PROFILE=dev
+deploy-performance-pipelines:
+	make terraform-apply-auto-approve STACKS=performance-pipelines PROFILE=dev
 
-undeploy-performance-pipeline:
-	make terraform-destroy-auto-approve STACKS=performance-pipeline PROFILE=dev
+undeploy-performance-pipelines:
+	make terraform-destroy-auto-approve STACKS=performance-pipelines PROFILE=dev
 
-plan-performance-pipeline:
+plan-performance-pipelines:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=performance-pipeline
+		make terraform-plan STACKS=performance-pipelines
 	fi
 	if [ "$(PROFILE)" != "dev" ]; then
 		echo "Only dev profile supported at present"
@@ -441,7 +441,7 @@ performance-test-data-collection: # Runs data collection for performance tests -
 generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	rm -rf $(TMP_DIR)/performance
 	mkdir $(TMP_DIR)/performance
-	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
+	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nTEST_TYPE=$(TEST_TYPE)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
 	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
 	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
 	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
@@ -459,15 +459,15 @@ stress-test-in-pipeline:
 	sleep 105m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test"
 
 load-test-in-pipeline:
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make load-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 60
+	sleep 30s
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test"
 
 # -----------------------------
 # Other

@@ -1,25 +1,6 @@
-resource "aws_iam_role" "codebuild_role" {
-  name = "${var.project_id}-${var.environment}-performance-codebuild-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codebuild.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_codebuild_project" "di_performance_tests" {
-  name           = "${var.project_id}-${var.environment}-performance-test-stage"
-  description    = "Runs the performance tests for the DI Project"
+resource "aws_codebuild_project" "di_load_tests" {
+  name           = "${var.project_id}-${var.environment}-load-test-stage"
+  description    = "Runs the load tests for the DI Project"
   build_timeout  = "480"
   queued_timeout = "5"
   service_role   = aws_iam_role.codebuild_role.arn
@@ -65,12 +46,12 @@ resource "aws_codebuild_project" "di_performance_tests" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-performance-test-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-load-test-stage"
       stream_name = ""
     }
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.performance_tests_buildspec.rendered
+    buildspec = data.template_file.load_tests_buildspec.rendered
   }
 }

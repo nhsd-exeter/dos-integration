@@ -41,7 +41,7 @@ phases:
       - make -s terraform-apply-auto-approve STACKS=api-gateway-sqs PROFILE=perf ENVIRONMENT=perf
   build:
     commands:
-      - echo "[Running Performance Tests]"
+      - echo "[Running Stress Tests]"
       - make stress-test-in-pipeline PROFILE=perf ENVIRONMENT=perf
   post_build:
     commands:

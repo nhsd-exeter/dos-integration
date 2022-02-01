@@ -99,11 +99,3 @@ variable "texas_terraform_state_store" {
 variable "texas_terraform_state_lock" {
   description = ""
 }
-
-# ##############
-# # EVENTBRIDGE
-# ##############
-
-variable "nightly_rule_name" {
-  description = ""
-}

@@ -471,7 +471,10 @@ resource "aws_iam_role_policy" "performance_rule_policy" {
     {
       "Effect":"Allow",
       "Action": "codepipeline:StartPipelineExecution",
-      "Resource": ${jsonencode(aws_codepipeline.codepipeline.arn)}
+      "Resource": [
+        "${aws_codepipeline.stress_test_codepipeline.arn}",
+        "${aws_codepipeline.load_test_codepipeline.arn}"
+      ]
     }
   ]
 }
