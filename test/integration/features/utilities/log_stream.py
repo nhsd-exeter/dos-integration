@@ -35,9 +35,11 @@ def get_sender_log_stream_name() -> str:
 
 
 def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
-    log_groups = {"processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
-                    "sender": LOG_GROUP_NAME_EVENT_SENDER,
-                    "eb_dlq": LOG_GROUP_NAME_EVENT_BRIDGE_DLQ}
+    log_groups = {
+        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
+        "sender": LOG_GROUP_NAME_EVENT_SENDER,
+        "eb_dlq": LOG_GROUP_NAME_EVENT_BRIDGE_DLQ,
+    }
     if event_lambda == "processor" or "sender" or "eb_dlq":
         log_group_name = log_groups[event_lambda]
     else:

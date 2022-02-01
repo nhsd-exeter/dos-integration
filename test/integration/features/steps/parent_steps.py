@@ -355,4 +355,6 @@ def event_bridge_dlq_log_check(context):
         ' | filter report_key="EVENTBRIDGE_DLQ_HANDLER_RECEIVED_EVENT"'
     )
     logs = get_logs(query, "eb_dlq", context.start_time)
-    assert "Eventbridge Dead Letter Queue Handler received event" in logs, "ERROR!!.. expected exception logs not found."
+    assert (
+        "Eventbridge Dead Letter Queue Handler received event" in logs
+    ), "ERROR!!.. expected exception logs not found."
