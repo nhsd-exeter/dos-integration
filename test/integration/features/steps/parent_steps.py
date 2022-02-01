@@ -93,7 +93,7 @@ def a_change_event_with_invalid_organisationtypeid(context):
 
 
 # Weekday NOT present on the Opening Time
-@given("a Changed Event with the Weekday NOT present in the Opening Time")
+@given("a Changed Event with the Weekday NOT present in the Opening Times data")
 def a_change_event_with_no_openingtimes_weekday(context):
     context.change_event = changed_event()
     del context.change_event["OpeningTimes"][0]["Weekday"]
