@@ -1,4 +1,4 @@
-from os import getenv
+# from os import getenv
 from behave import given, then, when
 from time import sleep, time
 from json import dumps
@@ -10,6 +10,7 @@ from features.utilities.utils import (
     get_stored_events_from_dynamo_db,
     search_dos_db,
     process_change_request_payload,
+    generate_correlation_id,
 )
 from decimal import Decimal
 from features.utilities.changed_events import changed_event, change_request
@@ -20,6 +21,7 @@ from datetime import datetime
 @given("a Changed Event is valid")
 def a_change_event_is_valid(context):
     context.change_event = changed_event()
+    context.correlation_id = generate_correlation_id(context)
 
 
 @given("a valid unsigned change request")
@@ -114,6 +116,12 @@ def a_change_event_with_isopen_status_set_to_false(context):
     context.change_event["OpeningTimes"][0]["IsOpen"] = False
 
 
+# set correlation id to "Bad Request"
+@given('the correlation-id is "{custom_correlation}"')
+def a_custom_correlation_id_is_set(context, custom_correlation: str):
+    context.correlation_id = custom_correlation
+
+
 # IsOpen is true AND Times is blank
 @when("the OpeningTimes Times data is not defined")
 def no_times_data_within_openingtimes(context):
@@ -139,11 +147,7 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
-    name_no_space = context.scenario.name.replace(" ", "_")
-    run_id = getenv("RUN_ID")
-    correlation_id = f"{run_id}_{name_no_space}"
-    context.response = process_payload(context.change_event, valid_or_invalid == "valid", correlation_id)
-    context.correlation_id = correlation_id
+    context.response = process_payload(context.change_event, valid_or_invalid == "valid", context.correlation_id)
     context.sequence_no = context.response.request.headers["sequence-number"]
 
 

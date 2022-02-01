@@ -108,6 +108,13 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
 
+  @dev @kit
+  Scenario: 400 from DOS results in Splunk error log
+    Given a Changed Event is valid
+    And the correlation-id is "Bad Request"
+    When the Changed Event is sent for processing with "valid" api key
+#   Then the event is pushed to the DLQ
+#   And the DLQ logs the error for Splunk
 
 
 
