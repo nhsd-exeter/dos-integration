@@ -388,7 +388,7 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
 	if [ $(PIPELINE) == true ]; then
 		PERFORMANCE_ARGS=$$(echo --users 5 --spawn-rate 5 --run-time 10s)
 	else
@@ -408,11 +408,16 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
-load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
+	if [ $(PIPELINE) == true ]; then
+		PERFORMANCE_ARGS=$$(echo --users 1 --spawn-rate 1 --run-time 10m)
+	else
+		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
+	fi
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 --exit-code-on-error 0 \
+			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -464,7 +469,7 @@ stress-test-in-pipeline:
 load-test-in-pipeline:
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make load-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 30s
+	sleep 20m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
 	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test"
