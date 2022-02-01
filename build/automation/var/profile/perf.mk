@@ -99,3 +99,6 @@ TF_VAR_dead_letter_queue_from_event_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eve
 
 
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
+
+# Cloudwatch performance dashboard
+TF_VAR_cloudwatch_performance_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance
