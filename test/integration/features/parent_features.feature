@@ -20,7 +20,7 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
-  @complete @dev @mik3
+@complete @dev
   Scenario: A Changed Event with no postcode LAT Long Values is reported
     Given a Changed Event is valid
     When the postcode has no LAT Long values
