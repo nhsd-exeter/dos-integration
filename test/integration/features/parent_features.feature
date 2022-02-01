@@ -21,11 +21,9 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the Changed Event is stored in dynamo db
 
 @complete @dev
-  Scenario: A Changed Event with no postcode Lat/Long Values is reported
+  Scenario: A Changed Event with no postcode LAT Long Values is reported
     Given a Changed Event is valid
-    When the postcode has no LAT/Long values
-#   Should the above be a Given statement?
-#   Given a Changed event with no postcode LAT/Long values ???
+    When the postcode has no LAT Long values
     And the Changed Event is sent for processing with "valid" api key
     Then the invalid postcode exception is reported to cloudwatch
 
@@ -64,7 +62,7 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing with "valid" api key
     Then the 'address' from the changes is not included in the change request
 
-  @complete @dev
+@complete @dev
   Scenario: Postcode not included in Changes when postcode is invalid
     Given a Changed Event is valid
     When the postcode is invalid
@@ -75,40 +73,40 @@ Feature: DOS INTEGRATION E2E TESTS
   Scenario: Invalid Opening Times reported where Weekday is not identified
     Given a Changed Event with the Weekday NOT present in the Opening Times data
     When the Changed Event is sent for processing with "valid" api key
-# Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
   @complete @dev
   Scenario: Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
     Given a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
-# Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
 @complete @dev
   Scenario: IsOpen is true AND Times is blank
     Given a Changed Event is valid
     When the OpeningTimes Times data is not defined
     And the Changed Event is sent for processing with "valid" api key
-# Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
   @complete @dev
   Scenario: IsOpen is false AND Times in NOT blank
     Given a Changed Event with the openingTimes IsOpen status set to false
     When the Changed Event is sent for processing with "valid" api key
-# Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
   @complete @dev
   Scenario:  OpeningTimeType is Additional AND AdditionalOpening Date is Blank
     Given a Changed Event is valid
     When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
     And the Changed Event is sent for processing with "valid" api key
-  # Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
   @complete @dev
   Scenario: An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
     Given a Changed Event is valid
     When an AdditionalOpeningDate contains data with both true and false IsOpen status
     And the Changed Event is sent for processing with "valid" api key
-# Then the exception is reported to cloudwatch
+    Then the exception is reported to cloudwatch
 
 
 
