@@ -136,28 +136,6 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
     context.change_event["OpeningTimes"][7]["IsOpen"] = False
 
 
-# "OpeningTimes": [
-#     {
-#       "Weekday": "Sunday",
-#       "Times": "10:00-17:00",
-#       "OffsetOpeningTime": 540,
-#       "OffsetClosingTime": 780,
-#       "OpeningTimeType": "General",
-#       "AdditionalOpeningDate": "",
-#       "IsOpen": true
-#     },
-#     {
-#       "Weekday": "",
-#       "Times": "10:00-17:00",
-#       "OffsetOpeningTime": 0,
-#       "OffsetClosingTime": 0,
-#       "OpeningTimeType": "Additional",
-#       "AdditionalOpeningDate": "Dec 24 2022",
-#       "IsOpen": true
-#     }
-# ]
-
-
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
@@ -185,13 +163,11 @@ def step_then_should_transform_into(context, status):
     ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
 
 
-# When the postcode has no LAT/Long values
-@when("the postcode has no LAT/Long values")
+@when("the postcode has no LAT Long values")
 def postcode_with_no_lat_long_values(context):
     context.change_event["Postcode"] = "BT4 2HU"
 
 
-# When the OrganisationStatus is equal to "Hidden" OR "Closed"
 @when('the OrganisationStatus is defined as "{org_status}"')
 def a_change_event_with_orgstatus_value(context, org_status: str):
     context.change_event["OrganisationStatus"] = org_status
@@ -278,11 +254,11 @@ def service_exception(context):
 def unmatched_postcode_exception(context):
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        ' | filter message like "is not a valid DoS postcode"'
+        ' | filter report_key like "INVALID_POSTCODE"'
     )
     logs = get_logs(query, "processor", context.start_time)
     postcode = context.change_event["Postcode"]
-    assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
+    assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected Invalid Postcode exception not found."
 
 
 @then("the hidden or closed exception is reported to cloudwatch")
@@ -333,7 +309,6 @@ def the_changed_event_is_not_processed(context):
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
-# The below step definition answers to a corresponding 'AND' annotation within the feature file
 @then("the Changed Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
