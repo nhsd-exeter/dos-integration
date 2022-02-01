@@ -1,3 +1,4 @@
+from os import getenv
 from behave import given, then, when
 from time import sleep, time
 from json import dumps
@@ -160,7 +161,12 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
-    context.response = process_payload(context.change_event, valid_or_invalid == "valid")
+    name_no_space = context.scenario.name.replace(" ","_")
+    run_id = getenv("RUN_ID")
+    print(run_id)
+    raise ValueError
+    correlation_id = f"{run_id}_{name_no_space}"
+    context.response = process_payload(context.change_event, valid_or_invalid == "valid", correlation_id)
     context.correlation_id = context.response.headers["x-amz-apigw-id"]
     context.sequence_no = context.response.request.headers["sequence-number"]
 

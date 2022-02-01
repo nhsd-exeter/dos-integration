@@ -112,6 +112,7 @@ e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=te
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
+		-e RUN_ID=${RUN_ID} \
 		"
 
 e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
@@ -136,6 +137,7 @@ e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev];
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
+		-e RUN_ID=${RUN_ID} \
 		"
 
 clean: # Runs whole project clean
