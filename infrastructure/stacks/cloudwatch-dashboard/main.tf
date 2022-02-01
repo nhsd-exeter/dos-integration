@@ -14,7 +14,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "ENV", "${var.environment}" ]
+                    [ "UEC-DOS-INT", "QueueToProcessorLatency", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ]
                 ],
                 "region": "${var.aws_region}"
             }
@@ -29,7 +30,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "ENV", "${var.environment}" ]
+                    [ "UEC-DOS-INT", "DosApiLatency","ENV", "${var.environment}" ]
                 ],
                 "region": "${var.aws_region}"
             }
