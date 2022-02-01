@@ -14,7 +14,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "ProcessingLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-${var.environment}-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "${var.environment}" ]
+                    [ "ENV", "${var.environment}" ]
                 ],
                 "region": "${var.aws_region}"
             }
@@ -29,7 +29,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "DosApiLatency", "ServiceName", "${var.project_id}-perf-event-sender", "LogGroup", "${var.project_id}-${var.environment}-event-sender", "ServiceType", "AWS::Lambda::Function", "ENV", "${var.environment}" ]
+                    [ "ENV", "${var.environment}" ]
                 ],
                 "region": "${var.aws_region}"
             }
@@ -42,7 +42,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-perf-event-processor" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-event-processor" ],
                     [ ".", "Errors", ".", ".", { "stat": "Sum" } ],
                     [ ".", "Invocations", ".", "." ],
                     [ ".", "Duration", ".", "." ],
@@ -69,7 +69,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.project_id}-${var.environment}-perf-fifo-queue.fifo" ],
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.project_id}-${var.environment}-fifo-queue.fifo" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
                     [ ".", "ApproximateAgeOfOldestMessage", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
@@ -87,7 +87,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.project_id}-${var.environment}-perf-${var.dos_db_name}", { "stat": "Maximum" } ],
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.dos_db_name}", { "stat": "Maximum" } ],
                     [ "..." ],
                     [ "...", { "stat": "Average" } ]
                 ],
@@ -107,7 +107,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.project_id}-${var.environment}-perf-${var.dos_db_name}" ]
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.dos_db_name}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -126,7 +126,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-perf-event-sender" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.project_id}-${var.environment}-event-sender" ],
                     [ ".", "Duration", ".", "." ],
                     [ ".", "Errors", ".", "." ]
                 ],
@@ -138,8 +138,4 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
     ]
 }
 EOF
-
-  tags = {
-    service = var.project_id
-  }
 }
