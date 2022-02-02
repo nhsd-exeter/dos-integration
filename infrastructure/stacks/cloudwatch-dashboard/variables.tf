@@ -75,3 +75,8 @@ variable "event_processor_lambda_name" {
 variable "event_sender_lambda_name" {
   description = "Name of event sender lambda"
 }
+
+
+variable "di_endpoint_api_gateway_name" {
+  description = "Endpoint consumed by NHS UK"
+}

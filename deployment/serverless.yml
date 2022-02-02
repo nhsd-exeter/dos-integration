@@ -1,5 +1,5 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
-service: uec-dos-integration
+service: ${env:PROGRAMME}-${env:TEAM_ID}
 frameworkVersion: '2'
 variablesResolutionMode: 20210326
 configValidationMode: error
@@ -28,7 +28,8 @@ provider:
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
   logs:
-    restApi: true
+    restApi:
+      format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
   tracing:
     lambda: true
     apiGateway: true

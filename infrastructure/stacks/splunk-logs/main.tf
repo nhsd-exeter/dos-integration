@@ -16,16 +16,6 @@ resource "aws_cloudwatch_log_subscription_filter" "event_sender_logs_subscriptio
   distribution    = ""
 }
 
-
-resource "aws_cloudwatch_log_subscription_filter" "change_event_gateway_subscription_filter" {
-  name            = var.change_event_gateway_subscription_filter_name
-  role_arn        = data.aws_iam_role.firehose_role.arn
-  log_group_name  = "API-Gateway-Execution-Logs_${data.aws_api_gateway_rest_api.di_endpoint.id}/${var.di_endpoint_api_gateway_stage}"
-  filter_pattern  = ""
-  destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
-}
-
 resource "aws_cloudwatch_log_subscription_filter" "fifo_dlq_handler_logs_subscription_filter" {
   name            = var.fifo_dlq_handler_subscription_filter_name
   role_arn        = data.aws_iam_role.firehose_role.arn
@@ -39,6 +29,24 @@ resource "aws_cloudwatch_log_subscription_filter" "eventbridge_dlq_handler_logs_
   name            = var.eventbridge_dlq_handler_subscription_filter_name
   role_arn        = data.aws_iam_role.firehose_role.arn
   log_group_name  = "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}"
+  filter_pattern  = ""
+  destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
+  distribution    = ""
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
+  name            = var.change_event_gateway_subscription_filter_name
+  role_arn        = data.aws_iam_role.firehose_role.arn
+  log_group_name  = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
+  filter_pattern  = ""
+  destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
+  distribution    = ""
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "cr_endpoint_access_logs" {
+  name            = var.change_request_gateway_subscription_filter_name
+  role_arn        = data.aws_iam_role.firehose_role.arn
+  log_group_name  = "/aws/api-gateway/${var.programme}-${var.team_id}/${var.environment}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""

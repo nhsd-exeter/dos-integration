@@ -63,6 +63,7 @@ TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-process
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_eventbridge_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler
+TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription
 
 # Mock DoS API Gateway Mock
 TF_VAR_dos_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-mock
