@@ -154,6 +154,25 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "title": "Event Sender",
                 "period": 300
             }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 16,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
+                    [ "AWS/ApiGateway", "Count", "ApiName", "${var.change_request_receiver_api_name}", { "label": "DOS Change Request", "region": "${var.aws_region}" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": true,
+                "region": "${var.aws_region}",
+                "period": 300,
+                "stat": "Sum",
+                "title": "Message Count"
+            }
         }
     ]
 }
