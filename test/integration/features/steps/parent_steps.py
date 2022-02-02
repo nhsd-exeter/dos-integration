@@ -21,7 +21,6 @@ from datetime import datetime
 @given("a Changed Event is valid")
 def a_change_event_is_valid(context):
     context.change_event = changed_event()
-    context.correlation_id = generate_correlation_id(context)
 
 
 @given("a valid unsigned change request")
@@ -147,6 +146,8 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
 @when('the Changed Event is sent for processing with "{valid_or_invalid}" api key')
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context.start_time = datetime.today().timestamp()
+    if getattr(context, "correlation_id", None) is None:
+        context.correlation_id = generate_correlation_id(context)
     context.response = process_payload(context.change_event, valid_or_invalid == "valid", context.correlation_id)
     context.sequence_no = context.response.request.headers["sequence-number"]
 
