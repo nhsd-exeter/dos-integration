@@ -45,7 +45,9 @@ variable "project_id" {
 variable "environment" {
   description = "Environment name"
 }
-
+variable "team_id" {
+  description = "team id"
+}
 # ##############
 # # FIREHOSE
 # ##############
@@ -59,6 +61,11 @@ variable "event_sender_subscription_filter_name" {
 }
 
 variable "change_event_gateway_subscription_filter_name" {
+  description = "Log filter name for change event api gateway logs"
+}
+
+
+variable "change_request_gateway_subscription_filter_name" {
   description = "Log filter name for change event api gateway logs"
 }
 

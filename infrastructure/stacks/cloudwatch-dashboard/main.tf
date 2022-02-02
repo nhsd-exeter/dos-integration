@@ -5,10 +5,10 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
 {
     "widgets": [
         {
-            "height": 6,
-            "width": 23,
+            "height": 5,
+            "width": 19,
             "y": 0,
-            "x": 0,
+            "x": 4,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
@@ -17,13 +17,32 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                     [ "UEC-DOS-INT", "QueueToProcessorLatency", "ENV", "${var.environment}" ],
                     [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ]
                 ],
-                "region": "${var.aws_region}"
+                "region": "${var.aws_region}",
+                "title": "System Latency"
+            }
+        },
+        {
+            "height": 5,
+            "width": 4,
+            "y": 0,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApiGateway", "4XXError", "ApiName", "${var.di_endpoint_api_gateway_name}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "stat": "Sum",
+                "period": 300,
+                "title": "NHS UK Endpoint 4xxError"
             }
         },
         {
             "height": 6,
             "width": 6,
-            "y": 16,
+            "y": 15,
             "x": 6,
             "type": "metric",
             "properties": {
@@ -38,7 +57,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 10,
+            "y": 9,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -63,7 +82,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 4,
             "width": 23,
-            "y": 6,
+            "y": 5,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -83,7 +102,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 10,
+            "y": 9,
             "x": 6,
             "type": "metric",
             "properties": {
@@ -103,7 +122,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 10,
+            "y": 9,
             "x": 12,
             "type": "metric",
             "properties": {
@@ -120,7 +139,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 16,
+            "y": 15,
             "x": 0,
             "type": "metric",
             "properties": {

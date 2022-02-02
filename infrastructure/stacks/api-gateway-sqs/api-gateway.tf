@@ -83,7 +83,7 @@ resource "aws_api_gateway_integration" "di_endpoint_integration" {
 #else
 #set($correlation_id = $context.extendedRequestId)
 #end
-Action=SendMessage&MessageGroupId=$input.json("ODSCode")&MessageBody=$input.body&MessageAttribute.1.Name=correlation-id&MessageAttribute.1.Value.DataType=String&MessageAttribute.1.Value.StringValue=$correlation_id&MessageAttribute.2.Name=sequence-number&MessageAttribute.2.Value.DataType=Number&MessageAttribute.2.Value.StringValue=$util.escapeJavaScript($input.params("sequence-number"))
+Action=SendMessage&MessageGroupId=$input.json("ODSCode")&MessageBody=$util.urlEncode($input.body)&MessageAttribute.1.Name=correlation-id&MessageAttribute.1.Value.DataType=String&MessageAttribute.1.Value.StringValue=$correlation_id&MessageAttribute.2.Name=sequence-number&MessageAttribute.2.Value.DataType=Number&MessageAttribute.2.Value.StringValue=$util.escapeJavaScript($input.params("sequence-number"))
 EOF
   }
 }
@@ -106,12 +106,36 @@ resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "api_gw" {
+  name = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
+
+  retention_in_days = 30
+}
 
 resource "aws_api_gateway_stage" "di_endpoint_stage" {
   deployment_id        = aws_api_gateway_deployment.di_endpoint_deployment.id
   rest_api_id          = aws_api_gateway_rest_api.di_endpoint.id
   stage_name           = var.di_endpoint_api_gateway_stage
   xray_tracing_enabled = true
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+    format = jsonencode({
+      requestTime              = "$context.requestTime"
+      requestId                = "$context.requestId"
+      httpMethod               = "$context.httpMethod"
+      path                     = "$context.path",
+      resourcePath             = "$context.resourcePath",
+      status                   = "$context.status"
+      responseLatency          = "$context.responseLatency"
+      ip                       = "$context.identity.sourceIp"
+      xrayTraceId              = "$context.xrayTraceId"
+      integrationRequestId     = "$context.integration.requestId"
+      functionResponseStatus   = "$context.integration.status"
+      integrationLatency       = "$context.integration.latency"
+      integrationServiceStatus = "$context.integration.integrationStatus"
+      }
+    )
+  }
 }
 
 resource "aws_api_gateway_usage_plan" "di_endpoint_usage_plan" {

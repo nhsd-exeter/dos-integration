@@ -37,6 +37,11 @@ resource "aws_api_gateway_integration_response" "response_400" {
   rest_api_id       = aws_api_gateway_rest_api.di_endpoint.id
   status_code       = aws_api_gateway_method_response.response_400.status_code
   selection_pattern = "^4[0-9][0-9]"
+  response_templates = {
+    "application/json" = <<EOF
+  {"Message": "Bad Request"}
+EOF
+  }
   depends_on = [
     aws_api_gateway_method_response.response_400,
     aws_api_gateway_integration.di_endpoint_integration,
