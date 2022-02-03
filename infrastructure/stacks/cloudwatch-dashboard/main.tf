@@ -96,7 +96,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
                 ],
                 "region": "${var.aws_region}",
-                "title": "SQS"
+                "title": "FIFO SQS"
             }
         },
         {
