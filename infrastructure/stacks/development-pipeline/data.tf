@@ -40,3 +40,8 @@ data "aws_subnet_ids" "selected" {
     "${var.aws_vpc_name}-private-${var.aws_region}c"] # insert values here
   }
 }
+
+locals {
+  subnet_arns = [for d in data.aws_subnet_ids.selected.ids : "arn:aws:ec2:${var.aws_region}:${var.aws_account_id_nonprod}:subnet/${d}"]
+  #ids = [for d in var.data: d["id"]]  #same
+}

@@ -130,22 +130,12 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
         "Effect": "Allow",
         "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:*uec-dos-int*"
+        "Resource": [
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:*uec-dos-int*"
+        ]
     },
     {
         "Effect": "Allow",
@@ -155,17 +145,11 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
         "Effect": "Allow",
         "Action": "cloudwatch:*",
-        "Resource": "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id_nonprod}:alarm:uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "cloudwatch:",
-        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:dashboard/uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "cloudwatch:*",
-        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:*uec-dos-int*"
+        "Resource": [
+          "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id_nonprod}:alarm:uec-dos-int*",
+          "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:dashboard/uec-dos-int*",
+          "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:*uec-dos-int*"
+        ]
     },
     {
         "Effect": "Allow",
@@ -455,6 +439,21 @@ resource "aws_iam_role_policy" "codebuild_policy" {
             "ec2:DescribeVpcs"
         ],
         "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": "arn:aws:ec2:${var.aws_region}:${var.aws_account_id_nonprod}:network-interface/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        },
+        "ArnEquals": {
+          "ec2:Subnet": ["${join("\",\"", local.subnet_arns)}"]
+        }
+      }
     },
     {
         "Effect": "Allow",
