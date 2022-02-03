@@ -23,12 +23,30 @@ def dead_letter_message():
                     "ApproximateFirstReceiveTimestamp": "1545082649185",
                 },
                 "messageAttributes": {
-                    "correlation-id": {
-                        "stringValue": "059f36b4-87a3-44ab-83d2-661975830a7d",
+                    "ERROR_MESSAGE": {
+                        "stringValue": "ApiDestination returned HTTP status 400 with payload: Dummy",
                         "stringListValues": [],
                         "binaryListValues": [],
                         "dataType": "String",
-                    }
+                    },
+                    "ERROR_CODE": {
+                        "stringValue": "SDK_CLIENT_ERROR",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
+                    "RULE_ARN": {
+                        "stringValue": "arn:aws:events:eu:0:rule/dummy-eventbridge-bus/dummy-change-request-rule",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
+                    "TARGET_ARN": {
+                        "stringValue": "arn:aws:events:eu:0:api-destination/dummy-dos-api-gateway-api-destination/abc",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
                 },
                 "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
                 "eventSource": "aws:sqs",
@@ -54,11 +72,19 @@ def lambda_context():
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler(mock_extract_body, dead_letter_message, lambda_context):
     # Arrange
+    change_request = {
+        "reference": "Dummy correlation id",
+        "system": "DoS Integration",
+        "message": "DoS Integration CR. correlation-id: Dummy correlation id",
+        "service_id": "63805",
+        "changes": {"phone": None},
+    }
     extracted_body = {
         "correlation_id": "dummy_correlation_id",
         "dynamo_record_id": "adf382c13e1f265bbc5eb5fe59630390",
         "message_received": 1643272884341,
         "ods_code": "DUMMY",
+        "change_payload": change_request,
     }
     mock_extract_body.return_value = extracted_body
     # Act
