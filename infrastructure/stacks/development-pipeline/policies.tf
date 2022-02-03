@@ -61,6 +61,20 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       ]
     },
     {
+      "Effect":"Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:GetBucketVersioning",
+        "s3:PutObjectAcl",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${module.codepipeline_artefact_bucket.s3_bucket_arn}",
+        "${module.codepipeline_artefact_bucket.s3_bucket_arn}/*"
+      ]
+    },
+    {
       "Effect": "Allow",
       "Action": [
         "dynamodb:PutItem",
@@ -110,23 +124,18 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     },
     {
         "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:uec-dos-int*"
+        "Action": "logs:DescribeLogGroups",
+        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group::log-stream:"
     },
     {
         "Effect": "Allow",
         "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "logs:*",
-        "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:*uec-dos-int*"
+        "Resource": [
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:uec-dos-int*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group:*:log-stream:*uec-dos-int*"
+        ]
     },
     {
         "Effect": "Allow",
@@ -136,17 +145,11 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
         "Effect": "Allow",
         "Action": "cloudwatch:*",
-        "Resource": "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id_nonprod}:alarm:uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "cloudwatch:",
-        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:dashboard/uec-dos-int*"
-    },
-    {
-        "Effect": "Allow",
-        "Action": "cloudwatch:*",
-        "Resource": "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:*uec-dos-int*"
+        "Resource": [
+          "arn:aws:cloudwatch:${var.aws_region}:${var.aws_account_id_nonprod}:alarm:uec-dos-int*",
+          "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:dashboard/uec-dos-int*",
+          "arn:aws:cloudwatch::${var.aws_account_id_nonprod}:*uec-dos-int*"
+        ]
     },
     {
         "Effect": "Allow",
@@ -193,7 +196,16 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       ],
       "Resource": [
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:events!connection/uec-dos-int-*",
-        "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:uec-dos-int-*",
+        "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:uec-dos-int-*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:core-dos-dev/deployment*",
         "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id_nonprod}:secret:uec-pu-updater/deployment*"
       ]
@@ -228,16 +240,16 @@ resource "aws_iam_role_policy" "codebuild_policy" {
       "Action": [
           "iam:PassRole",
           "iam:CreateRole",
+          "iam:ListRolePolicies",
           "iam:GetRole",
+          "iam:GetRolePolicy",
           "iam:DeleteRole",
           "iam:PutRolePolicy",
+          "iam:ListAttachedRolePolicies",
           "iam:DeleteRolePolicy"
       ],
       "Resource": [
-          "arn:aws:iam::${var.aws_account_id_nonprod}:role/service-role/UECDoSINT*",
-          "arn:aws:iam::${var.aws_account_id_nonprod}:role/service-role/UECDosInt*",
-          "arn:aws:iam::${var.aws_account_id_nonprod}:role/uec-dos-int*",
-          "arn:aws:iam::${var.aws_account_id_nonprod}:role/service-role/UECPU*"
+          "arn:aws:iam::${var.aws_account_id_nonprod}:role/uec-dos-int*"
       ]
     },
     {
@@ -327,16 +339,6 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "arn:aws:ssm:${var.aws_region}:${var.aws_account_id_nonprod}:patchbaseline/*uec-dos-int*",
           "arn:aws:ssm:${var.aws_region}:${var.aws_account_id_nonprod}:parameter/*uec-dos-int*"
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "iam:*"
-        ],
-      "Resource": [
-        "arn:aws:iam::${var.aws_account_id_nonprod}:role/uec-dos-int*",
-        "arn:aws:iam::${var.aws_account_id_nonprod}:role/UECPU*"
-        ]
     },
     {
       "Sid": "CFGeneral",
@@ -439,6 +441,21 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         "Resource": "*"
     },
     {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": "arn:aws:ec2:${var.aws_region}:${var.aws_account_id_nonprod}:network-interface/*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        },
+        "ArnEquals": {
+          "ec2:Subnet": ["${join("\",\"", local.subnet_arns)}"]
+        }
+      }
+    },
+    {
         "Effect": "Allow",
         "Action": "ec2:*",
         "Resource": "*",
@@ -461,10 +478,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "kms:Update*",
           "kms:TagResource",
           "kms:UntagResource",
-          "kms:PutKeyPolicy",
-          "iam:ListGroups",
-          "iam:ListRoles",
-          "iam:ListUsers"
+          "kms:PutKeyPolicy"
       ],
       "Resource": "*"
     },
@@ -478,10 +492,6 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     {
       "Effect": "Allow",
       "Action": [
-        "ec2:Describe*",
-        "ec2:Create*",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "logs:*",
         "s3:*"
         ],
       "Resource": "*"
