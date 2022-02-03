@@ -470,7 +470,7 @@ load-test-in-pipeline: # An all in one load test make target
 	AWS_START_TIME=$$(date +%FT%TZ)
 	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make load-test START_TIME=$$START_TIME
-	sleep 1h
+	sleep 25m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
