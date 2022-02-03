@@ -438,10 +438,10 @@ performance-test-data-collection: # Runs data collection for performance tests -
 			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
 			"
 
-generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
+generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp], TEST_TYPE="string", CODE_VERSION="string"
 	rm -rf $(TMP_DIR)/performance
 	mkdir $(TMP_DIR)/performance
-	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nTEST_TYPE=$(TEST_TYPE)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
+	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nTEST_TYPE=$(TEST_TYPE)\nCODE_VERSION=$(CODE_VERSION)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
 	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
 	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
 	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
@@ -456,23 +456,25 @@ performance-test-clean: # Clean up performance test results
 stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_START_TIME=$$(date +%FT%TZ)
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make stress-test START_TIME=$$START_TIME PIPELINE=true
 	sleep 6h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test"
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test" CODE_VERSION=$$CODE_VERSION
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 load-test-in-pipeline: # An all in one load test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_START_TIME=$$(date +%FT%TZ)
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make load-test START_TIME=$$START_TIME
 	sleep 1h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test"
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test" CODE_VERSION=$$CODE_VERSION
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 send-performance-dashboard-slack-message:

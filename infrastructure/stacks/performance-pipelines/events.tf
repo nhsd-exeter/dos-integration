@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_rule" "stress_test_cron" {
   name                = "${var.project_id}-${var.environment}-stress-test-trigger"
-  description         = "Trigger performance pipeline nightly"
-  schedule_expression = "cron(00 0 * * ? *)" # every Monday at midnight
+  description         = "Trigger performance pipeline every Monday at midnight"
+  schedule_expression = "cron(0 0 ? * 2 *)" # every Monday at midnight
 }
 
 resource "aws_cloudwatch_event_target" "trigger_stress_test_pipeline" {
@@ -13,8 +13,8 @@ resource "aws_cloudwatch_event_target" "trigger_stress_test_pipeline" {
 
 resource "aws_cloudwatch_event_rule" "load_test_cron" {
   name                = "${var.project_id}-${var.environment}-load-test-trigger"
-  description         = "Trigger performance pipeline nightly"
-  schedule_expression = "cron(00 0 * * ? *)" # every Tuesday at midnight
+  description         = "Trigger performance pipeline every Tuesday at midnight"
+  schedule_expression = "cron(0 0 ? * 3 *)" # every Tuesday at midnight
 }
 
 resource "aws_cloudwatch_event_target" "trigger_load_test_pipeline" {

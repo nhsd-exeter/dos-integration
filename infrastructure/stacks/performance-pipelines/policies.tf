@@ -451,7 +451,8 @@ resource "aws_iam_role_policy" "codebuild_policy" {
         "ec2:AuthorizeSecurityGroupIngress",
         "logs:*",
         "s3:*",
-        "rds:*"
+        "rds:*",
+        "sns:*"
         ],
       "Resource": "*"
     }
