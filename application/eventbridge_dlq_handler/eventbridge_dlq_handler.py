@@ -56,7 +56,7 @@ def handle_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
     if msg_attributes is not None:
         if "ERROR_MESSAGE" in msg_attributes:
             error_msg = msg_attributes["ERROR_MESSAGE"]["stringValue"]
-            msg_attributes["error_msg"] = error_msg
+            attributes["error_msg"] = error_msg
             error_msg_http_codes = [int(str) for str in error_msg.split() if str.isdigit()]
             if len(error_msg_http_codes) > 0:
                 attributes["error_msg_http_code"] = error_msg_http_codes[0]
