@@ -43,15 +43,16 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
         },
     )
 
-def handle_msg_attributes(msg_attributes:Dict[str, Any]) -> Dict[str, Any]:
+
+def handle_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
     attributes = {
         "error_msg": "",
         "error_msg_http_code": None,
         "error_code": "",
         "rule_arn": "",
         "target_arn": "",
-        "change_payload": ""
-        }
+        "change_payload": "",
+    }
     if msg_attributes is not None:
         if "ERROR_MESSAGE" in msg_attributes:
             error_msg = msg_attributes["ERROR_MESSAGE"]["stringValue"]
