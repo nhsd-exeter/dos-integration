@@ -365,7 +365,7 @@ def event_bridge_dlq_log_check(context):
 def lambda_status_code_check(context, lambda_name, status_code):
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        f' | filter error_msg_http_code={status_code}'
+        f" | filter error_msg_http_code={status_code}"
     )
     logs = get_logs(query, lambda_name, context.start_time)
     assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
