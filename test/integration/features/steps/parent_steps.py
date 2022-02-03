@@ -118,7 +118,7 @@ def a_change_event_with_isopen_status_set_to_false(context):
 # set correlation id to "Bad Request"
 @given('the correlation-id is "{custom_correlation}"')
 def a_custom_correlation_id_is_set(context, custom_correlation: str):
-    context.correlation_id = custom_correlation
+    context.correlation_id = generate_correlation_id(context, custom_correlation)
 
 
 # IsOpen is true AND Times is blank
