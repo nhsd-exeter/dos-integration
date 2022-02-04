@@ -6,7 +6,6 @@ Feature: Test Event Sender Features
     When the change request is sent with "invalid" api key
     Then the change request has status code "403"
 
-
   @complete @event_sender @security
   Scenario: An unsigned valid change request sent to event sender
     Given a valid unsigned change request

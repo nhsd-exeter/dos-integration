@@ -45,15 +45,15 @@ phases:
       - make tester-build
       - make update-ip-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
       - make terraform-apply-auto-approve STACKS=api-gateway-sqs PROFILE=test ENVIRONMENT=test
-      - make e2e-test TAGS=complete PROFILE=test ENVIRONMENT=test RUN_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION-$CODEBUILD_BUILD_NUMBER
+      - make integration-test TAGS=complete PROFILE=test ENVIRONMENT=test RUN_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION-$CODEBUILD_BUILD_NUMBER
   post_build:
     commands:
       - make delete-ip-from-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
 reports: #New
-  BehaveReports: # CodeBuild will create a report group called "BehaveReports".
+  PytestIntegrationReport: # CodeBuild will create a report group called "PytestIntegrationReport".
     files: #Store all of the files
       - '**/*'
-    base-directory: $CODEBUILD_SRC_DIR/test/integration/reports
+    base-directory: $CODEBUILD_SRC_DIR/test/integration
     discard-paths: yes
     file-format: JUNITXML
 #artifacts:

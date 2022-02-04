@@ -61,7 +61,7 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 14:
+        elif counter == 12:
             raise Exception("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
 

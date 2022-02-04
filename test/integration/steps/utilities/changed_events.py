@@ -3,10 +3,12 @@ import csv
 import itertools
 import random
 from typing import Any, Dict
+import os
 
 
 def changed_event() -> Dict[str, Any]:
-    with open("./features/resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
+    print(os.getcwd())
+    with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         payload["ODSCode"] = random_odscode()
         return payload
@@ -44,7 +46,7 @@ def change_request() -> Dict[str, Any]:
 
 
 def random_odscode() -> str:
-    with open("./features/resources/valid_ods_codes.csv") as csv_file:
+    with open("resources/valid_ods_codes.csv") as csv_file:
         csv_data = csv.reader(csv_file, delimiter=",")
         ods_list = list(itertools.chain(*list(csv_data)))
         valid_odscode = random.choices(ods_list, k=1)
