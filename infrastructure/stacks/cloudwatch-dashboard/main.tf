@@ -5,8 +5,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
 {
     "widgets": [
         {
-            "height": 5,
-            "width": 19,
+            "height": 6,
+            "width": 12,
             "y": 0,
             "x": 4,
             "type": "metric",
@@ -22,8 +22,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             }
         },
         {
-            "height": 5,
-            "width": 4,
+            "height": 6,
+            "width": 6,
             "y": 0,
             "x": 0,
             "type": "metric",
@@ -42,8 +42,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 15,
-            "x": 6,
+            "y": 18,
+            "x": 12,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
@@ -57,7 +57,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 9,
+            "y": 18,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -80,9 +80,9 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             }
         },
         {
-            "height": 4,
-            "width": 23,
-            "y": 5,
+            "height": 6,
+            "width": 9,
+            "y": 6,
             "x": 0,
             "type": "metric",
             "properties": {
@@ -102,7 +102,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 9,
+            "y": 12,
             "x": 6,
             "type": "metric",
             "properties": {
@@ -122,7 +122,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 9,
+            "y": 12,
             "x": 12,
             "type": "metric",
             "properties": {
@@ -139,8 +139,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 15,
-            "x": 0,
+            "y": 18,
+            "x": 6,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
@@ -157,10 +157,10 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
             "type": "metric",
-            "x": 12,
-            "y": 16,
-            "width": 6,
             "height": 6,
+            "width": 6,
+            "y": 12,
+            "x": 0,
             "properties": {
                 "metrics": [
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
@@ -172,6 +172,26 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "period": 300,
                 "stat": "Sum",
                 "title": "Message Count"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 9,
+            "y": 6,
+            "width": 9,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/Events", "Invocations", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ],
+                    [ "AWS/Events", "TriggeredRules", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ],
+                    [ "AWS/Events", "FailedInvocations", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "stat": "Sum",
+                "period": 300,
+                "title": "Event Bridge"
             }
         }
     ]

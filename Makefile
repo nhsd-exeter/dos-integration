@@ -261,7 +261,7 @@ eventbridge-dlq-handler-build: ### Build event processor lambda docker image
 eventbridge-dlq-handler-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.txt
-	make common-code-remove LAMBDA_DIR=eventbridge-dlq-handler
+	make common-code-remove LAMBDA_DIR=eventbridge_dlq_handler
 
 # ==============================================================================
 # Authoriser (for dos api gateway mock)

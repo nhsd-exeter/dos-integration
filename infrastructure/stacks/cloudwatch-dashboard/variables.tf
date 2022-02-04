@@ -84,3 +84,10 @@ variable "change_request_receiver_api_name" {
   description = "Name for the API Gateway endpoint on request receiver side"
 }
 
+variable "eventbridge_bus_name" {
+  description = "Name of the eventbridge event bus"
+}
+
+variable "change_request_eventbridge_rule_name" {
+  description = "Rule to pickup change request from eventbridge bus"
+}
