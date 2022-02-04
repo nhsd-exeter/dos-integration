@@ -1,4 +1,3 @@
-from aws_encryption_sdk import CommitmentPolicy, EncryptionSDKClient, StrictAwsKmsMasterKeyProvider
 from aws_encryption_sdk.exceptions import (
     MaxEncryptedDataKeysExceeded,
     NotSupportedError,
@@ -10,11 +9,10 @@ from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from base64 import b64decode
 from binascii import Error as binasciiError
-from boto3 import client
 from json import loads, dumps
-from os import environ
 from time import time
-from typing import Any, Dict
+from typing import Any, Dict, Union
+from common.encryption_helper import MessageEncryptionHelper
 
 from common.utilities import extract_body
 
@@ -22,47 +20,21 @@ logger = Logger(child=True)
 
 SIGNING_KEY_KEY = "signing_key"
 BAD_REQUEST = {"statusCode": 400, "body": dumps({"message": "Invalid payload"})}
+helper: Union[MessageEncryptionHelper, None] = None
 
 
-def initialise_encryption_client():
-
-    logger.info("Getting key")
-    kms = client("kms")
-    response = kms.describe_key(
-        KeyId=f"alias/{environ['KEYALIAS']}",
-        GrantTokens=[
-            "string",
-        ],
-    )
-    # Use the key arn you obtained in the previous step
-    key_arn = response["KeyMetadata"]["Arn"]
-    encryption_client = EncryptionSDKClient(commitment_policy=CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT)
-
-    # Create an AWS KMS master key provider
-    kms_kwargs = dict(key_ids=[key_arn])
-
-    master_key_provider = StrictAwsKmsMasterKeyProvider(**kms_kwargs)
-
-    def encrypt_string(plaintext):
-
-        encrypted_text, encryptor_header = encryption_client.encrypt(source=plaintext, key_provider=master_key_provider)
-        return encrypted_text
-
-    def decrypt_string(ciphertext):
-
-        decrypted_text, encryptor_header = encryption_client.decrypt(
-            source=ciphertext, key_provider=master_key_provider
-        )
-        return decrypted_text.decode()
-
-    return encrypt_string, decrypt_string
+def initialise_encryption_client() -> MessageEncryptionHelper:
+    global helper
+    if helper is None:
+        helper = MessageEncryptionHelper()
+    return helper
 
 
 def validate_signing_key(signing_key: Any, body: Dict[str, Any]) -> bool:
     try:
-        encrypt_string, decrypt_string = initialise_encryption_client()
+        helper = initialise_encryption_client()
         decoded_key = b64decode(signing_key)
-        data = loads(decrypt_string(decoded_key))
+        data = loads(helper.decrypt_string(decoded_key))
         assert data["ods_code"] == body["ods_code"], "Signing key invalid, ods code doesnt match"
         assert (
             data["dynamo_record_id"] == body["dynamo_record_id"]

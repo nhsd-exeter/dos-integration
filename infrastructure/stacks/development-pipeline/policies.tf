@@ -124,7 +124,10 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     },
     {
         "Effect": "Allow",
-        "Action": "logs:DescribeLogGroups",
+        "Action": [
+          "logs:DescribeLogGroups",
+          "logs:GetQueryResults"
+        ],
         "Resource": "arn:aws:logs:${var.aws_region}:${var.aws_account_id_nonprod}:log-group::log-stream:"
     },
     {

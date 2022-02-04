@@ -5,7 +5,7 @@ from random import choices
 from change_event_exceptions import ValidationException
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 from pytest import fixture, raises
@@ -177,7 +177,11 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock, encrypt
     # Arrange
     bus_name = "test"
     environ["EVENTBRIDGE_BUS_NAME"] = bus_name
-    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: b"encrypted"
+    mock_e.decrypt_string = lambda a: "decrypted"
+    mock_client.return_value = mock_e
+    encryption_client_mock.return_value = mock_e
     change_request = ChangeRequest(service_id=49016)
     change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
@@ -232,7 +236,11 @@ def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger,
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
-    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: b"encrypted"
+    mock_e.decrypt_string = lambda a: "decrypted"
+    mock_client.return_value = mock_e
+    encryption_client_mock.return_value = mock_e
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -257,7 +265,11 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger, encrypti
     record_id = "someid"
     message_received = 1642501355616
     nhs_entity = NHSEntity({})
-    encryption_client_mock.return_value = (lambda a: b"encrypted", lambda a: "decrypted")
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: b"encrypted"
+    mock_e.decrypt_string = lambda a: "decrypted"
+    mock_client.return_value = mock_e
+    encryption_client_mock.return_value = mock_e
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
     nhs_entity.phone = "01462622435"
