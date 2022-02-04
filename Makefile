@@ -331,15 +331,30 @@ serverless-requirements: # Install serverless plugins
 # Pipelines
 
 deploy-development-pipeline:
-	make terraform-apply-auto-approve STACKS=development-pipeline
+	make terraform-apply-auto-approve STACKS=development-pipeline PROFILE=dev
 
 undeploy-development-pipeline:
-	make terraform-destroy-auto-approve STACKS=development-pipeline
+	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=dev
 
 plan-development-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=development-pipeline
+	fi
+	if [ "$(PROFILE)" != "dev" ]; then
+		echo "Only dev profile supported at present"
+	fi
+
+deploy-performance-pipelines:
+	make terraform-apply-auto-approve STACKS=performance-pipelines PROFILE=dev
+
+undeploy-performance-pipelines:
+	make terraform-destroy-auto-approve STACKS=performance-pipelines PROFILE=dev
+
+plan-performance-pipelines:
+	if [ "$(PROFILE)" == "dev" ]; then
+		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-plan STACKS=performance-pipelines
 	fi
 	if [ "$(PROFILE)" != "dev" ]; then
 		echo "Only dev profile supported at present"
@@ -373,12 +388,16 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT
-# Roughly 20k change events per minute
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
+	if [ $(PIPELINE) == true ]; then
+		PERFORMANCE_ARGS=$$(echo --users 5 --spawn-rate 5 --run-time 30s)
+	else
+		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
+	fi
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
-			--users 20 --spawn-rate 20 --run-time 1m --stop-timeout 10 \
+			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -389,12 +408,11 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 			"
 
-load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT
-# Roughly 20 change events per minute
+load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -420,20 +438,57 @@ performance-test-data-collection: # Runs data collection for performance tests -
 			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
 			"
 
-generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
+generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp], TEST_TYPE="string", CODE_VERSION="string"
 	rm -rf $(TMP_DIR)/performance
 	mkdir $(TMP_DIR)/performance
-	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
+	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nTEST_TYPE=$(TEST_TYPE)\nCODE_VERSION=$(CODE_VERSION)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
 	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
 	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
 	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
 	aws s3 cp $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-performance-tests-nonprod/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip
 
-performance-test-clean:
+performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
 	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
+
+stress-test-in-pipeline: # An all in one stress test make target
+	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_START_TIME=$$(date +%FT%TZ)
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
+	make stress-test START_TIME=$$START_TIME PIPELINE=true
+	sleep 6h
+	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_END_TIME=$$(date +%FT%TZ)
+	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test" CODE_VERSION=$$CODE_VERSION
+	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
+
+load-test-in-pipeline: # An all in one load test make target
+	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_START_TIME=$$(date +%FT%TZ)
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
+	make load-test START_TIME=$$START_TIME
+	sleep 25m
+	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
+	AWS_END_TIME=$$(date +%FT%TZ)
+	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
+	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test" CODE_VERSION=$$CODE_VERSION
+	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
+
+send-performance-dashboard-slack-message:
+	aws sns publish --topic-arn arn:aws:sns:$(AWS_REGION):$(AWS_ACCOUNT_ID_NONPROD):uec-dos-int-dev-pipeline-topic --message '{
+	"version": "0",
+	"id": "13cde686-328b-6117-af20-0e5566167482",
+	"detail-type": "Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)",
+	"source": "aws.ecr",
+	"account": "$(AWS_ACCOUNT_ID_NONPROD)",
+	"time": "2019-11-16T01:54:34Z",
+	"region": "$(AWS_REGION)",
+	"resources": [],
+	"detail": {}
+	}'
 
 # -----------------------------
 # Other
