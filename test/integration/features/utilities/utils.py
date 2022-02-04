@@ -147,3 +147,13 @@ def search_dos_db(query: str) -> list:
     rows = db_cursor.fetchall()
     db_cursor.close()
     return rows
+
+
+def generate_correlation_id(context: dict, suffix=None) -> str:
+    name_no_space = context.scenario.name.replace(" ", "_")
+    run_id = getenv("RUN_ID")
+    if suffix is None:
+        correlation_id = f"{run_id}_{name_no_space}"
+    else:
+        correlation_id = f"{run_id}_{suffix}"
+    return correlation_id

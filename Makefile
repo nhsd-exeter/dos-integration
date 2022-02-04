@@ -138,6 +138,7 @@ e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev];
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		-e RUN_ID=${RUN_ID} \
+		-e EVENTBRIDGE_DLQ=${TF_VAR_eventbridge_dlq_handler_lambda_name} \
 		"
 
 clean: # Runs whole project clean
