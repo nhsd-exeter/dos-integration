@@ -50,10 +50,10 @@ phases:
     commands:
       - make delete-ip-from-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
 reports: #New
-  BehaveReports: # CodeBuild will create a report group called "BehaveReports".
+  PytestIntegrationReport: # CodeBuild will create a report group called "PytestIntegrationReport".
     files: #Store all of the files
       - '**/*'
-    base-directory: $CODEBUILD_SRC_DIR/test/integration/reports
+    base-directory: $CODEBUILD_SRC_DIR/test/integration
     discard-paths: yes
     file-format: JUNITXML
 #artifacts:

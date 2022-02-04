@@ -1,5 +1,5 @@
-aws_encryption_sdk
 aws-lambda-context
+aws_encryption_sdk
 behave
 boto3
 coverage
@@ -8,9 +8,12 @@ moto
 mutmut
 pandas
 pytest
+pytest-bdd
 pytest-cov
+pytest-html
 pytest-icdiff
 pytest-sugar
+pytest-xdist
+requests
 responses
 testfixtures
-requests

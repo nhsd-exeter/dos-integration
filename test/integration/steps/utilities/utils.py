@@ -1,17 +1,18 @@
-import requests
 import json
-from os import getenv
-from features.utilities.get_secrets import get_secret
-from json import dumps
-from boto3 import client
-from time import sleep
-from boto3.dynamodb.types import TypeDeserializer
-from decimal import Decimal
-import psycopg2
-from psycopg2.extras import DictCursor
 import random
+from decimal import Decimal
+from json import dumps
+from os import getenv, environ
+from time import sleep, time_ns
+
+import psycopg2
+import requests
+from boto3 import client
+from boto3.dynamodb.types import TypeDeserializer
+from psycopg2.extras import DictCursor
 from requests import Response
 
+from .get_secrets import get_secret
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -28,7 +29,7 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
     api_key = "invalid"
     if valid_api_key:
         api_key = json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = generate_unique_sequence_number(payload["ODSCode"])
+    sequence_number = str(time_ns())
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
@@ -37,7 +38,6 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
     }
     payload["Address1"] = generate_random_int() + " MANSFIELD ROAD"
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
-
     return output
 
 
@@ -67,6 +67,7 @@ def debug_purge_queue():
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
     print(f"{DYNAMO_DB_TABLE} {odscode} {sequence_number}")
+    sleep(5)
     resp = DYNAMO_CLIENT.query(
         TableName=DYNAMO_DB_TABLE,
         IndexName="gsi_ods_sequence",
@@ -150,7 +151,7 @@ def search_dos_db(query: str) -> list:
 
 
 def generate_correlation_id(context: dict, suffix=None) -> str:
-    name_no_space = context.scenario.name.replace(" ", "_")
+    name_no_space = environ.get("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
     if suffix is None:
         correlation_id = f"{run_id}_{name_no_space}"
