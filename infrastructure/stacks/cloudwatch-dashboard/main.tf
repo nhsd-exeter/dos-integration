@@ -8,7 +8,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "width": 12,
             "y": 0,
-            "x": 4,
+            "x": 6,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
