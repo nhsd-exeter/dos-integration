@@ -107,8 +107,10 @@ class EventProcessor:
             "ods_code": self.nhs_entity.odscode,
             "time": time(),
         }
-        encrypt_string, decrypt_string = initialise_encryption_client()
-        signing_key = encrypt_string(dumps(key_data))
+        logger.info("Getting Encryption Client")
+        encryption_helper = initialise_encryption_client()
+        logger.info("Getting signing key")
+        signing_key = encryption_helper.encrypt_string(dumps(key_data))
         b64_mystring = b64encode(signing_key).decode("utf-8")
         logger.debug(f"signing key : {b64_mystring}")
         eventbridge = client("events")
@@ -186,7 +188,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
     metrics.set_property("message_received", message_received_pretty)
+    logger.info("Getting latest sequence number")
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
+    logger.info("Writing change event to dynamo")
     record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
 
     metrics.set_property("correlation_id", logger.get_correlation_id())

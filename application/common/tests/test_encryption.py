@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 from pytest import fixture
 from dataclasses import dataclass
 from os import environ
@@ -22,7 +22,10 @@ def lambda_context():
 @patch("common.encryption.initialise_encryption_client")
 def test_validate_signing_not_base64(mock_client):
     # Arrange
-    mock_client.return_value = (lambda a: "encrypted", lambda a: "decrypted")
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: "encrypted"
+    mock_e.decrypt_string = lambda a: "decrypted"
+    mock_client.return_value = mock_e
     # Act
     response = validate_signing_key("Hello dave", {})
     # Assert
@@ -36,7 +39,10 @@ def mock_decrypt():
 @patch("common.encryption.initialise_encryption_client")
 def test_validate_signing_valid_base64_invalid_sig(mock_client):
     # Arrange
-    mock_client.return_value = (lambda a: "encrypted", mock_decrypt)
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: "encrypted"
+    mock_e.decrypt_string = mock_decrypt
+    mock_client.return_value = mock_e
     # Act
     response = validate_signing_key("aGVsbG8=", "{}")
     # Assert
@@ -49,7 +55,10 @@ def test_validate_signing_valid_no_ods_match(mock_client):
     expected_response = {
         "ods_code": "A",
     }
-    mock_client.return_value = (lambda a: "encrypted", lambda a: dumps(expected_response))
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: "encrypted"
+    mock_e.decrypt_string = lambda a: dumps(expected_response)
+    mock_client.return_value = mock_e
     # Act
     response = validate_signing_key("aGVsbG8=", {"ods_code": "B"})
     # Assert
@@ -61,7 +70,10 @@ def test_validate_signing_valid_no_ods_match(mock_client):
 def test_validate_signing_valid(mock_time, mock_client):
     # Arrange
     expected_response = {"ods_code": "A", "dynamo_record_id": "1", "message_received": 1, "time": 1643186734.55731}
-    mock_client.return_value = (lambda a: "encrypted", lambda a: dumps(expected_response))
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: "encrypted"
+    mock_e.decrypt_string = lambda a: dumps(expected_response)
+    mock_client.return_value = mock_e
     # Act
     response = validate_signing_key(
         "aGVsbG8=",
@@ -80,7 +92,10 @@ def test_validate_signing_valid(mock_time, mock_client):
 def test_validate_signing_valid_timed_out(mock_time, mock_client):
     # Arrange
     expected_response = {"ods_code": "A", "dynamo_record_id": "1", "message_received": 1, "time": 1643086744.55731}
-    mock_client.return_value = (lambda a: "encrypted", lambda a: dumps(expected_response))
+    mock_e = Mock()
+    mock_e.encrypt_string = lambda a: "encrypted"
+    mock_e.decrypt_string = lambda a: dumps(expected_response)
+    mock_client.return_value = mock_e
 
     # Act
     response = validate_signing_key(
@@ -133,9 +148,9 @@ def test_validation_decorator_invalid_key(mock_client, lambda_context):
     assert response == BAD_REQUEST
 
 
-@patch("common.encryption.StrictAwsKmsMasterKeyProvider")
-@patch("common.encryption.EncryptionSDKClient")
-@patch("common.encryption.client")
+@patch("common.encryption_helper.StrictAwsKmsMasterKeyProvider")
+@patch("common.encryption_helper.EncryptionSDKClient")
+@patch("common.encryption_helper.client")
 def test_initalise_encryption_client(client_mock, encryption_client_mock, key_provider_mock):
     # Arrange
     environ["KEYALIAS"] = "dave"
