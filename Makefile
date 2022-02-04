@@ -90,10 +90,10 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
 		"
 
-e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=test
+smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave features/e2e_di_test.feature --junit --no-capture" \
+	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --junitxml=./testresults.xml --disable-pytest-warnings" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -113,32 +113,6 @@ e2e-test-smoke: #End to end test DI project - mandatory: PROFILE, ENVIRONMENT=te
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		-e RUN_ID=${RUN_ID} \
-		"
-
-e2e-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m behave --junit --no-capture --tags=$(TAGS)" \
-	DIR=./test/integration \
-	ARGS=" \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
-		-e CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
-		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e SQS_URL=$(SQS_QUEUE_URL) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e KEYALIAS=${TF_VAR_signing_key_alias} \
-		-e RUN_ID=${RUN_ID} \
-		-e EVENTBRIDGE_DLQ=${TF_VAR_eventbridge_dlq_handler_lambda_name} \
 		"
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
@@ -163,7 +137,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
-		-e RUN_ID=2 \
+		-e RUN_ID=${RUN_ID} \
 		-e EVENTBRIDGE_DLQ=${TF_VAR_eventbridge_dlq_handler_lambda_name} \
 		"
 

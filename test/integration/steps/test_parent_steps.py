@@ -1,23 +1,35 @@
+from base64 import b64encode
 from datetime import datetime
 from decimal import Decimal
-from time import sleep
-from pytest_bdd import given, parsers, scenarios, then, when
+from json import dumps
+from time import sleep, time
 
-from .utilities.changed_events import changed_event
+from .utilities.changed_events import change_request, changed_event
+from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
-    get_stored_events_from_dynamo_db,
-    process_payload,
     generate_correlation_id,
+    get_stored_events_from_dynamo_db,
+    process_change_request_payload,
+    process_payload,
+    search_dos_db,
 )
+from pytest_bdd import given, parsers, scenarios, then, when
 
-scenarios("../features/parent_features.feature")
+scenarios("../features/parent_features.feature", "../features/event_sender.feature", "../features/e2e_di_test.feature")
 
 
 @given("a Changed Event is valid", target_fixture="context")
 def a_change_event_is_valid():
     context = {}
     context["change_event"] = changed_event()
+    return context
+
+
+@given("a valid unsigned change request", target_fixture="context")
+def a_change_request_is_valid():
+    context = {}
+    context["change_request"] = change_request()
     return context
 
 
@@ -29,46 +41,49 @@ def a_change_event_with_invalid_odscode():
     return context
 
 
-# @given("change request has valid signature")
-# def has_valid_signature(context):
-#     key_data = {
-#         "ods_code": context.change_request["ods_code"],
-#         "dynamo_record_id": context.change_request["dynamo_record_id"],
-#         "message_received": context.change_request["message_received"],
-#         "time": time(),
-#     }
-#     encrypt_string = initialise_encryption_client()
-#     signing_key = encrypt_string(dumps(key_data))
-#     b64_mystring = b64encode(signing_key).decode("utf-8")
-#     context.change_request["signing_key"] = b64_mystring
+@given("change request has valid signature", target_fixture="context")
+def has_valid_signature(context):
+    key_data = {
+        "ods_code": context["change_request"]["ods_code"],
+        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
+        "message_received": context["change_request"]["message_received"],
+        "time": time(),
+    }
+    encrypt_string = initialise_encryption_client()
+    signing_key = encrypt_string(dumps(key_data))
+    b64_mystring = b64encode(signing_key).decode("utf-8")
+    context["change_request"]["signing_key"] = b64_mystring
+    return context
 
 
-# @given("change request has invalid signature")
-# def has_invalid_signature(context):
-#     key_data = {
-#         "ods_code": "Dave",
-#         "dynamo_record_id": context.change_request["dynamo_record_id"],
-#         "message_received": context.change_request["message_received"],
-#         "time": time(),
-#     }
-#     encrypt_string = initialise_encryption_client()
-#     signing_key = encrypt_string(dumps(key_data))
-#     b64_mystring = b64encode(signing_key).decode("utf-8")
-#     context.change_request["signing_key"] = b64_mystring
+@given("change request has invalid signature", target_fixture="context")
+def has_invalid_signature(context):
+    key_data = {
+        "ods_code": "Dave",
+        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
+        "message_received": context["change_request"]["message_received"],
+        "time": time(),
+    }
+    encrypt_string = initialise_encryption_client()
+    signing_key = encrypt_string(dumps(key_data))
+    b64_mystring = b64encode(signing_key).decode("utf-8")
+    context["change_request"]["signing_key"] = b64_mystring
+    return context
 
 
-# @given("change request has expired signature")
-# def has_expired_signature(context):
-#     key_data = {
-#         "ods_code": "Dave",
-#         "dynamo_record_id": context.change_request["dynamo_record_id"],
-#         "message_received": context.change_request["message_received"],
-#         "time": time() - 100_000,
-#     }
-#     encrypt_string = initialise_encryption_client()
-#     signing_key = encrypt_string(dumps(key_data))
-#     b64_mystring = b64encode(signing_key).decode("utf-8")
-#     context.change_request["signing_key"] = b64_mystring
+@given("change request has expired signature", target_fixture="context")
+def has_expired_signature(context):
+    key_data = {
+        "ods_code": "Dave",
+        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
+        "message_received": context["change_request"]["message_received"],
+        "time": time() - 100_000,
+    }
+    encrypt_string = initialise_encryption_client()
+    signing_key = encrypt_string(dumps(key_data))
+    b64_mystring = b64encode(signing_key).decode("utf-8")
+    context["change_request"]["signing_key"] = b64_mystring
+    return context
 
 
 @given("a Changed Event contains an incorrect OrganisationSubtype", target_fixture="context")
@@ -111,7 +126,7 @@ def a_change_event_with_invalid_openingtimetype():
     return context
 
 
-# set correlation id to "Bad Request"
+# set correlation id to contain "Bad Request"
 @given(parsers.parse('the correlation-id is "{custom_correlation}"'), target_fixture="context")
 def a_custom_correlation_id_is_set(context, custom_correlation: str):
     context["correlation_id"] = generate_correlation_id(context, custom_correlation)
@@ -185,6 +200,13 @@ def a_change_event_with_orgstatus_value(context, org_status: str):
 @when("the postcode is invalid", target_fixture="context")
 def postcode_is_invalid(context):
     context["change_event"]["Postcode"] = "AAAA 123"
+    return context
+
+
+@when(parsers.parse('the change request is sent with "{valid_or_invalid}" api key'), target_fixture="context")
+def the_change_request_is_sent(context, valid_or_invalid):
+    context["start_time"] = datetime.today().timestamp()
+    context["response"] = process_change_request_payload(context["change_request"], valid_or_invalid == "valid")
     return context
 
 
@@ -331,19 +353,19 @@ def the_changed_event_is_not_processed(context):
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
-# @then("the Changed Request is accepted by Dos")
-# def the_changed_request_is_accepted_by_dos(context):
-#     """assert dos API response and validate processed record in Dos CR Queue database"""
-#     query = f"select value from changes where externalref = '{context.correlation_id}'"
-#     response = search_dos_db(query)
-#     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+@then("the Changed Request is accepted by Dos")
+def the_changed_request_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    query = f"select value from changes where externalref = '{context['correlation_id']}'"
+    response = search_dos_db(query)
+    assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
 
 
-# @then("the Changed Event is not sent to Dos")
-# def the_changed_event_is_not_sent_to_dos(context):
-#     query = "select * from changes"
-#     response = search_dos_db(query)
-#     assert context.correlation_id not in response, "ERROR!!.. Event data found in Dos."
+@then("the Changed Event is not sent to Dos")
+def the_changed_event_is_not_sent_to_dos(context):
+    query = "select * from changes"
+    response = search_dos_db(query)
+    assert context["correlation_id"] not in response, "ERROR!!.. Event data found in Dos."
 
 
 @then("the event is sent to the DLQ", target_fixture="context")
@@ -378,3 +400,11 @@ def lambda_status_code_check(context, lambda_name, status_code):
     )
     logs = get_logs(query, lambda_name, context["start_time"])
     assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
+
+
+@then(parsers.parse('the change request has status code "{status}"'))
+def step_then_should_transform_into(context, status):
+    message = context["response"].json
+    assert (
+        str(context["response"].status_code) == status
+    ), f'Status code not as expected: {context["response"].status_code} != {status} Error: {message} - {status}'
