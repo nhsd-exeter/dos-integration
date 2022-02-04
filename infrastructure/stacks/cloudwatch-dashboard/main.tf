@@ -17,6 +17,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                     [ "UEC-DOS-INT", "QueueToProcessorLatency", "ENV", "${var.environment}" ],
                     [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ]
                 ],
+                "period": 60,
                 "region": "${var.aws_region}",
                 "title": "System Latency"
             }
@@ -35,7 +36,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "stat": "Sum",
-                "period": 300,
+                "period": 60,
                 "title": "NHS UK Endpoint 4xxError"
             }
         },
@@ -51,6 +52,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "metrics": [
                     [ "UEC-DOS-INT", "DosApiLatency","ENV", "${var.environment}" ]
                 ],
+                "period": 60,
                 "region": "${var.aws_region}"
             }
         },
@@ -75,7 +77,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "title": "Event Processor",
-                "period": 300,
+                "period": 60,
                 "stat": "Average"
             }
         },
@@ -95,6 +97,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
                 ],
+                "period": 60,
                 "region": "${var.aws_region}",
                 "title": "FIFO SQS"
             }
@@ -114,7 +117,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "period": 300,
+                "period": 60,
                 "stat": "Minimum",
                 "title": "Max DB Connections"
             }
@@ -132,7 +135,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "period": 300,
+                "period": 60,
                 "stat": "Maximum"
             }
         },
@@ -152,7 +155,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 ],
                 "region": "${var.aws_region}",
                 "title": "Event Sender",
-                "period": 300
+                "period": 60
             }
         },
         {
@@ -169,7 +172,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": true,
                 "region": "${var.aws_region}",
-                "period": 300,
+                "period": 60,
                 "stat": "Sum",
                 "title": "Message Count"
             }
@@ -190,7 +193,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "stat": "Sum",
-                "period": 300,
+                "period": 60,
                 "title": "Event Bridge"
             }
         }
