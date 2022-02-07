@@ -115,10 +115,10 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e RUN_ID=${RUN_ID} \
 		"
 
-integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT
+integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT=
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n auto --junitxml=./testresults.xml --disable-pytest-warnings" \
+	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --junitxml=./testresults.xml --disable-pytest-warnings" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -458,7 +458,7 @@ stress-test-in-pipeline: # An all in one stress test make target
 	AWS_START_TIME=$$(date +%FT%TZ)
 	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make stress-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 6h
+	sleep 4.5h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
@@ -470,7 +470,7 @@ load-test-in-pipeline: # An all in one load test make target
 	AWS_START_TIME=$$(date +%FT%TZ)
 	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make load-test START_TIME=$$START_TIME
-	sleep 25m
+	sleep 10m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
 	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME

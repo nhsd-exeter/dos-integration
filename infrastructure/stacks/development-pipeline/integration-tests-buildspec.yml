@@ -45,7 +45,7 @@ phases:
       - make tester-build
       - make update-ip-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
       - make terraform-apply-auto-approve STACKS=api-gateway-sqs PROFILE=test ENVIRONMENT=test
-      - make integration-test TAGS=complete PROFILE=test ENVIRONMENT=test RUN_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION-$CODEBUILD_BUILD_NUMBER
+      - make integration-test TAGS=complete PROFILE=test ENVIRONMENT=test RUN_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION-$CODEBUILD_BUILD_NUMBER PARALLEL_TEST_COUNT=8
   post_build:
     commands:
       - make delete-ip-from-allowlist PROFILE=test ENVIRONMENT=test USERNAME="codebuild"
