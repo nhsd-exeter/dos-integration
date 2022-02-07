@@ -104,7 +104,7 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
             "report_key": INVALID_OPEN_TIMES_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
-            "nhsuk_open_times_payload": json.dumps(nhs_entity.entity_data("OpeningTimes")),
+            "nhsuk_open_times_payload": json.dumps(nhs_entity.entity_data["OpeningTimes"]),
             "dos_services": ", ".join(str(service.uid) for service in matching_services)
         }
     )
