@@ -1,13 +1,14 @@
-from json import load, dumps
-import csv
-import itertools
-import random
+from json import dumps, load
+from random import choice
 from typing import Any, Dict
-import os
+
+from .utils import search_dos_db
+
+VALID_SERVICE_TYPES = [13, 131, 132, 134, 137]
+VALID_STATUS_ID = 1
 
 
 def changed_event() -> Dict[str, Any]:
-    print(os.getcwd())
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         payload["ODSCode"] = random_odscode()
@@ -46,11 +47,12 @@ def change_request() -> Dict[str, Any]:
 
 
 def random_odscode() -> str:
-    with open("resources/valid_ods_codes.csv") as csv_file:
-        csv_data = csv.reader(csv_file, delimiter=",")
-        ods_list = list(itertools.chain(*list(csv_data)))
-        valid_odscode = random.choices(ods_list, k=1)
-        return valid_odscode[0]
+    query = (
+        f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
+        f"AND statusid = '{VALID_STATUS_ID}'"
+    )
+    odscode_list = search_dos_db(query)
+    return choice(odscode_list)[0]
 
 
 def get_payload(payload_name: str) -> str:
