@@ -30,3 +30,4 @@ TF_VAR_texas_hosted_zone = $(TEXAS_HOSTED_ZONE)
 TF_VAR_environment = $(ENVIRONMENT)
 TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
+PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
