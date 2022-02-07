@@ -2,7 +2,7 @@ import json
 import random
 from decimal import Decimal
 from json import dumps
-from os import getenv, environ
+from os import getenv
 from time import sleep, time_ns
 
 import psycopg2
@@ -150,11 +150,11 @@ def search_dos_db(query: str) -> list:
     return rows
 
 
-def generate_correlation_id(context: dict, suffix=None) -> str:
-    name_no_space = environ.get("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
+def generate_correlation_id(suffix=None) -> str:
+    name_no_space = getenv("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
-    if suffix is None:
-        correlation_id = f"{run_id}_{name_no_space}"
-    else:
-        correlation_id = f"{run_id}_{suffix}"
+    correlation_id = f"{run_id}_{name_no_space}" if suffix is None else f"{run_id}_{suffix}"
+    correlation_id = (
+        correlation_id if len(correlation_id) < 100 else correlation_id[:99]
+    )  # DoS API Gateway max reference is 100 characters
     return correlation_id
