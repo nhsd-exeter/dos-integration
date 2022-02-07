@@ -115,7 +115,7 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e RUN_ID=${RUN_ID} \
 		"
 
-integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT=
+integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
 	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --junitxml=./testresults.xml --disable-pytest-warnings" \
