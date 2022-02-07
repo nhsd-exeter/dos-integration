@@ -129,7 +129,7 @@ def a_change_event_with_invalid_openingtimetype():
 # set correlation id to contain "Bad Request"
 @given(parsers.parse('the correlation-id is "{custom_correlation}"'), target_fixture="context")
 def a_custom_correlation_id_is_set(context, custom_correlation: str):
-    context["correlation_id"] = generate_correlation_id(context, custom_correlation)
+    context["correlation_id"] = generate_correlation_id(custom_correlation)
     return context
 
 
@@ -177,7 +177,7 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context["start_time"] = datetime.today().timestamp()
     if "correlation_id" not in context:
-        context["correlation_id"] = generate_correlation_id(context)
+        context["correlation_id"] = generate_correlation_id()
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
