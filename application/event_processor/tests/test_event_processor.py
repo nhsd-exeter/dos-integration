@@ -428,6 +428,72 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.disconnect_dos_db")
+@patch(f"{FILE_PATH}.log_invalid_open_times")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
+@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.EventProcessor")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+def test_lambda_handler_invalid_open_times(
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_event_processor,
+    mock_add_change_request_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    mock_log_invalid_open_times,
+    mock_disconnect_dos_db,
+    change_event,
+    lambda_context,
+):
+    # Arrange
+    service = dummy_dos_service()
+    service.id = 1
+    service.uid = 101
+    service.odscode = "SLC4501"
+    service.web = "www.fakesite.com"
+    service.publicphone = "01462622435"
+    service.postcode = "S45 1AB"
+
+    change_event["OpeningTimes"] = [
+        {
+            "Weekday": "Monday",
+            "Times": "09:00-13:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        {
+            "Weekday": "Monday",
+            "Times": "12:00-17:30",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        }
+    ]
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    mock_extract_body.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_add_change_request_to_dynamodb.return_value = 1
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
+    mock_event_processor.return_value.get_matching_services.return_value = [service]
+
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    lambda_handler(sqs_event, lambda_context)
+    # Assert
+    mock_log_invalid_open_times.assert_called_once()
+    mock_disconnect_dos_db.assert_called_once()
+    mock_event_processor.get_change_requests.assert_not_called()
+    mock_event_processor.send_changes.assert_not_called()
+    # Clean up
+    for env in EXPECTED_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.EventProcessor")

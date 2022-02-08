@@ -1,4 +1,5 @@
 from typing import List
+import json
 
 from aws_lambda_powertools.logging.logger import Logger
 
@@ -8,6 +9,8 @@ from nhs import NHSEntity
 HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"
 UN_MATCHED_PHARMACY_REPORT_ID = "UN_MATCHED_PHARMACY"
 INVALID_POSTCODE_REPORT_ID = "INVALID_POSTCODE"
+INVALID_OPEN_TIMES_REPORT_ID = "INVALID_OPEN_TIMES"
+
 
 logger = Logger(child=True)
 
@@ -85,4 +88,23 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
         },
+    )
+
+
+def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
+    """Report invalid open times for nhs entity
+
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        matching_services (List[DoSService]): The list of DoS matching services
+    """
+    logger.warning(
+        f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times.",
+        extra={
+            "report_key": INVALID_OPEN_TIMES_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_open_times_payload": json.dumps(nhs_entity.entity_data["OpeningTimes"]),
+            "dos_services": ", ".join(str(service.uid) for service in matching_services)
+        }
     )

@@ -1,9 +1,12 @@
 from unittest.mock import patch
+import json
 
 from aws_lambda_powertools import Logger
 from ..dos import VALID_STATUS_ID
 from ..nhs import NHSEntity
 from ..reporting import (
+    INVALID_OPEN_TIMES_REPORT_ID,
+    log_invalid_open_times,
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
@@ -120,5 +123,46 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
             "nhsuk_county": nhs_entity.county,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_invalid_open_times(mock_logger):
+    # Arrange
+    opening_times = [
+        {
+            "Weekday": "Monday",
+            "Times": "09:00-13:00",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        },
+        {
+            "Weekday": "Monday",
+            "Times": "12:00-17:30",
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": True
+        }
+    ]
+    nhs_entity = NHSEntity({
+        "OpeningTimes": opening_times
+    })
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+
+    dos_services = [dummy_dos_service() for i in range(3)]
+    # Act
+    log_invalid_open_times(nhs_entity, dos_services)
+    # Assert
+    mock_logger.assert_called_with(
+        f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times.",
+        extra={
+            "report_key": INVALID_OPEN_TIMES_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_open_times_payload": json.dumps(opening_times),
+            "dos_services": ", ".join(str(service.uid) for service in dos_services)
         },
     )

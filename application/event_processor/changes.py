@@ -81,12 +81,12 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
         nhs_entity (NHSEntity): NHS UK Entity for comparision
     """
 
-    # If anything in OpeningTimes list field doesn't appear right, no open times changes are created.
+    # Skip if invalid times. This check will have already been done and logged out fully in event_processor
     if not nhs_entity.all_times_valid():
         logger.warning(
-            "Opening Times for NHS are not in expected format or are logically invalid. No open times changes added. "
-            f"OpenTimes={nhs_entity.entity_data.get('OpeningTimes')}"
-        )
+            f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found to be invalid or illogical. "
+            "Skipping change."
+            )
         return
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)

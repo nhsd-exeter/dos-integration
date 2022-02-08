@@ -17,7 +17,7 @@ from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
 from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
 from nhs import NHSEntity
-from reporting import log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
+from reporting import log_invalid_open_times, log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 from common.encryption import initialise_encryption_client
 
 
@@ -223,6 +223,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         if nhs_entity.is_status_hidden_or_closed():
             report_closed_or_hidden_services(nhs_entity, matching_services)
             return
+
+        if not nhs_entity.all_times_valid():
+            log_invalid_open_times(nhs_entity, matching_services)
 
         event_processor.get_change_requests()
 
