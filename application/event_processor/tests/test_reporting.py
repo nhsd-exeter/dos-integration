@@ -157,7 +157,7 @@ def test_log_invalid_open_times(mock_logger):
     log_invalid_open_times(nhs_entity, dos_services)
     # Assert
     mock_logger.assert_called_with(
-        f"NHS Entity '{nhs_entity.odscode}' has an misformatted or illogical set of opening times.",
+        f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times.",
         extra={
             "report_key": INVALID_OPEN_TIMES_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,

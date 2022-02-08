@@ -99,7 +99,7 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
         matching_services (List[DoSService]): The list of DoS matching services
     """
     logger.warning(
-        f"NHS Entity '{nhs_entity.odscode}' has an misformatted or illogical set of opening times.",
+        f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times.",
         extra={
             "report_key": INVALID_OPEN_TIMES_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
