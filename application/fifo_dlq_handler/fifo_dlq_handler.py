@@ -3,7 +3,8 @@ from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from common.dynamodb import add_change_request_to_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.utilities import extract_body, get_sequence_number, handle_sqs_msg_attributes
+from common.utilities import extract_body, get_sequence_number
+from eventbridge_dlq_handler.eventbridge_dlq_handler import handle_sqs_msg_attributes
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 tracer = Tracer()
