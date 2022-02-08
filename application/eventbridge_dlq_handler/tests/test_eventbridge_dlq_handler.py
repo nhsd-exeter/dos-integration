@@ -1,9 +1,7 @@
 from dataclasses import dataclass
 from unittest.mock import patch
-
 from pytest import fixture
-
-from ..eventbridge_dlq_handler import lambda_handler, handle_msg_attributes
+from ..eventbridge_dlq_handler import lambda_handler
 
 FILE_PATH = "application.eventbridge_dlq_handler.eventbridge_dlq_handler"
 
@@ -91,14 +89,3 @@ def test_lambda_handler(mock_extract_body, dead_letter_message, lambda_context):
     lambda_handler(dead_letter_message, lambda_context)
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_message["Records"][0]["body"])
-
-
-def test_handle_msg_attributes(dead_letter_message):
-    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
-
-    attributes = handle_msg_attributes(msg_attributes=msg_attributes)
-    assert attributes["error_msg"] == msg_attributes["ERROR_MESSAGE"]["stringValue"]
-    assert attributes["error_msg_http_code"] == 400
-    assert attributes["error_code"] == msg_attributes["ERROR_CODE"]["stringValue"]
-    assert attributes["rule_arn"] == msg_attributes["RULE_ARN"]["stringValue"]
-    assert attributes["target_arn"] == msg_attributes["TARGET_ARN"]["stringValue"]
