@@ -204,6 +204,16 @@ This testing includes:
 
 This testing is generally done by a tester
 
+Prerequisites
+
+    tx-mfa
+    Sign into Non-Prod VPN
+    make tester-build
+
+To run unit tests run the following commands
+
+    make integration-test PROFILE=task TAGS=dev PARALLEL_TEST_COUNT=10
+
 ### Performance Testing
 
 Performance testing is the practice of evaluating how a system performs in terms of responsiveness and stability under a particular workload. Performance tests are typically executed to examine speed, robustness, reliability of the application.
