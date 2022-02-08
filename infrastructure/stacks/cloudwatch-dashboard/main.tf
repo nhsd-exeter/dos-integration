@@ -1,3 +1,39 @@
+resource "aws_cloudwatch_query_definition" "errors" {
+  name = "${var.project_id}/${var.environment}/errors"
+
+  log_group_names = [
+    "/aws/lambda/${var.event_processor_lambda_name}",
+    "/aws/lambda/${var.event_sender_lambda_name}",
+    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message, exception_name
+| filter level == 'ERROR'
+| sort @timestamp
+EOF
+}
+
+resource "aws_cloudwatch_query_definition" "by_correlation_id" {
+  name = "${var.project_id}/${var.environment}/by-correlation-id"
+
+  log_group_names = [
+    "/aws/lambda/${var.event_processor_lambda_name}",
+    "/aws/lambda/${var.event_sender_lambda_name}",
+    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
+| filter correlation_id == 'REPLACE'
+| sort @timestamp
+EOF
+}
+
+
+
 resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
 
   dashboard_name = var.cloudwatch_monitoring_dashboard_name
