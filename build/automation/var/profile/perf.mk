@@ -5,11 +5,11 @@
 
 LOG_LEVEL:= INFO
 
-DOS_API_GATEWAY_SECRETS = $(TF_VAR_dos_api_gateway_secret)
-DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
+DOS_API_GATEWAY_SECRETS = core-dos-db-sync/deployment
+DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
-DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
+DOS_API_GATEWAY_URL := https://core-dos-performance-ddc-core-dos-api-gateway.k8s-nonprod.texasplatform.uk/api/change-request
 MOCK_MODE := false
 
 DB_SERVER_NAME := uec-core-dos-performance-db-12-replica-di
