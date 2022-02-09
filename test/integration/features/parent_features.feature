@@ -101,14 +101,14 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
 
-  @complete @dev
+@complete @dev
   Scenario: An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
     Given a Changed Event is valid
     When an AdditionalOpeningDate contains data with both true and false IsOpen status
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
 
-  @dev
+@complete @dev
   Scenario: 400 from DOS results in Splunk error log
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
@@ -118,8 +118,12 @@ Feature: DOS INTEGRATION E2E TESTS
     And the "eb_dlq" logs show status code "400"
 
 
-
-
+  @complete @dev
+  Scenario: All data required in the Opening times exception report is identifiable in the logs
+    Given a Changed Event is valid
+    When the OpeningTimes Times data is not defined
+    And the Changed Event is sent for processing with "valid" api key
+    Then the attributes for invalid opening times report is identified in the logs
 
 
 
