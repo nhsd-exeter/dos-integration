@@ -1,10 +1,12 @@
 from json import loads
+
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 from pytest import raises
 from ..utilities import (
     extract_body,
     get_sequence_number,
+    handle_sqs_msg_attributes,
 )
 
 
@@ -45,6 +47,17 @@ def test_get_sequence_number_empty():
     sequence_number = get_sequence_number(record)
     # Assert
     assert sequence_number is None
+
+
+def test_handle_sqs_msg_attributes(dead_letter_message):
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+
+    attributes = handle_sqs_msg_attributes(msg_attributes=msg_attributes)
+    assert attributes["error_msg"] == msg_attributes["ERROR_MESSAGE"]["stringValue"]
+    assert attributes["error_msg_http_code"] == 400
+    assert attributes["error_code"] == msg_attributes["ERROR_CODE"]["stringValue"]
+    assert attributes["rule_arn"] == msg_attributes["RULE_ARN"]["stringValue"]
+    assert attributes["target_arn"] == msg_attributes["TARGET_ARN"]["stringValue"]
 
 
 SQS_EVENT = {

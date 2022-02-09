@@ -461,15 +461,15 @@ def test_lambda_handler_invalid_open_times(
             "Times": "09:00-13:00",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
-            "IsOpen": True
+            "IsOpen": True,
         },
         {
             "Weekday": "Monday",
             "Times": "12:00-17:30",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
-            "IsOpen": True
-        }
+            "IsOpen": True,
+        },
     ]
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
