@@ -368,6 +368,16 @@ def lambda_status_code_check(context, lambda_name, status_code):
     assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
 
 
+@then(parsers.parse('the "{lambda_name}" logs show error message "{error_message}"'))
+def lambda_error_msg_check(context, lambda_name, error_message):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        f' | filter error_msg like "{error_message}"'
+    )
+    logs = get_logs(query, lambda_name, context["start_time"])
+    assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
+
+
 @then(parsers.parse('the change request has status code "{status}"'))
 def step_then_should_transform_into(context, status):
     message = context["response"].json
