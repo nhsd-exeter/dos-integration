@@ -41,9 +41,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
 
 def validate_event(event: Dict[str, Any]) -> None:
     if "odscode" not in event:
-        raise ValueError("Missing 'odscode' in event")
+        raise Exception("Missing 'odscode' in event")
     if "sequence_number" not in event:
-        raise ValueError("Missing 'sequence_number' in event")
+        raise Exception("Missing 'sequence_number' in event")
 
 
 def build_correlation_id():
@@ -67,18 +67,21 @@ def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
         Limit=1,
         ScanIndexForward=False,
     )
+    if len(response["Items"]) == 0:
+        raise Exception(f"No change event found for ods code {odscode} and sequence number {sequence_number}")
     item = response["Items"][0]
-    logger.info("Retrieved change event", extra={"item": item})
+    logger.info("Retrieved change event from dynamodb", extra={"item": item})
     deserializer = TypeDeserializer()
     change_event = {k: deserializer.deserialize(v) for k, v in item.items()}["Event"]
     logger.append_keys(change_event=change_event)
+    logger.info("Found change event")
     return change_event
 
 
 def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_number: int, correlation_id: str):
     sqs = client("sqs")
     queue_url = sqs.get_queue_url(QueueName=getenv("FIFO_SQS_NAME"))["QueueUrl"]
-    logger.info("Sending change event to SQS", extra={"queue_url": queue_url, "sequence_number": sequence_number})
+    logger.info("Sending change event to SQS", extra={"queue_url": queue_url})
     change_event_str = dumps(change_event)
     response = sqs.send_message(
         QueueUrl=queue_url,
@@ -89,7 +92,7 @@ def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_numbe
             "sequence-number": {"StringValue": str(sequence_number), "DataType": "Number"},
         },
     )
-    logger.info("Response from sqs", extra={"response": response})
+    logger.info("Message send to SQS, response from sqs", extra={"response": response})
 
 
-# {"odscode":"FQ582", "sequence_number": "1644322266020278800"}
+# {"odscode":"FC766", "sequence_number": "1000082472"}
