@@ -251,8 +251,24 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "period": 60,
                 "title": "DLQ failures"
             }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 24,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "period": 300,
+                "stat": "Sum"
+            }
         }
-
     ]
 }
 EOF
