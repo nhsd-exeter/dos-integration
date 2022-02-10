@@ -79,6 +79,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
@@ -93,6 +94,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
@@ -203,11 +205,6 @@ event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_sender
 
-event-sender-run: ### A rebuild and restart of the event sender lambda.
-	make stop
-	make event-sender-build
-	make start
-
 # ==============================================================================
 # Event Processor
 
@@ -228,11 +225,6 @@ event-processor-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_processor
-
-event-processor-run: ### A rebuild and restart of the event processor lambda.
-	make stop
-	make event-processor-build
-	make start
 
 # ==============================================================================
 # First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
@@ -405,10 +397,11 @@ docker-hub-signin: # Sign into Docker hub
 
 tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-processor.txt
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-sender.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-eventbridge-dlq-hander.txt
+	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
 	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
 	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
 	make docker-image NAME=tester

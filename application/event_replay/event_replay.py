@@ -17,7 +17,7 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
 @logger.inject_lambda_context
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """Entrypoint handler for the authoriser lambda
 
     Args:
@@ -27,25 +27,30 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     Returns:
         dict: Policy to allow connection to the API Gateway Mock
     """
-    body = event
-    odscode = body["odscode"]
-    logger.append_keys(ods_code=odscode)
-    sequence_number = body["sequence_number"]
-    logger.append_keys(sequence_number=sequence_number)
-    # logger.append_keys(dynamo_record_id=dynamo_record_id)
-    change_event = get_change_event(odscode, Decimal(sequence_number))
     correlation_id = build_correlation_id()
     logger.set_correlation_id(correlation_id)
-    # change_event = fix_decimals(change_event)
+    validate_event(event)
+    odscode = event["odscode"]
+    sequence_number = event["sequence_number"]
+    logger.append_keys(ods_code=odscode)
+    logger.append_keys(sequence_number=sequence_number)
+    change_event = get_change_event(odscode, Decimal(sequence_number))
     send_change_event(change_event, odscode, int(sequence_number), correlation_id)
-    return dumps({"message": "OK"})
+    return dumps({"message": "OK", "correlation_id": correlation_id})
+
+
+def validate_event(event: Dict[str, Any]) -> None:
+    if "odscode" not in event:
+        raise ValueError("Missing 'odscode' in event")
+    if "sequence_number" not in event:
+        raise ValueError("Missing 'sequence_number' in event")
 
 
 def build_correlation_id():
-    return f'{time_ns()}-{getenv("PROFILE")}'
+    return f'{time_ns()}-{getenv("ENV")}-replayed-event'
 
 
-def get_change_event(odscode: str, sequence_number: Decimal):
+def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
     response = client("dynamodb").query(
         TableName=getenv("CHANGE_EVENTS_TABLE_NAME"),
         IndexName="gsi_ods_sequence",
@@ -70,20 +75,12 @@ def get_change_event(odscode: str, sequence_number: Decimal):
     return change_event
 
 
-# def fix_decimals(change_event: Dict[str, Any]):
-#     for k, v in change_event.items():
-#         if isinstance(v, Decimal):
-#             change_event[k] = float(v)
-#     return change_event
-
-
 def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_number: int, correlation_id: str):
     sqs = client("sqs")
     queue_url = sqs.get_queue_url(QueueName=getenv("FIFO_SQS_NAME"))["QueueUrl"]
     logger.info("Sending change event to SQS", extra={"queue_url": queue_url, "sequence_number": sequence_number})
     change_event_str = dumps(change_event)
-    # print(message_body)
-    sqs.send_message(
+    response = sqs.send_message(
         QueueUrl=queue_url,
         MessageBody=change_event_str,
         MessageGroupId=odscode,
@@ -92,6 +89,7 @@ def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_numbe
             "sequence-number": {"StringValue": str(sequence_number), "DataType": "Number"},
         },
     )
+    logger.info("Response from sqs", extra={"response": response})
 
 
 # {"odscode":"FQ582", "sequence_number": "1644322266020278800"}
