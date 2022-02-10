@@ -25,7 +25,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         context (LambdaContext): Lambda function context object
 
     Returns:
-        dict: Policy to allow connection to the API Gateway Mock
+        str: Message and correlation id of the replayed change event
     """
     correlation_id = build_correlation_id()
     logger.set_correlation_id(correlation_id)
@@ -36,7 +36,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     logger.append_keys(sequence_number=sequence_number)
     change_event = get_change_event(odscode, Decimal(sequence_number))
     send_change_event(change_event, odscode, int(sequence_number), correlation_id)
-    return dumps({"message": "OK", "correlation_id": correlation_id})
+    return dumps({"message": "The change event has been re-sent successfully", "correlation_id": correlation_id})
 
 
 def validate_event(event: Dict[str, Any]) -> None:
@@ -93,6 +93,3 @@ def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_numbe
         },
     )
     logger.info("Message send to SQS, response from sqs", extra={"response": response})
-
-
-# {"odscode":"FC766", "sequence_number": "1000082472"}
