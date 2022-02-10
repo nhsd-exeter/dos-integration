@@ -123,11 +123,10 @@ def get_matching_dos_services(odscode: str) -> List[DoSService]:
 
     sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
     named_args = {"ODS_5": f"{odscode[0:5]}%"}
-    c = query_dos_db(query=sql_query, vars=named_args)
+    rows = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
-    services = [DoSService(row) for row in c.fetchall()]
-    c.close()
+    services = [DoSService(row) for row in rows]
     return services
 
 
@@ -151,16 +150,15 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         "WHERE ssod.serviceid = %(service_id)s"
     )
     named_args = {"service_id": service_id}
-    c = query_dos_db(sql_query, named_args)
+    rows = query_dos_db(sql_query, named_args)
 
     """sort by date and then by starttime"""
-    sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
+    sorted_list = sorted(rows, key=lambda row: (row[1], row[2]))
     specified_opening_time_dict: Dict[datetime, List[OpenPeriod]] = {}
     key: date
     for key, value in groupby(sorted_list, lambda row: (row[1])):
         specified_opening_time_dict[key] = [OpenPeriod(row[2], row[3]) for row in list(value)]
     specified_opening_times = [SpecifiedOpeningTime(value, key) for key, value in specified_opening_time_dict.items()]
-    c.close()
     return specified_opening_times
 
 
@@ -179,17 +177,16 @@ def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
         "WHERE sdo.serviceid = %(service_id)s"
     )
     named_args = {"service_id": service_id}
-    c = query_dos_db(sql_command, named_args)
+    rows = query_dos_db(sql_command, named_args)
 
     standard_opening_times = StandardOpeningTimes()
-    for row in c.fetchall():
+    for row in rows:
         weekday = row[2].lower()
         start = row[3]
         end = row[4]
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
 
-    c.close()
     return standard_opening_times
 
 
@@ -248,7 +245,9 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
     c = db_connection.cursor(cursor_factory=DictCursor)
     logger.info(f"Running SQL command: {c.mogrify(query, vars)}")
     c.execute(query, vars)
-    return c
+    result = c.fetchall()
+    c.close()
+    return result
 
 
 def get_dos_locations(postcode: str) -> List[DoSLocation]:
@@ -265,9 +264,9 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
     db_column_names = [f.name for f in fields(DoSLocation)]
     sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode ~* %(pc_regex)s"
     named_args = {"pc_regex": pc_regex}
-    c = query_dos_db(sql_command, named_args)
+    rows = query_dos_db(sql_command, named_args)
 
-    dos_locations = [DoSLocation(**row) for row in c.fetchall()]
+    dos_locations = [DoSLocation(**row) for row in rows]
     dos_location_cache[normalised_pc] = dos_locations
     logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
 

@@ -1,0 +1,5 @@
+.version
+*.txt
+*.tar.gz
+*.txt
+Dockerfile.effective

@@ -15,6 +15,7 @@ build: # Build lambdas
 	make -s event-processor-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s fifo-dlq-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make -s eventbridge-dlq-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s test-db-checker-handler-build AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 start: # Stop project
 	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -109,6 +110,7 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
+		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
@@ -133,6 +135,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
@@ -262,6 +265,27 @@ eventbridge-dlq-handler-clean: ### Clean event processor lambda docker image dir
 	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.txt
 	make common-code-remove LAMBDA_DIR=eventbridge_dlq_handler
+
+# ==============================================================================
+# Test DB Checker Handler (test-db-checker-handler)
+
+test-db-checker-handler-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=test_db_checker_handler
+	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/test-db-checker-handler/assets/requirements.txt
+	cd $(APPLICATION_DIR)/test_db_checker_handler
+	tar -czf $(DOCKER_DIR)/test-db-checker-handler/assets/test-db-checker-handler-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make test-db-checker-handler-clean
+	export VERSION=$$(make docker-image-get-version NAME=test-db-checker-handler)
+
+test-db-checker-handler-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/test-db-checkerhandler/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
+	make common-code-remove LAMBDA_DIR=test_db_checker_handler
 
 # ==============================================================================
 # Authoriser (for dos api gateway mock)

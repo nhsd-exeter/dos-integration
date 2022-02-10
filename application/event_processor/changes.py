@@ -2,9 +2,9 @@ from typing import Dict
 
 from aws_lambda_powertools import Logger
 
-from dos import DoSService, get_valid_dos_postcode
+from common.dos import DoSService, get_valid_dos_postcode
 from nhs import NHSEntity
-from opening_times import SpecifiedOpeningTime
+from common.opening_times import SpecifiedOpeningTime
 from reporting import log_invalid_nhsuk_pharmacy_postcode
 from change_request import (
     ADDRESS_CHANGE_KEY,

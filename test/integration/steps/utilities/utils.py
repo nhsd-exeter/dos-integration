@@ -5,11 +5,9 @@ from json import dumps
 from os import getenv
 from time import sleep, time_ns
 
-import psycopg2
 import requests
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from psycopg2.extras import DictCursor
 from requests import Response
 
 from .get_secrets import get_secret
@@ -128,26 +126,22 @@ def generate_random_int() -> str:
     return str(random.sample(range(1000), 1)[0])
 
 
-def search_dos_db(query: str) -> list:
-    db_username = json.loads(get_secret(getenv("DOS_DB_USERNAME_SECRET_NAME")))[getenv("DOS_DB_USERNAME_KEY")]
-    db_password = json.loads(get_secret(getenv("DOS_DB_PASSWORD_SECRET_NAME")))[getenv("DOS_DB_PASSWORD_KEY")]
-    sleep(5)
-    response = RDS_DB_CLIENT.describe_db_instances(DBInstanceIdentifier=getenv("DOS_DB_IDENTIFIER_NAME"))
-    server_url = response["DBInstances"][0]["Endpoint"]["Address"]
-    db_connection = psycopg2.connect(
-        host=server_url,
-        port="5432",
-        dbname="pathwaysdos_regressiondi",
-        user=db_username,
-        password=db_password,
-        connect_timeout=30,
-        options="-c search_path=dbo,pathwaysdos",
+def get_ods() -> list:
+    lambda_payload = {"type": "ods"}
+    response = LAMBDA_CLIENT_FUNCTIONS.invoke(
+        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"), InvocationType="RequestResponse", Payload=lambda_payload
     )
-    db_cursor = db_connection.cursor(cursor_factory=DictCursor)
-    db_cursor.execute(query)
-    rows = db_cursor.fetchall()
-    db_cursor.close()
-    return rows
+    data = response["Payload"].read()
+    return data
+
+
+def get_changes(correlation_id: str) -> list:
+    lambda_payload = {"type": "change", "correlation_id": correlation_id}
+    response = LAMBDA_CLIENT_FUNCTIONS.invoke(
+        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"), InvocationType="RequestResponse", Payload=lambda_payload
+    )
+    data = response["Payload"].read()
+    return data
 
 
 def generate_correlation_id(suffix=None) -> str:

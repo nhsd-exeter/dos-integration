@@ -150,3 +150,20 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     maximumRetryAttempts: 0
+
+  test-db-checker-handler:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/test-db-checker-handler:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-test-db-checker-handler
+    description: ${sls:stage} Test DB Checker Handler lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test-db-checker_handler_role_name}
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    maximumRetryAttempts: 0
+
+resources:
+  Conditions:
+    CreateNonProdResources:
+      !Not [!Equals ["${sls:stage}", live]]

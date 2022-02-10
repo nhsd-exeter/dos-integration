@@ -15,10 +15,10 @@ from ..dos import (
     _set_db_connection,
     _get_db_connection,
 )
-from .conftest import dummy_dos_location, dummy_dos_service
+from ...event_processor.tests.conftest import dummy_dos_location, dummy_dos_service
 from opening_times import OpenPeriod, StandardOpeningTimes
 
-FILE_PATH = "application.event_processor.dos"
+FILE_PATH = "application.common.dos"
 
 
 def test__init__():

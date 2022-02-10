@@ -21,7 +21,7 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from dos import dos_location_cache
+from common.dos import dos_location_cache
 
 FILE_PATH = "application.event_processor.event_processor"
 

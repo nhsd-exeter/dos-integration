@@ -2,10 +2,9 @@ from json import dumps, load
 from random import choice
 from typing import Any, Dict
 
-from .utils import search_dos_db
+from .utils import get_ods
 
-VALID_SERVICE_TYPES = [13, 131, 132, 134, 137]
-VALID_STATUS_ID = 1
+odscode_list = None
 
 
 def changed_event() -> Dict[str, Any]:
@@ -47,11 +46,9 @@ def change_request() -> Dict[str, Any]:
 
 
 def random_odscode() -> str:
-    query = (
-        f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
-        f"AND statusid = '{VALID_STATUS_ID}'"
-    )
-    odscode_list = search_dos_db(query)
+    global odscode_list
+    if odscode_list is None:
+        odscode_list = get_ods()
     return choice(odscode_list)[0]
 
 

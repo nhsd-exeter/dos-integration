@@ -2,7 +2,7 @@ from unittest.mock import patch
 import json
 
 from aws_lambda_powertools import Logger
-from ..dos import VALID_STATUS_ID
+from ...common.dos import VALID_STATUS_ID
 from ..nhs import NHSEntity
 from ..reporting import (
     INVALID_OPEN_TIMES_REPORT_ID,
