@@ -380,9 +380,15 @@ def step_then_should_transform_into(context, status):
 @then("the attributes for invalid opening times report is identified in the logs")
 def invalid_opening_times_exception(context):
     query = (
-        "fields nhsuk_odscode, nhsuk_organisation_name, message_received, nhsuk_open_times_payload, dos_services"
-        f'| sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
         '| filter report_key="INVALID_OPEN_TIMES"'
     )
     logs = get_logs(query, "processor", context["start_time"])
-    assert logs != []
+    for item in [
+        "nhsuk_odscode",
+        "nhsuk_organisation_name",
+        "message_received",
+        "nhsuk_open_times_payload",
+        "dos_services",
+    ]:
+        assert item in logs

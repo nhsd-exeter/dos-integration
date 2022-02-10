@@ -118,7 +118,7 @@ Feature: DOS INTEGRATION E2E TESTS
     And the "eb_dlq" logs show status code "400"
 
 
-  @complete @dev
+@complete @dev
   Scenario: All data required in the Opening times exception report is identifiable in the logs
     Given a Changed Event is valid
     When the OpeningTimes Times data is not defined
