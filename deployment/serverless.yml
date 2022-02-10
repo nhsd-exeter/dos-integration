@@ -14,6 +14,12 @@ provider:
   deploymentBucket:
     blockPublicAccess: true
     skipPolicySetup: true
+  stackTags:
+    Environment: ${env:ENVIRONMENT}
+    PROFILE: ${env:PROFILE}
+    Product: ${env:PROJECT_ID}
+    Programme: ${env:PROGRAMME}
+    Service: ${env:PROJECT_ID}
   tags:
     Environment: ${env:ENVIRONMENT}
     PROFILE: ${env:PROFILE}
