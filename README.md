@@ -260,6 +260,7 @@ A make target has been added to check that a lambda can successful access the do
     make test-deployed-event-processor-db-connection LAMBDA_NAME=uec-dos-int-di-203-event-processor
 
 It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
+
 ## Deployment
 
 ### API Key
