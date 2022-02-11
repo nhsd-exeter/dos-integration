@@ -4,6 +4,11 @@ resource "aws_dynamodb_table" "message-history-table" {
   hash_key     = "Id"
   range_key    = "ODSCode"
 
+  server_side_encryption {
+    enabled = true
+    kms_key_arn = data.aws_kms_key.kms_managed_key.arn
+  }
+
   attribute {
     name = "Id"
     type = "S"
@@ -34,4 +39,5 @@ resource "aws_dynamodb_table" "message-history-table" {
   tags = {
     service = var.project_id
   }
+
 }

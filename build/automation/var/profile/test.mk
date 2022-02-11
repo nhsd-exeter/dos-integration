@@ -45,6 +45,9 @@ TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
 
+# Key Management Service
+TF_VAR_kms_managed_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-customer-managed-key
+
 # Lambda IAM Roles
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
 TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role

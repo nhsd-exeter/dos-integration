@@ -102,6 +102,12 @@ def a_change_event_with_invalid_organisationtypeid():
     return context
 
 
+# # IsOpen is true AND Times is blank
+
+# # OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+# # An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
+
+
 # # Weekday NOT present on the Opening Time
 @given("a Changed Event with the Weekday NOT present in the Opening Times data", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday():
@@ -214,6 +220,16 @@ def no_matched_services_found(context):
     assert event_logs != [], "ERROR!! No unmatched services log found.."
 
 
+# @then('the "{event}" logs are generated')
+# def the_lambda_logs_are_generated(context, event: str):
+#     query = (
+#         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"',
+#         ' | filter message="Event has been validated"',
+#     )
+#     event_logs = get_logs(query, event, context.start_time)
+#     assert event_logs != [], "ERROR!! No logs found!.."
+
+
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
     sleep(3)
@@ -225,6 +241,23 @@ def stored_dynamo_db_events_are_pulled(context):
         odscode == db_event_record["ODSCode"]
     ), f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
     assert sequence_num == db_event_record["SequenceNumber"], "ERROR!!.. Change event record(sequence no) mismatch!!"
+
+
+# @then("the lambda is confirmed active")
+# def the_lambda_is_confirmed_active(context):
+#     status = get_lambda_info("status")
+#     assert status == "Active" or "Successful", "ERROR! Invocation either unsuccessful or Lambda is inactive"
+
+
+# @then("the Changed Event is processed")
+# def the_changed_event_is_processed(context):
+#     search_param = "Sent off change payload"
+#     query = (
+#         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+#         f' | filter message like "{search_param}"'
+#     )
+#     logs = get_logs(query, "processor", context.start_time)
+#     assert logs != [], "ERROR!!.. logs not found"
 
 
 @then("the unmatched service exception is reported to cloudwatch", target_fixture="context")
@@ -287,7 +320,7 @@ def hidden_or_closed_exception(context):
 def address_change_is_discarded_in_event_sender(context, address: str):
     query = (
         f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        '| filter message like "Attempting to send change request to DoS"'
+        ' | filter message like "Attempting to send change request to DoS"'
     )
     logs = get_logs(query, "sender", context["start_time"])
     assert f"{address}" not in logs, "ERROR!!.. Unexpected Address change found in logs."
@@ -339,7 +372,7 @@ def the_changed_event_is_not_sent_to_dos(context):
 def event_sender_triggers_DLQ(context):
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter response_text like "Fake Bad Request"'
+        f' | filter response_text like "Fake Bad Request"'
     )
     logs = get_logs(query, "sender", context["start_time"])
     assert "Failed to send change request to DoS" in logs, "ERROR!!.. expected exception logs not found."
@@ -375,20 +408,3 @@ def step_then_should_transform_into(context, status):
     assert (
         str(context["response"].status_code) == status
     ), f'Status code not as expected: {context["response"].status_code} != {status} Error: {message} - {status}'
-
-
-@then("the attributes for invalid opening times report is identified in the logs")
-def invalid_opening_times_exception(context):
-    query = (
-        f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        '| filter report_key="INVALID_OPEN_TIMES"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    for item in [
-        "nhsuk_odscode",
-        "nhsuk_organisation_name",
-        "message_received",
-        "nhsuk_open_times_payload",
-        "dos_services",
-    ]:
-        assert item in logs

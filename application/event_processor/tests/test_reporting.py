@@ -136,17 +136,19 @@ def test_log_invalid_open_times(mock_logger):
             "Times": "09:00-13:00",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
-            "IsOpen": True,
+            "IsOpen": True
         },
         {
             "Weekday": "Monday",
             "Times": "12:00-17:30",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
-            "IsOpen": True,
-        },
+            "IsOpen": True
+        }
     ]
-    nhs_entity = NHSEntity({"OpeningTimes": opening_times})
+    nhs_entity = NHSEntity({
+        "OpeningTimes": opening_times
+    })
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
 
@@ -161,6 +163,6 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
-            "dos_services": ", ".join(str(service.uid) for service in dos_services),
+            "dos_services": ", ".join(str(service.uid) for service in dos_services)
         },
     )

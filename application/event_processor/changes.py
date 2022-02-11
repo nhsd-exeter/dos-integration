@@ -86,7 +86,7 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
         logger.warning(
             f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found to be invalid or illogical. "
             "Skipping change."
-        )
+            )
         return
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)

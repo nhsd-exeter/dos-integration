@@ -7,6 +7,7 @@ resource "aws_sqs_queue" "di_change_event_fifo_queue" {
   fifo_throughput_limit       = "perMessageGroupId"
   visibility_timeout_seconds  = 120 # Must be same as event processor max execution time
   sqs_managed_sse_enabled     = true
+  kms_master_key_id           = data.aws_kms_key.kms_managed_key.key_id
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.di_dead_letter_queue_from_fifo_queue.arn
     maxReceiveCount     = 1

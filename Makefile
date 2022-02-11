@@ -36,13 +36,13 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
+	make terraform-apply-auto-approve STACKS=key-management-service,lambda-security-group,lambda-iam-roles,dynamo-db
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs,cloudwatch-dashboard
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs,cloudwatch-dashboard
+	make terraform-destroy-auto-approve STACKS=key-management-service,eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs,cloudwatch-dashboard
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
@@ -412,7 +412,7 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 40 --spawn-rate 2 --run-time 60m --stop-timeout 10 --exit-code-on-error 0 \
+			--users 10 --spawn-rate 2 --run-time 10m --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
