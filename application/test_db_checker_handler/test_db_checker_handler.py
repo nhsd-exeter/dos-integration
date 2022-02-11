@@ -1,26 +1,25 @@
 from aws_lambda_powertools import Logger, Tracer
-from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from common.middlewares import unhandled_exception_logging
-from common.dos import query_dos_db, VALID_SERVICE_TYPES, VALID_STATUS_ID
+from common.dos_db_connection import query_dos_db
 from json import dumps
-from typing import Dict
+from typing import Dict, Any
 
-TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
+
 tracer = Tracer()
 logger = Logger()
-DLQ_HANDLER_REPORT_ID = "EVENTBRIDGE_DLQ_HANDLER_RECEIVED_EVENT"
+VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
+VALID_STATUS_ID = 1
 
 
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
-@event_source(data_class=SQSEvent)
 @logger.inject_lambda_context()
-def lambda_handler(event: Dict, context: LambdaContext) -> str:
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """Entrypoint handler for the lambda
 
     Args:
-        event (str): query to run against the db
+        event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
     request = event
@@ -28,7 +27,7 @@ def lambda_handler(event: Dict, context: LambdaContext) -> str:
     if request["type"] == "ods":
         query = (
             f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
-            f"AND statusid = '{VALID_STATUS_ID}'"
+            f"AND statusid = '{VALID_STATUS_ID}' AND odscode IS NOT NULL"
         )
     elif request["type"] == "change":
         cid = request.get("correlation_id")
@@ -38,6 +37,6 @@ def lambda_handler(event: Dict, context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
     else:
         raise ValueError("Unsupported request")
-
-    result = query_dos_db(query)
+    cursor = query_dos_db(query)
+    result = cursor.fetchall()
     return dumps(result)

@@ -15,7 +15,8 @@ from changes import get_changes
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
-from common.dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services, disconnect_dos_db
+from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.dos_db_connection import disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_invalid_open_times, log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
 from common.encryption import initialise_encryption_client

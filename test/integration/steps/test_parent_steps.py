@@ -4,17 +4,18 @@ from decimal import Decimal
 from json import dumps
 from time import sleep, time
 
+from pytest_bdd import given, parsers, scenarios, then, when
+
 from .utilities.changed_events import change_request, changed_event
 from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
+    get_changes,
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
-    get_changes,
 )
-from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("../features/parent_features.feature", "../features/event_sender.feature", "../features/e2e_di_test.feature")
 
@@ -216,9 +217,9 @@ def no_matched_services_found(context):
 
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
-    sleep(3)
     odscode = context["change_event"]["ODSCode"]
     sequence_num = Decimal(context["sequence_no"])
+    sleep(10)
     db_event_record = get_stored_events_from_dynamo_db(odscode, sequence_num)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
     assert (

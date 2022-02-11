@@ -1,9 +1,9 @@
-import json
 import random
+from ast import literal_eval
 from decimal import Decimal
-from json import dumps
+from json import dumps, loads
 from os import getenv
-from time import sleep, time_ns
+from time import time_ns
 
 import requests
 from boto3 import client
@@ -26,7 +26,7 @@ RDS_DB_CLIENT = client("rds")
 def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
-        api_key = json.loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
+        api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     sequence_number = str(time_ns())
     headers = {
         "x-api-key": api_key,
@@ -42,17 +42,13 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
 def process_change_request_payload(payload: dict, api_key_valid: bool) -> Response:
     api_key = "invalid"
     if api_key_valid:
-        secret = json.loads(get_secret(getenv("CR_API_KEY_SECRET")))
+        secret = loads(get_secret(getenv("CR_API_KEY_SECRET")))
         api_key = secret[getenv("CR_API_KEY_KEY")]
-
     headers = {
         "x-api-key": api_key,
         "Content-Type": "application/json",
     }
-
-    print(CR_URL)
     output = requests.request("POST", CR_URL, headers=headers, data=dumps(payload))
-    print(output)
     return output
 
 
@@ -65,7 +61,6 @@ def debug_purge_queue():
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
     print(f"{DYNAMO_DB_TABLE} {odscode} {sequence_number}")
-    sleep(5)
     resp = DYNAMO_CLIENT.query(
         TableName=DYNAMO_DB_TABLE,
         IndexName="gsi_ods_sequence",
@@ -113,7 +108,7 @@ def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
         if resp.get("Count") > 0:
             sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
     except Exception as err:
-        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} { DYNAMO_DB_TABLE} .Error: {err}")
+        print(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} {DYNAMO_DB_TABLE} .Error: {err}")
         raise
     return sequence_number
 
@@ -126,21 +121,27 @@ def generate_random_int() -> str:
     return str(random.sample(range(1000), 1)[0])
 
 
-def get_ods() -> list:
+def get_ods() -> list[list[str]]:
     lambda_payload = {"type": "ods"}
     response = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"), InvocationType="RequestResponse", Payload=lambda_payload
+        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
+        InvocationType="RequestResponse",
+        Payload=dumps(lambda_payload),
     )
-    data = response["Payload"].read()
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
     return data
 
 
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "change", "correlation_id": correlation_id}
     response = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"), InvocationType="RequestResponse", Payload=lambda_payload
+        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
+        InvocationType="RequestResponse",
+        Payload=dumps(lambda_payload),
     )
-    data = response["Payload"].read()
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
     return data
 
 

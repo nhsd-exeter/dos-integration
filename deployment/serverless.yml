@@ -161,6 +161,14 @@ functions:
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test_db_checker_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      DB_SERVER: ${env:DB_SERVER}
+      DB_PORT: ${env:DB_PORT}
+      DB_NAME: ${env:DB_NAME}
+      DB_SCHEMA: ${env:DB_SCHEMA}
+      DB_USER_NAME: ${env:DB_USER_NAME}
+      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
     maximumRetryAttempts: 0
 
 resources:

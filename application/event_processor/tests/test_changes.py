@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from common.dos import dos_location_cache
+from dos import dos_location_cache
 
 from ..change_request import (
     ADDRESS_CHANGE_KEY,

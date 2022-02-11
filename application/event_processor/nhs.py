@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from aws_lambda_powertools import Logger
 
-from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 logger = Logger(child=True)
 

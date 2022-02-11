@@ -385,6 +385,15 @@ resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
         "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:Describe*",
+        "secretsmanager:Get*",
+        "secretsmanager:List*"
+      ],
+      "Resource": "*"
     }
   ]
 }
