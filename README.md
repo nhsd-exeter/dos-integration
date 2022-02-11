@@ -51,6 +51,7 @@
   - [Operation](#operation)
     - [Error Handling](#error-handling)
     - [Observability](#observability)
+      - [Tracing Change events and requests Correlation Id](#tracing-change-events-and-requests-correlation-id)
     - [Auditing](#auditing)
     - [Backups](#backups)
     - [Cloud Environments](#cloud-environments)
@@ -414,6 +415,7 @@ List of the high level principles that a product /development team must adhere t
   - Format
 - Tracing
   - AWS X-Ray Trace Ids (These are included in logs)
+  - `correlation-id` and `reference` (dos) provide a common key to track change events across systems: NHS UK Profile Editor, DoS Integrations, and DoS (Api Gateway)
 - Monitoring
   - Dashboards
 - Alerting
@@ -423,6 +425,14 @@ List of the high level principles that a product /development team must adhere t
   - What do we measure?
 
 What are the links of the supporting systems?
+
+#### Tracing Change events and requests Correlation Id
+
+  To be able to track a change event and the change request it can become across systems a common id field is present on logs related to each event. The id is generate in `Profile Editor` (NHS UK) which is then assigned to the `correlation-id` header of the request send to our (DoS Integration) endpoint, for a given change event. The `correlation-id` header is then used through the handling of the change event in `DoS Integration`.
+
+  If a change event does result in a change request being created for `DoS` then the change request has a `reference` key with the value being the correlation id.
+
+  The events can be further investigate in DoS Integration by using the X-Ray trace id that is associated with the log that has the given correlation id for the change event being investigated.
 
 ### Auditing
 
