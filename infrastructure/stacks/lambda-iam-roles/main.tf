@@ -31,7 +31,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
       "Action": "kms:*",
       "Resource": [
         "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}"
       ]
     },
     {
@@ -153,7 +153,7 @@ resource "aws_iam_role_policy" "event_sender_policy" {
       "Action": "kms:*",
       "Resource": [
         "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}"
       ]
     },
     {
@@ -231,7 +231,7 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
       "Action": "kms:*",
       "Resource": [
         "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}"
       ]
     },
     {
@@ -335,7 +335,7 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
       "Action": "kms:*",
       "Resource": [
         "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}"
       ]
     },
     {
