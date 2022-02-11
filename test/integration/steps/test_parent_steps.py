@@ -4,17 +4,18 @@ from decimal import Decimal
 from json import dumps
 from time import sleep, time
 
+from pytest_bdd import given, parsers, scenarios, then, when
+
 from .utilities.changed_events import change_request, changed_event
 from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
+    get_changes,
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
-    search_dos_db,
 )
-from pytest_bdd import given, parsers, scenarios, then, when
 
 scenarios("../features/parent_features.feature", "../features/event_sender.feature", "../features/e2e_di_test.feature")
 
@@ -216,9 +217,9 @@ def no_matched_services_found(context):
 
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
-    sleep(3)
     odscode = context["change_event"]["ODSCode"]
     sequence_num = Decimal(context["sequence_no"])
+    sleep(10)
     db_event_record = get_stored_events_from_dynamo_db(odscode, sequence_num)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
     assert (
@@ -323,16 +324,14 @@ def the_changed_event_is_not_processed(context):
 @then("the Changed Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    query = f"select value from changes where externalref = '{context['correlation_id']}'"
-    response = search_dos_db(query)
+    response = get_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
 
 
 @then("the Changed Event is not sent to Dos")
 def the_changed_event_is_not_sent_to_dos(context):
-    query = "select * from changes"
-    response = search_dos_db(query)
-    assert context["correlation_id"] not in response, "ERROR!!.. Event data found in Dos."
+    response = get_changes(context["correlation_id"])
+    assert response == [], "ERROR!!.. Event data found in Dos."
 
 
 @then("the event is sent to the DLQ", target_fixture="context")

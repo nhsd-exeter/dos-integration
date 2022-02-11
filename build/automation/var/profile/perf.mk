@@ -51,6 +51,7 @@ TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
 TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handler-role
 TF_VAR_eventbridge_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dql-handler-role
+TF_VAR_test_db_checker_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler-role
 
 # Kinisis Firehose (Splunk Logs)
 TF_VAR_dos_integration_firehose := $(PROJECT_ID)-cw-logs-firehose
@@ -62,6 +63,7 @@ TF_VAR_fifo_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)
 TF_VAR_eventbridge_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
+TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_eventbridge_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler
 TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription

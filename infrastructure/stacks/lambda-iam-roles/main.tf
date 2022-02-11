@@ -338,3 +338,64 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
 }
 EOF
 }
+
+resource "aws_iam_role" "test_db_checker_handler_role" {
+  name               = var.test_db_checker_handler_role_name
+  path               = "/"
+  description        = ""
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
+  name   = "test_db_checker_handler_policy"
+  role   = aws_iam_role.test_db_checker_handler_role.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:Describe*",
+        "secretsmanager:Get*",
+        "secretsmanager:List*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}

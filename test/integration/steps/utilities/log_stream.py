@@ -56,12 +56,12 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
         query_id = start_query_response["queryId"]
         response = None
         while response is None or response["status"] != "Complete":
-            sleep(15)
+            sleep(20)
             response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 16:
+        elif counter == 21:
             raise Exception("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
 
