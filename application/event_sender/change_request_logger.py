@@ -1,6 +1,6 @@
 from aws_lambda_powertools import Logger
 from typing import Any
-
+from json import loads
 from requests import Response
 
 logger = Logger(child=True)
@@ -24,11 +24,14 @@ class ChangeRequestLogger:
         Args:
             response (Response): Response object from posting the change request
         """
+        response_object = loads(response.text)
+        details = response_object.get("detail")
+
         if response.ok is True:
-            extra = {"state": "Success", "response_status_code": response.status_code, "response_text": response.text}
+            extra = {"state": "Success", "response_status_code": response.status_code, "response_text": details}
             logger.info("Successfully send change request to DoS", extra=extra)
         else:
-            extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}
+            extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": details}
             logger.error("Failed to send change request to DoS", extra=extra)
 
     def log_change_request_exception(self) -> None:
