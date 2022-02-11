@@ -428,11 +428,11 @@ What are the links of the supporting systems?
 
 #### Tracing Change events and requests Correlation Id
 
-  To be able to track a change event and the change request it can become across systems a common id field is present on logs related to each event. The id is generate in `Profile Editor` (NHS UK) which is then assigned to the `correlation-id` header of the request send to our (DoS Integration) endpoint, for a given change event. The `correlation-id` header is then used through the handling of the change event in `DoS Integration`.
+  To be able to track a change event and the change requests it can become across systems a common id field is present on logs related to each event. The id is generated in `Profile Editor` (NHS UK) which is then assigned to the `correlation-id` header of the request send to our (DoS Integration) endpoint, for a given change event. The `correlation-id` header is then used throughout the handling of the change event in `DoS Integration`.
 
-  If a change event does result in a change request being created for `DoS` then the change request has a `reference` key with the value being the correlation id.
+  If a change event does result in change requests being created for `DoS` then the change requests have a `reference` key with the value being the correlation id.
 
-  The events can be further investigate in DoS Integration by using the X-Ray trace id that is associated with the log that has the given correlation id for the change event being investigated.
+  The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
 
 ### Auditing
 
