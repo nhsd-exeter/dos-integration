@@ -40,11 +40,11 @@ TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
 TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
-TF_VAR_sqs_kms_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-kms-key-sqs
+TF_VAR_sqs_kms_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-sqs-queues-kms-key
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
-TF_VAR_ddb_kms_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-kms-key-ddb
+TF_VAR_ddb_kms_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-ddb-table-kms-key
 
 # Lambda IAM Roles
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
