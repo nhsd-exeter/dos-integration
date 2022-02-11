@@ -67,3 +67,12 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
     logger.info(f"Running SQL command: {c.mogrify(query, vars)}")
     c.execute(query, vars)
     return c
+
+
+def _set_db_connection(value):
+    global db_connection
+    db_connection = value
+
+
+def _get_db_connection():
+    return db_connection

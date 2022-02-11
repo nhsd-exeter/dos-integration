@@ -219,12 +219,3 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     if len(dos_locations) == 0:
         return None
     return dos_locations[0].postcode
-
-
-def _set_db_connection(value):
-    global db_connection
-    db_connection = value
-
-
-def _get_db_connection():
-    return db_connection

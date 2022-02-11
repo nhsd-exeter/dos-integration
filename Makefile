@@ -76,6 +76,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -89,6 +90,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test

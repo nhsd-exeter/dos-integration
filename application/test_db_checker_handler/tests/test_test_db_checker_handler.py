@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from unittest.mock import patch
 from json import dumps
+from unittest.mock import MagicMock, patch
+
 from pytest import fixture, raises
 
 from ..test_db_checker_handler import lambda_handler
@@ -23,7 +24,9 @@ def lambda_context():
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_type_ods(query_dos_mock, lambda_context):
     # Arrange
-    query_dos_mock.return_value = [("ODS12"), ("ODS11")]
+    mock_connection = MagicMock()
+    query_dos_mock.return_value = mock_connection
+    mock_connection.fetchall.return_value = [("ODS12"), ("ODS11")]
 
     test_input = {"type": "ods"}
 
@@ -31,7 +34,8 @@ def test_type_ods(query_dos_mock, lambda_context):
     response = lambda_handler(test_input, lambda_context)
     # Assert
     query_dos_mock.assert_called_once_with(
-        "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) AND statusid = '1'"
+        "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
+        "AND statusid = '1' AND odscode IS NOT NULL"
     )
     assert response == '["ODS12", "ODS11"]'
 
@@ -50,7 +54,9 @@ def test_type_change_with_id(query_dos_mock, lambda_context):
         },
         "initiator": {"userid": "CHANGE_REQUEST", "timestamp": "2022-01-27 10:13:50"},
     }
-    query_dos_mock.return_value = [(dumps(expected))]
+    mock_connection = MagicMock()
+    query_dos_mock.return_value = mock_connection
+    mock_connection.fetchall.return_value = [(dumps(expected))]
 
     test_input = {"type": "change", "correlation_id": "dave"}
 
@@ -65,9 +71,7 @@ def test_type_change_with_id(query_dos_mock, lambda_context):
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_type_change_no_id(query_dos_mock, lambda_context):
     # Arrange
-
     test_input = {"type": "change"}
-
     # Act
     with raises(ValueError) as err:
         lambda_handler(test_input, lambda_context)
@@ -79,9 +83,7 @@ def test_type_change_no_id(query_dos_mock, lambda_context):
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_type_change_unknown_type(query_dos_mock, lambda_context):
     # Arrange
-
     test_input = {"type": "dave"}
-
     # Act
     with raises(ValueError) as err:
         lambda_handler(test_input, lambda_context)
