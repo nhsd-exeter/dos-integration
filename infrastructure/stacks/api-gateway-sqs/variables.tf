@@ -87,6 +87,10 @@ variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
 }
 
+variable "sqs_kms_key_alias" {
+  description = "Key alias for the sqs kms key"
+}
+
 # ############################
 # SQS DEAD LETTER QUEUE
 # ############################

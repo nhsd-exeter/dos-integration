@@ -28,6 +28,14 @@ resource "aws_iam_role_policy" "event_processor_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": [
+        "${data.aws_kms_key.ddb_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}",
+      ]
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
@@ -142,6 +150,14 @@ resource "aws_iam_role_policy" "event_sender_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": [
+        "${data.aws_kms_key.ddb_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}",
+      ]
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
@@ -210,6 +226,14 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": [
+        "${data.aws_kms_key.ddb_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}",
+      ]
+    },
     {
       "Effect": "Allow",
       "Action": [
@@ -306,6 +330,14 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": [
+        "${data.aws_kms_key.ddb_kms_key.arn}",
+        "${data.aws_kms_key.sqs_kms_key.arn}",
+      ]
+    },
     {
       "Effect": "Allow",
       "Action": [
