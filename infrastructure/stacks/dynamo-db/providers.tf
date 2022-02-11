@@ -11,5 +11,4 @@ provider "aws" {
       "Environment" = var.environment
     }
   }
-  version = "~> 3.74"
 }
