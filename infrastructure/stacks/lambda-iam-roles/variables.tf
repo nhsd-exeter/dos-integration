@@ -85,9 +85,23 @@ variable "change_events_table_name" {
   description = "Name of the table that stores received pharmacy change events"
 }
 
+
+# ##############
+# # KMS
+# ##############
+
+variable "ddb_kms_key_alias" {
+  description = "Key alias for the ddb kms key"
+}
+
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
 }
+
+variable "sqs_kms_key_alias" {
+  description = "Key alias for the sqs kms key"
+}
+
 
 ############
 # SQS
