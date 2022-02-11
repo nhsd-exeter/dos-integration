@@ -70,6 +70,10 @@ variable "eventbridge_dlq_handler_role_name" {
   description = "Role name for fifo dlq handler lambda"
 }
 
+variable "test_db_checker_handler_role_name" {
+  description = "Role name for test db checker handler lambda"
+}
+
 # ##############
 # # DYNAMO DB
 # ##############

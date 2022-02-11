@@ -158,7 +158,7 @@ functions:
     description: ${sls:stage} Test DB Checker Handler lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test-db-checker_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test_db_checker_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     maximumRetryAttempts: 0

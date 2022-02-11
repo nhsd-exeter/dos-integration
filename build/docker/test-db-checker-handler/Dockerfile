@@ -6,4 +6,4 @@ RUN pip install -r /requirements.txt --upgrade
 # Copy function code
 ADD assets/test-db-checker-handler-app.tar.gz "/var/task"
 # Set the CMD to your handler
-CMD [ "test-db-checker_handler.lambda_handler" ]
+CMD [ "test_db_checker_handler.lambda_handler" ]
