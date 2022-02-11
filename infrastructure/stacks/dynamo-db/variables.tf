@@ -59,3 +59,7 @@ variable "environment" {
 variable "change_events_table_name" {
   description = "Name of the table that stores received pharmacy change events"
 }
+
+variable "ddb_kms_key_alias" {
+  description = "Key alias for the ddb kms key"
+}
