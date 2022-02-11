@@ -206,7 +206,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.change_request_receiver_api_name}", { "label": "DOS Change Request", "region": "${var.aws_region}" } ]
                 ],
                 "view": "timeSeries",
-                "stacked": true,
+                "stacked": false,
                 "region": "${var.aws_region}",
                 "period": 60,
                 "stat": "Sum",
@@ -231,6 +231,42 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stat": "Sum",
                 "period": 60,
                 "title": "Event Bridge"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.dead_letter_queue_from_event_bus_name}", { "label": "EventBridge Message Count" } ],
+                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "FIFO Message Count" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "stat": "Sum",
+                "period": 60,
+                "title": "DLQ failures"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 24,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "period": 300,
+                "stat": "Sum"
             }
         }
     ]

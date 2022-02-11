@@ -57,7 +57,7 @@ def test_lambda_handler(
     mock_add_change_request_to_dynamodb, mock_extract_body, dead_letter_change_event, lambda_context
 ):
     # Arrange
-    extracted_body = "Test message."
+    extracted_body = "Test message1."
     mock_extract_body.return_value = extracted_body
     # Act
     lambda_handler(dead_letter_change_event, lambda_context)
