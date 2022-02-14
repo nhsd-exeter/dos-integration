@@ -16,17 +16,15 @@ variable "project_id" {
   description = "Project ID"
 }
 
-variable "log_bucket" {
-  description = "The common log bucket for the S3 bucket created"
-}
 
-variable "bucket_iam_role" {
-  description = "The name of the iam role assigned to the created s3 bucket"
-}
 
-variable "iam_role_policy_name" {
-  description = "The policy name of attached to the role"
-}
+# variable "bucket_iam_role" {
+#   description = "The name of the iam role assigned to the created s3 bucket"
+# }
+
+# variable "iam_role_policy_name" {
+#   description = "The policy name of attached to the role"
+# }
 
 variable "bucket_iam_user" {
   description = "The name of the iam user assigned to the created s3 bucket"
