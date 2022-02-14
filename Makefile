@@ -16,7 +16,7 @@ build: # Build lambdas
 		fifo-dlq-handler-build \
 		eventbridge-dlq-handler-build \
 		event-replay-build \
-        test-db-checker-handler-build \
+		test-db-checker-handler-build \
 		AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 
@@ -79,7 +79,6 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
-		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
@@ -94,7 +93,6 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
-		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
 
@@ -290,6 +288,27 @@ event-replay-clean: ### Clean event replay lambda docker image directory
 	make common-code-remove LAMBDA_DIR=event_replay
 
 # ==============================================================================
+# Test DB Checker Handler (test-db-checker-handler)
+
+test-db-checker-handler-build: ### Build event processor lambda docker image
+	make common-code-copy LAMBDA_DIR=test_db_checker_handler
+	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/test-db-checker-handler/assets/requirements.txt
+	cd $(APPLICATION_DIR)/test_db_checker_handler
+	tar -czf $(DOCKER_DIR)/test-db-checker-handler/assets/test-db-checker-handler-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make test-db-checker-handler-clean
+	export VERSION=$$(make docker-image-get-version NAME=test-db-checker-handler)
+
+test-db-checker-handler-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/test-db-checkerhandler/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
+	make common-code-remove LAMBDA_DIR=test_db_checker_handler
+
+# ==============================================================================
 # Authoriser (for dos api gateway mock)
 
 authoriser-build-and-push: ### Build authoriser lambda docker image
@@ -349,6 +368,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
@@ -397,11 +417,12 @@ docker-hub-signin: # Sign into Docker hub
 
 tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-processor.txt
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-sender.txt
+	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
+	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-eventbridge-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
+	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-test-db-checker-handler.txt
 	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
 	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
 	make docker-image NAME=tester
@@ -553,3 +574,4 @@ create-ecr-repositories:
 	make docker-create-repository NAME=fifo-dlq-handler
 	make docker-create-repository NAME=eventbridge-dlq-handler
 	make docker-create-repository NAME=event-replay
+	make docker-create-repository NAME=test-db-checker-handler
