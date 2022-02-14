@@ -117,6 +117,13 @@ Feature: DOS INTEGRATION E2E TESTS
     And the DLQ logs the error for Splunk
     And the "eb_dlq" logs show status code "400"
 
+@complete @dev
+  Scenario: DLQ logs show "message abandoned" error_msg
+    Given a Changed Event is valid
+    And the correlation-id is "Bad Request"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "eb_dlq" logs show error message "Message Abandoned:"
+
 
 @complete @dev
   Scenario: All data required in the Opening times exception report is identifiable in the logs
