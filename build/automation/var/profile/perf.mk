@@ -10,7 +10,6 @@ DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := https://core-dos-performance-ddc-core-dos-api-gateway.k8s-nonprod.texasplatform.uk/api/change-request
-MOCK_MODE := false
 
 DB_SERVER_NAME := uec-core-dos-performance-db-12-replica-di
 DB_PORT := 5432

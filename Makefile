@@ -162,6 +162,7 @@ clean: # Runs whole project clean
 		fifo-dlq-handler-clean \
 		eventbridge-dlq-handler-clean \
 		event-replay-clean \
+		test-db-checker-handler-clean \
 		tester-clean \
 		authoriser-clean \
 		dos-api-gateway-clean
@@ -267,7 +268,7 @@ eventbridge-dlq-handler-clean: ### Clean eventbridge dlq handler lambda docker i
 	make common-code-remove LAMBDA_DIR=eventbridge_dlq_handler
 
 # ==============================================================================
-# Eventbridge Dead Letter Queue Handler (eventbridge-dlq-handler)
+# Event Replay lambda (event-replay)
 
 event-replay-build: ### Build event replay lambda docker image
 	make common-code-copy LAMBDA_DIR=event_replay
