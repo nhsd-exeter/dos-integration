@@ -7,7 +7,7 @@ import random
 from configparser import ConfigParser
 from os import path
 
-SESSION_DURATION = 3600
+SESSION_DURATION = 3600*6
 
 
 def get_config_profiles():
