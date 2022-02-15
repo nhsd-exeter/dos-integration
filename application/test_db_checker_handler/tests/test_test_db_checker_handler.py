@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from pytest import fixture, raises
 
 from ..test_db_checker_handler import lambda_handler
+from common.dos import DoSService
 
 FILE_PATH = "application.test_db_checker_handler.test_db_checker_handler"
 
@@ -92,6 +93,71 @@ def test_get_demographics_no_match(matching_dos_mock, lambda_context):
     matching_dos_mock.assert_called_once_with("FA100")
     assert str(err.value) == "No matching services for ods FA100"
 
+
+@patch(f"{FILE_PATH}.get_matching_dos_services")
+def test_type_demographics(matching_dos_mock, lambda_context):
+    expected = {
+        "id": "1",
+        "uid": "123",
+        "name": "Example",
+        "odscode": "FA100",
+        "address": "5-7 Kingsway",
+        "town": "BINGLEY",
+        "postcode": "BD16 4RP",
+        "web": None,
+        "email": "31864-fake@nhs.gov.uk",
+        "fax": None,
+        "nonpublicphone": None,
+        "typeid": 131,
+        "parentid": 30737,
+        "subregionid": 30737,
+        "statusid": 1,
+        "createdtime": "2011-12-08 08:53:15 +00:00",
+        "modifiedtime": "2017-11-29 10:33:29 +00:00",
+        "publicphone": None,
+        "publicname": None,
+        "_standard_opening_times": None,
+        "_specified_opening_times": None,
+    }
+    db_tuple = tuple(
+        expected[k]
+        for k in [
+            "id",
+            "uid",
+            "name",
+            "odscode",
+            "address",
+            "town",
+            "postcode",
+            "web",
+            "email",
+            "fax",
+            "nonpublicphone",
+            "typeid",
+            "parentid",
+            "subregionid",
+            "statusid",
+            "createdtime",
+            "modifiedtime",
+            "publicphone",
+            "publicname",
+        ]
+    )
+
+    # Arrange
+    test_input = {"type": "change_event_demographics", "odscode": "FA100"}
+    matching_dos_mock.return_value = [DoSService(db_tuple)]
+    # Act
+    response = lambda_handler(test_input, lambda_context)
+    # Assert
+
+    matching_dos_mock.assert_called_once_with("FA100")
+    print(response)
+    print("---------------")
+    print(dumps(expected))
+    assert response == dumps(expected)
+
+
 @patch(f"{FILE_PATH}.get_matching_dos_services")
 def test_type_demographics_no_ods(matching_dos_mock, lambda_context):
     # Arrange
@@ -103,6 +169,7 @@ def test_type_demographics_no_ods(matching_dos_mock, lambda_context):
     assert str(err.value) == "Missing odscode"
     matching_dos_mock.assert_not_called()
 
+
 @patch(f"{FILE_PATH}.get_standard_opening_times_from_db")
 def test_type_standards_no_ods(mock_opening_times, lambda_context):
     # Arrange
@@ -113,6 +180,7 @@ def test_type_standards_no_ods(mock_opening_times, lambda_context):
     # Assert
     assert str(err.value) == "Missing service_id"
     mock_opening_times.assert_not_called()
+
 
 @patch(f"{FILE_PATH}.get_specified_opening_times_from_db")
 def test_type_specifieds_no_ods(mock_opening_times, lambda_context):
