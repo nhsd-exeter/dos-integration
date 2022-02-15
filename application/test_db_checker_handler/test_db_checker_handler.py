@@ -47,8 +47,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         odscode = request.get("odscode")
         if odscode is not None:
             services = get_matching_dos_services(odscode)
-            service = services[0].__dict__
-            result = service
+            if len(services) > 0:
+                service = services[0].__dict__
+                result = service
+            else:
+                raise ValueError(f"No matching services for ods {odscode}")
         else:
             raise ValueError("Missing odscode")
     elif request["type"] == "change_event_standard_opening_times":
