@@ -39,7 +39,6 @@ def dummy_dos_location() -> DoSLocation:
     )
 
 
-
 @fixture
 def change_event():
     change_event = PHARMACY_STANDARD_EVENT.copy()

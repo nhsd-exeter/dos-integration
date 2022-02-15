@@ -35,7 +35,8 @@ def test_type_ods(query_dos_mock, lambda_context):
     # Assert
     query_dos_mock.assert_called_once_with(
         "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
-        "AND statusid = '1' AND odscode IS NOT NULL", None
+        "AND statusid = '1' AND odscode IS NOT NULL",
+        None,
     )
     assert response == '["ODS12", "ODS11"]'
 
