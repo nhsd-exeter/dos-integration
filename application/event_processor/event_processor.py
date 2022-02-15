@@ -205,7 +205,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
     elif sequence_number < db_latest_sequence_number:
-        logger.error("Sequence id is smaller than the existing one in db for a given odscode, so will be ignored", extra={"incoming_sequence_number":sequence_number,"db_latest_sequence_number":db_latest_sequence_number})
+        logger.error(
+            "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
+            extra={"incoming_sequence_number": sequence_number, "db_latest_sequence_number": db_latest_sequence_number},
+        )
         return
 
     try:
