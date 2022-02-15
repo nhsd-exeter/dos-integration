@@ -3,7 +3,7 @@ from datetime import time, date
 
 from .conftest import PHARMACY_STANDARD_EVENT
 from ..nhs import NHSEntity, is_std_opening_json, is_spec_opening_json
-from opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 test_attr_names = ("odscode", "website", "PublicPhone", "Phone", "Postcode")
 

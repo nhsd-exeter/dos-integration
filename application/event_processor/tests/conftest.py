@@ -6,8 +6,8 @@ from pathlib import Path
 from pytest import fixture
 from testfixtures import LogCapture
 
-from ..dos import DoSLocation, DoSService
-from ..opening_times import StandardOpeningTimes
+from common.dos import DoSLocation, DoSService
+from common.opening_times import StandardOpeningTimes
 
 
 std_event_path = os.path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")

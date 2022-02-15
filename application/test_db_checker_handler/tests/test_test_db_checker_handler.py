@@ -28,14 +28,14 @@ def test_type_ods(query_dos_mock, lambda_context):
     query_dos_mock.return_value = mock_connection
     mock_connection.fetchall.return_value = [("ODS12"), ("ODS11")]
 
-    test_input = {"type": "ods"}
+    test_input = {"type": "get_odscodes"}
 
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
     query_dos_mock.assert_called_once_with(
         "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
-        "AND statusid = '1' AND odscode IS NOT NULL"
+        "AND statusid = '1' AND odscode IS NOT NULL", None
     )
     assert response == '["ODS12", "ODS11"]'
 
@@ -58,12 +58,12 @@ def test_type_change_with_id(query_dos_mock, lambda_context):
     query_dos_mock.return_value = mock_connection
     mock_connection.fetchall.return_value = [(dumps(expected))]
 
-    test_input = {"type": "change", "correlation_id": "dave"}
+    test_input = {"type": "get_changes", "correlation_id": "dave"}
 
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
-    query_dos_mock.assert_called_once_with("SELECT value from changes where externalref = 'dave'")
+    query_dos_mock.assert_called_once_with("SELECT value from changes where externalref = 'dave'", None)
     bla = dumps(dumps(expected))
     assert response == f"[{bla}]"
 
@@ -71,7 +71,7 @@ def test_type_change_with_id(query_dos_mock, lambda_context):
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_type_change_no_id(query_dos_mock, lambda_context):
     # Arrange
-    test_input = {"type": "change"}
+    test_input = {"type": "get_changes"}
     # Act
     with raises(ValueError) as err:
         lambda_handler(test_input, lambda_context)
