@@ -75,6 +75,18 @@ resource "aws_codepipeline" "codepipeline" {
         }
       }
     }
+    action {
+      name            = "Deploy_fresh"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-deploy-fresh-stage"
+      }
+    }
   }
 
   stage {

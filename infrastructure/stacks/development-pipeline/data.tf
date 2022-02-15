@@ -20,6 +20,6 @@ data "aws_iam_role" "pipeline_role" {
 }
 
 locals {
-  deploy_envs = toset(["dev", "test", "perf", "fresh"])
+  deploy_envs = toset(["dev", "test", "perf"])
   to_deploy   = toset(["event-sender", "event-processor", "fifo-dlq-handler", "eventbridge-dlq-handler", "test-db-checker-handler"])
 }
