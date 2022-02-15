@@ -1,26 +1,26 @@
+from base64 import b64encode
 from json import dumps
 from os import environ, getenv
+from time import gmtime, strftime, time, time_ns
 from typing import Dict, List, Union
-from boto3 import client
-from base64 import b64encode
-from time import strftime, gmtime, time_ns, time
+
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+from boto3 import client
 from change_event_exceptions import ValidationException
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
+from common.dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+from common.encryption import initialise_encryption_client
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
-from dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
-from common.dos_db_connection import disconnect_dos_db
 from nhs import NHSEntity
 from reporting import log_invalid_open_times, log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
-from common.encryption import initialise_encryption_client
-
 
 logger = Logger()
 tracer = Tracer()

@@ -5,10 +5,10 @@ import re
 
 from aws_lambda_powertools import Logger
 
-import change_request
-
 logger = Logger(child=True)
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+CHANGE_REQUEST_DATE_FORMAT = "%Y-%m-%d"
+CHANGE_REQUEST_TIME_FORMAT = "%H:%M"
 
 
 @dataclass(repr=True, unsafe_hash=True)
@@ -51,8 +51,8 @@ class OpenPeriod:
     def export_cr_format(self) -> Union[Dict[str, str], None]:
         """Exports open period into a DoS change request accepted format"""
         return {
-            "start_time": self.start.strftime(change_request.TIME_FORMAT),
-            "end_time": self.end.strftime(change_request.TIME_FORMAT),
+            "start_time": self.start.strftime(CHANGE_REQUEST_TIME_FORMAT),
+            "end_time": self.end.strftime(CHANGE_REQUEST_TIME_FORMAT),
         }
 
     @staticmethod
@@ -152,7 +152,7 @@ class SpecifiedOpeningTime:
     def export_cr_format(self) -> dict:
         """Exports Specified opening time into a DoS change request accepted format"""
         exp_open_periods = [op.export_cr_format() for op in sorted(self.open_periods)]
-        date_str = self.date.strftime(change_request.DATE_FORMAT)
+        date_str = self.date.strftime(CHANGE_REQUEST_DATE_FORMAT)
         change = {date_str: exp_open_periods}
         return change
 

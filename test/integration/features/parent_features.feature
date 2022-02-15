@@ -14,6 +14,12 @@ Feature: DOS INTEGRATION E2E TESTS
     And the unmatched service exception is reported to cloudwatch
     Then the Changed Event is not processed any further
 
+  @complete @dev @jack
+  Scenario: A change event is sent which creates no change
+    Given a Change Event which matches DoS
+    When the Changed Event is sent for processing with "valid" api key
+    Then no change requests have been created
+
   @complete @dev
   Scenario: All received Changed Event is archived in Dynamo DB
     Given a Changed Event is valid

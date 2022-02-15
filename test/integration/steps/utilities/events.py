@@ -2,12 +2,15 @@ from json import dumps, load
 from random import choice
 from typing import Any, Dict
 
-from .utils import get_ods
+from .utils import (
+    get_odscodes_list,
+    get_change_event_demographics,
+)
 
 odscode_list = None
 
 
-def changed_event() -> Dict[str, Any]:
+def create_change_event() -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         payload["ODSCode"] = random_odscode()
@@ -55,7 +58,7 @@ def change_request() -> Dict[str, Any]:
 def random_odscode() -> str:
     global odscode_list
     if odscode_list is None:
-        odscode_list = get_ods()
+        odscode_list = get_odscodes_list()
     return choice(odscode_list)[0]
 
 
@@ -67,3 +70,16 @@ def get_payload(payload_name: str) -> str:
         raise Exception("Unable to find Payload by request name")
     with open(f"./features/resources/payloads/{payload_file_name}", "r", encoding="utf-8") as json_file:
         return dumps(load(json_file))
+
+
+def build_same_as_dos_change_event():
+    # TODO Refactor into change event class
+    change_event = create_change_event()
+    # odscode = base_change_event["ODSCode"]
+    change_event["ODSCode"] = "FKA16"
+    demographics_data = get_change_event_demographics(change_event["ODSCode"])
+    print(demographics_data)
+    print(type(demographics_data))
+    change_event["OrganisationName"] = demographics_data["public_name"]
+    change_event["Postcode"] = demographics_data["post_code"]
+    raise Exception("Not Implemented")
