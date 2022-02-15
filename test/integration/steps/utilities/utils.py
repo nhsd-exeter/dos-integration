@@ -3,6 +3,7 @@ from ast import literal_eval
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
+from random import choice
 from time import time_ns
 from typing import Any, Dict
 
@@ -130,6 +131,15 @@ def get_odscodes_list() -> list[list[str]]:
     return data
 
 
+def get_single_service_odscode() -> str:
+    lambda_payload = {"type": "get_odscodes"}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    odscode = choice(data)[0]
+    return odscode
+
+
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -141,9 +151,8 @@ def get_changes(correlation_id: str) -> list:
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
     lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
-    # data = literal_eval(data)
-    data = dict(data)
+    data = response["Payload"].read().decode("utf-8")
+    data = loads(loads(data))
     return data
 
 

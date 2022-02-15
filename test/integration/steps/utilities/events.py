@@ -1,10 +1,14 @@
+from datetime import datetime
 from json import dumps, load
 from random import choice
 from typing import Any, Dict
 
 from .utils import (
-    get_odscodes_list,
     get_change_event_demographics,
+    get_change_event_specified_opening_times,
+    get_change_event_standard_opening_times,
+    get_odscodes_list,
+    get_single_service_odscode,
 )
 
 odscode_list = None
@@ -75,11 +79,50 @@ def get_payload(payload_name: str) -> str:
 def build_same_as_dos_change_event():
     # TODO Refactor into change event class
     change_event = create_change_event()
-    # odscode = base_change_event["ODSCode"]
-    change_event["ODSCode"] = "FKA16"
+    change_event["ODSCode"] = get_single_service_odscode()
     demographics_data = get_change_event_demographics(change_event["ODSCode"])
-    print(demographics_data)
-    print(type(demographics_data))
-    change_event["OrganisationName"] = demographics_data["public_name"]
-    change_event["Postcode"] = demographics_data["post_code"]
-    raise Exception("Not Implemented")
+    change_event["OrganisationName"] = demographics_data["publicname"]
+    change_event["Postcode"] = demographics_data["postcode"]
+    change_event["Contacts"][0]["ContactValue"] = demographics_data["web"]
+    change_event["Contacts"][1]["ContactValue"] = demographics_data["publicphone"]
+    address_keys = ["Address1", "Address2", "Address3", "City", "County"]
+    for address_key in address_keys:
+        change_event[address_key] = None
+    address_parts = demographics_data["address"].split("$")
+
+    if len(address_parts) > 5:
+        raise Exception("Address in DoS is too long")
+
+    counter = 0
+    for address_part in address_parts:
+        change_event[address_keys[counter]] = address_part
+        counter += 1
+
+    standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
+    change_event["OpeningTimes"] = []
+    for day in standard_opening_times:
+        for opening_times in standard_opening_times[day]:
+            change_event["OpeningTimes"].append(
+                {
+                    "Weekday": day,
+                    "Times": f'{opening_times["start_time"]}-{opening_times["end_time"]}',
+                    "OpeningTimeType": "General",
+                    "AdditionalOpeningDate": "",
+                    "IsOpen": True,
+                }
+            )
+    specified_opening_times = get_change_event_specified_opening_times(demographics_data["id"])
+    for date in specified_opening_times:
+        for opening_times in specified_opening_times[date]:
+            str_date = datetime.strptime(date, "%Y-%m-%d")
+            change_event["OpeningTimes"].append(
+                {
+                    "Weekday": "",
+                    "Times": f'{opening_times["start_time"]}-{opening_times["end_time"]}',
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
+                    "IsOpen": True,
+                }
+            )
+    print(dumps(change_event, indent=4))
+    return change_event

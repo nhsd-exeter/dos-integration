@@ -37,6 +37,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
             f"AND statusid = '{VALID_STATUS_ID}' AND odscode IS NOT NULL"
         )
+    elif request["type"] == "get_single_service_odscode":
+        query = (
+            f"SELECT LEFT(odscode,5) AS ODS_5 FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
+            f"AND statusid = '{VALID_STATUS_ID}' AND odscode IS NOT NULL AND odscode != ''"
+            "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY left(odscode,5) having count(left(odscode,5)) = 1"
+        )
     elif request["type"] == "get_changes":
         cid = request.get("correlation_id")
         if cid is not None:
