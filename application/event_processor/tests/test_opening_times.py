@@ -202,6 +202,43 @@ def test_openperiod_from_string():
     assert OpenPeriod.from_string(2.38) is None
 
 
+def test_openperiod_from_string_times():
+    a = OpenPeriod.from_string_times("08:34", "15:13")
+    assert a.start == time(8, 34, 0)
+    assert a.end == time(15, 13, 0)
+
+    b = OpenPeriod.from_string_times("04:45:55", "09:32:22")
+    assert b.start == time(4, 45, 55)
+    assert b.end == time(9, 32, 22)
+
+    c = OpenPeriod.from_string_times("00:00:00", "09:32")
+    assert c.start == time(0, 0, 0)
+    assert c.end == time(9, 32, 0)
+
+    d = OpenPeriod.from_string_times("00:00", "23:59")
+    assert d.start == time(0, 0, 0)
+    assert d.end == time(23, 59, 00)
+
+    e = OpenPeriod.from_string_times("00:00:05", "23:59")
+    assert e.start == time(0, 0, 5)
+    assert e.end == time(23, 59, 00)
+
+    d = OpenPeriod.from_string_times("00:00", "23:59")
+    assert d.start == time(0, 0, 0)
+    assert d.end == time(23, 59, 00)
+
+    assert OpenPeriod.from_string_times("", "") is None
+    assert OpenPeriod.from_string_times("hello", "hello") is None
+    assert OpenPeriod.from_string_times("12:00", "32") is None
+    assert OpenPeriod.from_string_times("", "15:32") is None
+    assert OpenPeriod.from_string_times("08:00", "24:00") is None
+    assert OpenPeriod.from_string_times("38:00", "12:00") is None
+    assert OpenPeriod.from_string_times("08:00", "44:00") is None
+    assert OpenPeriod.from_string_times(231892, 12323) is None
+    assert OpenPeriod.from_string_times(None, None) is None
+    assert OpenPeriod.from_string_times(2.38, "03:00") is None
+
+
 @pytest.mark.parametrize(
     "open_periods, date, other_open_periods,other_date, expected",
     [

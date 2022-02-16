@@ -58,7 +58,8 @@ def test__init__():
     test_data["OpeningTimes"] = [
         {
             "Weekday": "Friday",
-            "Times": "08:45-17:00",
+            "OpeningTime": "08:45",
+            "ClosingTime": "17:00",
             "OffsetOpeningTime": 525,
             "OffsetClosingTime": 1020,
             "OpeningTimeType": "General",
@@ -67,9 +68,8 @@ def test__init__():
         },
         {
             "Weekday": "Friday",
-            "Times": "08:45-17:00",
-            "OffsetOpeningTime": 525,
-            "OffsetClosingTime": 1020,
+            "OpeningTime": "08:45",
+            "ClosingTime": "17:00",
             "OpeningTimeType": "Surgery",
             "AdditionalOpeningDate": "",
             "IsOpen": True,
@@ -458,14 +458,16 @@ def test_lambda_handler_invalid_open_times(
     change_event["OpeningTimes"] = [
         {
             "Weekday": "Monday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
             "IsOpen": True,
         },
         {
             "Weekday": "Monday",
-            "Times": "12:00-17:30",
+            "OpeningTime": "12:00",
+            "ClosingTime": "17:30",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
             "IsOpen": True,

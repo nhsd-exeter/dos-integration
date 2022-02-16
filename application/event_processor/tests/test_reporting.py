@@ -133,14 +133,16 @@ def test_log_invalid_open_times(mock_logger):
     opening_times = [
         {
             "Weekday": "Monday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
             "IsOpen": True,
         },
         {
             "Weekday": "Monday",
-            "Times": "12:00-17:30",
+            "OpeningTime": "12:00",
+            "ClosingTime": "17:30",
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
             "IsOpen": True,

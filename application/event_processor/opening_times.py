@@ -113,6 +113,35 @@ class OpenPeriod:
 
         return None
 
+    @staticmethod
+    def from_string_times(opening_time_str: str, closing_time_str: str) -> Union["OpenPeriod", None]:
+        """Builds an OpenPeriod object from string time arguments"""
+
+        time_formats = ("%H:%M", "%H:%M:%S")
+
+        # Try to convert open time string to time object
+        open_time = None
+        for time_format in time_formats:
+            try:
+                open_time = datetime.strptime(str(opening_time_str), time_format).time()
+                break
+            except ValueError:
+                pass
+
+        # Try to convert close time string to time object
+        close_time = None
+        for time_format in time_formats:
+            try:
+                close_time = datetime.strptime(str(closing_time_str), time_format).time()
+                break
+            except ValueError:
+                pass
+
+        if None in (open_time, close_time):
+            return None
+
+        return OpenPeriod(open_time, close_time)
+
 
 @dataclass(unsafe_hash=True)
 class SpecifiedOpeningTime:
