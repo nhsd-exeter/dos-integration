@@ -113,7 +113,7 @@ class NHSEntity:
 
         # Sort the openingtimes data
         sort_specified = sorted(
-            specified_times_list, 
+            specified_times_list,
             key=lambda item: (item["AdditionalOpeningDate"], item["OpeningTime"], item["ClosingTime"]))
         specified_opening_time_dict: Dict[str, List[OpenPeriod]] = {}
         specified_closed_days = set()
@@ -163,8 +163,8 @@ def is_std_opening_json(item: dict) -> bool:
     """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
 
     # Check values
-    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or 
-            str(item.get("Weekday")).lower() not in WEEKDAYS or 
+    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or
+            str(item.get("Weekday")).lower() not in WEEKDAYS or
             item.get("AdditionalOpeningDate") not in [None, ""]):
 
         return False

@@ -311,12 +311,13 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
             },
             False,
         ),
-        (   {
-                "Weekday": "Sunday", 
-                "OpeningTimeType": "General", 
-                "AdditionalOpeningDate": "", 
+        (
+            {
+                "Weekday": "Sunday",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
                 "IsOpen": False
-            }, 
+            },
             True),
         (
             {
@@ -500,14 +501,14 @@ def test_is_std_opening_json(open_time_json, expected):
             },
             False,
         ),
-        (   
+        (
             {
                 "Weekday": "",
                 "OpeningTime": "10:00",
                 "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "IsOpen": True
-            }, 
+            },
             False),
         (
             {
