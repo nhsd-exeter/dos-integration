@@ -66,7 +66,7 @@ resource "aws_codebuild_project" "di_unit_tests" {
 
 resource "aws_codebuild_project" "di_build" {
 
-  for_each       = local.to_deploy
+  for_each       = local.to_build
   name           = "${var.project_id}-${var.environment}-build-${each.key}-stage"
   description    = "Builds ${each.key} docker container image"
   build_timeout  = "5"
