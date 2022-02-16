@@ -27,7 +27,8 @@
   ],
   "OpeningTimes": [{
     "Weekday": "Monday",
-    "Times": "09:15-12:45",
+    "OpeningTime": "09:15",
+    "ClosingTime": "12:45",
     "OffsetOpeningTime": 540,
     "OffsetClosingTime": 780,
     "OpeningTimeType": "General",
@@ -36,7 +37,8 @@
   },
   {
     "Weekday": "Monday",
-    "Times": "14:00-17:30",
+    "OpeningTime": "14:00",
+    "ClosingTime": "17:30",
     "OffsetOpeningTime": 840,
     "OffsetClosingTime": 1050,
     "OpeningTimeType": "General",

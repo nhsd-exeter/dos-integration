@@ -93,7 +93,7 @@ class NHSEntity:
 
             # Populate StandardOpeningTimes obj depending on IsOpen status
             if open_time["IsOpen"]:
-                open_period = OpenPeriod.from_string(open_time["Times"])
+                open_period = OpenPeriod.from_string_times(open_time["OpeningTime"], open_time["ClosingTime"])
                 std_opening_times.add_open_period(open_period, weekday)
             else:
                 std_opening_times.closed_days.add(weekday)
@@ -112,7 +112,9 @@ class NHSEntity:
         specified_times_list = list(filter(is_spec_opening_json, self.entity_data.get("OpeningTimes", [])))
 
         # Sort the openingtimes data
-        sort_specified = sorted(specified_times_list, key=lambda item: (item["AdditionalOpeningDate"], item["Times"]))
+        sort_specified = sorted(
+            specified_times_list,
+            key=lambda item: (item["AdditionalOpeningDate"], item["OpeningTime"], item["ClosingTime"]))
         specified_opening_time_dict: Dict[str, List[OpenPeriod]] = {}
         specified_closed_days = set()
 
@@ -121,8 +123,7 @@ class NHSEntity:
             op_list: List[OpenPeriod] = []
             for item in list(values):
                 if item["IsOpen"]:
-                    start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in item["Times"].split("-")]
-                    op_list.append(OpenPeriod(start, end))
+                    op_list.append(OpenPeriod.from_string_times(item["OpeningTime"], item["ClosingTime"]))
                     specified_opening_time_dict[date_str] = op_list
                 else:
                     specified_closed_days.add(date_str)
@@ -162,22 +163,25 @@ def is_std_opening_json(item: dict) -> bool:
     """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
 
     # Check values
-    if (
-        str(item.get("OpeningTimeType")).upper() != "GENERAL"
-        or str(item.get("Weekday")).lower() not in WEEKDAYS
-        or item.get("AdditionalOpeningDate") not in [None, ""]
-    ):
+    if (str(item.get("OpeningTimeType")).upper() != "GENERAL" or
+            str(item.get("Weekday")).lower() not in WEEKDAYS or
+            item.get("AdditionalOpeningDate") not in [None, ""]):
 
         return False
 
-    # Check is_open value corresponds to time period being present
     is_open = item.get("IsOpen")
     if not isinstance(is_open, bool):
         return False
 
-    if (is_open and OpenPeriod.from_string(item.get("Times")) is None) or (
-        not is_open and item.get("Times") not in [None, ""]
-    ):
+    open_time = item.get("OpeningTime")
+    close_time = item.get("ClosingTime")
+
+    # If marked as open, ensure open time values are valid
+    if is_open and OpenPeriod.from_string_times(open_time, close_time) is None:
+        return False
+
+    # If marked as closed, ensure open time values are not present
+    if not is_open and (any(value not in ["", None] for value in (open_time, close_time))):
         return False
 
     return True
@@ -186,7 +190,6 @@ def is_std_opening_json(item: dict) -> bool:
 def is_spec_opening_json(item: dict) -> bool:
     """Checks EXACT match to definition of Additional/Spec opening time for NHS Open time payload object"""
 
-    # Check values
     if str(item.get("OpeningTimeType")).upper() != "ADDITIONAL":
         return False
 
@@ -195,14 +198,19 @@ def is_spec_opening_json(item: dict) -> bool:
     except ValueError:
         return False
 
-    # Check is_open value corresponds to time period being present
     is_open = item.get("IsOpen")
     if not isinstance(is_open, bool):
         return False
 
-    if (is_open and OpenPeriod.from_string(item.get("Times")) is None) or (
-        not is_open and item.get("Times") not in [None, ""]
-    ):
+    open_time = item.get("OpeningTime")
+    close_time = item.get("ClosingTime")
+
+    # If marked as open, ensure open time values are valid
+    if is_open and OpenPeriod.from_string_times(open_time, close_time) is None:
+        return False
+
+    # If marked as closed, ensure open time values are not present
+    if not is_open and (any(value not in ["", None] for value in (open_time, close_time))):
         return False
 
     return True

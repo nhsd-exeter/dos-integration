@@ -113,6 +113,16 @@ class OpenPeriod:
 
         return None
 
+    @staticmethod
+    def from_string_times(opening_time_str: str, closing_time_str: str) -> Union["OpenPeriod", None]:
+        """Builds an OpenPeriod object from string time arguments"""
+        open_time = string_to_time(opening_time_str)
+        close_time = string_to_time(closing_time_str)
+        if None in (open_time, close_time):
+            return None
+
+        return OpenPeriod(open_time, close_time)
+
 
 @dataclass(unsafe_hash=True)
 class SpecifiedOpeningTime:
@@ -260,3 +270,12 @@ class StandardOpeningTimes:
             open_periods = sorted(getattr(self, weekday))
             change[weekday.capitalize()] = [op.export_cr_format() for op in open_periods]
         return change
+
+
+def string_to_time(time_str: str) -> time:
+    for time_format in ("%H:%M", "%H:%M:%S"):
+        try:
+            return datetime.strptime(str(time_str), time_format).time()
+        except ValueError:
+            pass
+    return None

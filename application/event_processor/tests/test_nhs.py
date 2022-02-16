@@ -37,7 +37,8 @@ def test_get_specified_opening_times():
             "OpeningTimes": [
                 {
                     "Weekday": "",
-                    "Times": "08:45-17:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "17:00",
                     "OffsetOpeningTime": 525,
                     "OffsetClosingTime": 1020,
                     "OpeningTimeType": "Additional",
@@ -46,7 +47,8 @@ def test_get_specified_opening_times():
                 },
                 {
                     "Weekday": "",
-                    "Times": "09:00-16:00",
+                    "OpeningTime": "09:00",
+                    "ClosingTime": "16:00",
                     "OffsetOpeningTime": 540,
                     "OffsetClosingTime": 980,
                     "OpeningTimeType": "Additional",
@@ -55,7 +57,8 @@ def test_get_specified_opening_times():
                 },
                 {
                     "Weekday": "",
-                    "Times": "09:00-16:00",
+                    "OpeningTime": "09:00",
+                    "ClosingTime": "16:00",
                     "OffsetOpeningTime": 540,
                     "OffsetClosingTime": 980,
                     "OpeningTimeType": "Additional",
@@ -64,7 +67,8 @@ def test_get_specified_opening_times():
                 },
                 {
                     "Weekday": "Thursday",
-                    "Times": "08:45-18:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "18:00",
                     "OffsetOpeningTime": 525,
                     "OffsetClosingTime": 1080,
                     "OpeningTimeType": "General",
@@ -101,28 +105,32 @@ def test_get_standard_opening_times():
             "OpeningTimes": [
                 {
                     "Weekday": "Friday",
-                    "Times": "08:45-17:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "17:00",
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
                 },
                 {
                     "Weekday": "",
-                    "Times": "08:45-18:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "18:00",
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Jan 23 2022",
                     "IsOpen": True,
                 },
                 {
                     "Weekday": "Thursday",
-                    "Times": "09:00-17:00",
+                    "OpeningTime": "09:00",
+                    "ClosingTime": "17:00",
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
                 },
                 {
                     "Weekday": "Saturday",
-                    "Times": "08:45-18:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "18:00",
                     "OpeningTimeType": "Invalid_Type",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
@@ -173,7 +181,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OffsetOpeningTime": 540,
                 "OffsetClosingTime": 780,
                 "OpeningTimeType": "General",
@@ -185,7 +194,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Tuesday",
-                "Times": "01:00-23:59",
+                "OpeningTime": "01:00",
+                "ClosingTime": "23:59",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -195,7 +205,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -205,7 +216,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "blursday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -215,7 +227,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "08:00-24:00",
+                "OpeningTime": "08:00",
+                "ClosingTime": "24:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -225,7 +238,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -235,7 +249,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "Apr 23 2012",
                 "IsOpen": True,
@@ -245,7 +260,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Wednesday",
-                "Times": "09:00-17:00",
+                "OpeningTime": "09:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -255,7 +271,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Wednesday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": False,
@@ -265,7 +282,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Wednesday",
-                "Times": "",
+                "OpeningTime": "",
+                "ClosingTime": "",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": False,
@@ -275,7 +293,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Wednesday",
-                "Times": "",
+                "OpeningTime": "",
+                "ClosingTime": "",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
@@ -285,17 +304,26 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
             },
             False,
         ),
-        ({"Weekday": "Sunday", "OpeningTimeType": "General", "AdditionalOpeningDate": "", "IsOpen": False}, True),
         (
             {
                 "Weekday": "Sunday",
-                "Times": None,
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": False
+            },
+            True),
+        (
+            {
+                "Weekday": "Sunday",
+                "OpeningTime": None,
+                "ClosingTime": None,
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "",
                 "IsOpen": False,
@@ -305,7 +333,8 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Nov 23 2023",
                 "IsOpen": True,
@@ -326,7 +355,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OffsetOpeningTime": 540,
                 "OffsetClosingTime": 780,
                 "OpeningTimeType": "Additional",
@@ -338,7 +368,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OffsetOpeningTime": 540,
                 "OffsetClosingTime": 780,
                 "OpeningTimeType": "Additional",
@@ -350,7 +381,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Apr 32 2021",
                 "IsOpen": True,
@@ -360,7 +392,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-25:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "25:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Apr 14 2021",
                 "IsOpen": True,
@@ -370,7 +403,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Apr 14 2021",
                 "IsOpen": True,
@@ -380,7 +414,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "Apr 14 2021",
                 "IsOpen": True,
@@ -390,7 +425,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "General",
                 "AdditionalOpeningDate": "Apr 14 2021",
                 "IsOpen": True,
@@ -400,7 +436,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "",
+                "OpeningTime": "",
+                "ClosingTime": "",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Jan 1 2021",
                 "IsOpen": False,
@@ -410,7 +447,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "12:00-13:00",
+                "OpeningTime": "12:00",
+                "ClosingTime": "13:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Jan 1 2021",
                 "IsOpen": False,
@@ -420,7 +458,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "",
+                "OpeningTime": "",
+                "ClosingTime": "",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Jan 1 2021",
                 "IsOpen": True,
@@ -430,7 +469,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "Sunday",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OffsetOpeningTime": 540,
                 "OffsetClosingTime": 780,
                 "OpeningTimeType": "General",
@@ -442,7 +482,8 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Apr 23 20211",
                 "IsOpen": True,
@@ -452,15 +493,33 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "Times": "10:00-17:00",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "",
                 "IsOpen": True,
             },
             False,
         ),
-        ({"Weekday": "", "Times": "10:00-17:00", "OpeningTimeType": "Additional", "IsOpen": True}, False),
-        ({"Weekday": "", "Times": "10:00-17:00", "AdditionalOpeningDate": "Jan 30 2033", "IsOpen": True}, False),
+        (
+            {
+                "Weekday": "",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
+                "OpeningTimeType": "Additional",
+                "IsOpen": True
+            },
+            False),
+        (
+            {
+                "Weekday": "",
+                "OpeningTime": "10:00",
+                "ClosingTime": "17:00",
+                "AdditionalOpeningDate":
+                "Jan 30 2033",
+                "IsOpen": True
+            },
+            False),
     ],
 )
 def test_is_spec_opening_json(open_time_json, expected):

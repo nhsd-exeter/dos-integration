@@ -34,7 +34,8 @@
   "OpeningTimes": [
     {
       "Weekday": "Monday",
-      "Times": "09:00-12:00",
+      "OpeningTime": "09:00",
+      "ClosingTime": "12:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -43,7 +44,8 @@
     },
     {
       "Weekday": "Monday",
-      "Times": "13:00-23:00",
+      "OpeningTime": "13:00",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -52,7 +54,8 @@
     },
     {
       "Weekday": "Tuesday",
-      "Times": "09:00-23:00",
+      "OpeningTime": "09:00",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -61,7 +64,8 @@
     },
     {
       "Weekday": "Wednesday",
-      "Times": "07:30-23:00",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -70,7 +74,8 @@
     },
     {
       "Weekday": "Thursday",
-      "Times": "07:30-23:00",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -79,7 +84,8 @@
     },
     {
       "Weekday": "Friday",
-      "Times": "07:30-23:00",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -88,7 +94,8 @@
     },
     {
       "Weekday": "Saturday",
-      "Times": "07:30-23:00",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",
@@ -97,7 +104,8 @@
     },
     {
       "Weekday": "Sunday",
-      "Times": "10:00-17:00",
+      "OpeningTime": "10:00",
+      "ClosingTime": "17:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
       "OpeningTimeType": "General",

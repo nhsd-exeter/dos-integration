@@ -30,7 +30,8 @@
     ],
     "OpeningTimes": [{
             "Weekday": "Monday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 780,
             "OpeningTimeType": "General",
@@ -39,7 +40,8 @@
         },
         {
             "Weekday": "Monday",
-            "Times": "14:00-17:30",
+            "OpeningTime": "14:00",
+            "ClosingTime": "17:30",
             "OffsetOpeningTime": 840,
             "OffsetClosingTime": 1050,
             "OpeningTimeType": "General",
@@ -48,7 +50,8 @@
         },
         {
             "Weekday": "Tuesday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 780,
             "OpeningTimeType": "General",
@@ -57,7 +60,8 @@
         },
         {
             "Weekday": "Tuesday",
-            "Times": "14:00-17:30",
+            "OpeningTime": "14:00",
+            "ClosingTime": "17:30",
             "OffsetOpeningTime": 840,
             "OffsetClosingTime": 1050,
             "OpeningTimeType": "General",
@@ -66,7 +70,8 @@
         },
         {
             "Weekday": "Wednesday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 780,
             "OpeningTimeType": "General",
@@ -75,7 +80,8 @@
         },
         {
             "Weekday": "Wednesday",
-            "Times": "14:00-17:30",
+            "OpeningTime": "14:00",
+            "ClosingTime": "17:30",
             "OffsetOpeningTime": 840,
             "OffsetClosingTime": 1050,
             "OpeningTimeType": "General",
@@ -84,7 +90,8 @@
         },
         {
             "Weekday": "Thursday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 780,
             "OpeningTimeType": "General",
@@ -93,7 +100,8 @@
         },
         {
             "Weekday": "Thursday",
-            "Times": "14:00-17:30",
+            "OpeningTime": "14:00",
+            "ClosingTime": "17:30",
             "OffsetOpeningTime": 840,
             "OffsetClosingTime": 1050,
             "OpeningTimeType": "General",
@@ -102,7 +110,8 @@
         },
         {
             "Weekday": "Friday",
-            "Times": "09:00-13:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 780,
             "OpeningTimeType": "General",
@@ -111,7 +120,8 @@
         },
         {
             "Weekday": "Friday",
-            "Times": "14:00-17:30",
+            "OpeningTime": "14:00",
+            "ClosingTime": "17:30",
             "OffsetOpeningTime": 840,
             "OffsetClosingTime": 1050,
             "OpeningTimeType": "General",
@@ -120,7 +130,8 @@
         },
         {
             "Weekday": "Saturday",
-            "Times": "09:00-12:00",
+            "OpeningTime": "09:00",
+            "ClosingTime": "13:00",
             "OffsetOpeningTime": 540,
             "OffsetClosingTime": 720,
             "OpeningTimeType": "General",
@@ -129,7 +140,8 @@
         },
         {
             "Weekday": "",
-            "Times": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
             "OffsetOpeningTime": 0,
             "OffsetClosingTime": 0,
             "OpeningTimeType": "Additional",
@@ -138,7 +150,8 @@
         },
         {
             "Weekday": "",
-            "Times": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
             "OffsetOpeningTime": 0,
             "OffsetClosingTime": 0,
             "OpeningTimeType": "Additional",
@@ -147,7 +160,8 @@
         },
         {
             "Weekday": "",
-            "Times": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
             "OffsetOpeningTime": 0,
             "OffsetClosingTime": 0,
             "OpeningTimeType": "Additional",
@@ -156,7 +170,8 @@
         },
         {
             "Weekday": "",
-            "Times": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
             "OffsetOpeningTime": 0,
             "OffsetClosingTime": 0,
             "OpeningTimeType": "Additional",

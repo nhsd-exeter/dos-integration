@@ -202,14 +202,16 @@ def test_update_changes_with_opening_times():
             "OpeningTimes": [
                 {
                     "Weekday": "Friday",
-                    "Times": "08:45-17:00",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "17:00",
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
                 },
                 {
                     "Weekday": "Tuesday",
-                    "Times": "09:00-17:30",
+                    "OpeningTime": "09:00",
+                    "ClosingTime": "17:30",
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Nov 12 2021",
                     "IsOpen": True,
