@@ -74,7 +74,11 @@ variable "fifo_dlq_handler_subscription_filter_name" {
 }
 
 variable "eventbridge_dlq_handler_subscription_filter_name" {
-  description = "Log filter name for eventbridge dlq lambda"
+  description = "Log filter name for eventbridge dlq handler lambda"
+}
+
+variable "event_replay_subscription_filter_name" {
+  description = "Log filter name for event replay lambda"
 }
 
 variable "dos_integration_firehose" {
@@ -104,9 +108,13 @@ variable "event_sender_lambda_name" {
 }
 
 variable "fifo_dlq_handler_lambda_name" {
-  description = "Name of event processor lambda"
+  description = "Name of fifo dlq handler lambda"
 }
 
 variable "eventbridge_dlq_handler_lambda_name" {
-  description = "Name of eventbridge lambda"
+  description = "Name of eventbridge dlq handler lambda"
+}
+
+variable "event_replay_lambda_name" {
+  description = "Name of event replay lambda"
 }

@@ -22,7 +22,8 @@ resource "aws_cloudwatch_query_definition" "by_correlation_id" {
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
     "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
+    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.event_replay_lambda_name}"
   ]
 
   query_string = <<EOF

@@ -204,6 +204,16 @@ This testing includes:
 
 This testing is generally done by a tester
 
+Prerequisites
+
+    tx-mfa
+    Sign into Non-Prod VPN
+    make tester-build
+
+To run unit tests run the following commands
+
+    make integration-test PROFILE=task TAGS=dev PARALLEL_TEST_COUNT=10
+
 ### Performance Testing
 
 Performance testing is the practice of evaluating how a system performs in terms of responsiveness and stability under a particular workload. Performance tests are typically executed to examine speed, robustness, reliability of the application.
@@ -250,6 +260,7 @@ A make target has been added to check that a lambda can successful access the do
     make test-deployed-event-processor-db-connection LAMBDA_NAME=uec-dos-int-di-203-event-processor
 
 It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
+
 ## Deployment
 
 ### API Key

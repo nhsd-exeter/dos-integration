@@ -31,7 +31,4 @@ resource "aws_dynamodb_table" "message-history-table" {
     projection_type = "ALL"
   }
 
-  tags = {
-    service = var.project_id
-  }
 }

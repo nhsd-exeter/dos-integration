@@ -67,7 +67,11 @@ variable "fifo_dlq_handler_role_name" {
 }
 
 variable "eventbridge_dlq_handler_role_name" {
-  description = "Role name for fifo dlq handler lambda"
+  description = "Role name for eventbridge dlq handler lambda"
+}
+
+variable "event_replay_role_name" {
+  description = "Role name for event replay lambda"
 }
 
 variable "test_db_checker_handler_role_name" {
@@ -81,7 +85,21 @@ variable "change_events_table_name" {
   description = "Name of the table that stores received pharmacy change events"
 }
 
-
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
+}
+
+############
+# SQS
+############
+variable "fifo_queue_name" {
+  description = ""
+}
+
+variable "dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
+variable "dead_letter_queue_from_event_bus_name" {
+  description = ""
 }

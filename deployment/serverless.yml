@@ -27,6 +27,7 @@ provider:
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_ID}
   environment:
+    PROFILE: ${env:PROFILE}
     ENV: ${env:ENVIRONMENT}
     POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
     POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
@@ -94,7 +95,6 @@ functions:
       DB_USER_NAME: ${env:DB_USER_NAME}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
-      MOCK_MODE: ${env:MOCK_MODE}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
       KEYALIAS: ${env:TF_VAR_signing_key_alias}
@@ -130,7 +130,6 @@ functions:
       DOS_API_GATEWAY_PASSWORD_KEY: ${env:DOS_API_GATEWAY_PASSWORD_KEY}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
-      MOCK_MODE: ${env:MOCK_MODE}
       KEYALIAS: ${env:TF_VAR_signing_key_alias}
     events:
       - http:
@@ -149,6 +148,21 @@ functions:
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_eventbridge_dlq_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    maximumRetryAttempts: 0
+
+  event-replay:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-replay:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-event-replay
+    description: ${sls:stage} Event Replay lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_replay_role_name}
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      FIFO_SQS_NAME: ${env:TF_VAR_fifo_queue_name}
     maximumRetryAttempts: 0
 
   test-db-checker-handler:

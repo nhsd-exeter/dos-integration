@@ -86,6 +86,10 @@ variable "eventbridge_dlq_handler_lambda_name" {
   description = "Event bridge dlq handler"
 }
 
+variable "event_replay_lambda_name" {
+  description = "Event replay dlq handler"
+}
+
 variable "di_endpoint_api_gateway_name" {
   description = "Endpoint consumed by NHS UK"
 }

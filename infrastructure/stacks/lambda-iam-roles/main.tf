@@ -62,7 +62,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -236,7 +236,7 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.dead_letter_queue_from_fifo_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -332,7 +332,80 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.dead_letter_queue_from_event_bus_name}"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "event_replay_role" {
+  name               = var.event_replay_role_name
+  path               = "/"
+  description        = ""
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+resource "aws_iam_role_policy" "event_replay_policy" {
+  name   = "event_replay_policy"
+  role   = aws_iam_role.event_replay_role.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:GetQueueUrl"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "dynamodb:Query",
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }
