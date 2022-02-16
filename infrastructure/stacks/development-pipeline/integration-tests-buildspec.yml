@@ -55,7 +55,7 @@ reports: #New
       - '**/*'
     base-directory: $CODEBUILD_SRC_DIR/test/integration
     discard-paths: yes
-    file-format: JUNITXML
+    file-format: CUCUMBERJSON
 #artifacts:
   #files:
     # - location

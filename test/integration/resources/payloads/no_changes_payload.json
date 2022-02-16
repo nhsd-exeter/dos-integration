@@ -1,36 +1,24 @@
 {
-  "description": "Payload for no a change scenario",
-  "SearchKey": "ANEI1245",
-  "ODSCode": "FAT91",
+  "description": "Default valid schema aligned no change payload",
+  "SearchKey": "X3618",
+  "ODSCode": "FYG13",
   "OrganisationName": null,
   "OrganisationTypeId": "PHA",
   "OrganisationType": "Pharmacy",
+  "OrganisationSubType": "Community",
   "OrganisationStatus": "Visible",
-  "SummaryText": "",
-  "URL": "https://my-pharmacy.com/",
+  "Address1": "Boots Pharmacy",
+  "Address2": "20 Belle Vue",
+  "Address3": "Bude",
+  "City": "Cornwall",
+  "County": null,
+  "Latitude": 53.3723793029785,
+  "Longitude": -2.12734055519104,
+  "Postcode": "EX23 8JL",
   "ParentOrganisation": {
     "ODSCode": "QOP",
     "OrganisationName": "Greater Manchester Health and Social Care Partnership (STP)"
   },
-  "Address1": "501-503 MANSFIELD ROAD, NOTTINGHAM",
-  "Address2": null,
-  "Address3": null,
-  "City": null,
-  "County": null,
-  "Latitude": 53.38030624389648,
-  "Longitude": -1.4826949834823608,
-  "Postcode": "NG5 2JJ",
-  "Email": "health.my-pharmacy@nhs.net",
-  "Contacts": [
-    {
-      "ContactType": "Primary",
-      "ContactAvailabilityType": "Office hours",
-      "ContactMethodType": "Telephone",
-      "ContactValue": "0115 9606272"
-    }
-  ],
-  "OrganisationSubType": null,
-  "OrganisationAliases": [],
   "OpeningTimes": [
     {
       "Weekday": "Monday",
@@ -91,6 +79,125 @@
       "Times": "10:00-17:00",
       "OffsetOpeningTime": 540,
       "OffsetClosingTime": 780,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "Times": "10:00-17:00",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Dec 24 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "Times": "10:00-17:00",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Dec 25 2022",
+      "IsOpen": true
+    }
+  ],
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Website",
+      "ContactValue": "http://www.boots.com/store-locator#"
+    },
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "01288 352906"
+    }
+  ],
+  "Facilities": [
+    {
+      "Id": 1,
+      "Value": "No"
+    },
+    {
+      "Id": 2,
+      "Value": "Yes"
+    },
+    {
+      "Id": 3,
+      "Value": "No"
+    },
+    {
+      "Id": 4,
+      "Value": "Yes"
+    },
+    {
+      "Id": 5,
+      "Value": "No"
+    },
+    {
+      "Id": 6,
+      "Value": "No"
+    },
+    {
+      "Id": 35,
+      "Value": "No"
+    }
+  ],
+  "LastUpdatedDates": {
+    "OpeningTimes": "2021-09-07T10:21:30+00:00",
+    "Facilities": "2021-09-07T10:21:42+00:00",
+    "Services": "2021-09-07T10:21:36+00:00",
+    "ContactDetails": "2017-10-23T14:06:46+00:00"
+  },
+  "OpeningDays": [
+    {
+      "Weekday": "Monday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Tuesday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Wednesday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Thursday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Friday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Saturday",
+      "Times": "09:00-17:30",
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Sunday",
+      "Times": "10:00-16:00",
       "OpeningTimeType": "General",
       "AdditionalOpeningDate": "",
       "IsOpen": true
