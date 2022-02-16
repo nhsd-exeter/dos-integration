@@ -170,7 +170,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
         "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
-        "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+        "ON ssod.id = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(service_id)s",
         {"service_id": service_id},
     )
@@ -233,7 +233,7 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
         "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
-        "ON ssod.serviceid = ssot.servicespecifiedopeningdateid "
+        "ON ssod.id = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(service_id)s",
         {"service_id": service_id},
     )
