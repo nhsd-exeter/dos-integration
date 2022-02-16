@@ -34,7 +34,7 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
         "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
-    payload["Address1"] = generate_random_int() + " MANSFIELD ROAD"
+    payload["Unique_key"] = generate_random_int()
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
     return output
 
@@ -153,3 +153,14 @@ def generate_correlation_id(suffix=None) -> str:
         correlation_id if len(correlation_id) < 100 else correlation_id[:99]
     )  # DoS API Gateway max reference is 100 characters
     return correlation_id
+
+
+def re_process_payload(odscode: str, seq_number: str) -> str:
+    lambda_payload = {"odscode": odscode, "sequence_number": seq_number}
+    response = LAMBDA_CLIENT_FUNCTIONS.invoke(
+        FunctionName=getenv("EVENT_REPLAY"),
+        InvocationType="RequestResponse",
+        Payload=dumps(lambda_payload),
+    )
+    print(response)
+    return response

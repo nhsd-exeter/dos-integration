@@ -63,6 +63,7 @@ TF_VAR_eventbridge_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIR
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
+TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_eventbridge_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler
 TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription

@@ -3,10 +3,11 @@ from datetime import datetime
 from decimal import Decimal
 from json import dumps
 from time import sleep, time
+from os import getenv
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from .utilities.changed_events import change_request, changed_event
+from .utilities.changed_events import change_request, changed_event, aligned_changed_event
 from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
@@ -15,6 +16,7 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    re_process_payload,
 )
 
 scenarios("../features/parent_features.feature", "../features/event_sender.feature", "../features/e2e_di_test.feature")
@@ -24,6 +26,13 @@ scenarios("../features/parent_features.feature", "../features/event_sender.featu
 def a_change_event_is_valid():
     context = {}
     context["change_event"] = changed_event()
+    return context
+
+
+@given("a Changed Event is aligned with Dos", target_fixture="context")
+def a_change_event_is_aligned():
+    context = {}
+    context["change_event"] = aligned_changed_event()
     return context
 
 
@@ -226,6 +235,7 @@ def stored_dynamo_db_events_are_pulled(context):
         odscode == db_event_record["ODSCode"]
     ), f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
     assert sequence_num == db_event_record["SequenceNumber"], "ERROR!!.. Change event record(sequence no) mismatch!!"
+    return context
 
 
 @then("the unmatched service exception is reported to cloudwatch", target_fixture="context")
@@ -237,6 +247,17 @@ def unmatched_service_exception(context):
     logs = get_logs(query, "processor", context["start_time"])
     odscode = context["change_event"]["ODSCode"]
     assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
+    return context
+
+
+@then("no Changed request is created", target_fixture="context")
+def no_cr_created(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message = "No changes identified"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. Unexpected Changed request found.."
     return context
 
 
@@ -401,3 +422,21 @@ def invalid_opening_times_exception(context):
         "dos_services",
     ]:
         assert item in logs
+
+
+@then("the stored Changed Event is reprocessed in DI")
+def replaying_changed_event(context):
+    response = re_process_payload(context["change_event"]["ODSCode"], context["sequence_no"])
+    assert "'StatusCode': 200" in str(response), f"Status code not as expected: {response}"
+
+
+@then("the reprocessed Changed Event is sent to Dos")
+def verify_replayed_changed_event(context):
+    part_correlation_id = getenv("ENVIRONMENT") + "-replayed-event"
+    odscode = context["change_event"]["ODSCode"]
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id like "{part_correlation_id}"'
+        f'| filter message like "Changes for nhs:{odscode}"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. expected event-replay logs not found."

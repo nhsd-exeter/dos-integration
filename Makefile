@@ -96,7 +96,7 @@ coverage-report: # Runs whole project coverage unit tests
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --junitxml=./testresults.xml --disable-pytest-warnings" \
+	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --cucumberjson=./testresults.json --disable-pytest-warnings" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -113,6 +113,7 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
+		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e KEYALIAS=${TF_VAR_signing_key_alias} \
@@ -122,7 +123,7 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --junitxml=./testresults.xml" \
+	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -138,6 +139,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
+		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \

@@ -133,22 +133,17 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the attributes for invalid opening times report is identified in the logs
 
 
+  @complete @dev
+  Scenario: A Changed event with aligned data does not create a CR
+    Given a Changed Event is aligned with Dos
+    When the Changed Event is sent for processing with "valid" api key
+    Then no Changed request is created
 
 
-# Scenario: Happy Path message to DOS
-#   Given I input a valid Change Event
-#   When it is received by the EventBridge
-#   Then a Change Request is sent to DoS
-#   And a confirmation of receipt is logged
-
-# Scenario: Rate Limiting
-#   Given I input a valid Change Event (x10)
-#   When they are received by the EventBridge
-#   Then a maximum of 3 Change Requests a second are sent to Dos
-#   And a confirmation of receipt is logged for all
-
-# Scenario: Failed message send to DOS
-#   Given I input a valid Change Event
-#   When it is rejected by the DOS API Gateway
-#   Then the Change Request is retried 'X' times
-#   And a maximum of 3 Change Requests a second are sent to DOS
+  @complete @dev
+  Scenario: AN UNPROCESSED CHANGED EVENT IS REPLAYED IN DI
+    Given a Changed Event is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event is stored in dynamo db
+    And the stored Changed Event is reprocessed in DI
+    And the reprocessed Changed Event is sent to Dos
