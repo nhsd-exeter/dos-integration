@@ -10,8 +10,6 @@ WEBSITE_CHANGE_KEY = "website"
 OPENING_DATES_KEY = "opening_dates"
 OPENING_DAYS_KEY = "opening_days"
 
-DATE_FORMAT = "%Y-%m-%d"
-TIME_FORMAT = "%H:%M"
 
 logger = Logger(child=True)
 

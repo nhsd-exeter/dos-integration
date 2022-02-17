@@ -3,7 +3,9 @@ from ast import literal_eval
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
+from random import choice
 from time import time_ns
+from typing import Any, Dict
 
 import requests
 from boto3 import client
@@ -121,28 +123,62 @@ def generate_random_int() -> str:
     return str(random.sample(range(1000), 1)[0])
 
 
-def get_ods() -> list[list[str]]:
-    lambda_payload = {"type": "ods"}
-    response = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
-        InvocationType="RequestResponse",
-        Payload=dumps(lambda_payload),
-    )
+def get_odscodes_list() -> list[list[str]]:
+    lambda_payload = {"type": "get_odscodes"}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response["Payload"].read().decode("utf-8"))
     data = literal_eval(data)
     return data
+
+
+def get_single_service_odscode() -> str:
+    lambda_payload = {"type": "get_single_service_odscode"}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    odscode = choice(data)[0]
+    return odscode
 
 
 def get_changes(correlation_id: str) -> list:
-    lambda_payload = {"type": "change", "correlation_id": correlation_id}
-    response = LAMBDA_CLIENT_FUNCTIONS.invoke(
+    lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    return data
+
+
+def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
+    lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = response["Payload"].read().decode("utf-8")
+    data = loads(loads(data))
+    return data
+
+
+def get_change_event_standard_opening_times(service_id: str) -> Any:
+    lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    return data
+
+
+def get_change_event_specified_opening_times(service_id: str) -> Any:
+    lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    return data
+
+
+def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
+    response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
         FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )
-    data = loads(response["Payload"].read().decode("utf-8"))
-    data = literal_eval(data)
-    return data
+    return response
 
 
 def generate_correlation_id(suffix=None) -> str:
@@ -162,5 +198,4 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )
-    print(response)
     return response

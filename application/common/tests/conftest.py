@@ -3,11 +3,40 @@ import boto3
 from moto import mock_dynamodb2
 import os
 import json
+from random import choices, randint, uniform
+from ..dos import DoSLocation, DoSService
+from ..opening_times import StandardOpeningTimes
+
 
 std_event_path = "event_processor/tests/STANDARD_EVENT.json"
 
 with open(std_event_path, "r") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
+
+
+def dummy_dos_service() -> DoSService:
+    """Creates a DoSService Object with random data for the unit testing"""
+    test_data = []
+    for col in DoSService.db_columns:
+        random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
+        test_data.append(random_str)
+    dos_service = DoSService(test_data)
+    dos_service._standard_opening_times = StandardOpeningTimes()
+    dos_service._specified_opening_times = []
+    return dos_service
+
+
+def dummy_dos_location() -> DoSLocation:
+    """Creates a DoSLocation Object with random data for the unit testing"""
+    return DoSLocation(
+        id=randint(1111, 9999),
+        postcode="".join(choices("01234567890ABCDEFGHIJKLM", k=6)),
+        easting=randint(1111, 9999),
+        northing=randint(1111, 9999),
+        latitude=uniform(-200.0, 200.0),
+        longitude=uniform(-200.0, 200.0),
+        postaltown="".join(choices("ABCDEFGHIJKLM", k=8)),
+    )
 
 
 @fixture

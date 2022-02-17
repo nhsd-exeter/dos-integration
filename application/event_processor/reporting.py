@@ -3,7 +3,7 @@ import json
 
 from aws_lambda_powertools.logging.logger import Logger
 
-from dos import DoSService, VALID_STATUS_ID
+from common.dos import DoSService, VALID_STATUS_ID
 from nhs import NHSEntity
 
 HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"

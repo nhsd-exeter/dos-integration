@@ -3,7 +3,7 @@ from random import choices
 from unittest.mock import MagicMock, patch
 
 import pytest
-from opening_times import OpenPeriod, StandardOpeningTimes
+from ..opening_times import OpenPeriod, StandardOpeningTimes
 
 from ..dos import (
     DoSLocation,
@@ -15,7 +15,7 @@ from ..dos import (
 )
 from .conftest import dummy_dos_location, dummy_dos_service
 
-FILE_PATH = "application.event_processor.dos"
+FILE_PATH = "application.common.dos"
 
 
 def test__init__():
