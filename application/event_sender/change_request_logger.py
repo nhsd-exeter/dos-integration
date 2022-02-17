@@ -29,7 +29,12 @@ class ChangeRequestLogger:
             changes = response_data.get("dosChanges")
             if changes is None or len(changes) == 0:
                 logger.warning("Change request generated no changes")
-            extra = {"state": "Success", "response_status_code": response.status_code, "changes":changes, "response_text": response.text}
+            extra = {
+                "state": "Success",
+                "response_status_code": response.status_code,
+                "changes": changes,
+                "response_text": response.text,
+            }
             logger.info("Successfully send change request to DoS", extra=extra)
         else:
             extra = {"state": "Failure", "response_status_code": response.status_code, "response_text": response.text}

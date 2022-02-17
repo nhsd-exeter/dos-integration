@@ -25,7 +25,7 @@ class TestChangeRequestLogger:
         expected_extra = {
             "state": "Success",
             "response_status_code": status_code,
-            "changes":[{"changeId":"2D9B8BB8-F168-1010-E343-7E0FE2822107"}],
+            "changes": [{"changeId": "2D9B8BB8-F168-1010-E343-7E0FE2822107"}],
             "response_text": test_response.text,
         }
         # Act
@@ -57,7 +57,7 @@ class TestChangeRequestLogger:
         # Arrange
         change_request_logger = ChangeRequestLogger()
         status_code = 201
-        changes = [{"changeId":"2D9B8BB8-F168-1010-E343-7E0FE2822107"}]
+        changes = [{"changeId": "2D9B8BB8-F168-1010-E343-7E0FE2822107"}]
         response_json = {"dosChanges": changes}
         response_text = dumps(response_json)
         info_logger_expected = {
@@ -120,7 +120,6 @@ class TestChangeRequestLogger:
         # Assert
         info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=info_logger_expected)
         warn_logger_mock.assert_called_with("Change request generated no changes")
-
 
     @patch.object(Logger, "exception")
     def test_log_change_request_exception(self, exception_logger_mock):
