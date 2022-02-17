@@ -87,10 +87,6 @@ variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
 }
 
-variable "sqs_kms_key_alias" {
-  description = "Key alias for the sqs kms key"
-}
-
 # ############################
 # SQS DEAD LETTER QUEUE
 # ############################
@@ -130,4 +126,16 @@ variable "nhs_uk_api_key_key" {
 
 variable "ip_address_secret" {
   description = "IP Address secret"
+}
+
+# ############################
+# KMS 
+# ############################
+
+variable "sqs_kms_key_alias" {
+  description = "Key alias for the sqs kms key"
+}
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
 }
