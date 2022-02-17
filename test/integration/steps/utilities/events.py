@@ -80,6 +80,7 @@ def build_same_as_dos_change_event():
     # TODO Refactor into change event class
     change_event = create_change_event()
     change_event["ODSCode"] = get_single_service_odscode()
+    print(f"New selected ODSCode: {change_event['ODSCode']}")
     demographics_data = get_change_event_demographics(change_event["ODSCode"])
     change_event["OrganisationName"] = demographics_data["publicname"]
     change_event["Postcode"] = demographics_data["postcode"]
@@ -88,10 +89,7 @@ def build_same_as_dos_change_event():
     address_keys = ["Address1", "Address2", "Address3", "City", "County"]
     for address_key in address_keys:
         change_event[address_key] = None
-    address_parts = demographics_data["address"].split("$")
-
-    if len(address_parts) > 5:
-        raise Exception("Address in DoS is too long")
+    address_parts = demographics_data["address"].split("$", "5")
 
     counter = 0
     for address_part in address_parts:
