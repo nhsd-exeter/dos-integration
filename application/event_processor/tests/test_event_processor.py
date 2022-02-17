@@ -640,7 +640,8 @@ def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
     mock_event_processor.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()
     mock_logger.assert_called_with(
-        "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored"
+        "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
+        extra={"incoming_sequence_number": 1, "db_latest_sequence_number": 3},
     )
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
