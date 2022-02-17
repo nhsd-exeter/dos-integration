@@ -89,7 +89,7 @@ def build_same_as_dos_change_event():
     address_keys = ["Address1", "Address2", "Address3", "City", "County"]
     for address_key in address_keys:
         change_event[address_key] = None
-    address_parts = demographics_data["address"].split("$", "5")
+    address_parts = demographics_data["address"].split("$", 5)
 
     counter = 0
     for address_part in address_parts:
