@@ -49,6 +49,9 @@ phases:
       - echo "[Deploying]"
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE
+      - if [ "$ENVIRONMENT" = "fresh" ] ; then
+          make undeploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ;
+        fi
 
       # - command
   # post_build:

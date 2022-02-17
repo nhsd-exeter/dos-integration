@@ -277,7 +277,7 @@ resource "aws_codebuild_project" "di_integration_tests" {
 resource "aws_codebuild_project" "di_deploy_fresh" {
   name           = "${var.project_id}-${var.environment}-deploy-fresh-stage"
   description    = "Deploy to the fresh environment"
-  build_timeout  = "10"
+  build_timeout  = "50"
   queued_timeout = "30"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
