@@ -132,7 +132,7 @@ def get_odscodes_list() -> list[list[str]]:
 
 
 def get_single_service_odscode() -> str:
-    lambda_payload = {"type": "get_odscodes"}
+    lambda_payload = {"type": "get_single_service_odscode"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response["Payload"].read().decode("utf-8"))
     data = literal_eval(data)

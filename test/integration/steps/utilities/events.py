@@ -126,5 +126,4 @@ def build_same_as_dos_change_event():
                     "IsOpen": True,
                 }
             )
-    print(dumps(change_event, indent=4))
     return change_event

@@ -22,7 +22,7 @@ def lambda_context():
 
 
 @patch(f"{FILE_PATH}.run_query")
-def test_type_ods(mock_run_query, lambda_context):
+def test_type_get_odscodes(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
     test_input = {"type": "get_odscodes"}
@@ -32,6 +32,23 @@ def test_type_ods(mock_run_query, lambda_context):
     mock_run_query.assert_called_once_with(
         "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
         "AND statusid = 1 AND odscode IS NOT NULL",
+        None,
+    )
+    assert response == '["ODS12", "ODS11"]'
+
+
+@patch(f"{FILE_PATH}.run_query")
+def test_type_get_single_service_odscode(mock_run_query, lambda_context):
+    # Arrange
+    mock_run_query.return_value = [("ODS12"), ("ODS11")]
+    test_input = {"type": "get_single_service_odscode"}
+    # Act
+    response = lambda_handler(test_input, lambda_context)
+    # Assert
+    mock_run_query.assert_called_once_with(
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
+        "AND statusid = 1 AND odscode IS NOT NULL AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) "
+        "HAVING COUNT(LEFT(odscode,5)) = 1",
         None,
     )
     assert response == '["ODS12", "ODS11"]'
