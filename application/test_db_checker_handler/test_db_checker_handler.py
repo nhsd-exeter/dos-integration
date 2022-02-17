@@ -75,8 +75,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
                 "VALID_STATUS_ID": VALID_STATUS_ID,
             }
             query_results = run_query(query, query_vars)
-            query_results = query_results[0]
-            result = dict(zip(db_columns, query_results))
+            if len(query_results) > 0:
+                query_results = query_results[0]
+                result = dict(zip(db_columns, query_results))
+            else:
+                raise ValueError(f"No matching services for odscode {odscode}")
         else:
             raise ValueError("Missing odscode")
     elif request["type"] == "change_event_standard_opening_times":

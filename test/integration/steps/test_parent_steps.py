@@ -149,7 +149,7 @@ def a_change_event_with_isopen_status_set_to_false():
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
-    context["change_event"] = changed_event()
+    context["change_event"] = create_change_event()
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     return context
