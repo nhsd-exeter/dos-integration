@@ -147,10 +147,11 @@ def a_change_event_with_isopen_status_set_to_false():
 
 
 # # IsOpen is true AND Times is blank
-@when("the OpeningTimes Times data is not defined", target_fixture="context")
+@when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
     context["change_event"] = changed_event()
-    context["change_event"]["OpeningTimes"][0]["Times"] = ""
+    context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     return context
 
 
@@ -279,7 +280,7 @@ def openingtimes_service_exception(context):
         ' | filter message like "Changes for nhs"'
     )
     logs = get_logs(query, "processor", context["start_time"])
-    assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not logged."
+    assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not captured."
 
 
 @then("the invalid postcode exception is reported to cloudwatch")
