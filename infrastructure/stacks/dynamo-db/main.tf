@@ -37,5 +37,3 @@ resource "aws_dynamodb_table" "message-history-table" {
   }
 
 }
-
-

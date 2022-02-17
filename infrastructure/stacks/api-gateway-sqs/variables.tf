@@ -132,10 +132,6 @@ variable "ip_address_secret" {
 # KMS 
 # ############################
 
-variable "sqs_kms_key_alias" {
-  description = "Key alias for the sqs kms key"
-}
-
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
 }

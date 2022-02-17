@@ -28,14 +28,6 @@ resource "aws_iam_role_policy" "event_processor_policy" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": "kms:*",
-      "Resource": [
-        "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}"
-      ]
-    },
-    {
-      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
@@ -74,11 +66,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:GenerateDataKey*",
-        "kms:DescribeKey"
-      ],
+      "Action": "kms:*",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
@@ -150,14 +138,6 @@ resource "aws_iam_role_policy" "event_sender_policy" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": "kms:*",
-      "Resource": [
-        "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}"
-      ]
-    },
-    {
-      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
@@ -167,11 +147,7 @@ resource "aws_iam_role_policy" "event_sender_policy" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "kms:Decrypt",
-        "kms:GenerateDataKey*",
-        "kms:DescribeKey"
-      ],
+      "Action": "kms:*",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
@@ -229,10 +205,7 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
     {
       "Effect": "Allow",
       "Action": "kms:*",
-      "Resource": [
-        "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}"
-      ]
+      "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -333,10 +306,7 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
     {
       "Effect": "Allow",
       "Action": "kms:*",
-      "Resource": [
-        "${data.aws_kms_key.ddb_kms_key.arn}",
-        "${data.aws_kms_key.sqs_kms_key.arn}"
-      ]
+      "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",

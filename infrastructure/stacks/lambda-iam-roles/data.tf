@@ -26,11 +26,3 @@ data "aws_iam_policy_document" "key" {
     not_resources = []
   }
 }
-
-data "aws_kms_key" "ddb_kms_key" {
-  key_id = "alias/${var.ddb_kms_key_alias}"
-}
-
-data "aws_kms_key" "sqs_kms_key" {
-  key_id = "alias/${var.sqs_kms_key_alias}"
-}
