@@ -1,13 +1,13 @@
 Feature: DOS INTEGRATION E2E TESTS
 
   @complete @dev
-  Scenario: A VALID CHANGED EVENT IS PROCESSED AND SENT TO DOS
+  Scenario: A valid Changed Event is processed and sent to DOS
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
   @complete @dev
-  Scenario: UNMATCHED DOS SERVICES EXCEPTION IS LOGGED
+  Scenario: Unmatched DOS services exception is logged
     Given a Changed Event with invalid ODSCode is provided
     When the Changed Event is sent for processing with "valid" api key
     Then no matched services were found
@@ -15,7 +15,7 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the Changed Event is not processed any further
 
   @complete @dev
-  Scenario: ALL RECEIVED CHANGED EVENT IS ARCHIVED IN DYNAMO DB
+  Scenario: All received Changed Event is archived in Dynamo DB
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
@@ -81,14 +81,14 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
 
-  @complete @dev
+@complete @dev
   Scenario: IsOpen is true AND Times is blank
     Given a Changed Event is valid
-    When the OpeningTimes Times data is not defined
+    When the OpeningTimes Opening and Closing Times data are not defined
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
 
-  @complete @dev
+@complete @dev
   Scenario: IsOpen is false AND Times in NOT blank
     Given a Changed Event with the openingTimes IsOpen status set to false
     When the Changed Event is sent for processing with "valid" api key
@@ -109,7 +109,7 @@ Feature: DOS INTEGRATION E2E TESTS
     Then the OpeningTimes exception is reported to cloudwatch
 
   @dev
-  Scenario: 400 from DOS results in Splunk error log
+  Scenario: DOS rejects CE and returns SC 400 with invalid Correlation ID and logs error in Splunk
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
@@ -118,22 +118,22 @@ Feature: DOS INTEGRATION E2E TESTS
     And the "eb_dlq" logs show status code "400"
 
   @dev
-  Scenario: DLQ logs show "message abandoned" error_msg
+  Scenario: A CR with invalid Correlation ID gets rejected by events bridge and is NOT sent to DOS
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "eb_dlq" logs show error message "Message Abandoned:"
+    Then the "eb_dlq" logs show error message "Message Abandoned"
 
 
 @complete @dev
   Scenario: All data required in the Opening times exception report is identifiable in the logs
     Given a Changed Event is valid
-    When the OpeningTimes Times data is not defined
+    When the OpeningTimes Opening and Closing Times data are not defined
     And the Changed Event is sent for processing with "valid" api key
     Then the attributes for invalid opening times report is identified in the logs
 
 
-  @complete @dev
+@complete @dev
   Scenario: A Changed event with aligned data does not create a CR
     Given a Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
@@ -141,7 +141,7 @@ Feature: DOS INTEGRATION E2E TESTS
 
 
   @complete @dev
-  Scenario: AN UNPROCESSED CHANGED EVENT IS REPLAYED IN DI
+  Scenario: An unprocessed Changed Event is replayed in DI
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
