@@ -29,7 +29,7 @@ def a_change_event_is_valid():
     return context
 
 
-@given("a Change Event which matches DoS", target_fixture="context")
+@given("a Change Event is aligned with Dos", target_fixture="context")
 def a_change_event_is_valid_and_matches_dos():
     context = {}
     context["change_event"] = build_same_as_dos_change_event()

@@ -198,5 +198,4 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )
-    print(response)
     return response

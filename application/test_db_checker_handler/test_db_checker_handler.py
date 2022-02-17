@@ -7,7 +7,6 @@ from common.dos import (
     VALID_SERVICE_TYPES,
     VALID_STATUS_ID,
     SpecifiedOpeningTime,
-    get_matching_dos_services,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
@@ -29,35 +28,55 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         context (LambdaContext): Lambda function context object
     """
     request = event
-    query = None
-    query_vars = None
     result = None
     if request["type"] == "get_odscodes":
         query = (
             f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
-            f"AND statusid = '{VALID_STATUS_ID}' AND odscode IS NOT NULL"
+            f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
         )
+        result = run_query(query, None)
     elif request["type"] == "get_single_service_odscode":
         query = (
-            f"SELECT LEFT(odscode,5) AS ODS_5 FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
-            f"AND statusid = '{VALID_STATUS_ID}' AND odscode IS NOT NULL AND odscode != ''"
-            "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY left(odscode,5) having count(left(odscode,5)) = 1"
+            f"SELECT LEFT(odscode,5) FROM services WHERE typeid IN {tuple(VALID_SERVICE_TYPES)} "
+            f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL "
+            "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
         )
+        result = run_query(query, None)
     elif request["type"] == "get_changes":
         cid = request.get("correlation_id")
         if cid is not None:
             query = f"SELECT value from changes where externalref = '{cid}'"
+            result = run_query(query, None)
         else:
             raise ValueError("Missing correlation id")
     elif request["type"] == "change_event_demographics":
         odscode = request.get("odscode")
         if odscode is not None:
-            services = get_matching_dos_services(odscode)
-            if len(services) > 0:
-                service = services[0].__dict__
-                result = service
-            else:
-                raise ValueError(f"No matching services for ods {odscode}")
+            db_columns = (
+                "id",
+                "name",
+                "odscode",
+                "address",
+                "postcode",
+                "web",
+                "typeid",
+                "statusid",
+                "publicphone",
+                "publicname",
+            )
+            query = (
+                f"SELECT {', '.join(db_columns)} "
+                "FROM services WHERE odscode like %(ODSCODE)s AND typeid IN %(SERVICE_TYPES)s "
+                "AND statusid = %(VALID_STATUS_ID)s AND odscode IS NOT NULL"
+            )
+            query_vars = {
+                "ODSCODE": f"{odscode}%",
+                "SERVICE_TYPES": tuple(VALID_SERVICE_TYPES),
+                "VALID_STATUS_ID": VALID_STATUS_ID,
+            }
+            query_results = run_query(query, query_vars)
+            query_results = query_results[0]
+            result = dict(zip(db_columns, query_results))
         else:
             raise ValueError("Missing odscode")
     elif request["type"] == "change_event_standard_opening_times":
@@ -77,10 +96,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     else:
         raise ValueError("Unsupported request")
 
-    if query is not None:
-        cursor = query_dos_db(query, query_vars)
-        result = cursor.fetchall()
-        cursor.close()
-
-    print(result)
     return dumps(result, default=str)
+
+
+def run_query(query, query_vars) -> list:
+    logger.info("Running query", extra={"query": query})
+    cursor = query_dos_db(query, query_vars)
+    query_result = cursor.fetchall()
+    cursor.close()
+    return query_result

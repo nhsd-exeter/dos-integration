@@ -105,7 +105,8 @@ def build_same_as_dos_change_event():
             change_event["OpeningTimes"].append(
                 {
                     "Weekday": day,
-                    "Times": f'{opening_times["start_time"]}-{opening_times["end_time"]}',
+                    "OpeningTime": opening_times["start_time"],
+                    "ClosingTime": opening_times["end_time"],
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
@@ -118,7 +119,8 @@ def build_same_as_dos_change_event():
             change_event["OpeningTimes"].append(
                 {
                     "Weekday": "",
-                    "Times": f'{opening_times["start_time"]}-{opening_times["end_time"]}',
+                    "OpeningTime": opening_times["start_time"],
+                    "ClosingTime": opening_times["end_time"],
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
                     "IsOpen": True,

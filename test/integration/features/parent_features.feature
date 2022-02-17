@@ -14,11 +14,6 @@ Feature: DOS INTEGRATION E2E TESTS
     And the unmatched service exception is reported to cloudwatch
     Then the Changed Event is not processed any further
 
-  @complete @dev @wip
-  Scenario: A change event is sent which creates no change
-    Given a Change Event which matches DoS
-    When the Changed Event is sent for processing with "valid" api key
-
   @complete @dev
   Scenario: All received Changed Event is archived in Dynamo DB
     Given a Changed Event is valid
@@ -129,7 +124,6 @@ Feature: DOS INTEGRATION E2E TESTS
     When the Changed Event is sent for processing with "valid" api key
     Then the "eb_dlq" logs show error message "Message Abandoned"
 
-
 @complete @dev
   Scenario: All data required in the Opening times exception report is identifiable in the logs
     Given a Changed Event is valid
@@ -137,13 +131,11 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing with "valid" api key
     Then the attributes for invalid opening times report is identified in the logs
 
-
-@complete @dev
+  @complete @dev @wip
   Scenario: A Changed event with aligned data does not create a CR
-    Given a Changed Event is aligned with Dos
+    Given a Change Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then no Changed request is created
-
 
   @complete @dev
   Scenario: An unprocessed Changed Event is replayed in DI
