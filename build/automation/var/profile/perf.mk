@@ -3,7 +3,7 @@
 # ==============================================================================
 # Service variables
 
-LOG_LEVEL:= INFO
+LOG_LEVEL:= DEBUG
 
 DOS_API_GATEWAY_SECRETS = core-dos-db-sync/deployment
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
