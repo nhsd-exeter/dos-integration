@@ -131,7 +131,7 @@ Feature: DOS INTEGRATION E2E TESTS
     And the Changed Event is sent for processing with "valid" api key
     Then the attributes for invalid opening times report is identified in the logs
 
-  @complete @dev @wip
+  @complete @dev
   Scenario: A Changed event with aligned data does not create a CR
     Given a Change Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
