@@ -96,10 +96,6 @@ def build_same_as_dos_change_event():
         change_event[address_keys[counter]] = address_part
         counter += 1
 
-    if demographics_data["address"][-1] == "$":
-        print("Address ends with $ so retrying")
-        return build_same_as_dos_change_event()  # Recursive call
-
     standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
     change_event["OpeningTimes"] = []
     for day in standard_opening_times:
