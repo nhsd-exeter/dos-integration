@@ -65,7 +65,7 @@ def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_e
     dos_address = dos_service.address
 
     if dos_address != nhs_uk_address_string:
-        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
+        logger.info(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
         changes[ADDRESS_CHANGE_KEY] = nhs_uk_entity.address_lines
 
     return changes
