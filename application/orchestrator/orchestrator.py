@@ -12,7 +12,7 @@ from common.types import ChangeMetadata, ChangeRequestQueueItem
 
 logger = Logger()
 tracer = Tracer()
-TIME_TO_SLEEP = 1 / int(getenv("SLEEP_TIME_IN_SECONDS", default=1))
+TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
 QUEUE_URL = getenv("CR_QUEUE_URL")
 
 

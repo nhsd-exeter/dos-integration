@@ -58,6 +58,10 @@ variable "event_processor_role_name" {
   description = "Role name for event processor lambda"
 }
 
+variable "orchestrator_role_name" {
+  description = "Role name for event processor lambda"
+}
+
 variable "event_sender_role_name" {
   description = "Role name for event sender lambda"
 }

@@ -43,10 +43,6 @@ provider:
     lambda: true
     apiGateway: true
   apiGateway:
-    apiKeySourceType: HEADER
-    apiKeys:
-      - name: ${env:TF_VAR_change_request_receiver_api_key_name}
-        value: ${self:custom.secret.${env:TF_VAR_change_request_receiver_api_key_key}}
     usagePlan:
       throttle:
         rateLimit: 3
@@ -55,7 +51,6 @@ provider:
   apiName: ${env:TF_VAR_change_request_receiver_api_name}
 
 custom:
-  secret: ${ssm:/aws/reference/secretsmanager/${env:TF_VAR_change_request_receiver_api_key_name}}
   localstack:
     stages: local
   vpcDiscovery:
@@ -93,7 +88,7 @@ functions:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-      SLEEP_TIME_IN_SECONDS: ${env:SLEEP_TIME_IN_SECONDS}
+      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
 
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
@@ -152,11 +147,6 @@ functions:
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       KEYALIAS: ${env:TF_VAR_signing_key_alias}
-    events:
-      - http:
-          path: /change-request
-          method: post
-          private: true
     maximumRetryAttempts: 0
 
   eventbridge-dlq-handler:

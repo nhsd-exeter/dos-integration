@@ -47,7 +47,7 @@ resource "aws_sqs_queue" "di_dead_letter_queue_from_fifo_queue" {
   message_retention_seconds = 1209600 # 14 days
 }
 
-resource "aws_sqs_queue" "cr_di_dead_letter_queue_from_cr_fifo_queue" {
+resource "aws_sqs_queue" "cr_di_dead_letter_queue_from_fifo_queue" {
   name                      = var.cr_dead_letter_queue_from_fifo_queue_name
   fifo_queue                = true
   sqs_managed_sse_enabled   = true

@@ -111,3 +111,6 @@ TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
 
 # Cloudwatch monitoring dashboard
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
+
+
+DOS_TRANSACTIONS_PER_SECOND=3
