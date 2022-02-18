@@ -7,7 +7,7 @@ from boto3 import client
 
 
 def get_ip_address() -> str:
-    # For documentation ipify see here - https://www.ipify.org/
+    # For documentation on ipify see here - https://www.ipify.org/
     return urlopen("https://api.ipify.org").read().decode("utf8")
 
 
