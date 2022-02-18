@@ -37,7 +37,7 @@ def divide_chunks(to_chunk, chunk_size):
 
     # looping till length l
     for i in range(0, len(to_chunk), chunk_size):
-        yield to_chunk[i : i + chunk_size]
+        yield to_chunk[i : i + chunk_size]  # noqa: E203
 
 
 class EventProcessor:

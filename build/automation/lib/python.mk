@@ -68,7 +68,6 @@ python-code-check: ### Check Python code with 'flake8' - optional: FILES=[direc
 	make docker-run-tools CMD=" \
 		python -m flake8 \
 			--max-line-length=120 \
-			--ignore=$(IGNORE)
 			--exclude */tests/__init__.py,$(EXCLUDE) \
 			$(or $(FILES), $(APPLICATION_DIR)) \
 	"
