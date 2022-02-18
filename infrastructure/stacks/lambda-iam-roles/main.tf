@@ -67,25 +67,19 @@ resource "aws_iam_role_policy" "event_processor_policy" {
     {
       "Effect": "Allow",
       "Action": [
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "kms:Encrypt",
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["events:PutEvents"],
-      "Resource": "arn:aws:events:${var.aws_region}:${var.aws_account_id}:event-bus/uec-dos-int-*"
     },
     {
       "Effect": "Allow",
@@ -157,6 +151,14 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "kms:DescribeKey"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:DeleteMessageBatch"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
     },
     {
       "Effect": "Allow",

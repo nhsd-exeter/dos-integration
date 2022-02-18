@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 from aws_lambda_powertools import Logger, Tracer
 from time import time_ns, strftime, gmtime
 from os import environ
@@ -6,8 +6,9 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_request import ChangeRequest
 from common.middlewares import unhandled_exception_logging
+from common.types import ChangeRequestQueueItem
 from common.encryption import validate_event_is_signed
-from common.utilities import extract_body
+from boto3 import client
 
 tracer = Tracer()
 logger = Logger()
@@ -18,7 +19,7 @@ logger = Logger()
 @validate_event_is_signed
 @logger.inject_lambda_context
 @metric_scope
-def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Dict:
+def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metrics) -> Dict:
     """Entrypoint handler for the event_sender lambda
 
     Args:
@@ -26,22 +27,23 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
         context (LambdaContext): Lambda function context object
     """
 
-    body = extract_body(event["body"])
-    odscode = body["ods_code"]
+    sqs = client("sqs")
+
+    odscode = event["metadata"]["ods_code"]
     logger.append_keys(ods_code=odscode)
-    dynamo_record_id = body["dynamo_record_id"]
+    dynamo_record_id = event["metadata"]["dynamo_record_id"]
     logger.append_keys(dynamo_record_id=dynamo_record_id)
-    logger.set_correlation_id(body["correlation_id"])
-    message_received = body["message_received"]
+    logger.set_correlation_id(event["metadata"]["correlation_id"])
+    message_received = event["metadata"]["message_received"]
     s, ms = divmod(message_received, 1000)
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
     logger.info(
         "Received change request",
-        extra={"change_request": body["change_payload"]},
+        extra={"change_request": event["change_request"]},
     )
 
-    change_request = ChangeRequest(body["change_payload"])
+    change_request = ChangeRequest(event["change_request"])
     before = time_ns() // 1000000
     response = change_request.post_change_request()
     after = time_ns() // 1000000
@@ -61,6 +63,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext, metrics) -> Di
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
+        # remove from the queue to avoid reprocessing
+        sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
+
     else:
         metrics.set_property("StatusCode", response.status_code)
         metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
