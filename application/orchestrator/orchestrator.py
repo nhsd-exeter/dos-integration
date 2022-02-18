@@ -8,10 +8,12 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body
+from common.types import ChangeMetadata, ChangeRequestQueueItem
 
 logger = Logger()
 tracer = Tracer()
 TIME_TO_SLEEP = 1 / int(getenv("SLEEP_TIME_IN_SECONDS", default=1))
+QUEUE_URL = getenv("CR_QUEUE_URL")
 
 
 @unhandled_exception_logging()
@@ -27,13 +29,23 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     Event: The event payload should contain a Change Request
     """
     sqs = client("sqs")
-    response = sqs.receive_message(QueueUrl=getenv("CR_QUEUE_URL"), MaxNumberOfMessages=10)
+    response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
+    logger.info(f"Received {len(response['Messages'])} messages from SQS")
     lambda_client = client("lambda")
     for message in response["Messages"]:
         logger.info("Processing SQS message", extra={"message": message})
-        message_body = extract_body(message["Body"])
-        change_request = message_body.get("change_request")
-        invoke_lambda(lambda_client, {"change_request": change_request})
+        change_metadata: ChangeMetadata = {
+            "dynamo_record_id": message["MessageAttributes"]["DynamoRecordId"]["StringValue"],
+            "correlation_id": message["MessageAttributes"]["CorrelationId"]["StringValue"],
+            "message_received": int(message["MessageAttributes"]["MessageReceived"]["StringValue"]),
+            "ods_code": message["MessageAttributes"]["OdsCode"]["StringValue"],
+        }
+        change_request_queue_item: ChangeRequestQueueItem = {
+            "change_request": extract_body(message["Body"]),
+            "recipient_id": message["ReceiptHandle"],
+            "metadata": change_metadata,
+        }
+        invoke_lambda(lambda_client, change_request_queue_item)
         sleep(TIME_TO_SLEEP)
 
 
