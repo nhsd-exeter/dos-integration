@@ -101,3 +101,13 @@ variable "di_endpoint_api_gateway_name" {
 variable "cr_dead_letter_queue_from_fifo_queue_name" {
   description = "Name of the cr_fifo dead letter queue"
 }
+
+# ######################
+# # CLOUDWATCH Alerts
+# #######################
+variable "sqs_dlq_recieved_msg_alert_name" {
+  description = "The name of the cloudwatch alert for msgs recieved in the sqs dlq"
+}
+variable "sns_topic_app_alerts_for_slack" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+}
