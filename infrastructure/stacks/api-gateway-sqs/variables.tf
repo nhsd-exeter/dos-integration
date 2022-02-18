@@ -99,6 +99,10 @@ variable "dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }
 
+variable "cr_dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
 variable "fifo_dlq_handler_lambda_name" {
   description = ""
 }
