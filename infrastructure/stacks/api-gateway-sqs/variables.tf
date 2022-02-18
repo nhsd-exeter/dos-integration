@@ -128,9 +128,9 @@ variable "ip_address_secret" {
   description = "IP Address secret"
 }
 
-# ############################
-# KMS 
-# ############################
+##############################
+# KMS
+##############################
 
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
