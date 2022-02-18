@@ -67,6 +67,9 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
 
     else:
+        if response.status_code in [503, 429]:
+            #TODO: time to break the circuit
+            logger.info('Requests throttled - breaking circuit to allow recover')
         metrics.set_property("StatusCode", response.status_code)
         metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
         metrics.put_metric("DoSApiFail", 1, "Count")
