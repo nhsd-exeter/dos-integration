@@ -76,13 +76,31 @@ plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 functions:
+  orchestrator:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/orchestrator:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
+    description: ${sls:stage} Orchestrator
+    memorySize: 128
+    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins?)
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
+    maximumRetryAttempts: 0 #???
+    reservedConcurrency: 1 # ensure only one orchestrator running at a time
+    events:
+      - schedule: rate(1 minute)
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
+
+
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
     memorySize: 128
-    timeout: 120
+    timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     maximumRetryAttempts: 0
     tags:
@@ -97,6 +115,7 @@ functions:
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
+      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       KEYALIAS: ${env:TF_VAR_signing_key_alias}
 
   fifo-dlq-handler:

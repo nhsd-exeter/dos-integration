@@ -1,7 +1,7 @@
-from base64 import b64encode
 from json import dumps
-from os import environ, getenv
-from time import gmtime, strftime, time, time_ns
+from os import environ
+import hashlib
+from time import gmtime, strftime, time_ns
 from typing import Dict, List, Union
 
 from aws_embedded_metrics import metric_scope
@@ -16,7 +16,6 @@ from changes import get_changes
 from common.dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
-from common.encryption import initialise_encryption_client
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
@@ -32,6 +31,13 @@ EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_USER_NAME",
     "EVENTBRIDGE_BUS_NAME",
 )
+
+
+def divide_chunks(to_chunk, chunk_size):
+
+    # looping till length l
+    for i in range(0, len(to_chunk), chunk_size):
+        yield to_chunk[i : i + chunk_size]
 
 
 class EventProcessor:
@@ -94,7 +100,7 @@ class EventProcessor:
         self.change_requests = change_requests
         return self.change_requests
 
-    def send_changes(self, message_received: int, record_id: str) -> None:
+    def send_changes(self, message_received: int, record_id: str, sequence_number: str) -> None:
         """Sends change request payload off to next part of workflow
         [Which at the moment is straight to the next lambda]
         """
@@ -102,43 +108,33 @@ class EventProcessor:
             logger.error("Attempting to send change requests before get_change_requests has been called.")
             return
 
-        key_data = {
-            "message_received": message_received,
-            "dynamo_record_id": record_id,
-            "ods_code": self.nhs_entity.odscode,
-            "time": time(),
-        }
-        logger.info("Getting Encryption Client")
-        encryption_helper = initialise_encryption_client()
-        logger.info("Getting signing key")
-        signing_key = encryption_helper.encrypt_string(dumps(key_data))
-        b64_mystring = b64encode(signing_key).decode("utf-8")
-        logger.debug(f"signing key : {b64_mystring}")
-        eventbridge = client("events")
-        events = []
+        sqs = client("sqs")
+        messages = []
         for change_request in self.change_requests:
-            change_payload = change_request.create_payload()
-            events.append(
+            change_payload = dumps(change_request.create_payload())
+            encoded = change_payload.encode()
+            hashed_payload = hashlib.sha256(encoded)
+            messages.append(
                 {
-                    "Source": "event-processor",
-                    "DetailType": "change-request",
-                    "Detail": dumps(
-                        {
-                            "signing_key": b64_mystring,
-                            "change_payload": change_payload,
-                            "correlation_id": logger.get_correlation_id(),
-                            "message_received": message_received,
-                            "dynamo_record_id": record_id,
-                            "ods_code": self.nhs_entity.odscode,
-                        }
-                    ),
-                    "EventBusName": getenv("EVENTBRIDGE_BUS_NAME"),
+                    "Id": "tbc",
+                    "MessageBody": dumps(change_payload),
+                    "MessageDeduplicationId": f"${sequence_number}-${hashed_payload}",
+                    "MessageGroupId": f"{change_request.service_id}-${sequence_number}",
+                    "MessageAttributes": {
+                        "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
+                        "message_received": {"DataType": "Number", "StringValue": message_received},
+                        "dynamo_record_id": {"DataType": "Number", "StringValue": record_id},
+                        "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
+                    },
                 }
             )
-        if len(events) > 0:
-            response = eventbridge.put_events(Entries=events)
-            logger.info("Response from eventbridge put_events", extra={"response": response})
-            logger.info(f"Sent off change payload for id={change_request.service_id}")
+        if len(messages) > 0:
+            chunks = divide_chunks(messages, 10)
+            for chunk in chunks:
+                # TODO: Handle errors?
+                response = sqs.send_message_batch(QueueUrl=environ["CR_QUEUE_URL"], Entries=chunk)
+                logger.info("Response from sqs send_message_batch", extra={"response": response})
+                logger.info(f"Sent off change payload for id={change_request.service_id}")
         else:
             logger.info("No changes identified")
 
@@ -241,4 +237,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     finally:
         disconnect_dos_db()
 
-    event_processor.send_changes(sqs_timestamp, record_id)
+    event_processor.send_changes(sqs_timestamp, record_id, sequence_number)

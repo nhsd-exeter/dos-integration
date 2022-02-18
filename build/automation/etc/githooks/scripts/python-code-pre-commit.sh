@@ -5,12 +5,12 @@ set -e
 
 if [ $(make git-check-if-commit-changed-directory DIR=application PRECOMMIT=true) == true ]; then
   make -s python-code-format python-code-check \
-    FILES=application
+    FILES=application IGNORE=E203
 fi
 
 if [ $(make git-check-if-commit-changed-directory DIR=test PRECOMMIT=true) == true ]; then
   make -s python-code-format python-code-check \
-    FILES=test
+    FILES=test IGNORE=E203
 fi
 
 exit 0

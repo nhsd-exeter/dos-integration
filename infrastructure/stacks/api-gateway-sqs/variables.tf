@@ -83,6 +83,10 @@ variable "fifo_queue_name" {
   description = "FIFO queue name feed by API Gateway"
 }
 
+variable "cr_fifo_queue_name" {
+  description = "FIFO queue name fed by event processor"
+}
+
 variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
 }

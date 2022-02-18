@@ -5,14 +5,28 @@ resource "aws_sqs_queue" "di_change_event_fifo_queue" {
   deduplication_scope         = "messageGroup"
   message_retention_seconds   = 1209600 # 14 days
   fifo_throughput_limit       = "perMessageGroupId"
-  visibility_timeout_seconds  = 120 # Must be same as event processor max execution time
+  visibility_timeout_seconds  = 10 # Must be same as event processor max execution time
   sqs_managed_sse_enabled     = true
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.di_dead_letter_queue_from_fifo_queue.arn
-    maxReceiveCount     = 1
+    maxReceiveCount     = 5
   })
   depends_on = [aws_sqs_queue.di_dead_letter_queue_from_fifo_queue]
 }
+
+
+resource "aws_sqs_queue" "di_change_request_fifo_queue" {
+  name                        = var.cr_fifo_queue_name
+  fifo_queue                  = true
+  content_based_deduplication = true
+  deduplication_scope         = "messageGroup"
+  message_retention_seconds   = 1209600 # 14 days
+  fifo_throughput_limit       = "perMessageGroupId"
+  visibility_timeout_seconds  = 10 # Must be same as event processor max execution time
+  sqs_managed_sse_enabled     = true
+
+}
+
 
 resource "aws_lambda_event_source_mapping" "fifo_event_source_mapping" {
   batch_size       = 1
