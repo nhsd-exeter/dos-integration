@@ -95,8 +95,15 @@ variable "signing_key_alias" {
 variable "fifo_queue_name" {
   description = ""
 }
+variable "cr_fifo_queue_name" {
+  description = ""
+}
 
 variable "dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
+variable "cr_dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }
 

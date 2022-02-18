@@ -32,6 +32,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
     logger.info(f"Received {len(response['Messages'])} messages from SQS")
     lambda_client = client("lambda")
+    #TODO: Need to figure out circuit breaker bits
     for message in response["Messages"]:
         logger.info("Processing SQS message", extra={"message": message})
         change_metadata: ChangeMetadata = {

@@ -15,6 +15,7 @@ build: # Build lambdas
 		event-processor-build \
 		fifo-dlq-handler-build \
 		eventbridge-dlq-handler-build \
+		orchestrator-build \
 		event-replay-build \
 		test-db-checker-handler-build \
 		AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -314,7 +315,7 @@ test-db-checker-handler-clean: ### Clean event processor lambda docker image dir
 # ==============================================================================
 # Orchestrator
 
-orchestrator-build-and-push: ### Build orchestrator lambda docker image
+orchestrator-build: ### Build orchestrator lambda docker image
 	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
 	cd $(APPLICATION_DIR)/orchestrator
 	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
@@ -323,7 +324,7 @@ orchestrator-build-and-push: ### Build orchestrator lambda docker image
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make orchestrator-clean
-	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	export VERSION=$$(make docker-image-get-version NAME=orchestrator)
 
 orchestrator-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.tar.gz
@@ -390,6 +391,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
