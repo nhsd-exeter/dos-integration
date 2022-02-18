@@ -76,6 +76,7 @@ plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 functions:
+
   orchestrator:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/orchestrator:${env:VERSION}
     architecture: x86_64
@@ -92,7 +93,7 @@ functions:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-
+      SLEEP_TIME_IN_SECONDS: ${env:SLEEP_TIME_IN_SECONDS}
 
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}

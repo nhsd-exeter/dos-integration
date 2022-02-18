@@ -312,6 +312,24 @@ test-db-checker-handler-clean: ### Clean event processor lambda docker image dir
 	make common-code-remove LAMBDA_DIR=test_db_checker_handler
 
 # ==============================================================================
+# Orchestrator
+
+orchestrator-build-and-push: ### Build orchestrator lambda docker image
+	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
+	cd $(APPLICATION_DIR)/orchestrator
+	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
+		--exclude=tests \
+		*.py
+	cd $(PROJECT_DIR)
+	make -s docker-image NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make orchestrator-clean
+	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+orchestrator-clean: ### Clean event processor lambda docker image directory
+	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.txt
+
+# ==============================================================================
 # Authoriser (for dos api gateway mock)
 
 authoriser-build-and-push: ### Build authoriser lambda docker image

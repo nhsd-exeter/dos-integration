@@ -55,6 +55,7 @@ TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handl
 TF_VAR_eventbridge_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dql-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
 TF_VAR_test_db_checker_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler-role
+TF_VAR_orchestrator_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-role
 
 # Kinisis Firehose (Splunk Logs)
 TF_VAR_dos_integration_firehose := $(PROJECT_ID)-cw-logs-firehose
