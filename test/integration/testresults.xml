@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="7" time="1356.743" timestamp="2022-02-14T11:58:17.521981" hostname="00ffaf3e59ff"><testcase time="0.009" /><testcase classname="test_parent_steps" name="test_all_received_changed_event_is_archived_in_dynamo_db" time="20.713" /><testcase time="0.009" /><testcase time="0.009" /><testcase classname="test_parent_steps" name="test_changed_event_with_hidden_organisation_status_is_reported" time="102.373" /><testcase classname="test_parent_steps" name="test_address_changes_are_discarded_when_postcode_is_invalid" time="61.525" /><testcase classname="test_parent_steps" name="test_postcode_not_included_in_changes_when_postcode_is_invalid" time="81.888" /><testcase classname="test_parent_steps" name="test_invalid_opening_times_reported_where_weekday_is_not_identified" time="183.531" /><testcase classname="test_parent_steps" name="test_invalid_opening_times_reported_where_openingtimetype_is_not_defined_as_general_or_additional" time="428.844"><failure message="Exception: Log search retries exceeded.. no logs found">request = &lt;FixtureRequest for &lt;Function test_invalid_opening_times_reported_where_openingtimetype_is_not_defined_as_general_or_additional&gt;&gt;
+_pytest_bdd_example = {}
+
+    @pytest.mark.usefixtures(*args)
+    def scenario_wrapper(request, _pytest_bdd_example):
+        scenario = templated_scenario.render(_pytest_bdd_example)
+&gt;       _execute_scenario(feature, scenario, request)
+
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:144: in _execute_scenario
+    _execute_step_function(request, scenario, step, step_func)
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:114: in _execute_step_function
+    return_value = step_func(**kwargs)
+steps/test_parent_steps.py:260: in openingtimes_service_exception
+    logs = get_logs(query, "processor", context["start_time"])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+query = 'fields message | sort @timestamp asc | filter correlation_id="_test_invalid_opening_times_reported_where_openingtimetype_is_not_defined_as_general_or_additional" | filter message like "Changes for nhs"'
+event_lambda = 'processor', start_time = 1644840349.262949
+
+    def get_logs(query: str, event_lambda: str, start_time: Timestamp) -&gt; str:
+        log_groups = {
+            "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
+            "sender": LOG_GROUP_NAME_EVENT_SENDER,
+            "eb_dlq": LOG_GROUP_NAME_EVENT_BRIDGE_DLQ,
+        }
+        if event_lambda == "processor" or "sender" or "eb_dlq":
+            log_group_name = log_groups[event_lambda]
+        else:
+            raise Exception("Error.. log group name not correctly specified")
+        logs_found = False
+        counter = 0
+        while logs_found is False:
+            start_query_response = LAMBDA_CLIENT_LOGS.start_query(
+                logGroupName=log_group_name,
+                startTime=int(start_time),
+                endTime=int(datetime.now().timestamp()),
+                queryString=query,
+            )
+            query_id = start_query_response["queryId"]
+            response = None
+            while response is None or response["status"] != "Complete":
+                sleep(20)
+                response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
+            counter += 1
+            if response["results"] != []:
+                logs_found = True
+            elif counter == 21:
+&gt;               raise Exception("Log search retries exceeded.. no logs found")
+E               Exception: Log search retries exceeded.. no logs found
+
+steps/utilities/log_stream.py:65: Exception</failure></testcase><testcase classname="test_parent_steps" name="test_isopen_is_true_and_times_is_blank" time="427.644"><failure message="Exception: Log search retries exceeded.. no logs found">request = &lt;FixtureRequest for &lt;Function test_isopen_is_true_and_times_is_blank&gt;&gt;
+_pytest_bdd_example = {}
+
+    @pytest.mark.usefixtures(*args)
+    def scenario_wrapper(request, _pytest_bdd_example):
+        scenario = templated_scenario.render(_pytest_bdd_example)
+&gt;       _execute_scenario(feature, scenario, request)
+
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:144: in _execute_scenario
+    _execute_step_function(request, scenario, step, step_func)
+/usr/local/lib/python3.9/site-packages/pytest_bdd/scenario.py:114: in _execute_step_function
+    return_value = step_func(**kwargs)
+steps/test_parent_steps.py:260: in openingtimes_service_exception
+    logs = get_logs(query, "processor", context["start_time"])
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+query = 'fields message | sort @timestamp asc | filter correlation_id="_test_isopen_is_true_and_times_is_blank" | filter message like "Changes for nhs"'
+event_lambda = 'processor', start_time = 1644840778.26353
+
+    def get_logs(query: str, event_lambda: str, start_time: Timestamp) -&gt; str:
+        log_groups = {
+            "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
+            "sender": LOG_GROUP_NAME_EVENT_SENDER,
+            "eb_dlq": LOG_GROUP_NAME_EVENT_BRIDGE_DLQ,
+        }
+        if event_lambda == "processor" or "sender" or "eb_dlq":
+            log_group_name = log_groups[event_lambda]
+        else:
+            raise Exception("Error.. log group name not correctly specified")
+        logs_found = False
+        counter = 0
+        while logs_found is False:
+            start_query_response = LAMBDA_CLIENT_LOGS.start_query(
+                logGroupName=log_group_name,
+                startTime=int(start_time),
+                endTime=int(datetime.now().timestamp()),
+                queryString=query,
+            )
+            query_id = start_query_response["queryId"]
+            response = None
+            while response is None or response["status"] != "Complete":
+                sleep(20)
+                response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
+            counter += 1
+            if response["results"] != []:
+                logs_found = True
+            elif counter == 21:
+&gt;               raise Exception("Log search retries exceeded.. no logs found")
+E               Exception: Log search retries exceeded.. no logs found
+
+steps/utilities/log_stream.py:65: Exception</failure></testcase><testcase time="0.001" /></testsuite></testsuites>
