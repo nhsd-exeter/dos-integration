@@ -80,7 +80,7 @@ def build_same_as_dos_change_event():
     # TODO Refactor into change event class
     change_event = create_change_event()
     change_event["ODSCode"] = get_single_service_odscode()
-    print(f"New selected ODSCode: {change_event['ODSCode']}")
+    print(f"Latest selected ODSCode: {change_event['ODSCode']}")
     demographics_data = get_change_event_demographics(change_event["ODSCode"])
     change_event["OrganisationName"] = demographics_data["publicname"]
     change_event["Postcode"] = demographics_data["postcode"]

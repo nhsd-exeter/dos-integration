@@ -47,8 +47,8 @@ def test_type_get_single_service_odscode(mock_run_query, lambda_context):
     # Assert
     mock_run_query.assert_called_once_with(
         "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
-        "AND statusid = 1 AND odscode IS NOT NULL AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) "
-        "HAVING COUNT(LEFT(odscode,5)) = 1",
+        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' AND LENGTH(LEFT(odscode,5)) = 5 "
+        "GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1",
         None,
     )
     assert response == '["ODS12", "ODS11"]'
