@@ -1,6 +1,6 @@
 Feature: F004. Error Handling
 
-  @dev
+@dev
   Scenario: F004S001. DOS rejects CE and returns SC 400 with invalid Correlation ID and logs error in Splunk
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"

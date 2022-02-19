@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @smoke @dupe
+@complete @smoke
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
