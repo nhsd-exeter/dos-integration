@@ -1,18 +1,18 @@
 from dataclasses import dataclass
 from unittest.mock import patch
 from pytest import fixture
-from ..eventbridge_dlq_handler import lambda_handler
+from ..cr_fifo_dlq_handler import lambda_handler
 
-FILE_PATH = "application.eventbridge_dlq_handler.eventbridge_dlq_handler"
+FILE_PATH = "application.cr_fifo_dlq_handler.cr_fifo_dlq_handler"
 
 
 @fixture
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "eventbridge-dlq-handler"
+        function_name: str = "cr-fifo-dlq-handler"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:eventbridge-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:cr-fifo-dlq-handler"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
@@ -35,7 +35,11 @@ def test_lambda_handler(mock_extract_body, lambda_context):
         "ods_code": "DUMMY",
         "change_payload": change_request,
     }
-    dead_letter_message = {"Records": [{"body": "Test message.", "messageAttributes": {}}]}
+    dead_letter_message = {
+        "Records": [
+            {"body": "Test message.", "messageAttributes": {"correlation_id": {"stringValue": "dummy_correlation_id"}}}
+        ]
+    }
     mock_extract_body.return_value = extracted_body
     # Act
     lambda_handler(dead_letter_message, lambda_context)

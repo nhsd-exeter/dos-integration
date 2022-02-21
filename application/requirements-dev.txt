@@ -1,5 +1,4 @@
 aws-lambda-context
-aws_encryption_sdk
 boto3
 coverage
 locust

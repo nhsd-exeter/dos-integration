@@ -60,3 +60,10 @@ resource "aws_lambda_event_source_mapping" "dead_letter_event_source_mapping" {
   enabled          = true
   function_name    = data.aws_lambda_function.fifo_dlq_handler.arn
 }
+
+resource "aws_lambda_event_source_mapping" "cr_dead_letter_event_source_mapping" {
+  batch_size       = 1
+  event_source_arn = aws_sqs_queue.cr_di_dead_letter_queue_from_fifo_queue.arn
+  enabled          = true
+  function_name    = data.aws_lambda_function.cr_fifo_dlq_handler.arn
+}

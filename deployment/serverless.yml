@@ -87,6 +87,8 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
+      SLEEP_FOR_WHEN_OPEN: 10
+      CIRCUIT: DOS_API_GATEWAY
       EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
@@ -111,9 +113,7 @@ functions:
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-      KEYALIAS: ${env:TF_VAR_signing_key_alias}
 
   fifo-dlq-handler:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
@@ -147,17 +147,18 @@ functions:
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-      KEYALIAS: ${env:TF_VAR_signing_key_alias}
+      CR_DLQ_URL: ${env:cr_dlq_queue_url}
+      CIRCUIT: DOS_API_GATEWAY
     maximumRetryAttempts: 0
 
-  eventbridge-dlq-handler:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/eventbridge-dlq-handler:${env:VERSION}
+  cr-fifo-dlq-handler:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-eventbridge-dlq-handler
-    description: ${sls:stage} EventBridge DLQ Handler lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-cr-fifo-dlq-handler
+    description: ${sls:stage} cr-fifo DLQ Handler lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_eventbridge_dlq_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_cr_fifo_dlq_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     maximumRetryAttempts: 0

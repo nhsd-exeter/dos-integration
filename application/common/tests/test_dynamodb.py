@@ -4,6 +4,8 @@ from json import dumps, loads
 from decimal import Decimal
 from common.dynamodb import (
     add_change_request_to_dynamodb,
+    put_circuit_status,
+    get_circuit_status,
     get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     dict_hash,
     TTL,
@@ -41,6 +43,14 @@ def dynamodb_table_create(dynamodb_client):
         ],
     )
     return table
+
+
+def test_put_and_get_circuit_status(dynamodb_table_create, dynamodb_client):
+
+    put_circuit_status("TESTCIRCUIT", True)
+    is_open = get_circuit_status("TESTCIRCUIT")
+
+    assert is_open
 
 
 def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):

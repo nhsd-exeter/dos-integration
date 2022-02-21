@@ -48,7 +48,7 @@ TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
 TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
 TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handler-role
-TF_VAR_eventbridge_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dql-handler-role
+TF_VAR_cr_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dql-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
 TF_VAR_test_db_checker_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler-role
 
@@ -59,14 +59,14 @@ TF_VAR_event_processor_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-
 TF_VAR_event_sender_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-cw-logs-firehose-subscription
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
 TF_VAR_fifo_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler-cw-logs-firehose-subscription
-TF_VAR_eventbridge_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
-TF_VAR_event_replay_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_cr_fifo_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_event_replay_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
-TF_VAR_eventbridge_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler
+TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription
 
@@ -92,16 +92,6 @@ TF_VAR_change_request_receiver_api_key_key := CHANGE_REQUEST_RECEIVER_API_KEY
 CHANGE_REQUEST_RECEIVER_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver
 TF_VAR_change_request_receiver_api_name := $(CHANGE_REQUEST_RECEIVER_NAME)
 TF_VAR_change_request_receiver_subdomain_name := $(CHANGE_REQUEST_RECEIVER_NAME)
-
-# Event Bridge
-TF_VAR_eventbridge_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-bus
-TF_VAR_change_request_eventbridge_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-rule
-TF_VAR_dos_api_gateway_eventbridge_connection_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-connection
-TF_VAR_dos_api_gateway_api_destination_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-api-destination
-TF_VAR_dos_api_gateway_api_destination_url := https://$(TF_VAR_change_request_receiver_subdomain_name).$(TEXAS_HOSTED_ZONE)/change-request
-TF_VAR_eventbridge_target_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-role
-TF_VAR_eventbridge_target_policy_name	:= $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-target-policy
-TF_VAR_dead_letter_queue_from_event_bus_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-bus-dead-letter-queue
 
 
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias

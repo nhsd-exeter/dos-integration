@@ -9,6 +9,7 @@ class ChangeMetadata(TypedDict):
 
 
 class ChangeRequestQueueItem(TypedDict):
+    is_health_check: bool
     change_request: Dict  # could change this to Change Request potentially
     recipient_id: str
     metadata: ChangeMetadata

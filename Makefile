@@ -14,7 +14,7 @@ build: # Build lambdas
 	make -s event-sender-build \
 		event-processor-build \
 		fifo-dlq-handler-build \
-		eventbridge-dlq-handler-build \
+		cr-fifo-dlq-handler-build \
 		orchestrator-build \
 		event-replay-build \
 		test-db-checker-handler-build \
@@ -34,7 +34,7 @@ log: project-log # Show project logs
 deploy: # Deploys whole project - mandatory: PROFILE
 	make -s terraform-clean
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-apply-auto-approve STACKS=api-key,change-request-receiver-api-key
+		make terraform-apply-auto-approve STACKS=api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make authoriser-build-and-push dos-api-gateway-build-and-push
@@ -43,15 +43,15 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=change-request-receiver-route53,eventbridge,api-gateway-sqs,splunk-logs,cloudwatch-dashboard
+	make terraform-apply-auto-approve STACKS=api-gateway-sqs,splunk-logs,cloudwatch-dashboard
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=eventbridge,change-request-receiver-route53,splunk-logs,api-gateway-sqs,cloudwatch-dashboard
+	make terraform-destroy-auto-approve STACKS=splunk-logs,api-gateway-sqs,cloudwatch-dashboard
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key,change-request-receiver-api-key
+		make terraform-destroy-auto-approve STACKS=api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock,dynamo-db
@@ -79,7 +79,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
@@ -94,7 +94,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
 		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/eventbridge_dlq_handler:/tmp/.packages/eventbridge_dlq_handler \
+		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		"
@@ -122,7 +122,6 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		-e RUN_ID=${RUN_ID} \
 		"
 
@@ -149,9 +148,8 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e KEYALIAS=${TF_VAR_signing_key_alias} \
 		-e RUN_ID=${RUN_ID} \
-		-e EVENTBRIDGE_DLQ=${TF_VAR_eventbridge_dlq_handler_lambda_name} \
+		-e CR_FIFO_DLQ=${TF_VAR_cr_fifo_dlq_handler_lambda_name} \
 		"
 
 clean: # Runs whole project clean
@@ -163,7 +161,7 @@ clean: # Runs whole project clean
 		event-sender-clean \
 		event-processor-clean \
 		fifo-dlq-handler-clean \
-		eventbridge-dlq-handler-clean \
+		cr-fifo-dlq-handler-clean \
 		event-replay-clean \
 		test-db-checker-handler-clean \
 		tester-clean \
@@ -250,25 +248,25 @@ fifo-dlq-handler-clean: ### Clean fifo dlq handler lambda docker image directory
 	make common-code-remove LAMBDA_DIR=fifo_dlq_handler
 
 # ==============================================================================
-# Eventbridge Dead Letter Queue Handler (eventbridge-dlq-handler)
+# CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
 
-eventbridge-dlq-handler-build: ### Build eventbridge dlq handler lambda docker image
-	make common-code-copy LAMBDA_DIR=eventbridge_dlq_handler
-	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/eventbridge-dlq-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/eventbridge_dlq_handler
-	tar -czf $(DOCKER_DIR)/eventbridge-dlq-handler/assets/eventbridge-dlq-handler-app.tar.gz \
+cr-fifo-dlq-handler-build: ### Build cr-fifo dlq handler lambda docker image
+	make common-code-copy LAMBDA_DIR=cr_fifo_dlq_handler
+	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/requirements.txt
+	cd $(APPLICATION_DIR)/cr_fifo_dlq_handler
+	tar -czf $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/cr-fifo-dlq-handler-app.tar.gz \
 		--exclude=tests \
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make eventbridge-dlq-handler-clean
-	export VERSION=$$(make docker-image-get-version NAME=eventbridge-dlq-handler)
+	make docker-image NAME=cr-fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make cr-fifo-dlq-handler-clean
+	export VERSION=$$(make docker-image-get-version NAME=cr-fifo-dlq-handler)
 
-eventbridge-dlq-handler-clean: ### Clean eventbridge dlq handler lambda docker image directory
-	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/eventbridge-dlq-handler/assets/*.txt
-	make common-code-remove LAMBDA_DIR=eventbridge_dlq_handler
+cr-fifo-dlq-handler-clean: ### Clean cr-fifo dlq handler lambda docker image directory
+	rm -fv $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.txt
+	make common-code-remove LAMBDA_DIR=cr_fifo_dlq_handler
 
 # ==============================================================================
 # Event Replay lambda (event-replay)
@@ -391,7 +389,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=eventbridge-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=cr-fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -446,7 +444,7 @@ tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
-	cp -f $(APPLICATION_DIR)/eventbridge_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-eventbridge-dlq-hander.txt
+	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-cr-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
 	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-test-db-checker-handler.txt
 	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
@@ -602,6 +600,7 @@ create-ecr-repositories:
 	make docker-create-repository NAME=event-processor
 	make docker-create-repository NAME=event-sender
 	make docker-create-repository NAME=fifo-dlq-handler
-	make docker-create-repository NAME=eventbridge-dlq-handler
+	make docker-create-repository NAME=cr-fifo-dlq-handler
+	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=event-replay
 	make docker-create-repository NAME=test-db-checker-handler

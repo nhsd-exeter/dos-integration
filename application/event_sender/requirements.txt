@@ -1,4 +1,3 @@
 aws-embedded-metrics
-aws_encryption_sdk
 aws-lambda-powertools
 requests

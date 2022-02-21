@@ -4,7 +4,7 @@ resource "aws_cloudwatch_query_definition" "errors" {
   log_group_names = [
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
   ]
 
@@ -21,7 +21,7 @@ resource "aws_cloudwatch_query_definition" "by_correlation_id" {
   log_group_names = [
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.event_replay_lambda_name}"
   ]
@@ -247,7 +247,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.dead_letter_queue_from_event_bus_name}", { "label": "EventBridge Message Count" } ],
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.cr_dead_letter_queue_from_fifo_queue_name}", { "label": "EventBridge Message Count" } ],
                     [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "FIFO Message Count" } ]
                 ],
                 "view": "timeSeries",

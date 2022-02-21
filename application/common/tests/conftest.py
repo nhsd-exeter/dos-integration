@@ -105,7 +105,7 @@ def dead_letter_message():
                 },
                 "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
                 "eventSource": "aws:sqs",
-                "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:eventbridge-dlq-queue",
+                "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:cr-fifo-dlq-queue",
                 "awsRegion": "us-east-2",
             }
         ]

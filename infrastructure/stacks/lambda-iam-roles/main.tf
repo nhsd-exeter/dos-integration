@@ -280,8 +280,8 @@ resource "aws_kms_alias" "signing_key" {
   name          = "alias/${var.signing_key_alias}"
   target_key_id = aws_kms_key.signing_key.key_id
 }
-resource "aws_iam_role" "eventbridge_dlq_handler_role" {
-  name               = var.eventbridge_dlq_handler_role_name
+resource "aws_iam_role" "cr_fifo_dlq_handler_role" {
+  name               = var.cr_fifo_dlq_handler_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -301,9 +301,9 @@ resource "aws_iam_role" "eventbridge_dlq_handler_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
-  name   = "eventbridge_dlq_handler_policy"
-  role   = aws_iam_role.eventbridge_dlq_handler_role.id
+resource "aws_iam_role_policy" "cr_fifo_dlq_handler_policy" {
+  name   = "cr_fifo_dlq_handler_policy"
+  role   = aws_iam_role.cr_fifo_dlq_handler_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -334,7 +334,7 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.dead_letter_queue_from_event_bus_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
     }
   ]
 }

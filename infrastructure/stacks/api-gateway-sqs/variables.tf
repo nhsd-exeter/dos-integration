@@ -107,6 +107,10 @@ variable "fifo_dlq_handler_lambda_name" {
   description = ""
 }
 
+variable "cr_fifo_dlq_handler_lambda_name" {
+  description = ""
+}
+
 # ############################
 # # ROUTE53
 # ############################

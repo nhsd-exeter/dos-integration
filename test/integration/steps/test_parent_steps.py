@@ -1,14 +1,12 @@
-from base64 import b64encode
 from datetime import datetime
 from decimal import Decimal
-from json import dumps
-from time import sleep, time
+from time import sleep
 from os import getenv
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.events import build_same_as_dos_change_event, change_request, create_change_event, nhsuk_changed_event
-from .utilities.encryption import initialise_encryption_client
+
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
@@ -61,51 +59,6 @@ def a_change_event_with_invalid_odscode():
     change_event = create_change_event()
     change_event["ODSCode"] = "F8KE1"
     context = {"change_event": change_event}
-    return context
-
-
-@given("change request has valid signature", target_fixture="context")
-def has_valid_signature(context):
-    key_data = {
-        "ods_code": context["change_request"]["ods_code"],
-        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
-        "message_received": context["change_request"]["message_received"],
-        "time": time(),
-    }
-    encrypt_string = initialise_encryption_client()
-    signing_key = encrypt_string(dumps(key_data))
-    b64_mystring = b64encode(signing_key).decode("utf-8")
-    context["change_request"]["signing_key"] = b64_mystring
-    return context
-
-
-@given("change request has invalid signature", target_fixture="context")
-def has_invalid_signature(context):
-    key_data = {
-        "ods_code": "Dave",
-        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
-        "message_received": context["change_request"]["message_received"],
-        "time": time(),
-    }
-    encrypt_string = initialise_encryption_client()
-    signing_key = encrypt_string(dumps(key_data))
-    b64_mystring = b64encode(signing_key).decode("utf-8")
-    context["change_request"]["signing_key"] = b64_mystring
-    return context
-
-
-@given("change request has expired signature", target_fixture="context")
-def has_expired_signature(context):
-    key_data = {
-        "ods_code": "Dave",
-        "dynamo_record_id": context["change_request"]["dynamo_record_id"],
-        "message_received": context["change_request"]["message_received"],
-        "time": time() - 100_000,
-    }
-    encrypt_string = initialise_encryption_client()
-    signing_key = encrypt_string(dumps(key_data))
-    b64_mystring = b64encode(signing_key).decode("utf-8")
-    context["change_request"]["signing_key"] = b64_mystring
     return context
 
 

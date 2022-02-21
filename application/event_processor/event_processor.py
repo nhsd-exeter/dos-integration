@@ -29,7 +29,6 @@ EXPECTED_ENVIRONMENT_VARIABLES = (
     "DB_NAME",
     "DB_SCHEMA",
     "DB_USER_NAME",
-    "EVENTBRIDGE_BUS_NAME",
 )
 
 
@@ -194,7 +193,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
     logger.info("Writing change event to dynamo")
     record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-
+    correlation_id = logger.get_correlation_id()
+    if "broken" in correlation_id.lower():
+        raise ValueError("Everything is broken boo ")
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", record_id)
     metrics.set_dimensions({"ENV": environ["ENV"]})

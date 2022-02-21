@@ -31,9 +31,9 @@ def event() -> Dict[str, Any]:
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "eventbridge-dlq-handler"
+        function_name: str = "cr-fifo-dlq-handler"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:eventbridge-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:cr-fifo-dlq-handler"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

@@ -1,11 +1,12 @@
 from json import dumps
-from os import getenv
+from os import getenv, environ
 from time import sleep
 from typing import Any, Dict
 
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+from common.dynamodb import get_circuit_status
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body
 from common.types import ChangeMetadata, ChangeRequestQueueItem
@@ -30,9 +31,28 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     Event: The event payload should contain a Change Request
     """
     sqs = client("sqs")
+    lambda_client = client("lambda")
     start = time()
     loop = 0
+
     while time() < start + 280:
+        circuit_open = get_circuit_status(environ["CIRCUIT"])
+        if circuit_open:
+            # Wait then continue
+            sleep(environ["SLEEP_FOR_WHEN_OPEN"])
+            change_request_queue_item: ChangeRequestQueueItem = {
+                "is_health_check": True,
+                "change_request": {},
+                "recipient_id": None,
+                "metadata": None,
+            }
+            logger.info(
+                "Sending health check to try and re-open the circuit", extra={"request": change_request_queue_item}
+            )
+            invoke_lambda(lambda_client, change_request_queue_item)
+
+            continue
+
         logger.append_keys(loop=loop)
         response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
         messages = response.get("Messages")
@@ -41,7 +61,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
             sleep(1)
         else:
             logger.info(f"Received {len(messages)} messages from SQS")
-            lambda_client = client("lambda")
 
             # TODO: Need to figure out circuit breaker bits
             for message in messages:
@@ -65,6 +84,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                     "ods_code": ods_code,
                 }
                 change_request_queue_item: ChangeRequestQueueItem = {
+                    "is_health_check": False,
                     "change_request": extract_body(message["Body"]),
                     "recipient_id": message["ReceiptHandle"],
                     "metadata": change_metadata,
