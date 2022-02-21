@@ -7,7 +7,6 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from change_request import ChangeRequest
 from common.middlewares import unhandled_exception_logging
 from common.types import ChangeRequestQueueItem
-from common.encryption import validate_event_is_signed
 from boto3 import client
 
 tracer = Tracer()
@@ -16,7 +15,6 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
-@validate_event_is_signed
 @logger.inject_lambda_context
 @metric_scope
 def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metrics) -> Dict:

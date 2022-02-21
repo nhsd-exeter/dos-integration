@@ -87,6 +87,7 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
+      EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
 

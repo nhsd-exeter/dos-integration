@@ -19,6 +19,7 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
 @lambda_handler_decorator(trace_execution=True)
 def set_correlation_id(handler, event: SQSEvent, context: LambdaContext):
     """Set correlation id from SQS event"""
-    logger.set_correlation_id(next(event.records).message_attributes["correlation-id"]["stringValue"])
+    record = next(event.records)
+    logger.set_correlation_id(record.message_attributes["correlation-id"]["stringValue"])
     response = handler(event, context)
     return response

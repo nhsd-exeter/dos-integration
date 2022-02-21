@@ -515,6 +515,13 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
     {
       "Effect": "Allow",
       "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-event-sender"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "rds-db:connect",
         "logs:CreateLogGroup",
         "logs:CreateLogStream",

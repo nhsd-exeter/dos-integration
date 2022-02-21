@@ -316,11 +316,13 @@ test-db-checker-handler-clean: ### Clean event processor lambda docker image dir
 # Orchestrator
 
 orchestrator-build: ### Build orchestrator lambda docker image
+	make common-code-copy LAMBDA_DIR=orchestrator
 	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
 	cd $(APPLICATION_DIR)/orchestrator
 	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
 		--exclude=tests \
-		*.py
+		*.py \
+		common
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make orchestrator-clean
@@ -329,6 +331,7 @@ orchestrator-build: ### Build orchestrator lambda docker image
 orchestrator-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.txt
+	make common-code-remove LAMBDA_DIR=orchestrator
 
 # ==============================================================================
 # Authoriser (for dos api gateway mock)
@@ -484,7 +487,7 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 40 --spawn-rate 2 --run-time 60m --stop-timeout 10 --exit-code-on-error 0 \
+			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -590,6 +593,10 @@ delete-ip-from-allowlist: # Update your IP address in AWS secrets manager to ace
 python-linting:
 	make python-code-check FILES=application
 	make python-code-check FILES=test
+
+python-format:
+	make python-code-format FILES=application
+	make python-code-format FILES=test
 
 create-ecr-repositories:
 	make docker-create-repository NAME=event-processor

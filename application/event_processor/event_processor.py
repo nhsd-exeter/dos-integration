@@ -100,7 +100,7 @@ class EventProcessor:
         self.change_requests = change_requests
         return self.change_requests
 
-    def send_changes(self, message_received: int, record_id: str, sequence_number: str) -> None:
+    def send_changes(self, message_received: int, record_id: str, sequence_number: int) -> None:
         """Sends change request payload off to next part of workflow
         [Which at the moment is straight to the next lambda]
         """
@@ -113,17 +113,20 @@ class EventProcessor:
         for change_request in self.change_requests:
             change_payload = dumps(change_request.create_payload())
             encoded = change_payload.encode()
-            hashed_payload = hashlib.sha256(encoded)
+            hashed_payload = hashlib.sha256(encoded).hexdigest()
+            logger.debug(f"Hash payload {len(hashed_payload)}-{hashed_payload}")
+            entry_id = f"{change_request.service_id}-{sequence_number}"
+            logger.debug(f"Entry id {entry_id}")
             messages.append(
                 {
-                    "Id": "tbc",
-                    "MessageBody": dumps(change_payload),
-                    "MessageDeduplicationId": f"${sequence_number}-${hashed_payload}",
-                    "MessageGroupId": f"{change_request.service_id}-${sequence_number}",
+                    "Id": entry_id,
+                    "MessageBody": change_payload,
+                    "MessageDeduplicationId": f"{sequence_number}-{hashed_payload}",
+                    "MessageGroupId": f"{change_request.service_id}",
                     "MessageAttributes": {
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
-                        "message_received": {"DataType": "Number", "StringValue": message_received},
-                        "dynamo_record_id": {"DataType": "Number", "StringValue": record_id},
+                        "message_received": {"DataType": "Number", "StringValue": str(message_received)},
+                        "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
                         "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
                     },
                 }

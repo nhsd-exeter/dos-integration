@@ -9,6 +9,7 @@ from boto3 import client
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body
 from common.types import ChangeMetadata, ChangeRequestQueueItem
+from time import strftime, gmtime, time
 
 logger = Logger()
 tracer = Tracer()
@@ -29,31 +30,59 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     Event: The event payload should contain a Change Request
     """
     sqs = client("sqs")
-    response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
-    logger.info(f"Received {len(response['Messages'])} messages from SQS")
-    lambda_client = client("lambda")
-    # TODO: Need to figure out circuit breaker bits
-    for message in response["Messages"]:
-        logger.info("Processing SQS message", extra={"message": message})
-        change_metadata: ChangeMetadata = {
-            "dynamo_record_id": message["MessageAttributes"]["DynamoRecordId"]["StringValue"],
-            "correlation_id": message["MessageAttributes"]["CorrelationId"]["StringValue"],
-            "message_received": int(message["MessageAttributes"]["MessageReceived"]["StringValue"]),
-            "ods_code": message["MessageAttributes"]["OdsCode"]["StringValue"],
-        }
-        change_request_queue_item: ChangeRequestQueueItem = {
-            "change_request": extract_body(message["Body"]),
-            "recipient_id": message["ReceiptHandle"],
-            "metadata": change_metadata,
-        }
-        invoke_lambda(lambda_client, change_request_queue_item)
-        sleep(TIME_TO_SLEEP)
+    start = time()
+    loop = 0
+    while time() < start + 280:
+        logger.append_keys(loop=loop)
+        response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
+        messages = response.get("Messages")
+        if messages is None:
+            logger.info("No messages at this time")
+            sleep(1)
+        else:
+            logger.info(f"Received {len(messages)} messages from SQS")
+            lambda_client = client("lambda")
+
+            # TODO: Need to figure out circuit breaker bits
+            for message in messages:
+                it_start = time()
+                logger.info("Processing SQS message", extra={"sqs_message": message})
+                correlation_id = message["MessageAttributes"]["correlation_id"]["StringValue"]
+                dynamo_record_id = message["MessageAttributes"]["dynamo_record_id"]["StringValue"]
+                message_received = int(message["MessageAttributes"]["message_received"]["StringValue"])
+                ods_code = message["MessageAttributes"]["ods_code"]["StringValue"]
+                logger.set_correlation_id(correlation_id)
+                logger.append_keys(ods_code=ods_code)
+                s, ms = divmod(message_received, 1000)
+                message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
+                logger.append_keys(message_received=message_received_pretty)
+                logger.append_keys(dynamo_record_id=dynamo_record_id)
+                logger.append_keys(ods_code=ods_code)
+                change_metadata: ChangeMetadata = {
+                    "dynamo_record_id": dynamo_record_id,
+                    "correlation_id": correlation_id,
+                    "message_received": message_received,
+                    "ods_code": ods_code,
+                }
+                change_request_queue_item: ChangeRequestQueueItem = {
+                    "change_request": extract_body(message["Body"]),
+                    "recipient_id": message["ReceiptHandle"],
+                    "metadata": change_metadata,
+                }
+                # TODO: What happens when this fails?
+                logger.info("Sending request to event sender", extra={"request": change_request_queue_item})
+                invoke_lambda(lambda_client, change_request_queue_item)
+                it_end = time()
+                to_sleep = max(0, (TIME_TO_SLEEP - (it_end - it_start)))
+                logger.debug(f"Seeping for {to_sleep}")
+                sleep(to_sleep)
+        loop = loop + 1
 
 
 def invoke_lambda(lambda_client, payload: Dict[str, Any]) -> Dict[str, Any]:
     response = lambda_client.invoke(
         FunctionName=getenv("EVENT_SENDER_FUNCTION_NAME"),
-        InvocationType="event",
+        InvocationType="Event",
         Payload=dumps(payload),
     )
     return response

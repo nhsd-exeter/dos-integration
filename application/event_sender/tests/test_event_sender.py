@@ -1,8 +1,9 @@
 from unittest.mock import patch, call
 from dataclasses import dataclass
 from os import environ
+from application.common.types import ChangeMetadata, ChangeRequestQueueItem
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
-import json
+
 from pytest import fixture
 from ..event_sender import lambda_handler
 
@@ -13,16 +14,14 @@ CHANGE_REQUEST = {
     "service_id": "49016",
     "changes": {"ods_code": "f0000", "phone": "0118 999 88199 9119 725 3", "website": "https://www.google.pl"},
 }
-BODY = json.dumps(
-    {
-        "change_payload": CHANGE_REQUEST,
-        "correlation_id": "dummy_correlation_id",
-        "message_received": 1642619743522,
-        "ods_code": "FX100",
-        "dynamo_record_id": "EXAMPLE",
-    }
-)
-EVENT = {"body": BODY}
+METADATA: ChangeMetadata = {
+    "dynamo_record_id": "EXAMPLE",
+    "correlation_id": "dummy_correlation_id",
+    "message_received": 1642619743522,
+    "ods_code": "FX100",
+}
+
+EVENT: ChangeRequestQueueItem = {"change_request": CHANGE_REQUEST, "recipient_id": "r-1", "metadata": METADATA}
 
 FILE_PATH = "application.event_sender.event_sender"
 
@@ -64,10 +63,12 @@ class MockResponse:
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
+@patch(f"{FILE_PATH}.client")
 def test_lambda_handler_dos_api_success(
-    mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
+    mock_client, mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
 ):
 
+    environ["CR_QUEUE_URL"] = "test_q"
     mock_instance = mock_change_request.return_value
     mock_instance.post_change_request.return_value = MockResponse(status_code=201, text="success")
     environ["ENV"] = "test"
@@ -76,7 +77,7 @@ def test_lambda_handler_dos_api_success(
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
-
+    mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_instance.post_change_request.assert_called_once_with()
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
@@ -84,16 +85,23 @@ def test_lambda_handler_dos_api_success(
     mock_put_metric.assert_has_calls(
         [call("DosApiLatency", 0, "Milliseconds"), call("QueueToDoSLatency", 3000, "Milliseconds")]
     )
+
     assert response["statusCode"] == 201
     assert response["body"] == "success"
+    mock_client.return_value.delete_message.assert_called_with(
+        QueueUrl="test_q",
+        ReceiptHandle="r-1",
+    )
+    del environ["CR_QUEUE_URL"]
 
 
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
+@patch(f"{FILE_PATH}.client")
 def test_lambda_handler_dos_api_fail(
-    mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
+    mock_client, mock_set_dimension, mock_put_metric, mock_time, mock_change_request, lambda_context, mock_logger
 ):
 
     mock_instance = mock_change_request.return_value
@@ -103,13 +111,14 @@ def test_lambda_handler_dos_api_fail(
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
-
+    mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
     mock_put_metric.assert_has_calls([call("DosApiLatency", 0, "Milliseconds"), call("DoSApiFail", 1, "Count")])
     assert response["statusCode"] == 500
     assert response["body"] == "something went wrong"
+    mock_client.return_value.delete_message.asset_not_called()
 
 
 class InvocationTracker(object):

@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from json import dumps
 from os import environ
+import hashlib
 from random import choices
 from change_event_exceptions import ValidationException
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 
 from pytest import fixture, raises
@@ -169,19 +170,22 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
-@patch(f"{FILE_PATH}.initialise_encryption_client")
-@patch.object(Logger, "get_correlation_id", return_value=1)
+def get_message_attributes(correlation_id: str, message_received: int, record_id: str, ods_code: str):
+    return {
+        "correlation_id": {"DataType": "String", "StringValue": correlation_id},
+        "message_received": {"DataType": "Number", "StringValue": str(message_received)},
+        "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
+        "ods_code": {"DataType": "String", "StringValue": ods_code},
+    }
+
+
+@patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes(mock_client, mock_logger, get_correlation_id_mock, encryption_client_mock):
+def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     # Arrange
-    bus_name = "test"
-    environ["EVENTBRIDGE_BUS_NAME"] = bus_name
-    mock_e = Mock()
-    mock_e.encrypt_string = lambda a: b"encrypted"
-    mock_e.decrypt_string = lambda a: "decrypted"
-    mock_client.return_value = mock_e
-    encryption_client_mock.return_value = mock_e
+    q_name = "test"
+    environ["CR_QUEUE_URL"] = q_name
     change_request = ChangeRequest(service_id=49016)
     change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
@@ -199,48 +203,42 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock, encrypt
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
+    sequence_number = 1
 
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = [change_request]
     # Act
-    event_processor.send_changes(message_received, record_id)
+    event_processor.send_changes(message_received, record_id, sequence_number)
     # Assert
-    mock_client.assert_called_with("events")
+    mock_client.assert_called_with("sqs")
+    change_payload = dumps(change_request.create_payload())
+    encoded = change_payload.encode()
+    hashed_payload = hashlib.sha256(encoded).hexdigest()
     entry_details = {
-        "signing_key": "ZW5jcnlwdGVk",
-        "change_payload": change_request.create_payload(),
-        "correlation_id": 1,
-        "message_received": message_received,
-        "dynamo_record_id": record_id,
-        "ods_code": nhs_entity.odscode,
+        "Id": "49016-1",
+        "MessageBody": change_payload,
+        "MessageDeduplicationId": f"1-{hashed_payload}",
+        "MessageGroupId": "49016",
+        "MessageAttributes": get_message_attributes("1", message_received, record_id, nhs_entity.odscode),
     }
-    mock_client.return_value.put_events.assert_called_with(
+    mock_client.return_value.send_message_batch.assert_called_with(
+        QueueUrl=q_name,
         Entries=[
-            {
-                "Source": "event-processor",
-                "DetailType": "change-request",
-                "Detail": dumps(entry_details),
-                "EventBusName": bus_name,
-            },
-        ]
+            entry_details,
+        ],
     )
     mock_logger.assert_called_with(f"Sent off change payload for id={change_request.service_id}")
     # Clean up
-    del environ["EVENTBRIDGE_BUS_NAME"]
+    del environ["CR_QUEUE_URL"]
 
 
-@patch(f"{FILE_PATH}.initialise_encryption_client")
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger, encryption_client_mock):
+def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger):
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
-    mock_e = Mock()
-    mock_e.encrypt_string = lambda a: b"encrypted"
-    mock_e.decrypt_string = lambda a: "decrypted"
-    mock_client.return_value = mock_e
-    encryption_client_mock.return_value = mock_e
+
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
@@ -248,43 +246,38 @@ def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger,
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
-
+    sequence_number = 1
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = None
     # Act
-    event_processor.send_changes(message_received, record_id)
+    event_processor.send_changes(message_received, record_id, sequence_number)
     # Assert
     mock_logger.assert_called_with("Attempting to send change requests before get_change_requests has been called.")
 
 
-@patch(f"{FILE_PATH}.initialise_encryption_client")
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_send_changes_when_no_change_requests(mock_client, mock_logger, encryption_client_mock):
+def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     # Arrange
     record_id = "someid"
     message_received = 1642501355616
     nhs_entity = NHSEntity({})
-    mock_e = Mock()
-    mock_e.encrypt_string = lambda a: b"encrypted"
-    mock_e.decrypt_string = lambda a: "decrypted"
-    mock_client.return_value = mock_e
-    encryption_client_mock.return_value = mock_e
+
     nhs_entity.odscode = "SLC45"
     nhs_entity.website = "www.site.com"
     nhs_entity.phone = "01462622435"
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
-
+    sequence_number = 1
     event_processor = EventProcessor(nhs_entity)
     event_processor.change_requests = []
     # Act
-    event_processor.send_changes(message_received, record_id)
+    event_processor.send_changes(message_received, record_id, sequence_number)
     # Assert
     mock_logger.assert_called_with("No changes identified")
-    mock_client.assert_called_with("events")
-    mock_client.return_value.put_events.assert_not_called()
+    mock_client.assert_called_with("sqs")
+    mock_client.return_value.send_message_batch.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
