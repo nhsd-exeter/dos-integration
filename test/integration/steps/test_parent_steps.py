@@ -19,7 +19,13 @@ from .utilities.utils import (
     re_process_payload,
 )
 
-scenarios("../features/parent_features.feature", "../features/event_sender.feature", "../features/e2e_di_test.feature")
+scenarios(
+    "../features/F001_Valid_Change_Events.feature",
+    "../features/F002_Invalid_Change_Events.feature",
+    "../features/F003_DoS_Security.feature",
+    "../features/F004_Error_Handling.feature",
+    "../features/F005_Support_Functions.feature",
+)
 
 
 @given("a Changed Event is valid", target_fixture="context")
@@ -29,7 +35,7 @@ def a_change_event_is_valid():
     return context
 
 
-@given("a Change Event is aligned with Dos", target_fixture="context")
+@given("a Changed Event is aligned with Dos", target_fixture="context")
 def a_change_event_is_valid_and_matches_dos():
     context = {}
     context["change_event"] = build_same_as_dos_change_event()
