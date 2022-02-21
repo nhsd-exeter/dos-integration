@@ -39,8 +39,6 @@ def test_get_specified_opening_times():
                     "Weekday": "",
                     "OpeningTime": "08:45",
                     "ClosingTime": "17:00",
-                    "OffsetOpeningTime": 525,
-                    "OffsetClosingTime": 1020,
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Nov 12 2021",
                     "IsOpen": True,
@@ -49,8 +47,6 @@ def test_get_specified_opening_times():
                     "Weekday": "",
                     "OpeningTime": "09:00",
                     "ClosingTime": "16:00",
-                    "OffsetOpeningTime": 540,
-                    "OffsetClosingTime": 980,
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Jan  6    2022",
                     "IsOpen": True,
@@ -59,8 +55,6 @@ def test_get_specified_opening_times():
                     "Weekday": "",
                     "OpeningTime": "09:00",
                     "ClosingTime": "16:00",
-                    "OffsetOpeningTime": 540,
-                    "OffsetClosingTime": 980,
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Apr  01   2023",
                     "IsOpen": True,
@@ -69,12 +63,34 @@ def test_get_specified_opening_times():
                     "Weekday": "Thursday",
                     "OpeningTime": "08:45",
                     "ClosingTime": "18:00",
-                    "OffsetOpeningTime": 525,
-                    "OffsetClosingTime": 1080,
                     "OpeningTimeType": "General",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
                 },
+                {
+                    "Weekday": "",
+                    "OpeningTime": None,
+                    "ClosingTime": None,
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": "Jan 04 2023",
+                    "IsOpen": False,
+                },
+                {
+                    "Weekday": "",
+                    "OpeningTime": "08:45",
+                    "ClosingTime": "18:00",
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": "Jan 04 2023",
+                    "IsOpen": True,
+                },
+                {
+                    "Weekday": "",
+                    "OpeningTime": "",
+                    "ClosingTime": "",
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": "Jan 20 2023",
+                    "IsOpen": False,
+                }
             ]
         }
     )
@@ -85,17 +101,21 @@ def test_get_specified_opening_times():
         SpecifiedOpeningTime([OpenPeriod(time(8, 45, 0), time(17, 0, 0))], date(2021, 11, 12)),
         SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(16, 0, 0))], date(2022, 1, 6)),
         SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(16, 0, 0))], date(2023, 4, 1)),
+        SpecifiedOpeningTime([OpenPeriod(time(8, 45, 0), time(18, 0, 0))], date(2023, 1, 4), is_open=False),
+        SpecifiedOpeningTime([], date(2023, 1, 20), is_open=False)
     ]
 
     actual_spec_open_times = nhs_entity.specified_opening_times
-    assert len(actual_spec_open_times) == len(
-        expected
-    ), f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
 
     for exp_spec_open_time in expected:
-        assert (
-            exp_spec_open_time in actual_spec_open_times
-        ), f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
+        assert exp_spec_open_time in actual_spec_open_times,\
+            f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
+
+
+    assert len(actual_spec_open_times) == len(expected),\
+        f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
+
+
 
 
 def test_get_standard_opening_times():
@@ -134,6 +154,14 @@ def test_get_standard_opening_times():
                     "OpeningTimeType": "Invalid_Type",
                     "AdditionalOpeningDate": "",
                     "IsOpen": True,
+                },
+                {
+                    "Weekday": "Sunday",
+                    "OpeningTime": "",
+                    "ClosingTime": "",
+                    "OpeningTimeType": "General",
+                    "AdditionalOpeningDate": "",
+                    "IsOpen": False,
                 },
             ]
         }

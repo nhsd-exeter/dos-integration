@@ -197,43 +197,268 @@ def test_do_not_update_address_if_postcode_invalid_no_address(mock_get_valid_dos
 
 def test_update_changes_with_opening_times():
     # Arrange
-    nhs_uk_entity = NHSEntity(
-        {
-            "OpeningTimes": [
-                {
-                    "Weekday": "Friday",
-                    "OpeningTime": "08:45",
-                    "ClosingTime": "17:00",
-                    "OpeningTimeType": "General",
-                    "AdditionalOpeningDate": "",
-                    "IsOpen": True,
-                },
-                {
-                    "Weekday": "Tuesday",
-                    "OpeningTime": "09:00",
-                    "ClosingTime": "17:30",
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Nov 12 2021",
-                    "IsOpen": True,
-                },
-            ],
-        }
-    )
+    nhs_uk_entity = NHSEntity({
+        "OpeningTimes": [
+            {
+                "Weekday": "Monday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Monday",
+                "OpeningTime": "13:00",
+                "ClosingTime": "16:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Monday",
+                "OpeningTime": "17:00",
+                "ClosingTime": "18:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Tuesday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Wednesday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Thursday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Friday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Saturday",
+                "OpeningTime": "09:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Saturday",
+                "OpeningTime": "13:00",
+                "ClosingTime": "18:00",
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "Sunday",
+                "OpeningTime": None,
+                "ClosingTime": None,
+                "OpeningTimeType": "General",
+                "AdditionalOpeningDate": "",
+                "IsOpen": False
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "08:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr 15 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "13:00",
+                "ClosingTime": "16:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr 15 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "07:00",
+                "ClosingTime": "11:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr 18 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "12:00",
+                "ClosingTime": "15:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr 18 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "16:00",
+                "ClosingTime": "18:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Apr 18 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": None,
+                "ClosingTime": None,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Feb 21 2022",
+                "IsOpen": False
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": None,
+                "ClosingTime": None,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 7 2022",
+                "IsOpen": False
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": None,
+                "ClosingTime": None,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 8 2022",
+                "IsOpen": False
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "07:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 10 2022",
+                "IsOpen":True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "13:00",
+                "ClosingTime": "17:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 10 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "18:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 10 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "07:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 11 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "13:00",
+                "ClosingTime": "17:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 11 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "18:00",
+                "ClosingTime": "20:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 11 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "06:00",
+                "ClosingTime": "12:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 19 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": "13:00",
+                "ClosingTime": "18:00",
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 19 2022",
+                "IsOpen": True
+            },
+            {
+                "Weekday": "",
+                "OpeningTime": None,
+                "ClosingTime": None,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": "Mar 9 2022",
+                "IsOpen": False
+            }
+        ],
+    })
+
     expected_changes = {
-        OPENING_DATES_KEY: {"2021-11-12": [{"start_time": "09:00", "end_time": "17:30"}]},
+        OPENING_DATES_KEY: {
+			    "2022-04-15": [
+                    {"start_time": "08:00", "end_time": "12:00"}, {"start_time": "13:00", "end_time": "16:00"}],
+			    "2022-04-18": [
+                    {"start_time": "07:00", "end_time": "11:00"},
+                    {"start_time": "12:00", "end_time": "15:00"},
+                    {"start_time": "16:00", "end_time": "18:00"}],
+			    "2022-02-21": [],
+			    "2022-03-07": [],
+			    "2022-03-08": [],
+			    "2022-03-10": [
+                    {"start_time": "07:00", "end_time": "12:00"},
+                    {"start_time": "13:00", "end_time": "17:00"},
+                    {"start_time": "18:00", "end_time": "20:00"}],
+			    "2022-03-11": [
+                    {"start_time": "07:00", "end_time": "12:00"},
+                    {"start_time": "13:00", "end_time": "17:00"},
+                    {"start_time": "18:00", "end_time": "20:00"}],
+			    "2022-03-19": [
+                    {"start_time": "06:00", "end_time": "12:00"},
+                    {"start_time": "13:00", "end_time": "18:00"}],
+			    "2022-03-09": []            
+            },
         OPENING_DAYS_KEY: {
-            "Monday": [],
-            "Tuesday": [],
-            "Wednesday": [],
-            "Thursday": [],
-            "Friday": [{"start_time": "08:45", "end_time": "17:00"}],
-            "Saturday": [],
-            "Sunday": [],
+            "Monday": [
+                {"start_time": "09:00", "end_time": "12:00"},
+                {"start_time": "13:00", "end_time": "16:00"},
+                {"start_time": "17:00", "end_time": "18:00"}],
+            "Tuesday": [{"start_time": "09:00", "end_time": "20:00"}],
+            "Wednesday": [{"start_time": "09:00", "end_time": "20:00"}],
+            "Thursday": [{"start_time": "09:00", "end_time": "20:00"}],
+            "Friday": [{"start_time": "09:00", "end_time": "20:00"}],
+            "Saturday": [{"start_time": "09:00", "end_time": "12:00"}, {"start_time": "13:00", "end_time": "18:00"}],
+            "Sunday": []
         },
     }
     dos_service = dummy_dos_service()
     # Act
     changes = {}
     update_changes_with_opening_times(changes, dos_service, nhs_uk_entity)
+    print(changes)
     # Assert
     assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"

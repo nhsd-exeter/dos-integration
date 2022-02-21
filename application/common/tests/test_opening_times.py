@@ -467,7 +467,7 @@ def test_stdopeningtimes_any_contradiction():
     st1.monday.append(a)
     assert st1.any_contradictions() is False
 
-    st1.closed_days.add("monday")
+    st1.explicit_closed_days.add("monday")
     assert st1.any_contradictions()
 
     st1.monday = []
@@ -477,11 +477,11 @@ def test_stdopeningtimes_any_contradiction():
     st1.wednesday = [b]
     assert st1.any_contradictions() is False
 
-    st1.closed_days.add("tuesday")
+    st1.explicit_closed_days.add("tuesday")
     assert st1.any_contradictions() is False
 
-    st1.closed_days.add("saturday")
+    st1.explicit_closed_days.add("saturday")
     assert st1.any_contradictions()
 
-    st1.closed_days.add("wednesday")
+    st1.explicit_closed_days.add("wednesday")
     assert st1.any_contradictions()

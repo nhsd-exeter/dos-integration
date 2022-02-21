@@ -208,22 +208,43 @@ class StandardOpeningTimes:
         # Initialise all weekday OpenPeriod lists as empty
         for day in WEEKDAYS:
             setattr(self, day, [])
-        self.closed_days = set()
+        self.explicit_closed_days = set()
 
     def __repr__(self):
         day_opening_strs = [f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS]
-        return f"<StandardOpeningTimes: {' '.join(day_opening_strs)}>"
+
+        closed_days_str = ""
+        if len(self.explicit_closed_days) > 0:
+            closed_days_str = f" exp_closed_days={self.explicit_closed_days}"
+
+        return f"<StandardOpeningTimes: {' '.join(day_opening_strs)}{closed_days_str}>"
 
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
-    def __eq__(self, other: Any):
-        if self.closed_days != other.closed_days:
+    def __eq__(self, other: 'StandardOpeningTimes'):
+        if not isinstance(other, StandardOpeningTimes):
             return False
+
+        if self.all_closed_days() != other.all_closed_days():
+            return False
+
         for day in WEEKDAYS:
             if not OpenPeriod.equal_lists(getattr(self, day), getattr(other, day)):
                 return False
+
         return True
+
+    def all_closed_days(self):
+        """Returns a set of all implicit AND explicit closed days."""
+        all_closed_days = self.explicit_closed_days
+
+        # Add implicit closed days to explicit set
+        for day in WEEKDAYS:
+            if len(getattr(self, day)) == 0:
+                all_closed_days.add(day)
+
+        return all_closed_days
 
     def is_open(self, weekday: str) -> bool:
         return len(getattr(self, weekday)) > 0
@@ -255,7 +276,7 @@ class StandardOpeningTimes:
 
     def any_contradictions(self) -> bool:
         """Returns True if any open period falls on a day that is marked as closed."""
-        for weekday in self.closed_days:
+        for weekday in self.explicit_closed_days:
             if self.is_open(weekday):
                 return True
         return False

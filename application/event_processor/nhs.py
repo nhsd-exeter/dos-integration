@@ -96,7 +96,7 @@ class NHSEntity:
                 open_period = OpenPeriod.from_string_times(open_time["OpeningTime"], open_time["ClosingTime"])
                 std_opening_times.add_open_period(open_period, weekday)
             else:
-                std_opening_times.closed_days.add(weekday)
+                std_opening_times.explicit_closed_days.add(weekday)
 
         return std_opening_times
 
@@ -110,33 +110,21 @@ class NHSEntity:
             dict: key=date and value = List[OpenPeriod] objects in a sort order
         """
         specified_times_list = list(filter(is_spec_opening_json, self.entity_data.get("OpeningTimes", [])))
+        specified_opening_times = []
 
-        # Sort the openingtimes data
-        sort_specified = sorted(
-            specified_times_list,
-            key=lambda item: (item["AdditionalOpeningDate"], item["OpeningTime"], item["ClosingTime"]),
-        )
-        specified_opening_time_dict: Dict[str, List[OpenPeriod]] = {}
-        specified_closed_days = set()
+        # Grouping data by date, and create open_period objects from values
+        for date_str, op_dict_list in groupby(specified_times_list, lambda item: (item["AdditionalOpeningDate"])):
+            open_periods = []
+            date = datetime.strptime(date_str, "%b  %d  %Y").date()
+            is_open = True
 
-        # Grouping data by date
-        for date_str, values in groupby(sort_specified, lambda item: (item["AdditionalOpeningDate"])):
-            op_list: List[OpenPeriod] = []
-            for item in list(values):
+            for item in list(op_dict_list):
                 if item["IsOpen"]:
-                    op_list.append(OpenPeriod.from_string_times(item["OpeningTime"], item["ClosingTime"]))
-                    specified_opening_time_dict[date_str] = op_list
+                    open_periods.append(OpenPeriod.from_string_times(item["OpeningTime"], item["ClosingTime"]))
                 else:
-                    specified_closed_days.add(date_str)
-
-        specified_opening_times = [
-            SpecifiedOpeningTime(
-                open_periods=open_periods,
-                specified_date=datetime.strptime(date_str, "%b  %d  %Y").date(),
-                is_open=(date_str not in specified_closed_days),
-            )
-            for date_str, open_periods in specified_opening_time_dict.items()
-        ]
+                    is_open = False
+            
+            specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
 
         return specified_opening_times
 
