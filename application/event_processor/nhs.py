@@ -1,6 +1,6 @@
 from datetime import datetime
 from itertools import groupby
-from typing import Dict, List, Union
+from typing import List, Union
 from dataclasses import dataclass
 
 from aws_lambda_powertools import Logger
@@ -123,7 +123,7 @@ class NHSEntity:
                     open_periods.append(OpenPeriod.from_string_times(item["OpeningTime"], item["ClosingTime"]))
                 else:
                     is_open = False
-            
+
             specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
 
         return specified_opening_times

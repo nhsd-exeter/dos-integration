@@ -111,11 +111,8 @@ def test_get_specified_opening_times():
         assert exp_spec_open_time in actual_spec_open_times,\
             f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
 
-
     assert len(actual_spec_open_times) == len(expected),\
         f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
-
-
 
 
 def test_get_standard_opening_times():

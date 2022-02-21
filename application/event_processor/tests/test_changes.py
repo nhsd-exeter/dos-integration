@@ -349,7 +349,7 @@ def test_update_changes_with_opening_times():
                 "ClosingTime": "12:00",
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": "Mar 10 2022",
-                "IsOpen":True
+                "IsOpen": True
             },
             {
                 "Weekday": "",
@@ -420,27 +420,27 @@ def test_update_changes_with_opening_times():
 
     expected_changes = {
         OPENING_DATES_KEY: {
-			    "2022-04-15": [
+                "2022-04-15": [
                     {"start_time": "08:00", "end_time": "12:00"}, {"start_time": "13:00", "end_time": "16:00"}],
-			    "2022-04-18": [
+                "2022-04-18": [
                     {"start_time": "07:00", "end_time": "11:00"},
                     {"start_time": "12:00", "end_time": "15:00"},
                     {"start_time": "16:00", "end_time": "18:00"}],
-			    "2022-02-21": [],
-			    "2022-03-07": [],
-			    "2022-03-08": [],
-			    "2022-03-10": [
+                "2022-02-21": [],
+                "2022-03-07": [],
+                "2022-03-08": [],
+                "2022-03-10": [
                     {"start_time": "07:00", "end_time": "12:00"},
                     {"start_time": "13:00", "end_time": "17:00"},
                     {"start_time": "18:00", "end_time": "20:00"}],
-			    "2022-03-11": [
+                "2022-03-11": [
                     {"start_time": "07:00", "end_time": "12:00"},
                     {"start_time": "13:00", "end_time": "17:00"},
                     {"start_time": "18:00", "end_time": "20:00"}],
-			    "2022-03-19": [
+                "2022-03-19": [
                     {"start_time": "06:00", "end_time": "12:00"},
                     {"start_time": "13:00", "end_time": "18:00"}],
-			    "2022-03-09": []            
+                "2022-03-09": []
             },
         OPENING_DAYS_KEY: {
             "Monday": [
