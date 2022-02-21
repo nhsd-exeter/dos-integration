@@ -8,7 +8,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the Changed Request is accepted by Dos
     And the Changed Event is stored in dynamo db
 
-  @complete @dev
+@complete @dev
   Scenario: F001S002. All received Changed Events are archived in Dynamo DB
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

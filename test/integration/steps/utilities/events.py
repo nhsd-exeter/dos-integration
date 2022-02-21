@@ -22,8 +22,8 @@ def create_change_event() -> Dict[str, Any]:
         return payload
 
 
-def aligned_changed_event() -> Dict[str, Any]:
-    with open("resources/payloads/aligned_payload.json", "r", encoding="utf-8") as json_file:
+def nhsuk_changed_event() -> Dict[str, Any]:
+    with open("resources/payloads/nhs_uk_test_payload.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         return payload
 
