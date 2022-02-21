@@ -442,10 +442,9 @@ def invalid_opening_times_exception(context):
 def specified_opening_date_closed(context):
     opening_times = context["change_event"]["OpeningTimes"]
     for item in opening_times:
-        if item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
+        while item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
             closed_date = item["AdditionalOpeningDate"]
-        else:
-            raise Exception("ERROR!.. Changed Event has no closed OpeningTimes date")
+            break
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
     assert f'"{closed_date}\\":[]' in logs
@@ -456,10 +455,9 @@ def specified_opening_date_closed(context):
 def standard_opening_day_closed(context):
     opening_times = context["change_event"]["OpeningTimes"]
     for item in opening_times:
-        if item["IsOpen"] is False and item["AdditionalOpeningDate"] == "":
+        while item["IsOpen"] is False and item["AdditionalOpeningDate"] == "":
             closed_day = item["Weekday"]
-        else:
-            raise Exception("ERROR!.. Changed Event has no closed OpeningTimes day")
+            break
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
     assert f'"{closed_day}\\":[]' in logs
