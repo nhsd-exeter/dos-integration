@@ -1,6 +1,5 @@
 from json import dumps
 from os import getenv, environ
-from time import sleep
 from typing import Any, Dict
 
 from aws_lambda_powertools import Logger, Tracer
@@ -10,11 +9,11 @@ from common.dynamodb import get_circuit_status
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body
 from common.types import ChangeMetadata, ChangeRequestQueueItem
-from time import strftime, gmtime, time
+from time import strftime, gmtime, time, sleep
 
 logger = Logger()
 tracer = Tracer()
-TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
+
 QUEUE_URL = getenv("CR_QUEUE_URL")
 
 
@@ -34,12 +33,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     lambda_client = client("lambda")
     start = time()
     loop = 0
-
-    while time() < start + 280:
+    TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
+    while time() < start + int(environ["RUN_FOR"]):
         circuit_open = get_circuit_status(environ["CIRCUIT"])
         if circuit_open:
             # Wait then continue
-            sleep(environ["SLEEP_FOR_WHEN_OPEN"])
+            sleep(int(environ["SLEEP_FOR_WHEN_OPEN"]))
             change_request_queue_item: ChangeRequestQueueItem = {
                 "is_health_check": True,
                 "change_request": {},
@@ -97,6 +96,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                 logger.debug(f"Seeping for {to_sleep}")
                 sleep(to_sleep)
         loop = loop + 1
+
+
+def simple_test():
+    start = time()
+    while time() < start + 280:
+        print("bla")
 
 
 def invoke_lambda(lambda_client, payload: Dict[str, Any]) -> Dict[str, Any]:
