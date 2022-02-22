@@ -5,7 +5,7 @@ from typing import Any, Dict
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
-from common.dynamodb import get_circuit_status
+from common.dynamodb import get_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body
 from common.types import ChangeMetadata, ChangeRequestQueueItem
@@ -35,7 +35,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     loop = 0
     TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
     while time() < start + int(environ["RUN_FOR"]):
-        circuit_open = get_circuit_status(environ["CIRCUIT"])
+        circuit_open = get_circuit_is_open(environ["CIRCUIT"])
         if circuit_open:
             # Wait then continue
             sleep(int(environ["SLEEP_FOR_WHEN_OPEN"]))

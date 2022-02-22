@@ -9,7 +9,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 from change_request import ChangeRequest
-from common.dynamodb import put_circuit_status
+from common.dynamodb import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.types import ChangeRequestQueueItem
 
@@ -74,7 +74,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
     else:
         if event["is_health_check"] and response.status_code in [400, 200, 201]:
             logger.info("Circuit fixed - closing the circuit")
-            put_circuit_status(environ["CIRCUIT"], False)
+            put_circuit_is_open(environ["CIRCUIT"], False)
         else:
             # TODO: The current DoS Api returns 500 when it should return 400, this isn't ideal
             # as it means we will circuit break unnecessarily and this could happen repeatidly until
@@ -82,7 +82,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
             if response.status_code >= 500 or response.status_code == 429:
                 logger.info("Potentially recoverable breaking circuit to retry shortly")
-                put_circuit_status(environ["CIRCUIT"], True)
+                put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
                 logger.info("Permanent error sending to DLQ, Not retrying")
                 hashed_payload = sha256(str(event["change_request"]).encode()).hexdigest()

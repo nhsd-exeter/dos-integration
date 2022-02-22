@@ -61,26 +61,27 @@ EXPECTED_METADATA: ChangeMetadata = {
     "message_received": "1645527100000",
     "ods_code": "FA100",
 }
-
+SYSTEM = "DoS Integration"
+MESSAGE = "Some message"
 EXAMPLE_MESSAGE_1 = {
     "reference": "",
-    "system": "DoS Integration",
-    "message": "DoS Integration",
+    "system": SYSTEM,
+    "message": MESSAGE,
     "service_id": "100",
     "changes": [],
 }
 EXAMPLE_MESSAGE_2 = {
     "reference": "",
-    "system": "DoS Integration",
-    "message": "DoS Integration",
+    "system": SYSTEM,
+    "message": MESSAGE,
     "service_id": "200",
     "changes": [],
 }
 
 EXAMPLE_MESSAGE_3 = {
     "reference": "",
-    "system": "DoS Integration",
-    "message": "DoS Integration",
+    "system": SYSTEM,
+    "message": MESSAGE,
     "service_id": "300",
     "changes": [],
 }
@@ -93,7 +94,7 @@ EXPECTED_HEALTH_CHECK: ChangeRequestQueueItem = {
 }
 
 
-@patch(f"{FILE_PATH}.get_circuit_status", return_value=False)
+@patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
 @patch(f"{FILE_PATH}.client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
@@ -130,7 +131,7 @@ def test_orchestrator_circuit_closed_single_loop(mock_time, mock_sleep, mock_inv
     assert 0.3 == approx(c1_args[0])
 
 
-@patch(f"{FILE_PATH}.get_circuit_status", return_value=False)
+@patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
 @patch(f"{FILE_PATH}.client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
@@ -187,7 +188,7 @@ def test_orchestrator_circuit_closed_double_loop(mock_time, mock_sleep, mock_inv
     assert 0 == approx(c2_args[0])
 
 
-@patch(f"{FILE_PATH}.get_circuit_status", return_value=False)
+@patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
 @patch(f"{FILE_PATH}.client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
@@ -215,7 +216,7 @@ def test_orchestrator_circuit_closed_single_loop_no_messages(
     mock_sleep.assert_called_once_with(1)
 
 
-@patch(f"{FILE_PATH}.get_circuit_status", return_value=True)
+@patch(f"{FILE_PATH}.get_circuit_is_open", return_value=True)
 @patch(f"{FILE_PATH}.client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")

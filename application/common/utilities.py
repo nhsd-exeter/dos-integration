@@ -34,7 +34,7 @@ def get_sequence_number(record: SQSRecord) -> Union[int, None]:
     return None if seq_num_str is None else int(seq_num_str)
 
 
-def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str, float]:
+def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str, float, None]:
     attribute = msg_attributes.get(key)
     if attribute is None:
         return None

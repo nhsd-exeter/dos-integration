@@ -108,7 +108,7 @@ def test_lambda_handler_dos_api_success(
 
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
-@patch(f"{FILE_PATH}.put_circuit_status")
+@patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
 @patch(f"{FILE_PATH}.client")
@@ -146,7 +146,7 @@ def test_lambda_handler_dos_api_fail(
 
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
-@patch(f"{FILE_PATH}.put_circuit_status")
+@patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(MetricsLogger, "put_metric")
 @patch(f"{FILE_PATH}.client")
 def test_lambda_handler_health_check(
@@ -179,7 +179,7 @@ def test_lambda_handler_health_check(
 
 @patch(f"{FILE_PATH}.ChangeRequest")
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
-@patch(f"{FILE_PATH}.put_circuit_status")
+@patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
 @patch(f"{FILE_PATH}.client")
