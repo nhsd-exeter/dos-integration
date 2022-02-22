@@ -28,6 +28,11 @@ resource "aws_iam_role_policy" "event_processor_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
@@ -63,11 +68,6 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "kms:*",
-      "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -138,17 +138,17 @@ resource "aws_iam_role_policy" "event_sender_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "secretsmanager:Describe*",
         "secretsmanager:Get*",
         "secretsmanager:List*"
       ],
       "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "kms:*",
-      "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -370,6 +370,11 @@ resource "aws_iam_role_policy" "event_replay_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
@@ -442,6 +447,11 @@ resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
     {
       "Effect": "Allow",
       "Action": [
