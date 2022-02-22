@@ -227,7 +227,7 @@ def test_lambda_handler_non_recoverable_error(
             "dynamo_record_id": {"DataType": "String", "StringValue": METADATA["dynamo_record_id"]},
             "ods_code": {"DataType": "String", "StringValue": METADATA["ods_code"]},
             "error_msg": {"DataType": "String", "StringValue": error_message},
-            "error_msg_http_code": {"DataType": "String", "StringValue": status_code},
+            "error_msg_http_code": {"DataType": "String", "StringValue": str(status_code)},
         },
     )
     mock_client().delete_message.assert_called_once_with(

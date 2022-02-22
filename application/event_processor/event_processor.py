@@ -115,9 +115,23 @@ class EventProcessor:
             hashed_payload = hashlib.sha256(encoded).hexdigest()
             message_deduplication_id = f"{sequence_number}-{hashed_payload}"
             message_group_id = change_request.service_id
-            logger.debug(f"Hash payload {len(hashed_payload)}-{hashed_payload}")
             entry_id = f"{change_request.service_id}-{sequence_number}"
-            logger.debug(f"Entry id {entry_id}")
+            logger.debug(
+                "CR to send",
+                extra={
+                    "change_request": change_request,
+                    "correlation_id": logger.get_correlation_id(),
+                    "dynamo_record_id": record_id,
+                    "entry_id": entry_id,
+                    "hashed_payload": f"{len(hashed_payload)} - {hashed_payload}",
+                    "message_deduplication_id": message_deduplication_id,
+                    "message_group_id": message_group_id,
+                    "message_received": str(message_received),
+                    "ods_code": self.nhs_entity.odscode,
+                    "sequence_number": str(sequence_number),
+                },
+            )
+
             messages.append(
                 {
                     "Id": entry_id,

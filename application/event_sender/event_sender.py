@@ -27,7 +27,6 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    print(event)
     sqs = client("sqs")
     if not event["is_health_check"]:
         odscode = event["metadata"]["ods_code"]
@@ -95,7 +94,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
                         "dynamo_record_id": {"DataType": "String", "StringValue": dynamo_record_id},
                         "ods_code": {"DataType": "String", "StringValue": odscode},
                         "error_msg": {"DataType": "String", "StringValue": response.text},
-                        "error_msg_http_code": {"DataType": "String", "StringValue": response.status_code},
+                        "error_msg_http_code": {"DataType": "String", "StringValue": str(response.status_code)},
                     },
                 )
                 sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])

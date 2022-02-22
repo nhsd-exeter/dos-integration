@@ -53,6 +53,8 @@ EXAMPLE_ATTRIBUTES = {
     "dynamo_record_id": {"StringValue": "d1"},
     "message_received": {"StringValue": "1645527100000"},
     "ods_code": {"StringValue": "FA100"},
+    "message_deduplication_id": {"StringValue": "dummy_message_deduplication_id"},
+    "message_group_id": {"StringValue": "dummy_message_group_id"},
 }
 
 EXPECTED_METADATA: ChangeMetadata = {

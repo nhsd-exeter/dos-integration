@@ -69,6 +69,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                 dynamo_record_id = message["MessageAttributes"]["dynamo_record_id"]["StringValue"]
                 message_received = int(message["MessageAttributes"]["message_received"]["StringValue"])
                 ods_code = message["MessageAttributes"]["ods_code"]["StringValue"]
+                message_deduplication_id = message["MessageAttributes"]["message_deduplication_id"]["StringValue"]
+                message_group_id = message["MessageAttributes"]["message_group_id"]["StringValue"]
                 logger.set_correlation_id(correlation_id)
                 logger.append_keys(ods_code=ods_code)
                 s, ms = divmod(message_received, 1000)
@@ -81,6 +83,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                     "correlation_id": correlation_id,
                     "message_received": message_received,
                     "ods_code": ods_code,
+                    "message_deduplication_id": message_deduplication_id,
+                    "message_group_id": message_group_id,
                 }
                 change_request_queue_item: ChangeRequestQueueItem = {
                     "is_health_check": False,
