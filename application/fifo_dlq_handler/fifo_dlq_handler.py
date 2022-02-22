@@ -38,9 +38,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:
             "report_key": FIFO_DLQ_HANDLER_REPORT_ID,
             "error_msg": f"Message Abandoned: {attributes['error_msg']}",
             "error_msg_http_code": attributes["error_msg_http_code"],
-            "error_code": attributes["error_code"],
-            "rule_arn": attributes["rule_arn"],
-            "target_arn": attributes["target_arn"],
             "payload": body,
         },
     )

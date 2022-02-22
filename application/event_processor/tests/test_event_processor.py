@@ -170,12 +170,21 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
-def get_message_attributes(correlation_id: str, message_received: int, record_id: str, ods_code: str):
+def get_message_attributes(
+    correlation_id: str,
+    message_received: int,
+    record_id: str,
+    ods_code: str,
+    message_deduplication_id: str,
+    message_group_id: str,
+):
     return {
         "correlation_id": {"DataType": "String", "StringValue": correlation_id},
         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
         "ods_code": {"DataType": "String", "StringValue": ods_code},
+        "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
+        "message_group_id": {"DataType": "String", "StringValue": message_group_id},
     }
 
 
@@ -219,13 +228,13 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
         "MessageBody": change_payload,
         "MessageDeduplicationId": f"1-{hashed_payload}",
         "MessageGroupId": "49016",
-        "MessageAttributes": get_message_attributes("1", message_received, record_id, nhs_entity.odscode),
+        "MessageAttributes": get_message_attributes(
+            "1", message_received, record_id, nhs_entity.odscode, f"1-{hashed_payload}", "49016"
+        ),
     }
     mock_client.return_value.send_message_batch.assert_called_with(
         QueueUrl=q_name,
-        Entries=[
-            entry_details,
-        ],
+        Entries=[entry_details],
     )
     mock_logger.assert_called_with(f"Sent off change payload for id={change_request.service_id}")
     # Clean up

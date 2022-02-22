@@ -46,29 +46,11 @@ def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str
 
 
 def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
-    attributes = {
-        "error_msg": "",
-        "error_msg_http_code": None,
-        "error_code": "",
-        "rule_arn": "",
-        "target_arn": "",
-        "change_payload": "",
-    }
+    attributes = {"error_msg": "", "error_msg_http_code": ""}
     if msg_attributes is not None:
-        if "ERROR_MESSAGE" in msg_attributes:
-            error_msg = msg_attributes["ERROR_MESSAGE"]["stringValue"]
-            attributes["error_msg"] = error_msg
-            error_msg_http_codes = [int(str) for str in error_msg.split() if str.isdigit()]
-            if len(error_msg_http_codes) > 0:
-                attributes["error_msg_http_code"] = error_msg_http_codes[0]
-
-        if "ERROR_CODE" in msg_attributes:
-            attributes["error_code"] = msg_attributes["ERROR_CODE"]["stringValue"]
-
-        if "RULE_ARN" in msg_attributes:
-            attributes["rule_arn"] = msg_attributes["RULE_ARN"]["stringValue"]
-
-        if "TARGET_ARN" in msg_attributes:
-            attributes["target_arn"] = msg_attributes["TARGET_ARN"]["stringValue"]
+        if "error_msg_http_code" in msg_attributes:
+            attributes["error_msg_http_code"] = msg_attributes["error_msg_http_code"]["stringValue"]
+        if "error_msg" in msg_attributes:
+            attributes["error_msg"] = msg_attributes["error_msg"]["stringValue"]
 
         return attributes

@@ -78,26 +78,14 @@ def dead_letter_message():
                     "ApproximateFirstReceiveTimestamp": "1545082649185",
                 },
                 "messageAttributes": {
-                    "ERROR_MESSAGE": {
+                    "error_msg": {
                         "stringValue": "ApiDestination returned HTTP status 400 with payload: Dummy",
                         "stringListValues": [],
                         "binaryListValues": [],
                         "dataType": "String",
                     },
-                    "ERROR_CODE": {
-                        "stringValue": "SDK_CLIENT_ERROR",
-                        "stringListValues": [],
-                        "binaryListValues": [],
-                        "dataType": "String",
-                    },
-                    "RULE_ARN": {
-                        "stringValue": "arn:aws:events:eu:0:rule/dummy-eventbridge-bus/dummy-change-request-rule",
-                        "stringListValues": [],
-                        "binaryListValues": [],
-                        "dataType": "String",
-                    },
-                    "TARGET_ARN": {
-                        "stringValue": "arn:aws:events:eu:0:api-destination/dummy-dos-api-gateway-api-destination/abc",
+                    "error_msg_http_code": {
+                        "stringValue": "400",
                         "stringListValues": [],
                         "binaryListValues": [],
                         "dataType": "String",

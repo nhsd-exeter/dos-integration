@@ -1,4 +1,3 @@
-from hashlib import sha256
 from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
@@ -28,7 +27,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-
+    print(event)
     sqs = client("sqs")
     if not event["is_health_check"]:
         odscode = event["metadata"]["ods_code"]
@@ -85,12 +84,11 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
                 put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
                 logger.info("Permanent error sending to DLQ, Not retrying")
-                hashed_payload = sha256(str(event["change_request"]).encode()).hexdigest()
                 sqs.send_message(
                     QueueUrl=environ["CR_DLQ_URL"],
                     MessageBody=dumps(event["change_request"]),
-                    MessageDeduplicationId=f"{time_ns()}-{hashed_payload}",
-                    MessageGroupId=odscode,
+                    MessageDeduplicationId=event["metadata"]["message_deduplication_id"],
+                    MessageGroupId=event["metadata"]["message_group_id"],
                     MessageAttributes={
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
                         "message_received": {"DataType": "Number", "StringValue": str(message_received)},

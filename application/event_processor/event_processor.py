@@ -113,6 +113,8 @@ class EventProcessor:
             change_payload = dumps(change_request.create_payload())
             encoded = change_payload.encode()
             hashed_payload = hashlib.sha256(encoded).hexdigest()
+            message_deduplication_id = f"{sequence_number}-{hashed_payload}"
+            message_group_id = change_request.service_id
             logger.debug(f"Hash payload {len(hashed_payload)}-{hashed_payload}")
             entry_id = f"{change_request.service_id}-{sequence_number}"
             logger.debug(f"Entry id {entry_id}")
@@ -120,13 +122,15 @@ class EventProcessor:
                 {
                     "Id": entry_id,
                     "MessageBody": change_payload,
-                    "MessageDeduplicationId": f"{sequence_number}-{hashed_payload}",
-                    "MessageGroupId": f"{change_request.service_id}",
+                    "MessageDeduplicationId": message_deduplication_id,
+                    "MessageGroupId": message_group_id,
                     "MessageAttributes": {
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
                         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
                         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
                         "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
+                        "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
+                        "message_group_id": {"DataType": "String", "StringValue": message_group_id},
                     },
                 }
             )

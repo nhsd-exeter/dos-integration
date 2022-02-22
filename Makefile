@@ -82,6 +82,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
+		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -97,6 +98,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
+		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		"
 
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test

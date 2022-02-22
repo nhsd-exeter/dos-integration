@@ -53,11 +53,8 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
 
     attributes = handle_sqs_msg_attributes(msg_attributes=msg_attributes)
-    assert attributes["error_msg"] == msg_attributes["ERROR_MESSAGE"]["stringValue"]
-    assert attributes["error_msg_http_code"] == 400
-    assert attributes["error_code"] == msg_attributes["ERROR_CODE"]["stringValue"]
-    assert attributes["rule_arn"] == msg_attributes["RULE_ARN"]["stringValue"]
-    assert attributes["target_arn"] == msg_attributes["TARGET_ARN"]["stringValue"]
+    assert attributes["error_msg"] == msg_attributes["error_msg"]["stringValue"]
+    assert attributes["error_msg_http_code"] == "400"
 
 
 SQS_EVENT = {
@@ -69,6 +66,7 @@ SQS_EVENT = {
             "attributes": {},
             "messageAttributes": {
                 "sequence-number": {"stringValue": "1", "dataType": "Number"},
+                "error_msg": {"stringValue": "Test Message", "dataType": "String"},
             },
             "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
             "eventSource": "aws:sqs",

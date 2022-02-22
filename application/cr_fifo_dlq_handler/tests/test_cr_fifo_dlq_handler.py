@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from unittest.mock import patch
+
 from pytest import fixture
+
 from ..cr_fifo_dlq_handler import lambda_handler
 
 FILE_PATH = "application.cr_fifo_dlq_handler.cr_fifo_dlq_handler"
@@ -37,7 +39,29 @@ def test_lambda_handler(mock_extract_body, lambda_context):
     }
     dead_letter_message = {
         "Records": [
-            {"body": "Test message.", "messageAttributes": {"correlation_id": {"stringValue": "dummy_correlation_id"}}}
+            {
+                "body": "Test message.",
+                "messageAttributes": {
+                    "correlation-id": {
+                        "stringValue": "059f36b4-87a3-44ab-83d2-661975830a7d",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
+                    "error_msg_http_code": {
+                        "stringValue": "401",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
+                    "error_msg": {
+                        "stringValue": "My message",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "String",
+                    },
+                },
+            }
         ]
     }
     mock_extract_body.return_value = extracted_body

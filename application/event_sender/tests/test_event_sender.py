@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from hashlib import sha256
 from json import dumps
 from os import environ
 from unittest.mock import call, patch
@@ -23,6 +22,8 @@ METADATA: ChangeMetadata = {
     "correlation_id": "dummy_correlation_id",
     "message_received": 1642619743522,
     "ods_code": "FX100",
+    "message_deduplication_id": "dummy_message_deduplication_id",
+    "message_group_id": "dummy_message_group_id",
 }
 
 EVENT: ChangeRequestQueueItem = {
@@ -205,7 +206,6 @@ def test_lambda_handler_non_recoverable_error(
     environ["CIRCUIT"] = "testcircuit"
     environ["CR_DLQ_URL"] = dlq_queue_name
     environ["CR_QUEUE_URL"] = incoming_queue_url
-    expected_hash = sha256(str(EVENT["change_request"]).encode()).hexdigest()
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
@@ -218,11 +218,9 @@ def test_lambda_handler_non_recoverable_error(
     assert response["body"] == error_message
     mock_client().send_message.assert_called_once_with(
         QueueUrl=dlq_queue_name,
-        MessageBody=dumps(
-            EVENT["change_request"],
-        ),
-        MessageDeduplicationId=f"1642619746522500523-{expected_hash}",
-        MessageGroupId=METADATA["ods_code"],
+        MessageBody=dumps(EVENT["change_request"]),
+        MessageDeduplicationId=METADATA["message_deduplication_id"],
+        MessageGroupId=METADATA["message_group_id"],
         MessageAttributes={
             "correlation_id": {"DataType": "String", "StringValue": METADATA["correlation_id"]},
             "message_received": {"DataType": "Number", "StringValue": str(METADATA["message_received"])},

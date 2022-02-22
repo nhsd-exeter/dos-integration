@@ -6,6 +6,8 @@ class ChangeMetadata(TypedDict):
     correlation_id: str
     message_received: int
     ods_code: str
+    message_deduplication_id: str
+    message_group_id: str
 
 
 class ChangeRequestQueueItem(TypedDict):
