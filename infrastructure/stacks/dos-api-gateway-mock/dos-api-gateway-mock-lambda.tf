@@ -31,6 +31,11 @@ resource "aws_iam_role_policy" "dos_api_gateway_lambda_role_policy" {
   "Statement": [
     {
       "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
