@@ -21,6 +21,14 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
 
 
 def put_circuit_is_open(circuit: str, is_open: bool) -> None:
+    """Set the circuit open status for a given circuit
+    Args:
+        circuit (str): Name of the circuit
+        is_open (bool): boolean as to whether the circuit is open (broken) or closed
+
+    Returns:
+        None
+    """
     dynamo_record = {
         "Id": circuit,
         "ODSCode": "CIRCUIT",
@@ -38,6 +46,12 @@ def put_circuit_is_open(circuit: str, is_open: bool) -> None:
 
 
 def get_circuit_is_open(circuit: str) -> Union[bool, None]:
+    """Gets the open status of a given circuit
+    Args:
+        circuit (str): Name of the circuit
+    Returns:
+        Union[bool, None]: returns the status or None if the circuit does not exist
+    """
     try:
         dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
         respone = dynamodb.get_item(
