@@ -10,3 +10,7 @@ data "terraform_remote_state" "vpc" {
 data "aws_db_instance" "dos_db" {
   db_instance_identifier = var.dos_db_name
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}

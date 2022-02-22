@@ -20,3 +20,7 @@ data "aws_acm_certificate" "issued" {
   domain   = "*.${var.texas_hosted_zone}"
   statuses = ["ISSUED"]
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}

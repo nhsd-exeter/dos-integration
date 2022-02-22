@@ -9,3 +9,7 @@ data "aws_iam_role" "firehose_role" {
 data "aws_api_gateway_rest_api" "di_endpoint" {
   name = var.di_endpoint_api_gateway_name
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}

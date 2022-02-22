@@ -45,3 +45,7 @@ locals {
   subnet_arns = [for d in data.aws_subnet_ids.selected.ids : "arn:aws:ec2:${var.aws_region}:${var.aws_account_id_nonprod}:subnet/${d}"]
   #ids = [for d in var.data: d["id"]]  #same
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}

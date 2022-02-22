@@ -13,3 +13,7 @@ data "aws_acm_certificate" "issued" {
 data "aws_api_gateway_rest_api" "change_request_receiver" {
   name = var.change_request_receiver_api_name
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}
