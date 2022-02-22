@@ -18,6 +18,11 @@ resource "aws_api_gateway_rest_api_policy" "di_endpoint_policy" {
       "Resource": "execute-api:/*/*/*"
     },
     {
+      "Effect": "Allow",
+      "Action": "kms:*",
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
+    },
+    {
       "Effect": "Deny",
       "Principal": "*",
       "Action": "execute-api:Invoke",
