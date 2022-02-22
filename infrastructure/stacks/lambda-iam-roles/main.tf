@@ -154,6 +154,11 @@ resource "aws_iam_role_policy" "event_sender_policy" {
     },
     {
       "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
         "sqs:DeleteMessageBatch"

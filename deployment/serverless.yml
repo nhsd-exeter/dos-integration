@@ -93,6 +93,7 @@ functions:
       EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
 
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
@@ -129,7 +130,6 @@ functions:
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
-
 
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}

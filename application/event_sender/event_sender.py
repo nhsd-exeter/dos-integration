@@ -1,14 +1,17 @@
-from typing import Dict
-from aws_lambda_powertools import Logger, Tracer
-from time import time_ns, strftime, gmtime
+from hashlib import sha256
+from json import dumps
 from os import environ
+from time import gmtime, strftime, time_ns
+from typing import Dict
+
 from aws_embedded_metrics import metric_scope
+from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from boto3 import client
 from change_request import ChangeRequest
+from common.dynamodb import put_circuit_status
 from common.middlewares import unhandled_exception_logging
 from common.types import ChangeRequestQueueItem
-from common.dynamodb import put_circuit_status
-from boto3 import client
 
 tracer = Tracer()
 logger = Logger()
@@ -78,23 +81,25 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # the message is DLQ'd - 5 times, if we can fix that then these message could be sent to the dlq
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
             if response.status_code >= 500 or response.status_code == 429:
-                logger.info("Potentially recoverabele breaking circuit to retry shortly")
+                logger.info("Potentially recoverable breaking circuit to retry shortly")
                 put_circuit_status(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
-                logger.info("Permanent error sending to DLQ as no point retrying")
-                # TODO : Send message to DLQ
-                # sqs.send_message(
-                #     QueueUrl=environ["CR_DLQ_URL"],
-                #     MessageBody=event["change_request"],
-                #     # "MessageDeduplicationId": f"{sequence_number}-{hashed_payload}",
-                #     # "MessageGroupId": f"{change_request.service_id}",
-                #     MessageAttributes={
-                #         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
-                #         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
-                #         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
-                #         "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
-                #     },
-                #      )
+                logger.info("Permanent error sending to DLQ, Not retrying")
+                hashed_payload = sha256(str(event["change_request"]).encode()).hexdigest()
+                sqs.send_message(
+                    QueueUrl=environ["CR_DLQ_URL"],
+                    MessageBody=dumps(event["change_request"]),
+                    MessageDeduplicationId=f"{time_ns()}-{hashed_payload}",
+                    MessageGroupId=odscode,
+                    MessageAttributes={
+                        "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
+                        "message_received": {"DataType": "Number", "StringValue": str(message_received)},
+                        "dynamo_record_id": {"DataType": "String", "StringValue": dynamo_record_id},
+                        "ods_code": {"DataType": "String", "StringValue": odscode},
+                        "error_msg": {"DataType": "String", "StringValue": response.text},
+                        "error_msg_http_code": {"DataType": "String", "StringValue": response.status_code},
+                    },
+                )
                 sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
             metrics.set_property("StatusCode", response.status_code)
             metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
