@@ -98,12 +98,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         loop = loop + 1
 
 
-def simple_test():
-    start = time()
-    while time() < start + 280:
-        print("bla")
-
-
 def invoke_lambda(lambda_client, payload: Dict[str, Any]) -> Dict[str, Any]:
     response = lambda_client.invoke(
         FunctionName=getenv("EVENT_SENDER_FUNCTION_NAME"),
