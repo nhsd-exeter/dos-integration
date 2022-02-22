@@ -110,6 +110,7 @@ class NHSEntity:
             dict: key=date and value = List[OpenPeriod] objects in a sort order
         """
         specified_times_list = list(filter(is_spec_opening_json, self.entity_data.get("OpeningTimes", [])))
+        specified_times_list = sorted(specified_times_list, key=lambda item: item["AdditionalOpeningDate"])
         specified_opening_times = []
 
         # Grouping data by date, and create open_period objects from values
