@@ -70,7 +70,7 @@ populate-deployment-variables:
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
-	CMD="python -m pytest --junitxml=./testresults.xml --cov=. -vv" \
+	CMD="python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
 	DIR=./application \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \

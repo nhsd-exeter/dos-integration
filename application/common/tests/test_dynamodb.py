@@ -1,4 +1,4 @@
-from pytest import fixture
+from pytest import fixture, raises
 from os import environ
 from json import dumps, loads
 from decimal import Decimal
@@ -45,12 +45,37 @@ def dynamodb_table_create(dynamodb_client):
     return table
 
 
+def test_get_circuit_status_none(dynamodb_table_create, dynamodb_client):
+
+    is_open = get_circuit_status("BLABLABLA")
+
+    assert is_open is None
+
+
 def test_put_and_get_circuit_status(dynamodb_table_create, dynamodb_client):
 
     put_circuit_status("TESTCIRCUIT", True)
     is_open = get_circuit_status("TESTCIRCUIT")
 
     assert is_open
+
+
+def test_put_circuit_exception(dynamodb_table_create, dynamodb_client):
+    temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
+    del environ["CHANGE_EVENTS_TABLE_NAME"]
+    with raises(Exception):
+        put_circuit_status("TESTCIRCUIT", True)
+
+    environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
+
+
+def test_get_circuit_exception(dynamodb_table_create, dynamodb_client):
+    temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
+    del environ["CHANGE_EVENTS_TABLE_NAME"]
+    with raises(Exception):
+        get_circuit_status("TESTCIRCUIT")
+
+    environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
 
 
 def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):

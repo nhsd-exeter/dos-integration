@@ -222,7 +222,7 @@ class StandardOpeningTimes:
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
-    def __eq__(self, other: 'StandardOpeningTimes'):
+    def __eq__(self, other: "StandardOpeningTimes"):
         if not isinstance(other, StandardOpeningTimes):
             return False
 
