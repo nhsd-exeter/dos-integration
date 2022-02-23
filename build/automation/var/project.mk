@@ -85,7 +85,7 @@ TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
-TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr_fifo-dlq-handler
+TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler
 TF_VAR_orchestrator_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator
 TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription
 
@@ -110,5 +110,4 @@ TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-moni
 
 
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
-
 DOS_TRANSACTIONS_PER_SECOND=3
