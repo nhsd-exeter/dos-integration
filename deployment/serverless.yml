@@ -43,10 +43,6 @@ provider:
     lambda: true
     apiGateway: true
   apiGateway:
-    apiKeySourceType: HEADER
-    apiKeys:
-      - name: ${env:TF_VAR_change_request_receiver_api_key_name}
-        value: ${self:custom.secret.${env:TF_VAR_change_request_receiver_api_key_key}}
     usagePlan:
       throttle:
         rateLimit: 3
@@ -55,7 +51,6 @@ provider:
   apiName: ${env:TF_VAR_change_request_receiver_api_name}
 
 custom:
-  secret: ${ssm:/aws/reference/secretsmanager/${env:TF_VAR_change_request_receiver_api_key_name}}
   localstack:
     stages: local
   vpcDiscovery:
@@ -76,13 +71,37 @@ plugins:
   - serverless-vpc-discovery
   - serverless-localstack
 functions:
+
+  orchestrator:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/orchestrator:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
+    description: ${sls:stage} Orchestrator
+    memorySize: 128
+    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins?)
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
+    maximumRetryAttempts: 0 #???
+    reservedConcurrency: 1 # ensure only one orchestrator running at a time
+    events:
+      - schedule: rate(1 minute)
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      RUN_FOR: 280
+      SLEEP_FOR_WHEN_OPEN: 10
+      CIRCUIT: DOS_API_GATEWAY
+      EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
+      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
+      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+
   event-processor:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
     memorySize: 128
-    timeout: 120
+    timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     maximumRetryAttempts: 0
     tags:
@@ -96,8 +115,7 @@ functions:
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      EVENTBRIDGE_BUS_NAME: ${env:TF_VAR_eventbridge_bus_name}
-      KEYALIAS: ${env:TF_VAR_signing_key_alias}
+      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
 
   fifo-dlq-handler:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
@@ -112,7 +130,6 @@ functions:
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
-
 
   event-sender:
     image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
@@ -130,22 +147,19 @@ functions:
       DOS_API_GATEWAY_PASSWORD_KEY: ${env:DOS_API_GATEWAY_PASSWORD_KEY}
       DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
       DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
-      KEYALIAS: ${env:TF_VAR_signing_key_alias}
-    events:
-      - http:
-          path: /change-request
-          method: post
-          private: true
+      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
+      CR_DLQ_URL: ${env:cr_dlq_queue_url}
+      CIRCUIT: DOS_API_GATEWAY
     maximumRetryAttempts: 0
 
-  eventbridge-dlq-handler:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/eventbridge-dlq-handler:${env:VERSION}
+  cr-fifo-dlq-handler:
+    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-eventbridge-dlq-handler
-    description: ${sls:stage} EventBridge DLQ Handler lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-cr-fifo-dlq-handler
+    description: ${sls:stage} cr-fifo DLQ Handler lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_eventbridge_dlq_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_cr_fifo_dlq_handler_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     maximumRetryAttempts: 0

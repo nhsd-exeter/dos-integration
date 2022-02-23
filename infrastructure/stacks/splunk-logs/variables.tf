@@ -73,8 +73,8 @@ variable "fifo_dlq_handler_subscription_filter_name" {
   description = "Log filter name for fifo dlq lambda"
 }
 
-variable "eventbridge_dlq_handler_subscription_filter_name" {
-  description = "Log filter name for eventbridge dlq handler lambda"
+variable "cr_fifo_dlq_handler_subscription_filter_name" {
+  description = "Log filter name for cr_fifo dlq handler lambda"
 }
 
 variable "event_replay_subscription_filter_name" {
@@ -111,8 +111,8 @@ variable "fifo_dlq_handler_lambda_name" {
   description = "Name of fifo dlq handler lambda"
 }
 
-variable "eventbridge_dlq_handler_lambda_name" {
-  description = "Name of eventbridge dlq handler lambda"
+variable "cr_fifo_dlq_handler_lambda_name" {
+  description = "Name of cr_fifo dlq handler lambda"
 }
 
 variable "event_replay_lambda_name" {

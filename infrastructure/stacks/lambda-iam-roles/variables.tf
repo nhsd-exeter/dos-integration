@@ -58,6 +58,11 @@ variable "event_processor_role_name" {
   description = "Role name for event processor lambda"
 }
 
+variable "orchestrator_role_name" {
+  description = "Role name for event processor lambda"
+}
+
+
 variable "event_sender_role_name" {
   description = "Role name for event sender lambda"
 }
@@ -66,8 +71,8 @@ variable "fifo_dlq_handler_role_name" {
   description = "Role name for fifo dlq handler lambda"
 }
 
-variable "eventbridge_dlq_handler_role_name" {
-  description = "Role name for eventbridge dlq handler lambda"
+variable "cr_fifo_dlq_handler_role_name" {
+  description = "Role name for cr_fifo dlq handler lambda"
 }
 
 variable "event_replay_role_name" {
@@ -95,11 +100,14 @@ variable "signing_key_alias" {
 variable "fifo_queue_name" {
   description = ""
 }
+variable "cr_fifo_queue_name" {
+  description = ""
+}
 
 variable "dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }
 
-variable "dead_letter_queue_from_event_bus_name" {
+variable "cr_dead_letter_queue_from_fifo_queue_name" {
   description = ""
 }

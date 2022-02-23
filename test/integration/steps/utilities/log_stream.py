@@ -10,10 +10,10 @@ from json.decoder import JSONDecodeError
 LAMBDA_CLIENT_LOGS = client("logs")
 EVENT_PROCESSOR = get_env("EVENT_PROCESSOR")
 EVENT_SENDER = get_env("EVENT_SENDER")
-EVENT_BRIDGE_DLQ = get_env("EVENTBRIDGE_DLQ")
+CR_FIFO_DLQ = get_env("CR_FIFO_DLQ")
 LOG_GROUP_NAME_EVENT_PROCESSOR = f"/aws/lambda/{EVENT_PROCESSOR}"
 LOG_GROUP_NAME_EVENT_SENDER = f"/aws/lambda/{EVENT_SENDER}"
-LOG_GROUP_NAME_EVENT_BRIDGE_DLQ = f"/aws/lambda/{EVENT_BRIDGE_DLQ}"
+LOG_GROUP_NAME_CR_FIFO_DLQ = f"/aws/lambda/{CR_FIFO_DLQ}"
 
 
 def get_processor_log_stream_name() -> str:
@@ -38,9 +38,9 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
     log_groups = {
         "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
         "sender": LOG_GROUP_NAME_EVENT_SENDER,
-        "eb_dlq": LOG_GROUP_NAME_EVENT_BRIDGE_DLQ,
+        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
     }
-    if event_lambda == "processor" or "sender" or "eb_dlq":
+    if event_lambda == "processor" or "sender" or "cr_dlq":
         log_group_name = log_groups[event_lambda]
     else:
         raise Exception("Error.. log group name not correctly specified")

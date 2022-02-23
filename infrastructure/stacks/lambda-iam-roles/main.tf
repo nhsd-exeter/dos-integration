@@ -67,25 +67,19 @@ resource "aws_iam_role_policy" "event_processor_policy" {
     {
       "Effect": "Allow",
       "Action": [
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "kms:Encrypt",
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": ["events:PutEvents"],
-      "Resource": "arn:aws:events:${var.aws_region}:${var.aws_account_id}:event-bus/uec-dos-int-*"
     },
     {
       "Effect": "Allow",
@@ -157,6 +151,19 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "kms:DescribeKey"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "sqs:SendMessage",
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:DeleteMessageBatch"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -278,8 +285,8 @@ resource "aws_kms_alias" "signing_key" {
   name          = "alias/${var.signing_key_alias}"
   target_key_id = aws_kms_key.signing_key.key_id
 }
-resource "aws_iam_role" "eventbridge_dlq_handler_role" {
-  name               = var.eventbridge_dlq_handler_role_name
+resource "aws_iam_role" "cr_fifo_dlq_handler_role" {
+  name               = var.cr_fifo_dlq_handler_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -299,9 +306,9 @@ resource "aws_iam_role" "eventbridge_dlq_handler_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
-  name   = "eventbridge_dlq_handler_policy"
-  role   = aws_iam_role.eventbridge_dlq_handler_role.id
+resource "aws_iam_role_policy" "cr_fifo_dlq_handler_policy" {
+  name   = "cr_fifo_dlq_handler_policy"
+  role   = aws_iam_role.cr_fifo_dlq_handler_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -332,7 +339,7 @@ resource "aws_iam_role_policy" "eventbridge_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.dead_letter_queue_from_event_bus_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
     }
   ]
 }
@@ -467,6 +474,122 @@ resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
         "secretsmanager:List*"
       ],
       "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "orchestrator_role" {
+  name               = var.orchestrator_role_name
+  path               = "/"
+  description        = ""
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "orchestrator_policy" {
+  name   = "orchestrator_policy"
+  role   = aws_iam_role.orchestrator_role.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:Describe*",
+        "secretsmanager:Get*",
+        "secretsmanager:List*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-event-sender"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "rds-db:connect",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "ec2:CreateNetworkInterface",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeVpcs",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+      ],
+      "Resource": ["*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query"
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }

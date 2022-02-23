@@ -2,7 +2,7 @@ import boto3
 from json import dumps, loads
 import hashlib
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from boto3.dynamodb.types import TypeSerializer
 from time import time
 from os import environ
@@ -18,6 +18,61 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     encoded = dumps([change_event, sequence_number], sort_keys=True).encode()
     change_event_hash.update(encoded)
     return change_event_hash.hexdigest()
+
+
+def put_circuit_is_open(circuit: str, is_open: bool) -> None:
+    """Set the circuit open status for a given circuit
+    Args:
+        circuit (str): Name of the circuit
+        is_open (bool): boolean as to whether the circuit is open (broken) or closed
+
+    Returns:
+        None
+    """
+    dynamo_record = {
+        "Id": circuit,
+        "ODSCode": "CIRCUIT",
+        "IsOpen": is_open,
+    }
+    try:
+        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        serializer = TypeSerializer()
+        put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
+        response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
+        logger.info("Put circuit status", extra={"response": response, "item": put_item})
+    except Exception as err:
+        logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
+        raise
+
+
+def get_circuit_is_open(circuit: str) -> Union[bool, None]:
+    """Gets the open status of a given circuit
+    Args:
+        circuit (str): Name of the circuit
+    Returns:
+        Union[bool, None]: returns the status or None if the circuit does not exist
+    """
+    try:
+        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        respone = dynamodb.get_item(
+            TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+            Key={
+                "Id": {
+                    "S": circuit,
+                },
+                "ODSCode": {
+                    "S": "CIRCUIT",
+                },
+            },
+        )
+        item = respone.get("Item")
+        if item is None:
+            return None
+        else:
+            return int(item["IsOpen"]["BOOL"])
+    except Exception as err:
+        logger.exception(f"Unable to get circuit status for {circuit} .Error: {err}")
+        raise
 
 
 def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:

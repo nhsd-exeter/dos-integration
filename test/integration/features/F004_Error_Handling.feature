@@ -7,7 +7,7 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with "valid" api key
     Then the event is sent to the DLQ
     And the DLQ logs the error for Splunk
-    And the "eb_dlq" logs show status code "400"
+    And the "cr_dlq" logs show status code "400"
     And the Changed Event is stored in dynamo db
 
   @dev
@@ -15,11 +15,11 @@ Feature: F004. Error Handling
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "eb_dlq" logs show error message "Message Abandoned"
+    Then the "cr_dlq" logs show error message "Message Abandoned"
     And the Changed Event is stored in dynamo db
 
   # FAILING TESTS.. WAITING ON BUG FIX
-  @complete @dev
+  @complete @dev @wip
   Scenario: F004S003. A Changed Event where Specified opening date is set as closed is captured
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

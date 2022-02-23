@@ -2,6 +2,7 @@ from json import loads, dumps
 from typing import Dict, Any
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from aws_lambda_powertools import Logger
+from time import sleep
 
 logger = Logger()
 
@@ -30,4 +31,5 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     for row in change_event["changes"]:
         change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
         counter += 1
+    sleep(1.7)
     return {"statusCode": 201, "body": dumps(change_request_response)}

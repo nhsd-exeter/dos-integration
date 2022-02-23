@@ -4,7 +4,7 @@ resource "aws_cloudwatch_query_definition" "errors" {
   log_group_names = [
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
   ]
 
@@ -21,7 +21,7 @@ resource "aws_cloudwatch_query_definition" "by_correlation_id" {
   log_group_names = [
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.eventbridge_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
     "/aws/lambda/${var.event_replay_lambda_name}"
   ]
@@ -52,7 +52,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stacked": false,
                 "metrics": [
                     [ "UEC-DOS-INT", "QueueToProcessorLatency", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ]
+                    [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ],
+                    [ "...", { "stat": "TM(0%:90%)" } ]
                 ],
                 "period": 60,
                 "region": "${var.aws_region}",
@@ -127,16 +128,17 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "view": "timeSeries",
                 "stacked": false,
+
                 "metrics": [
                     [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.fifo_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
-                    [ ".", "ApproximateAgeOfOldestMessage", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
                 ],
+                "stat": "Sum",
                 "period": 60,
                 "region": "${var.aws_region}",
-                "title": "FIFO SQS"
+                "title": "CE Queue"
             }
         },
         {
@@ -204,7 +206,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "metrics": [
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
-                    [ "AWS/ApiGateway", "Count", "ApiName", "${var.change_request_receiver_api_name}", { "label": "DOS Change Request", "region": "${var.aws_region}" } ]
+                    [ "AWS/Lambda", "Invocations", "FunctionName", "${var.event_sender_lambda_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
+
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -221,17 +224,19 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "width": 9,
             "height": 6,
             "properties": {
-                "metrics": [
-                    [ "AWS/Events", "Invocations", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ],
-                    [ "AWS/Events", "TriggeredRules", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ],
-                    [ "AWS/Events", "FailedInvocations", "EventBusName", "${var.eventbridge_bus_name}", "RuleName", "${var.change_request_eventbridge_rule_name}" ]
-                ],
                 "view": "timeSeries",
                 "stacked": false,
-                "region": "${var.aws_region}",
+
+                "metrics": [
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}" ],
+                    [ ".", "NumberOfMessagesReceived", ".", "." ],
+                    [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
+                    [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
+                ],
                 "stat": "Sum",
                 "period": 60,
-                "title": "Event Bridge"
+                "region": "${var.aws_region}",
+                "title": "CR Queue"
             }
         },
         {
@@ -242,8 +247,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.dead_letter_queue_from_event_bus_name}", { "label": "EventBridge Message Count" } ],
-                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "FIFO Message Count" } ]
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.cr_dead_letter_queue_from_fifo_queue_name}", { "label": "CR FIFO Message Count" } ],
+                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "CE FIFO Message Count" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,

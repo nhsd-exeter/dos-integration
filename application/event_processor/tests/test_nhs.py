@@ -90,7 +90,7 @@ def test_get_specified_opening_times():
                     "OpeningTimeType": "Additional",
                     "AdditionalOpeningDate": "Jan 20 2023",
                     "IsOpen": False,
-                }
+                },
             ]
         }
     )
@@ -102,17 +102,19 @@ def test_get_specified_opening_times():
         SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(16, 0, 0))], date(2022, 1, 6)),
         SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(16, 0, 0))], date(2023, 4, 1)),
         SpecifiedOpeningTime([OpenPeriod(time(8, 45, 0), time(18, 0, 0))], date(2023, 1, 4), is_open=False),
-        SpecifiedOpeningTime([], date(2023, 1, 20), is_open=False)
+        SpecifiedOpeningTime([], date(2023, 1, 20), is_open=False),
     ]
 
     actual_spec_open_times = nhs_entity.specified_opening_times
 
     for exp_spec_open_time in expected:
-        assert exp_spec_open_time in actual_spec_open_times,\
-            f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
+        assert (
+            exp_spec_open_time in actual_spec_open_times
+        ), f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
 
-    assert len(actual_spec_open_times) == len(expected),\
-        f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
+    assert len(actual_spec_open_times) == len(
+        expected
+    ), f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
 
 
 def test_get_standard_opening_times():

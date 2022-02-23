@@ -19,6 +19,10 @@ data "aws_lambda_function" "fifo_dlq_handler" {
   function_name = var.fifo_dlq_handler_lambda_name
 }
 
+data "aws_lambda_function" "cr_fifo_dlq_handler" {
+  function_name = var.cr_fifo_dlq_handler_lambda_name
+}
+
 data "aws_secretsmanager_secret_version" "api_key" {
   secret_id = var.api_gateway_api_key_name
 }

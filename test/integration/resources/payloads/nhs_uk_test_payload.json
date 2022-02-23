@@ -1,0 +1,805 @@
+{
+  "@search.action": null,
+  "SearchKey": "X6825",
+  "ODSCode": "FGL66",
+  "OrganisationName": "Well Putnoe - Queens Drive",
+  "OrganisationTypeId": "PHA",
+  "OrganisationType": "Pharmacy",
+  "OrganisationSubType": "Community",
+  "OrganisationStatus": "Visible",
+  "SummaryText": null,
+  "URL": "www.well.co.uk",
+  "Address1": "86 Queens Drive",
+  "Address2": "Putnoe",
+  "Address3": null,
+  "City": "Bedford",
+  "County": "",
+  "Latitude": 52.1490478515625,
+  "Longitude": -0.4392049014568329,
+  "Postcode": "MK41 9BS",
+  "Geocode": { "type": "Point", "coordinates": [-0.439205, 52.149] },
+  "Phone": "01234 352 544",
+  "Email": "pharmacy.fgl66@nhs.net",
+  "Website": "www.well.co.uk",
+  "OrganisationAliases": [],
+  "Trusts": [],
+  "ParentOrganisation": {
+    "ODSCode": "QHG",
+    "OrganisationName": "Bedfordshire, Luton and Milton Keynes STP"
+  },
+  "Services": [
+    {
+      "ServiceName": "Pharmacy Service (NHS): Domiciliary support service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0497",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (NHS): Inhaler technique service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0503",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (NHS): Medication review service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0261",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (NHS): Post-discharge support",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0505",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (NHS): Stop smoking service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0273",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (NHS): Supervised consumption of medicines",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0258",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Blood pressure monitoring",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0510",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Healthcheck",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0529",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Inhaler technique service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0512",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Seasonal flu vaccination service (not at risk groups)",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0514",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Stop smoking service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0515",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Vaccination service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0518",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service (Non-NHS): Weight management",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0271",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Appliance dispensing",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0177",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Appointment booking available for consultations",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0520",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Appointment booking for consultations not required",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0521",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Collect Lateral Flow Device ",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0557",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Community Pharmacy",
+      "ServiceDescription": null,
+      "ServiceCode": "EPS0002",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Electronic Prescription Service",
+      "ServiceDescription": null,
+      "ServiceCode": "EPS0001",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: New medicine service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0257",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Prescription collection from local General Practices",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0519",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Private consultation room",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0526",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Public Health",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0527",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "Pharmacy Service: Seasonal flu vaccination service (at risk groups)",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0277",
+      "Contacts": [],
+      "Treatments": null,
+      "OpeningTimes": [],
+      "AgeRange": []
+    }
+  ],
+  "OpeningTimes": [
+    {
+      "Weekday": "Monday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "12:00",
+      "Times": "09:00-12:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Monday",
+      "OpeningTime": "13:00",
+      "ClosingTime": "16:00",
+      "Times": "13:00-16:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 960,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Monday",
+      "OpeningTime": "17:00",
+      "ClosingTime": "18:00",
+      "Times": "17:00-18:00",
+      "OffsetOpeningTime": 1020,
+      "OffsetClosingTime": 1080,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Tuesday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "20:00",
+      "Times": "09:00-20:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Wednesday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "20:00",
+      "Times": "09:00-20:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Thursday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "20:00",
+      "Times": "09:00-20:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Friday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "20:00",
+      "Times": "09:00-20:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Saturday",
+      "OpeningTime": "09:00",
+      "ClosingTime": "12:00",
+      "Times": "09:00-12:00",
+      "OffsetOpeningTime": 540,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Saturday",
+      "OpeningTime": "13:00",
+      "ClosingTime": "18:00",
+      "Times": "13:00-18:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 1080,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Sunday",
+      "OpeningTime": null,
+      "ClosingTime": null,
+      "Times": "-",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "General",
+      "AdditionalOpeningDate": "",
+      "IsOpen": false
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "08:00",
+      "ClosingTime": "12:00",
+      "Times": "08:00-12:00",
+      "OffsetOpeningTime": 480,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Apr 15 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "13:00",
+      "ClosingTime": "16:00",
+      "Times": "13:00-16:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 960,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Apr 15 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "07:00",
+      "ClosingTime": "11:00",
+      "Times": "07:00-11:00",
+      "OffsetOpeningTime": 420,
+      "OffsetClosingTime": 660,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Apr 18 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "12:00",
+      "ClosingTime": "15:00",
+      "Times": "12:00-15:00",
+      "OffsetOpeningTime": 720,
+      "OffsetClosingTime": 900,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Apr 18 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "16:00",
+      "ClosingTime": "18:00",
+      "Times": "16:00-18:00",
+      "OffsetOpeningTime": 960,
+      "OffsetClosingTime": 1080,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Apr 18 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": null,
+      "ClosingTime": null,
+      "Times": "-",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Feb 21 2022",
+      "IsOpen": false
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": null,
+      "ClosingTime": null,
+      "Times": "-",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 7 2022",
+      "IsOpen": false
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": null,
+      "ClosingTime": null,
+      "Times": "-",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 8 2022",
+      "IsOpen": false
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "07:00",
+      "ClosingTime": "12:00",
+      "Times": "07:00-12:00",
+      "OffsetOpeningTime": 420,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 10 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "13:00",
+      "ClosingTime": "17:00",
+      "Times": "13:00-17:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 1020,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 10 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "18:00",
+      "ClosingTime": "20:00",
+      "Times": "18:00-20:00",
+      "OffsetOpeningTime": 1080,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 10 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "07:00",
+      "ClosingTime": "12:00",
+      "Times": "07:00-12:00",
+      "OffsetOpeningTime": 420,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 11 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "13:00",
+      "ClosingTime": "17:00",
+      "Times": "13:00-17:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 1020,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 11 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "18:00",
+      "ClosingTime": "20:00",
+      "Times": "18:00-20:00",
+      "OffsetOpeningTime": 1080,
+      "OffsetClosingTime": 1200,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 11 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "06:00",
+      "ClosingTime": "12:00",
+      "Times": "06:00-12:00",
+      "OffsetOpeningTime": 360,
+      "OffsetClosingTime": 720,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 19 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": "13:00",
+      "ClosingTime": "18:00",
+      "Times": "13:00-18:00",
+      "OffsetOpeningTime": 780,
+      "OffsetClosingTime": 1080,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 19 2022",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "",
+      "OpeningTime": null,
+      "ClosingTime": null,
+      "Times": "-",
+      "OffsetOpeningTime": 0,
+      "OffsetClosingTime": 0,
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Mar 9 2022",
+      "IsOpen": false
+    }
+  ],
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "01234 352 544"
+    },
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Email",
+      "ContactValue": "pharmacy.fgl66@nhs.net"
+    },
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Website",
+      "ContactValue": "https://www.nhs.uk"
+    }
+  ],
+  "Facilities": [
+    {
+      "Id": 1,
+      "Name": "Braille translation service",
+      "Value": "No",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 2,
+      "Name": "Disabled parking",
+      "Value": "Yes",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 3,
+      "Name": "Disabled WC",
+      "Value": "No",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 4,
+      "Name": "Induction loop",
+      "Value": "Yes",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 5,
+      "Name": "Text Relay",
+      "Value": "No",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 6,
+      "Name": "Signing service available",
+      "Value": "No",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 35,
+      "Name": "Step free access",
+      "Value": "Yes",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 7,
+      "Name": "Wheelchair access",
+      "Value": "Yes",
+      "FacilityGroupName": "Accessibility"
+    },
+    {
+      "Id": 28,
+      "Name": "Car Parking",
+      "Value": "Yes",
+      "FacilityGroupName": "Parking"
+    },
+    {
+      "Id": 29,
+      "Name": "Cycle parking",
+      "Value": "Yes",
+      "FacilityGroupName": "Parking"
+    },
+    {
+      "Id": 30,
+      "Name": "Disabled parking",
+      "Value": "Yes",
+      "FacilityGroupName": "Parking"
+    },
+    {
+      "Id": 145,
+      "Name": "Baby changing facility",
+      "Value": "No",
+      "FacilityGroupName": "Other facilities"
+    },
+    {
+      "Id": 146,
+      "Name": "Consultation room available",
+      "Value": "Yes",
+      "FacilityGroupName": "Other facilities"
+    },
+    {
+      "Id": 144,
+      "Name": "Toilet available",
+      "Value": "No",
+      "FacilityGroupName": "Other facilities"
+    }
+  ],
+  "Staff": [],
+  "GSD": null,
+  "Metrics": [
+    {
+      "MetricID": 43,
+      "MetricName": "Has Car Parking",
+      "DisplayName": "Car parking",
+      "Description": "Is there car parking at this organisation?",
+      "Value": "yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Parking available",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 4,
+      "MetricDisplayTypeName": "BooleanImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "yes",
+      "BandingName": "Yes"
+    },
+    {
+      "MetricID": 44,
+      "MetricName": "Has Disabled Car Parking",
+      "DisplayName": "Disabled parking",
+      "Description": "Is disabled car parking available at this organisation?",
+      "Value": "yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Disabled parking available",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 4,
+      "MetricDisplayTypeName": "BooleanImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "yes",
+      "BandingName": "Yes"
+    },
+    {
+      "MetricID": 45,
+      "MetricName": "Has Disabled Access",
+      "DisplayName": "Disabled access",
+      "Description": "Disabled access",
+      "Value": "yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Disabled access available",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 4,
+      "MetricDisplayTypeName": "BooleanImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "yes",
+      "BandingName": "Yes"
+    },
+    {
+      "MetricID": 47,
+      "MetricName": "Has Induction Loop",
+      "DisplayName": "Induction loop",
+      "Description": "Induction loop in place",
+      "Value": "yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Has induction loop",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 4,
+      "MetricDisplayTypeName": "BooleanImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "yes",
+      "BandingName": "Yes"
+    },
+    {
+      "MetricID": 48,
+      "MetricName": "Has Signing Service",
+      "DisplayName": "Signing services",
+      "Description": "Signing services",
+      "Value": "no",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Signing service not available",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 4,
+      "MetricDisplayTypeName": "BooleanImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "no",
+      "BandingName": "No"
+    },
+    {
+      "MetricID": 10051,
+      "MetricName": "Electronic prescription service",
+      "DisplayName": "Electronic prescription service",
+      "Description": "Electronic prescription service",
+      "Value": "Yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 5,
+      "MetricDisplayTypeName": "BandingImage",
+      "HospitalSectorType": null,
+      "MetricText": "",
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "yes",
+      "BandingName": "Electronic prescription service available"
+    },
+    {
+      "MetricID": 99002,
+      "MetricName": "Business Card: Has Car Parking",
+      "DisplayName": "Car parking",
+      "Description": "Is there car parking at this organisation?",
+      "Value": "yes",
+      "Value2": null,
+      "Value3": null,
+      "Text": "Parking available",
+      "LinkUrl": null,
+      "LinkText": null,
+      "MetricDisplayTypeID": 5,
+      "MetricDisplayTypeName": "BandingImage",
+      "HospitalSectorType": null,
+      "MetricText": null,
+      "DefaultText": null,
+      "IsMetaMetric": true,
+      "BandingClassification": "parking",
+      "BandingName": "Yes"
+    }
+  ],
+  "LastUpdatedDates": {
+    "OpeningTimes": "2022-02-18T15:06:30.43+00:00",
+    "DentistsAcceptingPatients": null,
+    "Facilities": "2021-12-31T17:13:11+00:00",
+    "HospitalDepartment": null,
+    "Services": "2021-12-31T17:13:04+00:00",
+    "ContactDetails": "2022-02-16T08:52:02.71+00:00"
+  }
+}

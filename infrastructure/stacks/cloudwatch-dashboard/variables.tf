@@ -68,6 +68,10 @@ variable "fifo_queue_name" {
   description = "FIFO queue name feed by API Gateway"
 }
 
+variable "cr_fifo_queue_name" {
+  description = "FIFO queue name feed by API Gateway"
+}
+
 variable "event_processor_lambda_name" {
   description = "Name of event processor lambda"
 }
@@ -82,7 +86,7 @@ variable "dead_letter_queue_from_fifo_queue_name" {
   description = "FIFO dead letter queue name"
 }
 
-variable "eventbridge_dlq_handler_lambda_name" {
+variable "cr_fifo_dlq_handler_lambda_name" {
   description = "Event bridge dlq handler"
 }
 
@@ -98,14 +102,6 @@ variable "change_request_receiver_api_name" {
   description = "Name for the API Gateway endpoint on request receiver side"
 }
 
-variable "eventbridge_bus_name" {
-  description = "Name of the eventbridge event bus"
-}
-
-variable "dead_letter_queue_from_event_bus_name" {
-  description = "Name of the eventbridge dead letter queue"
-}
-
-variable "change_request_eventbridge_rule_name" {
-  description = "Rule to pickup change request from eventbridge bus"
+variable "cr_dead_letter_queue_from_fifo_queue_name" {
+  description = "Name of the cr_fifo dead letter queue"
 }

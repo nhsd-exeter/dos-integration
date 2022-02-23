@@ -13,9 +13,9 @@ FILE_PATH = "application.test_db_checker_handler.test_db_checker_handler"
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "eventbridge-dlq-handler"
+        function_name: str = "test_db_checker"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:eventbridge-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:test_db_checker-handler"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

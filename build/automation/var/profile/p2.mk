@@ -6,14 +6,14 @@
 LOG_LEVEL:= DEBUG
 
 DOS_API_GATEWAY_SECRETS = $(TF_VAR_dos_api_gateway_secret)
-DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USERNAME
+DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL := $(or $(DOS_API_GATEWAY_MOCK_URL), "//")
 
-DB_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
+DB_SERVER_NAME := uec-core-dos-performance-db-12-replica-di
 DB_PORT := 5432
-DB_NAME := pathwaysdos_regression
+DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 DB_SECRET_NAME := core-dos-dev/deployment
 DB_SECRET_KEY := DB_SF_READONLY_PASSWORD
@@ -23,6 +23,8 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
+LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor
+LOG_GROUP_NAME_SENDER := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 
 # Change Event Receiver API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
@@ -37,9 +39,12 @@ DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
+TF_VAR_cr_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-queue.fifo
+cr_fifo_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_fifo_queue_name)
+cr_dlq_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_dead_letter_queue_from_fifo_queue_name)
 TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
-SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
-TF_VAR_ip_address_secret := uec-dos-int-task-ip-addresses-allowlist
+TF_VAR_cr_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-dead-letter-queue.fifo
+TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
@@ -51,6 +56,7 @@ TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handl
 TF_VAR_cr_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dql-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
 TF_VAR_test_db_checker_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler-role
+TF_VAR_orchestrator_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-role
 
 # Kinisis Firehose (Splunk Logs)
 TF_VAR_dos_integration_firehose := $(PROJECT_ID)-cw-logs-firehose
@@ -63,7 +69,6 @@ TF_VAR_cr_fifo_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONME
 TF_VAR_event_replay_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_processor_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor
 TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
-TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler
@@ -83,7 +88,6 @@ TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
 TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 
-
 # Change Request Receiver API Key
 TF_VAR_change_request_receiver_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver-api-key
 TF_VAR_change_request_receiver_api_key_key := CHANGE_REQUEST_RECEIVER_API_KEY
@@ -93,8 +97,10 @@ CHANGE_REQUEST_RECEIVER_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-rece
 TF_VAR_change_request_receiver_api_name := $(CHANGE_REQUEST_RECEIVER_NAME)
 TF_VAR_change_request_receiver_subdomain_name := $(CHANGE_REQUEST_RECEIVER_NAME)
 
-
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
 
 # Cloudwatch monitoring dashboard
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
+
+
+DOS_TRANSACTIONS_PER_SECOND=3

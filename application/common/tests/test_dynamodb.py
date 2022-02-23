@@ -1,9 +1,11 @@
-from pytest import fixture
+from pytest import fixture, raises
 from os import environ
 from json import dumps, loads
 from decimal import Decimal
 from common.dynamodb import (
     add_change_request_to_dynamodb,
+    put_circuit_is_open,
+    get_circuit_is_open,
     get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     dict_hash,
     TTL,
@@ -41,6 +43,39 @@ def dynamodb_table_create(dynamodb_client):
         ],
     )
     return table
+
+
+def test_get_circuit_is_open_none(dynamodb_table_create, dynamodb_client):
+
+    is_open = get_circuit_is_open("BLABLABLA")
+
+    assert is_open is None
+
+
+def test_put_and_get_circuit_is_open(dynamodb_table_create, dynamodb_client):
+
+    put_circuit_is_open("TESTCIRCUIT", True)
+    is_open = get_circuit_is_open("TESTCIRCUIT")
+
+    assert is_open
+
+
+def test_put_circuit_exception(dynamodb_table_create, dynamodb_client):
+    temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
+    del environ["CHANGE_EVENTS_TABLE_NAME"]
+    with raises(Exception):
+        put_circuit_is_open("TESTCIRCUIT", True)
+
+    environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
+
+
+def test_get_circuit_exception(dynamodb_table_create, dynamodb_client):
+    temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
+    del environ["CHANGE_EVENTS_TABLE_NAME"]
+    with raises(Exception):
+        get_circuit_is_open("TESTCIRCUIT")
+
+    environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
 
 
 def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):
