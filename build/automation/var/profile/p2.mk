@@ -88,15 +88,6 @@ TF_VAR_dos_api_gateway_secret_password_key := $(DOS_API_GATEWAY_PASSWORD_KEY)
 TF_VAR_dos_api_gateway_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-api-gateway-lambda
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 
-# Change Request Receiver API Key
-TF_VAR_change_request_receiver_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver-api-key
-TF_VAR_change_request_receiver_api_key_key := CHANGE_REQUEST_RECEIVER_API_KEY
-
-# Change Request Receiver Route53
-CHANGE_REQUEST_RECEIVER_NAME := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-receiver
-TF_VAR_change_request_receiver_api_name := $(CHANGE_REQUEST_RECEIVER_NAME)
-TF_VAR_change_request_receiver_subdomain_name := $(CHANGE_REQUEST_RECEIVER_NAME)
-
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
 
 # Cloudwatch monitoring dashboard
