@@ -52,7 +52,9 @@ DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
+
 TF_VAR_cr_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-queue.fifo
+
 cr_fifo_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_fifo_queue_name)
 cr_dlq_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_dead_letter_queue_from_fifo_queue_name)
 TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
@@ -85,7 +87,7 @@ TF_VAR_event_sender_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender
 TF_VAR_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_test_db_checker_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler
-TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr_fifo-dlq-handler
+TF_VAR_cr_fifo_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler
 TF_VAR_orchestrator_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator
 TF_VAR_change_request_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-request-api-gateway-cw-logs-firehose-subscription
 
@@ -110,5 +112,4 @@ TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-moni
 
 
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
-
 DOS_TRANSACTIONS_PER_SECOND=3
