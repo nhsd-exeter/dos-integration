@@ -12,6 +12,6 @@ resource "aws_codestarnotifications_notification_rule" "commits" {
 
   target {
     type    = "AWSChatbotSlack"
-    address = "arn:aws:chatbot::${var.aws_account_id_nonprod}:chat-configuration/slack-channel/${var.pipeline_chatbot_channel}"
+    address = "arn:aws:chatbot::${var.aws_account_id_mgmt}:chat-configuration/slack-channel/${var.pipeline_chatbot_channel}"
   }
 }

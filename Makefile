@@ -433,10 +433,10 @@ serverless-requirements: # Install serverless plugins
 # Pipelines
 
 deploy-development-pipeline:
-	make terraform-apply-auto-approve STACKS=development-pipeline PROFILE=dev
+	make terraform-apply-auto-approve STACKS=development-pipeline PROFILE=tools
 
 undeploy-development-pipeline:
-	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=dev
+	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=tools
 
 plan-development-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then

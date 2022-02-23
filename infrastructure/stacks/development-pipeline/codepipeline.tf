@@ -1,9 +1,9 @@
 resource "aws_codepipeline" "codepipeline" {
   name     = "${var.project_id}-${var.environment}-codepipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  role_arn = data.aws_iam_role.pipeline_role.arn
 
   artifact_store {
-    location = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket"
+    location = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"
     type     = "S3"
   }
 
@@ -43,57 +43,50 @@ resource "aws_codepipeline" "codepipeline" {
   }
   stage {
     name = "Build"
-    action {
-      name            = "Build"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-build-stage"
+    dynamic "action" {
+      for_each = local.to_build
+      content {
+        name            = "Build_${action.key}"
+        category        = "Build"
+        owner           = "AWS"
+        provider        = "CodeBuild"
+        input_artifacts = ["source_output"]
+        version         = "1"
+        configuration = {
+          ProjectName = "${var.project_id}-${var.environment}-build-${action.key}-stage"
+        }
       }
     }
   }
-
   stage {
     name = "Deploy"
-    action {
-      name            = "Deploy_Dev"
-      category        = "Build"
-      owner           = "AWS"
-      run_order       = 1
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-deploy-dev-stage"
+    dynamic "action" {
+      for_each = local.deploy_envs
+      content {
+        name            = "Deploy_${action.key}"
+        category        = "Build"
+        owner           = "AWS"
+        run_order       = 1
+        provider        = "CodeBuild"
+        input_artifacts = ["source_output"]
+        version         = "1"
+        configuration = {
+          ProjectName = "${var.project_id}-${var.environment}-deploy-${action.key}-stage"
+        }
       }
     }
-    action {
-      name            = "Deploy_Test"
-      category        = "Build"
-      run_order       = 1
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-deploy-test-stage"
-      }
-    }
-    action {
-      name            = "Deploy_Performance"
-      category        = "Build"
-      run_order       = 1
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-deploy-performance-stage"
-      }
-    }
+    # action {
+    #   name            = "Deploy_fresh"
+    #   category        = "Build"
+    #   owner           = "AWS"
+    #   run_order       = 1
+    #   provider        = "CodeBuild"
+    #   input_artifacts = ["source_output"]
+    #   version         = "1"
+    #   configuration = {
+    #     ProjectName = "${var.project_id}-${var.environment}-deploy-fresh-stage"
+    #   }
+    # }
   }
 
   stage {
@@ -117,34 +110,13 @@ resource "aws_codestarconnections_connection" "github" {
   provider_type = "GitHub"
 }
 module "codepipeline_artefact_bucket" {
-  source               = "../../modules/s3"
-  name                 = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket"
-  project_id           = var.project_id
-  acl                  = "private"
-  profile              = var.profile
-  bucket_iam_role      = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-role"
-  iam_role_policy_name = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-policy"
-  log_bucket           = var.texas_s3_logs_bucket
-  versioning_enabled   = "true"
-  force_destroy        = "true"
-}
-
-
-resource "aws_iam_role" "codepipeline_role" {
-  name = "${var.project_id}-${var.environment}-codepipeline-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+  source     = "../../modules/s3"
+  name       = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"
+  project_id = var.project_id
+  acl        = "private"
+  profile    = var.profile
+  # bucket_iam_role      = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-role"
+  # iam_role_policy_name = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-policy"
+  versioning_enabled = "true"
+  force_destroy      = "true"
 }

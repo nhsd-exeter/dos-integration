@@ -33,7 +33,7 @@ variable "aws_account_id_prod" {
 variable "aws_account_id_identities" {
   description = ""
 }
-variable "aws_vpc_name" {
+variable "aws_np_vpc_name" {
   description = ""
 }
 
@@ -58,9 +58,6 @@ variable "pipeline_notification_name" {
 
 variable "pipeline_chatbot_channel" {
   description = ""
-}
-variable "test_signing_key_alias" {
-  description = "Alias of key used for signing"
 }
 
 variable "pipeline_topic_name" {
@@ -89,16 +86,4 @@ variable "project_id" {
 }
 variable "environment" {
   description = "Environment name"
-}
-
-variable "texas_s3_logs_bucket" {
-  description = "The texas s3 log bucket for s3 bucket logs"
-}
-
-variable "texas_terraform_state_store" {
-  description = ""
-}
-
-variable "texas_terraform_state_lock" {
-  description = ""
 }
