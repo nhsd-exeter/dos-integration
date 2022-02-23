@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "di_endpoint_role_policy" {
         "kms:Decrypt"
       ],
       "Resource":  "${data.aws_kms_key.signing_key.arn}"
-    }
+    },
     {
       "Effect": "Allow",
       "Action": ["sqs:SendMessage"],
