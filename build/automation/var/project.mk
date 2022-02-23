@@ -52,7 +52,11 @@ DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
+TF_VAR_cr_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-queue.fifo
+cr_fifo_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_fifo_queue_name)
+cr_dlq_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_dead_letter_queue_from_fifo_queue_name)
 TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
+TF_VAR_cr_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-dead-letter-queue.fifo
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
@@ -104,3 +108,7 @@ TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
 # Cloudwatch monitoring dashboard
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
 
+
+SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
+
+DOS_TRANSACTIONS_PER_SECOND=3

@@ -48,7 +48,7 @@ provider:
         rateLimit: 3
         burstLimit: 5
   endpointType: regional
-  apiName: ${env:TF_VAR_change_request_receiver_api_name}
+
 
 custom:
   localstack:
