@@ -25,22 +25,32 @@ DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
-def process_payload(payload: dict, valid_api_key: bool, correlation_id: str, sequence_id=None) -> Response:
+def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    # # Allow custom sequence id
-    if sequence_id is None:
-        sequence_number = str(time_ns())
-    else:
-        sequence_number = str(sequence_id)
-
+    sequence_number = str(time_ns())
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
         "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
+    payload["Unique_key"] = generate_random_int()
+    output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    return output
+
+
+def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_id) -> Response:
+
+    api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
+    headers = {
+        "x-api-key": api_key,
+        "correlation-id": correlation_id,
+        "Content-Type": "application/json",
+    }
+    if sequence_id is not None:
+        headers["sequence-number"] = str(sequence_id)
     payload["Unique_key"] = generate_random_int()
     output = requests.request("POST", URL, headers=headers, data=dumps(payload))
     return output

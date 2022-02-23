@@ -20,6 +20,7 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    process_payload_with_sequence,
     re_process_payload,
     get_latest_sequence_id_for_odscode_from_dynamodb,
 )
@@ -126,7 +127,7 @@ def current_ods_exists_in_ddb(odscode: str):
     context = {}
     context["change_event"] = create_change_event()
     context["change_event"]["ODSCode"] = odscode
-    if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) != 0:
+    if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
     # # Generate new Address1 to prevent SQS dedupe
     newaddr = randint(100, 500)
@@ -185,10 +186,21 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
     context["start_time"] = datetime.today().timestamp()
-    if "correlation_id" not in context:
-        context["correlation_id"] = generate_correlation_id()
-    context["response"] = process_payload(context["change_event"], "valid", context["correlation_id"], seqid)
-    context["sequence_no"] = context["response"].request.headers["sequence-number"]
+    context["correlation_id"] = generate_correlation_id()
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
+    context["sequence_no"] = seqid
+    return context
+
+
+# # Request with no sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with no sequence id"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_no_sequence(context):
+    context["start_time"] = datetime.today().timestamp()
+    context["correlation_id"] = generate_correlation_id()
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], None)
     return context
 
 
@@ -468,3 +480,12 @@ def verify_replayed_changed_event(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. expected event-replay logs not found."
+
+@then("the event processor logs should record a sequence error")
+def sequence_id_error_logs(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Sequence id is smaller than the existing one"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. Sequence id error message not found."
