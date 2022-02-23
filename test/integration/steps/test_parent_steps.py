@@ -337,11 +337,11 @@ def event_sender_triggers_DLQ(context):
 def event_bridge_dlq_log_check(context):
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter report_key="EVENTBRIDGE_DLQ_HANDLER_RECEIVED_EVENT"'
+        ' | filter report_key="CR_DLQ_HANDLER_RECEIVED_EVENT"'
     )
     logs = get_logs(query, "cr_dlq", context["start_time"])
     assert (
-        "Eventbridge Dead Letter Queue Handler received event" in logs
+        "Change Request DLQ Handler hit" in logs
     ), "ERROR!!.. expected exception logs not found."
     return context
 

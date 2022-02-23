@@ -247,8 +247,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.cr_dead_letter_queue_from_fifo_queue_name}", { "label": "EventBridge Message Count" } ],
-                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "FIFO Message Count" } ]
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.cr_dead_letter_queue_from_fifo_queue_name}", { "label": "CR FIFO Message Count" } ],
+                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "CE FIFO Message Count" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,

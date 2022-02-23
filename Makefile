@@ -67,6 +67,12 @@ populate-deployment-variables:
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 
+unit-test-local:
+	pyenv local .venv
+	pip install -r application/requirements-dev.txt -r application/event_processor/requirements.txt -r application/event_replay/requirements.txt -r application/event_sender/requirements.txt -r application/fifo_dlq_handler/requirements.txt
+	cd application
+	python -m pytest --junitxml=./testresults.xml --cov=. -vv
+
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester \
@@ -126,6 +132,29 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \
 		"
+
+integration-test-local:
+	cd test/integration
+	API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
+	NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+	CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
+	CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
+	DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+	DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+	DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+	DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+	URL=https://$(DOS_INTEGRATION_URL) \
+	CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
+	EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
+	EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
+	SQS_URL=$(SQS_QUEUE_URL) \
+	TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
+	EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
+	DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
+	DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+	KEYALIAS=${TF_VAR_signing_key_alias} \
+	RUN_ID=${RUN_ID} \
+	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
