@@ -9,3 +9,7 @@ data "aws_secretsmanager_secret_version" "change_request_receiver" {
 data "aws_lambda_function" "eventbridge_dlq_handler" {
   function_name = var.eventbridge_dlq_handler_lambda_name
 }
+
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}
