@@ -105,7 +105,7 @@ resource "aws_iam_role_policy" "invocation_authoriser_policy" {
     {
       "Effect": "Allow",
       "Action": "kms:*",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Action": "lambda:InvokeFunction",

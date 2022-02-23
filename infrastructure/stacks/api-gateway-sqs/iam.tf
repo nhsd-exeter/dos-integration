@@ -8,7 +8,7 @@ resource "aws_iam_role" "di_endpoint_role" {
     {
       "Effect": "Allow",
       "Action": "kms:*",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Action": "sts:AssumeRole",
@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "di_endpoint_role_policy" {
     {
       "Effect": "Allow",
       "Action": "kms:*",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
