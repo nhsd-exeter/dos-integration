@@ -37,6 +37,14 @@ resource "aws_iam_role_policy" "di_endpoint_role_policy" {
     },
     {
       "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource":  "${data.aws_kms_key.signing_key_arn}"
+    }
+    {
+      "Effect": "Allow",
       "Action": ["sqs:SendMessage"],
       "Resource": "${aws_sqs_queue.di_change_event_fifo_queue.arn}"
     },
