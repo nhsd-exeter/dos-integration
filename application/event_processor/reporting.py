@@ -1,4 +1,3 @@
-from pyexpat.errors import messages
 from typing import List
 from os import environ
 import json
@@ -66,6 +65,7 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )
+
 
 @metric_scope
 def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSService, metrics) -> None:
