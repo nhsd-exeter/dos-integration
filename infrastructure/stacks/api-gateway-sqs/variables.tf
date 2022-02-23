@@ -139,3 +139,10 @@ variable "nhs_uk_api_key_key" {
 variable "ip_address_secret" {
   description = "IP Address secret"
 }
+
+# ############################
+# # KMS
+# ############################
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}
