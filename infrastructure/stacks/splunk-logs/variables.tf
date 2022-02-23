@@ -81,6 +81,10 @@ variable "event_replay_subscription_filter_name" {
   description = "Log filter name for event replay lambda"
 }
 
+variable "orchestrator_subscription_filter_name" {
+  description = "Log filter name for event replay lambda"
+}
+
 variable "dos_integration_firehose" {
   description = "The firehose delivery stream name"
 }
@@ -117,4 +121,8 @@ variable "cr_fifo_dlq_handler_lambda_name" {
 
 variable "event_replay_lambda_name" {
   description = "Name of event replay lambda"
+}
+
+variable "orchestrator_lambda_name" {
+  description = "Name of orchestrator lambda"
 }
