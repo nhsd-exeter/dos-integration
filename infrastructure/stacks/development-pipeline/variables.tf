@@ -102,3 +102,7 @@ variable "texas_terraform_state_store" {
 variable "texas_terraform_state_lock" {
   description = ""
 }
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}

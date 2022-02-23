@@ -118,3 +118,7 @@ variable "eventbridge_dlq_handler_lambda_name" {
 variable "event_replay_lambda_name" {
   description = "Name of event replay lambda"
 }
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}

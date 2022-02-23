@@ -60,3 +60,7 @@ variable "lambda_security_group_name" {
 variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
 }
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}

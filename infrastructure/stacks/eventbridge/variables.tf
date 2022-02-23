@@ -108,3 +108,7 @@ variable "event_processor_lambda_name" {
 variable "eventbridge_dlq_handler_lambda_name" {
   description = "Name of eventbridge dead letter queue lambda handler"
 }
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}

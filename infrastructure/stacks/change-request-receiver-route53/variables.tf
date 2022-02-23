@@ -77,3 +77,7 @@ variable "change_request_receiver_api_name" {
 variable "texas_hosted_zone" {
   description = "hosted zone"
 }
+
+variable "signing_key_alias" {
+  description = "Alias of key used for signing"
+}
