@@ -52,10 +52,9 @@ DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
-<<<<<<< HEAD
+
 TF_VAR_cr_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-queue.fifo
-=======
->>>>>>> 7cfcde7 (More missing bits from var files)
+
 cr_fifo_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_fifo_queue_name)
 cr_dlq_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_cr_dead_letter_queue_from_fifo_queue_name)
 TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
