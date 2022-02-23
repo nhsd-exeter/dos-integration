@@ -25,11 +25,16 @@ DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
 
-def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
+def process_payload(payload: dict, valid_api_key: bool, correlation_id: str, sequence_id=None) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = str(time_ns())
+    # # Allow custom sequence id
+    if sequence_id is None:
+        sequence_number = str(time_ns())
+    else:
+        sequence_number = str(sequence_id)
+
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
@@ -83,6 +88,25 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
     return deserialized
+
+
+def get_latest_sequence_id_for_odscode_from_dynamodb(odscode: str) -> int:
+    resp = DYNAMO_CLIENT.query(
+        TableName=DYNAMO_DB_TABLE,
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={
+            ":odscode": {"S": odscode},
+        },
+        Limit=1,
+        ScanIndexForward=False,
+        ProjectionExpression="ODSCode,SequenceNumber",
+    )
+    sequence_number = 0
+    if resp.get("Count") > 0:
+        sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
+
+    return sequence_number
 
 
 def get_lambda_info(info_param: str) -> str:

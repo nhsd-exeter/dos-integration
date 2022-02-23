@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from time import sleep
 from os import getenv
+from random import randint
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -20,6 +21,7 @@ from .utilities.utils import (
     process_change_request_payload,
     process_payload,
     re_process_payload,
+    get_latest_sequence_id_for_odscode_from_dynamodb,
 )
 
 scenarios(
@@ -117,6 +119,21 @@ def a_change_event_with_isopen_status_set_to_false():
     return context
 
 
+# # ODS <odscode> has an entry in dynamodb
+# # Check that the requested ODS code exists in ddb, and create an entry if not
+@given(parsers.parse("ODS {odscode} has an entry in dynamodb"), target_fixture="context")
+def current_ods_exists_in_ddb(odscode: str):
+    context = {}
+    context["change_event"] = create_change_event()
+    context["change_event"]["ODSCode"] = odscode
+    if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) != 0:
+        context = the_change_event_is_sent_with_custom_sequence(context, 100)
+    # # Generate new Address1 to prevent SQS dedupe
+    newaddr = randint(100, 500)
+    context["change_event"]["Address1"] = f"{newaddr} New Street"
+    return context
+
+
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
@@ -157,6 +174,20 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
+    context["sequence_no"] = context["response"].request.headers["sequence-number"]
+    return context
+
+
+# # Request with custom sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_custom_sequence(context, seqid):
+    context["start_time"] = datetime.today().timestamp()
+    if "correlation_id" not in context:
+        context["correlation_id"] = generate_correlation_id()
+    context["response"] = process_payload(context["change_event"], "valid", context["correlation_id"], seqid)
     context["sequence_no"] = context["response"].request.headers["sequence-number"]
     return context
 
