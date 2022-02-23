@@ -120,7 +120,6 @@ def a_change_event_with_isopen_status_set_to_false():
     return context
 
 
-# # ODS <odscode> has an entry in dynamodb
 # # Check that the requested ODS code exists in ddb, and create an entry if not
 @given(parsers.parse("ODS {odscode} has an entry in dynamodb"), target_fixture="context")
 def current_ods_exists_in_ddb(odscode: str):
@@ -129,7 +128,7 @@ def current_ods_exists_in_ddb(odscode: str):
     context["change_event"]["ODSCode"] = odscode
     if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
-    # # Generate new Address1 to prevent SQS dedupe
+    # New address prevents SQS dedupe
     newaddr = randint(100, 500)
     context["change_event"]["Address1"] = f"{newaddr} New Street"
     return context
@@ -201,6 +200,20 @@ def the_change_event_is_sent_with_no_sequence(context):
     context["start_time"] = datetime.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], None)
+    return context
+
+# # Request with duplicate sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with a duplicate sequence id"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_duplicate_sequence(context):
+    context["start_time"] = datetime.today().timestamp()
+    context["correlation_id"] = generate_correlation_id()
+    odscode = context["change_event"]["ODSCode"]
+    seqid = get_latest_sequence_id_for_odscode_from_dynamodb(odscode)
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
+    context["sequence_no"] = seqid
     return context
 
 
@@ -480,6 +493,7 @@ def verify_replayed_changed_event(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. expected event-replay logs not found."
+
 
 @then("the event processor logs should record a sequence error")
 def sequence_id_error_logs(context):
