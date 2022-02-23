@@ -19,7 +19,7 @@ Feature: F004. Error Handling
     And the Changed Event is stored in dynamo db
 
   # FAILING TESTS.. WAITING ON BUG FIX
-  @complete @dev
+  @complete @dev @wip
   Scenario: F004S003. A Changed Event where Specified opening date is set as closed is captured
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

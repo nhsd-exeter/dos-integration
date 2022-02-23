@@ -340,9 +340,7 @@ def event_bridge_dlq_log_check(context):
         ' | filter report_key="CR_DLQ_HANDLER_RECEIVED_EVENT"'
     )
     logs = get_logs(query, "cr_dlq", context["start_time"])
-    assert (
-        "Change Request DLQ Handler hit" in logs
-    ), "ERROR!!.. expected exception logs not found."
+    assert "Change Request DLQ Handler hit" in logs, "ERROR!!.. expected exception logs not found."
     return context
 
 
