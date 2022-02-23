@@ -21,3 +21,4 @@ DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
+SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
