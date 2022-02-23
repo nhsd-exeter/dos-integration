@@ -98,10 +98,6 @@ variable "di_endpoint_api_gateway_name" {
   description = "Endpoint consumed by NHS UK"
 }
 
-variable "change_request_receiver_api_name" {
-  description = "Name for the API Gateway endpoint on request receiver side"
-}
-
 variable "cr_dead_letter_queue_from_fifo_queue_name" {
   description = "Name of the cr_fifo dead letter queue"
 }
