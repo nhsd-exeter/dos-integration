@@ -156,10 +156,6 @@ integration-test-local:
 	RUN_ID=${RUN_ID} \
 	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
 
-echo:
-	echo $(DOS_INTEGRATION_URL)
-	echo $(AWS_SAME_ACCOUNT_DOCKER_REGISTRY)
-	echo $(AWS_VPC_NAME)
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
