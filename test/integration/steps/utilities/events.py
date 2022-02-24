@@ -40,8 +40,10 @@ def change_request() -> Dict[str, Any]:
                 "website": None,
                 "phone": None,
                 "public_name": "My Test Pharmacy 21",
-                "address": ["85 Peachfield Road", "CHAPEL ROW", "South Godshire"],
-                "postcode": "RG7 1DB",
+                "address": {
+                    "address_lines": ["85 Peachfield Road", "CHAPEL ROW", "South Godshire"],
+                    "post_code": "RG7 1DB",
+                },
                 "opening_days": {
                     "Monday": [],
                     "Tuesday": [],
