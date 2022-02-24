@@ -597,6 +597,15 @@ send-performance-dashboard-slack-message:
 	}'
 
 # -----------------------------
+# Chaos Testing
+
+setup-chaos-test: # Setup chaos test environment
+	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
+
+restore-from-chaos-test: # Restore from chaos test environment
+	make terraform-apply-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
+
+# -----------------------------
 # Other
 
 update-all-ip-allowlists: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
