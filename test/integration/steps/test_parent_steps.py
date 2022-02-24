@@ -22,7 +22,7 @@ from .utilities.utils import (
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
-    get_latest_sequence_id_for_odscode_from_dynamodb,
+    get_latest_sequence_id_for_a_given_odscode,
 )
 
 scenarios(
@@ -126,7 +126,7 @@ def current_ods_exists_in_ddb():
     context = {}
     context["change_event"] = create_change_event()
     odscode = context["change_event"]["ODSCode"]
-    if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) == 0:
+    if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
     # New address prevents SQS dedupe
     newaddr = randint(100, 500)
@@ -212,7 +212,7 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
     context["start_time"] = datetime.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     odscode = context["change_event"]["ODSCode"]
-    seqid = get_latest_sequence_id_for_odscode_from_dynamodb(odscode)
+    seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
     return context

@@ -100,25 +100,6 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
     return deserialized
 
 
-def get_latest_sequence_id_for_odscode_from_dynamodb(odscode: str) -> int:
-    resp = DYNAMO_CLIENT.query(
-        TableName=DYNAMO_DB_TABLE,
-        IndexName="gsi_ods_sequence",
-        KeyConditionExpression="ODSCode = :odscode",
-        ExpressionAttributeValues={
-            ":odscode": {"S": odscode},
-        },
-        Limit=1,
-        ScanIndexForward=False,
-        ProjectionExpression="ODSCode,SequenceNumber",
-    )
-    sequence_number = 0
-    if resp.get("Count") > 0:
-        sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
-
-    return sequence_number
-
-
 def get_lambda_info(info_param: str) -> str:
     values = {"state": "State", "status": "LastUpdateStatus", "description": "Description"}
     param = values[info_param]
