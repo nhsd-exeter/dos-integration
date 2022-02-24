@@ -121,11 +121,11 @@ def a_change_event_with_isopen_status_set_to_false():
 
 
 # # Check that the requested ODS code exists in ddb, and create an entry if not
-@given(parsers.parse("ODS {odscode} has an entry in dynamodb"), target_fixture="context")
-def current_ods_exists_in_ddb(odscode: str):
+@given(parsers.parse("an ODS has an entry in dynamodb"), target_fixture="context")
+def current_ods_exists_in_ddb():
     context = {}
     context["change_event"] = create_change_event()
-    context["change_event"]["ODSCode"] = odscode
+    odscode = context["change_event"]["ODSCode"]
     if get_latest_sequence_id_for_odscode_from_dynamodb(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
     # New address prevents SQS dedupe
