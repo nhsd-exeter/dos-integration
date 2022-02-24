@@ -202,6 +202,7 @@ def the_change_event_is_sent_with_no_sequence(context):
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], None)
     return context
 
+
 # # Request with duplicate sequence id
 @when(
     parsers.parse("the Changed Event is sent for processing with a duplicate sequence id"),
