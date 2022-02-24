@@ -62,7 +62,10 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         dos_time = after - before
         metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
 
-    if response.ok and not event["is_health_check"]:
+    if response is None:
+        logger.info("Change Request failed to reach DoS, Potentially recoverable breaking circuit to retry shortly")
+        put_circuit_is_open(environ["CIRCUIT"], True)
+    elif response.ok and not event["is_health_check"]:
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
@@ -98,7 +101,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
                     },
                 )
                 sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
+
             metrics.set_property("StatusCode", response.status_code)
             metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
             metrics.put_metric("DoSApiFail", 1, "Count")
-    return {"statusCode": response.status_code, "body": response.text}
