@@ -1,4 +1,4 @@
--include $(VAR_DIR)/platform-texas/v1/account-live-k8s-prod.mk
+-include $(VAR_DIR)/profile/prod.mk
 
 # API Gateway Route53
 TF_VAR_dos_integration_sub_domain_name := $(PROJECT_ID)-$(ENVIRONMENT)

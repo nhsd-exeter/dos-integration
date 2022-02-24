@@ -1,4 +1,4 @@
--include $(VAR_DIR)/platform-texas/v1/account-live-k8s-nonprod.mk # To allow for docker build to work correct
+-include $(VAR_DIR)/profile/nonprd.mk # To allow for docker build to work correct
 
 # ==============================================================================
 # Service Variables
