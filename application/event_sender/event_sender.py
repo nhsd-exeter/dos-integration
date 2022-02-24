@@ -105,3 +105,4 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             metrics.set_property("StatusCode", response.status_code)
             metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
             metrics.put_metric("DoSApiFail", 1, "Count")
+    return {"statusCode": response.status_code, "body": response.text}

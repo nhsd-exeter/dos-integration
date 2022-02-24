@@ -85,8 +85,10 @@ def test_lambda_handler_dos_api_success(
     environ["ENV"] = "test"
     environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = "1"
     # Act
-    lambda_handler(EVENT, lambda_context)
+    response = lambda_handler(EVENT, lambda_context)
     # Assert
+    assert response["statusCode"] == 201
+    assert response["body"] == "success"
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_instance.post_change_request.assert_called_once_with()
@@ -126,8 +128,10 @@ def test_lambda_handler_dos_api_fail(
     environ["ENV"] = "test"
     environ["CIRCUIT"] = "testcircuit"
     # Act
-    lambda_handler(EVENT, lambda_context)
+    response = lambda_handler(EVENT, lambda_context)
     # Assert
+    assert response["statusCode"] == 201
+    assert response["body"] == "success"
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
@@ -157,8 +161,10 @@ def test_lambda_handler_health_check(
     HEALTH_EVENT = EVENT.copy()
     HEALTH_EVENT["is_health_check"] = True
     # Act
-    lambda_handler(HEALTH_EVENT, lambda_context)
+    response = lambda_handler(EVENT, lambda_context)
     # Assert
+    assert response["statusCode"] == 201
+    assert response["body"] == "success"
     mock_client.assert_called_with("sqs")
     mock_instance.post_change_request.assert_called_once()
     mock_put_metric.assert_not_called()
@@ -197,8 +203,10 @@ def test_lambda_handler_non_recoverable_error(
     environ["CR_DLQ_URL"] = dlq_queue_name
     environ["CR_QUEUE_URL"] = incoming_queue_url
     # Act
-    lambda_handler(EVENT, lambda_context)
+    response = lambda_handler(EVENT, lambda_context)
     # Assert
+    assert response["statusCode"] == 201
+    assert response["body"] == "success"
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()

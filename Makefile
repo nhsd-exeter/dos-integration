@@ -37,8 +37,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make terraform-apply-auto-approve STACKS=api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make authoriser-build-and-push dos-api-gateway-build-and-push
-		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
+		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
@@ -400,6 +399,10 @@ dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
+mock-dos-api-gateway-deployment:
+	make authoriser-build-and-push dos-api-gateway-build-and-push VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
+
 # ==============================================================================
 # Deployments
 
@@ -599,11 +602,17 @@ send-performance-dashboard-slack-message:
 # -----------------------------
 # Chaos Testing
 
-setup-chaos-test: # Setup chaos test environment
+setup-no-dos-chaos-test: # Setup chaos test environment
 	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
 
-restore-from-chaos-test: # Restore from chaos test environment
+restore-from-no-dos-chaos-test: # Restore from chaos test environment
 	make terraform-apply-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
+
+setup-dos-chaos-test: # Setup chaos test environment
+	make mock-dos-api-gateway-deployment TF_VAR_chaos_mode="true"
+
+restore-from-dos-chaos-test: # Restore from chaos test environment
+	make mock-dos-api-gateway-deployment
 
 # -----------------------------
 # Other
