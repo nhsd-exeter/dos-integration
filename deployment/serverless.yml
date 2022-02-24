@@ -150,6 +150,7 @@ functions:
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
       CR_DLQ_URL: ${env:cr_dlq_queue_url}
       CIRCUIT: DOS_API_GATEWAY
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
 
   cr-fifo-dlq-handler:
