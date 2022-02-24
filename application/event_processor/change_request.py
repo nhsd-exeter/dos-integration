@@ -3,8 +3,9 @@ from aws_lambda_powertools import Logger
 
 
 ADDRESS_CHANGE_KEY = "address"
+ADDRESS_LINES_KEY = "address_lines"
 PHONE_CHANGE_KEY = "phone"
-POSTCODE_CHANGE_KEY = "postcode"
+POSTCODE_CHANGE_KEY = "post_code"
 PUBLICNAME_CHANGE_KEY = "public_name"
 WEBSITE_CHANGE_KEY = "website"
 OPENING_DATES_KEY = "opening_dates"

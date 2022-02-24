@@ -4,6 +4,7 @@ from dos import dos_location_cache
 
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
+    ADDRESS_LINES_KEY,
     OPENING_DATES_KEY,
     OPENING_DAYS_KEY,
     PHONE_CHANGE_KEY,
@@ -101,10 +102,12 @@ def test_get_changes_different_changes():
     dos_location_cache[dos_location.normal_postcode()] = [dos_location]
 
     expected_changes = {
-        ADDRESS_CHANGE_KEY: [address1, address2, address3, city, county],
+        ADDRESS_CHANGE_KEY: {
+            ADDRESS_LINES_KEY: [address1, address2, address3, city, county],
+            POSTCODE_CHANGE_KEY: nhs_entity.postcode,
+        },
         PUBLICNAME_CHANGE_KEY: organisation_name,
         WEBSITE_CHANGE_KEY: website,
-        POSTCODE_CHANGE_KEY: postcode,
         PHONE_CHANGE_KEY: phone,
     }
     # Act
@@ -162,7 +165,7 @@ def test_update_changes_address_to_change_request_if_not_equal_not_equal():
     # Act
     actual_changes = {}
     update_changes_with_address(actual_changes, dos_service, nhs_uk_entity)
-    expected_changes = {ADDRESS_CHANGE_KEY: nhs_uk_entity.address_lines}
+    expected_changes = {ADDRESS_CHANGE_KEY: {ADDRESS_LINES_KEY: nhs_uk_entity.address_lines}}
     # Assert
     assert actual_changes == expected_changes, f"Should return {expected_changes} dict, actually: {actual_changes}"
 

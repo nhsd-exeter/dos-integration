@@ -3,6 +3,7 @@ from typing import Dict
 from aws_lambda_powertools import Logger
 from change_request import (
     ADDRESS_CHANGE_KEY,
+    ADDRESS_LINES_KEY,
     OPENING_DATES_KEY,
     OPENING_DAYS_KEY,
     PHONE_CHANGE_KEY,
@@ -65,7 +66,7 @@ def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_e
 
     if dos_address != nhs_uk_address_string:
         logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
-        changes[ADDRESS_CHANGE_KEY] = nhs_uk_entity.address_lines
+        changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_uk_entity.address_lines}
 
     return changes
 
@@ -118,4 +119,4 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
                 del changes[ADDRESS_CHANGE_KEY]
                 logger.info("Deleted address change as postcode is invalid")
         else:
-            changes[POSTCODE_CHANGE_KEY] = valid_dos_postcode
+            changes[ADDRESS_CHANGE_KEY][POSTCODE_CHANGE_KEY] = valid_dos_postcode
