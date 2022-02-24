@@ -57,7 +57,7 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with sequence id <seqid>
     Then the event processor logs should record a sequence error
 
-    Examples:
-    | seqid | description                           |
-    |  1    | positive integer lower than seq value |
-    | -1234 | negative integer lower than seq value |
+    Examples: These are both lower than the default sequence-id values
+    | seqid |
+    |  1    |
+    | -1234 |
