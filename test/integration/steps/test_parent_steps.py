@@ -5,8 +5,13 @@ from os import getenv
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from .utilities.events import build_same_as_dos_change_event, change_request, create_change_event, nhsuk_changed_event
-
+from .utilities.events import (
+    build_same_as_dos_change_event,
+    change_request,
+    create_change_event,
+    set_opening_times_change_event,
+)
+# from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
@@ -36,7 +41,7 @@ def a_change_event_is_valid():
 @given("a specific Changed Event is valid", target_fixture="context")
 def a_specific_change_event_is_valid():
     context = {}
-    context["change_event"] = nhsuk_changed_event()
+    context["change_event"] = set_opening_times_change_event()
     return context
 
 
@@ -393,12 +398,13 @@ def invalid_opening_times_exception(context):
 def specified_opening_date_closed(context):
     opening_times = context["change_event"]["OpeningTimes"]
     for item in opening_times:
-        while item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
+        if item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
             closed_date = item["AdditionalOpeningDate"]
+            date_obj = datetime.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
             break
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
-    assert f'"{closed_date}\\":[]' in logs
+    assert f'\\"{date_obj}\\":[]' in logs, f"Expected closed date '{closed_date}' not captured"
     return context
 
 
@@ -406,12 +412,12 @@ def specified_opening_date_closed(context):
 def standard_opening_day_closed(context):
     opening_times = context["change_event"]["OpeningTimes"]
     for item in opening_times:
-        while item["IsOpen"] is False and item["AdditionalOpeningDate"] == "":
+        if item["IsOpen"] is False and item["OpeningTimeType"] == "General":
             closed_day = item["Weekday"]
             break
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
-    assert f'"{closed_day}\\":[]' in logs
+    assert f'\\"{closed_day}\\":[]' in logs, f"Expected closed day '{closed_day}' not captured"
     return context
 
 

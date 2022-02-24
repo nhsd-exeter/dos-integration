@@ -1,4 +1,5 @@
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from json import dumps, load
 from random import choice
 from typing import Any, Dict
@@ -124,4 +125,45 @@ def build_same_as_dos_change_event():
                     "IsOpen": True,
                 }
             )
+    return change_event
+
+
+def set_opening_times_change_event():
+    change_event = build_same_as_dos_change_event()
+    date = datetime.today() + relativedelta(months=1)
+    has_set_closed_day = False
+    for day in change_event["OpeningTimes"]:
+        if day["IsOpen"] and day["OpeningTimeType"] == "General":
+            closed_day = day["Weekday"]
+            has_set_closed_day = True
+            break
+    if has_set_closed_day is False:
+        raise ValueError("ERROR!.. Unable to find 'Open' Standard opening time")
+    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] !=closed_day , change_event["OpeningTimes"]))
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": closed_day,
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False,
+        }
+    )
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
+            "IsOpen": False,
+        }
+    )
     return change_event

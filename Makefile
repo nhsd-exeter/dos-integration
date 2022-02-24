@@ -131,6 +131,8 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \
+		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
+
 		"
 
 integration-test-local:
@@ -180,7 +182,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \
-		-e CR_FIFO_DLQ=${TF_VAR_cr_fifo_dlq_handler_lambda_name} \
+		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
 clean: # Runs whole project clean
