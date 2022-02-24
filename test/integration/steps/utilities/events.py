@@ -139,7 +139,7 @@ def set_opening_times_change_event():
             break
     if has_set_closed_day is False:
         raise ValueError("ERROR!.. Unable to find 'Open' Standard opening time")
-    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] !=closed_day , change_event["OpeningTimes"]))
+    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] != closed_day, change_event["OpeningTimes"]))
     change_event["OpeningTimes"].append(
         {
             "Weekday": closed_day,

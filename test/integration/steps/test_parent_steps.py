@@ -11,6 +11,7 @@ from .utilities.events import (
     create_change_event,
     set_opening_times_change_event,
 )
+
 # from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
