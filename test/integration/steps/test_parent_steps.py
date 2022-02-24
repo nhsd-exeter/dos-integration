@@ -12,7 +12,6 @@ from .utilities.events import (
     set_opening_times_change_event,
 )
 
-# from .utilities.encryption import initialise_encryption_client
 from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
