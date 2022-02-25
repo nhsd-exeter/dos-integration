@@ -391,6 +391,16 @@ resource "aws_iam_role_policy" "event_replay_policy" {
     {
       "Effect": "Allow",
       "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
