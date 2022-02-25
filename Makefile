@@ -198,7 +198,8 @@ clean: # Runs whole project clean
 		test-db-checker-handler-clean \
 		tester-clean \
 		authoriser-clean \
-		dos-api-gateway-clean
+		dos-api-gateway-clean \
+		performance-test-clean
 
 # ==============================================================================
 # Mocks Setup
@@ -521,7 +522,7 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
+			--users 50 --spawn-rate 2 --run-time 40m --stop-timeout 5 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" \
 		DIR=./test/performance/create_change_events \
@@ -605,13 +606,13 @@ send-performance-dashboard-slack-message:
 setup-no-dos-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to be unavailable) - mandatory: PROFILE; optional: ENVIRONMENT
 	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
 
-restore-from-no-dos-chaos-test: # Restore from chaos test environment
-	make terraform-apply-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
+restore-from-no-dos-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
+	make mock-dos-api-gateway-deployment
 
 setup-circuit-breaker-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to return 500 errors) - mandatory: PROFILE; optional: ENVIRONMENT
 	make mock-dos-api-gateway-deployment TF_VAR_chaos_mode="true"
 
-restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment
+restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
 	make mock-dos-api-gateway-deployment
 
 # -----------------------------

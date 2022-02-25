@@ -19,23 +19,24 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     Returns:
         dict: Response to change request
     """
-    logger.debug("Event Received", extra={"event": event})
+    logger.info("Event Received", extra={"event": event})
     change_request = loads(event["body"])
     sleep(1.7)
     if change_request == {}:
         logger.warning("Empty change request received, likely a health check")
-    else:
-        correlation_id = change_request["reference"]
-        logger.set_correlation_id(correlation_id)
-        logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
+        return {"statusCode": 400, "body": "Change Request is empty"}
+
+    correlation_id = change_request["reference"]
+    logger.set_correlation_id(correlation_id)
+    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
+
+    if "bad request" in correlation_id.lower():
+        logger.warning("MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
+        return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
 
     if getenv("CHAOS_MODE") == "true":
         logger.warning("CHAOS MODE ENABLED - Returning a 500 response")
         return {"statusCode": 500, "body": "Chaos mode is enabled"}
-
-    if "bad request" in correlation_id.lower():
-        logger.info("Bad Request  - MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
-        return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
 
     change_request_response = {"dosChanges": []}
 
