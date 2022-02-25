@@ -82,18 +82,19 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # the message is DLQ'd - 5 times, if we can fix that then these message could be sent to the dlq
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
             if response is None:
-                logger.critcal(
-                    "Potentially recoverable breaking circuit to retry shortly due DoS API Gateway being unavailable"
-                )
+                msg = "Potentially recoverable breaking circuit to retry shortly due DoS API Gateway being unavailable"
+                logger.warning(msg)
                 put_circuit_is_open(environ["CIRCUIT"], True)
+                metrics.put_metric("DoSApiUnavailable", 1, "Count")
+                return {"body": msg}
             elif response.status_code >= 500 or response.status_code == 429:
-                logger.critcal(
+                logger.warning(
                     "Potentially recoverable breaking circuit to retry shortly due to DoS API Gateway"
                     "unable to accept change request"
                 )
                 put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
-                logger.critcal("Permanent error sending to DLQ, Not retrying")
+                logger.info("Permanent error sending to DLQ, Not retrying")
                 sqs.send_message(
                     QueueUrl=environ["CR_DLQ_URL"],
                     MessageBody=dumps(event["change_request"]),

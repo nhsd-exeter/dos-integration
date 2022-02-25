@@ -28,8 +28,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         correlation_id = change_request["reference"]
         logger.set_correlation_id(correlation_id)
         logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
-    print(getenv("CHAOS_MODE"))
+
     if getenv("CHAOS_MODE") == "true":
+        logger.warning("CHAOS MODE ENABLED - Returning a 500 response")
         return {"statusCode": 500, "body": "Chaos mode is enabled"}
 
     if "bad request" in correlation_id.lower():

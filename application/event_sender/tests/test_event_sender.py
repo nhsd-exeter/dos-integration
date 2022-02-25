@@ -123,15 +123,17 @@ def test_lambda_handler_dos_api_fail(
     mock_logger,
 ):
     # Arrange
+    status_code = 500
+    error_msg = "something went wrong"
     mock_instance = mock_change_request.return_value
-    mock_instance.post_change_request.return_value = MockResponse(status_code=500, text="something went wrong")
+    mock_instance.post_change_request.return_value = MockResponse(status_code=status_code, text=error_msg)
     environ["ENV"] = "test"
     environ["CIRCUIT"] = "testcircuit"
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
-    assert response["statusCode"] == 201
-    assert response["body"] == "success"
+    assert response["statusCode"] == status_code
+    assert response["body"] == error_msg
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
@@ -154,24 +156,28 @@ def test_lambda_handler_health_check(
     # Arrange
     environ["CR_QUEUE_URL"] = "test_q"
     environ["CIRCUIT"] = "testcircuit"
-    mock_instance = mock_change_request.return_value
-    mock_instance.post_change_request.return_value = MockResponse(status_code=400, text="Bad request")
     environ["ENV"] = "test"
     environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = "1"
+    environ["CR_DLQ_URL"] = "test_dlq"
+    status_code = 400
+    error_msg = "Bad request"
+    mock_instance = mock_change_request.return_value
+    mock_instance.post_change_request.return_value = MockResponse(status_code=status_code, text=error_msg)
     HEALTH_EVENT = EVENT.copy()
     HEALTH_EVENT["is_health_check"] = True
     # Act
-    response = lambda_handler(EVENT, lambda_context)
+    response = lambda_handler(HEALTH_EVENT, lambda_context)
     # Assert
-    assert response["statusCode"] == 201
-    assert response["body"] == "success"
+    assert response["statusCode"] == status_code
+    assert response["body"] == error_msg
     mock_client.assert_called_with("sqs")
     mock_instance.post_change_request.assert_called_once()
     mock_put_metric.assert_not_called()
     put_circuit_mock.assert_called_once_with("testcircuit", False)
     # Clean up
-    del environ["CR_QUEUE_URL"]
-    del environ["CIRCUIT"]
+    environment_variables = ["CIRCUIT", "CR_DLQ_URL", "CR_QUEUE_URL", "ENV", "DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+    for variable in environment_variables:
+        del environ[variable]
 
 
 @patch(f"{FILE_PATH}.ChangeRequest")
@@ -205,8 +211,8 @@ def test_lambda_handler_non_recoverable_error(
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
-    assert response["statusCode"] == 201
-    assert response["body"] == "success"
+    assert response["statusCode"] == status_code
+    assert response["body"] == error_message
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()

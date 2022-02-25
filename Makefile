@@ -602,16 +602,16 @@ send-performance-dashboard-slack-message:
 # -----------------------------
 # Chaos Testing
 
-setup-no-dos-chaos-test: # Setup chaos test environment
+setup-no-dos-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to be unavailable) - mandatory: PROFILE; optional: ENVIRONMENT
 	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
 
 restore-from-no-dos-chaos-test: # Restore from chaos test environment
 	make terraform-apply-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
 
-setup-dos-chaos-test: # Setup chaos test environment
+setup-circuit-breaker-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to return 500 errors) - mandatory: PROFILE; optional: ENVIRONMENT
 	make mock-dos-api-gateway-deployment TF_VAR_chaos_mode="true"
 
-restore-from-dos-chaos-test: # Restore from chaos test environment
+restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment
 	make mock-dos-api-gateway-deployment
 
 # -----------------------------
