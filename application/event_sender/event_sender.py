@@ -27,6 +27,9 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
+    if event["change_request"] == {}:
+        logger.error("Change request is empty")
+
     sqs = client("sqs")
     if not event["is_health_check"]:
         odscode = event["metadata"]["ods_code"]
@@ -62,10 +65,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         dos_time = after - before
         metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
 
-    if response is None:
-        logger.info("Change Request failed to reach DoS, Potentially recoverable breaking circuit to retry shortly")
-        put_circuit_is_open(environ["CIRCUIT"], True)
-    elif response.ok and not event["is_health_check"]:
+    if response is not None and response.ok and not event["is_health_check"]:
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
@@ -73,7 +73,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
 
     else:
-        if event["is_health_check"] and response.status_code in [400, 200, 201]:
+        if event["is_health_check"] and response is not None and response.status_code in [400, 200, 201]:
             logger.info("Circuit fixed - closing the circuit")
             put_circuit_is_open(environ["CIRCUIT"], False)
         else:
@@ -81,11 +81,19 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # as it means we will circuit break unnecessarily and this could happen repeatidly until
             # the message is DLQ'd - 5 times, if we can fix that then these message could be sent to the dlq
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
-            if response.status_code >= 500 or response.status_code == 429:
-                logger.info("Potentially recoverable breaking circuit to retry shortly")
+            if response is None:
+                logger.critcal(
+                    "Potentially recoverable breaking circuit to retry shortly due DoS API Gateway being unavailable"
+                )
+                put_circuit_is_open(environ["CIRCUIT"], True)
+            elif response.status_code >= 500 or response.status_code == 429:
+                logger.critcal(
+                    "Potentially recoverable breaking circuit to retry shortly due to DoS API Gateway"
+                    "unable to accept change request"
+                )
                 put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
-                logger.info("Permanent error sending to DLQ, Not retrying")
+                logger.critcal("Permanent error sending to DLQ, Not retrying")
                 sqs.send_message(
                     QueueUrl=environ["CR_DLQ_URL"],
                     MessageBody=dumps(event["change_request"]),

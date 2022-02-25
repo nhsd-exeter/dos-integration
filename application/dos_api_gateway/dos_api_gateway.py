@@ -21,15 +21,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     """
     logger.debug("Event Received", extra={"event": event})
     change_request = loads(event["body"])
-
-    if change_request == {}:
-        logger.warning("Empty change request received")
-        return {"statusCode": 406, "body": "No change event found"}
-
     sleep(1.7)
-    correlation_id = change_request["reference"]
-    logger.set_correlation_id(correlation_id)
-    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
+    if change_request == {}:
+        logger.warning("Empty change request received, likely a health check")
+    else:
+        correlation_id = change_request["reference"]
+        logger.set_correlation_id(correlation_id)
+        logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
     print(getenv("CHAOS_MODE"))
     if getenv("CHAOS_MODE") == "true":
         return {"statusCode": 500, "body": "Chaos mode is enabled"}
@@ -40,8 +38,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
 
     change_request_response = {"dosChanges": []}
 
-    counter = 1
-    for row in change_request["changes"]:
-        change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
-        counter += 1
+    if "changes" in change_request:
+        counter = 1
+        for row in change_request["changes"]:
+            change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
+            counter += 1
     return {"statusCode": 201, "body": dumps(change_request_response)}
