@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from time import sleep
 from os import getenv
+from random import randint
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -19,7 +20,9 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    process_payload_with_sequence,
     re_process_payload,
+    get_latest_sequence_id_for_a_given_odscode,
 )
 
 scenarios(
@@ -117,6 +120,20 @@ def a_change_event_with_isopen_status_set_to_false():
     return context
 
 
+# # Check that the requested ODS code exists in ddb, and create an entry if not
+@given(parsers.parse("an ODS has an entry in dynamodb"), target_fixture="context")
+def current_ods_exists_in_ddb():
+    context = {}
+    context["change_event"] = create_change_event()
+    odscode = context["change_event"]["ODSCode"]
+    if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
+        context = the_change_event_is_sent_with_custom_sequence(context, 100)
+    # New address prevents SQS dedupe
+    newaddr = randint(100, 500)
+    context["change_event"]["Address1"] = f"{newaddr} New Street"
+    return context
+
+
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
@@ -158,6 +175,46 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
     context["sequence_no"] = context["response"].request.headers["sequence-number"]
+    return context
+
+
+# # Request with custom sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_custom_sequence(context, seqid):
+    context["start_time"] = datetime.today().timestamp()
+    context["correlation_id"] = generate_correlation_id()
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
+    context["sequence_no"] = seqid
+    return context
+
+
+# # Request with no sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with no sequence id"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_no_sequence(context):
+    context["start_time"] = datetime.today().timestamp()
+    context["correlation_id"] = generate_correlation_id()
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], None)
+    return context
+
+
+# # Request with duplicate sequence id
+@when(
+    parsers.parse("the Changed Event is sent for processing with a duplicate sequence id"),
+    target_fixture="context",
+)
+def the_change_event_is_sent_with_duplicate_sequence(context):
+    context["start_time"] = datetime.today().timestamp()
+    context["correlation_id"] = generate_correlation_id()
+    odscode = context["change_event"]["ODSCode"]
+    seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+    context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
+    context["sequence_no"] = seqid
     return context
 
 
@@ -437,3 +494,13 @@ def verify_replayed_changed_event(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. expected event-replay logs not found."
+
+
+@then("the event processor logs should record a sequence error")
+def sequence_id_error_logs(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Sequence id is smaller than the existing one"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. Sequence id error message not found."
