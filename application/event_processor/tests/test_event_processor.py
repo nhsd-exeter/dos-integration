@@ -16,6 +16,7 @@ from ..nhs import NHSEntity
 from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
+    ADDRESS_LINES_KEY,
     PHONE_CHANGE_KEY,
     POSTCODE_CHANGE_KEY,
     PUBLICNAME_CHANGE_KEY,
@@ -128,9 +129,11 @@ def test_get_change_requests_full_change_request():
 
     expected_changes = {
         WEBSITE_CHANGE_KEY: nhs_entity.website,
-        POSTCODE_CHANGE_KEY: nhs_entity.postcode,
         PUBLICNAME_CHANGE_KEY: nhs_entity.org_name,
-        ADDRESS_CHANGE_KEY: nhs_entity.address_lines,
+        ADDRESS_CHANGE_KEY: {
+            ADDRESS_LINES_KEY: nhs_entity.address_lines,
+            POSTCODE_CHANGE_KEY: nhs_entity.postcode,
+        },
     }
     assert cr.changes == expected_changes, f"Changes should be {expected_changes} but they are {cr.changes}"
 
