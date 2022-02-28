@@ -88,6 +88,7 @@ resource "aws_lambda_function" "dos_api_gateway_lambda" {
   environment {
     variables = {
       "POWERTOOLS_SERVICE_NAME" = var.powertools_service_name
+      "CHAOS_MODE"              = var.chaos_mode
     }
   }
 }

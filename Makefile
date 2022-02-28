@@ -37,8 +37,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make terraform-apply-auto-approve STACKS=api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make authoriser-build-and-push dos-api-gateway-build-and-push
-		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
+		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
@@ -199,7 +198,8 @@ clean: # Runs whole project clean
 		test-db-checker-handler-clean \
 		tester-clean \
 		authoriser-clean \
-		dos-api-gateway-clean
+		dos-api-gateway-clean \
+		performance-test-clean
 
 # ==============================================================================
 # Mocks Setup
@@ -400,6 +400,10 @@ dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
+mock-dos-api-gateway-deployment:
+	make authoriser-build-and-push dos-api-gateway-build-and-push VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
+
 # ==============================================================================
 # Deployments
 
@@ -595,6 +599,21 @@ send-performance-dashboard-slack-message:
 	"resources": [],
 	"detail": {}
 	}'
+
+# -----------------------------
+# Chaos Testing
+
+setup-no-dos-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to be unavailable) - mandatory: PROFILE; optional: ENVIRONMENT
+	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
+
+restore-from-no-dos-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
+	make mock-dos-api-gateway-deployment
+
+setup-circuit-breaker-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to return 500 errors) - mandatory: PROFILE; optional: ENVIRONMENT
+	make mock-dos-api-gateway-deployment TF_VAR_chaos_mode="true"
+
+restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
+	make mock-dos-api-gateway-deployment
 
 # -----------------------------
 # Other

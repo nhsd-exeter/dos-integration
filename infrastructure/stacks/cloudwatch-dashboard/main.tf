@@ -260,8 +260,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
             "type": "metric",
-            "x": 0,
-            "y": 24,
+            "x": 18,
+            "y": 0,
             "width": 6,
             "height": 6,
             "properties": {
@@ -273,6 +273,23 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "region": "${var.aws_region}",
                 "period": 300,
                 "stat": "Sum"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 0,
+            "width": 6,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "UEC-DOS-INT", "DoSApiUnavailable", "ENV", "${var.environment}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "period": 300,
+                "stat": "Average"
             }
         }
     ]

@@ -95,7 +95,7 @@ class TestChangeRequestLogger:
         change_request_logger.log_change_request_response(change_request_response)
         # Assert
         info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=info_logger_expected)
-        warn_logger_mock.assert_called_with("Change request generated no changes")
+        warn_logger_mock.assert_called_with("Change request generated no changes within DoS")
 
     @patch.object(Logger, "info")
     @patch.object(Logger, "warning")
@@ -119,7 +119,7 @@ class TestChangeRequestLogger:
         change_request_logger.log_change_request_response(change_request_response)
         # Assert
         info_logger_mock.assert_called_with("Successfully send change request to DoS", extra=info_logger_expected)
-        warn_logger_mock.assert_called_with("Change request generated no changes")
+        warn_logger_mock.assert_called_with("Change request generated no changes within DoS")
 
     @patch.object(Logger, "exception")
     def test_log_change_request_exception(self, exception_logger_mock):

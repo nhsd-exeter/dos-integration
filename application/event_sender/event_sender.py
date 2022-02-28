@@ -10,7 +10,7 @@ from boto3 import client
 from change_request import ChangeRequest
 from common.dynamodb import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
-from common.types import ChangeRequestQueueItem
+from common.types import ChangeMetadata, ChangeRequestQueueItem
 
 tracer = Tracer()
 logger = Logger()
@@ -29,12 +29,14 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
     """
     sqs = client("sqs")
     if not event["is_health_check"]:
-        odscode = event["metadata"]["ods_code"]
+        logger.info("Not a health check")
+        metadata: ChangeMetadata = event["metadata"]
+        odscode = metadata["ods_code"]
         logger.append_keys(ods_code=odscode)
-        dynamo_record_id = event["metadata"]["dynamo_record_id"]
+        dynamo_record_id = metadata["dynamo_record_id"]
         logger.append_keys(dynamo_record_id=dynamo_record_id)
-        logger.set_correlation_id(event["metadata"]["correlation_id"])
-        message_received = event["metadata"]["message_received"]
+        logger.set_correlation_id(metadata["correlation_id"])
+        message_received = metadata["message_received"]
         s, ms = divmod(message_received, 1000)
         message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
         logger.append_keys(message_received=message_received_pretty)
@@ -44,6 +46,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         )
     change_request = ChangeRequest(event["change_request"])
     if event["is_health_check"]:
+        logger.info("Health check")
         change_request = ChangeRequest({})
 
     before = time_ns() // 1000000
@@ -62,7 +65,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         dos_time = after - before
         metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
 
-    if response.ok and not event["is_health_check"]:
+    if response is not None and response.ok and not event["is_health_check"]:
         diff = after - message_received
         metrics.set_property("message", f"Recording change request latency of {diff}")
         metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
@@ -70,7 +73,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
 
     else:
-        if event["is_health_check"] and response.status_code in [400, 200, 201]:
+        if event["is_health_check"] and response is not None and response.status_code in [400, 200, 201]:
             logger.info("Circuit fixed - closing the circuit")
             put_circuit_is_open(environ["CIRCUIT"], False)
         else:
@@ -78,8 +81,19 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # as it means we will circuit break unnecessarily and this could happen repeatidly until
             # the message is DLQ'd - 5 times, if we can fix that then these message could be sent to the dlq
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
-            if response.status_code >= 500 or response.status_code == 429:
-                logger.info("Potentially recoverable breaking circuit to retry shortly")
+            if response is None:
+                message = (
+                    "Potentially recoverable, breaking circuit to retry shortly due DoS API Gateway being unavailable"
+                )
+                logger.warning(message)
+                put_circuit_is_open(environ["CIRCUIT"], True)
+                metrics.put_metric("DoSApiUnavailable", 1, "Count")
+                return {"body": dumps({"message": message})}
+            elif response.status_code >= 500 or response.status_code == 429:
+                logger.warning(
+                    "Potentially recoverable, breaking circuit to retry shortly due to DoS API Gateway "
+                    "unable to accept change request"
+                )
                 put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
                 logger.info("Permanent error sending to DLQ, Not retrying")
@@ -98,7 +112,8 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
                     },
                 )
                 sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
+
             metrics.set_property("StatusCode", response.status_code)
             metrics.set_property("message", f"DoS API failed with status code {response.status_code}")
             metrics.put_metric("DoSApiFail", 1, "Count")
-    return {"statusCode": response.status_code, "body": response.text}
+    return {"statusCode": response.status_code, "body": dumps({"message": response.text})}

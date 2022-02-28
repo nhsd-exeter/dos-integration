@@ -104,6 +104,11 @@ variable "powertools_service_name" {
   description = "The name of the aws powertools service"
 }
 
+variable "chaos_mode" {
+  description = "Should Chaos mode be enabled?"
+  default     = false
+}
+
 # ############################
 # # ROUTE53
 # ############################

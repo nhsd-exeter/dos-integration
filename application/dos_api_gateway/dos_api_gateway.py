@@ -1,4 +1,5 @@
 from json import loads, dumps
+from os import getenv
 from typing import Dict, Any
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from aws_lambda_powertools import Logger
@@ -18,18 +19,30 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     Returns:
         dict: Response to change request
     """
-    change_event = loads(event["body"])
-    correlation_id = change_event["reference"]
+    logger.info("Event Received", extra={"event": event})
+    change_request = loads(event["body"])
+    sleep(1.7)
+    if change_request == {}:
+        logger.warning("Empty change request received, likely a health check")
+        return {"statusCode": 400, "body": "Change Request is empty"}
+
+    correlation_id = change_request["reference"]
     logger.set_correlation_id(correlation_id)
+    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
+
     if "bad request" in correlation_id.lower():
-        logger.info("Bad Request  - MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
+        logger.warning("MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
         return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
 
+    if getenv("CHAOS_MODE") == "true":
+        logger.warning("CHAOS MODE ENABLED - Returning a 500 response")
+        return {"statusCode": 500, "body": "Chaos mode is enabled"}
+
     change_request_response = {"dosChanges": []}
-    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
-    counter = 1
-    for row in change_event["changes"]:
-        change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
-        counter += 1
-    sleep(1.7)
+
+    if "changes" in change_request:
+        counter = 1
+        for row in change_request["changes"]:
+            change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
+            counter += 1
     return {"statusCode": 201, "body": dumps(change_request_response)}
