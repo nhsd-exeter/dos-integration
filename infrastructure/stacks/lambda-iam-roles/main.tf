@@ -77,7 +77,8 @@ resource "aws_iam_role_policy" "event_processor_policy" {
       "Action": [
         "kms:Encrypt",
         "kms:GenerateDataKey*",
-        "kms:DescribeKey"
+        "kms:DescribeKey",
+        "kms:Decrypt"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
@@ -236,7 +237,14 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
       ],
       "Resource": ["*"]
     },
-        {
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
       "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
@@ -332,7 +340,14 @@ resource "aws_iam_role_policy" "cr_fifo_dlq_handler_policy" {
       ],
       "Resource": ["*"]
     },
-        {
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
       "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
@@ -373,6 +388,16 @@ resource "aws_iam_role_policy" "event_replay_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
     {
       "Effect": "Allow",
       "Action": [
@@ -558,7 +583,8 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
       "Action": [
         "kms:Encrypt",
         "kms:GenerateDataKey*",
-        "kms:DescribeKey"
+        "kms:DescribeKey",
+        "kms:Decrypt"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
