@@ -50,7 +50,7 @@ Feature: F002. Invalid change event handling
     Then the invalid postcode exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-  @complete @dev
+@complete @dev
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a Changed Event is valid
     When the postcode is invalid

@@ -20,3 +20,24 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then no Changed request is created
     And the Changed Event is stored in dynamo db
+
+  @complete
+  Scenario Outline: F001S004. A valid change event with changed Phone number is processed and captured by DOS
+    Given a Changed Event with changed "phone_no" is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the Changed Request with changed "phone_no" is captured by Dos
+
+  @complete
+  Scenario: F001S005. A valid change event with changed website is processed and captured by DOS
+    Given a Changed Event with changed "website" is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the Changed Request with changed "website" is captured by Dos
+
+  @complete
+  Scenario: F001S006. A valid change event with changed address is processed and captured by DOS
+    Given a Changed Event with changed "address" is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the Changed Request with changed address is captured by Dos

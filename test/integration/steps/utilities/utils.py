@@ -158,8 +158,8 @@ def get_single_service_odscode() -> str:
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
-    data = literal_eval(data)
+    data = loads(loads(response["Payload"].read().decode("utf-8")))
+    # data = literal_eval(data)
     return data
 
 
@@ -194,6 +194,20 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
         Payload=dumps(lambda_payload),
     )
     return response
+
+
+def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str):
+    """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                if search_param in dict(loads(row[0]))["new"][k]["data"]:
+                    return True
+                else:
+                    raise ValueError(f"{search_param} not found in Dos changes..")
 
 
 def generate_correlation_id(suffix=None) -> str:

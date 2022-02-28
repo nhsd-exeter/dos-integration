@@ -23,6 +23,7 @@ from .utilities.utils import (
     process_payload_with_sequence,
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
+    check_received_data_in_dos,
 )
 
 scenarios(
@@ -38,6 +39,22 @@ scenarios(
 def a_change_event_is_valid():
     context = {}
     context["change_event"] = create_change_event()
+    return context
+
+
+@given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
+def a_changed_contact_event_is_valid(contact):
+    context = {}
+    context["change_event"] = create_change_event()
+    if contact == "website":
+        context["change_event"]["Contacts"][0]["ContactValue"] = "www.my-test-website.com"
+    elif contact == "phone_no":
+        context["change_event"]["Contacts"][1]["ContactValue"] = "0123 4567890"
+    elif contact == "address":
+        newaddr = randint(100, 500)
+        context["change_event"]["Address1"] = f"{newaddr} New Street"
+    else:
+        raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
     return context
 
 
@@ -121,7 +138,7 @@ def a_change_event_with_isopen_status_set_to_false():
 
 
 # # Check that the requested ODS code exists in ddb, and create an entry if not
-@given(parsers.parse("an ODS has an entry in dynamodb"), target_fixture="context")
+@given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb():
     context = {}
     context["change_event"] = create_change_event()
@@ -376,6 +393,27 @@ def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     response = get_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+
+
+@then(parsers.parse('the Changed Request with changed "{contact}" is captured by Dos'))
+def the_changed_contact_is_accepted_by_dos(context, contact):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    if contact == "phone_no":
+        cms = "cmstelephoneno"
+        changed_data = context["change_event"]["Contacts"][1]["ContactValue"]
+    elif contact == "website":
+        cms = "cmsurl"
+        changed_data = context["change_event"]["Contacts"][0]["ContactValue"]
+    else:
+        raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+    assert check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True, "ERROR"
+
+
+@then("the Changed Request with changed address is captured by Dos")
+def the_changed_address_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    changed_address = context["change_event"]["Address1"]
+    assert check_received_data_in_dos(context["correlation_id"], "postaladdress", changed_address) is True, "ERROR"
 
 
 @then("the Changed Event is not sent to Dos")
