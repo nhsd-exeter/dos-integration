@@ -45,7 +45,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "width": 12,
             "y": 0,
-            "x": 6,
+            "x": 0,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
@@ -64,7 +64,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "width": 6,
             "y": 0,
-            "x": 0,
+            "x": 12,
             "type": "metric",
             "properties": {
                 "metrics": [
@@ -206,7 +206,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "metrics": [
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
-                    [ "AWS/Lambda", "Invocations", "FunctionName", "${var.event_sender_lambda_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
 
                 ],
                 "view": "timeSeries",
