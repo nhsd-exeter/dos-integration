@@ -406,14 +406,18 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
         changed_data = context["change_event"]["Contacts"][0]["ContactValue"]
     else:
         raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
-    assert check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True, f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+    assert (
+        check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True
+    ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
 
 
 @then("the Changed Request with changed address is captured by Dos")
 def the_changed_address_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     changed_address = context["change_event"]["Address1"]
-    assert check_received_data_in_dos(context["correlation_id"], "postaladdress", changed_address) is True, f"ERROR!.. Dos not updated with address change: {changed_address}"
+    assert (
+        check_received_data_in_dos(context["correlation_id"], "postaladdress", changed_address) is True
+    ), f"ERROR!.. Dos not updated with address change: {changed_address}"
 
 
 @then("the Changed Event is not sent to Dos")
