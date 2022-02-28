@@ -22,7 +22,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the Changed Event is stored in dynamo db
 
   @complete
-  Scenario Outline: F001S004. A valid change event with changed Phone number is processed and captured by DOS
+  Scenario: F001S004. A valid change event with changed Phone number is processed and captured by DOS
     Given a Changed Event with changed "phone_no" is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
