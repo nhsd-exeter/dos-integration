@@ -150,6 +150,44 @@ def test_lambda_handler_dos_api_fail(
 @patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(MetricsLogger, "put_metric")
+@patch.object(MetricsLogger, "set_dimensions")
+@patch(f"{FILE_PATH}.client")
+def test_lambda_handler_dos_api_fail_no_dos(
+    mock_client,
+    mock_set_dimension,
+    mock_put_metric,
+    put_circuit_mock,
+    mock_time,
+    mock_change_request,
+    lambda_context,
+    mock_logger,
+):
+    # Arrange
+    mock_instance = mock_change_request.return_value
+    mock_instance.post_change_request.return_value = None
+    environ["ENV"] = "test"
+    environ["CIRCUIT"] = "testcircuit"
+    # Act
+    response = lambda_handler(EVENT, lambda_context)
+    # Assert
+    assert response["body"] == dumps(
+        {"message": "Potentially recoverable, breaking circuit to retry shortly due DoS API Gateway being unavailable"}
+    )
+    mock_client.assert_called_with("sqs")
+    mock_change_request.assert_called_once_with(CHANGE_REQUEST)
+    mock_change_request().post_change_request.assert_called_once_with()
+    mock_set_dimension.assert_called_once_with({"ENV": "test"})
+    mock_put_metric.assert_has_calls([call("DoSApiUnavailable", 1, "Count")])
+    mock_client.return_value.delete_message.assert_not_called()
+    put_circuit_mock.assert_called_once_with("testcircuit", True)
+    # Clean up
+    del environ["CIRCUIT"]
+
+
+@patch(f"{FILE_PATH}.ChangeRequest")
+@patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
+@patch(f"{FILE_PATH}.put_circuit_is_open")
+@patch.object(MetricsLogger, "put_metric")
 @patch(f"{FILE_PATH}.client")
 def test_lambda_handler_health_check(
     mock_client, mock_put_metric, put_circuit_mock, mock_time, mock_change_request, lambda_context, mock_logger
