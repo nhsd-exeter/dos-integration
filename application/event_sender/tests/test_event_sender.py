@@ -80,15 +80,16 @@ def test_lambda_handler_dos_api_success(
     # Arrange
     environ["CR_QUEUE_URL"] = "test_q"
     environ["CIRCUIT"] = "testcircuit"
+    message = "success"
     mock_instance = mock_change_request.return_value
-    mock_instance.post_change_request.return_value = MockResponse(status_code=201, text="success")
+    mock_instance.post_change_request.return_value = MockResponse(status_code=201, text=message)
     environ["ENV"] = "test"
     environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = "1"
     # Act
     response = lambda_handler(EVENT, lambda_context)
     # Assert
     assert response["statusCode"] == 201
-    assert response["body"] == "success"
+    assert response["body"] == dumps({"message": message})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_instance.post_change_request.assert_called_once_with()
@@ -133,7 +134,7 @@ def test_lambda_handler_dos_api_fail(
     response = lambda_handler(EVENT, lambda_context)
     # Assert
     assert response["statusCode"] == status_code
-    assert response["body"] == error_msg
+    assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
@@ -169,7 +170,7 @@ def test_lambda_handler_health_check(
     response = lambda_handler(HEALTH_EVENT, lambda_context)
     # Assert
     assert response["statusCode"] == status_code
-    assert response["body"] == error_msg
+    assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
     mock_instance.post_change_request.assert_called_once()
     mock_put_metric.assert_not_called()
@@ -197,12 +198,12 @@ def test_lambda_handler_non_recoverable_error(
     mock_logger,
 ):
     # Arrange
-    error_message = "My error"
+    error_msg = "My error"
     status_code = 400
     dlq_queue_name = "dlq-queue"
     incoming_queue_url = "https://sqs.us-east-1.amazonaws.com/123456789012/incoming-queue"
     mock_instance = mock_change_request.return_value
-    mock_instance.post_change_request.return_value = MockResponse(status_code=status_code, text=error_message)
+    mock_instance.post_change_request.return_value = MockResponse(status_code=status_code, text=error_msg)
 
     environ["ENV"] = "test"
     environ["CIRCUIT"] = "testcircuit"
@@ -212,7 +213,7 @@ def test_lambda_handler_non_recoverable_error(
     response = lambda_handler(EVENT, lambda_context)
     # Assert
     assert response["statusCode"] == status_code
-    assert response["body"] == error_message
+    assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
     mock_change_request().post_change_request.assert_called_once_with()
@@ -228,7 +229,7 @@ def test_lambda_handler_non_recoverable_error(
             "message_received": {"DataType": "Number", "StringValue": str(METADATA["message_received"])},
             "dynamo_record_id": {"DataType": "String", "StringValue": METADATA["dynamo_record_id"]},
             "ods_code": {"DataType": "String", "StringValue": METADATA["ods_code"]},
-            "error_msg": {"DataType": "String", "StringValue": error_message},
+            "error_msg": {"DataType": "String", "StringValue": error_msg},
             "error_msg_http_code": {"DataType": "String", "StringValue": str(status_code)},
         },
     )
