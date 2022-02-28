@@ -5,7 +5,7 @@ resource "aws_dynamodb_table" "message-history-table" {
   range_key    = "ODSCode"
 
   server_side_encryption {
-    enabled = true
+    enabled     = true
     kms_key_arn = data.aws_kms_key.signing_key.arn
   }
 
