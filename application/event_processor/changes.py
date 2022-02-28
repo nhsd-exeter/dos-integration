@@ -92,9 +92,15 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.get_specified_opening_times()
     nhs_spec_open_dates = nhs_entity.specified_opening_times
-    if not SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates):
+    compared = SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates)
+    if not compared:
         logger.debug(f"Specified opening times not equal. dos={dos_spec_open_dates} nhs={nhs_spec_open_dates}")
         changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
+    else:
+        logger.debug(
+            "Specified opening times not equal",
+            extra={"dos": dos_spec_open_dates, "nhs": nhs_spec_open_dates, "compared": compared},
+        )
 
     # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
     dos_std_open_dates = dos_service.get_standard_opening_times()
