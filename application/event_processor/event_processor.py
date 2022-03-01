@@ -120,14 +120,10 @@ class EventProcessor:
                 "CR to send",
                 extra={
                     "change_request": change_request,
-                    "correlation_id": logger.get_correlation_id(),
-                    "dynamo_record_id": record_id,
                     "entry_id": entry_id,
                     "hashed_payload": f"{len(hashed_payload)} - {hashed_payload}",
                     "message_deduplication_id": message_deduplication_id,
                     "message_group_id": message_group_id,
-                    "message_received": str(message_received),
-                    "ods_code": self.nhs_entity.odscode,
                     "sequence_number": str(sequence_number),
                 },
             )
