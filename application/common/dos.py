@@ -1,9 +1,6 @@
 from dataclasses import dataclass, field, fields
-from datetime import date, datetime
 from itertools import groupby
-
-from typing import Dict, List, Union
-
+from typing import List, Union
 
 from aws_lambda_powertools import Logger
 
@@ -156,11 +153,11 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
         is_open = True
         open_periods = []
         for row in list(db_rows):
-            if row[4] is True: # row[4] is the 'is_closed' column
+            if row[4] is True:  # row[4] is the 'is_closed' column
                 is_open = False
             else:
                 open_periods.append(OpenPeriod(row[2], row[3]))
-        
+
         specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
 
     c.close()

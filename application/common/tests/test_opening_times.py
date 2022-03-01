@@ -239,7 +239,6 @@ def test_openperiod_from_string_times():
     assert OpenPeriod.from_string_times(2.38, "03:00") is None
 
 
-
 def test_specifiedopeningtime_eq_and_hash():
     op1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     op2 = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
