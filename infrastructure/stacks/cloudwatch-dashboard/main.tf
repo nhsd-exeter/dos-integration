@@ -9,7 +9,8 @@ resource "aws_cloudwatch_query_definition" "errors" {
   ]
 
   query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message, exception_name
+fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
+| parse response_text '"detail":"*"' as dos_error
 | filter level == 'ERROR'
 | sort @timestamp
 EOF
@@ -261,7 +262,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "type": "metric",
             "x": 18,
-            "y": 0,
+            "y": 6,
             "width": 6,
             "height": 6,
             "properties": {
@@ -278,7 +279,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "type": "metric",
             "x": 18,
-            "y": 0,
+            "y": 12,
             "width": 6,
             "height": 6,
             "properties": {
