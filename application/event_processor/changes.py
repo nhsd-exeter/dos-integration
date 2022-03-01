@@ -94,7 +94,9 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
     nhs_spec_open_dates = nhs_entity.specified_opening_times
     compared = SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates)
     if not compared:
-        logger.debug("Specified opening times notequal", extra={"dos": dos_spec_open_dates, "nhs": nhs_spec_open_dates})
+        logger.debug(
+            "Specified opening times not equal", extra={"dos": dos_spec_open_dates, "nhs": nhs_spec_open_dates}
+        )
         changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
     else:
         logger.debug(
