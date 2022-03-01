@@ -48,7 +48,8 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key,dos-api-gateway-mock,dynamo-db
+		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
+		make terraform-destroy-auto-approve STACKS=dynamo-db OPTS="-refresh=false"
 	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE

@@ -22,7 +22,7 @@
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
-  - [Deployment](#deployment)
+  - [General Deployment](#general-deployment)
     - [API Key](#api-key)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
@@ -31,6 +31,9 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
+    - [Prod Deployments](#prod-deployments)
+      - [Prerequisites](#prerequisites)
+      - [Deployment](#deployment)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -261,7 +264,7 @@ A make target has been added to check that a lambda can successful access the do
 
 It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
 
-## Deployment
+## General Deployment
 
 ### API Key
 
@@ -310,6 +313,16 @@ To be able to interact with a remote environment, please make sure you have set 
 MFA to the right AWS account using the following command
 
     tx-mfa
+
+### Prod Deployments
+
+#### Prerequisites
+
+- Set up Deployment Secrets `$(PROJECT_ID)-$(PROFILE)/deployment` in prod account e.g. `uec-dos-int-live/deployment`
+
+#### Deployment
+
+-
 
 ## Architecture
 
