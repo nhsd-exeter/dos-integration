@@ -85,6 +85,60 @@ def a_change_request_is_valid():
     return context
 
 
+@given("the Changed Event has overlapping opening times", target_fixture="context")
+def change_event_with_overlapping_opening_times(context):
+    # This has the side effect of also removing Tuesday
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "12:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "11:00"
+    return context
+
+
+@given("the Changed Event has one break in opening times", target_fixture="context")
+def change_event_with_break_in_opening_times(context):
+    # This has the side effect of also removing Tuesday
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "11:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "12:00"
+    return context
+
+
+@given("the Changed Event has two breaks in opening times", target_fixture="context")
+def change_event_with_two_breaks_in_opening_times(context):
+    # This has the side effect of also removing Tuesday AND Wednesday
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "11:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "12:00"
+    context["change_event"]["OpeningTimes"][1]["ClosingTime"] = "14:00"
+    context["change_event"]["OpeningTimes"][2]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][2]["OpeningTime"] = "16:00"
+    return context
+
+
+@given("the address field contains special characters", target_fixture="context")
+def change_event_with_special_address_characters(context):
+    context["change_event"]["Address1"] = "1234! Test Street \\\"' ?@ {"
+    return context
+
+
+@given(
+    parsers.parse('the Changed Event contains a one off opening date thats "{open_closed}"'), target_fixture="context"
+)
+def one_off_opening_date_set(context, open_closed: str):
+    context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = "Monday"
+    context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
+    if open_closed.lower() == "open":
+        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
+        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "17:00"
+        context["change_event"]["OpeningTimes"][0]["IsOpen"] = True
+    elif open_closed.lower() == "closed":
+        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
+        context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
 @given("a Changed Event with invalid ODSCode is provided", target_fixture="context")
 def a_change_event_with_invalid_odscode():
     change_event = create_change_event()
@@ -552,3 +606,23 @@ def sequence_id_error_logs(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. Sequence id error message not found."
+
+
+@then("an invalid opening times error is generated")
+def invalid_opening_times_error(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "INVALID_OPEN_TIMES"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
+
+
+@then("there are no opening times errors recorded")
+def no_opening_times_errors(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "INVALID_OPEN_TIMES"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs == [], "ERROR!!.. log messages showing in cloudwatch."
