@@ -47,9 +47,15 @@ def a_changed_contact_event_is_valid(contact):
     context = {}
     context["change_event"] = create_change_event()
     if contact == "website":
-        context["change_event"]["Contacts"][0]["ContactValue"] = "www.my-test-website.com"
+        if context["change_event"]["Contacts"][0]["ContactValue"] == "www.test1.com":
+            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test2.com"
+        else:
+            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test1.com"
     elif contact == "phone_no":
-        context["change_event"]["Contacts"][1]["ContactValue"] = "0123 4567890"
+        if context["change_event"]["Contacts"][1]["ContactValue"] == "0123 4567890":
+            context["change_event"]["Contacts"][1]["ContactValue"] = "0111 2223333"
+        else:
+            context["change_event"]["Contacts"][1]["ContactValue"] = "0123 4567890"
     elif contact == "address":
         newaddr = randint(100, 500)
         context["change_event"]["Address1"] = f"{newaddr} New Street"
