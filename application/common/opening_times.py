@@ -124,8 +124,8 @@ class OpenPeriod:
         return OpenPeriod(open_time, close_time)
 
 
-@dataclass(unsafe_hash=True)
 class SpecifiedOpeningTime:
+
     def __init__(self, open_periods: List[OpenPeriod], specified_date: date, is_open: bool = True):
         assert isinstance(specified_date, date)
         self.open_periods = open_periods
@@ -137,6 +137,9 @@ class SpecifiedOpeningTime:
 
     def open_periods_string(self) -> str:
         return OpenPeriod.list_string(self.open_periods)
+
+    def __hash__(self):
+        return hash((tuple(sorted(self.open_periods)), self.date, self.is_open))
 
     def __repr__(self):
         return f"<SpecifiedOpenTime: {self.date_string()} open={self.is_open} {self.open_periods_string()}>"

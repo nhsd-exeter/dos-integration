@@ -239,32 +239,35 @@ def test_openperiod_from_string_times():
     assert OpenPeriod.from_string_times(2.38, "03:00") is None
 
 
-@pytest.mark.parametrize(
-    "open_periods, date, other_open_periods,other_date, expected",
-    [
-        (
-            [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
-            date(2019, 5, 21),
-            [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
-            date(2019, 5, 23),
-            False,
-        ),
-        (
-            [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
-            date(2019, 5, 23),
-            [OpenPeriod(time(8, 0), time(12, 0)), OpenPeriod(time(13, 0), time(21, 0))],
-            date(2019, 5, 23),
-            True,
-        ),
-    ],
-)
-def test_specifiedopeningtime_eq(open_periods, date, other_open_periods, other_date, expected):
-    # Arrange
-    specified_open_period = SpecifiedOpeningTime(open_periods, date)
-    # Act
-    actual = specified_open_period.__eq__(SpecifiedOpeningTime(other_open_periods, other_date))
-    # Assert
-    assert expected == actual, f"Should return {expected} , actually: {actual}"
+def test_specifiedopeningtime_eq_and_hash():
+    op1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    op2 = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    op3 = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
+
+    d1 = date(2021, 12, 24)
+    d2 = date(2021, 12, 28)
+    d2b = date(2021, 12, 28)
+
+    sp1 = SpecifiedOpeningTime([], d1, is_open=False)
+    sp1b = SpecifiedOpeningTime([], d1, is_open=False)
+    sp2 = SpecifiedOpeningTime([op1, op2, op3], d1)
+    sp2b = SpecifiedOpeningTime([op3, op2, op1], d1)
+    sp3 = SpecifiedOpeningTime([op2, op3], d2)
+    sp3b = SpecifiedOpeningTime([op3, op2], d2b)
+
+    assert sp1 == sp1b
+    assert hash(sp1) == hash(sp1b)
+    assert sp2 == sp2b
+    assert hash(sp2) == hash(sp2b)
+    assert sp3 == sp3b
+    assert hash(sp3) == hash(sp3b)
+
+    assert sp1 != sp2
+    assert hash(sp1) != hash(sp2)
+    assert sp2 != sp3
+    assert hash(sp2) != hash(sp3)
+    assert sp1 != sp3
+    assert hash(sp1) != hash(sp3)
 
 
 @pytest.mark.parametrize(
@@ -377,12 +380,18 @@ def test_specifiedopentimes_equal_lists():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
+
     sp1 = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
     sp2 = SpecifiedOpeningTime([a, b, c], date(2021, 12, 24))
     sp2b = SpecifiedOpeningTime([a, b, c], date(2021, 12, 24))
     sp3 = SpecifiedOpeningTime([b], date(2021, 12, 24))
 
+    assert sp1 != sp2
+    assert sp1 != sp3
+    assert sp2 != sp3
     assert sp2 == sp2b
+
+    assert SpecifiedOpeningTime.equal_lists([], [])
     assert SpecifiedOpeningTime.equal_lists([sp1], [sp1])
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2], [sp1, sp2])
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp1, sp2, sp3])
@@ -390,6 +399,13 @@ def test_specifiedopentimes_equal_lists():
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2], [sp2, sp1])
     assert SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp2b, sp3, sp1])
     assert SpecifiedOpeningTime.equal_lists([sp2], [sp2b])
+
+    assert not SpecifiedOpeningTime.equal_lists([], [sp1])
+    assert not SpecifiedOpeningTime.equal_lists([sp1], [sp2])
+    assert not SpecifiedOpeningTime.equal_lists([sp1, sp1], [sp1, sp2])
+    assert not SpecifiedOpeningTime.equal_lists([sp3], [])
+    assert not SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp1, sp1, sp3])
+    assert not SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3, sp3], [sp1, sp2, sp3])
 
 
 def test_standard_opening_times_export_cr_format():

@@ -147,15 +147,21 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
         (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
         (28334, date(2019, 5, 27), time(8, 0, 0), time(20, 0, 0), False),
         (28334, date(2019, 8, 26), time(8, 0, 0), time(20, 0, 0), False),
+        (28334, date(2019, 8, 26), time(21, 0, 0), time(22, 0, 0), False),
+        (28334, date(2019, 9, 20), time(0, 0, 0), time(0, 0, 0), True),
+        (28334, date(2019, 9, 21), time(14, 30, 0), time(16, 0, 0), True),
+        (28334, date(2019, 5, 6), time(6, 0, 0), time(7, 0, 0), False),
     ]
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
     service_id = 123456
     expected_responses_set = sorted(
         [
-            "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 06-05-2019 open=True [06:00:00-07:00:00, 08:00:00-20:00:00]>",
             "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>",
-            "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>",
+            "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00, 21:00:00-22:00:00]>",
+            "<SpecifiedOpenTime: 20-09-2019 open=False []>",
+            "<SpecifiedOpenTime: 21-09-2019 open=False []>"
         ]
     )
     # Act
