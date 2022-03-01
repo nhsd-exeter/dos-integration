@@ -111,3 +111,10 @@ TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-moni
 
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_fifo_queue_name)
 DOS_TRANSACTIONS_PER_SECOND=3
+
+# Performance Pipelines
+TF_VAR_code_pipeline_branch_name := master
+TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
+TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
+TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
+TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule

@@ -325,9 +325,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "iam:*"
-        ],
+      "Action": "iam:*",
       "Resource": [
         "arn:aws:iam::${var.aws_account_id_nonprod}:role/uec-dos-int*",
         "arn:aws:iam::${var.aws_account_id_nonprod}:role/UECPU*"
