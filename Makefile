@@ -33,14 +33,12 @@ log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	make -s terraform-clean
-	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-apply-auto-approve STACKS=api-key
-	fi
+
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=lambda-security-group,lambda-iam-roles,dynamo-db
+	make terraform-apply-auto-approve STACKS=api-key,lambda-security-group,lambda-iam-roles,dynamo-db
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=api-gateway-sqs,splunk-logs,cloudwatch-dashboard
 
@@ -49,11 +47,9 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=splunk-logs,api-gateway-sqs,cloudwatch-dashboard
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
-	if [ "$(PROFILE)" == "task" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key
-	fi
+
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
-		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock,dynamo-db
+		make terraform-destroy-auto-approve STACKS=api-key,dos-api-gateway-mock,dynamo-db
 	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
