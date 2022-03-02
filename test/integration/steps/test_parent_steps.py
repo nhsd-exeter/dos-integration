@@ -126,7 +126,7 @@ def change_event_with_special_address_characters(context):
 )
 def one_off_opening_date_set(context, open_closed: str):
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
-    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = "Monday"
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = "Dec 01 2025"
     context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
     if open_closed.lower() == "open":
         context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
@@ -136,6 +136,18 @@ def one_off_opening_date_set(context, open_closed: str):
         context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
         context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
         context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
+@given('the Changed Event closes the pharmacy on a bank holiday', target_fixture="context")
+def bank_holiday_pharmacy_closed(context):
+    context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
+    nextyear = datetime.now().year+1
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec 25 {nextyear}"
+    context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
+    context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
+    context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
     return context
 
 
@@ -618,11 +630,11 @@ def invalid_opening_times_error(context):
     assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
 
 
-@then("there are no opening times errors recorded")
+@then("the opening times changes are marked as valid")
 def no_opening_times_errors(context):
     query = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter report_key like "INVALID_OPEN_TIMES"'
+        ' | filter message like "Specified opening times not equal"'
     )
     logs = get_logs(query, "processor", context["start_time"])
-    assert logs == [], "ERROR!!.. log messages showing in cloudwatch."
+    assert logs != [], "ERROR!!.. log messages showing in cloudwatch."
