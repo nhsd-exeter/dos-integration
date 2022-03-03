@@ -117,7 +117,9 @@ def change_event_with_two_breaks_in_opening_times(context):
 
 @given("the website field contains special characters", target_fixture="context")
 def change_event_with_special_address_characters(context):
-    context["change_event"]["Contacts"][0]["ContactValue"] = "https://www.rowlandspharmacy.co.uk/test?foo=bar"
+    context["change_event"]["Contacts"][0][
+        "ContactValue"
+    ] = "https:\/\/www.rowlandspharmacy.co.uk\/test?foo=bar"  # noqa: W605
     return context
 
 
@@ -649,7 +651,9 @@ def the_changed_website_is_accepted_by_dos(context):
         ' | filter message like "Attempting to send change request to DoS"'
     )
     logs = get_logs(query, "sender", context["start_time"])
-    assert "https://www.rowlandspharmacy.co.uk/test?foo=bar" in logs, "ERROR!!.. website not found in CR."
+    assert (
+        "https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo=bar"  # noqa: W605
+    ) in logs, "ERROR!!.. website not found in CR."
     successquery = (
         f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
         ' | filter message like "Successfully send change request to DoS"'
