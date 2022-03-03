@@ -115,9 +115,9 @@ def change_event_with_two_breaks_in_opening_times(context):
     return context
 
 
-@given("the address field contains special characters", target_fixture="context")
+@given("the website field contains special characters", target_fixture="context")
 def change_event_with_special_address_characters(context):
-    context["change_event"]["Address1"] = "1234! Test Street \\\"' ?@ {"
+    context["change_event"]["Contacts"][0]["ContactValue"] = "https://www.rowlandspharmacy.co.uk/test?foo=bar"
     return context
 
 
@@ -139,10 +139,10 @@ def one_off_opening_date_set(context, open_closed: str):
     return context
 
 
-@given('the Changed Event closes the pharmacy on a bank holiday', target_fixture="context")
+@given("the Changed Event closes the pharmacy on a bank holiday", target_fixture="context")
 def bank_holiday_pharmacy_closed(context):
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
-    nextyear = datetime.now().year+1
+    nextyear = datetime.now().year + 1
     context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec 25 {nextyear}"
     context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
@@ -638,3 +638,21 @@ def no_opening_times_errors(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. log messages showing in cloudwatch."
+
+
+@then("the Changed Request with special characters is accepted by DOS")
+def the_changed_website_is_accepted_by_dos(context):
+    # Ensure website is logged in Event Sender
+    query = (
+        "fields change_request_body.changes.website | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Attempting to send change request to DoS"'
+    )
+    logs = get_logs(query, "sender", context["start_time"])
+    assert "https://www.rowlandspharmacy.co.uk/test?foo=bar" in logs, "ERROR!!.. website not found in CR."
+    successquery = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Successfully send change request to DoS"'
+    )
+    logs = get_logs(successquery, "sender", context["start_time"])
+    assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."

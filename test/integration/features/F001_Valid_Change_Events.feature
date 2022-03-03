@@ -42,12 +42,12 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the processed Changed Request is sent to Dos
     And the Changed Request with changed address is captured by Dos
 
-@complete
+@complete @kit
   Scenario: F001S007. A valid change event with special characters is processed by DOS
     Given a Changed Event is valid
-    And the address field contains special characters
+    And the website field contains special characters
     When the Changed Event is sent for processing with "valid" api key
-    Then the processed Changed Request is sent to Dos
+    Then the Changed Request with special characters is accepted by DOS
     And the Changed Event is stored in dynamo db
 
 @complete
