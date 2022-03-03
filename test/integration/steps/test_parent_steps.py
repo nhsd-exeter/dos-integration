@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from time import sleep
+from time import sleep, time
 from os import getenv
 from random import randint
 
@@ -117,9 +117,12 @@ def change_event_with_two_breaks_in_opening_times(context):
 
 @given("the website field contains special characters", target_fixture="context")
 def change_event_with_special_address_characters(context):
+    uniqueval = int(time())
     context["change_event"]["Contacts"][0][
         "ContactValue"
-    ] = "https:\/\/www.rowlandspharmacy.co.uk\/test?foo=bar"  # noqa: W605
+    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"  # noqa: W605
+    #this allows us to assert the URI
+    context["uri_timestamp"] = uniqueval
     return context
 
 
@@ -128,7 +131,8 @@ def change_event_with_special_address_characters(context):
 )
 def one_off_opening_date_set(context, open_closed: str):
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
-    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = "Dec 01 2025"
+    selectedday = randint(10, 30)
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec {selectedday} 2025"
     context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
     if open_closed.lower() == "open":
         context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
@@ -644,19 +648,30 @@ def no_opening_times_errors(context):
 
 @then("the Changed Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context):
-    # Ensure website is logged in Event Sender
-    query = (
-        "fields change_request_body.changes.website | sort @timestamp asc"
-        f' | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Attempting to send change request to DoS"'
-    )
-    logs = get_logs(query, "sender", context["start_time"])
-    assert (
-        "https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo=bar"  # noqa: W605
-    ) in logs, "ERROR!!.. website not found in CR."
-    successquery = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Successfully send change request to DoS"'
-    )
-    logs = get_logs(successquery, "sender", context["start_time"])
-    assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
+    #the test env uses a 'prod-like' DOS endpoint which rejects these
+    current_env = getenv("ENVIRONMENT")
+    if "test" in current_env:
+        query = (
+            "fields response_status_code | sort @timestamp asc"
+            f' | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Failed to send change request to DoS"'
+        )
+        logs = get_logs(query, "sender", context["start_time"])
+        assert "400" in logs, "ERROR!!.. 400 response not received from DOS"
+    else:
+        #the mock DOS currently accepts the invalid characters
+        uri_timestamp = context["uri_timestamp"]
+        complete_uri = f"https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo={uri_timestamp}" # noqa: W605
+        query = (
+            "fields change_request_body.changes.website | sort @timestamp asc"
+            f' | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Attempting to send change request to DoS"'
+        )
+        logs = get_logs(query, "sender", context["start_time"])
+        assert complete_uri in logs, "ERROR!!.. website not found in CR."
+        successquery = (
+            f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Successfully send change request to DoS"'
+        )
+        logs = get_logs(successquery, "sender", context["start_time"])
+        assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
