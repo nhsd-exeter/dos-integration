@@ -120,8 +120,8 @@ def change_event_with_special_address_characters(context):
     uniqueval = int(time())
     context["change_event"]["Contacts"][0][
         "ContactValue"
-    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"  # noqa: W605
-    #this allows us to assert the URI
+    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"  #noqa: W605
+#   this allows us to assert the URI
     context["uri_timestamp"] = uniqueval
     return context
 
@@ -648,7 +648,7 @@ def no_opening_times_errors(context):
 
 @then("the Changed Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context):
-    #the test env uses a 'prod-like' DOS endpoint which rejects these
+#   the test env uses a 'prod-like' DOS endpoint which rejects these
     current_env = getenv("ENVIRONMENT")
     if "test" in current_env:
         query = (
@@ -659,9 +659,9 @@ def the_changed_website_is_accepted_by_dos(context):
         logs = get_logs(query, "sender", context["start_time"])
         assert "400" in logs, "ERROR!!.. 400 response not received from DOS"
     else:
-        #the mock DOS currently accepts the invalid characters
+#       the mock DOS currently accepts the invalid characters
         uri_timestamp = context["uri_timestamp"]
-        complete_uri = f"https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo={uri_timestamp}" # noqa: W605
+        complete_uri = f"https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo={uri_timestamp}"    # noqa: W605
         query = (
             "fields change_request_body.changes.website | sort @timestamp asc"
             f' | filter correlation_id="{context["correlation_id"]}"'
