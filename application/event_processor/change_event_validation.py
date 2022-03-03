@@ -21,8 +21,8 @@ def validate_event(event: Dict[str, Any]) -> None:
     try:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
-        logger.exception(f"Input schema validation error|{str(exception)}", extra={"event": event})
-        raise ValidationException("Change Event malformed, validation failed")
+        logger.error(f"Input schema validation error|{str(exception)}", extra={"event": event})
+        raise ValidationException()
     check_org_type_id(org_type_id=event["OrganisationTypeId"])
     check_org_sub_type(org_sub_type=event["OrganisationSubType"])
     check_ods_code_length(odscode=event["ODSCode"])

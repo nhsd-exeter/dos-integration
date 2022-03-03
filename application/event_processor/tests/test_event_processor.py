@@ -506,7 +506,9 @@ def test_lambda_handler_invalid_open_times(
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
+@patch.object(Logger, "error")
 def test_lambda_handler_should_throw_exception(
+    mock_logger,
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
@@ -536,8 +538,8 @@ def test_lambda_handler_should_throw_exception(
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
-    with raises(ValidationException):
-        lambda_handler(sqs_event, lambda_context)
+    lambda_handler(sqs_event, lambda_context)
+    mock_logger.assert_called_with("Validation Error", exc_info=True, extra={'error': ValidationException()})
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
