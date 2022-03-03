@@ -161,7 +161,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
             "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>",
             "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00, 21:00:00-22:00:00]>",
             "<SpecifiedOpenTime: 20-09-2019 open=False []>",
-            "<SpecifiedOpenTime: 21-09-2019 open=False []>"
+            "<SpecifiedOpenTime: 21-09-2019 open=False []>",
         ]
     )
     # Act

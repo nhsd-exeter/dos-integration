@@ -27,8 +27,7 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.website)
     update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.phone)
     update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.org_name)
-    update_changes_with_address(changes, dos_service, nhs_entity)
-    update_changes_with_postcode(changes, dos_service, nhs_entity)
+    update_changes_with_address_and_postcode(changes, dos_service, nhs_entity)
     update_changes_with_opening_times(changes, dos_service, nhs_entity)
     return changes
 
@@ -112,11 +111,18 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
         changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
 
 
-def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+
+    nhs_uk_address_string = "$".join(nhs_entity.address_lines)
+    dos_address = dos_service.address
+    is_address_same = True
+    if dos_address != nhs_uk_address_string:
+        is_address_same = False
+        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
+        changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_entity.address_lines}
 
     dos_postcode = dos_service.normal_postcode()
     nhs_postcode = nhs_entity.normal_postcode()
-
     if dos_postcode != nhs_postcode:
         logger.debug(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
 
@@ -127,4 +133,7 @@ def update_changes_with_postcode(changes: dict, dos_service: DoSService, nhs_ent
                 del changes[ADDRESS_CHANGE_KEY]
                 logger.info("Deleted address change as postcode is invalid")
         else:
+            if is_address_same:
+                changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_entity.address_lines}
+                logger.debug(f"Address is equal but Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
             changes[ADDRESS_CHANGE_KEY][POSTCODE_CHANGE_KEY] = valid_dos_postcode

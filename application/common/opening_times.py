@@ -125,7 +125,6 @@ class OpenPeriod:
 
 
 class SpecifiedOpeningTime:
-
     def __init__(self, open_periods: List[OpenPeriod], specified_date: date, is_open: bool = True):
         assert isinstance(specified_date, date)
         self.open_periods = open_periods
