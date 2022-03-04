@@ -66,7 +66,7 @@ unit-test-local:
 	pyenv local .venv
 	pip install -r application/requirements-dev.txt -r application/event_processor/requirements.txt -r application/event_replay/requirements.txt -r application/event_sender/requirements.txt -r application/fifo_dlq_handler/requirements.txt
 	cd application
-	python -m pytest --junitxml=./testresults.xml --cov=. -vv
+	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
 	make -s docker-run-tools \

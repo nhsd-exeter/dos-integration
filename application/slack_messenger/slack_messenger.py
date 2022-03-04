@@ -66,21 +66,19 @@ def send_msg_slack(message):
     url = environ["SLACK_WEBHOOK_URL"]
     channel = environ["SLACK_ALERT_CHANNEL"]
     headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
-    if url is None:
-        print("unable to send slack message, slack url not set")
-    else:
-        message["channel"] = channel
-        message["icon_emoji"] = ""
 
-        resp = post(
-            url=url,
-            headers=headers,
-            json=message,
-        )
-        logger.info(
-            "Message sent to slack",
-            extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
-        )
+    message["channel"] = channel
+    message["icon_emoji"] = ""
+
+    resp = post(
+        url=url,
+        headers=headers,
+        json=message,
+    )
+    logger.info(
+        "Message sent to slack",
+        extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
+    )
 
 
 @unhandled_exception_logging()
@@ -101,4 +99,4 @@ def lambda_handler(event: SNSEvent, context: LambdaContext) -> None:
 
     message = get_message_for_cloudwatch_event(event)
     logger.info("Sending alert to slack.", extra={"slack_message": message})
-    send_msg_slack(message=message)
+    send_msg_slack(message)
