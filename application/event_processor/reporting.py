@@ -94,6 +94,8 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "WARNING")
     metrics.set_property("message", error_msg)
+    metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.set_property("ods_code", nhs_entity.odscode)
     metrics.set_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("InvalidPostcode", 1, "Count")
     metrics.set_property("level", "INFO")
