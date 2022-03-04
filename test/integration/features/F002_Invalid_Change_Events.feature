@@ -112,7 +112,7 @@ Feature: F002. Invalid change event handling
     Then the attributes for invalid opening times report is identified in the logs
     And the Changed Event is stored in dynamo db
 
-@complete
+@complete @dev
   Scenario: F002S015. Pharmacy with overlapping opening times
     Given a Changed Event is valid
     And the Changed Event has overlapping opening times
