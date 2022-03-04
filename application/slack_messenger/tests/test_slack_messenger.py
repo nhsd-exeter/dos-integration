@@ -164,8 +164,8 @@ def test_get_messsage_from_event():
         "blocks": [
             {
                 "text": {
-                    "text": ":rotating_light:  *<https://console.aws.amazon.com/cloudwatch/home?" \
-                        "region=eu-west-2#alarm:alarmFilter=ANY;name=Matthew%20Test|Matthew Test>*",
+                    "text": ":rotating_light:  *<https://console.aws.amazon.com/cloudwatch/home?"
+                    "region=eu-west-2#alarm:alarmFilter=ANY;name=Matthew%20Test|Matthew Test>*",
                     "type": "mrkdwn",
                 },
                 "type": "section",
