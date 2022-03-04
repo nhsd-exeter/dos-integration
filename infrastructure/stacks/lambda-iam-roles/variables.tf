@@ -75,6 +75,10 @@ variable "cr_fifo_dlq_handler_role_name" {
   description = "Role name for cr_fifo dlq handler lambda"
 }
 
+variable "slack_messenger_role_name" {
+  description = "Role name for cr_fifo dlq handler lambda"
+}
+
 variable "event_replay_role_name" {
   description = "Role name for event replay lambda"
 }

@@ -15,6 +15,7 @@ build: # Build lambdas
 		fifo-dlq-handler-build \
 		cr-fifo-dlq-handler-build \
 		orchestrator-build \
+		slack-messenger-build \
 		event-replay-build \
 		authoriser-build \
 		dos-api-gateway-build \
@@ -82,6 +83,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
+		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -98,6 +100,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
+		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
@@ -177,6 +180,8 @@ clean: # Runs whole project clean
 		event-sender-clean \
 		event-processor-clean \
 		fifo-dlq-handler-clean \
+		slack-messenger-clean \
+		orchestrator-clean \
 		cr-fifo-dlq-handler-clean \
 		event-replay-clean \
 		test-db-checker-handler-clean \
@@ -221,6 +226,29 @@ event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_sender
+
+
+# ==============================================================================
+# Slack Messenger
+
+slack-messenger-build: ### Build event sender lambda docker image
+	make common-code-copy LAMBDA_DIR=slack_messenger
+	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/slack-messenger/assets/requirements.txt
+	cd $(APPLICATION_DIR)/slack_messenger
+	tar -czf $(DOCKER_DIR)/slack-messenger/assets/slack-messenger-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=slack-messenger AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make slack-messenger-clean
+	export VERSION=$$(make docker-image-get-version NAME=slack-messenger)
+
+slack-messenger-clean: ### Clean event sender lambda docker image directory
+	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.txt
+	make common-code-remove LAMBDA_DIR=slack_messenger
+
 
 # ==============================================================================
 # Event Processor
@@ -508,6 +536,8 @@ tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-messenger.txt
+	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-orchestrator.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-cr-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
