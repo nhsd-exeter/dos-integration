@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from time import sleep
+from time import sleep, time
 from os import getenv
 from random import randint
 
@@ -82,6 +82,74 @@ def a_change_event_is_valid_and_matches_dos():
 def a_change_request_is_valid():
     context = {}
     context["change_request"] = change_request()
+    return context
+
+
+@given("the Changed Event has overlapping opening times", target_fixture="context")
+def change_event_with_overlapping_opening_times(context):
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "12:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "11:00"
+    return context
+
+
+@given("the Changed Event has one break in opening times", target_fixture="context")
+def change_event_with_break_in_opening_times(context):
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "11:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "12:00"
+    return context
+
+
+@given("the Changed Event has two breaks in opening times", target_fixture="context")
+def change_event_with_two_breaks_in_opening_times(context):
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "11:00"
+    context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "12:00"
+    context["change_event"]["OpeningTimes"][1]["ClosingTime"] = "14:00"
+    context["change_event"]["OpeningTimes"][2]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][2]["OpeningTime"] = "16:00"
+    return context
+
+
+@given("the website field contains special characters", target_fixture="context")
+def change_event_with_special_address_characters(context):
+    uniqueval = int(time())
+    context["change_event"]["Contacts"][0][
+        "ContactValue"
+    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"   # noqa: W605
+    context["uri_timestamp"] = uniqueval
+    return context
+
+
+@given(
+    parsers.parse('the Changed Event contains a one off opening date thats "{open_closed}"'), target_fixture="context"
+)
+def one_off_opening_date_set(context, open_closed: str):
+    context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
+    selectedday = randint(10, 30)
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec {selectedday} 2025"
+    context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
+    if open_closed.lower() == "open":
+        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
+        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "17:00"
+        context["change_event"]["OpeningTimes"][0]["IsOpen"] = True
+    elif open_closed.lower() == "closed":
+        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
+        context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
+@given("the Changed Event closes the pharmacy on a bank holiday", target_fixture="context")
+def bank_holiday_pharmacy_closed(context):
+    context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
+    nextyear = datetime.now().year + 1
+    context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec 25 {nextyear}"
+    context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
+    context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
+    context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
     return context
 
 
@@ -552,3 +620,54 @@ def sequence_id_error_logs(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert logs != [], "ERROR!!.. Sequence id error message not found."
+
+
+@then("an invalid opening times error is generated")
+def invalid_opening_times_error(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "INVALID_OPEN_TIMES"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
+
+
+@then("the opening times changes are marked as valid")
+def no_opening_times_errors(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Specified opening times not equal"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. log messages showing in cloudwatch."
+
+
+@then("the Changed Request with special characters is accepted by DOS")
+def the_changed_website_is_accepted_by_dos(context):
+    #   the test env uses a 'prod-like' DOS endpoint which rejects these
+    current_env = getenv("ENVIRONMENT")
+    if "test" in current_env:
+        query = (
+            "fields response_status_code | sort @timestamp asc"
+            f' | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Failed to send change request to DoS"'
+        )
+        logs = get_logs(query, "sender", context["start_time"])
+        assert "400" in logs, "ERROR!!.. 400 response not received from DOS"
+    else:
+        #       the mock DOS currently accepts the invalid characters
+        uri_timestamp = context["uri_timestamp"]
+        complete_uri = f"https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo={uri_timestamp}"  # noqa: W605
+        query = (
+            "fields change_request_body.changes.website | sort @timestamp asc"
+            f' | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Attempting to send change request to DoS"'
+        )
+        logs = get_logs(query, "sender", context["start_time"])
+        assert complete_uri in logs, "ERROR!!.. website not found in CR."
+        successquery = (
+            f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+            ' | filter message like "Successfully send change request to DoS"'
+        )
+        logs = get_logs(successquery, "sender", context["start_time"])
+        assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
