@@ -3,6 +3,9 @@ from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
+from event_processor.change_event_exceptions import ValidationException
+
+
 logger = Logger(child=True)
 
 
@@ -11,6 +14,9 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
     try:
         response = handler(event, context)
         return response
+    except ValidationException as err:
+        logger.exception("Validation Error", extra={"error": err, "event": event})
+        return
     except BaseException as err:
         logger.exception("Something went wrong", extra={"error": err, "event": event})
         raise
