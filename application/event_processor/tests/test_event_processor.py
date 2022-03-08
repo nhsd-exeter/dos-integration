@@ -3,10 +3,9 @@ from json import dumps
 from os import environ
 import hashlib
 from random import choices
-from change_event_exceptions import ValidationException
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import logging
 
 from pytest import fixture, raises
@@ -540,7 +539,6 @@ def test_lambda_handler_should_throw_exception(
     with caplog.at_level(logging.ERROR):
         lambda_handler(sqs_event, lambda_context)
     assert "Validation Error" in caplog.text
-
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
