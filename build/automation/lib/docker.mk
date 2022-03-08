@@ -157,6 +157,15 @@ docker-push: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
 	fi
 	docker push $$reg/$(NAME):latest 2> /dev/null ||:
 
+docker-push-for-production: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
+	make docker-login
+	reg=$$(make _docker-get-reg)
+	if [ -n "$(or $(VERSION), $(TAG))" ]; then
+		docker push $$reg/$(NAME):$(or $(VERSION), $(TAG))
+	else
+		docker push $$reg/$(NAME):$$(make docker-image-get-version)
+	fi
+
 docker-pull: ### Pull Docker image - mandatory: NAME,DIGEST|VERSION|TAG
 	[ $$(make _docker-is-lib-image) == false ] && make docker-login
 	reg=$$(make _docker-get-reg)
@@ -843,7 +852,7 @@ docker-image-find-and-version-as: ### Find image based on git commit hash and ta
 	digest=$$(make docker-image-get-digest NAME=$(NAME) TAG=$$hash)
 	make docker-pull NAME=$(NAME) DIGEST=$$digest
 	make docker-tag NAME=$(NAME) DIGEST=$$digest TAG=$(or $(VERSION), $(TAG))
-	make docker-push NAME=$(NAME) TAG=$(or $(VERSION), $(TAG))
+	make docker-push-for-production NAME=$(NAME) TAG=$(or $(VERSION), $(TAG))
 
 docker-repo-list-tags: ### List repository tags - mandatory: REPO=[repository name]
 	(

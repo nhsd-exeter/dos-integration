@@ -32,6 +32,7 @@ TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
+ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)

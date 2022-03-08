@@ -412,12 +412,6 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s push-images VERSION=$(BUILD_TAG)
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
 
-# ==============================================================================
-# Serverless
-
-push-tester-image:
-	make docker-push NAME=tester
-
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
@@ -426,6 +420,30 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
 	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+
+push-tester-image:
+	make docker-push NAME=tester
+
+tag-images-for-production: # Matches artefacts with Git Tag and triggers production pipeline - Mandatory: PROFILE=[demo|live], COMMIT=[git commit to progress], ARTEFACTS=[comma separated list of images]
+	tag=$(BUILD_TIMESTAMP)-$(PROFILE)
+	for image in $$(echo $(or $(ARTEFACTS), $(ARTEFACT)) | tr "," "\n"); do
+		make docker-image-find-and-version-as \
+			TAG=$$tag \
+			NAME=$$image \
+			COMMIT=$(COMMIT)
+	done
+
+tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
+		make tag-images-for-production COMMIT=$(COMMIT)
+		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
+	else
+		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
+		echo Recommended: you run this command from the master branch
+	fi
+
+# ==============================================================================
+# Serverless
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
@@ -444,9 +462,32 @@ plan-development-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=development-pipeline
-	fi
-	if [ "$(PROFILE)" != "dev" ]; then
+	else
 		echo "Only dev profile supported at present"
+	fi
+
+deploy-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-apply-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
+	fi
+
+undeploy-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-destroy-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
+	fi
+
+plan-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-plan STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
 	fi
 
 deploy-performance-pipelines:
@@ -459,8 +500,7 @@ plan-performance-pipelines:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=performance-pipelines
-	fi
-	if [ "$(PROFILE)" != "dev" ]; then
+	else
 		echo "Only dev profile supported at present"
 	fi
 
