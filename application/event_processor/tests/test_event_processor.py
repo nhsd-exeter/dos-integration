@@ -6,8 +6,8 @@ from random import choices
 from change_event_exceptions import ValidationException
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import patch
-
+from unittest.mock import MagicMock, patch
+import logging
 
 from pytest import fixture, raises
 
@@ -506,9 +506,7 @@ def test_lambda_handler_invalid_open_times(
 @patch(f"{FILE_PATH}.EventProcessor")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
-@patch.object(Logger, "error")
 def test_lambda_handler_should_throw_exception(
-    mock_logger,
     mock_extract_body,
     mock_nhs_entity,
     mock_event_processor,
@@ -516,6 +514,7 @@ def test_lambda_handler_should_throw_exception(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
     lambda_context,
+    caplog
 ):
     # Arrange
     service = dummy_dos_service()
@@ -538,8 +537,10 @@ def test_lambda_handler_should_throw_exception(
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
     # Act
-    lambda_handler(sqs_event, lambda_context)
-    mock_logger.assert_called_with("Validation Error", exc_info=True, extra={'error': ValidationException()})
+    with caplog.at_level(logging.ERROR):
+        lambda_handler(sqs_event, lambda_context)
+    assert "Validation Error" in caplog.text
+
     # Clean up
     for env in EXPECTED_ENVIRONMENT_VARIABLES:
         del environ[env]
