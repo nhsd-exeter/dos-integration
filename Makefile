@@ -435,7 +435,6 @@ tag-images-for-production: # Matches artefacts with Git Tag and triggers product
 
 tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		make tag-images-for-production COMMIT=$(COMMIT)
 		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
 	else
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
