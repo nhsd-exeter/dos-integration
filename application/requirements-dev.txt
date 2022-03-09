@@ -15,3 +15,5 @@ pytest-xdist
 requests
 responses
 testfixtures
+Dumper
+Faker

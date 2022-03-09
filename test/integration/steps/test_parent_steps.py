@@ -3,6 +3,7 @@ from decimal import Decimal
 from time import sleep, time
 from os import getenv
 from random import randint
+from faker import Faker
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -24,6 +25,9 @@ from .utilities.utils import (
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
     check_received_data_in_dos,
+    check_received_opening_times_time_in_dos,
+    check_received_opening_times_date_in_dos,
+    time_to_sec,
 )
 
 scenarios(
@@ -32,7 +36,9 @@ scenarios(
     "../features/F003_DoS_Security.feature",
     "../features/F004_Error_Handling.feature",
     "../features/F005_Support_Functions.feature",
+    "../features/F006_Opening_times.feature",
 )
+faker = Faker('en_GB')
 
 
 @given("a Changed Event is valid", target_fixture="context")
@@ -44,21 +50,15 @@ def a_change_event_is_valid():
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact):
+    global faker
     context = {}
     context["change_event"] = create_change_event()
     if contact == "website":
-        if context["change_event"]["Contacts"][0]["ContactValue"] == "www.test1.com":
-            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test2.com"
-        else:
-            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test1.com"
+        context["change_event"]["Contacts"][0]["ContactValue"] = faker.domain_word()+'.nhs.uk'
     elif contact == "phone_no":
-        if context["change_event"]["Contacts"][1]["ContactValue"] == "0123 4567890":
-            context["change_event"]["Contacts"][1]["ContactValue"] = "0111 2223333"
-        else:
-            context["change_event"]["Contacts"][1]["ContactValue"] = "0123 4567890"
+        context["change_event"]["Contacts"][1]["ContactValue"] = faker.cellphone_number()
     elif contact == "address":
-        newaddr = randint(100, 500)
-        context["change_event"]["Address1"] = f"{newaddr} New Street"
+        context["change_event"]["Address1"] = faker.street_name()
     else:
         raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
     return context
@@ -70,6 +70,26 @@ def a_specific_change_event_is_valid():
     context["change_event"] = set_opening_times_change_event()
     return context
 
+@given("a specified opening time Changed Event is valid", target_fixture="context")
+def a_specified_opening_time_change_event_is_valid():
+    closing_time = datetime.datetime.now().time().strftime("%H:%M")
+    context = {}
+    context["change_event"] = set_opening_times_change_event()
+    context["change_event"]["OpeningTimes"][-1]["OpeningTime"] = "00:01"
+    context["change_event"]["OpeningTimes"][-1]["ClosingTime"] = closing_time
+    context["change_event"]["OpeningTimes"][-1]["IsOpen"] = True
+    return context
+
+@given("a standard opening time Changed Event is valid", target_fixture="context")
+def a_standard_opening_time_change_event_is_valid():
+    closing_time = datetime.datetime.now().time().strftime("%H:%M")
+    context = {}
+    context["change_event"] = set_opening_times_change_event()
+    context["change_event"]["OpeningTimes"][-2]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
+    context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
+    context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+    return context
 
 @given("a Changed Event is aligned with Dos", target_fixture="context")
 def a_change_event_is_valid_and_matches_dos():
@@ -483,6 +503,35 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
     assert (
         check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+
+
+@then(parsers.parse('the Changed Request with changed specified date and time is captured by Dos'))
+def the_changed_opening_time_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    open_time = time_to_sec(context["change_event"]["OpeningTimes"][-1]["OpeningTime"])
+    closing_time = time_to_sec(context["change_event"]["OpeningTimes"][-1]["ClosingTime"])
+    changed_time = f'{open_time}-{closing_time}'
+    changed_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
+    cms = "cmsopentimespecified"
+    assert (
+        check_received_opening_times_date_in_dos(context["correlation_id"], cms, changed_date) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_date}"
+    assert (
+        check_received_opening_times_time_in_dos(context["correlation_id"], cms, changed_time) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_time}"
+    return context
+
+
+@then(parsers.parse('the Changed Request with changed standard day time is captured by Dos'))
+def the_changed_opening_time_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    open_time = time_to_sec(context["change_event"]["OpeningTimes"][-2]["OpeningTime"])
+    closing_time = time_to_sec(context["change_event"]["OpeningTimes"][-2]["ClosingTime"])
+    changed_time = f'{open_time}-{closing_time}'
+    cms = "cmsopentimemonday"
+    assert (
+        check_received_opening_times_time_in_dos(context["correlation_id"], cms, changed_time) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_time}"
 
 
 @then("the Changed Request with changed address is captured by Dos")

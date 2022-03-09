@@ -5,6 +5,7 @@ from json import dumps, loads
 from os import getenv
 from random import choice
 from time import time_ns
+from datetime import datetime
 from typing import Any, Dict
 
 import requests
@@ -208,6 +209,41 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
                     return True
                 else:
                     raise ValueError(f"{search_param} not found in Dos changes..")
+
+
+def check_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
+    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                date_in_dos = " ".join(dict(loads(row[0]))["new"][k]["data"]["add"])[:10]
+                # Convert and format 'search_param' to datetime type
+                date_in_payload = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
+                if date_in_dos == date_in_payload:
+                    return True
+                else:
+                    raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
+
+def check_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
+    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                time_in_dos = " ".join(dict(loads(row[0]))["new"][k]["data"]["add"])[11:]
+                if time_in_dos == search_param:
+                    return True
+                else:
+                    raise ValueError(f'Specified date time change not found in Dos changes..')
+
+def time_to_sec(t):
+    h, m = map(int, t.split(':'))
+    return (h * 3600) + (m * 60)
 
 
 def generate_correlation_id(suffix=None) -> str:
