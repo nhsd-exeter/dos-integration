@@ -32,7 +32,7 @@ TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
-
+DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor
