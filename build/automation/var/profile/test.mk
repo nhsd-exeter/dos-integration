@@ -8,7 +8,6 @@ LOG_LEVEL:= DEBUG
 DOS_API_GATEWAY_SECRETS = core-dos-dev/deployment
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
-DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 DOS_API_GATEWAY_URL :=  https://core-dos-regressiondi-ddc-core-dos-api-gateway.k8s-nonprod.texasplatform.uk/api/change-request
 
 DB_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
