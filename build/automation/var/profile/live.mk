@@ -5,6 +5,8 @@ DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
 DOS_API_GATEWAY_URL := https://api-gateway.directoryofservices.nhs.uk/api/change-request
 
+MOCK_MODE := false
+
 
 
 DB_SERVER_NAME := uec-core-dos-live-db-12-replica-di
