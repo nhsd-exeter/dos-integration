@@ -19,7 +19,7 @@ DB_NAME := pathwaysdos_ut
 DB_SCHEMA := pathwaysdos
 DB_SECRET_NAME := core-dos-uet-database-upgrade/deployment
 DB_SECRET_KEY := DB_DI_READONLY_PASSWORD
-DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
+DB_USER_NAME_SECRET_NAME = uec-dos-int-$(PROFILE)/deployment
 DB_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-put-ip-addresses-allowlist
