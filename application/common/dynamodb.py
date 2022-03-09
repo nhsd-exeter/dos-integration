@@ -10,6 +10,7 @@ from aws_lambda_powertools.logging.logger import Logger
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 logger = Logger(child=True)
+dynamodb = boto3.client("dynamodb")
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -29,20 +30,18 @@ def put_circuit_is_open(circuit: str, is_open: bool) -> None:
     Returns:
         None
     """
-    dynamo_record = {
-        "Id": circuit,
-        "ODSCode": "CIRCUIT",
-        "IsOpen": is_open,
-    }
     try:
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        dynamo_record = {
+            "Id": circuit,
+            "ODSCode": "CIRCUIT",
+            "IsOpen": is_open,
+        }
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Put circuit status", extra={"response": response, "item": put_item})
     except Exception as err:
-        logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
-        raise
+        raise Exception("Unable to insert a record into dynamodb.") from err 
 
 
 def get_circuit_is_open(circuit: str) -> Union[bool, None]:
@@ -53,7 +52,6 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         Union[bool, None]: returns the status or None if the circuit does not exist
     """
     try:
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
         respone = dynamodb.get_item(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             Key={
@@ -71,8 +69,7 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         else:
             return int(item["IsOpen"]["BOOL"])
     except Exception as err:
-        logger.exception(f"Unable to get circuit status for {circuit} .Error: {err}")
-        raise
+        raise Exception(f"Unable to get circuit status for {circuit}", str(err)) from err
 
 
 def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
@@ -84,25 +81,24 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
     Returns:
         dict: returns response from dynamodb
     """
-    record_id = dict_hash(change_event, sequence_number)
-    dynamo_record = {
-        "Id": record_id,
-        "ODSCode": change_event["ODSCode"],
-        "TTL": int(time()) + TTL,
-        "EventReceived": event_received_time,
-        "SequenceNumber": sequence_number,
-        "Event": loads(dumps(change_event), parse_float=Decimal),
-    }
     try:
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+        record_id = dict_hash(change_event, sequence_number)
+        dynamo_record = {
+            "Id": record_id,
+            "ODSCode": change_event["ODSCode"],
+            "TTL": int(time()) + TTL,
+            "EventReceived": event_received_time,
+            "SequenceNumber": sequence_number,
+            "Event": loads(dumps(change_event), parse_float=Decimal),
+        }
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Added record to dynamodb", extra={"response": response, "item": put_item})
+        return record_id
     except Exception as err:
-        logger.exception(f"Unable to insert a record into dynamodb.Error: {err}")
-        raise
-    return record_id
+        raise Exception(f"Unable to insert a record into dynamodb") from err
+
 
 
 def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> int:
@@ -113,7 +109,6 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         int: Sequence number of the message or None if not present
     """
     try:
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
         resp = dynamodb.query(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             IndexName="gsi_ods_sequence",
@@ -128,7 +123,6 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         sequence_number = 0
         if resp.get("Count") > 0:
             sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
+        return sequence_number
     except Exception as err:
-        logger.exception(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode} .Error: {err}")
-        raise
-    return sequence_number
+        raise Exception(f"Unable to get sequence id from dynamodb for a given ODSCode {odscode}") from err
