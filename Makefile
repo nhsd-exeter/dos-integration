@@ -369,7 +369,7 @@ authoriser-build: ### Build authoriser lambda docker image
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=authoriser
 	make authoriser-clean
-	export VERSION=$$(make docker-image-get-version NAME=fifo-dlq-handler)
+	export VERSION=$$(make docker-image-get-version NAME=authoriser)
 
 authoriser-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
@@ -387,6 +387,7 @@ dos-api-gateway-build:
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=dos-api-gateway
 	make dos-api-gateway-clean
+	export VERSION=$$(make docker-image-get-version NAME=dos-api-gateway)
 
 dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
