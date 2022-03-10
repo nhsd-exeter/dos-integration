@@ -17,7 +17,7 @@ def test_unhandled_exception_logging(caplog):
         raise Exception("dummy exception message")
 
     with caplog.at_level(logging.ERROR):
-    
+
         with raises(ClientError):
             client_error_func(None, None)
         assert "Boto3 Client Error - 'dummy_error': dummy_message" in caplog.text
@@ -25,4 +25,3 @@ def test_unhandled_exception_logging(caplog):
         with raises(Exception):
             regular_error_func(None, None)
         assert "dummy exception message" in caplog.text
-    

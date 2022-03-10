@@ -2,7 +2,6 @@ from json import dumps
 from pytest import raises
 
 import boto3
-from botocore.exceptions import ClientError
 from moto import mock_secretsmanager
 
 FILE_PATH = "application.common.aws"
