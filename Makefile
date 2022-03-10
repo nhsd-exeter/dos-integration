@@ -17,6 +17,8 @@ build: # Build lambdas
 		cr-fifo-dlq-handler-build \
 		orchestrator-build \
 		event-replay-build \
+		authoriser-build \
+		dos-api-gateway-build \
 		test-db-checker-handler-build
 
 start: # Stop project
@@ -416,6 +418,8 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=event-replay
 	make docker-push NAME=test-db-checker-handler
 	make docker-push NAME=orchestrator
+	make docker-push NAME=authoriser
+	make docker-push NAME=dos-api-gateway
 
 push-tester-image:
 	make docker-push NAME=tester
