@@ -5,12 +5,13 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.dos import DoSService, VALID_STATUS_ID
+from common.constants import (
+    HIDDEN_OR_CLOSED_REPORT_ID,
+    INVALID_OPEN_TIMES_REPORT_ID,
+    INVALID_POSTCODE_REPORT_ID,
+    UN_MATCHED_PHARMACY_REPORT_ID,
+)
 from nhs import NHSEntity
-
-HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"
-UN_MATCHED_PHARMACY_REPORT_ID = "UN_MATCHED_PHARMACY"
-INVALID_POSTCODE_REPORT_ID = "INVALID_POSTCODE"
-INVALID_OPEN_TIMES_REPORT_ID = "INVALID_OPEN_TIMES"
 
 
 logger = Logger(child=True)

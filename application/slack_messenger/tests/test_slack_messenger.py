@@ -10,7 +10,7 @@ from application.slack_messenger.slack_messenger import (
     get_message_for_cloudwatch_event,
     generate_cloudwatch_url,
 )
-from event_processor.reporting import INVALID_POSTCODE_REPORT_ID
+from common.constants import INVALID_POSTCODE_REPORT_ID
 from unittest.mock import patch
 
 FILE_PATH = "application.slack_messenger.slack_messenger"

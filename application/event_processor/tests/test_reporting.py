@@ -3,6 +3,8 @@ import json
 
 from aws_lambda_powertools import Logger
 from common.dos import VALID_STATUS_ID
+from common.constants import HIDDEN_OR_CLOSED_REPORT_ID, UN_MATCHED_PHARMACY_REPORT_ID, INVALID_POSTCODE_REPORT_ID
+
 from ..nhs import NHSEntity
 from ..reporting import (
     INVALID_OPEN_TIMES_REPORT_ID,
@@ -10,9 +12,6 @@ from ..reporting import (
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
-    HIDDEN_OR_CLOSED_REPORT_ID,
-    UN_MATCHED_PHARMACY_REPORT_ID,
-    INVALID_POSTCODE_REPORT_ID,
 )
 from .conftest import dummy_dos_service
 

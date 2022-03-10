@@ -7,7 +7,7 @@ from datetime import datetime
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SNSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from event_processor.reporting import INVALID_POSTCODE_REPORT_ID, INVALID_OPEN_TIMES_REPORT_ID
+from common.constants import INVALID_POSTCODE_REPORT_ID, INVALID_OPEN_TIMES_REPORT_ID
 from common.middlewares import unhandled_exception_logging
 
 logger = Logger()
