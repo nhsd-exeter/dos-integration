@@ -1,9 +1,9 @@
 from json import loads
 from typing import Dict
-from aiohttp import ClientError
 
 from aws_lambda_powertools import Logger
 from boto3 import client
+from botocore.exceptions import ClientError
 
 logger = Logger()
 
