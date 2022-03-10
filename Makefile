@@ -16,6 +16,8 @@ build: # Build lambdas
 		cr-fifo-dlq-handler-build \
 		orchestrator-build \
 		slack-messenger-build \
+		authoriser-build \
+		dos-api-gateway-build \
 		event-replay-build \
 		authoriser-build \
 		dos-api-gateway-build \
@@ -241,7 +243,7 @@ slack-messenger-build: ### Build event sender lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=slack-messenger AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=slack-messenger
 	make slack-messenger-clean
 	export VERSION=$$(make docker-image-get-version NAME=slack-messenger)
 
