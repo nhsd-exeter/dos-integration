@@ -66,7 +66,7 @@ resource "aws_cloudwatch_metric_alarm" "event_processor_invalid_postcode_alert" 
   alarm_name                = "${var.project_id} | ${var.environment} | Invalid Postcode"
   comparison_operator       = "GreaterThanThreshold"
   evaluation_periods        = "3"
-  datapoints_to_alaram      = "2"
+  datapoints_to_alarm       = "2"
   threshold                 = "0"
   period                    = "120" # 2 mins
   metric_name               = "InvalidPostcode"
