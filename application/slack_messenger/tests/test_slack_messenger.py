@@ -166,7 +166,7 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
                         "title": "Trigger",
                         "value": "SUM InvalidPostcode GreaterThanThreshold 0.0 for 1 period(s)  of 300 seconds.",
                     },
-                    {"title": "Link to Logs", "value": mock_cloudwatch_url(), "short": False},
+                    {"type": "section", "text": {"type": "mrkdwn", "text": "<https://test.com|View Logs>"}},
                 ],
                 "ts": 1646393939.038,
             },

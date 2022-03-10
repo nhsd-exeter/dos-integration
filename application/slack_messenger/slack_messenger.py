@@ -1,5 +1,5 @@
 from json import loads
-from os import environ, getenv
+from os import environ
 from typing import Any, Dict
 from requests import post
 from urllib.parse import quote
@@ -23,10 +23,13 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
     alarm_name: str = message["AlarmName"]
 
     metric_name = message["Trigger"]["MetricName"]
+    namespace = str(message["Trigger"]["Namespace"]).lower()
+    filter_env = list(filter(lambda s: s["name"] == "ENV", message["Trigger"]["Dimensions"]))
+    env = filter_env[0]["value"] if len(filter_env) > 0 else ""
     new_state = message["NewStateValue"]
     alarm_description = message["AlarmDescription"]
     trigger = message["Trigger"]
-    log_groups = [f'{getenv("POWERTOOLS_SERVICE_NAME")}-event-processor']
+    log_groups = [f"{namespace}-{env}-event-processor"]
     filters = {"report_key": get_report_key(metric_name)}
     color = "warning"
 
@@ -57,9 +60,11 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                         "short": False,
                     },
                     {
-                        "title": "Link to Logs",
-                        "value": generate_cloudwatch_url(region, log_groups, filters),
-                        "short": False,
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
+                        },
                     },
                 ],
                 "ts": timestamp,
@@ -130,7 +135,7 @@ def generate_cloudwatch_url(region: str, log_groups: list, filters: dict, limit:
             res += f"{prefix}{k}{suffix}{value}"
         res += f"{S4}{S4}"
         QUERY = f"logsV2:logs-insights$3Ftab$3Dlogs$26queryDetail$3D{res}"
-        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}"
+        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}>"
 
     query = "\n".join([f'| filter {k}="{v}"' for (k, v) in filters.items()])
     fields = "fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message"
