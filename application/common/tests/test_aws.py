@@ -1,8 +1,8 @@
-from botocore.exceptions import ClientError
 from json import dumps
 from pytest import raises
 
 import boto3
+from botocore.exceptions import ClientError
 from moto import mock_secretsmanager
 
 FILE_PATH = "application.common.aws"
@@ -25,5 +25,5 @@ def test_get_secret():
 @mock_secretsmanager
 def test_get_secret_resource_not_found():
     from application.common.aws import get_secret
-    with raises(ClientError, match="ResourceNotFoundException"):
+    with raises(Exception, match="Failed getting secret 'fake_secret_name' from secrets manager"):
         get_secret("fake_secret_name")
