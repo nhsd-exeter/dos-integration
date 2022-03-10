@@ -24,7 +24,9 @@
         "AWS": [
           "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/UECPUServiceDeveloper",
           "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/UECPUServiceDeveloper",
-          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/UECPUSupportServiceDeveloper"
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/UECPUSupportServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/Developer",
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/Developer"
         ]
       },
       "Action": [

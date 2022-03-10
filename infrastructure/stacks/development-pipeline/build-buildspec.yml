@@ -51,7 +51,7 @@ phases:
     commands:
       - docker --version
       - echo "[Building docker containers]"
-      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION AWS_ACCOUNT_ID_MGMT=$AWS_ACCOUNT_ID_NONPROD
+      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
       # - make tester-build
       # - make mock-dos-db-setup
       # - make start PROFILE=pipeline-component-test
@@ -60,7 +60,7 @@ phases:
       # - make component-test PROFILE=pipeline-component-test
       - echo "[Pushing images to ECR]"
       - echo $CODEBUILD_SOURCE_VERSION
-      - make docker-push NAME=$BUILD_ITEM_NAME AWS_ACCOUNT_ID_MGMT=$AWS_ACCOUNT_ID_NONPROD
+      - make docker-push NAME=$BUILD_ITEM_NAME
 
       # - command
   # post_build:
