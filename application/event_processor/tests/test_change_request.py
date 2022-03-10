@@ -15,6 +15,7 @@ class TestChangeRequest:
             "reference": str(self.correlation_id),
             "system": "DoS Integration",
             "message": f"DoS Integration CR. correlation-id: {self.correlation_id}",
+            "replace_opening_dates_mode": True,
             "service_id": str(self.service_id),
             "changes": self.changes,
         }
@@ -26,6 +27,7 @@ class TestChangeRequest:
             "reference": change_request.reference,
             "system": change_request.system,
             "message": change_request.message,
+            "replace_opening_dates_mode": change_request.replace_opening_dates_mode,
             "service_id": str(change_request.service_id),
             "changes": change_request.changes,
         }
@@ -36,6 +38,7 @@ class TestChangeRequest:
             "reference": str(self.correlation_id),
             "system": "DoS Integration",
             "message": f"DoS Integration CR. correlation-id: {self.correlation_id}",
+            "replace_opening_dates_mode": True,
             "service_id": str(self.service_id),
             "changes": self.changes,
         }

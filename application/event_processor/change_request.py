@@ -24,6 +24,7 @@ class ChangeRequest:
         self.reference = correlation_id
         self.system = "DoS Integration"
         self.message = f"DoS Integration CR. correlation-id: {correlation_id}"
+        self.replace_opening_dates_mode = True
         self.service_id = str(service_id)
         self.changes = changes
         if self.changes is None:
@@ -39,6 +40,7 @@ class ChangeRequest:
             "reference": self.reference,
             "system": self.system,
             "message": self.message,
+            "replace_opening_dates_mode": self.replace_opening_dates_mode,
             "service_id": self.service_id,
             "changes": self.changes,
         }
