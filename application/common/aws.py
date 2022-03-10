@@ -1,5 +1,4 @@
 from json import loads
-from os import environ
 from typing import Dict
 from aiohttp import ClientError
 
@@ -9,6 +8,7 @@ from boto3 import client
 logger = Logger()
 
 secrets_manager = client(service_name="secretsmanager")
+
 
 def get_secret(secret_name: str) -> Dict[str, str]:
     """Get the secret from AWS Secrets Manager
