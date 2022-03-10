@@ -57,9 +57,11 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_prod_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
       # - command
-  # build:
-  #   commands:
-      # - command
+  build:
+    commands:
+      - echo "[Deploying]"
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE
   # post_build:
   #   commands:
   #    - command
