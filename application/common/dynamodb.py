@@ -10,7 +10,6 @@ from aws_lambda_powertools.logging.logger import Logger
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 logger = Logger(child=True)
-dynamodb = boto3.client("dynamodb")
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -31,6 +30,7 @@ def put_circuit_is_open(circuit: str, is_open: bool) -> None:
         None
     """
     try:
+        dynamodb = boto3.client("dynamodb")
         dynamo_record = {
             "Id": circuit,
             "ODSCode": "CIRCUIT",
@@ -52,6 +52,7 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         Union[bool, None]: returns the status or None if the circuit does not exist
     """
     try:
+        dynamodb = boto3.client("dynamodb")
         respone = dynamodb.get_item(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             Key={
@@ -82,6 +83,7 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         dict: returns response from dynamodb
     """
     try:
+        dynamodb = boto3.client("dynamodb")
         record_id = dict_hash(change_event, sequence_number)
         dynamo_record = {
             "Id": record_id,
@@ -109,6 +111,7 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         int: Sequence number of the message or None if not present
     """
     try:
+        dynamodb = boto3.client("dynamodb")
         resp = dynamodb.query(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             IndexName="gsi_ods_sequence",
