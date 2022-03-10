@@ -160,7 +160,7 @@ functions:
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
-      SLACK_WEBHOOK_URL: ${env:slack_webhook}
+      SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
       SLACK_ALERT_CHANNEL: ${env:slack_channel}
     events:
       - sns:

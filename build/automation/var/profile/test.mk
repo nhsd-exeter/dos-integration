@@ -20,3 +20,6 @@ DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
+SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-dev/deployment
+SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
+SLACK_ALERT_CHANNEL := dos-integration-dev-status
