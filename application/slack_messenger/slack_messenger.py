@@ -1,5 +1,5 @@
 from json import loads
-from os import environ
+from os import environ, getenv
 from typing import Any, Dict
 from requests import post
 from urllib.parse import quote
@@ -7,7 +7,7 @@ from datetime import datetime
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SNSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-
+from event_processor.reporting import INVALID_POSTCODE_REPORT_ID, INVALID_OPEN_TIMES_REPORT_ID
 from common.middlewares import unhandled_exception_logging
 
 logger = Logger()
@@ -26,6 +26,8 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
     new_state = message["NewStateValue"]
     alarm_description = message["AlarmDescription"]
     trigger = message["Trigger"]
+    log_groups = [f'{getenv("POWERTOOLS_SERVICE_NAME")}-event-processor']
+    filters = {"report_key": get_report_key(metric_name)}
     color = "warning"
 
     if message["NewStateValue"] == "ALARM":
@@ -54,12 +56,25 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                         f" of {str(trigger['Period'])} seconds.",
                         "short": False,
                     },
+                    {
+                        "title": "Link to Logs",
+                        "value": generate_cloudwatch_url(region, log_groups, filters),
+                        "short": False,
+                    },
                 ],
                 "ts": timestamp,
             }
         ],
     }
     return slack_message
+
+
+def get_report_key(metric_name):
+    if metric_name == "InvalidPostcode":
+        return INVALID_POSTCODE_REPORT_ID
+    elif metric_name == "InvalidOpenTimes":
+        return INVALID_OPEN_TIMES_REPORT_ID
+    return ""
 
 
 def send_msg_slack(message):
@@ -79,6 +94,57 @@ def send_msg_slack(message):
         "Message sent to slack",
         extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
     )
+
+
+def generate_cloudwatch_url(region: str, log_groups: list, filters: dict, limit: int = 100):
+    def escape(s):
+        for c in s:
+            if c.isalpha() or c.isdigit() or c in ["-", "."]:
+                continue
+            c_hex = "*{0:02x}".format(ord(c))
+            s = s.replace(c, c_hex)
+        return s
+
+    def generate_log_insights_url(params):
+        S1 = "$257E"
+        S2 = "$2528"
+        S3 = "$2527"
+        S4 = "$2529"
+
+        res = f"{S1}{S2}"
+        for k in params:
+            value = params[k]
+            if isinstance(value, str):
+                value = escape(value)
+            elif isinstance(value, list):
+                for i in range(len(value)):
+                    value[i] = escape(value[i])
+            prefix = S1 if list(params.items())[0][0] != k else ""
+            suffix = f"{S1}{S3}"
+            if isinstance(value, list):
+                value = "".join([f"{S1}{S3}{n}" for n in value])
+                suffix = f"{S1}{S2}"
+            elif isinstance(value, int) or isinstance(value, bool):
+                value = str(value).lower()
+                suffix = S1
+            res += f"{prefix}{k}{suffix}{value}"
+        res += f"{S4}{S4}"
+        QUERY = f"logsV2:logs-insights$3Ftab$3Dlogs$26queryDetail$3D{res}"
+        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}"
+
+    query = "\n".join([f'| filter {k}="{v}"' for (k, v) in filters.items()])
+    fields = "fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message"
+    params = {
+        "end": 0,
+        "start": -60 * 60 * 1,  # - 1hr
+        "unit": "seconds",
+        "timeType": "RELATIVE",  # "ABSOLUTE",  # OR RELATIVE and end = 0 and start is negative  seconds
+        "tz": "Local",  # OR "UTC"
+        "editorString": f"{fields}\n{query}\n| sort @timestamp desc\n| limit {limit}",
+        "isLiveTail": False,
+        "source": [f"/aws/lambda/{lg}" for lg in log_groups],
+    }
+    return generate_log_insights_url(params)
 
 
 @unhandled_exception_logging()

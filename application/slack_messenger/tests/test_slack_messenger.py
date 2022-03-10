@@ -1,9 +1,16 @@
 from dataclasses import dataclass
 from json import dumps
-from os import environ
+from os import environ, getenv
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
 from pytest import fixture, raises
-from application.slack_messenger.slack_messenger import lambda_handler, send_msg_slack, get_message_for_cloudwatch_event
+from application.slack_messenger.slack_messenger import (
+    get_report_key,
+    lambda_handler,
+    send_msg_slack,
+    get_message_for_cloudwatch_event,
+    generate_cloudwatch_url,
+)
+from event_processor.reporting import INVALID_POSTCODE_REPORT_ID
 from unittest.mock import patch
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
@@ -124,11 +131,13 @@ def test_send_message(mock_post, lambda_context):
     )
 
 
-def test_get_messsage_from_event():
+@patch(f"{FILE_PATH}.generate_cloudwatch_url")
+def test_get_messsage_from_event(mock_cloudwatch_url):
 
     # Arrange
     sns_event_dict = SNS_EVENT.copy()
     sns_event = SNSEvent(sns_event_dict)
+    mock_cloudwatch_url.return_value = "https://test.com"
     # Act
     message = get_message_for_cloudwatch_event(sns_event)
 
@@ -157,6 +166,7 @@ def test_get_messsage_from_event():
                         "title": "Trigger",
                         "value": "SUM InvalidPostcode GreaterThanThreshold 0.0 for 1 period(s)  of 300 seconds.",
                     },
+                    {"title": "Link to Logs", "value": mock_cloudwatch_url(), "short": False},
                 ],
                 "ts": 1646393939.038,
             },
@@ -172,3 +182,18 @@ def test_get_messsage_from_event():
             },
         ],
     }
+
+
+def test_generate_cloudwatch_url():
+    environ["POWERTOOLS_SERVICE_NAME"] = "test-service-name"
+    region = "eu-west-2"
+    metric_name = "InvalidPostcode"
+    report_key = get_report_key(metric_name)
+    log_groups = [f'{getenv("POWERTOOLS_SERVICE_NAME")}-event-processor']
+    filters = {"report_key": report_key}
+    expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
+    url = generate_cloudwatch_url(region, log_groups, filters, 10)
+    assert report_key == INVALID_POSTCODE_REPORT_ID
+    assert log_groups == ["test-service-name-event-processor"]
+    assert url.startswith(expected_url)
+    del environ["POWERTOOLS_SERVICE_NAME"]

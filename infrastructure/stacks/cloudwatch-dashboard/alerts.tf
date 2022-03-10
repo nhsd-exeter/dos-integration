@@ -65,13 +65,14 @@ resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dql_alert" {
 resource "aws_cloudwatch_metric_alarm" "event_processor_invalid_postcode_alert" {
   alarm_name                = "${var.project_id} | ${var.environment} | Invalid Postcode"
   comparison_operator       = "GreaterThanThreshold"
-  evaluation_periods        = "1"
+  evaluation_periods        = "3"
+  datapoints_to_alaram      = "2"
+  threshold                 = "0"
+  period                    = "120" # 2 mins
   metric_name               = "InvalidPostcode"
   namespace                 = "UEC-DOS-INT"
-  period                    = "120"
   statistic                 = "Sum"
   treat_missing_data        = "notBreaching"
-  threshold                 = "0"
   alarm_description         = "Events received from NHS UK with invalid postcodes"
   alarm_actions             = [aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
   insufficient_data_actions = []
