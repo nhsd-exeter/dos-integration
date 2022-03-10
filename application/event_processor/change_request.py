@@ -37,6 +37,7 @@ class ChangeRequest:
         """
         return {
             "reference": self.reference,
+            "replace_opening_dates_mode": True,
             "system": self.system,
             "message": self.message,
             "service_id": self.service_id,
