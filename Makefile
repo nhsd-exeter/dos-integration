@@ -360,7 +360,7 @@ orchestrator-clean: ### Clean event processor lambda docker image directory
 # ==============================================================================
 # Authoriser (for dos api gateway mock)
 
-authoriser-build-and-push: ### Build authoriser lambda docker image
+authoriser-build: ### Build authoriser lambda docker image
 	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
 	cd $(APPLICATION_DIR)/authoriser
 	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
@@ -369,7 +369,7 @@ authoriser-build-and-push: ### Build authoriser lambda docker image
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=authoriser
 	make authoriser-clean
-	make docker-push NAME=authoriser
+	export VERSION=$$(make docker-image-get-version NAME=fifo-dlq-handler)
 
 authoriser-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
@@ -378,7 +378,7 @@ authoriser-clean: ### Clean event processor lambda docker image directory
 # ==============================================================================
 # DoS API Gateway Mock lambda
 
-dos-api-gateway-build-and-push:
+dos-api-gateway-build:
 	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
 	cd $(APPLICATION_DIR)/dos_api_gateway
 	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
@@ -387,14 +387,12 @@ dos-api-gateway-build-and-push:
 	cd $(PROJECT_DIR)
 	make -s docker-image NAME=dos-api-gateway
 	make dos-api-gateway-clean
-	make docker-push NAME=dos-api-gateway
 
 dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
 mock-dos-api-gateway-deployment:
-	make authoriser-build-and-push dos-api-gateway-build-and-push VERSION=$(BUILD_TAG)
 	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
 
 # ==============================================================================
