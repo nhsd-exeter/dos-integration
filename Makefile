@@ -690,4 +690,5 @@ create-ecr-repositories:
 	make docker-create-repository NAME=cr-fifo-dlq-handler
 	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=event-replay
+	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=test-db-checker-handler
