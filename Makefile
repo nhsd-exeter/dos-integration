@@ -394,7 +394,7 @@ dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
 mock-dos-api-gateway-deployment:
-	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 
 # ==============================================================================
 # Deployments

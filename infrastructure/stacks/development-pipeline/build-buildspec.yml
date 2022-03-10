@@ -60,6 +60,9 @@ phases:
       # - make component-test PROFILE=pipeline-component-test
       - echo "[Pushing images to ECR]"
       - echo $CODEBUILD_SOURCE_VERSION
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$BUILD_ITEM_NAME
 
       # - command
