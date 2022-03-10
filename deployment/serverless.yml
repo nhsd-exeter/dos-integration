@@ -35,7 +35,7 @@ provider:
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
     BUILD_TIMESTAMP: ${env:VERSION}
-    CODE_VERSION: ${env:BUILD_COMMIT_HASH}
+    IMAGE_VERSION: ${env:VERSION}
   logs:
     restApi:
       format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
@@ -73,7 +73,7 @@ plugins:
 functions:
 
   orchestrator:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/orchestrator:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
     description: ${sls:stage} Orchestrator
@@ -96,7 +96,7 @@ functions:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
 
   event-processor:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-processor:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/event-processor:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
@@ -118,7 +118,7 @@ functions:
       CR_QUEUE_URL: ${env:cr_fifo_queue_url}
 
   fifo-dlq-handler:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-fifo-dlq-handler
     description: ${sls:stage} FIFO DLQ Handler lambda
@@ -132,7 +132,7 @@ functions:
     maximumRetryAttempts: 0
 
   event-sender:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-sender:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/event-sender:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
@@ -154,7 +154,7 @@ functions:
     maximumRetryAttempts: 0
 
   cr-fifo-dlq-handler:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-cr-fifo-dlq-handler
     description: ${sls:stage} cr-fifo DLQ Handler lambda
@@ -166,7 +166,7 @@ functions:
     maximumRetryAttempts: 0
 
   event-replay:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/event-replay:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/event-replay:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-replay
     description: ${sls:stage} Event Replay lambda
@@ -181,7 +181,7 @@ functions:
     maximumRetryAttempts: 0
 
   test-db-checker-handler:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/test-db-checker-handler:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/test-db-checker-handler:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-test-db-checker-handler
     description: ${sls:stage} Test DB Checker Handler lambda

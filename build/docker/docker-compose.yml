@@ -15,7 +15,6 @@ services:
       DB_SCHEMA: $DB_SCHEMA
       DB_USER_NAME: $DB_USER_NAME
       DB_PASSWORD: $DB_PASSWORD
-      MOCK_MODE: $MOCK_MODE
     volumes:
       - type: bind
         source: $TMP_DIR
@@ -39,8 +38,7 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: POSTGRES_PASSWORD=postgres psql -h localhost -p 5432 -d postgres -U
-        postgres -c "SELECT id from services" || exit 1
+      test: POSTGRES_PASSWORD=postgres psql -h localhost -p 5432 -d postgres -U postgres -c "SELECT id from services" || exit 1
       interval: 5s
       timeout: 10s
       retries: 100

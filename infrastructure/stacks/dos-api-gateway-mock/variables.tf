@@ -92,7 +92,7 @@ variable "image_version" {
   description = "The image version"
 }
 
-variable "aws_same_account_docker_registry" {
+variable "docker_registry" {
   description = "ECR repository for authoriser lambda"
 }
 

@@ -22,9 +22,11 @@
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACEServiceDeveloper",
-          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACEServiceDeveloper",
-          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/ROLE_PREFIX_TO_REPLACESupportServiceDeveloper"
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/UECPUServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/UECPUServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/UECPUSupportServiceDeveloper",
+          "arn:aws:iam::AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:role/Developer",
+          "arn:aws:iam::AWS_ACCOUNT_ID_PROD_TO_REPLACE:role/Developer"
         ]
       },
       "Action": [
@@ -44,12 +46,33 @@
       "Effect": "Deny",
       "NotPrincipal": {
         "AWS": [
-          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/jenkins_assume_role",
-          "arn:aws:sts::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:assumed-role/jenkins_assume_role/jenkins",
+          "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:role/UECPUPipelineRole",
           "arn:aws:iam::AWS_ACCOUNT_ID_MGMT_TO_REPLACE:root"
         ]
       },
       "Action": ["ecr:BatchDeleteImage", "ecr:DeleteRepository"]
+    },
+    {
+      "Sid": "LambdaECRImageRetrievalPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": [
+        "ecr:BatchGetImage",
+        "ecr:DeleteRepositoryPolicy",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:SetRepositoryPolicy"
+      ],
+      "Condition": {
+        "StringLike": {
+          "aws:sourceArn": [
+            "arn:aws:lambda:AWS_REGION_TO_REPLACE:AWS_ACCOUNT_ID_NONPROD_TO_REPLACE:function:*",
+            "arn:aws:lambda:AWS_REGION_TO_REPLACE:AWS_ACCOUNT_ID_PROD_TO_REPLACE:function:*"
+          ]
+        }
+      }
     }
   ]
 }

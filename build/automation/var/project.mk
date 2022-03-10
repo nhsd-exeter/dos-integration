@@ -20,7 +20,6 @@ DOCKER_REPOSITORIES =
 SSL_DOMAINS_PROD =
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
 
-AWS_SAME_ACCOUNT_DOCKER_REGISTRY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_DEFAULT_REGION).amazonaws.com/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 TF_VAR_aws_vpc_name = $(AWS_VPC_NAME)
 SERVERLESS_PYTHON_VERSION_TAG = $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
@@ -32,7 +31,10 @@ TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
+ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
+TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
+DOCKER_REGISTRY := $(DOCKER_REGISTRY)
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor

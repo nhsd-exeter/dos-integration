@@ -17,15 +17,13 @@ build: # Build lambdas
 		cr-fifo-dlq-handler-build \
 		orchestrator-build \
 		event-replay-build \
-		test-db-checker-handler-build \
-		AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-
+		test-db-checker-handler-build
 
 start: # Stop project
-	make project-start AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make project-start
 
 stop: # Stop project
-	make project-stop AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make project-stop
 
 restart: stop start # Restart project
 
@@ -33,7 +31,6 @@ log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	make -s terraform-clean
-
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make mock-dos-api-gateway-deployment
 	fi
@@ -225,7 +222,7 @@ event-sender-build: ### Build event sender lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=event-sender
 	make event-sender-clean
 	export VERSION=$$(make docker-image-get-version NAME=event-sender)
 
@@ -246,7 +243,7 @@ event-processor-build: ### Build event processor lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=event-processor
 	make event-processor-clean
 	export VERSION=$$(make docker-image-get-version NAME=event-processor)
 
@@ -267,7 +264,7 @@ fifo-dlq-handler-build: ### Build fifo dlq handler lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=fifo-dlq-handler
 	make fifo-dlq-handler-clean
 	export VERSION=$$(make docker-image-get-version NAME=fifo-dlq-handler)
 
@@ -288,7 +285,7 @@ cr-fifo-dlq-handler-build: ### Build cr-fifo dlq handler lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=cr-fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=cr-fifo-dlq-handler
 	make cr-fifo-dlq-handler-clean
 	export VERSION=$$(make docker-image-get-version NAME=cr-fifo-dlq-handler)
 
@@ -309,7 +306,7 @@ event-replay-build: ### Build event replay lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=event-replay
 	make event-replay-clean
 	export VERSION=$$(make docker-image-get-version NAME=event-replay)
 
@@ -330,7 +327,7 @@ test-db-checker-handler-build: ### Build event processor lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make docker-image NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-image NAME=test-db-checker-handler
 	make test-db-checker-handler-clean
 	export VERSION=$$(make docker-image-get-version NAME=test-db-checker-handler)
 
@@ -351,7 +348,7 @@ orchestrator-build: ### Build orchestrator lambda docker image
 		*.py \
 		common
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s docker-image NAME=orchestrator
 	make orchestrator-clean
 	export VERSION=$$(make docker-image-get-version NAME=orchestrator)
 
@@ -370,9 +367,9 @@ authoriser-build-and-push: ### Build authoriser lambda docker image
 		--exclude=tests \
 		*.py
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s docker-image NAME=authoriser
 	make authoriser-clean
-	make docker-push NAME=authoriser AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=authoriser
 
 authoriser-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
@@ -388,9 +385,9 @@ dos-api-gateway-build-and-push:
 		--exclude=tests \
 		*.py
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make -s docker-image NAME=dos-api-gateway
 	make dos-api-gateway-clean
-	make docker-push NAME=dos-api-gateway AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+	make docker-push NAME=dos-api-gateway
 
 dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
@@ -412,20 +409,37 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s push-images VERSION=$(BUILD_TAG)
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
 
-# ==============================================================================
-# Serverless
+push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
+	make docker-push NAME=event-sender
+	make docker-push NAME=event-processor
+	make docker-push NAME=fifo-dlq-handler
+	make docker-push NAME=cr-fifo-dlq-handler
+	make docker-push NAME=event-replay
+	make docker-push NAME=test-db-checker-handler
+	make docker-push NAME=orchestrator
 
 push-tester-image:
 	make docker-push NAME=tester
 
-push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
-	make docker-push NAME=event-sender AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=event-processor AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=cr-fifo-dlq-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=event-replay AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=test-db-checker-handler AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
-	make docker-push NAME=orchestrator AWS_ACCOUNT_ID_MGMT=$(AWS_ACCOUNT_ID_NONPROD)
+tag-images-for-production: # Matches artefacts with Git Tag and triggers production pipeline - Mandatory: PROFILE=[demo|live], COMMIT=[git commit to progress], ARTEFACTS=[comma separated list of images]
+	tag=$(BUILD_TIMESTAMP)-$(PROFILE)
+	for image in $$(echo $(or $(ARTEFACTS), $(ARTEFACT)) | tr "," "\n"); do
+		make docker-image-find-and-version-as \
+			TAG=$$tag \
+			NAME=$$image \
+			COMMIT=$(COMMIT)
+	done
+
+tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
+		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
+	else
+		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
+		echo Recommended: you run this command from the master branch
+	fi
+
+# ==============================================================================
+# Serverless
 
 serverless-requirements: # Install serverless plugins
 	make serverless-install-plugin NAME="serverless-vpc-discovery"
@@ -444,9 +458,32 @@ plan-development-pipeline:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=development-pipeline
-	fi
-	if [ "$(PROFILE)" != "dev" ]; then
+	else
 		echo "Only dev profile supported at present"
+	fi
+
+deploy-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-apply-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
+	fi
+
+undeploy-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-destroy-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
+	fi
+
+plan-deployment-pipelines:
+	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
+		make terraform-plan STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
+	else
+		echo "PROFILE must be tools and ENVIRONMENT must be dev"
 	fi
 
 deploy-performance-pipelines:
@@ -459,8 +496,7 @@ plan-performance-pipelines:
 	if [ "$(PROFILE)" == "dev" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=performance-pipelines
-	fi
-	if [ "$(PROFILE)" != "dev" ]; then
+	else
 		echo "Only dev profile supported at present"
 	fi
 
@@ -651,4 +687,5 @@ create-ecr-repositories:
 	make docker-create-repository NAME=cr-fifo-dlq-handler
 	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=event-replay
+	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=test-db-checker-handler
