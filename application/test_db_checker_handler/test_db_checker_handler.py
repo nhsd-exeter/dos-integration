@@ -49,6 +49,20 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             result = run_query(query, None)
         else:
             raise ValueError("Missing correlation id")
+    elif request["type"] == "get_service_id":
+        cid = request.get("correlation_id")
+        if cid is not None:
+            query = f"SELECT serviceid from changes where externalref = '{cid}'"
+            result = run_query(query, None)
+        else:
+            raise ValueError("Missing correlation id")
+    elif request["type"] == "get_approver_status":
+        cid = request.get("correlation_id")
+        if cid is not None:
+            query = f"SELECT modifiedtimestamp from changes where approvestatus = 'COMPLETE' and externalref = '{cid}'"
+            result = run_query(query, None)
+        else:
+            raise ValueError("Missing correlation id")
     elif request["type"] == "change_event_demographics":
         odscode = request.get("odscode")
         if odscode is not None:

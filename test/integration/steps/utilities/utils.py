@@ -164,6 +164,22 @@ def get_changes(correlation_id: str) -> list:
     return data
 
 
+def get_service_id(correlation_id: str) -> list:
+    lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(loads(response["Payload"].read().decode("utf-8")))
+    # data = literal_eval(data)
+    return data[0][0]
+
+
+def get_approver_status(correlation_id: str) -> list:
+    lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(loads(response["Payload"].read().decode("utf-8")))
+    # data = literal_eval(data)
+    return data
+
+
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
     lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -227,6 +243,7 @@ def check_received_opening_times_date_in_dos(corr_id: str, search_key: str, sear
                 else:
                     raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
 
+
 def check_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
@@ -239,10 +256,11 @@ def check_received_opening_times_time_in_dos(corr_id: str, search_key: str, sear
                 if time_in_dos == search_param:
                     return True
                 else:
-                    raise ValueError(f'Specified date time change not found in Dos changes..')
+                    raise ValueError("Specified date time change not found in Dos changes..")
+
 
 def time_to_sec(t):
-    h, m = map(int, t.split(':'))
+    h, m = map(int, t.split(":"))
     return (h * 3600) + (m * 60)
 
 

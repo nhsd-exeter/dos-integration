@@ -1,6 +1,6 @@
 Feature: F006. Opening times
 
-  @complete @mik3
+@complete
   Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by Dos
     Given a specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -54,11 +54,20 @@ Feature: F006. Opening times
     Then the opening times changes are marked as valid
     And the processed Changed Request is sent to Dos
 
-  @complete
-  Scenario: F006S008. Confirm added specified opening date being removed from Dos returns an exception
+  @complete @mik3
+  Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given a specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
     And the Changed Request with changed specified date and time is captured by Dos
-    And the Changed Event is replayed having removed the added specified opening date
-    And the Exception is captured
+    And the Changed Event is replayed with the specified opening date deleted
+    And the deleted specified date is confirmed removed from Dos
+
+  @complete
+  Scenario: F006S009. Confirm recently closed pharmacy on a standard day can be opened on the same day
+    Given a closed day standard opening time Changed Event is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the Changed Request with changed standard day time is captured by Dos
+    And the Changed Event is replayed with the pharmacy now open
+    And the pharmacy is now confirmed open for the standard day
