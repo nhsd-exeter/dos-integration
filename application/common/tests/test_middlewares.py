@@ -24,4 +24,4 @@ def test_unhandled_exception_logging(caplog):
 
         with raises(Exception):
             regular_error_func(None, None)
-        assert "dummy exception message" in caplog.text
+        assert "dummy_error" in caplog.text

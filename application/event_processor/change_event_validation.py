@@ -4,7 +4,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
-from change_event_exceptions import ValidationException
+from common.change_event_exceptions import ValidationException
 
 logger = Logger(child=True)
 ORGANISATION_TYPES = ["PHA"]

@@ -4,7 +4,7 @@ from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
 
-from event_processor.change_event_exceptions import ValidationException
+from common.change_event_exceptions import ValidationException
 
 
 logger = Logger(child=True)
@@ -24,7 +24,7 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
         logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err, "event": event})
         raise err
     except BaseException as err:
-        logger.exception("Something went wrong.", extra={"error": err, "event": event})
+        logger.exception(f"Something went wrong - {str(err)}", extra={"error": err, "event": event})
         raise err
 
 
