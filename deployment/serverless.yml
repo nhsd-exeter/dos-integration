@@ -150,7 +150,7 @@ functions:
     maximumRetryAttempts: 0
 
   slack-messenger:
-    image: ${env:AWS_SAME_ACCOUNT_DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
     description: ${sls:stage} Slack Messenger lambda
