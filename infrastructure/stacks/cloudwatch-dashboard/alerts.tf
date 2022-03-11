@@ -99,6 +99,26 @@ resource "aws_cloudwatch_metric_alarm" "event_processor_invalid_opening_times_al
   }
 
 }
+
+resource "aws_cloudwatch_metric_alarm" "dos_api_unavailable" {
+  alarm_name                = "${var.project_id} | ${var.environment} | DoS API Gateway Unavailable"
+  comparison_operator       = "GreaterThanThreshold"
+  evaluation_periods        = "1"
+  metric_name               = "DoSApiUnavailable"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "120"
+  treat_missing_data        = "notBreaching"
+  statistic                 = "Sum"
+  threshold                 = "0"
+  alarm_description         = "Events received from NHS UK with invalid opening times"
+  alarm_actions             = [aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  insufficient_data_actions = []
+  dimensions = {
+    ENV = var.environment
+  }
+
+}
+
 resource "aws_cloudwatch_metric_alarm" "change_request_to_dos_latency_alert" {
   alarm_name                = "${var.project_id} | ${var.environment} | Message Latency"
   comparison_operator       = "GreaterThanThreshold"
