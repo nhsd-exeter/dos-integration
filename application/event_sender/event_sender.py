@@ -76,6 +76,9 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         if event["is_health_check"] and response is not None and response.status_code in [400, 200, 201]:
             logger.info("Circuit fixed - closing the circuit")
             put_circuit_is_open(environ["CIRCUIT"], False)
+        elif event["is_health_check"]:
+            logger.warning("Health check failed, assume DoS api is still down")
+            # No need to change the status of the circuit, it will remain open until a success
         else:
             # TODO: The current DoS Api returns 500 when it should return 400, this isn't ideal
             # as it means we will circuit break unnecessarily and this could happen repeatidly until
