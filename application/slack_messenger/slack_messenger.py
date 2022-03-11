@@ -60,11 +60,8 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                         "short": False,
                     },
                     {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
-                        },
+                        "type": "mrkdwn",
+                        "text": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
                     },
                 ],
                 "ts": timestamp,
@@ -135,7 +132,7 @@ def generate_cloudwatch_url(region: str, log_groups: list, filters: dict, limit:
             res += f"{prefix}{k}{suffix}{value}"
         res += f"{S4}{S4}"
         QUERY = f"logsV2:logs-insights$3Ftab$3Dlogs$26queryDetail$3D{res}"
-        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}>"
+        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}"
 
     query = "\n".join([f'| filter {k}="{v}"' for (k, v) in filters.items()])
     fields = "fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message"
