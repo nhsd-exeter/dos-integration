@@ -16,7 +16,7 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
         response = handler(event, context)
         return response
     except ValidationException as err:
-        logger.exception("Validation Error", extra={"error": err, "event": event})
+        logger.exception(f"Validation Error - {err}", extra={"error": err, "event": event})
         return
     except ClientError as err:
         error_code = err.response["Error"]["Code"]
@@ -24,7 +24,7 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
         logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err, "event": event})
         raise err
     except BaseException as err:
-        logger.exception(f"Something went wrong - {str(err)}", extra={"error": err, "event": event})
+        logger.exception(f"Something went wrong - {err}", extra={"error": err, "event": event})
         raise err
 
 
