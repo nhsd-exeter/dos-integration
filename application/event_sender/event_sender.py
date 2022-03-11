@@ -52,17 +52,17 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
     before = time_ns() // 1000000
     response = change_request.post_change_request()
     after = time_ns() // 1000000
-    if not event["is_health_check"]:
-        metrics.set_namespace("UEC-DOS-INT")
-        metrics.set_property("level", "INFO")
-        metrics.set_property("function_name", context.function_name)
-        metrics.set_property("message_received", message_received_pretty)
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "INFO")
+    metrics.set_property("function_name", context.function_name)
+    metrics.set_dimensions({"ENV": environ["ENV"]})
 
+    if not event["is_health_check"]:
+        dos_time = after - before
+        metrics.set_property("message_received", message_received_pretty)
         metrics.set_property("ods_code", odscode)
         metrics.set_property("correlation_id", logger.get_correlation_id())
         metrics.set_property("dynamo_record_id", dynamo_record_id)
-        metrics.set_dimensions({"ENV": environ["ENV"]})
-        dos_time = after - before
         metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
 
     if response is not None and response.ok and not event["is_health_check"]:
@@ -76,6 +76,10 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         if event["is_health_check"] and response is not None and response.status_code in [400, 200, 201]:
             logger.info("Circuit fixed - closing the circuit")
             put_circuit_is_open(environ["CIRCUIT"], False)
+        elif event["is_health_check"]:
+            logger.warning("Health check failed, assume DoS api is still down")
+            metrics.put_metric("DoSApiUnavailable", 1, "Count")
+            # No need to change the status of the circuit, it will remain open until a success
         else:
             # TODO: The current DoS Api returns 500 when it should return 400, this isn't ideal
             # as it means we will circuit break unnecessarily and this could happen repeatidly until
