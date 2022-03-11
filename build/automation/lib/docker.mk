@@ -598,6 +598,7 @@ docker-run-terraform: ### Run terraform container - mandatory: CMD; optional: DI
 		--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
 		--env-file <(make _list-variables PATTERN="^TF_VAR_") \
 		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+		--env TF_LOG=trace \
 		--volume $(PROJECT_DIR):/project \
 		--network $(DOCKER_NETWORK) \
 		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
