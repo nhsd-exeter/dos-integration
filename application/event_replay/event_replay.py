@@ -7,8 +7,9 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from common.middlewares import unhandled_exception_logging
 from simplejson import dumps
+
+from common.middlewares import unhandled_exception_logging
 
 tracer = Tracer()
 logger = Logger()

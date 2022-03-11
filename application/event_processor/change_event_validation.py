@@ -4,7 +4,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
-from change_event_exceptions import ValidationException
+from common.change_event_exceptions import ValidationException
 
 logger = Logger(child=True)
 ORGANISATION_TYPES = ["PHA"]
@@ -21,8 +21,7 @@ def validate_event(event: Dict[str, Any]) -> None:
     try:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
-        logger.exception(f"Input schema validation error|{str(exception)}", extra={"event": event})
-        raise ValidationException("Change Event malformed, validation failed")
+        raise ValidationException(exception)
     check_org_type_id(org_type_id=event["OrganisationTypeId"])
     check_org_sub_type(org_sub_type=event["OrganisationSubType"])
     check_ods_code_length(odscode=event["ODSCode"])
@@ -38,11 +37,7 @@ def check_org_type_id(org_type_id: str) -> None:
     if org_type_id in ORGANISATION_TYPES:
         logger.info(f"Org type id: {org_type_id} validated")
     else:
-        logger.error(
-            "Organisation Type not expected type",
-            extra={"org_type_id": org_type_id, "expected_types": ORGANISATION_TYPES},
-        )
-        raise ValidationException("Unexpected Org Type ID")
+        raise ValidationException(f"Unexpected Org Type ID '{org_type_id}' not part of {ORGANISATION_TYPES}")
 
 
 def check_org_sub_type(org_sub_type: str) -> None:
@@ -54,15 +49,7 @@ def check_org_sub_type(org_sub_type: str) -> None:
     if org_sub_type.upper() in ORGANISATION_SUB_TYPES:
         logger.info(f"Organisation Sub Type: {org_sub_type} validated")
     else:
-        logger.error(
-            "Organisation Sub Type not expected type",
-            extra={
-                "org_sub_type": org_sub_type,
-                "org_sub_type_uppercase": org_sub_type.upper(),
-                "expected_types": ORGANISATION_SUB_TYPES,
-            },
-        )
-        raise ValidationException("Unexpected Org Sub Type")
+        raise ValidationException(f"Unexpected Org Sub Type '{org_sub_type}', not part of {ORGANISATION_SUB_TYPES}")
 
 
 def check_ods_code_length(odscode: str) -> None:
@@ -74,11 +61,7 @@ def check_ods_code_length(odscode: str) -> None:
 
     logger.debug("Checking ODS code length")
     if len(odscode) != ODSCODE_LENGTH:
-        logger.error(
-            "ODS code not expected length",
-            extra={"odscode": odscode, "ods_code_length": len(odscode), "expected_length": ODSCODE_LENGTH},
-        )
-        raise ValidationException("ODSCode Wrong Length")
+        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {ODSCODE_LENGTH}.")
 
 
 INPUT_SCHEMA = {

@@ -17,9 +17,8 @@ def extract_body(body: str) -> Dict[str, Any]:
     """
     try:
         body = loads(body)
-    except Exception:
-        logger.exception("Change Event unable to be extracted")
-        raise
+    except Exception as e:
+        raise Exception("Change Event unable to be extracted") from e
     return body
 
 
