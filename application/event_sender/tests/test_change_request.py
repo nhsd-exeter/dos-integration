@@ -100,7 +100,7 @@ class TestChangeRequest:
         add(POST, self.WEBSITE, json=expected_response_body, status=status_code)
         change_request.change_request_logger = MagicMock()
         # Act
-        response = change_request.post_change_request()
+        response = change_request.post_change_request(False)
         # Assert
         get_secret_mock.assert_called_with(self.AWS_SM_API_GATEWAY_SECRET)
         assert response.status_code == status_code
@@ -126,7 +126,7 @@ class TestChangeRequest:
         change_request.change_request_logger = cr_logger_mock
         mock_post.side_effect = Exception("Test exception")
         # Act
-        change_request.post_change_request()
+        change_request.post_change_request(False)
         # Assert
         mock_post.assert_called()
         cr_logger_mock.log_change_request_exception.assert_called()
