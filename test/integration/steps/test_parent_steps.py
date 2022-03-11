@@ -104,10 +104,6 @@ def a_standard_opening_time_change_event_is_valid():
 def a_closed_standard_opening_time_change_event_is_valid():
     context = {}
     context["change_event"] = set_opening_times_change_event()
-    # context["change_event"]["OpeningTimes"][-2]["Weekday"] = "Monday"
-    # context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = ""
-    # context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = ""
-    # context["change_event"]["OpeningTimes"][-2]["IsOpen"] = False
     return context
 
 
