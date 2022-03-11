@@ -210,7 +210,7 @@ def test_lambda_handler_health_check(
     assert response["statusCode"] == status_code
     assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
-    mock_instance.post_change_request.assert_called_once_with(False)
+    mock_instance.post_change_request.assert_called_once_with(True)
     mock_put_metric.assert_not_called()
     put_circuit_mock.assert_called_once_with("testcircuit", False)
     # Clean up
