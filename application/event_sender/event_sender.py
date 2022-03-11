@@ -55,14 +55,14 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
-    metrics.set_property("message_received", message_received_pretty)
-
-    metrics.set_property("ods_code", odscode)
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.set_property("dynamo_record_id", dynamo_record_id)
     metrics.set_dimensions({"ENV": environ["ENV"]})
+
     if not event["is_health_check"]:
         dos_time = after - before
+        metrics.set_property("message_received", message_received_pretty)
+        metrics.set_property("ods_code", odscode)
+        metrics.set_property("correlation_id", logger.get_correlation_id())
+        metrics.set_property("dynamo_record_id", dynamo_record_id)
         metrics.put_metric("DosApiLatency", dos_time, "Milliseconds")
 
     if response is not None and response.ok and not event["is_health_check"]:
