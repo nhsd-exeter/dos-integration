@@ -31,7 +31,7 @@ class ChangeRequest:
         )
         self.change_request_body: Dict[str, Any] = change_request_body
 
-    def post_change_request(self) -> Response:
+    def post_change_request(self, is_health_check: bool) -> Response:
         self.change_request_logger.log_change_request_post_attempt(self.change_request_body)
         """Post a change request to the API gateway"""
         try:
@@ -42,7 +42,8 @@ class ChangeRequest:
                 json=self.change_request_body,
                 timeout=self.timeout,
             )
-            self.change_request_logger.log_change_request_response(response)
+            if not is_health_check:
+                self.change_request_logger.log_change_request_response(response)
             return response
         except Exception:
             self.change_request_logger.log_change_request_exception()

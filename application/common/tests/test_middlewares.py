@@ -7,7 +7,6 @@ from application.common.middlewares import unhandled_exception_logging
 
 
 def test_unhandled_exception_logging(caplog):
-
     @unhandled_exception_logging
     def client_error_func(event, context):
         raise ClientError({"Error": {"Code": "dummy_error", "Message": "dummy_message"}}, "op_name")

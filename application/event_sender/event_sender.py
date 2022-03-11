@@ -50,7 +50,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         change_request = ChangeRequest({})
 
     before = time_ns() // 1000000
-    response = change_request.post_change_request()
+    response = change_request.post_change_request(event["is_health_check"])
     after = time_ns() // 1000000
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
@@ -94,11 +94,15 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
                 metrics.put_metric("DoSApiUnavailable", 1, "Count")
                 return {"body": dumps({"message": message})}
             elif response.status_code >= 500 or response.status_code == 429:
-                logger.warning(
-                    "Potentially recoverable, breaking circuit to retry shortly due to DoS API Gateway "
-                    "unable to accept change request"
-                )
-                put_circuit_is_open(environ["CIRCUIT"], True)
+                if response.text.strip() == "No changes to make":
+                    logger.warning("Change request generated no changes")
+                    sqs.delete_message(QueueUrl=environ["CR_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
+                else:
+                    logger.warning(
+                        "Potentially recoverable, breaking circuit to retry shortly due to DoS API Gateway "
+                        "unable to accept change request"
+                    )
+                    put_circuit_is_open(environ["CIRCUIT"], True)
             elif 400 <= response.status_code < 500:
                 logger.info("Permanent error sending to DLQ, Not retrying")
                 sqs.send_message(

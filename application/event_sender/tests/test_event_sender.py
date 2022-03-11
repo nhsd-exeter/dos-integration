@@ -92,7 +92,7 @@ def test_lambda_handler_dos_api_success(
     assert response["body"] == dumps({"message": message})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
-    mock_instance.post_change_request.assert_called_once_with()
+    mock_instance.post_change_request.assert_called_once_with(False)
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
 
     mock_put_metric.assert_has_calls(
@@ -137,7 +137,7 @@ def test_lambda_handler_dos_api_fail(
     assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
-    mock_change_request().post_change_request.assert_called_once_with()
+    mock_change_request().post_change_request.assert_called_once_with(False)
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
     mock_put_metric.assert_has_calls([call("DosApiLatency", 0, "Milliseconds"), call("DoSApiFail", 1, "Count")])
     mock_client.return_value.delete_message.assert_not_called()
@@ -175,7 +175,7 @@ def test_lambda_handler_dos_api_fail_no_dos(
     )
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
-    mock_change_request().post_change_request.assert_called_once_with()
+    mock_change_request().post_change_request.assert_called_once_with(False)
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
     mock_put_metric.assert_has_calls([call("DoSApiUnavailable", 1, "Count")])
     mock_client.return_value.delete_message.assert_not_called()
@@ -210,7 +210,7 @@ def test_lambda_handler_health_check(
     assert response["statusCode"] == status_code
     assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
-    mock_instance.post_change_request.assert_called_once()
+    mock_instance.post_change_request.assert_called_once_with(True)
     mock_put_metric.assert_not_called()
     put_circuit_mock.assert_called_once_with("testcircuit", False)
     # Clean up
@@ -254,7 +254,7 @@ def test_lambda_handler_non_recoverable_error(
     assert response["body"] == dumps({"message": error_msg})
     mock_client.assert_called_with("sqs")
     mock_change_request.assert_called_once_with(CHANGE_REQUEST)
-    mock_change_request().post_change_request.assert_called_once_with()
+    mock_change_request().post_change_request.assert_called_once_with(False)
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
     mock_put_metric.assert_has_calls([call("DosApiLatency", 0, "Milliseconds"), call("DoSApiFail", 1, "Count")])
     mock_client().send_message.assert_called_once_with(

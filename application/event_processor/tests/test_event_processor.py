@@ -513,7 +513,7 @@ def test_lambda_handler_should_throw_exception(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     change_event,
     lambda_context,
-    caplog
+    caplog,
 ):
     # Arrange
     service = dummy_dos_service()
