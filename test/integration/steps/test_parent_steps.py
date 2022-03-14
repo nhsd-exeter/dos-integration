@@ -754,7 +754,7 @@ def change_event_is_replayed(context, valid_or_invalid):
 def specified_date_is_removed_from_dos(context):
     service_id = get_service_id(context["correlation_id"])
     removed_date = dt.strptime(context["change_event"]["deleted_date"], "%b %d %Y").strftime("%y-%m-%d")
-    sleep(600)  # Verifying approver status of change to Dos
+    sleep(1200)  # Verifying approver status of change to Dos
     approver_status = get_approver_status(context["correlation_id"])
     assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
     specified_opening_times_from_db = get_change_event_specified_opening_times(service_id)
@@ -778,7 +778,7 @@ def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
 
 @then(parsers.parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'))
 def standard_day_confirmed_open(context, open_or_closed):
-    sleep(600)  # Verifying approver status of change to Dos
+    sleep(1200)  # Verifying approver status of change to Dos
     service_id = get_service_id(context["correlation_id"])
     opening_time_event = get_change_event_standard_opening_times(service_id)
     week_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
