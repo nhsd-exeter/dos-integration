@@ -29,7 +29,13 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
     new_state = message["NewStateValue"]
     alarm_description = message["AlarmDescription"]
     trigger = message["Trigger"]
-    log_groups = [f"{namespace}-{env}-event-processor"]
+    project_id = f"{namespace}-{env}"
+    log_groups = [
+        f"{project_id}-event-processor",
+        f"{project_id}-event-sender",
+        f"{project_id}-cr-fifo-dlq-handler",
+        f"{project_id}-fifo-dlq-handler",
+    ]
     filters = {"report_key": get_report_key(metric_name)}
     color = "warning"
 
@@ -60,8 +66,8 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                         "short": False,
                     },
                     {
-                        "type": "mrkdwn",
-                        "text": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
+                        "title": "",
+                        "value": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
                     },
                 ],
                 "ts": timestamp,
