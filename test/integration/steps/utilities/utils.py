@@ -5,8 +5,10 @@ from json import dumps, loads
 from os import getenv
 from random import choice
 from time import time_ns
+from datetime import datetime
 from typing import Any, Dict
 
+import json
 import requests
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
@@ -163,6 +165,22 @@ def get_changes(correlation_id: str) -> list:
     return data
 
 
+def get_service_id(correlation_id: str) -> list:
+    lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = json.loads(response["Payload"].read().decode("utf-8"))
+    data = literal_eval(data)
+    return data[0][0]
+
+
+def get_approver_status(correlation_id: str) -> list:
+    lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(loads(response["Payload"].read().decode("utf-8")))
+    # data = literal_eval(data)
+    return data
+
+
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
     lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -208,6 +226,58 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
                     return True
                 else:
                     raise ValueError(f"{search_param} not found in Dos changes..")
+
+
+def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
+    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                date_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][:10]
+                # Convert and format 'search_param' to datetime type
+                date_in_payload = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
+                if date_in_dos == date_in_payload:
+                    return True
+                else:
+                    raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
+
+
+def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
+    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][11:]
+                if time_in_dos == search_param:
+                    return True
+                else:
+                    raise ValueError("Specified Opening-time time change not found in Dos changes..")
+
+
+def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
+    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0]
+                if time_in_dos == search_param:
+                    return True
+                else:
+                    raise ValueError("Standard Opening-time time change not found in Dos changes..")
+
+
+def time_to_sec(t):
+    h, m = map(int, t.split(":"))
+    return (h * 3600) + (m * 60)
 
 
 def generate_correlation_id(suffix=None) -> str:

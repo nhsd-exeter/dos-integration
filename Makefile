@@ -109,14 +109,11 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
-		-e CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
 		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
 		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e SQS_URL=$(SQS_QUEUE_URL) \
@@ -126,21 +123,17 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
-
 		"
 
 integration-test-local:
 	cd test/integration
 	API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 	NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-	CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
-	CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
 	DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
 	DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
 	DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 	DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 	URL=https://$(DOS_INTEGRATION_URL) \
-	CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 	EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 	EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 	SQS_URL=$(SQS_QUEUE_URL) \
@@ -160,14 +153,11 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e CR_API_KEY_SECRET=$(TF_VAR_change_request_receiver_api_key_name) \
-		-e CR_API_KEY_KEY=$(TF_VAR_change_request_receiver_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
 		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
 		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e CR_URL=$(TF_VAR_dos_api_gateway_api_destination_url) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \

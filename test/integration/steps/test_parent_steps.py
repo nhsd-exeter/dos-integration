@@ -1,8 +1,10 @@
-from datetime import datetime
+from datetime import datetime as dt
 from decimal import Decimal
 from time import sleep, time
 from os import getenv
 from random import randint
+from faker import Faker
+import datetime
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -17,6 +19,10 @@ from .utilities.log_stream import get_logs
 from .utilities.utils import (
     generate_correlation_id,
     get_changes,
+    get_service_id,
+    get_change_event_standard_opening_times,
+    get_change_event_specified_opening_times,
+    get_approver_status,
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
@@ -24,6 +30,10 @@ from .utilities.utils import (
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
     check_received_data_in_dos,
+    check_standard_received_opening_times_time_in_dos,
+    check_specified_received_opening_times_time_in_dos,
+    check_specified_received_opening_times_date_in_dos,
+    time_to_sec,
 )
 
 scenarios(
@@ -32,7 +42,9 @@ scenarios(
     "../features/F003_DoS_Security.feature",
     "../features/F004_Error_Handling.feature",
     "../features/F005_Support_Functions.feature",
+    "../features/F006_Opening_times.feature",
 )
+faker = Faker("en_GB")
 
 
 @given("a Changed Event is valid", target_fixture="context")
@@ -44,21 +56,15 @@ def a_change_event_is_valid():
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact):
+    global faker
     context = {}
     context["change_event"] = create_change_event()
     if contact == "website":
-        if context["change_event"]["Contacts"][0]["ContactValue"] == "www.test1.com":
-            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test2.com"
-        else:
-            context["change_event"]["Contacts"][0]["ContactValue"] = "www.test1.com"
+        context["change_event"]["Contacts"][0]["ContactValue"] = faker.domain_word() + ".nhs.uk"
     elif contact == "phone_no":
-        if context["change_event"]["Contacts"][1]["ContactValue"] == "0123 4567890":
-            context["change_event"]["Contacts"][1]["ContactValue"] = "0111 2223333"
-        else:
-            context["change_event"]["Contacts"][1]["ContactValue"] = "0123 4567890"
+        context["change_event"]["Contacts"][1]["ContactValue"] = faker.cellphone_number()
     elif contact == "address":
-        newaddr = randint(100, 500)
-        context["change_event"]["Address1"] = f"{newaddr} New Street"
+        context["change_event"]["Address1"] = faker.street_name()
     else:
         raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
     return context
@@ -66,6 +72,36 @@ def a_changed_contact_event_is_valid(contact):
 
 @given("a specific Changed Event is valid", target_fixture="context")
 def a_specific_change_event_is_valid():
+    context = {}
+    context["change_event"] = set_opening_times_change_event()
+    return context
+
+
+@given("a specified opening time Changed Event is valid", target_fixture="context")
+def a_specified_opening_time_change_event_is_valid():
+    closing_time = datetime.datetime.now().time().strftime("%H:%M")
+    context = {}
+    context["change_event"] = set_opening_times_change_event()
+    context["change_event"]["OpeningTimes"][-1]["OpeningTime"] = "00:01"
+    context["change_event"]["OpeningTimes"][-1]["ClosingTime"] = closing_time
+    context["change_event"]["OpeningTimes"][-1]["IsOpen"] = True
+    return context
+
+
+@given("a standard opening time Changed Event is valid", target_fixture="context")
+def a_standard_opening_time_change_event_is_valid():
+    closing_time = datetime.datetime.now().time().strftime("%H:%M")
+    context = {}
+    context["change_event"] = set_opening_times_change_event()
+    context["change_event"]["OpeningTimes"][-2]["Weekday"] = "Monday"
+    context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
+    context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
+    context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+    return context
+
+
+@given("a closed day standard opening time Changed Event is valid", target_fixture="context")
+def a_closed_standard_opening_time_change_event_is_valid():
     context = {}
     context["change_event"] = set_opening_times_change_event()
     return context
@@ -117,7 +153,7 @@ def change_event_with_special_address_characters(context):
     uniqueval = int(time())
     context["change_event"]["Contacts"][0][
         "ContactValue"
-    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"   # noqa: W605
+    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"  # noqa: W605
     context["uri_timestamp"] = uniqueval
     return context
 
@@ -144,7 +180,7 @@ def one_off_opening_date_set(context, open_closed: str):
 @given("the Changed Event closes the pharmacy on a bank holiday", target_fixture="context")
 def bank_holiday_pharmacy_closed(context):
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "Additional"
-    nextyear = datetime.now().year + 1
+    nextyear = dt.now().year + 1
     context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec 25 {nextyear}"
     context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
@@ -259,13 +295,14 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context):
     target_fixture="context",
 )
 def the_change_event_is_sent_for_processing(context, valid_or_invalid):
-    context["start_time"] = datetime.today().timestamp()
+    context["start_time"] = dt.today().timestamp()
     if "correlation_id" not in context:
         context["correlation_id"] = generate_correlation_id()
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
     context["sequence_no"] = context["response"].request.headers["sequence-number"]
+    print(f"Applied Correlation id: {context['correlation_id']}")
     return context
 
 
@@ -275,7 +312,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
-    context["start_time"] = datetime.today().timestamp()
+    context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
@@ -288,7 +325,7 @@ def the_change_event_is_sent_with_custom_sequence(context, seqid):
     target_fixture="context",
 )
 def the_change_event_is_sent_with_no_sequence(context):
-    context["start_time"] = datetime.today().timestamp()
+    context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], None)
     return context
@@ -300,7 +337,7 @@ def the_change_event_is_sent_with_no_sequence(context):
     target_fixture="context",
 )
 def the_change_event_is_sent_with_duplicate_sequence(context):
-    context["start_time"] = datetime.today().timestamp()
+    context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     odscode = context["change_event"]["ODSCode"]
     seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
@@ -485,6 +522,35 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
 
 
+@then("the Changed Request with changed specified date and time is captured by Dos")
+def the_changed_opening_time_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    open_time = time_to_sec(context["change_event"]["OpeningTimes"][-1]["OpeningTime"])
+    closing_time = time_to_sec(context["change_event"]["OpeningTimes"][-1]["ClosingTime"])
+    changed_time = f"{open_time}-{closing_time}"
+    changed_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
+    cms = "cmsopentimespecified"
+    assert (
+        check_specified_received_opening_times_date_in_dos(context["correlation_id"], cms, changed_date) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_date}"
+    assert (
+        check_specified_received_opening_times_time_in_dos(context["correlation_id"], cms, changed_time) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_time}"
+    return context
+
+
+@then("the Changed Request with changed standard day time is captured by Dos")
+def the_changed_opening_standard_time_is_accepted_by_dos(context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    open_time = time_to_sec(context["change_event"]["OpeningTimes"][-2]["OpeningTime"])
+    closing_time = time_to_sec(context["change_event"]["OpeningTimes"][-2]["ClosingTime"])
+    changed_time = f"{open_time}-{closing_time}"
+    cms = "cmsopentimemonday"
+    assert (
+        check_standard_received_opening_times_time_in_dos(context["correlation_id"], cms, changed_time) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_time}"
+
+
 @then("the Changed Request with changed address is captured by Dos")
 def the_changed_address_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
@@ -573,7 +639,7 @@ def specified_opening_date_closed(context):
     for item in opening_times:
         if item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
             closed_date = item["AdditionalOpeningDate"]
-            date_obj = datetime.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
+            date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
             break
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
@@ -671,3 +737,59 @@ def the_changed_website_is_accepted_by_dos(context):
         )
         logs = get_logs(successquery, "sender", context["start_time"])
         assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
+
+
+@then("the Changed Event is replayed with the specified opening date deleted")
+def change_event_is_replayed(context, valid_or_invalid):
+    target_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
+    del context["change_event"]["OpeningTimes"][-1]
+    context["response"] = process_payload(
+        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
+    )
+    context["change_event"]["deleted_date"] = target_date
+    return context
+
+
+@then("the deleted specified date is confirmed removed from Dos")
+def specified_date_is_removed_from_dos(context):
+    service_id = get_service_id(context["correlation_id"])
+    removed_date = dt.strptime(context["change_event"]["deleted_date"], "%b %d %Y").strftime("%y-%m-%d")
+    sleep(300)  # Verifying approver status of change to Dos
+    approver_status = get_approver_status(context["correlation_id"])
+    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
+    specified_opening_times_from_db = get_change_event_specified_opening_times(service_id)
+    assert removed_date not in str(
+        specified_opening_times_from_db
+    ), f"Error!.. Removed specified date: {removed_date} still exists in Dos"
+
+
+@then("the Changed Event is replayed with the pharmacy now open")
+def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
+    closing_time = datetime.datetime.now().time().strftime("%H:%M")
+    context["change_event"] = set_opening_times_change_event()
+    context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
+    context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
+    context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+    context["response"] = process_payload(
+        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
+    )
+    return context
+
+
+@then(parsers.parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'))
+def standard_day_confirmed_open(context, open_or_closed):
+    sleep(300)
+    service_id = get_service_id(context["correlation_id"])
+    opening_time_event = get_change_event_standard_opening_times(service_id)
+    week_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
+    if open_or_closed.upper() == "OPEN":
+        assert (
+            opening_time_event[week_day] != []
+        ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{week_day}"'
+    elif open_or_closed.upper() == "CLOSED":
+        assert (
+            opening_time_event[week_day] == []
+        ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{week_day}"'
+    else:
+        raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
+    return context
