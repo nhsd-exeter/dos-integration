@@ -210,7 +210,7 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 resource "aws_codebuild_project" "di_integration_tests" {
   name           = "${var.project_id}-${var.environment}-integration-test-stage"
   description    = "Runs the integration tests for the DI Project"
-  build_timeout  = "30"
+  build_timeout  = "60"
   queued_timeout = "30"
   service_role   = data.aws_iam_role.pipeline_role.arn
 

@@ -22,7 +22,7 @@
     - [Test data and mock services](#test-data-and-mock-services)
     - [Manual check](#manual-check)
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
-  - [Deployment](#deployment)
+  - [General Deployment](#general-deployment)
     - [API Key](#api-key)
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
@@ -31,6 +31,10 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
+  - [Production Deployment](#production-deployment)
+    - [Prerequisites](#prerequisites)
+    - [How to deploy](#how-to-deploy)
+      - [Example](#example)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -261,7 +265,7 @@ A make target has been added to check that a lambda can successful access the do
 
 It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
 
-## Deployment
+## General Deployment
 
 ### API Key
 
@@ -310,6 +314,32 @@ To be able to interact with a remote environment, please make sure you have set 
 MFA to the right AWS account using the following command
 
     tx-mfa
+
+## Production Deployment
+
+### Prerequisites
+
+The production pipeline terraform stack must be deployed
+
+    make deploy-deployment-pipelines PROFILE=tools ENVIRONMENT=dev
+
+### How to deploy
+
+To deploy an update/new version to a production environment the commit must be tagged using the command below. This will automatically run a Github web hook that will trigger an AWS Codebuild project that will deploy the environment based on the git tag.
+
+Note: This should only be run against a commit on the master branch as the code has been built into an image and pushed to ECR. Also short commit hash is the first 7 characters of the commit hash.
+
+To Deploy Demo
+
+    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=[short commit hash]
+
+To Deploy Live
+
+    make tag-commit PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
+
+#### Example
+
+    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
 ## Architecture
 

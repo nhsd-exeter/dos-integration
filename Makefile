@@ -46,9 +46,9 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=splunk-logs,api-gateway-sqs,cloudwatch-dashboard
 	make serverless-remove VERSION="any" DB_PASSWORD="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
-
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
-		make terraform-destroy-auto-approve STACKS=api-key,dos-api-gateway-mock,dynamo-db
+		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
+		make terraform-destroy-auto-approve STACKS=dynamo-db OPTS="-refresh=false"
 	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
@@ -385,6 +385,11 @@ dos-api-gateway-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
+build-and-push-mock-dos-api-gateway-docker-images:
+	make authoriser-build dos-api-gateway-build
+	make docker-push NAME=authoriser
+	make docker-push NAME=dos-api-gateway
+
 mock-dos-api-gateway-deployment:
 	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 
@@ -413,15 +418,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 
 push-tester-image:
 	make docker-push NAME=tester
-
-tag-images-for-production: # Matches artefacts with Git Tag and triggers production pipeline - Mandatory: PROFILE=[demo|live], COMMIT=[git commit to progress], ARTEFACTS=[comma separated list of images]
-	tag=$(BUILD_TIMESTAMP)-$(PROFILE)
-	for image in $$(echo $(or $(ARTEFACTS), $(ARTEFACT)) | tr "," "\n"); do
-		make docker-image-find-and-version-as \
-			TAG=$$tag \
-			NAME=$$image \
-			COMMIT=$(COMMIT)
-	done
 
 tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
@@ -632,13 +628,19 @@ setup-no-dos-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mo
 	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
 
 restore-from-no-dos-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
-	make mock-dos-api-gateway-deployment
+	VERSION=$$(echo $(BUILD_TAG))
+	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
+	make mock-dos-api-gateway-deployment VERSION=$$VERSION
 
 setup-circuit-breaker-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to return 500 errors) - mandatory: PROFILE; optional: ENVIRONMENT
-	make mock-dos-api-gateway-deployment TF_VAR_chaos_mode="true"
+	VERSION=$$(echo $(BUILD_TAG))
+	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
+	make mock-dos-api-gateway-deployment VERSION=$$VERSION TF_VAR_chaos_mode="true"
 
 restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
-	make mock-dos-api-gateway-deployment
+	VERSION=$$(echo $(BUILD_TAG))
+	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
+	make mock-dos-api-gateway-deployment VERSION=$$VERSION
 
 # -----------------------------
 # Other
