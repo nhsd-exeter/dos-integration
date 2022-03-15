@@ -1,8 +1,10 @@
+import re
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 from json import dumps, load
 from random import choice
 from typing import Any, Dict
+
+from dateutil.relativedelta import relativedelta
 
 from .utils import (
     get_change_event_demographics,
@@ -127,7 +129,22 @@ def build_same_as_dos_change_event():
                     "IsOpen": True,
                 }
             )
-    return change_event
+    if valid_change_event(change_event):
+        return change_event
+    else:
+        return build_same_as_dos_change_event()
+
+
+def valid_change_event(change_event: dict) -> bool:
+    """This function checks if the data stored in DoS would pass the change request
+    validation within DoS API Gateway"""
+    if not re.fullmatch(
+        r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", str(change_event["Contacts"][0]["ContactValue"])
+    ):  # Website
+        return False
+    if not re.fullmatch(r"[+0][0-9 ()]{9,}", str(change_event["Contacts"][1]["ContactValue"])):  # Phone
+        return False
+    return True
 
 
 def set_opening_times_change_event():

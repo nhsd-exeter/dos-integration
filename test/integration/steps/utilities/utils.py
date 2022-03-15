@@ -220,12 +220,11 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
     if search_key not in str(response):
         raise ValueError(f"{search_key} not found..")
     for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if search_param in dict(loads(row[0]))["new"][k]["data"]:
-                    return True
-                else:
-                    raise ValueError(f"{search_param} not found in Dos changes..")
+        change_value = dict(loads(row[0]))
+        for dos_change_key in change_value["new"]:
+            if dos_change_key == search_key and search_param in change_value["new"][dos_change_key]["data"]:
+                return True
+    raise ValueError(f"{search_param} not found in Dos changes... {response}")
 
 
 def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
@@ -242,7 +241,9 @@ def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key:
                 if date_in_dos == date_in_payload:
                     return True
                 else:
-                    raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
+                    raise ValueError(
+                        f'Specified date change "{date_in_payload}" not found in Dos changes... {response}'
+                    )
 
 
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
@@ -257,7 +258,7 @@ def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key:
                 if time_in_dos == search_param:
                     return True
                 else:
-                    raise ValueError("Specified Opening-time time change not found in Dos changes..")
+                    raise ValueError("Specified Opening-time time change not found in Dos changes... {response}")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
@@ -272,7 +273,7 @@ def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: 
                 if time_in_dos == search_param:
                     return True
                 else:
-                    raise ValueError("Standard Opening-time time change not found in Dos changes..")
+                    raise ValueError("Standard Opening-time time change not found in Dos changes... {response}")
 
 
 def time_to_sec(t):
