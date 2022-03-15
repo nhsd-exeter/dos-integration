@@ -1,5 +1,10 @@
 -include $(VAR_DIR)/profile/prod.mk
 
+# ==============================================================================
+# Service variables
+
+LOG_LEVEL:= INFO
+
 DOS_API_GATEWAY_SECRETS = core-dos/deployment
 DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
