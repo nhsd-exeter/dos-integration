@@ -28,7 +28,6 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
         context (LambdaContext): Lambda function context object
     """
     sqs = client("sqs")
-    logger.append_keys(health_check=event["is_health_check"])
     if not event["is_health_check"]:
         logger.info("Not a health check")
         metadata: ChangeMetadata = event["metadata"]

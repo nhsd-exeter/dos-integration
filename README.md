@@ -31,9 +31,10 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
-    - [Production Deployment](#production-deployment)
-      - [Prerequisites](#prerequisites)
-      - [How to deploy](#how-to-deploy)
+  - [Production Deployment](#production-deployment)
+    - [Prerequisites](#prerequisites)
+    - [How to deploy](#how-to-deploy)
+      - [Example](#example)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -314,23 +315,33 @@ MFA to the right AWS account using the following command
 
     tx-mfa
 
-### Production Deployment
+## Production Deployment
 
-#### Prerequisites
+### Prerequisites
 
 The production pipeline terraform stack must be deployed
 
     make deploy-deployment-pipelines PROFILE=tools ENVIRONMENT=dev
 
-#### How to deploy
+### How to deploy
 
 To deploy an update/new version to a production environment the commit must be tagged using the command below
 
-Note: This should only be run against a commit on the master branch as the code has been built into an image and pushed to ECR
+Note: This should only be run against a commit on the master branch as the code has been built into an image and pushed to ECR. Also short commit hash is the first 7 characters of the commit hash.
 
-    make tag-commit PROFILE=demo COMMIT=[short commit hash] e.g. make tag-commit PROFILE=demo COMMIT=53eb18e
+To Deploy Demo
 
-This will run an AWS Codebuild project that will deploy the environment based on the git tag
+    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=[short commit hash]
+
+To Deploy Live
+
+    make tag-commit PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
+
+This will automatically run an AWS Codebuild project that will deploy the environment based on the git tag
+
+#### Example
+
+    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
 ## Architecture
 
