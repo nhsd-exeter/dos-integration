@@ -8,7 +8,7 @@ LOG_LEVEL:= INFO
 DOS_API_GATEWAY_SECRETS = core-dos-uet/deployment
 DOS_API_GATEWAY_USERNAME_KEY := DOS_UET_API_GATEWAY_USER
 DOS_API_GATEWAY_PASSWORD_KEY := DOS_UET_API_GATEWAY_PASSWORD
-DOS_API_GATEWAY_URL := https://core-dos-put-ut-ddc-core-dos-api-gateway.k8s-prod.texasplatform.uk/api/change-request
+DOS_API_GATEWAY_URL := https://api-gateway-usertest.directoryofservices.nhs.uk/api/change-request
 
 DB_SERVER_NAME := uec-core-dos-put-db-12-replica-di
 DB_PORT := 5432
