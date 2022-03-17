@@ -1,14 +1,13 @@
 import random
 from ast import literal_eval
+from datetime import datetime
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
 from random import choice
-from time import time_ns, sleep
-from datetime import datetime
+from time import sleep, time_ns
 from typing import Any, Dict
 
-import json
 import requests
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
@@ -44,7 +43,6 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
 
 
 def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_id) -> Response:
-
     api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     headers = {
         "x-api-key": api_key,
@@ -143,7 +141,7 @@ def generate_random_int() -> str:
 def get_odscodes_list() -> list[list[str]]:
     lambda_payload = {"type": "get_odscodes"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
+    data = loads(response)
     data = literal_eval(data)
     return data
 
@@ -151,7 +149,7 @@ def get_odscodes_list() -> list[list[str]]:
 def get_single_service_odscode() -> str:
     lambda_payload = {"type": "get_single_service_odscode"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
+    data = loads(response)
     data = literal_eval(data)
     odscode = choice(data)[0]
     return odscode
@@ -160,15 +158,14 @@ def get_single_service_odscode() -> str:
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(loads(response["Payload"].read().decode("utf-8")))
-    # data = literal_eval(data)
+    data = loads(loads(response))
     return data
 
 
 def get_service_id(correlation_id: str) -> list:
     lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = json.loads(response["Payload"].read().decode("utf-8"))
+    data = loads(response)
     data = literal_eval(data)
     return data[0][0]
 
@@ -176,7 +173,7 @@ def get_service_id(correlation_id: str) -> list:
 def get_approver_status(correlation_id: str) -> list:
     lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(loads(response["Payload"].read().decode("utf-8")))
+    data = loads(loads(response))
     return data
 
 
@@ -195,15 +192,14 @@ def confirm_approver_status(correlation_id: str) -> list:
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
     lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = response["Payload"].read().decode("utf-8")
-    data = loads(loads(data))
+    data = loads(loads(response))
     return data
 
 
 def get_change_event_standard_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
+    data = loads(response)
     data = literal_eval(data)
     return data
 
@@ -211,18 +207,30 @@ def get_change_event_standard_opening_times(service_id: str) -> Any:
 def get_change_event_specified_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response["Payload"].read().decode("utf-8"))
+    data = loads(response)
     data = literal_eval(data)
     return data
 
 
 def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
-    response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
-        InvocationType="RequestResponse",
-        Payload=dumps(lambda_payload),
-    )
-    return response
+    response_status = False
+    response = None
+    retries = 0
+    while response_status is False:
+        response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
+            FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
+            InvocationType="RequestResponse",
+            Payload=dumps(lambda_payload),
+        )
+        response_payload = response["Payload"].read().decode("utf-8")
+        if "errorMessage" not in response_payload:
+            return response_payload
+
+        if retries > 9:
+            print(f"Errored on this payload: {lambda_payload}")
+            raise Exception(f"Unable to run test db checker lambda successfully after {retries} retries")
+        retries += 1
+        sleep(20)
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str):

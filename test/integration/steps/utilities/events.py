@@ -21,6 +21,7 @@ def create_change_event() -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         payload["ODSCode"] = random_odscode()
+        payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
         return payload
 
@@ -94,13 +95,11 @@ def build_same_as_dos_change_event():
     address_keys = ["Address1", "Address2", "Address3", "City", "County"]
     for address_key in address_keys:
         change_event[address_key] = None
-    address_parts = demographics_data["address"].split("$", 5)
-
+    address_parts = demographics_data["address"].split("$", 4)
     counter = 0
     for address_part in address_parts:
         change_event[address_keys[counter]] = address_part
         counter += 1
-
     standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
     change_event["OpeningTimes"] = []
     for day in standard_opening_times:

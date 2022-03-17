@@ -97,7 +97,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                 invoke_lambda(lambda_client, change_request_queue_item)
                 it_end = time()
                 to_sleep = max(0, (TIME_TO_SLEEP - (it_end - it_start)))
-                logger.debug(f"Seeping for {to_sleep}")
+                logger.debug(f"Sleeping for {to_sleep}")
                 sleep(to_sleep)
         loop = loop + 1
 
