@@ -1,4 +1,3 @@
-# from operator import truediv
 import random
 from ast import literal_eval
 from decimal import Decimal
@@ -185,15 +184,11 @@ def confirm_approver_status(correlation_id: str) -> list:
     approver_loop_count = 0
     data = []
     while approver_loop_count < 15:
-        sleep(60)  # Wait for changes to be applied
+        sleep(60)
         data = get_approver_status(correlation_id)
         if data != []:
-            # print(data)
             break
-        # print(f'Approver loop counts: {approver_loop_count}')
-        approver_loop_count += 1  # increment
-    # Assertion is done in calling step
-    # assert data != [], f"Error!.. Dos Change not found for correlation id: {correlation_id}"
+        approver_loop_count += 1
     return data
 
 
@@ -248,7 +243,6 @@ def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key:
     response = get_changes(corr_id)
     if search_key not in str(response):
         raise ValueError(f"{search_key} not found..")
-    incrementer = 0
     row_found = False
     for row in response:
         for k in dict(loads(row[0]))["new"]:
@@ -259,12 +253,10 @@ def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key:
                     date_in_payload = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
                     if date_in_dos == date_in_payload:
                         row_found = True
-                    else:
-                        incrementer += 1
     if row_found is True:
         return True
     else:
-        raise ValueError(f'Specified date change "{date_in_payload}" not found in {incrementer} Dos changes..')
+        raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
 
 
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
@@ -272,7 +264,6 @@ def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key:
     response = get_changes(corr_id)
     if search_key not in str(response):
         raise ValueError(f"{search_key} not found..")
-    incrementer = 0
     row_found = False
     for row in response:
         for k in dict(loads(row[0]))["new"]:
@@ -281,12 +272,10 @@ def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key:
                     time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][11:]
                     if time_in_dos == search_param:
                         row_found = True
-                    else:
-                        incrementer += 1
     if row_found is True:
         return True
     else:
-        raise ValueError(f"Specified Opening-time time change not found in {incrementer} Dos changes..")
+        raise ValueError("Specified Opening-time time change not found in Dos changes..")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
