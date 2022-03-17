@@ -162,14 +162,6 @@ def get_changes(correlation_id: str) -> list:
     return data
 
 
-def get_service_id(correlation_id: str) -> list:
-    lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
-    data = loads(response)
-    data = literal_eval(data)
-    return data[0][0]
-
-
 def get_approver_status(correlation_id: str) -> list:
     lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -187,6 +179,22 @@ def confirm_approver_status(correlation_id: str) -> list:
             break
         approver_loop_count += 1
     return data
+
+
+def get_service_id(correlation_id: str) -> list:
+    retries = 0
+    data = None
+    while retries < 6:
+        sleep(5)
+        lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
+        response = invoke_test_db_checker_handler_lambda(lambda_payload)
+        data = loads(response)
+        data = literal_eval(data)
+        if data is not None:
+            break
+        else:
+            retries += 1
+    return data[0][0]
 
 
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:

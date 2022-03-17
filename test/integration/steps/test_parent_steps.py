@@ -534,7 +534,8 @@ def the_changed_opening_time_is_accepted_by_dos(context):
     changed_time = f"{open_time}-{closing_time}"
     changed_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
     cms = "cmsopentimespecified"
-    sleep(900)
+    approver_status = confirm_approver_status(context["correlation_id"])
+    assert approver_status != [], f'Error!.. Dos Change for correlation id: {context["correlation_id"]} not COMPLETED'
     assert (
         check_specified_received_opening_times_date_in_dos(context["correlation_id"], cms, changed_date) is True
     ), f"ERROR!.. Dos not updated with change: {changed_date}"
@@ -748,6 +749,7 @@ def the_changed_website_is_accepted_by_dos(context):
 def change_event_is_replayed(context, valid_or_invalid):
     target_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
     del context["change_event"]["OpeningTimes"][-1]
+    context["correlation_id"] = f'{context["correlation_id"]}-replay'
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )

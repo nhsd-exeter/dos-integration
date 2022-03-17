@@ -54,7 +54,7 @@ Feature: F006. Opening times
     Then the opening times changes are marked as valid
     And the processed Changed Request is sent to Dos
 
-@complete
+@complete @mik3
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given a specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
