@@ -1,12 +1,13 @@
-from pytest import fixture
-import boto3
-from moto import mock_dynamodb2
-import os
 import json
+import os
 from random import choices, randint, uniform
+
+import boto3
+from moto import mock_dynamodb
+from pytest import fixture
+
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
-
 
 std_event_path = "event_processor/tests/STANDARD_EVENT.json"
 
@@ -58,7 +59,7 @@ def aws_credentials():
 
 @fixture
 def dynamodb_client(aws_credentials):
-    with mock_dynamodb2():
+    with mock_dynamodb():
         conn = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
         yield conn
 
