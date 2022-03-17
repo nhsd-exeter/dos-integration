@@ -13,6 +13,7 @@ from .utilities.events import (
     change_request,
     create_change_event,
     set_opening_times_change_event,
+    valid_change_event,
 )
 
 from .utilities.log_stream import get_logs
@@ -44,7 +45,7 @@ scenarios(
     "../features/F005_Support_Functions.feature",
     "../features/F006_Opening_times.feature",
 )
-faker = Faker("en_GB")
+FAKER = Faker("en_GB")
 
 
 @given("a Changed Event is valid", target_fixture="context")
@@ -56,17 +57,20 @@ def a_change_event_is_valid():
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact):
-    global faker
     context = {}
     context["change_event"] = create_change_event()
-    if contact == "website":
-        context["change_event"]["Contacts"][0]["ContactValue"] = faker.domain_word() + ".nhs.uk"
-    elif contact == "phone_no":
-        context["change_event"]["Contacts"][1]["ContactValue"] = faker.cellphone_number()
-    elif contact == "address":
-        context["change_event"]["Address1"] = faker.street_name()
-    else:
-        raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
+    validated = False
+    while validated is False:
+        if contact == "website":
+            context["change_event"]["Contacts"][0]["ContactValue"] = FAKER.domain_word() + ".nhs.uk"
+        elif contact == "phone_no":
+            context["change_event"]["Contacts"][1]["ContactValue"] = FAKER.phone_number()
+        elif contact == "address":
+            context["change_event"]["Address1"] = FAKER.street_name()
+        else:
+            raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
+
+        validated = valid_change_event(context["change_event"])
     return context
 
 
