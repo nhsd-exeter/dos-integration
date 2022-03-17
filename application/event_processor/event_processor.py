@@ -118,7 +118,7 @@ class EventProcessor:
             logger.debug(
                 "CR to send",
                 extra={
-                    "change_request": change_request,
+                    "change_request": change_payload,
                     "entry_id": entry_id,
                     "hashed_payload": f"{len(hashed_payload)} - {hashed_payload}",
                     "message_deduplication_id": message_deduplication_id,
@@ -197,7 +197,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     s, ms = divmod(sqs_timestamp, 1000)
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
-    logger.info("Change Event received", extra={"event": event})
+    logger.info("Change Event received", extra={"change-event": change_event})
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
