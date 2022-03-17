@@ -21,6 +21,7 @@ def create_change_event() -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         payload["ODSCode"] = random_odscode()
+        payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
         return payload
 
