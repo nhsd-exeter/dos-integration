@@ -50,3 +50,14 @@ Feature: F004. Error Handling
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id ABCD1
     Then the change request has status code "400"
+
+  @complete @dev
+  Scenario Outline: F004S008. Scenario Outline for sequence id tests
+    Given an ODS has an entry in dynamodb
+    When the Changed Event is sent for processing with sequence id <seqid>
+    Then the event processor logs should record a sequence error
+
+    Examples: These are both lower than the default sequence-id values
+      | seqid |
+      | 1     |
+      | -1234 |

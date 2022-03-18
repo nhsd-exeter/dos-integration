@@ -61,7 +61,7 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 30:
+        elif counter == 32:
             raise Exception("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
 
@@ -94,3 +94,9 @@ def get_processor_logs_within_time_frame_for_debug(time_in_seconds: int = 0) -> 
     logs = get_processor_logs_list_for_debug(time_in_seconds)
     for m in logs:
         print(m)
+
+
+def get_secret(secret_name: str) -> str:
+    secrets_manager = client(service_name="secretsmanager")
+    get_secret_value_response = secrets_manager.get_secret_value(SecretId=secret_name)
+    return get_secret_value_response["SecretString"]

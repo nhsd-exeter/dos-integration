@@ -2,7 +2,7 @@ Feature: F006. Opening times
 
 @complete
   Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by Dos
-    Given a specified opening time Changed Event is valid
+    Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
     And the Changed Request with changed specified date and time is captured by Dos
@@ -54,11 +54,28 @@ Feature: F006. Opening times
     Then the opening times changes are marked as valid
     And the processed Changed Request is sent to Dos
 
-@complete @mik3
+@complete
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
-    Given a specified opening time Changed Event is valid
+    Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
     And the Changed Request with changed specified date and time is captured by Dos
     And the Changed Event is replayed with the specified opening date deleted
     And the deleted specified date is confirmed removed from Dos
+
+  @complete
+  Scenario: F006S009. A recently closed pharmacy on a standard day can be opened
+    Given a specific Changed Event is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the pharmacy is confirmed "CLOSED" for the standard day in Dos
+    And the Changed Event is replayed with the pharmacy now open
+    And the pharmacy is confirmed "OPEN" for the standard day in Dos
+
+  Scenario: F006S010. A recently opened pharmacy on a standard day can be closed
+    Given an opened day standard opening time Changed Event is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the processed Changed Request is sent to Dos
+    And the pharmacy is confirmed "OPEN" for the standard day in Dos
+    And the Changed Event is replayed with the pharmacy now closed
+    And the pharmacy is confirmed "CLOSED" for the standard day in Dos

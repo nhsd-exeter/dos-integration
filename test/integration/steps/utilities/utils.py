@@ -13,7 +13,7 @@ from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
 from requests import Response
 
-from .get_secrets import get_secret
+from .aws import get_secret
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -178,23 +178,28 @@ def confirm_approver_status(correlation_id: str) -> list:
         if data != []:
             break
         approver_loop_count += 1
+    print(f'Number of retries: {approver_loop_count}')
     return data
 
 
 def get_service_id(correlation_id: str) -> list:
     retries = 0
-    data = None
-    while retries < 6:
-        sleep(5)
+    data = []
+    data_status = False
+    while data_status is False:
         lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
         response = invoke_test_db_checker_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
-        if data is not None:
-            break
-        else:
-            retries += 1
-    return data[0][0]
+        if data != []:
+            print(f'Number of retries: {retries}')
+            print(data)
+            return data[0][0]
+
+        if retries > 8:
+            raise Exception("Error!.. Service Id not found")
+        retries += 1
+        sleep(5)
 
 
 def get_change_event_demographics(odscode: str) -> Dict[str, Any]:

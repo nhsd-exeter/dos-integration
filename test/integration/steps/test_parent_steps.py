@@ -16,7 +16,7 @@ from .utilities.events import (
     valid_change_event,
 )
 
-from .utilities.log_stream import get_logs
+from .utilities.aws import get_logs
 from .utilities.utils import (
     generate_correlation_id,
     get_changes,
@@ -81,7 +81,7 @@ def a_specific_change_event_is_valid():
     return context
 
 
-@given("a specified opening time Changed Event is valid", target_fixture="context")
+@given("an opened specified opening time Changed Event is valid", target_fixture="context")
 def a_specified_opening_time_change_event_is_valid():
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
     context = {}
@@ -101,13 +101,6 @@ def a_standard_opening_time_change_event_is_valid():
     context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
     context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
     context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
-    return context
-
-
-@given("a closed day standard opening time Changed Event is valid", target_fixture="context")
-def a_closed_standard_opening_time_change_event_is_valid():
-    context = {}
-    context["change_event"] = set_opening_times_change_event()
     return context
 
 
@@ -641,12 +634,8 @@ def invalid_opening_times_exception(context):
 
 @then("the date for the specified opening time returns an empty list")
 def specified_opening_date_closed(context):
-    opening_times = context["change_event"]["OpeningTimes"]
-    for item in opening_times:
-        if item["IsOpen"] is False and item["AdditionalOpeningDate"] != "":
-            closed_date = item["AdditionalOpeningDate"]
-            date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
-            break
+    closed_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
+    date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
     assert f'\\"{date_obj}\\":[]' in logs, f"Expected closed date '{closed_date}' not captured"
@@ -655,11 +644,7 @@ def specified_opening_date_closed(context):
 
 @then("the day for the standard opening time returns an empty list")
 def standard_opening_day_closed(context):
-    opening_times = context["change_event"]["OpeningTimes"]
-    for item in opening_times:
-        if item["IsOpen"] is False and item["OpeningTimeType"] == "General":
-            closed_day = item["Weekday"]
-            break
+    closed_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
     logs = get_logs(query, "sender", context["start_time"])
     assert f'\\"{closed_day}\\":[]' in logs, f"Expected closed day '{closed_day}' not captured"
@@ -772,10 +757,11 @@ def specified_date_is_removed_from_dos(context):
 @then("the Changed Event is replayed with the pharmacy now open")
 def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
-    context["change_event"] = set_opening_times_change_event()
+    # context["change_event"] = set_opening_times_change_event()
     context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
     context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
     context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+    context["correlation_id"] = f'{context["correlation_id"]}-open-replay'
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
@@ -784,17 +770,19 @@ def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
 
 @then(parsers.parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'))
 def standard_day_confirmed_open(context, open_or_closed):
+    approver_status = confirm_approver_status(context["correlation_id"])
+    assert approver_status != [], f"Error!.. Dos Change not Approved or COMPLETED"
     service_id = get_service_id(context["correlation_id"])
     opening_time_event = get_change_event_standard_opening_times(service_id)
     week_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
-    if open_or_closed.upper() == "OPEN":
-        assert (
-            opening_time_event[week_day] != []
-        ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{week_day}"'
-    elif open_or_closed.upper() == "CLOSED":
+    if open_or_closed.upper() == "CLOSED":
         assert (
             opening_time_event[week_day] == []
         ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{week_day}"'
+    elif open_or_closed.upper() == "OPEN":
+        assert (
+            opening_time_event[week_day] != []
+        ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{week_day}"'
     else:
         raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
