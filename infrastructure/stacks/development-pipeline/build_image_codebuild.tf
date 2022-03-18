@@ -13,7 +13,7 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
     }
     filter {
       type    = "FILE_PATH"
-      pattern = local.independent_build_images[each.key].filepath
+      pattern = local.independent_build_images[each.key].filematch
     }
   }
   depends_on = [aws_codebuild_project.di_build_image]

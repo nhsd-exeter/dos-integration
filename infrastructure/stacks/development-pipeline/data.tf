@@ -28,7 +28,7 @@ locals {
   to_build    = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway"])
   independent_build_images = {
     tester = {
-      "filepath" = "^*.txt$"
+      "filematch" = "requirement"
     }
   }
 }
