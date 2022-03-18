@@ -36,7 +36,7 @@ phases:
     commands:
       - make docker-hub-signin
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
-      - make tester-build
+      - make docker-pull NAME=tester VERSION=latest
   build:
     commands:
       - echo "[Running Load Tests]"
