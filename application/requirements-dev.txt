@@ -1,3 +1,4 @@
+Faker
 aws-lambda-context
 boto3
 coverage
@@ -15,5 +16,3 @@ pytest-xdist
 requests
 responses
 testfixtures
-Dumper
-Faker

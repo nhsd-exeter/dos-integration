@@ -50,6 +50,10 @@ resource "aws_codebuild_project" "di_unit_tests" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
+    environment_variable {
+      name  = "TESTER_BUILD_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-build-tester-stage"
+    }
   }
 
   logs_config {

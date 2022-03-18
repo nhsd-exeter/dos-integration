@@ -69,7 +69,7 @@ unit-test-local:
 
 unit-test:
 	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
 	DIR=./application \
 	ARGS=" \
@@ -87,7 +87,7 @@ unit-test:
 
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
-	IMAGE=$$(make _docker-get-reg)/tester \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
@@ -103,7 +103,7 @@ coverage-report: # Runs whole project coverage unit tests
 
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
 	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --cucumberjson=./testresults.json --disable-pytest-warnings" \
 	DIR=./test/integration \
 	ARGS=" \
@@ -147,7 +147,7 @@ integration-test-local:
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
 	DIR=./test/integration \
 	ARGS=" \
@@ -444,11 +444,11 @@ undeploy-development-pipeline:
 	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=tools
 
 plan-development-pipeline:
-	if [ "$(PROFILE)" == "dev" ]; then
+	if [ "$(PROFILE)" == "tools" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-plan STACKS=development-pipeline
 	else
-		echo "Only dev profile supported at present"
+		echo "Only tools profile supported at present"
 	fi
 
 deploy-deployment-pipelines:
@@ -493,6 +493,13 @@ docker-hub-signin: # Sign into Docker hub
 	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
 	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
 	make docker-login
+
+wait-for-codebuild-to-finish: # Wait for codebuild project to finish
+	build_id=$$(aws codebuild list-builds-for-project --project-name $(PROJECT_NAME) --sort-order DESCENDING | jq --raw-output '.ids[0]')
+	while [[ $$(aws codebuild batch-get-builds --ids $$build_id | jq --raw-output '.builds[0].buildStatus') == "IN_PROGRESS" ]]; do
+		echo Waiting for $(PROJECT_NAME) to finish
+		sleep 60
+	done
 
 # ==============================================================================
 # Tester
@@ -652,7 +659,7 @@ update-all-ip-allowlists: # Update your IP address in AWS secrets manager to ace
 
 update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		CMD="python update-ip-address.py $(USERNAME)" \
 		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
 
@@ -663,7 +670,7 @@ update-ip-allowlists-and-deploy-allowlist: # Update your IP address in AWS secre
 
 delete-ip-from-allowlist: # Update your IP address in AWS secrets manager to acesss test environment - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		CMD="python delete-ip-address.py $(USERNAME)" \
 		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
 
@@ -684,3 +691,4 @@ create-ecr-repositories:
 	make docker-create-repository NAME=event-replay
 	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=test-db-checker-handler
+	make docker-create-repository NAME=tester

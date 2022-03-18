@@ -45,27 +45,15 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
       - make docker-hub-signin
-      - make docker-pull NAME=tester VERSION=latest
+      # - command
   build:
     commands:
-      - make integration-test TAGS=complete PROFILE=test ENVIRONMENT=test RUN_ID=$CODEBUILD_RESOLVED_SOURCE_VERSION-$CODEBUILD_BUILD_NUMBER PARALLEL_TEST_COUNT=10
-  # post_build:
-  #   commands:
-  #     -
-reports: #New
-  PytestIntegrationReport: # CodeBuild will create a report group called "PytestIntegrationReport".
-    files: #Store all of the files
-      - 'testresults.json'
-    base-directory: $CODEBUILD_SRC_DIR/test/integration
-    discard-paths: yes
-    file-format: CUCUMBERJSON
-#artifacts:
-  #files:
-    # - location
-    # - location
-  #name: $(date +%Y-%m-%d)
-  #discard-paths: yes
-  #base-directory: location
-#cache:
-  #paths:
-    # - paths
+      - docker --version
+      - echo "[Building docker containers]"
+      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo "[Pushing images to ECR]"
+      - echo $CODEBUILD_SOURCE_VERSION
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - make docker-push NAME=$BUILD_ITEM_NAME

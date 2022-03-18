@@ -35,6 +35,7 @@ phases:
   pre_build:
     commands:
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - make wait-for-codebuild-to-finish PROJECT_NAME=$TESTER_BUILD_PROJECT_NAME
       - aws sts get-caller-identity
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
@@ -48,7 +49,7 @@ phases:
     commands:
       - aws sts get-caller-identity
       - echo "[Running Unit Tests]"
-      - make tester-build
+      - make docker-pull NAME=tester VERSION=latest
       - make unit-test
       # - command
   #post_build:

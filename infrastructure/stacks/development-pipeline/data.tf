@@ -6,6 +6,10 @@ data "template_file" "build_buildspec" {
   template = file("build-buildspec.yml")
 }
 
+data "template_file" "build_image_buildspec" {
+  template = file("build-image-buildspec.yml")
+}
+
 data "template_file" "deploy_buildspec" {
   template = file("deploy-buildspec.yml")
 }
@@ -22,4 +26,9 @@ data "aws_iam_role" "pipeline_role" {
 locals {
   deploy_envs = toset(["dev", "test", "perf"])
   to_build    = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway"])
+  independent_build_images = {
+    tester = {
+      "filepath" = "^*.txt$"
+    }
+  }
 }

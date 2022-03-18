@@ -1,4 +1,3 @@
 aws-embedded-metrics
 aws-lambda-powertools
 psycopg2
-moto
