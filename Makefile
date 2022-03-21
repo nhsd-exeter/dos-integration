@@ -493,6 +493,18 @@ wait-for-codebuild-to-finish: # Wait for codebuild project to finish
 		sleep 60
 	done
 
+parse-deployed-environment-from-tag:
+	echo hi
+
+undeploy-if-is-environment-deployed: # Check if environment is deployed
+	environment_deployed=$$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$(ENVIRONMENT)'"))')
+	if [ -z "$$environment_deployed" ]; then
+		echo Environment not deployed
+	else
+		echo Environment is deployed
+	fi
+# make undeploy
+
 # ==============================================================================
 # Tester
 
