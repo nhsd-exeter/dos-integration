@@ -8,6 +8,10 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
       pattern = "PUSH"
     }
     filter {
+      type    = "HEAD_REF"
+      pattern = "^refs/heads/master$"
+    }
+    filter {
       type    = "FILE_PATH"
       pattern = local.independent_build_images[each.key].filematch
     }

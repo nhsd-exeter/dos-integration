@@ -46,8 +46,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
       - make docker-hub-signin
-      - make docker-build NAME=serverless # (TMP) Build Serverless docker image
-      - make serverless-requirements # Install serverless plugins
+      - make make docker-pull NAME=serverless VERSION=latest
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
