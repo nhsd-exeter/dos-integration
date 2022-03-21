@@ -23,7 +23,7 @@ serverless-clean: ### Clean serverless directory - optional: SERVERLESS_DIR=[dir
 serverless-run: # Runs serverless commands - mandatory: PROFILE, CMD=[serverless command]; optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment],SERVERLESS_CONFIG_FILE=[serverless config file name, defaults to serverless.yml]
 	make docker-run-serverless \
 	IMAGE=$(DOCKER_REGISTRY)/serverless:latest \
-	ARGS="-v $(PROJECT_DIR)/$(SERVERLESS_DIR)/serverless.yml:/deployment/serverless.yml" \
+	ARGS="-v $(PROJECT_DIR)/$(SERVERLESS_DIR)/$(SERVERLESS_CONFIG_FILE):/deployment/serverless.yml" \
 	CMD="serverless $(CMD) --config $(SERVERLESS_CONFIG_FILE) --stage $(ENVIRONMENT)"
 
 serverless-install-plugin: ### Install serverless plugin - mandatory: NAME=[plugin name]; optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment]
