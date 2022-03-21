@@ -443,6 +443,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=orchestrator
 	make docker-push NAME=authoriser
 	make docker-push NAME=dos-api-gateway
+	make docker-push NAME=slack-messenger
 
 push-tester-image:
 	make docker-push NAME=tester
