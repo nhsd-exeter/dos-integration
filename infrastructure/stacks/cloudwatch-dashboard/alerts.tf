@@ -112,7 +112,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_api_unavailable" {
   namespace                 = "UEC-DOS-INT"
   treat_missing_data        = "notBreaching"
   statistic                 = "Sum"
-  alarm_description         = "Events received from NHS UK with invalid opening times"
+  alarm_description         = "Alert for when the DOS API Gateway Unavailable or Any Errors"
   alarm_actions             = [aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
   insufficient_data_actions = []
   dimensions = {

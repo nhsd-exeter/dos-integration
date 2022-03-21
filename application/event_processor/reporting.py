@@ -99,7 +99,6 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
     metrics.set_property("ods_code", nhs_entity.odscode)
     metrics.set_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("InvalidPostcode", 1, "Count")
-    metrics.set_property("level", "INFO")
 
 
 @metric_scope
@@ -126,4 +125,3 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
     metrics.set_property("message", error_msg)
     metrics.set_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
-    metrics.set_property("level", "INFO")

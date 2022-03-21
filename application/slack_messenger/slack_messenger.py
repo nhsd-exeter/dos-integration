@@ -1,14 +1,15 @@
 from json import loads
 from os import environ
-from typing import Any, Dict
+from typing import Any, Dict, TypedDict
 from requests import post
 from urllib.parse import quote
-from datetime import datetime
+from datetime import datetime, timedelta
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SNSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from common.constants import INVALID_POSTCODE_REPORT_ID, INVALID_OPEN_TIMES_REPORT_ID
 from common.middlewares import unhandled_exception_logging
+
 
 logger = Logger()
 tracer = Tracer()
@@ -67,7 +68,7 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                     },
                     {
                         "title": "",
-                        "value": f"<{generate_cloudwatch_url(region, log_groups, filters)}|View Logs>",
+                        "value": f"<{generate_aws_cloudwatch_log_insights_url(region, log_groups, filters)}|View Logs>",
                     },
                 ],
                 "ts": timestamp,
@@ -104,55 +105,52 @@ def send_msg_slack(message):
     )
 
 
-def generate_cloudwatch_url(region: str, log_groups: list, filters: dict, limit: int = 100):
-    def escape(s):
-        for c in s:
-            if c.isalpha() or c.isdigit() or c in ["-", "."]:
-                continue
-            c_hex = "*{0:02x}".format(ord(c))
-            s = s.replace(c, c_hex)
-        return s
+def generate_aws_cloudwatch_log_insights_url(region: str, log_groups: list, filters: dict, limit: int = 100):
+    def quote_string(input_str):
+        return f"""{quote(input_str, safe="~()'*").replace('%', '*')}"""
 
-    def generate_log_insights_url(params):
-        S1 = "$257E"
-        S2 = "$2528"
-        S3 = "$2527"
-        S4 = "$2529"
+    def quote_list(input_list):
+        quoted_list = ""
+        for item in input_list:
+            if isinstance(item, str):
+                item = f"'{item}"
+            quoted_list += f"~{item}"
+        return f"({quoted_list})"
 
-        res = f"{S1}{S2}"
-        for k in params:
-            value = params[k]
-            if isinstance(value, str):
-                value = escape(value)
-            elif isinstance(value, list):
-                for i in range(len(value)):
-                    value[i] = escape(value[i])
-            prefix = S1 if list(params.items())[0][0] != k else ""
-            suffix = f"{S1}{S3}"
-            if isinstance(value, list):
-                value = "".join([f"{S1}{S3}{n}" for n in value])
-                suffix = f"{S1}{S2}"
-            elif isinstance(value, int) or isinstance(value, bool):
-                value = str(value).lower()
-                suffix = S1
-            res += f"{prefix}{k}{suffix}{value}"
-        res += f"{S4}{S4}"
-        QUERY = f"logsV2:logs-insights$3Ftab$3Dlogs$26queryDetail$3D{res}"
-        return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#{QUERY}"
+    params = []
 
-    query = "\n".join([f'| filter {k}="{v}"' for (k, v) in filters.items()])
     fields = "fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message"
-    params = {
-        "end": 0,
-        "start": -60 * 60 * 1,  # - 1hr
+    query_filters = "\n".join([f'| filter {k}="{v}"' for (k, v) in filters.items()])
+    query = f"{fields}\n{query_filters}\n| sort @timestamp asc\n| limit {limit}"
+
+    parameters: TypedDict = {
+        "end": datetime.utcnow().isoformat(timespec="milliseconds") + "Z",
+        "start": (datetime.utcnow() - timedelta(hours=1)).isoformat(timespec="milliseconds") + "Z",
         "unit": "seconds",
-        "timeType": "RELATIVE",  # "ABSOLUTE",  # OR RELATIVE and end = 0 and start is negative  seconds
+        "timeType": "ABSOLUTE",  # "ABSOLUTE",  # OR RELATIVE and end = 0 and start is negative  seconds
         "tz": "Local",  # OR "UTC"
-        "editorString": f"{fields}\n{query}\n| sort @timestamp desc\n| limit {limit}",
+        "editorString": query,
         "isLiveTail": False,
         "source": [f"/aws/lambda/{lg}" for lg in log_groups],
     }
-    return generate_log_insights_url(params)
+
+    for key, value in parameters.items():
+        if key == "editorString":
+            value = "'" + quote(value)
+            value = value.replace("%", "*")
+        elif isinstance(value, str):
+            value = "'" + value
+        if isinstance(value, bool):
+            value = str(value).lower()
+        elif isinstance(value, list):
+            value = quote_list(value)
+        params += [key, str(value)]
+
+    object_string = quote_string("~(" + "~".join(params) + ")")
+    scaped_object = quote(object_string, safe="*").replace("~", "%7E")
+    with_query_detail = "?queryDetail=" + scaped_object
+    result = quote(with_query_detail, safe="*").replace("%", "$")
+    return f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}#logsV2:logs-insights{result}"
 
 
 @unhandled_exception_logging()

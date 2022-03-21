@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from json import dumps
-from os import environ, getenv
+from os import environ
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
 from pytest import fixture, raises
 from application.slack_messenger.slack_messenger import (
@@ -8,10 +8,11 @@ from application.slack_messenger.slack_messenger import (
     lambda_handler,
     send_msg_slack,
     get_message_for_cloudwatch_event,
-    generate_cloudwatch_url,
+    generate_aws_cloudwatch_log_insights_url,
 )
 from common.constants import INVALID_POSTCODE_REPORT_ID
 from unittest.mock import patch
+
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
@@ -131,7 +132,7 @@ def test_send_message(mock_post, lambda_context):
     )
 
 
-@patch(f"{FILE_PATH}.generate_cloudwatch_url")
+@patch(f"{FILE_PATH}.generate_aws_cloudwatch_log_insights_url")
 def test_get_messsage_from_event(mock_cloudwatch_url):
 
     # Arrange
@@ -185,15 +186,14 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
 
 
 def test_generate_cloudwatch_url():
-    environ["POWERTOOLS_SERVICE_NAME"] = "test-service-name"
+    project_id = "test-service-name"
     region = "eu-west-2"
     metric_name = "InvalidPostcode"
     report_key = get_report_key(metric_name)
-    log_groups = [f'{getenv("POWERTOOLS_SERVICE_NAME")}-event-processor']
+    log_groups = [f"{project_id}-event-processor"]
     filters = {"report_key": report_key}
     expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
-    url = generate_cloudwatch_url(region, log_groups, filters, 10)
+    url = generate_aws_cloudwatch_log_insights_url(region, log_groups, filters, 10)
     assert report_key == INVALID_POSTCODE_REPORT_ID
     assert log_groups == ["test-service-name-event-processor"]
     assert url.startswith(expected_url)
-    del environ["POWERTOOLS_SERVICE_NAME"]
