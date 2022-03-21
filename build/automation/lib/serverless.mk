@@ -4,8 +4,7 @@ SERVERLESS_CONFIG_FILE := $(or $(SERVERLESS_CONFIG_FILE), serverless.yml)
 
 serverless-build:
 	cd $(SERVERLESS_DIR)
-	tar -czf $(DOCKER_DIR)/serverless/assets/serverless.tar.gz \
-		serverless.yml
+	tar -czf $(DOCKER_DIR)/serverless/assets/serverless.tar.gz serverless.yml
 	cd $(PROJECT_DIR)
 	make docker-build NAME=serverless
 
@@ -17,6 +16,9 @@ serverless-remove: # Delete existing AWS resources - mandatory: PROFILE
 
 serverless-info: # See info on deployed environment - mandatory: PROFILE
 	make serverless-run CMD=info
+
+serverless-clean: ### Clean serverless directory - optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment]
+	rm -fv $(DOCKER_DIR)/serverless/assets/*.tar.gz
 
 serverless-run: # Runs serverless commands - mandatory: PROFILE, CMD=[serverless command]; optional: SERVERLESS_DIR=[directory where .serverless is, defaults to deployment],SERVERLESS_CONFIG_FILE=[serverless config file name, defaults to serverless.yml]
 	make docker-run-serverless \
