@@ -757,7 +757,6 @@ def specified_date_is_removed_from_dos(context):
 @then("the Changed Event is replayed with the pharmacy now open")
 def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
-    # context["change_event"] = set_opening_times_change_event()
     context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
     context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
     context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
