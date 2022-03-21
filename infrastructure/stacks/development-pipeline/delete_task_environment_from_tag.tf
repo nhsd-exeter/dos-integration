@@ -43,10 +43,6 @@ resource "aws_codebuild_project" "di_destroy_environment_from_tag" {
       value = "task"
     }
     environment_variable {
-      name  = "ENVIRONMENT"
-      value = "task"
-    }
-    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }

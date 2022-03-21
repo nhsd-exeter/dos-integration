@@ -331,15 +331,15 @@ Note: This should only be run against a commit on the master branch as the code 
 
 To Deploy Demo
 
-    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=[short commit hash]
+    make tag-commit-for-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=[short commit hash]
 
 To Deploy Live
 
-    make tag-commit PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
+    make tag-commit-for-deployment PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
 
 #### Example
 
-    make tag-commit PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
+    make tag-commit-for-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
 ## Architecture
 

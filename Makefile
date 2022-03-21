@@ -418,14 +418,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 push-tester-image:
 	make docker-push NAME=tester
 
-tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
-	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
-	else
-		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
-		echo Recommended: you run this command from the master branch
-	fi
-
 # ==============================================================================
 # Pipelines
 
@@ -493,17 +485,21 @@ wait-for-codebuild-to-finish: # Wait for codebuild project to finish
 		sleep 60
 	done
 
-parse-deployed-environment-from-tag:
-	echo hi
-
-undeploy-if-is-environment-deployed: # Check if environment is deployed
-	environment_deployed=$$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$(ENVIRONMENT)'"))')
-	if [ -z "$$environment_deployed" ]; then
-		echo Environment not deployed
+tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
+		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
 	else
-		echo Environment is deployed
+		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
+		echo Recommended: you run this command from the master branch
 	fi
-# make undeploy
+
+tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[di-number], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" != "$(ENVIRONMENT)" ]; then
+		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
+		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+	else
+		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
+	fi
 
 # ==============================================================================
 # Tester
