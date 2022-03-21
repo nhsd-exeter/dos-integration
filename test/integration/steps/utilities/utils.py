@@ -178,7 +178,7 @@ def confirm_approver_status(correlation_id: str) -> list:
         if data != []:
             break
         approver_loop_count += 1
-    print(f'Number of retries: {approver_loop_count}')
+    print(f"Number of retries: {approver_loop_count}")
     return data
 
 
@@ -192,7 +192,7 @@ def get_service_id(correlation_id: str) -> list:
         data = loads(response)
         data = literal_eval(data)
         if data != []:
-            print(f'Number of retries: {retries}')
+            print(f"Number of retries: {retries}")
             print(data)
             return data[0][0]
 

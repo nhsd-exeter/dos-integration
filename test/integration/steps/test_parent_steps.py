@@ -771,7 +771,7 @@ def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
 @then(parsers.parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'))
 def standard_day_confirmed_open(context, open_or_closed):
     approver_status = confirm_approver_status(context["correlation_id"])
-    assert approver_status != [], f"Error!.. Dos Change not Approved or COMPLETED"
+    assert approver_status != [], "Error!.. Dos Change not Approved or COMPLETED"
     service_id = get_service_id(context["correlation_id"])
     opening_time_event = get_change_event_standard_opening_times(service_id)
     week_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
