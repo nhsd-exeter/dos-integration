@@ -51,8 +51,6 @@ provider:
 
 
 custom:
-  localstack:
-    stages: local
   vpcDiscovery:
   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
     vpcName: '${env:AWS_VPC_NAME}'
@@ -69,9 +67,7 @@ custom:
 
 plugins:
   - serverless-vpc-discovery
-  - serverless-localstack
 functions:
-
   orchestrator:
     image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
     architecture: x86_64

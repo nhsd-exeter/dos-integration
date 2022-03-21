@@ -30,5 +30,8 @@ locals {
     tester = {
       "filematch" = "requirement"
     }
+    serverless = {
+      "filematch" = "serverless.yml"
+    }
   }
 }

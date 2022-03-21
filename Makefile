@@ -6,7 +6,6 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 
 setup: project-config # Set up project
 	make docker-build NAME=serverless
-	make serverless-requirements
 	make tester-build
 	make mock-dos-db-setup
 
@@ -426,13 +425,6 @@ tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
 		echo Recommended: you run this command from the master branch
 	fi
-
-# ==============================================================================
-# Serverless
-
-serverless-requirements: # Install serverless plugins
-	make serverless-install-plugin NAME="serverless-vpc-discovery"
-	make serverless-install-plugin NAME="serverless-localstack"
 
 # ==============================================================================
 # Pipelines
