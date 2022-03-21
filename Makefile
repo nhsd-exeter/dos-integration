@@ -19,8 +19,6 @@ build: # Build lambdas
 		authoriser-build \
 		dos-api-gateway-build \
 		event-replay-build \
-		authoriser-build \
-		dos-api-gateway-build \
 		test-db-checker-handler-build
 
 start: # Stop project
