@@ -35,7 +35,7 @@ LAMBDA_INVOKE_RESPONSE = {
     "ResponseMetadata": {},
 }
 MESSAGE = {
-    "AlarmName": "Matthew Test",
+    "AlarmName": "Invalid Postcodes Test",
     "AlarmDescription": "Testing alarm for invalid postcodes",
     "AWSAccountId": "000000000000",
     "AlarmConfigurationUpdatedTimestamp": "2022-02-22T12:22:09.734+0000",
@@ -43,7 +43,7 @@ MESSAGE = {
     "NewStateReason": "Some message",
     "StateChangeTime": "2022-03-04T11:38:59.002+0000",
     "Region": "EU (London)",
-    "AlarmArn": "arn:aws:cloudwatch:eu-west-2:000000000000:alarm:Matthew Test",
+    "AlarmArn": "arn:aws:cloudwatch:eu-west-2:000000000000:alarm:Invalid Postcodes Test",
     "OldStateValue": "INSUFFICIENT_DATA",
     "Trigger": {
         "MetricName": "InvalidPostcode",
@@ -71,7 +71,7 @@ SNS_EVENT = {
                 "Type": "Notification",
                 "MessageId": "be6ed8fb-6ca6-5ecb-ba78-82609035c3ad",
                 "TopicArn": "arn:aws:sns:eu-west-2:000000000000:uec-dos-int-di-259-topic-app-alerts-for-slack",
-                "Subject": 'ALARM: "Matthew Test" in EU (London)',
+                "Subject": 'ALARM: "Invalid Postcodes Test" in EU (London)',
                 "Message": dumps(MESSAGE),
                 "Timestamp": "2022-03-04T11:38:59.038Z",
                 "SignatureVersion": "1",
@@ -150,7 +150,7 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
                     {
                         "short": True,
                         "title": "Alarm Name",
-                        "value": "Matthew Test",
+                        "value": "Invalid Postcodes Test",
                     },
                     {
                         "short": True,
@@ -176,7 +176,7 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
             {
                 "text": {
                     "text": ":rotating_light:  *<https://console.aws.amazon.com/cloudwatch/home?"
-                    "region=eu-west-2#alarm:alarmFilter=ANY;name=Matthew%20Test|Matthew Test>*",
+                    "region=eu-west-2#alarm:alarmFilter=ANY;name=Invalid%20Postcodes%20Test|Invalid Postcodes Test>*",
                     "type": "mrkdwn",
                 },
                 "type": "section",
