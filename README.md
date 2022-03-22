@@ -304,6 +304,13 @@ To quick update the lambdas run the following command. Note this only updates th
 
     make undeploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
 
+### Remove deployment with commit tag
+
+You can remove a task deployment using a single command to create a tag which then runs an AWS codebuild stage that will undeploy that environment
+
+    make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
+    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 task environment
+
 ### Secrets
 
 Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID)-$(PROFILE)/deployment` secret name and variable `$(DEPLOYMENT_SECRETS)` should be set accordingly.
