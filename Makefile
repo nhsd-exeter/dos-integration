@@ -5,9 +5,8 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # Development workflow targets
 
 setup: project-config # Set up project
-	make docker-build NAME=serverless
+	make serverless-build
 	make tester-build
-	make mock-dos-db-setup
 
 build: # Build lambdas
 	make -s event-sender-build \
