@@ -19,10 +19,11 @@ from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
-    log_invalid_open_times,
-    log_unmatched_service_types,
-    log_unmatched_nhsuk_pharmacies,
+    log_invalid_open_times, 
+    log_unmatched_nhsuk_pharmacies, 
     report_closed_or_hidden_services,
+    log_unmatched_service_types,
+    log_service_with_generic_bank_holiday
 )
 
 logger = Logger()
@@ -258,7 +259,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         if not nhs_entity.all_times_valid():
             log_invalid_open_times(nhs_entity, matching_services)
 
+        for dos_service in matching_services:
+            if dos_service.any_generic_bankholiday_open_periods():
+                log_service_with_generic_bank_holiday(dos_service)
+
         event_processor.get_change_requests()
+        
     finally:
         disconnect_dos_db()
 

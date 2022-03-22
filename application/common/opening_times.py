@@ -210,6 +210,7 @@ class StandardOpeningTimes:
         # Initialise all weekday OpenPeriod lists as empty
         for day in WEEKDAYS:
             setattr(self, day, [])
+        self.generic_bankholiday = []
         self.explicit_closed_days = set()
 
     def __repr__(self):
@@ -225,6 +226,8 @@ class StandardOpeningTimes:
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
 
     def __eq__(self, other: "StandardOpeningTimes"):
+        """Check equality of 2 StandardOpeningTimes (generic bankholiday values are ignored)"""
+
         if not isinstance(other, StandardOpeningTimes):
             return False
 
@@ -261,6 +264,9 @@ class StandardOpeningTimes:
         day_key = weekday.lower()
         if day_key in WEEKDAYS:
             getattr(self, day_key).append(open_period)
+        elif day_key == "bankholiday":
+            logger.warning(f"A generic bank holiday OpenPeriod '{open_period}' was found. This will be ignored.")
+            self.generic_bankholiday.append(open_period)
         else:
             logger.error(f"Cannot add opening time for invalid weekday '{weekday}', open period not added.")
 

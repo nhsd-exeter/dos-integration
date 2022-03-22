@@ -10,7 +10,7 @@ from common.constants import (
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
-    UNMATCHED_SERVICE_TYPE_REPORT_ID,
+    GENERIC_BANK_HOLIDAY_REPORT_ID
 )
 from nhs import NHSEntity
 
@@ -152,3 +152,13 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
                 "dos_service_typeid": unmatched_service.typeid,
             },
         )
+def log_service_with_generic_bank_holiday(dos_service: DoSService) -> None:
+    """Log a service found to have a generic bank holiday open times set in DoS"""
+
+    logger.warning(
+        f"DoS Service uid={dos_service.uid} has a generic BankHoliday Standard opening time set in DoS",
+        extra={
+            "report_key": GENERIC_BANK_HOLIDAY_REPORT_ID,
+            "dos_service": dos_service.uid,
+        },
+    )
