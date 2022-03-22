@@ -418,14 +418,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 push-tester-image:
 	make docker-push NAME=tester
 
-tag-commit: # Tag docker images, then git tag commit - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
-	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
-	else
-		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
-		echo Recommended: you run this command from the master branch
-	fi
-
 # ==============================================================================
 # Pipelines
 
@@ -492,6 +484,22 @@ wait-for-codebuild-to-finish: # Wait for codebuild project to finish
 		echo Waiting for $(PROJECT_NAME) to finish
 		sleep 60
 	done
+
+tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
+		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
+	else
+		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
+		echo Recommended: you run this command from the master branch
+	fi
+
+tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[di-number], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" != "$(ENVIRONMENT)" ]; then
+		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
+		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+	else
+		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
+	fi
 
 # ==============================================================================
 # Tester

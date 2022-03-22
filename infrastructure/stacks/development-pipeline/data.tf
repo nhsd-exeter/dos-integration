@@ -14,9 +14,12 @@ data "template_file" "deploy_buildspec" {
   template = file("deploy-buildspec.yml")
 }
 
-
 data "template_file" "integration_tests_buildspec" {
   template = file("integration-tests-buildspec.yml")
+}
+
+data "template_file" "delete_task_environment_from_tag_buildspec" {
+  template = file("delete-task-environment-from-tag-buildspec.yml")
 }
 
 data "aws_iam_role" "pipeline_role" {
