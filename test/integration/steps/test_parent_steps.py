@@ -92,7 +92,7 @@ def a_specified_opening_time_change_event_is_valid():
     return context
 
 
-@given("a standard opening time Changed Event is valid", target_fixture="context")
+@given("an opened standard opening time Changed Event is valid", target_fixture="context")
 def a_standard_opening_time_change_event_is_valid():
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
     context = {}
@@ -754,13 +754,21 @@ def specified_date_is_removed_from_dos(context):
     ), f"Error!.. Removed specified date: {removed_date} still exists in Dos"
 
 
-@then("the Changed Event is replayed with the pharmacy now open")
-def event_replayed_with_pharmacy_closed(context, valid_or_invalid):
+@then(parsers.parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
+def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_closed):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
-    context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
-    context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
-    context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
-    context["correlation_id"] = f'{context["correlation_id"]}-open-replay'
+    if open_or_closed.upper() == "OPEN":
+        context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
+        context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
+        context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+        context["correlation_id"] = f'{context["correlation_id"]}_open_replay'
+    elif open_or_closed.upper() == "CLOSED":
+        context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = ""
+        context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = ""
+        context["change_event"]["OpeningTimes"][-2]["IsOpen"] = False
+        context["correlation_id"] = f'{context["correlation_id"]}_closed_replay'
+    else:
+        raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
