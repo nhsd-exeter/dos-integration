@@ -42,9 +42,8 @@ deploy: # Deploys whole project - mandatory: PROFILE
 	make terraform-apply-auto-approve STACKS=api-gateway-sqs,splunk-logs,cloudwatch-dashboard
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=splunk-logs,api-gateway-sqs,cloudwatch-dashboard
-	make serverless-remove VERSION="any" DB_PASSWORD="any"
+	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any"
 	make terraform-destroy-auto-approve STACKS=lambda-security-group,lambda-iam-roles
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
@@ -424,7 +423,7 @@ mock-dos-api-gateway-deployment:
 # ==============================================================================
 # Deployments
 
-sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp]
+sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp/latest]
 	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy
 

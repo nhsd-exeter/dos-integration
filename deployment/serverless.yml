@@ -1,9 +1,7 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
 service: uec-dos-integration
-frameworkVersion: '2'
-variablesResolutionMode: 20210326
+frameworkVersion: '3'
 configValidationMode: error
-unresolvedVariablesNotificationMode: error
 
 provider:
   name: aws
