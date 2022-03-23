@@ -201,7 +201,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
             "dos_service_name": dos_service.publicname,
             "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
             "nhsuk_parentorg": nhs_entity.parent_org_name,
-            "time": time.strftime("%Y-%m-%d %H:%M")
+            "discovery_time": time.strftime("%Y-%m-%d %H:%M")
         },
     )
 
