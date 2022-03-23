@@ -86,6 +86,7 @@ class DoSService:
     def any_generic_bankholiday_open_periods(self) -> bool:
         return len(self.get_standard_opening_times().generic_bankholiday) > 0
 
+
 @dataclass(init=True, repr=True)
 class DoSLocation:
     id: int

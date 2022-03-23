@@ -264,7 +264,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
                 log_service_with_generic_bank_holiday(dos_service)
 
         event_processor.get_change_requests()
-        
     finally:
         disconnect_dos_db()
 

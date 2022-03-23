@@ -1,5 +1,4 @@
 from datetime import date, datetime, time, timezone
-from lib2to3.pgen2.token import OP
 from random import choices
 from unittest.mock import MagicMock, patch
 

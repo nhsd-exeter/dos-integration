@@ -482,7 +482,6 @@ def test_stdopeningtimes_eq():
     assert st1 == st2
 
 
-
 def test_stdopeningtimes_any_contradiction():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
