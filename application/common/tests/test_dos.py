@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timezone
+from lib2to3.pgen2.token import OP
 from random import choices
 from unittest.mock import MagicMock, patch
 
@@ -117,6 +118,38 @@ def test_get_matching_dos_services_services_returned(mock_query_dos_db):
     )
     mock_connection.fetchall.assert_called_with()
     mock_connection.close.assert_called_with()
+
+
+def test_any_generic_bankholiday_open_periods():
+    dos_service = dummy_dos_service()
+    dos_service._standard_opening_times = StandardOpeningTimes()
+    op1 = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
+    op2 = OpenPeriod(time(14, 0, 0), time(18, 0, 0))
+
+    assert dos_service.any_generic_bankholiday_open_periods() is False
+
+    dos_service._standard_opening_times.add_open_period(op1, "monday")
+    assert dos_service.any_generic_bankholiday_open_periods() is False
+
+    dos_service._standard_opening_times.add_open_period(op2, "monday")
+    assert dos_service.any_generic_bankholiday_open_periods() is False
+
+    dos_service._standard_opening_times.add_open_period(op1, "tuesday")
+    dos_service._standard_opening_times.add_open_period(op1, "wednesday")
+    dos_service._standard_opening_times.add_open_period(op1, "thursday")
+    dos_service._standard_opening_times.add_open_period(op1, "friday")
+    dos_service._standard_opening_times.add_open_period(op1, "saturday")
+    dos_service._standard_opening_times.add_open_period(op1, "sunday")
+    assert dos_service.any_generic_bankholiday_open_periods() is False
+
+    dos_service._standard_opening_times.add_open_period(op1, "bankholiday")
+    assert dos_service.any_generic_bankholiday_open_periods()
+
+    dos_service._standard_opening_times.add_open_period(op2, "bankholiday")
+    assert dos_service.any_generic_bankholiday_open_periods()
+
+    dos_service._standard_opening_times.generic_bankholiday = []
+    assert dos_service.any_generic_bankholiday_open_periods() is False
 
 
 @patch(f"{FILE_PATH}.query_dos_db")

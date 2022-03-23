@@ -471,6 +471,17 @@ def test_stdopeningtimes_eq():
     st2.sunday += [c, b, a]
     assert st1 == st2
 
+    # Standard opening times should be equal even if generic bank holidays are not
+    # this is expected behaviour because generic bank holidays in DoS are ignored.
+    st1.generic_bankholiday = [a]
+    st2.generic_bankholiday = []
+    assert st1 == st2
+
+    st1.generic_bankholiday = [a, b, c]
+    st2.generic_bankholiday = [a, b, c]
+    assert st1 == st2
+
+
 
 def test_stdopeningtimes_any_contradiction():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
