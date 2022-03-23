@@ -1,15 +1,17 @@
 from typing import List
+from os import environ
 import json
-
+from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.dos import DoSService, VALID_STATUS_ID
+from common.constants import (
+    HIDDEN_OR_CLOSED_REPORT_ID,
+    INVALID_OPEN_TIMES_REPORT_ID,
+    INVALID_POSTCODE_REPORT_ID,
+    UN_MATCHED_PHARMACY_REPORT_ID,
+)
 from nhs import NHSEntity
-
-HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"
-UN_MATCHED_PHARMACY_REPORT_ID = "UN_MATCHED_PHARMACY"
-INVALID_POSTCODE_REPORT_ID = "INVALID_POSTCODE"
-INVALID_OPEN_TIMES_REPORT_ID = "INVALID_OPEN_TIMES"
 
 
 logger = Logger(child=True)
@@ -66,15 +68,16 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
     )
 
 
-def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSService) -> None:
+@metric_scope
+def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSService, metrics) -> None:
     """Log invalid NHS pharmacy postcode
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         dos_service (List[DoSService]): The list of DoS matching services
     """
-
+    error_msg = f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
     logger.warning(
-        f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!",
+        error_msg,
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
@@ -89,17 +92,26 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
             "dos_service": dos_service.uid,
         },
     )
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "WARNING")
+    metrics.set_property("message", error_msg)
+    metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.set_property("ods_code", nhs_entity.odscode)
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.put_metric("InvalidPostcode", 1, "Count")
 
 
-def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
+@metric_scope
+def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSService], metrics) -> None:
     """Report invalid open times for nhs entity
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         matching_services (List[DoSService]): The list of DoS matching services
     """
+    error_msg = f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times."
     logger.warning(
-        f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times.",
+        error_msg,
         extra={
             "report_key": INVALID_OPEN_TIMES_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
@@ -108,3 +120,8 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
             "dos_services": ", ".join(str(service.uid) for service in matching_services),
         },
     )
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "WARNING")
+    metrics.set_property("message", error_msg)
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.put_metric("InvalidOpenTimes", 1, "Count")

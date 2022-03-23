@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pytest import fixture
 
 from ..cr_fifo_dlq_handler import lambda_handler
+from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 
 FILE_PATH = "application.cr_fifo_dlq_handler.cr_fifo_dlq_handler"
 
@@ -21,7 +22,9 @@ def lambda_context():
 
 
 @patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler(mock_extract_body, lambda_context):
+@patch.object(MetricsLogger, "put_metric")
+@patch.object(MetricsLogger, "set_dimensions")
+def test_lambda_handler(mock_put_metric, mock_set_dimentions, mock_extract_body, lambda_context):
     # Arrange
     change_request = {
         "reference": "Dummy correlation id",

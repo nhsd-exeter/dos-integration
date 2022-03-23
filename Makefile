@@ -15,9 +15,10 @@ build: # Build lambdas
 		fifo-dlq-handler-build \
 		cr-fifo-dlq-handler-build \
 		orchestrator-build \
-		event-replay-build \
+		slack-messenger-build \
 		authoriser-build \
 		dos-api-gateway-build \
+		event-replay-build \
 		test-db-checker-handler-build
 
 start: # Stop project
@@ -59,12 +60,13 @@ populate-deployment-variables:
 	eval "$$(make aws-assume-role-export-variables)"
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
+	echo "export URL_SLACK_WEBHOOK=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
 
 unit-test-local:
 	pyenv local .venv
 	pip install -r application/requirements-dev.txt -r application/event_processor/requirements.txt -r application/event_replay/requirements.txt -r application/event_sender/requirements.txt -r application/fifo_dlq_handler/requirements.txt
 	cd application
-	python -m pytest --junitxml=./testresults.xml --cov=. -vv
+	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
 	make -s docker-run-tools \
@@ -82,6 +84,7 @@ unit-test:
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
+		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
 coverage-report: # Runs whole project coverage unit tests
@@ -98,6 +101,7 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
+		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
 smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
@@ -177,6 +181,8 @@ clean: # Runs whole project clean
 		event-sender-clean \
 		event-processor-clean \
 		fifo-dlq-handler-clean \
+		slack-messenger-clean \
+		orchestrator-clean \
 		cr-fifo-dlq-handler-clean \
 		event-replay-clean \
 		test-db-checker-handler-clean \
@@ -221,6 +227,29 @@ event-sender-clean: ### Clean event sender lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
 	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
 	make common-code-remove LAMBDA_DIR=event_sender
+
+
+# ==============================================================================
+# Slack Messenger
+
+slack-messenger-build: ### Build event sender lambda docker image
+	make common-code-copy LAMBDA_DIR=slack_messenger
+	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/slack-messenger/assets/requirements.txt
+	cd $(APPLICATION_DIR)/slack_messenger
+	tar -czf $(DOCKER_DIR)/slack-messenger/assets/slack-messenger-app.tar.gz \
+		--exclude=tests \
+		*.py \
+		common
+	cd $(PROJECT_DIR)
+	make docker-image NAME=slack-messenger
+	make slack-messenger-clean
+	export VERSION=$$(make docker-image-get-version NAME=slack-messenger)
+
+slack-messenger-clean: ### Clean event sender lambda docker image directory
+	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz
+	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.txt
+	make common-code-remove LAMBDA_DIR=slack_messenger
+
 
 # ==============================================================================
 # Event Processor
@@ -414,6 +443,7 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 	make docker-push NAME=orchestrator
 	make docker-push NAME=authoriser
 	make docker-push NAME=dos-api-gateway
+	make docker-push NAME=slack-messenger
 
 push-tester-image:
 	make docker-push NAME=tester
@@ -508,6 +538,8 @@ tester-build: ### Build tester docker image
 	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
+	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-messenger.txt
+	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-orchestrator.txt
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-cr-fifo-dlq-hander.txt
 	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt

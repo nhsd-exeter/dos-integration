@@ -1,3 +1,4 @@
+from os import environ
 from unittest.mock import patch
 
 from dos import dos_location_cache
@@ -141,6 +142,7 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
 @patch(f"{FILE_PATH}.get_valid_dos_postcode")
 def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, change_event):
     # Arrange
+    environ["ENV"] = "test"
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
     mock_get_valid_dos_postcode.return_value = None
@@ -155,6 +157,7 @@ def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, 
 @patch(f"{FILE_PATH}.get_valid_dos_postcode")
 def test_do_not_update_address_if_postcode_invalid_no_address(mock_get_valid_dos_postcode, change_event):
     # Arrange
+    environ["ENV"] = "test"
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
     mock_get_valid_dos_postcode.return_value = None

@@ -149,6 +149,23 @@ functions:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
 
+  slack-messenger:
+    image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
+    description: ${sls:stage} Slack Messenger lambda
+    memorySize: 128
+    timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role_name}
+    tags:
+      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    environment:
+      SLACK_WEBHOOK_URL: ${env:URL_SLACK_WEBHOOK}
+      SLACK_ALERT_CHANNEL: ${env:SLACK_ALERT_CHANNEL}
+    events:
+      - sns:
+          arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack}
+
   cr-fifo-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
     architecture: x86_64
