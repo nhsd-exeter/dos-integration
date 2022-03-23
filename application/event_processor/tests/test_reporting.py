@@ -1,5 +1,6 @@
 from unittest.mock import patch
 import json
+from datetime import datetime
 
 from aws_lambda_powertools import Logger
 from common.dos import VALID_STATUS_ID
@@ -7,20 +8,23 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
+    INVALID_OPEN_TIMES_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
+    GENERIC_BANK_HOLIDAY_REPORT_ID
 )
 
+from common.dos import VALID_STATUS_ID
+from common.opening_times import OpenPeriod
+from .conftest import dummy_dos_service
 from ..nhs import NHSEntity
 from ..reporting import (
-    INVALID_OPEN_TIMES_REPORT_ID,
     log_invalid_open_times,
     log_unmatched_service_types,
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
+    log_service_with_generic_bank_holiday
 )
-from .conftest import dummy_dos_service
-
 
 @patch.object(Logger, "warning")
 def test_report_closed_or_hidden_services(mock_logger, change_event):
@@ -168,7 +172,36 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
-            "dos_services": ", ".join(str(service.uid) for service in dos_services),
+            "dos_services": ", ".join(str(service.uid) for service in dos_services)
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_service_with_generic_bank_holiday(mock_logger):
+    # Arrange
+    nhs_entity = NHSEntity({})
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    dos_service = dummy_dos_service()
+    open_periods = [OpenPeriod.from_string("08:00-13:00"), OpenPeriod.from_string("04:00-18:00")]
+    dos_service._standard_opening_times.generic_bankholiday = open_periods
+
+    # Act
+    time = datetime.utcnow()
+    log_service_with_generic_bank_holiday(nhs_entity, dos_service)
+    # Assert
+    mock_logger.assert_called_with(
+        f"DoS Service uid={dos_service.uid} has a generic BankHoliday Standard opening time set in DoS",
+        extra={
+            "report_key": GENERIC_BANK_HOLIDAY_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "dos_service_uid": dos_service.uid,
+            "dos_service_name": dos_service.publicname,
+            "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
+            "nhsuk_parentorg": nhs_entity.parent_org_name,
+            "time": time.strftime("%Y-%m-%d %H:%M")
         },
     )
 
