@@ -44,7 +44,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" 
 }
 
 
-resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dql_alert" {
+resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dlq_alert" {
   alarm_name                = "${var.project_id} | ${var.environment} | Change Events DLQ'd"
   comparison_operator       = "GreaterThanThreshold"
   evaluation_periods        = "1"
@@ -141,7 +141,7 @@ resource "aws_cloudwatch_metric_alarm" "change_request_to_dos_latency_alert" {
 }
 
 
-resource "aws_cloudwatch_metric_alarm" "change_request_sqs_dql_alert" {
+resource "aws_cloudwatch_metric_alarm" "change_request_sqs_dlq_alert" {
   alarm_name                = "${var.project_id} | ${var.environment} | Change Requests DLQ'd"
   comparison_operator       = "GreaterThanThreshold"
   evaluation_periods        = "3"
