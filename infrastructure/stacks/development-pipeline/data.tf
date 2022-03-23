@@ -28,7 +28,7 @@ data "aws_iam_role" "pipeline_role" {
 
 locals {
   deploy_envs = toset(["dev", "test", "perf"])
-  to_build    = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway"])
+  to_build    = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway", "slack_messenger"])
   independent_build_images = {
     tester = {
       "filematch" = "requirement"
