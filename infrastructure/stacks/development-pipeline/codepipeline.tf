@@ -21,7 +21,7 @@ resource "aws_codepipeline" "codepipeline" {
       configuration = {
         ConnectionArn    = aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
-        BranchName       = "task/DI-363_Build_serverless_image"
+        BranchName       = var.code_pipeline_branch_name
         DetectChanges    = true
       }
     }
