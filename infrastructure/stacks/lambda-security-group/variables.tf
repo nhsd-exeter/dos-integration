@@ -60,3 +60,11 @@ variable "lambda_security_group_name" {
 variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
 }
+
+############
+# SNS TOPIC
+############
+
+variable "sns_topic_app_alerts_for_slack" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+}
