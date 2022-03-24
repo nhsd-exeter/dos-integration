@@ -173,8 +173,8 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-@patch(f"{FILE_PATH}.log_un_matched_service_types")
-def test_get_un_matching_services(mock_log_un_matched_service_types, mock_get_matching_dos_services, change_event):
+@patch(f"{FILE_PATH}.log_unmatched_service_types")
+def test_get_un_matching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
@@ -185,7 +185,7 @@ def test_get_un_matching_services(mock_log_un_matched_service_types, mock_get_ma
     # Act
     event_processor.get_matching_services()
     # Assert
-    mock_log_un_matched_service_types.assert_called_once()
+    mock_log_unmatched_service_types.assert_called_once()
 
 
 def get_message_attributes(

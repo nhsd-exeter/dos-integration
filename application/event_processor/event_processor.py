@@ -20,7 +20,7 @@ from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
     log_invalid_open_times,
-    log_un_matched_service_types,
+    log_unmatched_service_types,
     log_unmatched_nhsuk_pharmacies,
     report_closed_or_hidden_services,
 )
@@ -59,7 +59,7 @@ class EventProcessor:
         logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
 
-        # Filter for un matched service types and valid status
+        # Filter for unmatched service types and valid status
         non_matching_services = [
             s
             for s in matching_services
@@ -67,7 +67,7 @@ class EventProcessor:
         ]
 
         if len(non_matching_services) > 0:
-            log_un_matched_service_types(self.nhs_entity, non_matching_services)
+            log_unmatched_service_types(self.nhs_entity, non_matching_services)
 
         logger.info(
             f"Found {len(matching_services)} services in DB with "
