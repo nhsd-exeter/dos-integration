@@ -172,6 +172,22 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     assert matching_services == [service]
 
 
+@patch(f"{FILE_PATH}.get_matching_dos_services")
+@patch(f"{FILE_PATH}.log_un_matched_service_types")
+def test_get_un_matching_services(mock_log_un_matched_service_types, mock_get_matching_dos_services, change_event):
+    # Arrange
+    nhs_entity = NHSEntity(change_event)
+    service = dummy_dos_service()
+    service.typeid = 999
+    service.statusid = 1
+    mock_get_matching_dos_services.return_value = [service]
+    event_processor = EventProcessor(nhs_entity)
+    # Act
+    event_processor.get_matching_services()
+    # Assert
+    mock_log_un_matched_service_types.assert_called_once()
+
+
 def get_message_attributes(
     correlation_id: str,
     message_received: int,

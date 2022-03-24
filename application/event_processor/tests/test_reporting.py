@@ -3,12 +3,18 @@ import json
 
 from aws_lambda_powertools import Logger
 from common.dos import VALID_STATUS_ID
-from common.constants import HIDDEN_OR_CLOSED_REPORT_ID, UN_MATCHED_PHARMACY_REPORT_ID, INVALID_POSTCODE_REPORT_ID
+from common.constants import (
+    HIDDEN_OR_CLOSED_REPORT_ID,
+    UN_MATCHED_PHARMACY_REPORT_ID,
+    INVALID_POSTCODE_REPORT_ID,
+    UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+)
 
 from ..nhs import NHSEntity
 from ..reporting import (
     INVALID_OPEN_TIMES_REPORT_ID,
     log_invalid_open_times,
+    log_un_matched_service_types,
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
@@ -163,5 +169,45 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
             "dos_services": ", ".join(str(service.uid) for service in dos_services),
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_un_matched_service_types(mock_logger):
+    # Arrange
+    nhs_entity = NHSEntity(
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+    )
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    nhs_entity.org_type_id = "PHA"
+    nhs_entity.org_status = "OrganisationStatus"
+    nhs_entity.org_sub_type = "OrganisationSubType"
+    nhs_entity.postcode = "MK2 XXX"
+
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 999
+    # Act
+    log_un_matched_service_types(nhs_entity, dos_service)
+    # Assert
+    assert (
+        UN_MATCHED_SERVICE_TYPE_REPORT_ID == "UN_MATCHED_SERVICE_TYPE"
+    ), f"Log ID should be UN_MATCHED_SERVICE_TYPE but was {UN_MATCHED_SERVICE_TYPE_REPORT_ID}"
+    mock_logger.assert_called_with(
+        error_msg=f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not a valid!",
+        extra={
+            "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+            "nhsuk_organisation_status": nhs_entity.org_status,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+            "dos_service": dos_service.uid,
+            "dos_service_id": dos_service.id,
+            "dos_publicname": dos_service.publicname,
+            "dos_service_status": VALID_STATUS_ID,
+            "dos_service_type": dos_service.typeid,
         },
     )

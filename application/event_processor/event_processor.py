@@ -18,7 +18,12 @@ from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
-from reporting import log_invalid_open_times, log_unmatched_nhsuk_pharmacies, report_closed_or_hidden_services
+from reporting import (
+    log_invalid_open_times,
+    log_un_matched_service_types,
+    log_unmatched_nhsuk_pharmacies,
+    report_closed_or_hidden_services,
+)
 
 logger = Logger()
 tracer = Tracer()
@@ -53,6 +58,17 @@ class EventProcessor:
         # Check database for services with same first 5 digits of ODSCode
         logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
         matching_services = get_matching_dos_services(self.nhs_entity.odscode)
+
+        # Filter for un matched service types and valid status
+        non_matching_services = [
+            s
+            for s in matching_services
+            if int(s.typeid) not in VALID_SERVICE_TYPES and int(s.statusid) == VALID_STATUS_ID
+        ]
+
+        if len(non_matching_services) > 0:
+            log_un_matched_service_types(self.nhs_entity, non_matching_services)
+
         logger.info(
             f"Found {len(matching_services)} services in DB with "
             f"matching first 5 chars of ODSCode: {matching_services}"
