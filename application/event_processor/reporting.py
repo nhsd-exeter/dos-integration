@@ -134,7 +134,7 @@ def log_un_matched_service_types(nhs_entity: NHSEntity, un_matched_services: DoS
         nhs_entity (NHSEntity): The NHS entity to report
         un_matched_services (List[DoSService]): The list of DoS un matched services
     """
-    error_msg = f"NHS entity '{nhs_entity.odscode}' service type '{ un_matched_services.typeid}' is not a valid!"
+    error_msg = f"NHS entity '{nhs_entity.odscode}' service type '{ un_matched_services.typeid}' is not valid!"
     logger.warning(
         error_msg,
         extra={

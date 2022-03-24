@@ -195,7 +195,7 @@ def test_log_un_matched_service_types(mock_logger):
         UN_MATCHED_SERVICE_TYPE_REPORT_ID == "UN_MATCHED_SERVICE_TYPE"
     ), f"Log ID should be UN_MATCHED_SERVICE_TYPE but was {UN_MATCHED_SERVICE_TYPE_REPORT_ID}"
     mock_logger.assert_called_with(
-        error_msg=f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not a valid!",
+        f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not valid!",
         extra={
             "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
