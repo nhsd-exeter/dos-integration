@@ -188,8 +188,9 @@ def test_log_un_matched_service_types(mock_logger):
 
     dos_service = dummy_dos_service()
     dos_service.typeid = 999
+    un_matched_service_types = [dos_service]
     # Act
-    log_un_matched_service_types(nhs_entity, dos_service)
+    log_un_matched_service_types(nhs_entity, un_matched_service_types)
     # Assert
     assert (
         UN_MATCHED_SERVICE_TYPE_REPORT_ID == "UN_MATCHED_SERVICE_TYPE"
@@ -204,10 +205,10 @@ def test_log_un_matched_service_types(mock_logger):
             "nhsuk_organisation_status": nhs_entity.org_status,
             "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
-            "dos_service": dos_service.uid,
+            "dos_service_uid": dos_service.uid,
             "dos_service_id": dos_service.id,
-            "dos_publicname": dos_service.publicname,
+            "dos_service_publicname": dos_service.publicname,
             "dos_service_status": VALID_STATUS_ID,
-            "dos_service_type": dos_service.typeid,
+            "dos_service_typeid": dos_service.typeid,
         },
     )

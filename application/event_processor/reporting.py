@@ -128,27 +128,27 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
 
 
-def log_un_matched_service_types(nhs_entity: NHSEntity, un_matched_services: DoSService) -> None:
+def log_un_matched_service_types(nhs_entity: NHSEntity, un_matched_services: List[DoSService]) -> None:
     """Log unmatched DOS service types
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         un_matched_services (List[DoSService]): The list of DoS un matched services
     """
-    error_msg = f"NHS entity '{nhs_entity.odscode}' service type '{ un_matched_services.typeid}' is not valid!"
-    logger.warning(
-        error_msg,
-        extra={
-            "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.odscode,
-            "nhsuk_organisation_name": nhs_entity.org_name,
-            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
-            "nhsuk_organisation_status": nhs_entity.org_status,
-            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
-            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
-            "dos_service": un_matched_services.uid,
-            "dos_service_id": un_matched_services.id,
-            "dos_publicname": un_matched_services.publicname,
-            "dos_service_status": VALID_STATUS_ID,
-            "dos_service_type": un_matched_services.typeid,
-        },
-    )
+    for un_matched_service in un_matched_services:
+        logger.warning(
+            f"NHS entity '{nhs_entity.odscode}' service type '{ un_matched_service.typeid}' is not valid!",
+            extra={
+                "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+                "nhsuk_odscode": nhs_entity.odscode,
+                "nhsuk_organisation_name": nhs_entity.org_name,
+                "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+                "nhsuk_organisation_status": nhs_entity.org_status,
+                "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+                "dos_service_uid": un_matched_service.uid,
+                "dos_service_id": un_matched_service.id,
+                "dos_service_publicname": un_matched_service.publicname,
+                "dos_service_status": VALID_STATUS_ID,
+                "dos_service_typeid": un_matched_service.typeid,
+            },
+        )
