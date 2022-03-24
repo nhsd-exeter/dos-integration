@@ -66,9 +66,9 @@ TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
 # Lambda IAM Roles
 TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
 TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
-TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dql-handler-role
+TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
-TF_VAR_cr_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dql-handler-role
+TF_VAR_cr_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler-role
 TF_VAR_test_db_checker_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-test-db-checker-handler-role
 TF_VAR_orchestrator_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-role
 TF_VAR_slack_messenger_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-slack-messenger-role

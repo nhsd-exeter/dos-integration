@@ -85,6 +85,17 @@ variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
 }
 
+# ######################
+# # CLOUDWATCH ALERTS
+# #######################
+variable "sqs_dlq_recieved_msg_alert_name" {
+  description = "The name of the cloudwatch alert for msgs recieved in the sqs dlq"
+}
+variable "sns_topic_app_alerts_for_slack" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+}
+
+
 # ############################
 # SQS FIFO QUEUE
 # ############################

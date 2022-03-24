@@ -34,6 +34,7 @@ fields @timestamp,correlation_id,ods_code,level,message_received,function_name, 
 EOF
 }
 
+
 resource "aws_cloudwatch_query_definition" "by_invalid_postcode" {
   name = "${var.project_id}/${var.environment}/by-invalid-postcode"
 

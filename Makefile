@@ -36,7 +36,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,before-lambda-deployment
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
@@ -44,6 +44,9 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
 	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" URL_SLACK_WEBHOOK="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
+		make terraform-apply-auto-approve STACKS=api-key
+	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
 	fi
