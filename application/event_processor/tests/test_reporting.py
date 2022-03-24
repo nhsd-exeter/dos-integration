@@ -7,7 +7,7 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     UN_MATCHED_PHARMACY_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
-    UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+    UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
 
 from ..nhs import NHSEntity
@@ -193,12 +193,12 @@ def test_log_un_matched_service_types(mock_logger):
     log_un_matched_service_types(nhs_entity, un_matched_service_types)
     # Assert
     assert (
-        UN_MATCHED_SERVICE_TYPE_REPORT_ID == "UN_MATCHED_SERVICE_TYPE"
-    ), f"Log ID should be UN_MATCHED_SERVICE_TYPE but was {UN_MATCHED_SERVICE_TYPE_REPORT_ID}"
+        UNMATCHED_SERVICE_TYPE_REPORT_ID == "UNMATCHED_SERVICE_TYPE"
+    ), f"Log ID should be UN_MATCHED_SERVICE_TYPE but was {UNMATCHED_SERVICE_TYPE_REPORT_ID}"
     mock_logger.assert_called_with(
         f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not valid!",
         extra={
-            "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+            "report_key": UNMATCHED_SERVICE_TYPE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_organisation_typeid": nhs_entity.org_type_id,

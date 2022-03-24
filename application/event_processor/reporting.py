@@ -10,7 +10,7 @@ from common.constants import (
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
     UN_MATCHED_PHARMACY_REPORT_ID,
-    UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+    UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
 from nhs import NHSEntity
 
@@ -138,7 +138,7 @@ def log_un_matched_service_types(nhs_entity: NHSEntity, un_matched_services: Lis
         logger.warning(
             f"NHS entity '{nhs_entity.odscode}' service type '{ un_matched_service.typeid}' is not valid!",
             extra={
-                "report_key": UN_MATCHED_SERVICE_TYPE_REPORT_ID,
+                "report_key": UNMATCHED_SERVICE_TYPE_REPORT_ID,
                 "nhsuk_odscode": nhs_entity.odscode,
                 "nhsuk_organisation_name": nhs_entity.org_name,
                 "nhsuk_organisation_typeid": nhs_entity.org_type_id,
