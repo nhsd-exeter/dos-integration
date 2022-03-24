@@ -31,7 +31,6 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	make -s terraform-clean
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make mock-dos-api-gateway-deployment
 	fi
@@ -45,7 +44,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" URL_SLACK_WEBHOOK="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make terraform-apply-auto-approve STACKS=api-key
+		make terraform-destroy-auto-approve STACKS=api-key
 	fi
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
@@ -54,6 +53,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
+	make -s terraform-clean
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
@@ -466,7 +466,7 @@ plan-development-pipeline:
 	fi
 
 deploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+	if [ "$(PROFILE)" == "tools" ]; then
 		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-apply-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
 	else
@@ -474,7 +474,7 @@ deploy-deployment-pipelines:
 	fi
 
 undeploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
+	if [ "$(PROFILE)" == "tools" ]; then
 		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
 		make terraform-destroy-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
 	else

@@ -148,3 +148,10 @@ variable "cr_dead_letter_queue_from_fifo_queue_name" {
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
 }
+
+# ######################
+# # CLOUDWATCH ALERTS
+# #######################
+variable "sns_topic_app_alerts_for_slack" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+}
