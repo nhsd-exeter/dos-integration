@@ -1,4 +1,4 @@
-Feature: F002. Invalid change event handling
+Feature: F002. Invalid change event Exception handling
 
   @complete @dev
   Scenario: F002S001. Unmatched DOS services exception is logged

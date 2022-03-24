@@ -33,26 +33,26 @@ Feature: F004. Error Handling
     And the Changed Event is stored in dynamo db
 
 @complete @dev
-  Scenario: F004S005. Sequence number is not present in headers
+  Scenario: F004S005. An exception is raised when Sequence number is not present in headers
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with no sequence id
     Then the change request has status code "400"
 
 @complete @dev
-  Scenario: F004S006. Sequence number is duplicate of current
+  Scenario: F004S006. An exception is raised when Sequence number is a duplicate of current
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id
-    Then the processed Changed Request is sent to Dos
+    Then the Changed Request is accepted by Dos
     And the Changed Event is stored in dynamo db
 
 @complete @dev
-  Scenario: F004S007. Alphanumeric sequence number gets 400 Bad Request
+  Scenario: F004S007. An Alphanumeric Sequence number raises a 400 Bad Request exception
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id ABCD1
     Then the change request has status code "400"
 
   @complete @dev
-  Scenario Outline: F004S008. Scenario Outline for sequence id tests
+  Scenario Outline: F004S008. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id <seqid>
     Then the event processor logs should record a sequence error

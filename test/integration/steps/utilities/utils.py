@@ -162,6 +162,19 @@ def get_changes(correlation_id: str) -> list:
     return data
 
 
+def confirm_changes(correlation_id: str) -> list:
+    changes_loop_count = 0
+    data = []
+    while changes_loop_count < 10:
+        sleep(60)
+        data = get_changes(correlation_id)
+        if data != []:
+            break
+        changes_loop_count += 1
+    print(f"Number of confirm-changes retries: {changes_loop_count}")
+    return data
+
+
 def get_approver_status(correlation_id: str) -> list:
     lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -178,7 +191,7 @@ def confirm_approver_status(correlation_id: str) -> list:
         if data != []:
             break
         approver_loop_count += 1
-    print(f"Number of retries: {approver_loop_count}")
+    print(f"Number of approver retries: {approver_loop_count}")
     return data
 
 
@@ -192,7 +205,7 @@ def get_service_id(correlation_id: str) -> list:
         data = loads(response)
         data = literal_eval(data)
         if data != []:
-            print(f"Number of retries: {retries}")
+            print(f"Number of service_id retries: {retries}")
             print(data)
             return data[0][0]
 
@@ -248,7 +261,7 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str):
     """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
+    response = confirm_changes(corr_id)
     if search_key not in str(response):
         raise ValueError(f"{search_key} not found..")
     for row in response:

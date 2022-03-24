@@ -35,6 +35,7 @@ from .utilities.utils import (
     check_specified_received_opening_times_time_in_dos,
     check_specified_received_opening_times_date_in_dos,
     time_to_sec,
+    confirm_changes,
 )
 
 scenarios(
@@ -499,8 +500,9 @@ def the_changed_event_is_not_processed(context):
 @then("the Changed Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    response = get_changes(context["correlation_id"])
+    response = confirm_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+    return context
 
 
 @then(parsers.parse('the Changed Request with changed "{contact}" is captured by Dos'))
@@ -655,6 +657,7 @@ def standard_opening_day_closed(context):
 def replaying_changed_event(context):
     response = re_process_payload(context["change_event"]["ODSCode"], context["sequence_no"])
     assert "'StatusCode': 200" in str(response), f"Status code not as expected: {response}"
+    return context
 
 
 @then("the reprocessed Changed Event is sent to Dos")
@@ -689,14 +692,10 @@ def invalid_opening_times_error(context):
     assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
 
 
-@then("the opening times changes are marked as valid")
+@then("the opening times changes are confirmed valid")
 def no_opening_times_errors(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Specified opening times not equal"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. log messages showing in cloudwatch."
+    response = confirm_changes(context["correlation_id"])
+    assert "cmsopentime" in str(response), "Error!.. Opening time Change not found in Dos Changes"
 
 
 @then("the Changed Request with special characters is accepted by DOS")
