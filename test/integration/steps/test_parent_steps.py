@@ -5,6 +5,8 @@ from os import getenv
 from random import randint
 from faker import Faker
 import datetime
+from json import loads
+import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -656,20 +658,17 @@ def standard_opening_day_closed(context):
 @then("the stored Changed Event is reprocessed in DI")
 def replaying_changed_event(context):
     response = re_process_payload(context["change_event"]["ODSCode"], context["sequence_no"])
-    assert "'StatusCode': 200" in str(response), f"Status code not as expected: {response}"
+    assert (
+        "The change event has been re-sent successfully" in response
+    ), f"Error!.. Failed to re-process Change event. Message: {response}"
+    context["correlation_id"] = ast.literal_eval(loads(response)).get("correlation_id")
     return context
 
 
 @then("the reprocessed Changed Event is sent to Dos")
 def verify_replayed_changed_event(context):
-    part_correlation_id = getenv("ENVIRONMENT") + "-replayed-event"
-    odscode = context["change_event"]["ODSCode"]
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id like "{part_correlation_id}"'
-        f'| filter message like "Changes for nhs:{odscode}"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. expected event-replay logs not found."
+    response = confirm_changes(context["correlation_id"])
+    assert response != [], "Error!.. Re-processed change event not found in Dos"
 
 
 @then("the event processor logs should record a sequence error")

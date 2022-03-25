@@ -165,8 +165,8 @@ def get_changes(correlation_id: str) -> list:
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
     data = []
-    while changes_loop_count < 10:
-        sleep(60)
+    while changes_loop_count < 12:
+        sleep(10)
         data = get_changes(correlation_id)
         if data != []:
             break
@@ -349,4 +349,5 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )
-    return response
+    response_payload = response["Payload"].read().decode("utf-8")
+    return response_payload
