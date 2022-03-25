@@ -57,27 +57,23 @@ class EventProcessor:
 
         # Check database for services with same first 5 digits of ODSCode
         logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
-        matching_services = get_matching_dos_services(self.nhs_entity.odscode)
+        matching_dos_services = get_matching_dos_services(self.nhs_entity.odscode)
 
-        # Filter for unmatched service types and valid status
-        non_matching_services = [
-            s
-            for s in matching_services
-            if int(s.typeid) not in VALID_SERVICE_TYPES and int(s.statusid) == VALID_STATUS_ID
-        ]
-
+        # Filter for matched and unmatched service types and valid status
+        matching_services, non_matching_services = [], []
+        for s in matching_dos_services:
+            if int(s.statusid) == VALID_STATUS_ID:
+                if int(s.typeid) in VALID_SERVICE_TYPES:
+                    matching_services.append(s)
+                else:
+                    non_matching_services.append(s)
         if len(non_matching_services) > 0:
             log_unmatched_service_types(self.nhs_entity, non_matching_services)
 
         logger.info(
-            f"Found {len(matching_services)} services in DB with "
-            f"matching first 5 chars of ODSCode: {matching_services}"
+            f"Found {len(matching_dos_services)} services in DB with "
+            f"matching first 5 chars of ODSCode: {matching_dos_services}"
         )
-
-        # Filter for services with valid type and status
-        matching_services = [
-            s for s in matching_services if int(s.typeid) in VALID_SERVICE_TYPES and int(s.statusid) == VALID_STATUS_ID
-        ]
 
         logger.info(
             f"Found {len(matching_services)} services with typeid in "

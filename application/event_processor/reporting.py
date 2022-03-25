@@ -132,7 +132,7 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
     """Log unmatched DOS service types
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
-        unmatched_services (List[DoSService]): The list of DoS un matched services
+        unmatched_services (List[DoSService]): The list of DoS unmatched services
     """
     for unmatched_service in unmatched_services:
         logger.warning(

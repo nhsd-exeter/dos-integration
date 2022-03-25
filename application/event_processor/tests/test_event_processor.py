@@ -158,7 +158,8 @@ def test_get_change_requests_when_no_matching_services(mock_logger):
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_matching_services(mock_get_matching_dos_services, change_event):
+@patch(f"{FILE_PATH}.log_unmatched_service_types")
+def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
@@ -171,10 +172,12 @@ def test_get_matching_services(mock_get_matching_dos_services, change_event):
     # Assert
     assert matching_services == [service]
 
+    assert not mock_log_unmatched_service_types.called
+
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
 @patch(f"{FILE_PATH}.log_unmatched_service_types")
-def test_get_un_matching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
+def test_get_unmatching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
