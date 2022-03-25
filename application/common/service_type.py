@@ -21,11 +21,14 @@ class ServiceType:
 
     def __init__(self, organisation_type_id: str):
         self.name = self.find_service_type(organisation_type_id)
-        self.organisation_type_id = SERVICE_TYPES[self.service_type][ORGANISATION_TYPES_KEY]
-        self.organisation_type_id = SERVICE_TYPES[self.service_type][ORGANISATION_SUB_TYPES_KEY]
-        self.valid_service_types = SERVICE_TYPES[self.service_type][VALID_SERVICE_TYPES_KEY]
+        self.organisation_type_id = SERVICE_TYPES[self.name][ORGANISATION_TYPES_KEY]
+        self.organisation_sub_type = SERVICE_TYPES[self.name][ORGANISATION_SUB_TYPES_KEY]
+        self.valid_service_types = SERVICE_TYPES[self.name][VALID_SERVICE_TYPES_KEY]
 
-    def find_service_type(self, organisation_type_id) -> str:
+    def __repr__(self) -> str:
+        return f"<ServiceType: name={self.name} valid_service_types={self.valid_service_types}>"
+
+    def find_service_type(self, organisation_type_id: str) -> str:
         if SERVICE_TYPES[PHARMACY_SERVICE_KEY][ORGANISATION_TYPES_KEY] == organisation_type_id:
             service_type = PHARMACY_SERVICE_KEY
         elif SERVICE_TYPES[DENTIST_SERVICE_KEY][ORGANISATION_TYPES_KEY] == organisation_type_id:

@@ -1,18 +1,17 @@
+import hashlib
+import logging
 from dataclasses import dataclass
 from json import dumps
 from os import environ
-import hashlib
 from random import choices
+from unittest.mock import ANY, patch
+
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import patch
-import logging
-
+from common.dos import dos_location_cache
+from common.service_type import ServiceType
 from pytest import fixture, raises
 
-from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     ADDRESS_LINES_KEY,
@@ -22,7 +21,9 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from common.dos import dos_location_cache
+from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler
+from ..nhs import NHSEntity
+from .conftest import dummy_dos_location, dummy_dos_service
 
 FILE_PATH = "application.event_processor.event_processor"
 
@@ -77,8 +78,9 @@ def test__init__():
         },
     ]
     nhs_entity = NHSEntity(test_data)
+    service_type = ServiceType("PHA")
     # Act
-    event_processor = EventProcessor(nhs_entity)
+    event_processor = EventProcessor(nhs_entity, service_type)
     # Assert
     assert event_processor.nhs_entity == nhs_entity
     assert isinstance(event_processor.matching_services, type(None))
@@ -106,7 +108,8 @@ def test_get_change_requests_full_change_request():
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     nhs_entity.OpeningTimes = []
 
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     event_processor.matching_services = [service_1]
 
     dos_location = dummy_dos_location()
@@ -149,7 +152,8 @@ def test_get_change_requests_when_no_matching_services(mock_logger):
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     nhs_entity.OpeningTimes = []
 
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     event_processor.matching_services = None
     # Act
     event_processor.get_change_requests()
@@ -166,9 +170,10 @@ def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matchi
     service.typeid = 13
     service.statusid = 1
     mock_get_matching_dos_services.return_value = [service]
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     # Act
-    matching_services = event_processor.get_matching_services()
+    matching_services = event_processor.get_matching_services(service_type)
     # Assert
     assert matching_services == [service]
 
@@ -235,7 +240,8 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     sequence_number = 1
 
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     event_processor.change_requests = [change_request]
     # Act
     event_processor.send_changes(message_received, record_id, sequence_number)
@@ -277,7 +283,8 @@ def test_send_changes_when_get_change_requests_not_run(mock_client, mock_logger)
     nhs_entity.org_name = "Fake NHS Service"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     sequence_number = 1
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     event_processor.change_requests = None
     # Act
     event_processor.send_changes(message_received, record_id, sequence_number)
@@ -300,7 +307,8 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     nhs_entity.org_name = "Fake NHS Service"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     sequence_number = 1
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     event_processor.change_requests = []
     # Act
     event_processor.send_changes(message_received, record_id, sequence_number)
@@ -348,7 +356,7 @@ def test_lambda_handler_unmatched_service(
     assert response is None, f"Response should be None but is {response}"
     mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
-    mock_event_processor.assert_called_once_with(mock_entity)
+    mock_event_processor.assert_called_once_with(mock_entity, ANY)
     mock_event_processor.send_changes.assert_not_called()
     mock_set_dimension.assert_called_once_with({"ENV": "test"})
 

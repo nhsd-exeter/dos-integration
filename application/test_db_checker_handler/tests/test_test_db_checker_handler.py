@@ -25,7 +25,7 @@ def lambda_context():
 def test_type_get_odscodes(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_odscodes"}
+    test_input = {"type": "get_odscodes", "service_type": "Pharmacy"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
@@ -41,7 +41,7 @@ def test_type_get_odscodes(mock_run_query, lambda_context):
 def test_type_get_single_service_odscode(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_single_service_odscode"}
+    test_input = {"type": "get_single_service_odscode", "service_type": "Pharmacy"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
@@ -95,7 +95,7 @@ def test_type_get_changes_no_id(mock_run_query, lambda_context):
 def test_get_demographics_no_match(mock_run_query, lambda_context):
     # Arrange
     odscode = "FA100"
-    test_input = {"type": "change_event_demographics", "odscode": odscode}
+    test_input = {"type": "change_event_demographics", "odscode": odscode, "service_type": "Pharmacy"}
     mock_run_query.return_value = []
     with raises(ValueError) as err:
         lambda_handler(test_input, lambda_context)
@@ -125,7 +125,7 @@ def test_type_demographics(mock_run_query, lambda_context):
         "publicphone": None,
         "publicname": None,
     }
-    test_input = {"type": "change_event_demographics", "odscode": odscode}
+    test_input = {"type": "change_event_demographics", "odscode": odscode, "service_type": "Pharmacy"}
     mock_run_query.return_value = [list(expected.values())]
     # Act
     response = lambda_handler(test_input, lambda_context)

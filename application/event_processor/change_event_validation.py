@@ -23,10 +23,10 @@ def validate_event(event: Dict[str, Any]) -> None:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
         raise ValidationException(exception)
-    service_type = ServiceType(org_type_id=event["OrganisationTypeId"])
-    check_org_sub_type(org_sub_type=event["OrganisationSubType"], service_type=service_type)
+    service_type = ServiceType(event["OrganisationTypeId"])
+    check_org_sub_type(event["OrganisationSubType"], service_type)
     if service_type.name == PHARMACY_SERVICE_KEY:  # Temporary flag to be removed in DI-354
-        check_ods_code_length(odscode=event["ODSCode"])
+        check_ods_code_length(event["ODSCode"])
     logger.info("Event has been validated")
     return service_type
 

@@ -249,7 +249,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity, service_type)
-        matching_services = event_processor.get_matching_services()
+        matching_services = event_processor.get_matching_services(service_type)
         if len(matching_services) == 0:
             log_unmatched_nhsuk_pharmacies(nhs_entity)
             return
