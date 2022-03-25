@@ -1,6 +1,6 @@
 Feature: F005. Support Functions
 
-  @complete @dev
+@complete
   Scenario: F005S001. An unprocessed Changed Event is replayed in DI
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

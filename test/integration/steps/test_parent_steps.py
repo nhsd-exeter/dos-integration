@@ -5,6 +5,8 @@ from os import getenv
 from random import randint
 from faker import Faker
 import datetime
+from json import loads
+import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -35,6 +37,7 @@ from .utilities.utils import (
     check_specified_received_opening_times_time_in_dos,
     check_specified_received_opening_times_date_in_dos,
     time_to_sec,
+    confirm_changes,
 )
 
 scenarios(
@@ -305,7 +308,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 
 # # Request with custom sequence id
 @when(
-    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    parsers.parse("the Changed Event is sent for processing with sequence id <seqid>"),
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
@@ -499,8 +502,9 @@ def the_changed_event_is_not_processed(context):
 @then("the Changed Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    response = get_changes(context["correlation_id"])
+    response = confirm_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+    return context
 
 
 @then(parsers.parse('the Changed Request with changed "{contact}" is captured by Dos'))
@@ -654,19 +658,17 @@ def standard_opening_day_closed(context):
 @then("the stored Changed Event is reprocessed in DI")
 def replaying_changed_event(context):
     response = re_process_payload(context["change_event"]["ODSCode"], context["sequence_no"])
-    assert "'StatusCode': 200" in str(response), f"Status code not as expected: {response}"
+    assert (
+        "The change event has been re-sent successfully" in response
+    ), f"Error!.. Failed to re-process Change event. Message: {response}"
+    context["correlation_id"] = ast.literal_eval(loads(response)).get("correlation_id")
+    return context
 
 
 @then("the reprocessed Changed Event is sent to Dos")
 def verify_replayed_changed_event(context):
-    part_correlation_id = getenv("ENVIRONMENT") + "-replayed-event"
-    odscode = context["change_event"]["ODSCode"]
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id like "{part_correlation_id}"'
-        f'| filter message like "Changes for nhs:{odscode}"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. expected event-replay logs not found."
+    response = confirm_changes(context["correlation_id"])
+    assert response != [], "Error!.. Re-processed change event not found in Dos"
 
 
 @then("the event processor logs should record a sequence error")
@@ -689,14 +691,10 @@ def invalid_opening_times_error(context):
     assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
 
 
-@then("the opening times changes are marked as valid")
+@then("the opening times changes are confirmed valid")
 def no_opening_times_errors(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Specified opening times not equal"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. log messages showing in cloudwatch."
+    response = confirm_changes(context["correlation_id"])
+    assert "cmsopentime" in str(response), "Error!.. Opening time Change not found in Dos Changes"
 
 
 @then("the Changed Request with special characters is accepted by DOS")
