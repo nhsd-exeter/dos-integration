@@ -1,8 +1,21 @@
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+  config = {
+    bucket = var.terraform_platform_state_store
+    key    = var.vpc_terraform_state_key
+    region = var.aws_region
+  }
+}
+
+data "aws_db_instance" "dos_db" {
+  db_instance_identifier = var.dos_db_name
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
-data "aws_iam_policy_document" "key" {
+data "aws_iam_policy_document" "kms_policy" {
   policy_id     = null
   source_json   = null
   override_json = null

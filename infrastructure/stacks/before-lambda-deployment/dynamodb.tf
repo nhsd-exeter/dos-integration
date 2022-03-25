@@ -6,7 +6,7 @@ resource "aws_dynamodb_table" "message-history-table" {
 
   server_side_encryption {
     enabled     = true
-    kms_key_arn = data.aws_kms_key.signing_key.arn
+    kms_key_arn = aws_kms_key.signing_key.arn
   }
 
   attribute {
@@ -35,5 +35,7 @@ resource "aws_dynamodb_table" "message-history-table" {
     range_key       = "SequenceNumber"
     projection_type = "ALL"
   }
-
+  depends_on = [
+    aws_kms_key.signing_key
+  ]
 }

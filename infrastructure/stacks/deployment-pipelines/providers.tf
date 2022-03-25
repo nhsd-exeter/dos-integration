@@ -1,7 +1,5 @@
 provider "aws" {
-  profile = var.aws_profile
-  region  = var.aws_region
-  version = "~> 3.74"
+  region = var.aws_region
   default_tags {
     tags = {
       "Profile"     = var.profile
