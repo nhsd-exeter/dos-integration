@@ -1,10 +1,9 @@
+from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
 from typing import List, Union
-from dataclasses import dataclass
 
 from aws_lambda_powertools import Logger
-
 from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 logger = Logger(child=True)
@@ -15,7 +14,7 @@ class NHSEntity:
     """This is an object to store an NHS Entity data
 
     Some fields are pulled straight from the payload while others are processed first. So attribute
-    names differ from paylod format for consistency within object.
+    names differ from payload format for consistency within object.
     """
 
     entity_data: dict
@@ -31,7 +30,6 @@ class NHSEntity:
     phone: str
     standard_opening_times: Union[StandardOpeningTimes, None]
     specified_opening_times: Union[List[SpecifiedOpeningTime], None]
-
     CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
 
     def __init__(self, entity_data: dict):

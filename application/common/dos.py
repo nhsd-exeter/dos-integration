@@ -7,8 +7,6 @@ from aws_lambda_powertools import Logger
 from .dos_db_connection import query_dos_db
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
-
-VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
 logger = Logger(child=True)
 dos_location_cache = {}

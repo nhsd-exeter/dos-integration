@@ -5,10 +5,11 @@ from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
 from common.change_event_exceptions import ValidationException
+from common.constants import PHARMACY_SERVICE_KEY
+from common.service_type import ServiceType
 
 logger = Logger(child=True)
-ORGANISATION_TYPES = ["PHA"]
-ORGANISATION_SUB_TYPES = ["COMMUNITY"]
+
 ODSCODE_LENGTH = 5
 
 
@@ -22,34 +23,27 @@ def validate_event(event: Dict[str, Any]) -> None:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
         raise ValidationException(exception)
-    check_org_type_id(org_type_id=event["OrganisationTypeId"])
-    check_org_sub_type(org_sub_type=event["OrganisationSubType"])
-    check_ods_code_length(odscode=event["ODSCode"])
+    service_type = ServiceType(org_type_id=event["OrganisationTypeId"])
+    check_org_sub_type(org_sub_type=event["OrganisationSubType"], service_type=service_type)
+    if service_type.name == PHARMACY_SERVICE_KEY:  # Temporary flag to be removed in DI-354
+        check_ods_code_length(odscode=event["ODSCode"])
     logger.info("Event has been validated")
+    return service_type
 
 
-def check_org_type_id(org_type_id: str) -> None:
-    """Check Organisation Type ID if matches PHA, exception raise if error
-    Args:
-        org_type_id (str): org type id of NHS UK service
-    """
-    logger.debug("Checking Organisation Type")
-    if org_type_id in ORGANISATION_TYPES:
-        logger.info(f"Org type id: {org_type_id} validated")
-    else:
-        raise ValidationException(f"Unexpected Org Type ID '{org_type_id}' not part of {ORGANISATION_TYPES}")
-
-
-def check_org_sub_type(org_sub_type: str) -> None:
+def check_org_sub_type(org_sub_type: str, service_type: ServiceType) -> None:
     """Check Organisation Sub Type if matches 'Community', exception raise if error
     Args:
         org_sub_type (str): Organisation sub type of NHS UK service
+        service_type (ServiceType): Service Type class object
     """
     logger.debug("Checking Organisation Sub Type")
-    if org_sub_type.upper() in ORGANISATION_SUB_TYPES:
+    if org_sub_type.upper() in service_type.organisation_sub_type:
         logger.info(f"Organisation Sub Type: {org_sub_type} validated")
     else:
-        raise ValidationException(f"Unexpected Org Sub Type '{org_sub_type}', not part of {ORGANISATION_SUB_TYPES}")
+        raise ValidationException(
+            f"Unexpected Org Sub Type '{org_sub_type}', not part of {service_type.organisation_sub_type}"
+        )
 
 
 def check_ods_code_length(odscode: str) -> None:
@@ -58,7 +52,6 @@ def check_ods_code_length(odscode: str) -> None:
     Args:
         odscode (str): odscode of NHS UK service
     """
-
     logger.debug("Checking ODS code length")
     if len(odscode) != ODSCODE_LENGTH:
         raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {ODSCODE_LENGTH}.")

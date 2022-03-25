@@ -1,6 +1,6 @@
+import hashlib
 from json import dumps
 from os import environ
-import hashlib
 from time import gmtime, strftime, time_ns
 from typing import Dict, List, Union
 
@@ -13,10 +13,11 @@ from boto3 import client
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from common.dos import VALID_SERVICE_TYPES, VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
+from common.service_type import ServiceType
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
@@ -49,10 +50,11 @@ class EventProcessor:
     matching_services = None
     change_requests = None
 
-    def __init__(self, nhs_entity: NHSEntity):
+    def __init__(self, nhs_entity: NHSEntity, service_type: ServiceType):
         self.nhs_entity = nhs_entity
+        self.service_type = service_type
 
-    def get_matching_services(self) -> List[DoSService]:
+    def get_matching_services(self, service_type: ServiceType) -> List[DoSService]:
         """Using the nhs entity attributed to this object, it finds the
         matching DoS services from the db and filters the results
         """
@@ -79,7 +81,7 @@ class EventProcessor:
 
         logger.info(
             f"Found {len(matching_services)} services with typeid in "
-            f"whitelist{VALID_SERVICE_TYPES} and status id = "
+            f"allowlist {service_type.valid_service_types} and status id = "
             f"{VALID_STATUS_ID}: {matching_services}"
         )
 
@@ -222,7 +224,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     correlation_id = logger.get_correlation_id()
     if "broken" in correlation_id.lower():
-        raise ValueError("Everything is broken boo ")
+        raise ValueError("Everything is broken boo")
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", record_id)
     metrics.set_dimensions({"ENV": environ["ENV"]})
@@ -239,15 +241,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         return
 
     try:
-        validate_event(change_event)
-
+        service_type: ServiceType = validate_event(change_event)
         nhs_entity = NHSEntity(change_event)
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)
         logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
         metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
-        event_processor = EventProcessor(nhs_entity)
+        event_processor = EventProcessor(nhs_entity, service_type)
         matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
             log_unmatched_nhsuk_pharmacies(nhs_entity)
