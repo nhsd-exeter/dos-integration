@@ -194,6 +194,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     logger.append_keys(org_sub_type=None)
     logger.append_keys(dynamo_record_id=None)
     logger.append_keys(message_received=None)
+    logger.append_keys(service_type=None)
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -242,6 +243,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     try:
         service_type: ServiceType = validate_event(change_event)
+        logger.append_keys(service_type=service_type.name)
         nhs_entity = NHSEntity(change_event)
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)

@@ -1,3 +1,4 @@
+from aws_lambda_powertools import Logger
 from common.change_event_exceptions import ValidationException
 from common.constants import (
     DENTIST_SERVICE_KEY,
@@ -7,6 +8,8 @@ from common.constants import (
     SERVICE_TYPES,
     VALID_SERVICE_TYPES_KEY,
 )
+
+logger = Logger(child=True)
 
 
 class ServiceType:
@@ -24,6 +27,7 @@ class ServiceType:
         self.organisation_type_id = SERVICE_TYPES[self.name][ORGANISATION_TYPES_KEY]
         self.organisation_sub_type = SERVICE_TYPES[self.name][ORGANISATION_SUB_TYPES_KEY]
         self.valid_service_types = SERVICE_TYPES[self.name][VALID_SERVICE_TYPES_KEY]
+        logger.debug(f"ServiceType: {self.name}")
 
     def __repr__(self) -> str:
         return f"<ServiceType: name={self.name} valid_service_types={self.valid_service_types}>"
