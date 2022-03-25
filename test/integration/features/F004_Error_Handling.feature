@@ -10,7 +10,7 @@ Feature: F004. Error Handling
     And the "cr_dlq" logs show status code "400"
     And the Changed Event is stored in dynamo db
 
-  @dev
+@dev
   Scenario: F004S002. A CR with invalid Correlation ID gets rejected by events bridge and is NOT sent to DOS
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
@@ -38,7 +38,7 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with no sequence id
     Then the change request has status code "400"
 
-@complete @dev
+@complete
   Scenario: F004S006. An exception is raised when Sequence number is a duplicate of current
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id

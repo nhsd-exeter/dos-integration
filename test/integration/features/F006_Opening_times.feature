@@ -14,7 +14,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the Changed Request with changed standard day time is captured by Dos
 
-@complete @dev
+@complete
   Scenario: F006S003. Pharmacy with one break in opening times
     Given a Changed Event is valid
     And the Changed Event has one break in opening times
@@ -22,7 +22,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the opening times changes are confirmed valid
 
-@complete @dev
+@complete
   Scenario: F006S004. Pharmacy with two breaks in opening times
     Given a Changed Event is valid
     And the Changed Event has two breaks in opening times
@@ -30,7 +30,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the opening times changes are confirmed valid
 
-@complete @dev
+@complete
   Scenario: F006S005. Pharmacy with one off opening date set to closed
     Given a Changed Event is valid
     And the Changed Event contains a one off opening date thats "Closed"
@@ -38,7 +38,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the opening times changes are confirmed valid
 
-  @complete @dev
+@complete
   Scenario: F006S006. A Pharmacy with one off opening date set to open
     Given a Changed Event is valid
     And the Changed Event contains a one off opening date thats "Open"
@@ -46,7 +46,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the opening times changes are confirmed valid
 
-@complete @dev
+@complete
   Scenario: F006S007. Close pharmacy on bank holiday
     Given a Changed Event is valid
     And the Changed Event closes the pharmacy on a bank holiday

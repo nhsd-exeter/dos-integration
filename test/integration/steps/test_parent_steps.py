@@ -308,7 +308,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 
 # # Request with custom sequence id
 @when(
-    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    parsers.parse('the Changed Event is sent for processing with sequence id <seqid>'),
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
