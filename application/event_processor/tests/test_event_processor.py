@@ -77,7 +77,7 @@ def test__init__():
         },
     ]
     nhs_entity = NHSEntity(test_data)
-    # Act
+   # Act
     event_processor = EventProcessor(nhs_entity)
     # Assert
     assert event_processor.nhs_entity == nhs_entity

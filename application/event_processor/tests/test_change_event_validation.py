@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from common.service_type import ServiceType
 from pytest import raises
 
 from ..change_event_validation import ValidationException, check_ods_code_length, validate_event
