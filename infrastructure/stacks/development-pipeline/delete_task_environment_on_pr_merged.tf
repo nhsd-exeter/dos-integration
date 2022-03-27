@@ -57,6 +57,10 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
+    environment_variable {
+      name  = "SERVERLESS_BUILD_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-build-serverless-stage"
+    }
   }
   logs_config {
     cloudwatch_logs {
