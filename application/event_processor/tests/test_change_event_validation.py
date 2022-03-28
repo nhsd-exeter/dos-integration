@@ -31,13 +31,6 @@ def test_validate_event_missing_key(
     mock_check_org_sub_type.assert_not_called()
 
 
-# @pytest.mark.parametrize("org_type", ["Not Expected Type", "Dentist", "Pharmacy Out of hours", "PH1"])
-# def test_check_org_type_id_wrong_org_type(org_type):
-#     # Act & Assert
-#     with raises(ValidationException):
-#         check_org_type_id(org_type)
-
-
 @pytest.mark.parametrize("org_sub_type, org_type", [("Community", "PHA"), ("TBA", "Dentist")])
 def test_check_org_sub_type(org_sub_type, org_type):
     # Arrange
