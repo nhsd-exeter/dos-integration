@@ -59,6 +59,7 @@ phases:
   build:
     commands:
       - echo "[Deploying]"
+      - echo hi
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT
   # post_build:
