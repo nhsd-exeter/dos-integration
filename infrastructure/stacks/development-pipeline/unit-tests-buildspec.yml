@@ -34,7 +34,7 @@ phases:
       # - command
   pre_build:
     commands:
-      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION2
       - make wait-for-codebuild-to-finish PROJECT_NAME=$TESTER_BUILD_PROJECT_NAME
       - aws sts get-caller-identity
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
