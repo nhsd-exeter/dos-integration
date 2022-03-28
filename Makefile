@@ -425,7 +425,7 @@ mock-dos-api-gateway-deployment:
 # Deployments
 
 sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp/latest]
-	eval "$$(make populate-deployment-variables)"
+	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy
 
 quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE
