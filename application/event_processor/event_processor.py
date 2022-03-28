@@ -9,6 +9,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes

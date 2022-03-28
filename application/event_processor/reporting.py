@@ -1,9 +1,9 @@
 from typing import List
 from os import environ
 import json
+
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
-from datetime import datetime
 
 from common.dos import DoSService, VALID_STATUS_ID
 from common.opening_times import OpenPeriod

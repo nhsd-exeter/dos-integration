@@ -1,8 +1,8 @@
 from unittest.mock import patch
 import json
-from datetime import datetime
 
 from aws_lambda_powertools import Logger
+
 from common.dos import VALID_STATUS_ID
 from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
