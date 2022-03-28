@@ -27,6 +27,7 @@ provider:
   environment:
     PROFILE: ${env:PROFILE}
     ENV: ${env:ENVIRONMENT}
+    NEW_VAR: ${env:NEW_VAR}
     POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
     POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
