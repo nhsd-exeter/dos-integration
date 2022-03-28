@@ -155,6 +155,8 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
                 "dos_service_typeid": unmatched_service.typeid,
             },
         )
+
+
 def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: DoSService) -> None:
     """Log a service found to have a generic bank holiday open times set in DoS"""
 
@@ -169,7 +171,6 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
             "dos_service_uid": dos_service.uid,
             "dos_service_name": dos_service.name,
             "bank_holiday_opening_times": open_periods_str,
-            "nhsuk_parentorg": nhs_entity.parent_org_name,
-            "discovery_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+            "nhsuk_parentorg": nhs_entity.parent_org_name
         },
     )

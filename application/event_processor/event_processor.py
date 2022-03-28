@@ -19,10 +19,10 @@ from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
-    log_invalid_open_times, 
-    log_unmatched_nhsuk_pharmacies, 
-    report_closed_or_hidden_services,
+    log_invalid_open_times,
     log_unmatched_service_types,
+    log_unmatched_nhsuk_pharmacies,
+    report_closed_or_hidden_services,
     log_service_with_generic_bank_holiday
 )
 

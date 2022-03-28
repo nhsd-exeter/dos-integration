@@ -12,8 +12,6 @@ from common.constants import (
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
     GENERIC_BANK_HOLIDAY_REPORT_ID
 )
-
-from common.dos import VALID_STATUS_ID
 from common.opening_times import OpenPeriod
 from .conftest import dummy_dos_service
 from ..nhs import NHSEntity
@@ -25,6 +23,7 @@ from ..reporting import (
     log_invalid_nhsuk_pharmacy_postcode,
     log_service_with_generic_bank_holiday
 )
+
 
 @patch.object(Logger, "warning")
 def test_report_closed_or_hidden_services(mock_logger, change_event):
@@ -188,7 +187,6 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
     dos_service._standard_opening_times.generic_bankholiday = open_periods
 
     # Act
-    time = datetime.utcnow()
     log_service_with_generic_bank_holiday(nhs_entity, dos_service)
     # Assert
     mock_logger.assert_called_with(
@@ -200,8 +198,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
             "dos_service_uid": dos_service.uid,
             "dos_service_name": dos_service.name,
             "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
-            "nhsuk_parentorg": nhs_entity.parent_org_name,
-            "discovery_time": time.strftime("%Y-%m-%d %H:%M")
+            "nhsuk_parentorg": nhs_entity.parent_org_name
         },
     )
 
