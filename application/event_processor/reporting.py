@@ -9,7 +9,8 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
-    UN_MATCHED_PHARMACY_REPORT_ID,
+    UNMATCHED_PHARMACY_REPORT_ID,
+    UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
 from nhs import NHSEntity
 
@@ -32,7 +33,7 @@ def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: L
                 "dos_service_id": dos_service.id,
                 "dos_service_uid": dos_service.uid,
                 "nhsuk_odscode": nhs_entity.odscode,
-                "dos_publicname": dos_service.publicname,
+                "dos_service_publicname": dos_service.name,
                 "nhsuk_service_status": nhs_entity.org_status,
                 "nhsuk_service_type": nhs_entity.org_type,
                 "nhsuk_sector": nhs_entity.org_sub_type,
@@ -51,7 +52,7 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
     logger.warning(
         f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
-            "report_key": UN_MATCHED_PHARMACY_REPORT_ID,
+            "report_key": UNMATCHED_PHARMACY_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_organisation_typeid": nhs_entity.org_type_id,
@@ -125,3 +126,29 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
     metrics.set_property("message", error_msg)
     metrics.set_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
+
+
+def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[DoSService]) -> None:
+    """Log unmatched DOS service types
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        unmatched_services (List[DoSService]): The list of DoS unmatched services
+    """
+    for unmatched_service in unmatched_services:
+        logger.warning(
+            f"NHS entity '{nhs_entity.odscode}' service type '{ unmatched_service.typeid}' is not valid!",
+            extra={
+                "report_key": UNMATCHED_SERVICE_TYPE_REPORT_ID,
+                "nhsuk_odscode": nhs_entity.odscode,
+                "nhsuk_organisation_name": nhs_entity.org_name,
+                "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+                "nhsuk_organisation_status": nhs_entity.org_status,
+                "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+                "dos_service_uid": unmatched_service.uid,
+                "dos_service_id": unmatched_service.id,
+                "dos_service_publicname": unmatched_service.name,
+                "dos_service_status": VALID_STATUS_ID,
+                "dos_service_typeid": unmatched_service.typeid,
+            },
+        )

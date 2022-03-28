@@ -3,12 +3,18 @@ import json
 
 from aws_lambda_powertools import Logger
 from common.dos import VALID_STATUS_ID
-from common.constants import HIDDEN_OR_CLOSED_REPORT_ID, UN_MATCHED_PHARMACY_REPORT_ID, INVALID_POSTCODE_REPORT_ID
+from common.constants import (
+    HIDDEN_OR_CLOSED_REPORT_ID,
+    UNMATCHED_PHARMACY_REPORT_ID,
+    INVALID_POSTCODE_REPORT_ID,
+    UNMATCHED_SERVICE_TYPE_REPORT_ID,
+)
 
 from ..nhs import NHSEntity
 from ..reporting import (
     INVALID_OPEN_TIMES_REPORT_ID,
     log_invalid_open_times,
+    log_unmatched_service_types,
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
@@ -35,7 +41,7 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
             "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
             "nhsuk_odscode": nhs_entity.odscode,
-            "dos_publicname": dos_service.publicname,
+            "dos_service_publicname": dos_service.name,
             "nhsuk_service_status": nhs_entity.org_status,
             "nhsuk_service_type": nhs_entity.org_type,
             "nhsuk_sector": nhs_entity.org_sub_type,
@@ -66,12 +72,12 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
     log_unmatched_nhsuk_pharmacies(nhs_entity)
     # Assert
     assert (
-        UN_MATCHED_PHARMACY_REPORT_ID == "UN_MATCHED_PHARMACY"
-    ), f"Log ID should be UN_MATCHED_PHARMACY but was {UN_MATCHED_PHARMACY_REPORT_ID}"
+        UNMATCHED_PHARMACY_REPORT_ID == "UNMATCHED_PHARMACY"
+    ), f"Log ID should be UNMATCHED_PHARMACY but was {UNMATCHED_PHARMACY_REPORT_ID}"
     mock_logger.assert_called_with(
         f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
-            "report_key": UN_MATCHED_PHARMACY_REPORT_ID,
+            "report_key": UNMATCHED_PHARMACY_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_organisation_typeid": nhs_entity.org_type_id,
@@ -163,5 +169,46 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
             "dos_services": ", ".join(str(service.uid) for service in dos_services),
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_unmatched_service_types(mock_logger):
+    # Arrange
+    nhs_entity = NHSEntity(
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+    )
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    nhs_entity.org_type_id = "PHA"
+    nhs_entity.org_status = "OrganisationStatus"
+    nhs_entity.org_sub_type = "OrganisationSubType"
+    nhs_entity.postcode = "MK2 XXX"
+
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 999
+    unmatched_service_types = [dos_service]
+    # Act
+    log_unmatched_service_types(nhs_entity, unmatched_service_types)
+    # Assert
+    assert (
+        UNMATCHED_SERVICE_TYPE_REPORT_ID == "UNMATCHED_SERVICE_TYPE"
+    ), f"Log ID should be UNMATCHED_SERVICE_TYPE but was {UNMATCHED_SERVICE_TYPE_REPORT_ID}"
+    mock_logger.assert_called_with(
+        f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not valid!",
+        extra={
+            "report_key": UNMATCHED_SERVICE_TYPE_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+            "nhsuk_organisation_status": nhs_entity.org_status,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+            "dos_service_uid": dos_service.uid,
+            "dos_service_id": dos_service.id,
+            "dos_service_publicname": dos_service.name,
+            "dos_service_status": VALID_STATUS_ID,
+            "dos_service_typeid": dos_service.typeid,
         },
     )
