@@ -177,7 +177,7 @@ def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matchi
     # Assert
     assert matching_services == [service]
 
-    assert not mock_log_unmatched_service_types.called
+    mock_log_unmatched_service_types.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
@@ -189,9 +189,10 @@ def test_get_unmatching_services(mock_log_unmatched_service_types, mock_get_matc
     service.typeid = 999
     service.statusid = 1
     mock_get_matching_dos_services.return_value = [service]
-    event_processor = EventProcessor(nhs_entity)
+    service_type = ServiceType("PHA")
+    event_processor = EventProcessor(nhs_entity, service_type)
     # Act
-    event_processor.get_matching_services()
+    event_processor.get_matching_services(service_type)
     # Assert
     mock_log_unmatched_service_types.assert_called_once()
 

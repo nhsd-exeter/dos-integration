@@ -65,12 +65,12 @@ class EventProcessor:
 
         # Filter for matched and unmatched service types and valid status
         matching_services, non_matching_services = [], []
-        for s in matching_dos_services:
-            if int(s.statusid) == VALID_STATUS_ID:
-                if int(s.typeid) in VALID_SERVICE_TYPES:
-                    matching_services.append(s)
+        for service in matching_dos_services:
+            if int(service.statusid) == VALID_STATUS_ID:
+                if int(service.typeid) in service_type.valid_service_types:
+                    matching_services.append(service)
                 else:
-                    non_matching_services.append(s)
+                    non_matching_services.append(service)
         if len(non_matching_services) > 0:
             log_unmatched_service_types(self.nhs_entity, non_matching_services)
 
