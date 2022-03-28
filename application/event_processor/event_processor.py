@@ -261,7 +261,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
         for dos_service in matching_services:
             if dos_service.any_generic_bankholiday_open_periods():
-                log_service_with_generic_bank_holiday(dos_service)
+                log_service_with_generic_bank_holiday(nhs_entity, dos_service)
 
         event_processor.get_change_requests()
     finally:
