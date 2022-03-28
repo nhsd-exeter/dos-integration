@@ -16,7 +16,7 @@ resource "aws_codebuild_webhook" "demo_deployment_webhook" {
 resource "aws_codebuild_project" "di_deploy_demo" {
   name           = "${var.project_id}-demo-deploy-stage"
   description    = "Deploy to the demo environment"
-  build_timeout  = "10"
+  build_timeout  = "30"
   queued_timeout = "30"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
