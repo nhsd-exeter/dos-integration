@@ -13,7 +13,7 @@ from pytest_bdd import given, parsers, scenarios, then, when
 from .utilities.events import (
     build_same_as_dos_change_event,
     change_request,
-    create_change_event,
+    create_pharmacy_change_event,
     set_opening_times_change_event,
     valid_change_event,
 )
@@ -54,14 +54,14 @@ FAKER = Faker("en_GB")
 @given("a Changed Event is valid", target_fixture="context")
 def a_change_event_is_valid():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     return context
 
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact):
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     validated = False
     while validated is False:
         if contact == "website":
@@ -191,7 +191,7 @@ def bank_holiday_pharmacy_closed(context):
 
 @given("a Changed Event with invalid ODSCode is provided", target_fixture="context")
 def a_change_event_with_invalid_odscode():
-    change_event = create_change_event()
+    change_event = create_pharmacy_change_event()
     change_event["ODSCode"] = "F8KE1"
     context = {"change_event": change_event}
     return context
@@ -206,7 +206,7 @@ def a_change_event_with_custom_ods(context, odscode: str):
 @given("a Changed Event contains an incorrect OrganisationSubtype", target_fixture="context")
 def a_change_event_with_invalid_organisationsubtype():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OrganisationSubType"] = "com"
     return context
 
@@ -214,7 +214,7 @@ def a_change_event_with_invalid_organisationsubtype():
 @given("a Changed Event contains an incorrect OrganisationTypeID", target_fixture="context")
 def a_change_event_with_invalid_organisationtypeid():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OrganisationTypeId"] = "DEN"
     return context
 
@@ -223,7 +223,7 @@ def a_change_event_with_invalid_organisationtypeid():
 @given("a Changed Event with the Weekday NOT present in the Opening Times data", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     del context["change_event"]["OpeningTimes"][0]["Weekday"]
     return context
 
@@ -232,7 +232,7 @@ def a_change_event_with_no_openingtimes_weekday():
 @given("a Changed Event where OpeningTimeType is NOT defined correctly", target_fixture="context")
 def a_change_event_with_invalid_openingtimetype():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
     return context
 
@@ -248,7 +248,7 @@ def a_custom_correlation_id_is_set(context, custom_correlation: str):
 @given("a Changed Event with the openingTimes IsOpen status set to false", target_fixture="context")
 def a_change_event_with_isopen_status_set_to_false():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
     return context
 
@@ -257,7 +257,7 @@ def a_change_event_with_isopen_status_set_to_false():
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb():
     context = {}
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     odscode = context["change_event"]["ODSCode"]
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
@@ -270,7 +270,7 @@ def current_ods_exists_in_ddb():
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     return context
@@ -282,7 +282,7 @@ def no_times_data_within_openingtimes(context):
     target_fixture="context",
 )
 def specified_opening_date_not_defined(context):
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = ""
     return context
 
@@ -290,7 +290,7 @@ def specified_opening_date_not_defined(context):
 # # An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
 @when("an AdditionalOpeningDate contains data with both true and false IsOpen status", target_fixture="context")
 def same_specified_opening_date_with_true_and_false_isopen_status(context):
-    context["change_event"] = create_change_event()
+    context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = "Dec 25 2022"
     context["change_event"]["OpeningTimes"][7]["IsOpen"] = False
     return context

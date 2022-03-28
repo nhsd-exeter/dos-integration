@@ -17,18 +17,12 @@ from .utils import (
 odscode_list = None
 
 
-def create_change_event() -> Dict[str, Any]:
+def create_pharmacy_change_event() -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
-        payload["ODSCode"] = random_odscode()
+        payload["ODSCode"] = random_pharmacy_odscode()
         payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
-        return payload
-
-
-def nhsuk_changed_event() -> Dict[str, Any]:
-    with open("resources/payloads/nhs_uk_test_payload.json", "r", encoding="utf-8") as json_file:
-        payload = load(json_file)
         return payload
 
 
@@ -65,10 +59,10 @@ def change_request() -> Dict[str, Any]:
     }
 
 
-def random_odscode() -> str:
+def random_pharmacy_odscode() -> str:
     global odscode_list
     if odscode_list is None:
-        odscode_list = get_odscodes_list()
+        odscode_list = get_odscodes_list("Pharmacy")
     return choice(odscode_list)[0]
 
 
@@ -84,10 +78,10 @@ def get_payload(payload_name: str) -> str:
 
 def build_same_as_dos_change_event():
     # TODO Refactor into change event class
-    change_event = create_change_event()
-    change_event["ODSCode"] = get_single_service_odscode()
+    change_event = create_pharmacy_change_event()
+    change_event["ODSCode"] = get_single_service_odscode("Pharmacy")
     print(f"Latest selected ODSCode: {change_event['ODSCode']}")
-    demographics_data = get_change_event_demographics(change_event["ODSCode"])
+    demographics_data = get_change_event_demographics(change_event["ODSCode"], "Pharmacy")
     change_event["OrganisationName"] = demographics_data["publicname"]
     change_event["Postcode"] = demographics_data["postcode"]
     change_event["Contacts"][0]["ContactValue"] = demographics_data["web"]

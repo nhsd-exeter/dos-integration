@@ -138,16 +138,16 @@ def generate_random_int() -> str:
     return str(random.sample(range(1000), 1)[0])
 
 
-def get_odscodes_list() -> list[list[str]]:
-    lambda_payload = {"type": "get_odscodes"}
+def get_odscodes_list(service_type: str) -> list[list[str]]:
+    lambda_payload = {"type": "get_odscodes", "service_type": service_type.upper()}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     return data
 
 
-def get_single_service_odscode() -> str:
-    lambda_payload = {"type": "get_single_service_odscode"}
+def get_single_service_odscode(service_type: str) -> str:
+    lambda_payload = {"type": "get_single_service_odscode", "service_type": service_type.upper()}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
@@ -215,8 +215,8 @@ def get_service_id(correlation_id: str) -> list:
         sleep(5)
 
 
-def get_change_event_demographics(odscode: str) -> Dict[str, Any]:
-    lambda_payload = {"type": "change_event_demographics", "odscode": odscode}
+def get_change_event_demographics(odscode: str, service_type: str) -> Dict[str, Any]:
+    lambda_payload = {"type": "change_event_demographics", "odscode": odscode, "service_type": service_type.upper()}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data

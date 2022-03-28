@@ -33,6 +33,17 @@ class ServiceType:
         return f"<ServiceType: name={self.name} valid_service_types={self.valid_service_types}>"
 
     def find_service_type(self, organisation_type_id: str) -> str:
+        """Select the service type based on the organisation type id
+
+        Args:
+            organisation_type_id (str): organisation type id of NHS entity
+
+        Raises:
+            ValidationException: if the organisation type id is not found in the valid service types
+
+        Returns:
+            str: service type name
+        """
         if SERVICE_TYPES[PHARMACY_SERVICE_KEY][ORGANISATION_TYPES_KEY] == organisation_type_id:
             service_type = PHARMACY_SERVICE_KEY
         elif SERVICE_TYPES[DENTIST_SERVICE_KEY][ORGANISATION_TYPES_KEY] == organisation_type_id:
@@ -45,8 +56,13 @@ class ServiceType:
 
 
 def set_service_type(service_type_name: str) -> ServiceType:
-    """
-    Set the service type.
+    """Set the service type based on the service type name
+
+    Args:
+        service_type_name (str): service type name
+
+    Returns:
+        ServiceType: service type object
     """
     organisation_type_id = SERVICE_TYPES[service_type_name.upper()][ORGANISATION_TYPES_KEY]
     service_type = ServiceType(organisation_type_id)
