@@ -531,6 +531,10 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
 	fi
 
+get-environment-from-pr:
+	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DI-(?<x>.[0-9]*).*"; "di-\(.x)")')
+	echo $$ENVIRONMENT
+
 # ==============================================================================
 # Tester
 

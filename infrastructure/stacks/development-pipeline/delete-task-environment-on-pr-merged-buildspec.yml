@@ -26,7 +26,7 @@ phases:
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export PR_NUMBER=$(echo $CODEBUILD_WEBHOOK_TRIGGER | grep -Eo '[0-9]*')
       - echo $PR_NUMBER
-      - export ENVIRONMENT=$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration --jq '.[] | select(.number == $PR_NUMBER) | .headRefName | sub( ".*:*/DI-(?<x>.[0-9]*).*"; "di-\(.x)")')
+      - export ENVIRONMENT=$(make get-environment-from-pr PR_NUMBER=$PR_NUMBER)
       - echo $ENVIRONMENT
       - export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
       - echo $ENVIRONMENT_DEPLOYED
