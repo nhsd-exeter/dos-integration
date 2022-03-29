@@ -170,6 +170,7 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
             "nhsuk_organisation_name": nhs_entity.org_name,
             "dos_service_uid": dos_service.uid,
             "dos_service_name": dos_service.name,
+            "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": open_periods_str,
             "nhsuk_parentorg": nhs_entity.parent_org_name
         },
