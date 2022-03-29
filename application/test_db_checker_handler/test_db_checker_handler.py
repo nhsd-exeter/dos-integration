@@ -11,7 +11,7 @@ from common.dos import (
 )
 from common.dos_db_connection import query_dos_db
 from common.middlewares import unhandled_exception_logging
-from common.service_type import set_service_type
+from common.service_type import get_service_type
 
 tracer = Tracer()
 logger = Logger()
@@ -32,7 +32,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     if request["type"] == "get_odscodes":
         service_type_name = request.get("service_type")
         if service_type_name is not None:
-            service_type = set_service_type(service_type_name)
+            service_type = get_service_type(service_type_name)
             query = (
                 f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(service_type.valid_service_types)} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
@@ -41,7 +41,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     elif request["type"] == "get_single_service_odscode":
         service_type_name = request.get("service_type")
         if service_type_name is not None:
-            service_type = set_service_type(service_type_name)
+            service_type = get_service_type(service_type_name)
             query = (
                 f"SELECT LEFT(odscode,5) FROM services WHERE typeid IN {tuple(service_type.valid_service_types)} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
@@ -73,7 +73,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         odscode = request.get("odscode")
         service_type_name = request.get("service_type")
         if odscode is not None and service_type_name is not None:
-            service_type = set_service_type(service_type_name)
+            service_type = get_service_type(service_type_name)
             db_columns = (
                 "id",
                 "name",

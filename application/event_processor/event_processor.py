@@ -17,13 +17,13 @@ from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.service_type import ServiceType
+from common.service_type import ServiceType, get_valid_service_types
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
     log_invalid_open_times,
-    log_unmatched_service_types,
     log_unmatched_nhsuk_pharmacies,
+    log_unmatched_service_types,
     report_closed_or_hidden_services,
     log_service_with_generic_bank_holiday
 )
@@ -50,11 +50,10 @@ class EventProcessor:
     matching_services = None
     change_requests = None
 
-    def __init__(self, nhs_entity: NHSEntity, service_type: ServiceType):
+    def __init__(self, nhs_entity: NHSEntity):
         self.nhs_entity = nhs_entity
-        self.service_type = service_type
 
-    def get_matching_services(self, service_type: ServiceType) -> List[DoSService]:
+    def get_matching_services(self) -> List[DoSService]:
         """Using the nhs entity attributed to this object, it finds the
         matching DoS services from the db and filters the results
         """
@@ -65,9 +64,10 @@ class EventProcessor:
 
         # Filter for matched and unmatched service types and valid status
         matching_services, non_matching_services = [], []
+        validate_service_types = get_valid_service_types(self.nhs_entity.org_type_id)
         for service in matching_dos_services:
             if int(service.statusid) == VALID_STATUS_ID:
-                if int(service.typeid) in service_type.valid_service_types:
+                if int(service.typeid) in validate_service_types:
                     matching_services.append(service)
                 else:
                     non_matching_services.append(service)
@@ -81,7 +81,7 @@ class EventProcessor:
 
         logger.info(
             f"Found {len(matching_services)} services with typeid in "
-            f"allowlist {service_type.valid_service_types} and status id = "
+            f"allowlist {validate_service_types} and status id = "
             f"{VALID_STATUS_ID}: {matching_services}"
         )
 
@@ -250,8 +250,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
         metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
-        event_processor = EventProcessor(nhs_entity, service_type)
-        matching_services = event_processor.get_matching_services(service_type)
+        event_processor = EventProcessor(nhs_entity)
+        matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
             log_unmatched_nhsuk_pharmacies(nhs_entity)
             return
