@@ -29,6 +29,7 @@
     - [Deployment From the Command-line](#deployment-from-the-command-line)
       - [Quick Deployment](#quick-deployment)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
+    - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
@@ -89,6 +90,7 @@ The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bas
 There are essential configuration options that **must** be set before proceeding any further. As a minimum the following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you have `tx-mfa` into non-prod first before running `make setup`
 
     make setup
+    echo hi
 
 Please, ask one of your colleagues for the AWS account numbers used by the project. The next command will prompt you to provide them. This information can be sourced from a properly set up project by running `make show-configuration | grep ^AWS_ACCOUNT_ID_`
 
