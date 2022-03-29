@@ -11,7 +11,7 @@ from common.dos import (
 )
 from common.dos_db_connection import query_dos_db
 from common.middlewares import unhandled_exception_logging
-from common.service_type import get_service_type
+from common.service_type import get_valid_service_types
 
 tracer = Tracer()
 logger = Logger()
@@ -30,20 +30,20 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     request = event
     result = None
     if request["type"] == "get_odscodes":
-        service_type_name = request.get("service_type")
-        if service_type_name is not None:
-            service_type = get_service_type(service_type_name)
+        service_type = request.get("service_type")
+        if service_type is not None:
+            valid_service_types = get_valid_service_types(service_type)
             query = (
-                f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(service_type.valid_service_types)} "
+                f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(valid_service_types)} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
             )
             result = run_query(query, None)
     elif request["type"] == "get_single_service_odscode":
-        service_type_name = request.get("service_type")
-        if service_type_name is not None:
-            service_type = get_service_type(service_type_name)
+        service_type = request.get("service_type")
+        if service_type is not None:
+            valid_service_types = get_valid_service_types(service_type)
             query = (
-                f"SELECT LEFT(odscode,5) FROM services WHERE typeid IN {tuple(service_type.valid_service_types)} "
+                f"SELECT LEFT(odscode,5) FROM services WHERE typeid IN {tuple(valid_service_types)} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
                 "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
             )
@@ -71,9 +71,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
     elif request["type"] == "change_event_demographics":
         odscode = request.get("odscode")
-        service_type_name = request.get("service_type")
-        if odscode is not None and service_type_name is not None:
-            service_type = get_service_type(service_type_name)
+        service_type = request.get("service_type")
+        if odscode is not None and service_type is not None:
+            valid_service_types = get_valid_service_types(service_type)
             db_columns = (
                 "id",
                 "name",
@@ -93,7 +93,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             )
             query_vars = {
                 "ODSCODE": f"{odscode}%",
-                "SERVICE_TYPES": tuple(service_type.valid_service_types),
+                "SERVICE_TYPES": tuple(valid_service_types),
                 "VALID_STATUS_ID": VALID_STATUS_ID,
             }
             query_results = run_query(query, query_vars)

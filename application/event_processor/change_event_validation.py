@@ -5,15 +5,15 @@ from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
 from common.change_event_exceptions import ValidationException
-from common.constants import PHARMACY_SERVICE_KEY
-from common.service_type import ServiceType
+from common.constants import SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, PHARMACY_SERVICE_KEY
+from common.service_type import validate_organisation_keys
 
 logger = Logger(child=True)
 
 ODSCODE_LENGTH = 5
 
 
-def validate_event(event: Dict[str, Any]) -> ServiceType:
+def validate_event(event: Dict[str, Any]) -> None:
     """Validate event using business rules
     Args:
         event (Dict[str, Any]): Lambda function invocation event
@@ -23,27 +23,12 @@ def validate_event(event: Dict[str, Any]) -> ServiceType:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
         raise ValidationException(exception)
-    service_type = ServiceType(event["OrganisationTypeId"])
-    check_org_sub_type(event["OrganisationSubType"], service_type)
-    if service_type.name == PHARMACY_SERVICE_KEY:  # Temporary flag to be removed in DI-354
+    validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
+    if (
+        SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY] == PHARMACY_SERVICE_KEY
+    ):  # Temporary flag to be removed in DI-354
         check_ods_code_length(event["ODSCode"])
     logger.info("Event has been validated")
-    return service_type
-
-
-def check_org_sub_type(org_sub_type: str, service_type: ServiceType) -> None:
-    """Check Organisation Sub Type if matches 'Community', exception raise if error
-    Args:
-        org_sub_type (str): Organisation sub type of NHS UK service
-        service_type (ServiceType): Service Type class object
-    """
-    logger.debug("Checking Organisation Sub Type")
-    if org_sub_type.upper() in service_type.organisation_sub_type:
-        logger.info(f"Organisation Sub Type: {org_sub_type} validated")
-    else:
-        raise ValidationException(
-            f"Unexpected Org Sub Type '{org_sub_type}', not part of {service_type.organisation_sub_type}"
-        )
 
 
 def check_ods_code_length(odscode: str) -> None:

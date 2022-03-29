@@ -17,7 +17,7 @@ from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
-from common.service_type import ServiceType, get_valid_service_types
+from common.service_type import get_valid_service_types
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
@@ -64,10 +64,10 @@ class EventProcessor:
 
         # Filter for matched and unmatched service types and valid status
         matching_services, non_matching_services = [], []
-        validate_service_types = get_valid_service_types(self.nhs_entity.org_type_id)
+        valid_service_types = get_valid_service_types(self.nhs_entity.org_type_id)
         for service in matching_dos_services:
             if int(service.statusid) == VALID_STATUS_ID:
-                if int(service.typeid) in validate_service_types:
+                if int(service.typeid) in valid_service_types:
                     matching_services.append(service)
                 else:
                     non_matching_services.append(service)
@@ -81,7 +81,7 @@ class EventProcessor:
 
         logger.info(
             f"Found {len(matching_services)} services with typeid in "
-            f"allowlist {validate_service_types} and status id = "
+            f"allowlist {valid_service_types} and status id = "
             f"{VALID_STATUS_ID}: {matching_services}"
         )
 
@@ -242,8 +242,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         return
 
     try:
-        service_type: ServiceType = validate_event(change_event)
-        logger.append_keys(service_type=service_type.name)
+        validate_event(change_event)
         nhs_entity = NHSEntity(change_event)
         logger.append_keys(ods_code=nhs_entity.odscode)
         logger.append_keys(org_type=nhs_entity.org_type)

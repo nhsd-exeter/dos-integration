@@ -1,5 +1,3 @@
-from typing import Union
-
 from aws_lambda_powertools import Logger
 from common.change_event_exceptions import ValidationException
 from common.constants import ORGANISATION_SUB_TYPES_KEY, SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, VALID_SERVICE_TYPES_KEY
@@ -7,29 +5,26 @@ from common.constants import ORGANISATION_SUB_TYPES_KEY, SERVICE_TYPES, SERVICE_
 logger = Logger(child=True)
 
 
-class ServiceType:
+def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
+    """Validate the organisation type id and organisation sub type
+
+    Args:
+        org_type_id (str): organisation type id
+        org_sub_type (str): organisation sub type
+
+    Raises:
+        ValidationException: Either Org Type ID or Org Sub Type is not part of the valid list
     """
-    Class for the service type.
-    """
-
-    name: str
-    organisation_type_id: str
-    organisation_sub_type: list[str]
-    valid_service_types: set[int]
-
-    def __init__(self, organisation_type_id: str):
-        if SERVICE_TYPES.get(organisation_type_id) is None:
-            raise ValidationException(
-                f"Unexpected Org Type ID '{organisation_type_id}' not part of {list(SERVICE_TYPES.keys())[0]}"
-            )
-        self.name = SERVICE_TYPES[organisation_type_id][SERVICE_TYPES_NAME_KEY]
-        self.organisation_type_id = organisation_type_id
-        self.organisation_sub_type = SERVICE_TYPES[organisation_type_id][ORGANISATION_SUB_TYPES_KEY]
-        self.valid_service_types = SERVICE_TYPES[organisation_type_id][VALID_SERVICE_TYPES_KEY]
-        logger.debug(f"ServiceType: {self.name}")
-
-    def __repr__(self) -> str:
-        return f"<ServiceType: name={self.name} valid_service_types={self.valid_service_types}>"
+    if org_type_id in SERVICE_TYPES:
+        logger.append_keys(service_type=SERVICE_TYPES[org_type_id][SERVICE_TYPES_NAME_KEY])
+        logger.info(f"Org type id: {org_type_id} validated")
+        logger.info(f"real: {org_sub_type} expected: {SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]}")
+        if org_sub_type in SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]:
+            logger.info(f"Subtype type id: {org_sub_type} validated")
+        else:
+            raise ValidationException(f"Unexpected Org Sub Type ID: '{org_sub_type}'")
+    else:
+        raise ValidationException(f"Unexpected Org Type ID: '{org_type_id}'")
 
 
 def get_valid_service_types(organisation_type_id: str) -> set[int]:
@@ -42,17 +37,3 @@ def get_valid_service_types(organisation_type_id: str) -> set[int]:
         set[int]: set of valid service types
     """
     return SERVICE_TYPES[organisation_type_id][VALID_SERVICE_TYPES_KEY]
-
-
-def get_service_type(service_type_name: str) -> Union[ServiceType, None]:
-    """get the service type based on the service type name
-
-    Args:
-        service_type_name (str): service type name
-
-    Returns:
-        Union[ServiceType, None]: service type object or None
-    """
-    for key in SERVICE_TYPES.keys():
-        if SERVICE_TYPES[key][SERVICE_TYPES_NAME_KEY] == service_type_name.upper():
-            return ServiceType(key)
