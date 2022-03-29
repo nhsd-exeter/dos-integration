@@ -26,9 +26,10 @@ phases:
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export PR_NUMBER=$(echo $CODEBUILD_WEBHOOK_TRIGGER | grep -Eo '[0-9]*')
       - echo $PR_NUMBER
-      - export ENVIRONMENT=$(make get-environment-from-pr PR_NUMBER=$PR_NUMBER)
+      - export ENVIRONMENT=$(make -s get-environment-from-pr PR_NUMBER=$PR_NUMBER)
       - echo $ENVIRONMENT
-      - export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
+      - make is-environment-deployed ENVIRONMENT=$ENVIRONMENT
+      - export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$ENVIRONMENT)
       - echo $ENVIRONMENT_DEPLOYED
       - if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
           make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT ;
