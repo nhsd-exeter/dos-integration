@@ -23,7 +23,7 @@ class ServiceType:
     valid_service_types: set[int]
 
     def __init__(self, organisation_type_id: str):
-        self.name = self.find_service_type(organisation_type_id)
+        self.name = self._find_service_type_name(organisation_type_id)
         self.organisation_type_id = SERVICE_TYPES[self.name][ORGANISATION_TYPES_KEY]
         self.organisation_sub_type = SERVICE_TYPES[self.name][ORGANISATION_SUB_TYPES_KEY]
         self.valid_service_types = SERVICE_TYPES[self.name][VALID_SERVICE_TYPES_KEY]
@@ -32,8 +32,9 @@ class ServiceType:
     def __repr__(self) -> str:
         return f"<ServiceType: name={self.name} valid_service_types={self.valid_service_types}>"
 
-    def find_service_type(self, organisation_type_id: str) -> str:
-        """Select the service type based on the organisation type id
+    def _find_service_type_name(self, organisation_type_id: str) -> str:
+        """Select the service type name based on the organisation type id.
+        This is an internal method not intended for changing service type.
 
         Args:
             organisation_type_id (str): organisation type id of NHS entity
