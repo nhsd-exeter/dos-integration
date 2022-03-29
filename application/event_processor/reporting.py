@@ -158,7 +158,7 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
 
 
 def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: DoSService) -> None:
-    """Log a service found to have a generic bank holiday open times set in DoS"""
+    """Log a service found to have a generic bank holiday open times set in DoS."""
 
     open_periods_str = OpenPeriod.list_string(dos_service._standard_opening_times.generic_bankholiday)
 
