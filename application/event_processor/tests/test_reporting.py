@@ -197,6 +197,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
             "nhsuk_organisation_name": nhs_entity.org_name,
             "dos_service_uid": dos_service.uid,
             "dos_service_name": dos_service.name,
+            "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
             "nhsuk_parentorg": nhs_entity.parent_org_name
         },
