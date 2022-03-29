@@ -9,6 +9,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
@@ -23,6 +24,7 @@ from reporting import (
     log_unmatched_service_types,
     log_unmatched_nhsuk_pharmacies,
     report_closed_or_hidden_services,
+    log_service_with_generic_bank_holiday
 )
 
 logger = Logger()
@@ -257,6 +259,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
         if not nhs_entity.all_times_valid():
             log_invalid_open_times(nhs_entity, matching_services)
+
+        for dos_service in matching_services:
+            if dos_service.any_generic_bankholiday_open_periods():
+                log_service_with_generic_bank_holiday(nhs_entity, dos_service)
 
         event_processor.get_change_requests()
     finally:

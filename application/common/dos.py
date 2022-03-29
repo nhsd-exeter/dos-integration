@@ -7,6 +7,7 @@ from aws_lambda_powertools import Logger
 from .dos_db_connection import query_dos_db
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
+
 VALID_SERVICE_TYPES = {13, 131, 132, 134, 137}
 VALID_STATUS_ID = 1
 logger = Logger(child=True)
@@ -81,6 +82,9 @@ class DoSService:
         if self._specified_opening_times is None:
             self._specified_opening_times = get_specified_opening_times_from_db(self.id)
         return self._specified_opening_times
+
+    def any_generic_bankholiday_open_periods(self) -> bool:
+        return len(self.get_standard_opening_times().generic_bankholiday) > 0
 
 
 @dataclass(init=True, repr=True)
