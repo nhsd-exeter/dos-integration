@@ -197,6 +197,12 @@ def a_change_event_with_invalid_odscode():
     return context
 
 
+@given(parsers.parse('the Changed Event has ODS Code "{odscode}"'), target_fixture="context")
+def a_change_event_with_custom_ods(context, odscode: str):
+    context["change_event"]["ODSCode"] = odscode
+    return context
+
+
 @given("a Changed Event contains an incorrect OrganisationSubtype", target_fixture="context")
 def a_change_event_with_invalid_organisationsubtype():
     context = {}
@@ -448,6 +454,17 @@ def unmatched_postcode_exception(context):
     logs = get_logs(query, "processor", context["start_time"])
     postcode = context["change_event"]["Postcode"]
     assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected Invalid Postcode exception not found."
+
+
+@then("the unmatched service type exception is reported to cloudwatch")
+def unmatched_service_type_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "UNMATCHED_SERVICE_TYPE"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    odscode = context["change_event"]["ODSCode"]
+    assert f"{odscode}" in logs, "ERROR!!.. Expected Unmatched Service Type exception not found."
 
 
 @then("the hidden or closed exception is reported to cloudwatch")

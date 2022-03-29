@@ -119,3 +119,19 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And an invalid opening times error is generated
+
+@complete @dev
+  Scenario: F002S016. Pharmacy request with dentist ODS is reported
+    Given a Changed Event is valid
+    And the Changed Event has overlapping opening times
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event is stored in dynamo db
+    And an invalid opening times error is generated
+
+@complete @dev @kit
+  Scenario: F002S017. Active ODS Code with Invalid Service Type reports to Splunk
+    Given a Changed Event is valid
+    And the Changed Event has ODS Code "TP68G"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event is stored in dynamo db
+    And the unmatched service type exception is reported to cloudwatch
