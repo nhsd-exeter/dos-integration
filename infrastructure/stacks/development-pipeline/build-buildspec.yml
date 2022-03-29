@@ -12,7 +12,6 @@ phases:
       - make docker-hub-signin
   build:
     commands:
-      - docker --version
       - echo "[Building docker containers]"
       - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "[Pushing images to ECR]"
