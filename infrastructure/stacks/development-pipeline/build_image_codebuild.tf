@@ -5,11 +5,17 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
   filter_group {
     filter {
       type    = "EVENT"
-      pattern = "PUSH"
+      pattern = "PULL_REQUEST_CREATED"
     }
     filter {
-      type    = "HEAD_REF"
-      pattern = "^refs/heads/master$"
+      type    = "FILE_PATH"
+      pattern = local.independent_build_images[each.key].filematch
+    }
+  }
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PULL_REQUEST_UPDATED"
     }
     filter {
       type    = "FILE_PATH"

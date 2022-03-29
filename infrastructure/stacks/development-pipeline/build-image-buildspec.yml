@@ -8,15 +8,12 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
-      - aws sts get-caller-identity
       - make docker-hub-signin
   build:
     commands:
-      - docker --version
       - echo "[Building docker containers]"
       - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo "[Pushing images to ECR]"
-      - echo $CODEBUILD_SOURCE_VERSION
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN

@@ -4,7 +4,18 @@ resource "aws_codebuild_webhook" "destroy_environment_from_tag_deployment_webhoo
   filter_group {
     filter {
       type    = "EVENT"
-      pattern = "PUSH"
+      pattern = "PULL_REQUEST_CREATED"
+    }
+
+    filter {
+      type    = "HEAD_REF"
+      pattern = "^refs/tags/.*-destroy"
+    }
+  }
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PULL_REQUEST_UPDATED"
     }
 
     filter {

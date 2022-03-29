@@ -9,7 +9,6 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
-      - aws sts get-caller-identity
       - make docker-hub-signin
       - make docker-pull NAME=serverless VERSION=latest
   build:

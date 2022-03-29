@@ -31,7 +31,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
@@ -57,7 +57,6 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
-	eval "$$(make aws-assume-role-export-variables)"
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
@@ -211,13 +210,12 @@ common-code-remove: ### Remove common code from lambda direcory - mandatory: LAM
 # Event Sender
 
 event-sender-build: ### Build event sender lambda docker image
-	make common-code-copy LAMBDA_DIR=event_sender
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_sender
+	cd $(APPLICATION_DIR)
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
 		--exclude=tests \
-		*.py \
-		common
+		event_sender/*.py \
+		common/*.py
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender
 	make event-sender-clean
@@ -265,7 +263,6 @@ event-processor-build: ### Build event processor lambda docker image
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-processor
 	make event-processor-clean
-	export VERSION=$$(make docker-image-get-version NAME=event-processor)
 
 event-processor-clean: ### Clean event processor lambda docker image directory
 	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz

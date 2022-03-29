@@ -11,9 +11,8 @@ resource "aws_codebuild_project" "di_unit_tests" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
-
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
@@ -83,7 +82,7 @@ resource "aws_codebuild_project" "di_build" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -158,7 +157,7 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -228,7 +227,7 @@ resource "aws_codebuild_project" "di_integration_tests" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -295,7 +294,7 @@ resource "aws_codebuild_project" "di_deploy_fresh" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
