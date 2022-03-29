@@ -535,6 +535,9 @@ get-environment-from-pr:
 	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DI-(?<x>.[0-9]*).*"; "di-\(.x)")')
 	echo $$ENVIRONMENT
 
+is-environment-deployed:
+	ENVIRONMENT_DEPLOYED=$$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("$(ENVIRONMENT)"))')
+	echo $$ENVIRONMENT_DEPLOYED
 # ==============================================================================
 # Tester
 
