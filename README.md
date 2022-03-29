@@ -103,6 +103,7 @@ Generate and trust a self-signed certificate that will be used locally to enable
     # Terminal 1
     make build
     make start log
+    echo hi
 
 ## Contributing
 
