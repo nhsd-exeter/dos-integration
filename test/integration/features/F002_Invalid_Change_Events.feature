@@ -128,7 +128,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is stored in dynamo db
     And an invalid opening times error is generated
 
-@complete @dev @kit
+@complete @dev
   Scenario: F002S017. Active ODS Code with Invalid Service Type reports to Splunk
     Given a Changed Event is valid
     And the Changed Event has ODS Code "TP68G"
