@@ -184,10 +184,9 @@ def test_get_unmatching_services(mock_log_unmatched_service_types, mock_get_matc
     service.typeid = 999
     service.statusid = 1
     mock_get_matching_dos_services.return_value = [service]
-    service_type = ServiceType("PHA")
-    event_processor = EventProcessor(nhs_entity, service_type)
+    event_processor = EventProcessor(nhs_entity)
     # Act
-    event_processor.get_matching_services(service_type)
+    event_processor.get_matching_services()
     # Assert
     mock_log_unmatched_service_types.assert_called_once()
 

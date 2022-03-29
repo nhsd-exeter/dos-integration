@@ -1,3 +1,5 @@
+from typing import Union
+
 from aws_lambda_powertools import Logger
 from common.change_event_exceptions import ValidationException
 from common.constants import ORGANISATION_SUB_TYPES_KEY, SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, VALID_SERVICE_TYPES_KEY
