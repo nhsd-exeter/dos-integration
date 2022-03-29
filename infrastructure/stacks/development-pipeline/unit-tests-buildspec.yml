@@ -1,37 +1,7 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
 version: 0.2
 
-#env:
-  #variables:
-    # key: "value"
-    # key: "value"
-  #parameter-store:
-    # key: "value"
-    # key: "value"
-  #secrets-manager:
-    # key: secret-id:json-key:version-stage:version-id
-    # key: secret-id:json-key:version-stage:version-id
-  #exported-variables:
-    # - variable
-    # - variable
-  #git-credential-helper: yes
-#batch:
-  #fast-fail: true
-  #build-list:
-  #build-matrix:
-  #build-graph:
 phases:
-  install:
-    runtime-versions:
-      docker: 19
-  #install:
-    #If you use the Ubuntu standard image 2.0 or later, you must specify runtime-versions.
-    #If you specify runtime-versions and use an image other than Ubuntu standard image 2.0, the build fails.
-    #runtime-versions:
-      # name: version
-      # name: version
-    #commands:
-      # - command
-      # - command
   pre_build:
     commands:
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
@@ -44,18 +14,12 @@ phases:
       - aws sts get-caller-identity
       - chown -R 999:999 $CODEBUILD_SRC_DIR
       - make docker-hub-signin
-
   build:
     commands:
       - aws sts get-caller-identity
       - echo "[Running Unit Tests]"
       - make docker-pull NAME=tester VERSION=latest
       - make unit-test
-      # - command
-  #post_build:
-    #commands:
-      # - command
-      # - command
 reports:
   unit-tests:
     files:
@@ -63,13 +27,3 @@ reports:
     base-directory: $CODEBUILD_SRC_DIR/application
     discard-paths: yes
     file-format: JUNITXML
-#artifacts:
-  #files:
-    # - location
-    # - location
-  #name: $(date +%Y-%m-%d)
-  #discard-paths: yes
-  #base-directory: location
-#cache:
-  #paths:
-    # - paths
