@@ -13,7 +13,7 @@ logger = Logger(child=True)
 ODSCODE_LENGTH = 5
 
 
-def validate_event(event: Dict[str, Any]) -> ServiceType:
+def validate_event(event: Dict[str, Any]) -> None:
     """Validate event using business rules
     Args:
         event (Dict[str, Any]): Lambda function invocation event
