@@ -128,7 +128,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is stored in dynamo db
     And the unmatched service type exception is reported to cloudwatch
 
-@complete @dev
+@complete @dev @cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
     Given a Changed Event is valid
     And the Changed Event has ODS Code "FJQ49"

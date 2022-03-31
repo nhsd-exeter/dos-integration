@@ -54,7 +54,7 @@ Feature: F006. Opening times
     Then the Changed Request is accepted by Dos
     And the opening times changes are confirmed valid
 
-  @complete
+  @complete @no_log_searches
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
