@@ -10,7 +10,7 @@ from common.constants import (
     INVALID_POSTCODE_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
-    GENERIC_BANK_HOLIDAY_REPORT_ID
+    GENERIC_BANK_HOLIDAY_REPORT_ID,
 )
 from common.opening_times import OpenPeriod
 from .conftest import dummy_dos_service
@@ -21,7 +21,7 @@ from ..reporting import (
     report_closed_or_hidden_services,
     log_unmatched_nhsuk_pharmacies,
     log_invalid_nhsuk_pharmacy_postcode,
-    log_service_with_generic_bank_holiday
+    log_service_with_generic_bank_holiday,
 )
 
 
@@ -171,7 +171,7 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
-            "dos_services": ", ".join(str(service.uid) for service in dos_services)
+            "dos_services": ", ".join(str(service.uid) for service in dos_services),
         },
     )
 
@@ -199,7 +199,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
             "dos_service_name": dos_service.name,
             "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
-            "nhsuk_parentorg": nhs_entity.parent_org_name
+            "nhsuk_parentorg": nhs_entity.parent_org_name,
         },
     )
 

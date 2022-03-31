@@ -30,20 +30,20 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     request = event
     result = None
     if request["type"] == "get_odscodes":
-        service_type = request.get("service_type")
-        if service_type is not None:
-            valid_service_types = get_valid_service_types(service_type)
+        organisation_type_id = request.get("organisation_type_id")
+        if organisation_type_id is not None:
+            type_id_query = get_valid_service_types_equals_string(organisation_type_id)
             query = (
-                f"SELECT LEFT(odscode, 5) FROM services WHERE typeid IN {tuple(valid_service_types)} "
+                f"SELECT LEFT(odscode, 5) FROM services WHERE typeid {type_id_query} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
             )
             result = run_query(query, None)
     elif request["type"] == "get_single_service_odscode":
-        service_type = request.get("service_type")
-        if service_type is not None:
-            valid_service_types = get_valid_service_types(service_type)
+        organisation_type_id = request.get("organisation_type_id")
+        if organisation_type_id is not None:
+            type_id_query = get_valid_service_types_equals_string(organisation_type_id)
             query = (
-                f"SELECT LEFT(odscode,5) FROM services WHERE typeid IN {tuple(valid_service_types)} "
+                f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} "
                 f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
                 "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
             )
@@ -71,9 +71,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
     elif request["type"] == "change_event_demographics":
         odscode = request.get("odscode")
-        service_type = request.get("service_type")
-        if odscode is not None and service_type is not None:
-            valid_service_types = get_valid_service_types(service_type)
+        organisation_type_id = request.get("organisation_type_id")
+        if odscode is not None and organisation_type_id is not None:
+            type_id_query = get_valid_service_types_equals_string(organisation_type_id)
             db_columns = (
                 "id",
                 "name",
@@ -88,12 +88,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             )
             query = (
                 f"SELECT {', '.join(db_columns)} "
-                "FROM services WHERE odscode like %(ODSCODE)s AND typeid IN %(SERVICE_TYPES)s "
+                f"FROM services WHERE odscode like %(ODSCODE)s AND typeid {type_id_query} "
                 "AND statusid = %(VALID_STATUS_ID)s AND odscode IS NOT NULL"
             )
             query_vars = {
                 "ODSCODE": f"{odscode}%",
-                "SERVICE_TYPES": tuple(valid_service_types),
                 "VALID_STATUS_ID": VALID_STATUS_ID,
             }
             query_results = run_query(query, query_vars)
@@ -120,7 +119,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing service_id")
     else:
         raise ValueError("Unsupported request")
-
     return dumps(result, default=str)
 
 
@@ -130,3 +128,21 @@ def run_query(query, query_vars) -> list:
     query_result = cursor.fetchall()
     cursor.close()
     return query_result
+
+
+def get_valid_service_types_equals_string(organisation_type_id: str) -> str:
+    """Gets a query string for to match valid dos service type id/ids
+
+    Args:
+        organisation_type_id (str): Organsation type id
+
+    Returns:
+        str: Equals string to include in query
+    """
+    valid_service_types: list = get_valid_service_types(organisation_type_id)
+    if len(valid_service_types) > 1:
+        valid_service_types = tuple(valid_service_types)
+        type_id_query = f"IN {valid_service_types}"
+    else:
+        type_id_query = f"= {valid_service_types[0]}"
+    return type_id_query

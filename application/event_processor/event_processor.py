@@ -25,7 +25,7 @@ from reporting import (
     log_unmatched_nhsuk_pharmacies,
     log_unmatched_service_types,
     report_closed_or_hidden_services,
-    log_service_with_generic_bank_holiday
+    log_service_with_generic_bank_holiday,
 )
 
 logger = Logger()

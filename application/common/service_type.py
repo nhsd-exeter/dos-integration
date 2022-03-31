@@ -27,13 +27,13 @@ def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
         raise ValidationException(f"Unexpected Org Type ID: '{org_type_id}'")
 
 
-def get_valid_service_types(organisation_type_id: str) -> set[int]:
+def get_valid_service_types(organisation_type_id: str) -> list[int]:
     """Get the valid service types for the organisation type id
 
     Args:
         organisation_type_id (str): organisation type id from nhs uk entity
 
     Returns:
-        set[int]: set of valid service types
+        list[int]: set of valid service types
     """
     return SERVICE_TYPES[organisation_type_id][VALID_SERVICE_TYPES_KEY]
