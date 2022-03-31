@@ -12,7 +12,7 @@ phases:
   build:
     commands:
       - echo "[Building docker containers]"
-      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION DOCKER_BUILDKIT=1
+      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION DOCKER_BUILDKIT=1 FROM_CACHE=true
       - echo "[Pushing images to ECR]"
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY

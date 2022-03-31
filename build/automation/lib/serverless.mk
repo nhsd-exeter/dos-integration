@@ -11,6 +11,9 @@ serverless-build:
 serverless-deploy: # Deploy AWS resources - mandatory: PROFILE
 	make serverless-run CMD=deploy
 
+serverless-deploy-single-function: # Deploy single AWS lambda - mandatory: PROFILE, FUNCTION_NAME
+	make serverless-run CMD="deploy function -f $(FUNCTION_NAME)"
+
 serverless-remove: # Delete existing AWS resources - mandatory: PROFILE
 	make serverless-run CMD=remove
 

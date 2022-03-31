@@ -191,188 +191,140 @@ clean: # Runs whole project clean
 		performance-test-clean
 
 # ==============================================================================
-# Mocks Setup
-
-mock-dos-db-setup:
-	mkdir -p $(TMP_DIR)/sql 2> /dev/null ||:
-	aws s3 sync s3://uec-dos-int-dos-database $(TMP_DIR)/sql
-
-# ==============================================================================
-# Common Lambda Code
-
-common-code-copy: ### Copy common code to lambda direcory - mandatory: LAMBDA_DIR=[directory of lambda]
-	cp -rf $(APPLICATION_DIR)/common $(APPLICATION_DIR)/$(LAMBDA_DIR)/
-
-common-code-remove: ### Remove common code from lambda direcory - mandatory: LAMBDA_DIR=[directory of lambda]
-	rm -rf $(APPLICATION_DIR)/$(LAMBDA_DIR)/common
-
-# ==============================================================================
 # Event Sender
 
 event-sender-build: ### Build event sender lambda docker image
 	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
-	cd $(APPLICATION_DIR)
+	cd $(APPLICATION_DIR)/event_sender
 	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
-		--exclude=tests \
-		event_sender/*.py \
-		common/*.py
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-sender
-	make event-sender-clean
-	export VERSION=$$(make docker-image-get-version NAME=event-sender)
 
 event-sender-clean: ### Clean event sender lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-sender/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/event-sender/assets/*.txt
-	make common-code-remove LAMBDA_DIR=event_sender
+	rm -f $(DOCKER_DIR)/event-sender/assets/*.tar.gz $(DOCKER_DIR)/event-sender/assets/*.txt
 
+event-sender-build-and-deploy: ### Build and deploy event sender lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=event-sender
 
 # ==============================================================================
 # Slack Messenger
 
-slack-messenger-build: ### Build event sender lambda docker image
-	make common-code-copy LAMBDA_DIR=slack_messenger
+slack-messenger-build: ### Build slack messenger lambda docker image
 	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/slack-messenger/assets/requirements.txt
 	cd $(APPLICATION_DIR)/slack_messenger
 	tar -czf $(DOCKER_DIR)/slack-messenger/assets/slack-messenger-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=slack-messenger
-	make slack-messenger-clean
-	export VERSION=$$(make docker-image-get-version NAME=slack-messenger)
 
-slack-messenger-clean: ### Clean event sender lambda docker image directory
-	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/slack-messenger/assets/*.txt
-	make common-code-remove LAMBDA_DIR=slack_messenger
+slack-messenger-clean: ### Clean slack messenger lambda docker image directory
+	rm -f $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz $(DOCKER_DIR)/slack-messenger/assets/*.txt
 
+slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
 
 # ==============================================================================
 # Event Processor
 
 event-processor-build: ### Build event processor lambda docker image
-	make common-code-copy LAMBDA_DIR=event_processor
 	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/event-processor/assets/requirements.txt
 	cd $(APPLICATION_DIR)/event_processor
 	tar -czf $(DOCKER_DIR)/event-processor/assets/event-processor-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-processor
-	make event-processor-clean
 
 event-processor-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-processor/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/event-processor/assets/*.txt
-	make common-code-remove LAMBDA_DIR=event_processor
+	rm -f $(DOCKER_DIR)/event-processor/assets/*.tar.gz $(DOCKER_DIR)/event-processor/assets/*.txt
+
+event-processor-build-and-deploy: ### Build and deploy event processor lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=event-processor
 
 # ==============================================================================
 # First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
 
 fifo-dlq-handler-build: ### Build fifo dlq handler lambda docker image
-	make common-code-copy LAMBDA_DIR=fifo_dlq_handler
 	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/fifo-dlq-handler/assets/requirements.txt
 	cd $(APPLICATION_DIR)/fifo_dlq_handler
 	tar -czf $(DOCKER_DIR)/fifo-dlq-handler/assets/fifo-dlq-handler-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=fifo-dlq-handler
-	make fifo-dlq-handler-clean
-	export VERSION=$$(make docker-image-get-version NAME=fifo-dlq-handler)
 
 fifo-dlq-handler-clean: ### Clean fifo dlq handler lambda docker image directory
-	rm -fv $(DOCKER_DIR)/fifo-dlq-handler/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/fifo-dlq-handler/assets/*.txt
-	make common-code-remove LAMBDA_DIR=fifo_dlq_handler
+	rm -f $(DOCKER_DIR)/fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/fifo-dlq-handler/assets/*.txt
+
+fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=fifo-dlq-handler
 
 # ==============================================================================
 # CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
 
-cr-fifo-dlq-handler-build: ### Build cr-fifo dlq handler lambda docker image
-	make common-code-copy LAMBDA_DIR=cr_fifo_dlq_handler
+cr-fifo-dlq-handler-build: ### Build cr fifo dlq handler lambda docker image
 	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/requirements.txt
 	cd $(APPLICATION_DIR)/cr_fifo_dlq_handler
 	tar -czf $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/cr-fifo-dlq-handler-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=cr-fifo-dlq-handler
-	make cr-fifo-dlq-handler-clean
-	export VERSION=$$(make docker-image-get-version NAME=cr-fifo-dlq-handler)
 
-cr-fifo-dlq-handler-clean: ### Clean cr-fifo dlq handler lambda docker image directory
-	rm -fv $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.txt
-	make common-code-remove LAMBDA_DIR=cr_fifo_dlq_handler
+cr-fifo-dlq-handler-clean: ### Clean cr fifo dlq handler lambda docker image directory
+	rm -f $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.txt
+
+cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=cr-fifo-dlq-handler
 
 # ==============================================================================
 # Event Replay lambda (event-replay)
 
 event-replay-build: ### Build event replay lambda docker image
-	make common-code-copy LAMBDA_DIR=event_replay
 	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/event-replay/assets/requirements.txt
 	cd $(APPLICATION_DIR)/event_replay
 	tar -czf $(DOCKER_DIR)/event-replay/assets/event-replay-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=event-replay
-	make event-replay-clean
-	export VERSION=$$(make docker-image-get-version NAME=event-replay)
 
 event-replay-clean: ### Clean event replay lambda docker image directory
-	rm -fv $(DOCKER_DIR)/event-replay/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/event-replay/assets/*.txt
-	make common-code-remove LAMBDA_DIR=event_replay
+	rm -f $(DOCKER_DIR)/event-replay/assets/*.tar.gz $(DOCKER_DIR)/event-replay/assets/*.txt
+
+event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=event-replay
 
 # ==============================================================================
 # Test DB Checker Handler (test-db-checker-handler)
 
-test-db-checker-handler-build: ### Build event processor lambda docker image
-	make common-code-copy LAMBDA_DIR=test_db_checker_handler
+test-db-checker-handler-build: ### Build test db checker handler lambda docker image
 	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/test-db-checker-handler/assets/requirements.txt
 	cd $(APPLICATION_DIR)/test_db_checker_handler
 	tar -czf $(DOCKER_DIR)/test-db-checker-handler/assets/test-db-checker-handler-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
 	make docker-image NAME=test-db-checker-handler
-	make test-db-checker-handler-clean
-	export VERSION=$$(make docker-image-get-version NAME=test-db-checker-handler)
 
-test-db-checker-handler-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/test-db-checkerhandler/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
-	make common-code-remove LAMBDA_DIR=test_db_checker_handler
+test-db-checker-handler-clean: ### Clean test db checker handler lambda docker image directory
+	rm -f $(DOCKER_DIR)/test-db-checker-handler/assets/*.tar.gz $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
+
+test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=test-db-checker-handler
 
 # ==============================================================================
 # Orchestrator
 
 orchestrator-build: ### Build orchestrator lambda docker image
-	make common-code-copy LAMBDA_DIR=orchestrator
 	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
 	cd $(APPLICATION_DIR)/orchestrator
 	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
-		--exclude=tests \
-		*.py \
-		common
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=orchestrator
-	make orchestrator-clean
-	export VERSION=$$(make docker-image-get-version NAME=orchestrator)
+	make docker-image NAME=orchestrator
 
 orchestrator-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/orchestrator/assets/*.txt
-	make common-code-remove LAMBDA_DIR=orchestrator
+	rm -f $(DOCKER_DIR)/orchestrator/assets/*.tar.gz $(DOCKER_DIR)/orchestrator/assets/*.txt
+
+orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
 # Authoriser (for dos api gateway mock)
@@ -381,16 +333,12 @@ authoriser-build: ### Build authoriser lambda docker image
 	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
 	cd $(APPLICATION_DIR)/authoriser
 	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
-		--exclude=tests \
-		*.py
+		--exclude=tests *.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=authoriser
-	make authoriser-clean
-	export VERSION=$$(make docker-image-get-version NAME=authoriser)
+	make docker-image NAME=authoriser
 
-authoriser-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/authoriser/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/authoriser/assets/*.txt
+authoriser-clean: ### Clean authoriser lambda docker image directory
+	rm -f $(DOCKER_DIR)/authoriser/assets/*.tar.gz $(DOCKER_DIR)/authoriser/assets/*.txt
 
 # ==============================================================================
 # DoS API Gateway Mock lambda
@@ -399,21 +347,12 @@ dos-api-gateway-build:
 	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
 	cd $(APPLICATION_DIR)/dos_api_gateway
 	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
-		--exclude=tests \
-		*.py
+		--exclude=tests *.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image NAME=dos-api-gateway
-	make dos-api-gateway-clean
-	export VERSION=$$(make docker-image-get-version NAME=dos-api-gateway)
+	make docker-image NAME=dos-api-gateway
 
 dos-api-gateway-clean: ### Clean event processor lambda docker image directory
-	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz
-	rm -fv $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
-
-build-and-push-mock-dos-api-gateway-docker-images:
-	make authoriser-build dos-api-gateway-build
-	make docker-push NAME=authoriser
-	make docker-push NAME=dos-api-gateway
+	rm -f $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
 
 mock-dos-api-gateway-deployment:
 	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
@@ -425,10 +364,16 @@ sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit has
 	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy
 
-quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE
+quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE, ENVIRONMENT
 	make -s build VERSION=$(BUILD_TAG)
 	make -s push-images VERSION=$(BUILD_TAG)
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
+
+build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
+	make $(FUNCTION_NAME)-build VERSION=$(BUILD_TAG)
+	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
+	eval "$$(make -s populate-deployment-variables)"
+	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	make docker-push NAME=event-sender

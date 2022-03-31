@@ -15,4 +15,4 @@ phases:
   build:
     commands:
       - echo "[Deploying]"
-      - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE FROM_CACHE=true
+      - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE OPTS="-parallelism=30"

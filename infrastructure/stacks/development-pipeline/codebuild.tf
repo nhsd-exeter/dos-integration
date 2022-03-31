@@ -215,7 +215,8 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 }
 
 resource "aws_codebuild_project" "di_integration_tests" {
-  name           = "${var.project_id}-${var.environment}-integration-test-stage"
+  for_each       = local.integration_tags
+  name           = "${var.project_id}-${var.environment}-integration-test-stage-${each.key}"
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
   queued_timeout = "30"
@@ -245,6 +246,10 @@ resource "aws_codebuild_project" "di_integration_tests" {
     environment_variable {
       name  = "ENVIRONMENT"
       value = "test"
+    }
+    environment_variable {
+      name  = "INTEGRATION_TAGS"
+      value = each.key
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
