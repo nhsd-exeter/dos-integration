@@ -25,12 +25,12 @@ def lambda_context():
 def test_type_get_odscodes(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_odscodes"}
+    test_input = {"type": "get_odscodes", "organisation_type_id": "PHA"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
+        "SELECT LEFT(odscode, 5) FROM services WHERE typeid IN (13, 131, 132, 134, 137) "
         "AND statusid = 1 AND odscode IS NOT NULL",
         None,
     )
@@ -41,12 +41,12 @@ def test_type_get_odscodes(mock_run_query, lambda_context):
 def test_type_get_single_service_odscode(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_single_service_odscode"}
+    test_input = {"type": "get_single_service_odscode", "organisation_type_id": "PHA"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (131, 132, 134, 137, 13) "
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (13, 131, 132, 134, 137) "
         "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' AND LENGTH(LEFT(odscode,5)) = 5 "
         "GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1",
         None,
@@ -95,16 +95,16 @@ def test_type_get_changes_no_id(mock_run_query, lambda_context):
 def test_get_demographics_no_match(mock_run_query, lambda_context):
     # Arrange
     odscode = "FA100"
-    test_input = {"type": "change_event_demographics", "odscode": odscode}
+    test_input = {"type": "change_event_demographics", "odscode": odscode, "organisation_type_id": "PHA"}
     mock_run_query.return_value = []
     with raises(ValueError) as err:
         lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT id, name, odscode, address, postcode, web, typeid, statusid, publicphone, publicname "
-        "FROM services WHERE odscode like %(ODSCODE)s AND typeid IN %(SERVICE_TYPES)s "
+        "SELECT id, name, odscode, address, postcode, web, typeid, statusid, publicphone, "
+        "publicname FROM services WHERE odscode like %(ODSCODE)s AND typeid IN (13, 131, 132, 134, 137) "
         "AND statusid = %(VALID_STATUS_ID)s AND odscode IS NOT NULL",
-        {"ODSCODE": f"{odscode}%", "SERVICE_TYPES": (131, 132, 134, 137, 13), "VALID_STATUS_ID": 1},
+        {"ODSCODE": f"{odscode}%", "VALID_STATUS_ID": 1},
     )
     assert str(err.value) == f"No matching services for odscode {odscode}"
 
@@ -125,16 +125,16 @@ def test_type_demographics(mock_run_query, lambda_context):
         "publicphone": None,
         "publicname": None,
     }
-    test_input = {"type": "change_event_demographics", "odscode": odscode}
+    test_input = {"type": "change_event_demographics", "odscode": odscode, "organisation_type_id": "PHA"}
     mock_run_query.return_value = [list(expected.values())]
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT id, name, odscode, address, postcode, web, typeid, statusid, publicphone, publicname "
-        "FROM services WHERE odscode like %(ODSCODE)s AND typeid IN %(SERVICE_TYPES)s "
+        "SELECT id, name, odscode, address, postcode, web, typeid, statusid, publicphone, "
+        "publicname FROM services WHERE odscode like %(ODSCODE)s AND typeid IN (13, 131, 132, 134, 137) "
         "AND statusid = %(VALID_STATUS_ID)s AND odscode IS NOT NULL",
-        {"ODSCODE": f"{odscode}%", "SERVICE_TYPES": (131, 132, 134, 137, 13), "VALID_STATUS_ID": 1},
+        {"ODSCODE": f"{odscode}%", "VALID_STATUS_ID": 1},
     )
     assert response == dumps(expected)
 

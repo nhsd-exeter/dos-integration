@@ -1,18 +1,16 @@
+import hashlib
+import logging
 from dataclasses import dataclass
 from json import dumps
 from os import environ
-import hashlib
 from random import choices
+from unittest.mock import patch
+
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools import Logger
-from unittest.mock import patch
-import logging
-
+from common.dos import dos_location_cache
 from pytest import fixture, raises
 
-from ..event_processor import EventProcessor, lambda_handler, EXPECTED_ENVIRONMENT_VARIABLES
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_service, dummy_dos_location
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     ADDRESS_LINES_KEY,
@@ -22,7 +20,9 @@ from ..change_request import (
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
-from common.dos import dos_location_cache
+from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler
+from ..nhs import NHSEntity
+from .conftest import dummy_dos_location, dummy_dos_service
 
 FILE_PATH = "application.event_processor.event_processor"
 
@@ -172,7 +172,7 @@ def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matchi
     # Assert
     assert matching_services == [service]
 
-    assert not mock_log_unmatched_service_types.called
+    mock_log_unmatched_service_types.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")

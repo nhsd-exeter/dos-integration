@@ -13,7 +13,7 @@ from common.constants import (
     INVALID_POSTCODE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
-    GENERIC_BANK_HOLIDAY_REPORT_ID
+    GENERIC_BANK_HOLIDAY_REPORT_ID,
 )
 from nhs import NHSEntity
 
@@ -172,6 +172,6 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
             "dos_service_name": dos_service.name,
             "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": open_periods_str,
-            "nhsuk_parentorg": nhs_entity.parent_org_name
+            "nhsuk_parentorg": nhs_entity.parent_org_name,
         },
     )
