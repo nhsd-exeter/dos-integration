@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from itertools import groupby
 from typing import List, Union
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_lambda_powertools import Logger
 
@@ -102,27 +103,47 @@ class DoSLocation:
         return None not in (self.easting, self.northing, self.latitude, self.longitude)
 
 
-def get_matching_dos_services(odscode: str) -> List[DoSService]:
+def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService]:
     """Retrieves DoS Services from DoS database
 
     Args:
         odscode (str): ODScode to match on
+        org_type_id (str): OrganisationType to match on
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
-
-    logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
-
-    sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
-    named_args = {"ODS_5": f"{odscode[0:5]}%"}
+    if org_type_id == PHARMACY_ORG_TYPE_ID:
+        logger.info(
+            f"Searching for '{org_type_id}' DoS services with ODSCode that matches first 5 digits of '{odscode}'"
+        )
+        sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
+        named_args = {"ODS_5": f"{odscode[0:5]}%"}
+    elif org_type_id == DENTIST_ORG_TYPE_ID:
+        odscode_6, odscode_7 = get_new_odscode_for_dentist(odscode)
+        logger.info(
+            f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode,odscode_6,odscode_7}'"
+        )
+        where_clause = "WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS_6)s or odscode LIKE %(ODS_7)s"
+        sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services {where_clause}"
+        named_args = {"ODS": f"{odscode}%", "ODS_6": f"{odscode_6}%", "ODS_7": f"{odscode_7}%"}
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
     services = [DoSService(row) for row in c.fetchall()]
     c.close()
     return services
+
+
+def get_new_odscode_for_dentist(odscode: str) -> tuple():
+    odscode_length = len(odscode)
+    odscode_6 = odscode[:6]
+    odscode_7 = odscode[:7]
+    if odscode_length >= 7:
+        if odscode[0:2] == "V0":
+            odscode_6 = odscode[0:1] + odscode[2:][:5]
+    return (odscode_6, odscode_7)
 
 
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:

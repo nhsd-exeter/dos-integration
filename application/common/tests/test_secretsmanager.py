@@ -4,12 +4,12 @@ from pytest import raises
 import boto3
 from moto import mock_secretsmanager
 
-FILE_PATH = "application.common.aws"
+FILE_PATH = "application.common.secretsmanager"
 
 
 @mock_secretsmanager
 def test_get_secret():
-    from application.common.aws import get_secret
+    from application.common.secretsmanager import get_secret
 
     # Arrangement
     secret_name = "dummy_name"
@@ -24,7 +24,7 @@ def test_get_secret():
 
 @mock_secretsmanager
 def test_get_secret_resource_not_found():
-    from application.common.aws import get_secret
+    from application.common.secretsmanager import get_secret
 
     with raises(Exception, match="Failed getting secret 'fake_secret_name' from secrets manager"):
         get_secret("fake_secret_name")

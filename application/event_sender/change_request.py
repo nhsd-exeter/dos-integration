@@ -5,7 +5,7 @@ from change_request_logger import ChangeRequestLogger
 from requests import post
 from requests.auth import HTTPBasicAuth
 from requests.models import Response
-from common.aws import get_secret
+from common.secretsmanager import get_secret
 
 logger = Logger(child=True)
 

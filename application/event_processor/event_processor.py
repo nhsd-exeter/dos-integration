@@ -60,7 +60,7 @@ class EventProcessor:
 
         # Check database for services with same first 5 digits of ODSCode
         logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
-        matching_dos_services = get_matching_dos_services(self.nhs_entity.odscode)
+        matching_dos_services = get_matching_dos_services(self.nhs_entity.odscode, self.nhs_entity.org_type_id)
 
         # Filter for matched and unmatched service types and valid status
         matching_services, non_matching_services = [], []

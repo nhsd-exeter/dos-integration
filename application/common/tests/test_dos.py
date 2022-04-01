@@ -1,8 +1,10 @@
 from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 import pytest
+
 from ..opening_times import OpenPeriod, StandardOpeningTimes
 
 from ..dos import (
@@ -10,6 +12,7 @@ from ..dos import (
     DoSService,
     get_dos_locations,
     get_matching_dos_services,
+    get_new_odscode_for_dentist,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
@@ -75,42 +78,21 @@ def test__init__no_name():
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_services_returned(mock_query_dos_db):
+def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db):
     # Arrange
     odscode = "FQ038"
-    db_return = [
-        (
-            22851351399,
-            "159514725",
-            "My Pharmacy",
-            odscode,
-            "80 Street$Town",
-            "Town",
-            "TES T12",
-            None,
-            None,
-            None,
-            None,
-            13,
-            123486,
-            21813557,
-            1,
-            datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
-            datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
-            "0123 012 012",
-            None,
-        ),
-    ]
+    name = "My Pharmacy"
+    db_return = get_db_item(odscode, name)
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
     # Act
-    response = get_matching_dos_services(odscode)
+    response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
     # Assert
     service = response[0]
     assert service.odscode == odscode
     assert service.id == 22851351399
-    assert service.name == "My Pharmacy"
+    assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s",
         vars={"ODS_5": f"{odscode[0:5]}%"},
@@ -152,6 +134,32 @@ def test_any_generic_bankholiday_open_periods():
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
+def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
+    # Arrange
+    odscode = "V006800"
+    name = "My Dental Practice"
+    db_return = get_db_item(odscode, name)
+    mock_connection = MagicMock()
+    mock_connection.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_connection
+    odscode_6, odscode_7 = ("V06800", "V006800")
+    # Act
+    response = get_matching_dos_services(odscode, DENTIST_ORG_TYPE_ID)
+    # Assert
+    service = response[0]
+    assert service.odscode == odscode
+    assert service.id == 22851351399
+    assert service.name == name
+    where_clause = "WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS_6)s or odscode LIKE %(ODS_7)s"
+    mock_query_dos_db.assert_called_once_with(
+        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services {where_clause}",
+        vars={"ODS": f"{odscode}%", "ODS_6": f"{odscode_6}%", "ODS_7": f"{odscode_7}%"},
+    )
+    mock_connection.fetchall.assert_called_with()
+    mock_connection.close.assert_called_with()
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
 def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
     # Arrange
     odscode = "FQ038"
@@ -160,7 +168,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
     # Act
-    response = get_matching_dos_services(odscode)
+    response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
     # Assert
     assert response == []
     mock_query_dos_db.assert_called_once_with(
@@ -346,3 +354,44 @@ def test_get_dos_locations(mock_query_dos_db):
         "FROM locations WHERE postcode ~* %(pc_regex)s",
         {"pc_regex": " *".join(postcode.replace(" ", "").upper())},
     )
+
+
+@pytest.mark.parametrize(
+    "odscode, expected_result",
+    [
+        ("V006800", ("V06800", "V006800")),
+        ("V0032623456789", ("V03262", "V003262")),
+        ("V123456789", ("V12345", "V123456")),
+    ],
+)
+def test_get_new_odscode_for_dentist(odscode, expected_result):
+    # Act
+    response = get_new_odscode_for_dentist(odscode)
+    # Assert
+    assert response == expected_result
+
+
+def get_db_item(odscode, name):
+    return [
+        (
+            22851351399,
+            "159514725",
+            name,
+            odscode,
+            "80 Street$Town",
+            "Town",
+            "TES T12",
+            None,
+            None,
+            None,
+            None,
+            13,
+            123486,
+            21813557,
+            1,
+            datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
+            datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
+            "0123 012 012",
+            None,
+        )
+    ]

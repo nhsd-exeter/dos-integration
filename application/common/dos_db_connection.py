@@ -3,7 +3,7 @@ from typing import Union
 
 import psycopg2
 from aws_lambda_powertools import Logger
-from common.aws import get_secret
+from common.secretsmanager import get_secret
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
 
