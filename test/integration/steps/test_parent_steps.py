@@ -467,6 +467,17 @@ def unmatched_service_type_exception(context):
     assert f"{odscode}" in logs, "ERROR!!.. Expected Unmatched Service Type exception not found."
 
 
+@then("the generic bank holiday exception is reported to cloudwatch")
+def generic_bank_holiday_exception(context):
+    query = (
+        f'fields message, ods_code | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "GENERIC_BANK_HOLIDAY"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    odscode = context["change_event"]["ODSCode"]
+    assert f"{odscode}" in logs, "ERROR!!.. Expected Generic Bank Holiday exception not found."
+
+
 @then("the hidden or closed exception is reported to cloudwatch")
 def hidden_or_closed_exception(context):
     query = (
