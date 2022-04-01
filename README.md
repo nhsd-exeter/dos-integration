@@ -29,6 +29,8 @@
     - [Deployment From the Command-line](#deployment-from-the-command-line)
       - [Quick Deployment](#quick-deployment)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
+    - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
+    - [Remove deployment on Pull Request merge](#remove-deployment-on-pull-request-merge)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
@@ -310,6 +312,11 @@ You can remove a task deployment using a single command to create a tag which th
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
     e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 task environment
+
+### Remove deployment on Pull Request merge
+
+When a pull request is merged it will run an AWS Codebuild project that will destroy the environment if it exists.
+The codebuild stage can be found within the development-pipeline terraform stack.
 
 ### Secrets
 
