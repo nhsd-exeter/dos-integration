@@ -142,7 +142,6 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
-    odscode_6, odscode_7 = ("V06800", "V006800")
     # Act
     response = get_matching_dos_services(odscode, DENTIST_ORG_TYPE_ID)
     # Assert
@@ -150,10 +149,9 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     assert service.odscode == odscode
     assert service.id == 22851351399
     assert service.name == name
-    where_clause = "WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS_6)s or odscode LIKE %(ODS_7)s"
     mock_query_dos_db.assert_called_once_with(
-        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services {where_clause}",
-        vars={"ODS": f"{odscode}%", "ODS_6": f"{odscode_6}%", "ODS_7": f"{odscode_7}%"},
+        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS)s",
+        vars={"ODS": f"{odscode}%"},
     )
     mock_connection.fetchall.assert_called_with()
     mock_connection.close.assert_called_with()
@@ -359,9 +357,11 @@ def test_get_dos_locations(mock_query_dos_db):
 @pytest.mark.parametrize(
     "odscode, expected_result",
     [
-        ("V006800", ("V06800", "V006800")),
-        ("V0032623456789", ("V03262", "V003262")),
-        ("V123456789", ("V12345", "V123456")),
+        ("V006800", "V006800"),
+        ("V0032623456789", "V0032623456789"),
+        ("V123456789", "V123456"),
+        ("V0393a000", "V00393a"),
+        ("V12345", "V012345"),
     ],
 )
 def test_get_new_odscode_for_dentist(odscode, expected_result):

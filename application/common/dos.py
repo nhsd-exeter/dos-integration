@@ -121,15 +121,12 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
         named_args = {"ODS_5": f"{odscode[0:5]}%"}
     elif org_type_id == DENTIST_ORG_TYPE_ID:
-        odscode_6, odscode_7 = get_new_odscode_for_dentist(odscode)
-        logger.info(
-            f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode,odscode_6,odscode_7}'"
-        )
-        where_clause = "WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS_6)s or odscode LIKE %(ODS_7)s"
-        sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services {where_clause}"
-        named_args = {"ODS": f"{odscode}%", "ODS_6": f"{odscode_6}%", "ODS_7": f"{odscode_7}%"}
+        odscode_7 = get_new_odscode_for_dentist(odscode)
+        logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode_7}'")
+        sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS)s"
+        named_args = {"ODS": f"{odscode_7}%"}
     else:
-        logger.warning(f"Found invalid nhsuk org_type_id':{org_type_id}' for a given odscode '{odscode}'")
+        logger.warning(f"Found invalid nhsuk org_type_id':{org_type_id}' for a given odscode '{odscode_7}'")
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
@@ -138,14 +135,21 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     return services
 
 
-def get_new_odscode_for_dentist(odscode: str) -> tuple():
+def get_new_odscode_for_dentist(odscode: str) -> str:
+    def get_odscode_6(x):
+        return x[0:1] + "0" + x[1:6]
+
     odscode_length = len(odscode)
-    odscode_6 = odscode[:6]
-    odscode_7 = odscode[:7]
-    if odscode_length >= 7:
-        if odscode[0:2] == "V0":
-            odscode_6 = odscode[0:1] + odscode[2:][:5]
-    return (odscode_6, odscode_7)
+    if odscode_length == 10:
+        return odscode[0:7]
+    elif odscode_length == 9:
+        return get_odscode_6(odscode[0:6])
+    elif odscode_length == 7:
+        return odscode
+    elif odscode_length == 6:
+        return get_odscode_6(odscode)
+    else:
+        return odscode
 
 
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
