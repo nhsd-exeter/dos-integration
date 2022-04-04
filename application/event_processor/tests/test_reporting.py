@@ -241,5 +241,6 @@ def test_log_unmatched_service_types(mock_logger):
             "dos_service_publicname": dos_service.name,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_typeid": dos_service.typeid,
+            "dos_service_type": "PHARMACY",
         },
     )

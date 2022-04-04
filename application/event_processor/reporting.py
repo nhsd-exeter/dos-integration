@@ -1,6 +1,7 @@
 from typing import List
 from os import environ
 import json
+from common.service_type import get_valid_service_type_name
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
@@ -153,6 +154,7 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
                 "dos_service_publicname": unmatched_service.name,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_typeid": unmatched_service.typeid,
+                "dos_service_type": get_valid_service_type_name(nhs_entity.org_type_id),
             },
         )
 

@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from itertools import groupby
 from typing import List, Union
+from application.common.service_type import get_valid_service_type_name
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_lambda_powertools import Logger
@@ -114,20 +115,23 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
+    dos_service_type = get_valid_service_type_name(org_type_id)
     if org_type_id == PHARMACY_ORG_TYPE_ID:
         logger.info(
-            f"Searching for '{org_type_id}' DoS services with ODSCode that matches first 5 digits of '{odscode}'"
+            f"Searching for '{dos_service_type}' DoS services with ODSCode that matches first 5 digits of '{odscode}'"
         )
         sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
         named_args = {"ODS_5": f"{odscode[0:5]}%"}
     elif org_type_id == DENTIST_ORG_TYPE_ID:
         odscode_6, odscode_7 = get_new_odscode_for_dentist(odscode)
         logger.info(
-            f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode,odscode_6,odscode_7}'"
+            f"Searching for '{dos_service_type}' DoS services with ODSCode that matches '{odscode,odscode_6,odscode_7}'"
         )
         where_clause = "WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS_6)s or odscode LIKE %(ODS_7)s"
         sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services {where_clause}"
         named_args = {"ODS": f"{odscode}%", "ODS_6": f"{odscode_6}%", "ODS_7": f"{odscode_7}%"}
+    else:
+        logger.warning(f"Found invalid nhsuk org_type_id':{org_type_id}' for a given odscode '{odscode}'")
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
