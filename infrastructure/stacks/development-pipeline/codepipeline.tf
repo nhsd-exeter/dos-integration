@@ -106,8 +106,9 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
-
+  depends_on = [module.codepipeline_artefact_bucket]
 }
+
 resource "aws_codestarconnections_connection" "github" {
   name          = "${var.project_id}-codestarconnection"
   provider_type = "GitHub"
