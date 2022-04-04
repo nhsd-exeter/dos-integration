@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
 from typing import List, Union
+from common.service_type import get_valid_service_type_name
 
 from aws_lambda_powertools import Logger
 from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -31,6 +32,7 @@ class NHSEntity:
     standard_opening_times: Union[StandardOpeningTimes, None]
     specified_opening_times: Union[List[SpecifiedOpeningTime], None]
     CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
+    service_type: str
 
     def __init__(self, entity_data: dict):
         self.entity_data = entity_data
@@ -56,6 +58,7 @@ class NHSEntity:
         self.specified_opening_times = self._get_specified_opening_times()
         self.phone = self.extract_contact("Telephone")
         self.website = self.extract_contact("Website")
+        self.service_type = get_valid_service_type_name(self.org_type_id)
 
     def __repr__(self) -> str:
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
