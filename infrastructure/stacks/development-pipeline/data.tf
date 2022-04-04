@@ -26,6 +26,10 @@ data "template_file" "delete_task_environment_on_pr_merged_buildspec" {
   template = file("delete-task-environment-on-pr-merged-buildspec.yml")
 }
 
+data "template_file" "build_environment_buildspec" {
+  template = file("build-environment-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
