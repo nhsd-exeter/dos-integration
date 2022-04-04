@@ -59,6 +59,14 @@ def a_change_event_is_valid():
     context["change_event"] = create_pharmacy_change_event()
     return context
 
+@given("a dentist Changed Event is valid", target_fixture="context")
+def a_dentist_change_event_is_valid():
+    context = {}
+    context["change_event"] = create_pharmacy_change_event()
+    context["change_event"]["OrganisationTypeId"] = "Dentist"
+    context["change_event"]["OrganisationSubType"] = "TBA"
+    return context
+
 
 @given("a Dentist Changed Event is valid", target_fixture="context")
 def valid_dentist_change_event():
@@ -842,3 +850,13 @@ def dentist_changes_confirmed_in_dos(context):
     ]
     change_request_service_type = get_service_type_from_cr(context["correlation_id"])
     assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
+
+    
+@then("the Changed Event finds a matching dentist")
+def check_logs_for_dentist_match(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter location like "get_matching_services:82"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert "Found 1 services with typeid in allowlist" not in logs, "ERROR!!.. error message not found."
