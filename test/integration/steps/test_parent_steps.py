@@ -38,6 +38,8 @@ from .utilities.utils import (
     check_specified_received_opening_times_date_in_dos,
     time_to_sec,
     confirm_changes,
+    get_service_type_data,
+    get_service_type_from_cr,
 )
 
 scenarios(
@@ -55,6 +57,18 @@ FAKER = Faker("en_GB")
 def a_change_event_is_valid():
     context = {}
     context["change_event"] = create_pharmacy_change_event()
+    return context
+
+
+@given("a Dentist Changed Event is valid", target_fixture="context")
+def valid_dentist_change_event():
+    context = {}
+    context["change_event"] = create_pharmacy_change_event()
+    context["change_event"]["ODSCode"] = "V01521"
+    context["change_event"]["OrganisationName"] = "Test Dentist"
+    context["change_event"]["OrganisationTypeId"] = "Dentist"
+    context["change_event"]["OrganisationSubType"] = "TBA"
+    context["change_event"]["Address1"] = FAKER.street_name()
     return context
 
 
@@ -819,3 +833,14 @@ def standard_day_confirmed_open(context, open_or_closed):
     else:
         raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
+
+
+@then("the Dentist changes with service type id is captured by Dos")
+def dentist_changes_confirmed_in_dos(context):
+    change_event_service_type = get_service_type_data(context["change_event"]["OrganisationTypeId"])[
+        "VALID_SERVICE_TYPES_KEY"
+    ]
+    change_request_service_type = get_service_type_from_cr(context["correlation_id"])
+    print(change_event_service_type)  # Print out output for Tests
+    print(change_request_service_type)  # Print out output for Tests
+    assert change_event_service_type == change_request_service_type, "ERROR!.. Service type id mismatch"
