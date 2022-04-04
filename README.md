@@ -298,11 +298,11 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Branch Naming for Automatic Deployments
 
-For a branch to be automatically deployed on every push the branch must be prefixed with `task/`. This will then be run on an AWS Codebuild stage to deploy the code to a task environment.
+For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS Codebuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
 
 ### Branch Naming to not automatically deploy
 
-For a branch that is meant for testing or another purpose but you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`.
+For a branch that is meant for testing or another purpose but you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
 
 #### Quick Deployment
 

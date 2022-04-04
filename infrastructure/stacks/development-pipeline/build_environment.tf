@@ -9,7 +9,7 @@ resource "aws_codebuild_webhook" "build_environment_webhook" {
     }
     filter {
       type    = "HEAD_REF"
-      pattern = "^refs/heads/task/DI-367_Deploy_environment_on_push$"
+      pattern = "^refs/heads/task/$"
     }
   }
   depends_on = [aws_codebuild_project.di_build_environment]
