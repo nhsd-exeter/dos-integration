@@ -302,7 +302,7 @@ For a branch to be automatically deployed on every push the branch must be prefi
 
 ### Branch Naming to not automatically deploy
 
-For a branch that is meant for testing or another purpose but you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
+For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
 
 #### Quick Deployment
 
