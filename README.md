@@ -27,6 +27,8 @@
     - [Artefact Versioning](#artefact-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+    - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
+    - [Branch Naming to not automatically deploy](#branch-naming-to-not-automatically-deploy)
       - [Quick Deployment](#quick-deployment)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
@@ -292,9 +294,15 @@ Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
 ### Deployment From the Command-line
 
-    make docker-build NAME=serverless # (TMP) Build Serverless docker image
-    make serverless-requirements # Install serverless plugins
     make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+
+### Branch Naming for Automatic Deployments
+
+For a branch to be automatically deployed on every push the branch must be prefixed with `task/`. This will then be run on an AWS Codebuild stage to deploy the code to a task environment.
+
+### Branch Naming to not automatically deploy
+
+For a branch that is meant for testing or another purpose but you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`.
 
 #### Quick Deployment
 
