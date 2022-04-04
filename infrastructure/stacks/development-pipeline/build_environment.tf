@@ -1,4 +1,5 @@
 resource "aws_codebuild_webhook" "build_environment_webhook" {
+  count        = var.environment == "dev" ? 1 : 0
   project_name = "${var.project_id}-${var.environment}-build-environment-stage"
   build_type   = "BUILD"
   filter_group {
@@ -15,6 +16,7 @@ resource "aws_codebuild_webhook" "build_environment_webhook" {
 }
 
 resource "aws_codebuild_project" "di_build_environment" {
+  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-build-environment-stage"
   description    = "Builds environment based on push to task branches"
   build_timeout  = "30"

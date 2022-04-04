@@ -11,4 +11,4 @@ phases:
   build:
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
-      - make build-and-deploy BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1 FROM_CACHE=true
+      - make build-and-deploy BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1
