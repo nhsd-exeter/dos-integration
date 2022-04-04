@@ -91,15 +91,18 @@ resource "aws_codepipeline" "codepipeline" {
 
   stage {
     name = "Integration_Test"
-    action {
-      name            = "Integration_Test"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-integration-test-stage"
+    dynamic "action" {
+      for_each = local.integration_tags
+      content {
+        name            = "Integration_Test_${action.key}"
+        category        = "Build"
+        owner           = "AWS"
+        provider        = "CodeBuild"
+        input_artifacts = ["source_output"]
+        version         = "1"
+        configuration = {
+          ProjectName = "${var.project_id}-${var.environment}-integration-test-stage-${action.key}"
+        }
       }
     }
   }
@@ -109,6 +112,7 @@ resource "aws_codestarconnections_connection" "github" {
   name          = "${var.project_id}-codestarconnection"
   provider_type = "GitHub"
 }
+
 module "codepipeline_artefact_bucket" {
   source             = "../../modules/s3"
   name               = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"

@@ -1,4 +1,4 @@
-FROM nhsd/node:latest
+FROM node:latest
 WORKDIR /
 # Install serverless
 RUN apk add python3 make gcc g++

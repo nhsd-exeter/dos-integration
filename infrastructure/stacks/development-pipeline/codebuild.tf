@@ -11,15 +11,14 @@ resource "aws_codebuild_project" "di_unit_tests" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
-
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+    image                       = "${var.aws_account_id_mgmt}.dkr.ecr.eu-west-2.amazonaws.com/uec-dos/int/tester:latest"
     type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "CODEBUILD"
+    image_pull_credentials_type = "SERVICE_ROLE"
     privileged_mode             = true
 
     environment_variable {
@@ -83,7 +82,7 @@ resource "aws_codebuild_project" "di_build" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -158,7 +157,7 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -216,7 +215,8 @@ resource "aws_codebuild_project" "di_deploy_dev" {
 }
 
 resource "aws_codebuild_project" "di_integration_tests" {
-  name           = "${var.project_id}-${var.environment}-integration-test-stage"
+  for_each       = local.integration_tags
+  name           = "${var.project_id}-${var.environment}-integration-test-stage-${each.key}"
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
   queued_timeout = "30"
@@ -228,7 +228,7 @@ resource "aws_codebuild_project" "di_integration_tests" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
@@ -246,6 +246,10 @@ resource "aws_codebuild_project" "di_integration_tests" {
     environment_variable {
       name  = "ENVIRONMENT"
       value = "test"
+    }
+    environment_variable {
+      name  = "INTEGRATION_TAGS"
+      value = each.key
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -295,7 +299,7 @@ resource "aws_codebuild_project" "di_deploy_fresh" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
   }
 
 
