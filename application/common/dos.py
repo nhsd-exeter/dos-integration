@@ -126,7 +126,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS)s"
         named_args = {"ODS": f"{odscode_7}%"}
     else:
-        logger.warning(f"Found invalid nhsuk org_type_id':{org_type_id}' for a given odscode '{odscode_7}'")
+        logger.warning(f"Found invalid nhsuk org_type_id':{org_type_id}' for a given odscode '{odscode}'")
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
