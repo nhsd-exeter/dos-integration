@@ -44,6 +44,10 @@ resource "aws_codebuild_project" "di_build_environment" {
       name  = "PROFILE"
       value = "task"
     }
+    environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-build-environment-stage"
+    }
 
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
