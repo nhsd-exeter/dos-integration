@@ -21,8 +21,8 @@ from nhs import NHSEntity
 logger = Logger(child=True)
 
 
-def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
-    """Report closed or hidden NHS UK services
+def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
+    """Log closed or hidden NHS UK services
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
@@ -47,7 +47,7 @@ def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: L
         )
 
 
-def log_unmatched_nhsuk_services(nhs_entity: NHSEntity) -> None:
+def log_unmatched_nhsuk_service(nhs_entity: NHSEntity) -> None:
     """Log unmatched NHS Services
     Args:
         nhs_entity (NHSEntity): NHS entity to log

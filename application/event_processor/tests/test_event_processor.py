@@ -360,7 +360,7 @@ def test_lambda_handler_unmatched_service(
 
 
 @patch(f"{FILE_PATH}.disconnect_dos_db")
-@patch(f"{FILE_PATH}.log_unmatched_nhsuk_pharmacies")
+@patch(f"{FILE_PATH}.log_unmatched_nhsuk_service")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.EventProcessor")
@@ -372,7 +372,7 @@ def test_lambda_handler_no_matching_dos_services(
     mock_event_processor,
     mock_add_change_request_to_dynamodb,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    mock_log_unmatched_nhsuk_pharmacies,
+    mock_log_unmatched_nhsuk_service,
     mock_disconnect_dos_db,
     change_event,
     lambda_context,
@@ -391,7 +391,7 @@ def test_lambda_handler_no_matching_dos_services(
     # Act
     lambda_handler(sqs_event, lambda_context)
     # Assert
-    mock_log_unmatched_nhsuk_pharmacies.assert_called_once()
+    mock_log_unmatched_nhsuk_service.assert_called_once()
     mock_event_processor.get_change_requests.assert_not_called()
     mock_disconnect_dos_db.assert_called_once()
     mock_event_processor.send_changes.assert_not_called()
@@ -402,7 +402,7 @@ def test_lambda_handler_no_matching_dos_services(
 
 
 @patch(f"{FILE_PATH}.disconnect_dos_db")
-@patch(f"{FILE_PATH}.report_closed_or_hidden_services")
+@patch(f"{FILE_PATH}.log_closed_or_hidden_services")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.EventProcessor")
@@ -414,7 +414,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     mock_event_processor,
     mock_add_change_request_to_dynamodb,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    mock_report_closed_or_hidden_services,
+    mock_log_closed_or_hidden_services,
     mock_disconnect_dos_db,
     change_event,
     lambda_context,
@@ -443,7 +443,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     # Act
     lambda_handler(sqs_event, lambda_context)
     # Assert
-    mock_report_closed_or_hidden_services.assert_called_once()
+    mock_log_closed_or_hidden_services.assert_called_once()
     mock_disconnect_dos_db.assert_called_once()
     mock_event_processor.get_change_requests.assert_not_called()
     mock_event_processor.send_changes.assert_not_called()

@@ -18,21 +18,21 @@ from ..nhs import NHSEntity
 from ..reporting import (
     log_invalid_open_times,
     log_unmatched_service_types,
-    report_closed_or_hidden_services,
-    log_unmatched_nhsuk_services,
+    log_closed_or_hidden_services,
+    log_unmatched_nhsuk_service,
     log_invalid_nhsuk_postcode,
     log_service_with_generic_bank_holiday,
 )
 
 
 @patch.object(Logger, "warning")
-def test_report_closed_or_hidden_services(mock_logger, change_event):
+def test_log_closed_or_hidden_services(mock_logger, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
     matching_services = [dos_service]
     # Act
-    report_closed_or_hidden_services(nhs_entity, matching_services)
+    log_closed_or_hidden_services(nhs_entity, matching_services)
     # Assert
     assert (
         HIDDEN_OR_CLOSED_REPORT_ID == "HIDDEN_OR_CLOSED"
@@ -56,7 +56,7 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_unmatched_nhsuk_pharmacies(mock_logger):
+def test_log_unmatched_nhsuk_service(mock_logger):
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -73,7 +73,7 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
         }
     )
     # Act
-    log_unmatched_nhsuk_pharmacies(nhs_entity)
+    log_unmatched_nhsuk_service(nhs_entity)
     # Assert
     assert (
         UNMATCHED_PHARMACY_REPORT_ID == "UNMATCHED_PHARMACY"

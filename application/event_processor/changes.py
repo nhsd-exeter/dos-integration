@@ -14,7 +14,7 @@ from change_request import (
 from common.dos import DoSService, get_valid_dos_postcode
 from common.opening_times import SpecifiedOpeningTime
 from nhs import NHSEntity
-from reporting import log_invalid_nhsuk_pharmacy_postcode
+from reporting import log_invalid_nhsuk_postcode
 
 logger = Logger(child=True)
 
@@ -128,7 +128,7 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
 
         valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
         if valid_dos_postcode is None:
-            log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
+            log_invalid_nhsuk_postcode(nhs_entity, dos_service)
             if ADDRESS_CHANGE_KEY in changes:
                 del changes[ADDRESS_CHANGE_KEY]
                 logger.info("Deleted address change as postcode is invalid")
