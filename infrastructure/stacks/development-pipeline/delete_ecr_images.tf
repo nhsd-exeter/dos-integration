@@ -35,7 +35,15 @@ resource "aws_codebuild_project" "di_delete_ecr_images" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "task"
+      value = "dev"
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "dev"
+    }
+    environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-delete-ecr-images-stage"
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"

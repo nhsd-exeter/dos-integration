@@ -9,3 +9,8 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
       - make aws-ecr-cleanup REPOS=authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,slack-messenger,test-db-checker-handler
+    finally:
+        - |
+          if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
+            make slack-codebuild-notification PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT PIPELINE_NAME="Delete ECR Images" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Failed Please investigate"
+          fi
