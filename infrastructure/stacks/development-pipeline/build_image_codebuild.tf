@@ -26,7 +26,7 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
 }
 
 resource "aws_codebuild_project" "di_build_image" {
-  for_each       = local.independent_build_images
+  for_each       = var.environment == "dev" ? local.independent_build_images : {}
   name           = "${var.project_id}-${var.environment}-build-${each.key}-stage"
   description    = "Builds ${each.key} docker container image"
   build_timeout  = "10"
