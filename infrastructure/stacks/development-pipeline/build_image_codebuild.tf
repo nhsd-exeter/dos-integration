@@ -103,7 +103,7 @@ resource "aws_codebuild_project" "di_build_image" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.build_image_buildspec.rendered
   }

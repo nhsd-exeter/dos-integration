@@ -76,7 +76,7 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.delete_task_environment_on_pr_merged_buildspec.rendered
   }
