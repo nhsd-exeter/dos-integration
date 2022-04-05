@@ -1,6 +1,6 @@
 resource "aws_codebuild_webhook" "build_environment_webhook" {
   count        = var.environment == "dev" ? 1 : 0
-  project_name = "${var.project_id}-${var.environment}-build-environment-stage"
+  project_name = aws_codebuild_project.di_build_environment[0].name
   build_type   = "BUILD"
   filter_group {
     filter {
