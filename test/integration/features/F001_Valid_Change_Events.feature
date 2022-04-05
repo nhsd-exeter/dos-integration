@@ -50,7 +50,8 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the Changed Event is stored in dynamo db
 
   @complete
-  Scenario: F001S008. A valid Dentist change event is processed into Dos
+  Scenario: F001S008. A valid Dentist change event is processed into DOS
     Given a Dentist Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Dentist changes with service type id is captured by Dos
+    Then the Changed Request is accepted by Dos
+    And the Dentist changes with service type id is captured by Dos
