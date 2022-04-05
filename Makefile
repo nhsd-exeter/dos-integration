@@ -53,7 +53,6 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
-	make -s terraform-clean
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:

@@ -74,7 +74,7 @@ resource "aws_codebuild_project" "di_delete_ecr_images" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.delete_ecr_images_buildspec.rendered
   }
