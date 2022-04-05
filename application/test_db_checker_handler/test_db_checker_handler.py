@@ -55,6 +55,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             result = run_query(query, None)
         else:
             raise ValueError("Missing correlation id")
+    elif request["type"] == "get_service_type_from_cr":
+        sid = request.get("get_service_id")
+        if sid is not None:
+            query = f"SELECT typeid from services where id = '{sid}'"
+            result = run_query(query, None)
+        else:
+            raise ValueError("Missing correlation id")
     elif request["type"] == "get_service_id":
         cid = request.get("correlation_id")
         if cid is not None:

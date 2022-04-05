@@ -14,6 +14,7 @@ from boto3.dynamodb.types import TypeDeserializer
 from requests import Response
 
 from .aws import get_secret
+from .constant import SERVICE_TYPES
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -213,6 +214,31 @@ def get_service_id(correlation_id: str) -> list:
             raise Exception("Error!.. Service Id not found")
         retries += 1
         sleep(5)
+
+
+def get_service_type_from_cr(correlation_id: str) -> list:
+    retries = 0
+    data = []
+    data_status = False
+    while data_status is False:
+        lambda_payload = {"type": "get_service_type_from_cr", "get_service_id": get_service_id(correlation_id)}
+        response = invoke_test_db_checker_handler_lambda(lambda_payload)
+        data = loads(response)
+        data = literal_eval(data)
+        if data != []:
+            print(f"Number of service_type retries: {retries}")
+            print(data)
+            return data[0][0]
+
+        if retries > 8:
+            raise Exception("Error!.. Service type not found")
+        retries += 1
+        sleep(5)
+
+
+def get_service_type_data(organisation_type_id: str) -> list[int]:
+    """Get the valid service types for the organisation type id"""
+    return SERVICE_TYPES[organisation_type_id]
 
 
 def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Dict[str, Any]:
