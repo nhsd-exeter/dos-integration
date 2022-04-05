@@ -136,7 +136,7 @@ def test_any_generic_bankholiday_open_periods():
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     # Arrange
-    odscode = "V006800"
+    odscode = "V00393a"
     name = "My Dental Practice"
     db_return = get_db_item(odscode, name)
     mock_connection = MagicMock()

@@ -18,7 +18,7 @@ logger = Logger(child=True)
 class ChangeRequest:
     changes: Dict[str, Any]
 
-    def __init__(self, service_id: int, changes: Any = None):
+    def __init__(self, service_id: int, odscode: str, changes: Any = None):
         correlation_id = logger.get_correlation_id()
 
         self.reference = correlation_id
@@ -26,6 +26,7 @@ class ChangeRequest:
         self.message = f"DoS Integration CR. correlation-id: {correlation_id}"
         self.replace_opening_dates_mode = True
         self.service_id = str(service_id)
+        self.odscode = odscode
         self.changes = changes
         if self.changes is None:
             self.changes = {}
@@ -42,5 +43,6 @@ class ChangeRequest:
             "message": self.message,
             "replace_opening_dates_mode": self.replace_opening_dates_mode,
             "service_id": self.service_id,
+            "odscode": self.odscode,
             "changes": self.changes,
         }
