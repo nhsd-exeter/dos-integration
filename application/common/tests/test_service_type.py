@@ -6,7 +6,7 @@ from ..constants import (
     SERVICE_TYPES,
     VALID_SERVICE_TYPES_KEY,
 )
-from ..service_type import get_valid_service_type_name, get_valid_service_types, validate_organisation_keys
+from ..service_type import get_valid_service_types, validate_organisation_keys
 
 FILE_PATH = "application.common.test_service_type"
 
@@ -67,27 +67,3 @@ def test_get_valid_service_types(org_type, expected_valid_service_types):
     valid_service_types = get_valid_service_types(org_type)
     # Assert
     assert expected_valid_service_types == valid_service_types
-
-
-@pytest.mark.parametrize(
-    "org_type_id, expected_valid_service_name",
-    [
-        (
-            "Dentist",
-            "DENTIST",
-        ),
-        (
-            "PHA",
-            "PHARMACY",
-        ),
-        (
-            "PHA1",
-            None,
-        ),
-    ],
-)
-def test_get_valid_service_type_name(org_type_id, expected_valid_service_name):
-    # Act
-    valid_service_name = get_valid_service_type_name(org_type_id)
-    # Assert
-    assert expected_valid_service_name == valid_service_name

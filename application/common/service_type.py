@@ -37,17 +37,3 @@ def get_valid_service_types(organisation_type_id: str) -> list[int]:
         list[int]: set of valid service types
     """
     return SERVICE_TYPES[organisation_type_id][VALID_SERVICE_TYPES_KEY]
-
-
-def get_valid_service_type_name(organisation_type_id: str) -> str:
-    """Get the valid service type name  for the organisation type id
-
-    Args:
-        organisation_type_id (str): organisation type id from nhs uk entity
-
-    Returns:
-        str: valid service name
-    """
-    return (
-        SERVICE_TYPES[organisation_type_id][SERVICE_TYPES_NAME_KEY] if organisation_type_id in SERVICE_TYPES else None
-    )

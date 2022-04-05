@@ -82,7 +82,7 @@ class EventProcessor:
             )
         elif self.nhs_entity.org_type_id == DENTIST_ORG_TYPE_ID:
             logger.info(
-                f"Found {len(matching_dos_services)} services in DB with " f"matching ODSCode: {matching_dos_services}"
+                f"Found {len(matching_dos_services)} services in DB with matching ODSCode: {matching_dos_services}"
             )
         logger.info(
             f"Found {len(matching_services)} services with typeid in "
