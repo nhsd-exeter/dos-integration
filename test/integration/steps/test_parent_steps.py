@@ -838,9 +838,7 @@ def standard_day_confirmed_open(context, open_or_closed):
 @then("the Dentist changes with service type id is captured by Dos")
 def dentist_changes_confirmed_in_dos(context):
     change_event_service_type = get_service_type_data(context["change_event"]["OrganisationTypeId"])[
-        "VALID_SERVICE_TYPES_KEY"
+        "VALID_SERVICE_TYPES"
     ]
     change_request_service_type = get_service_type_from_cr(context["correlation_id"])
-    print(change_event_service_type)  # Print out output for Tests
-    print(change_request_service_type)  # Print out output for Tests
-    assert change_event_service_type == change_request_service_type, "ERROR!.. Service type id mismatch"
+    assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
