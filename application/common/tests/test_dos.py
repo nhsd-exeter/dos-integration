@@ -10,9 +10,10 @@ from ..opening_times import OpenPeriod, StandardOpeningTimes
 from ..dos import (
     DoSLocation,
     DoSService,
+    build_select_statement,
     get_dos_locations,
     get_matching_dos_services,
-    get_new_odscode_for_dentist,
+    get_new_odscode_for_dos,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
@@ -94,8 +95,11 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     assert service.id == 22851351399
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
-        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s",
-        vars={"ODS_5": f"{odscode[0:5]}%"},
+        query=(
+            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
+        ),
+        vars={"ODS": f"{odscode[0:5]}%"},
     )
     mock_connection.fetchall.assert_called_with()
     mock_connection.close.assert_called_with()
@@ -150,7 +154,10 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     assert service.id == 22851351399
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
-        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS)s",
+        query=(
+            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
+        ),
         vars={"ODS": f"{odscode}%"},
     )
     mock_connection.fetchall.assert_called_with()
@@ -170,8 +177,11 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
     # Assert
     assert response == []
     mock_query_dos_db.assert_called_once_with(
-        query=f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s",
-        vars={"ODS_5": f"{odscode[0:5]}%"},
+        query=(
+            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
+        ),
+        vars={"ODS": f"{odscode[0:5]}%"},
     )
     mock_connection.fetchall.assert_called_with()
     mock_connection.close.assert_called_with()
@@ -355,18 +365,19 @@ def test_get_dos_locations(mock_query_dos_db):
 
 
 @pytest.mark.parametrize(
-    "odscode, expected_result",
+    "odscode,org_type_id, expected_result",
     [
-        ("V006800", "V006800"),
-        ("V0032623456789", "V0032623456789"),
-        ("V123456789", "V123456"),
-        ("V0393a000", "V00393a"),
-        ("V12345", "V012345"),
+        ("V006800", DENTIST_ORG_TYPE_ID, "V006800"),
+        ("V0032623456789", DENTIST_ORG_TYPE_ID, "V0032623456789"),
+        ("V123456789", DENTIST_ORG_TYPE_ID, "V123456"),
+        ("V0393a000", DENTIST_ORG_TYPE_ID, "V00393a"),
+        ("V12345", DENTIST_ORG_TYPE_ID, "V012345"),
+        ("FA18923", PHARMACY_ORG_TYPE_ID, "FA189"),
     ],
 )
-def test_get_new_odscode_for_dentist(odscode, expected_result):
+def test_get_new_odscode_for_dos(odscode, org_type_id, expected_result):
     # Act
-    response = get_new_odscode_for_dentist(odscode)
+    response = get_new_odscode_for_dos(odscode, org_type_id)
     # Assert
     assert response == expected_result
 
@@ -393,5 +404,6 @@ def get_db_item(odscode, name):
             datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
             "0123 012 012",
             None,
+            "my service",
         )
     ]

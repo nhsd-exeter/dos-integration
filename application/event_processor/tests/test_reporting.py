@@ -50,7 +50,7 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_type": dos_service.typeid,
-            "dos_service_type_name": nhs_entity.service_type,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
 
@@ -94,7 +94,6 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
             "nhsuk_county": nhs_entity.entity_data.get("County", ""),
             "nhsuk_postcode": nhs_entity.postcode,
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
-            "dos_service_type_name": nhs_entity.service_type,
         },
     )
 
@@ -133,7 +132,7 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
             "nhsuk_county": nhs_entity.county,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
-            "dos_service_type_name": nhs_entity.service_type,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
 
@@ -175,7 +174,7 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
             "dos_services": ", ".join(str(service.uid) for service in dos_services),
-            "dos_service_type_name": nhs_entity.service_type,
+            "dos_service_type_name": ", ".join(str(service.servicename) for service in dos_services),
         },
     )
 
@@ -204,7 +203,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
             "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
             "nhsuk_parentorg": nhs_entity.parent_org_name,
-            "dos_service_type_name": nhs_entity.service_type,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
 
@@ -246,6 +245,6 @@ def test_log_unmatched_service_types(mock_logger):
             "dos_service_publicname": dos_service.name,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_typeid": dos_service.typeid,
-            "dos_service_type_name": nhs_entity.service_type,
+            "dos_service_type_name": dos_service.servicename,
         },
     )

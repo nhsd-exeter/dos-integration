@@ -216,7 +216,7 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     # Arrange
     q_name = "test"
     environ["CR_QUEUE_URL"] = q_name
-    change_request = ChangeRequest(service_id=49016, odscode="SLC45")
+    change_request = ChangeRequest(service_id=49016)
     change_request.reference = "1"
     change_request.system = "Profile Updater (test)"
     change_request.message = "Test message 1531816592293|@./"

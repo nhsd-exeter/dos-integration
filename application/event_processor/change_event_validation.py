@@ -10,7 +10,8 @@ from common.service_type import validate_organisation_keys
 
 logger = Logger(child=True)
 
-ODSCODE_LENGTH = 5
+PHARMACY_ODSCODE_LENGTH = 5
+# DENTIST_ODSCODE_LENGTH = 6
 
 
 def validate_event(event: Dict[str, Any]) -> None:
@@ -24,9 +25,7 @@ def validate_event(event: Dict[str, Any]) -> None:
     except SchemaValidationError as exception:
         raise ValidationException(exception)
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
-    if (
-        SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY] == PHARMACY_SERVICE_KEY
-    ):  # Temporary flag to be removed in DI-354
+    if SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY] == PHARMACY_SERVICE_KEY:
         check_ods_code_length(event["ODSCode"])
     logger.info("Event has been validated")
 
@@ -38,8 +37,8 @@ def check_ods_code_length(odscode: str) -> None:
         odscode (str): odscode of NHS UK service
     """
     logger.debug("Checking ODS code length")
-    if len(odscode) != ODSCODE_LENGTH:
-        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {ODSCODE_LENGTH}.")
+    if len(odscode) != PHARMACY_ODSCODE_LENGTH:
+        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}.")
 
 
 INPUT_SCHEMA = {

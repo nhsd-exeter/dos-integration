@@ -110,7 +110,7 @@ class EventProcessor:
             changes = get_changes(service, self.nhs_entity)
             logger.info(f"Changes for nhs:{self.nhs_entity.odscode}/dos:{service.id} : {changes}")
             if len(changes) > 0:
-                change_requests.append(ChangeRequest(service.id, service.odscode, changes))
+                change_requests.append(ChangeRequest(service.id, changes))
 
         payload_list = dumps([cr.create_payload() for cr in change_requests], default=str)
         logger.info(f"Created {len(change_requests)} change requests {payload_list}")
@@ -158,7 +158,7 @@ class EventProcessor:
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
                         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
                         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
-                        "ods_code": {"DataType": "String", "StringValue": change_request.odscode},
+                        "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
                         "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
                         "message_group_id": {"DataType": "String", "StringValue": message_group_id},
                     },
