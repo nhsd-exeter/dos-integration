@@ -3,7 +3,7 @@ from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
 from typing import Dict, List, Union
-from application.common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
