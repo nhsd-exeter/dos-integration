@@ -61,18 +61,21 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a dentist Changed Event is valid
     And the Changed Event has ODS Code "V0393a000"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Event finds a matching dentist
+    Then the Changed Event finds a matching dentist with ods "V00393a"
+    And the Event Sender sends the ods "V00393a"
 
 @complete @dev
   Scenario: F001S010. A valid change event with 10 digit dentist code is processed by DOS
     Given a dentist Changed Event is valid
     And the Changed Event has ODS Code "V00393a000"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Event finds a matching dentist
+    Then the Changed Event finds a matching dentist with ods "V00393a"
+    And the Event Sender sends the ods "V00393a"
 
 @complete @dev
   Scenario: F001S011. A valid change event with 6 digit dentist code is processed by DOS
     Given a dentist Changed Event is valid
     And the Changed Event has ODS Code "V0393a"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Event finds a matching dentist
+    Then the Changed Event finds a matching dentist with ods "V00393a"
+    And the Event Sender sends the ods "V00393a"
