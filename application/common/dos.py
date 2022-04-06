@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field, fields
 from itertools import groupby
 from typing import List, Union
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_lambda_powertools import Logger
 
@@ -37,6 +38,7 @@ class DoSService:
         "modifiedtime",
         "publicphone",
         "publicname",
+        "servicename",
     ]
 
     def __init__(self, db_cursor_row: tuple) -> None:
@@ -102,27 +104,52 @@ class DoSLocation:
         return None not in (self.easting, self.northing, self.latitude, self.longitude)
 
 
-def get_matching_dos_services(odscode: str) -> List[DoSService]:
+def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService]:
     """Retrieves DoS Services from DoS database
 
     Args:
         odscode (str): ODScode to match on
+        org_type_id (str): OrganisationType to match on
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
-
-    logger.info(f"Searching for DoS services with ODSCode that matches first 5 digits of '{odscode}'")
-
-    sql_query = f"SELECT {', '.join(DoSService.db_columns)} FROM services WHERE odscode LIKE %(ODS_5)s"
-    named_args = {"ODS_5": f"{odscode[0:5]}%"}
+    odscode = get_new_odscode_for_dos(odscode, org_type_id)
+    logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+        " WHERE odscode LIKE %(ODS)s"
+    )
+    named_args = {"ODS": f"{odscode}%"}
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
     services = [DoSService(row) for row in c.fetchall()]
     c.close()
     return services
+
+
+def get_new_odscode_for_dos(odscode: str, org_type_id: str) -> str:
+    def get_odscode_6():
+        return odscode[0:1] + "0" + odscode[1:6]
+
+    if org_type_id == PHARMACY_ORG_TYPE_ID:
+        return odscode[0:5]
+    elif org_type_id == DENTIST_ORG_TYPE_ID:
+        odscode_length = len(odscode)
+        if odscode_length == 10:
+            return odscode[0:7]
+        elif odscode_length == 9:
+            return get_odscode_6()
+        elif odscode_length == 7:
+            return odscode
+        elif odscode_length == 6:
+            return get_odscode_6()
+        else:
+            return odscode
 
 
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:

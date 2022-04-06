@@ -3,6 +3,7 @@ from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
 from typing import Dict, List, Union
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
@@ -13,7 +14,7 @@ from boto3 import client
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services, get_new_odscode_for_dos
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
@@ -60,7 +61,7 @@ class EventProcessor:
 
         # Check database for services with same first 5 digits of ODSCode
         logger.info(f"Getting matching DoS Services for odscode '{self.nhs_entity.odscode}'.")
-        matching_dos_services = get_matching_dos_services(self.nhs_entity.odscode)
+        matching_dos_services = get_matching_dos_services(self.nhs_entity.odscode, self.nhs_entity.org_type_id)
 
         # Filter for matched and unmatched service types and valid status
         matching_services, non_matching_services = [], []
@@ -74,11 +75,15 @@ class EventProcessor:
         if len(non_matching_services) > 0:
             log_unmatched_service_types(self.nhs_entity, non_matching_services)
 
-        logger.info(
-            f"Found {len(matching_dos_services)} services in DB with "
-            f"matching first 5 chars of ODSCode: {matching_dos_services}"
-        )
-
+        if self.nhs_entity.org_type_id == PHARMACY_ORG_TYPE_ID:
+            logger.info(
+                f"Found {len(matching_dos_services)} services in DB with "
+                f"matching first 5 chars of ODSCode: {matching_dos_services}"
+            )
+        elif self.nhs_entity.org_type_id == DENTIST_ORG_TYPE_ID:
+            logger.info(
+                f"Found {len(matching_dos_services)} services in DB with matching ODSCode: {matching_dos_services}"
+            )
         logger.info(
             f"Found {len(matching_services)} services with typeid in "
             f"allowlist {valid_service_types} and status id = "
@@ -124,6 +129,7 @@ class EventProcessor:
 
         sqs = client("sqs")
         messages = []
+        odscode = get_new_odscode_for_dos(self.nhs_entity.odscode, self.nhs_entity.org_type_id)
         for change_request in self.change_requests:
             change_payload = dumps(change_request.create_payload())
             encoded = change_payload.encode()
@@ -153,7 +159,7 @@ class EventProcessor:
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
                         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
                         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
-                        "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
+                        "ods_code": {"DataType": "String", "StringValue": odscode},
                         "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
                         "message_group_id": {"DataType": "String", "StringValue": message_group_id},
                     },

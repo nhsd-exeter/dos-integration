@@ -232,6 +232,7 @@ def test_send_changes(mock_client, mock_logger, get_correlation_id_mock):
     nhs_entity.phone = "01462622435"
     nhs_entity.postcode = "S45 1AA"
     nhs_entity.org_name = "Fake NHS Service"
+    nhs_entity.org_type_id = "PHA"
     nhs_entity.address_lines = ["Fake Street1", "Fake Street2", "Fake Street3", "Fake City", "Fake County"]
     sequence_number = 1
 

@@ -42,6 +42,7 @@ def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: L
                 "nhsuk_sector": nhs_entity.org_sub_type,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_type": dos_service.typeid,
+                "dos_service_type_name": dos_service.servicename,
             },
         )
 
@@ -94,6 +95,7 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
             "nhsuk_postcode": nhs_entity.postcode,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
     metrics.set_namespace("UEC-DOS-INT")
@@ -121,6 +123,7 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(nhs_entity.entity_data["OpeningTimes"]),
+            "dos_service_type_name": ", ".join(str(service.servicename) for service in matching_services),
             "dos_services": ", ".join(str(service.uid) for service in matching_services),
         },
     )
@@ -153,6 +156,7 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
                 "dos_service_publicname": unmatched_service.name,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_typeid": unmatched_service.typeid,
+                "dos_service_type_name": unmatched_service.servicename,
             },
         )
 
@@ -173,5 +177,6 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
             "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": open_periods_str,
             "nhsuk_parentorg": nhs_entity.parent_org_name,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
