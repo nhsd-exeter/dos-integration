@@ -14,7 +14,7 @@ from boto3 import client
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
-from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services, get_new_odscode_for_dos
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
@@ -129,6 +129,7 @@ class EventProcessor:
 
         sqs = client("sqs")
         messages = []
+        odscode = get_new_odscode_for_dos(self.nhs_entity.odscode, self.nhs_entity.org_type_id)
         for change_request in self.change_requests:
             change_payload = dumps(change_request.create_payload())
             encoded = change_payload.encode()
@@ -158,7 +159,7 @@ class EventProcessor:
                         "correlation_id": {"DataType": "String", "StringValue": logger.get_correlation_id()},
                         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
                         "dynamo_record_id": {"DataType": "String", "StringValue": record_id},
-                        "ods_code": {"DataType": "String", "StringValue": self.nhs_entity.odscode},
+                        "ods_code": {"DataType": "String", "StringValue": odscode},
                         "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
                         "message_group_id": {"DataType": "String", "StringValue": message_group_id},
                     },

@@ -120,8 +120,8 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
         " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-        " FROM services s, servicetypes st"
-        " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
+        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+        " WHERE odscode LIKE %(ODS)s"
     )
     named_args = {"ODS": f"{odscode}%"}
     c = query_dos_db(query=sql_query, vars=named_args)
