@@ -10,7 +10,6 @@ from ..opening_times import OpenPeriod, StandardOpeningTimes
 from ..dos import (
     DoSLocation,
     DoSService,
-    build_select_statement,
     get_dos_locations,
     get_matching_dos_services,
     get_new_odscode_for_dos,
@@ -96,7 +95,9 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
-            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+            " FROM services s, servicetypes st"
             " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
         ),
         vars={"ODS": f"{odscode[0:5]}%"},
@@ -155,7 +156,9 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
-            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+            " FROM services s, servicetypes st"
             " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
         ),
         vars={"ODS": f"{odscode}%"},
@@ -178,7 +181,9 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
     assert response == []
     mock_query_dos_db.assert_called_once_with(
         query=(
-            f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+            " FROM services s, servicetypes st"
             " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
         ),
         vars={"ODS": f"{odscode[0:5]}%"},

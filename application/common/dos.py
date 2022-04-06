@@ -118,7 +118,9 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     odscode = get_new_odscode_for_dos(odscode, org_type_id)
     logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
     sql_query = (
-        f"SELECT {build_select_statement()} FROM services s, servicetypes st"
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+        " FROM services s, servicetypes st"
         " WHERE s.typeid = st.id and odscode LIKE %(ODS)s"
     )
     named_args = {"ODS": f"{odscode}%"}
@@ -130,18 +132,9 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     return services
 
 
-def build_select_statement():
-    return (
-        ", ".join(DoSService.db_columns)
-        .replace("id", "s.id", 1)
-        .replace("name", "s.name", 1)
-        .replace("servicename", "st.name servicename", 1)
-    )
-
-
 def get_new_odscode_for_dos(odscode: str, org_type_id: str) -> str:
-    def get_odscode_6(x):
-        return x[0:1] + "0" + x[1:6]
+    def get_odscode_6():
+        return odscode[0:1] + "0" + odscode[1:6]
 
     if org_type_id == PHARMACY_ORG_TYPE_ID:
         return odscode[0:5]
@@ -150,11 +143,11 @@ def get_new_odscode_for_dos(odscode: str, org_type_id: str) -> str:
         if odscode_length == 10:
             return odscode[0:7]
         elif odscode_length == 9:
-            return get_odscode_6(odscode[0:6])
+            return get_odscode_6()
         elif odscode_length == 7:
             return odscode
         elif odscode_length == 6:
-            return get_odscode_6(odscode)
+            return get_odscode_6()
         else:
             return odscode
 

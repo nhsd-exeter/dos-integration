@@ -5,13 +5,13 @@ from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
 from common.change_event_exceptions import ValidationException
-from common.constants import SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, PHARMACY_SERVICE_KEY
+from common.constants import SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, PHARMACY_SERVICE_KEY, DENTIST_SERVICE_KEY
 from common.service_type import validate_organisation_keys
 
 logger = Logger(child=True)
 
 PHARMACY_ODSCODE_LENGTH = 5
-# DENTIST_ODSCODE_LENGTH = 6
+MIN_DENTIST_ODSCODE_LENGTH = 6
 
 
 def validate_event(event: Dict[str, Any]) -> None:
@@ -25,20 +25,25 @@ def validate_event(event: Dict[str, Any]) -> None:
     except SchemaValidationError as exception:
         raise ValidationException(exception)
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
-    if SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY] == PHARMACY_SERVICE_KEY:
-        check_ods_code_length(event["ODSCode"])
+    check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY])
     logger.info("Event has been validated")
 
 
-def check_ods_code_length(odscode: str) -> None:
+def check_ods_code_length(odscode: str, service_type: str) -> None:
     """Check ODS code length as expected, exception raise if error
     Note: ods code type is checked by schema validation
     Args:
         odscode (str): odscode of NHS UK service
     """
-    logger.debug("Checking ODS code length")
-    if len(odscode) != PHARMACY_ODSCODE_LENGTH:
-        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}.")
+    logger.debug(f"Checking {service_type} ODS code length")
+    if service_type == PHARMACY_SERVICE_KEY:
+        if len(odscode) != PHARMACY_ODSCODE_LENGTH:
+            raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}.")
+    if service_type == DENTIST_SERVICE_KEY:
+        if len(odscode) < MIN_DENTIST_ODSCODE_LENGTH:
+            raise ValidationException(
+                f"ODSCode Wrong Length, '{odscode}' should be greater than or equal to  {MIN_DENTIST_ODSCODE_LENGTH}."
+            )
 
 
 INPUT_SCHEMA = {
