@@ -23,9 +23,9 @@ from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
     log_invalid_open_times,
-    log_unmatched_nhsuk_pharmacies,
+    log_unmatched_nhsuk_service,
     log_unmatched_service_types,
-    report_closed_or_hidden_services,
+    log_closed_or_hidden_services,
     log_service_with_generic_bank_holiday,
 )
 
@@ -258,11 +258,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         event_processor = EventProcessor(nhs_entity)
         matching_services = event_processor.get_matching_services()
         if len(matching_services) == 0:
-            log_unmatched_nhsuk_pharmacies(nhs_entity)
+            log_unmatched_nhsuk_service(nhs_entity)
             return
 
         if nhs_entity.is_status_hidden_or_closed():
-            report_closed_or_hidden_services(nhs_entity, matching_services)
+            log_closed_or_hidden_services(nhs_entity, matching_services)
             return
 
         if not nhs_entity.all_times_valid():

@@ -21,8 +21,8 @@ from nhs import NHSEntity
 logger = Logger(child=True)
 
 
-def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
-    """Report closed or hidden NHS UK services
+def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
+    """Log closed or hidden NHS UK services
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
@@ -47,8 +47,8 @@ def report_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: L
         )
 
 
-def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
-    """Log unmatched NHS Pharmacies
+def log_unmatched_nhsuk_service(nhs_entity: NHSEntity) -> None:
+    """Log unmatched NHS Services
     Args:
         nhs_entity (NHSEntity): NHS entity to log
     """
@@ -74,7 +74,7 @@ def log_unmatched_nhsuk_pharmacies(nhs_entity: NHSEntity) -> None:
 
 
 @metric_scope
-def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSService, metrics) -> None:
+def log_invalid_nhsuk_postcode(nhs_entity: NHSEntity, dos_service: DoSService, metrics) -> None:
     """Log invalid NHS pharmacy postcode
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
@@ -87,6 +87,8 @@ def log_invalid_nhsuk_pharmacy_postcode(nhs_entity: NHSEntity, dos_service: DoSS
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_type": nhs_entity.org_type,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "nhsuk_address1": nhs_entity.entity_data.get("Address1", ""),
             "nhsuk_address2": nhs_entity.entity_data.get("Address2", ""),
             "nhsuk_address3": nhs_entity.entity_data.get("Address3", ""),

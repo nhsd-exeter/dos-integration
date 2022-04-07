@@ -18,21 +18,21 @@ from ..nhs import NHSEntity
 from ..reporting import (
     log_invalid_open_times,
     log_unmatched_service_types,
-    report_closed_or_hidden_services,
-    log_unmatched_nhsuk_pharmacies,
-    log_invalid_nhsuk_pharmacy_postcode,
+    log_closed_or_hidden_services,
+    log_unmatched_nhsuk_service,
+    log_invalid_nhsuk_postcode,
     log_service_with_generic_bank_holiday,
 )
 
 
 @patch.object(Logger, "warning")
-def test_report_closed_or_hidden_services(mock_logger, change_event):
+def test_log_closed_or_hidden_services(mock_logger, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
     matching_services = [dos_service]
     # Act
-    report_closed_or_hidden_services(nhs_entity, matching_services)
+    log_closed_or_hidden_services(nhs_entity, matching_services)
     # Assert
     assert (
         HIDDEN_OR_CLOSED_REPORT_ID == "HIDDEN_OR_CLOSED"
@@ -56,7 +56,7 @@ def test_report_closed_or_hidden_services(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_unmatched_nhsuk_pharmacies(mock_logger):
+def test_log_unmatched_nhsuk_service(mock_logger):
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -73,7 +73,7 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
         }
     )
     # Act
-    log_unmatched_nhsuk_pharmacies(nhs_entity)
+    log_unmatched_nhsuk_service(nhs_entity)
     # Assert
     assert (
         UNMATCHED_PHARMACY_REPORT_ID == "UNMATCHED_PHARMACY"
@@ -99,7 +99,7 @@ def test_log_unmatched_nhsuk_pharmacies(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
+def test_log_invalid_nhsuk_postcode(mock_logger):
     # Arrange
     nhs_entity = NHSEntity(
         {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
@@ -113,7 +113,7 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
 
     dos_service = dummy_dos_service()
     # Act
-    log_invalid_nhsuk_pharmacy_postcode(nhs_entity, dos_service)
+    log_invalid_nhsuk_postcode(nhs_entity, dos_service)
     # Assert
     assert (
         INVALID_POSTCODE_REPORT_ID == "INVALID_POSTCODE"
@@ -124,6 +124,8 @@ def test_log_invalid_nhsuk_pharmacy_postcode(mock_logger):
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_type": nhs_entity.org_type,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "nhsuk_address1": nhs_entity.address_lines[0],
             "nhsuk_address2": nhs_entity.address_lines[1],
             "nhsuk_address3": nhs_entity.address_lines[2],
