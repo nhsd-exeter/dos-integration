@@ -5,13 +5,10 @@ from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
 from common.change_event_exceptions import ValidationException
-from common.constants import SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, PHARMACY_SERVICE_KEY, DENTIST_SERVICE_KEY
+from common.constants import ODSCODE_LENGTH_KEY, SERVICE_TYPES
 from common.service_type import validate_organisation_keys
 
 logger = Logger(child=True)
-
-PHARMACY_ODSCODE_LENGTH = 5
-DENTIST_ODSCODE_LENGTH = 7
 
 
 def validate_event(event: Dict[str, Any]) -> None:
@@ -25,23 +22,19 @@ def validate_event(event: Dict[str, Any]) -> None:
     except SchemaValidationError as exception:
         raise ValidationException(exception)
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
-    check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][SERVICE_TYPES_NAME_KEY])
+    check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][ODSCODE_LENGTH_KEY])
     logger.info("Event has been validated")
 
 
-def check_ods_code_length(odscode: str, service_type: str) -> None:
+def check_ods_code_length(odscode: str, odscode_length: int) -> None:
     """Check ODS code length as expected, exception raise if error
     Note: ods code type is checked by schema validation
     Args:
         odscode (str): odscode of NHS UK service
     """
-    logger.debug(f"Checking {service_type} ODS code length")
-    if service_type == PHARMACY_SERVICE_KEY:
-        if len(odscode) != PHARMACY_ODSCODE_LENGTH:
-            raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}.")
-    if service_type == DENTIST_SERVICE_KEY:
-        if len(odscode) != DENTIST_ODSCODE_LENGTH:
-            raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length  {DENTIST_ODSCODE_LENGTH}.")
+    logger.debug(f"Checking ODSCode {odscode} length")
+    if len(odscode) != odscode_length:
+        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {odscode_length}.")
 
 
 INPUT_SCHEMA = {

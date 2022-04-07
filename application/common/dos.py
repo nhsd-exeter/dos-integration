@@ -116,13 +116,13 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         digits of odscode, taken from DoS database
     """
     logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
-    odscode_for_sql = (
-        odscode[0:5]
-        if org_type_id == PHARMACY_ORG_TYPE_ID
-        else odscode[0:1] + odscode[2:]
-        if org_type_id == DENTIST_ORG_TYPE_ID
-        else odscode
-    )
+
+    if org_type_id == PHARMACY_ORG_TYPE_ID:
+        odscode_for_sql = odscode[0:5]
+    elif org_type_id == DENTIST_ORG_TYPE_ID:
+        odscode_for_sql = odscode[0:1] + odscode[2:]
+    else:
+        odscode_for_sql = odscode
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
         " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"

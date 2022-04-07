@@ -3,8 +3,6 @@ from unittest.mock import patch
 import pytest
 from pytest import raises
 
-from common.constants import PHARMACY_SERVICE_KEY, DENTIST_SERVICE_KEY
-
 from ..change_event_validation import ValidationException, check_ods_code_length, validate_event
 
 FILE_PATH = "application.event_processor.change_event_validation"
@@ -29,29 +27,29 @@ def test_validate_event_missing_key(mock_check_ods_code_length, mock_validate_or
 
 
 @pytest.mark.parametrize(
-    "odscode, service_type",
+    "odscode, odscode_length",
     [
-        ("FXXX1", PHARMACY_SERVICE_KEY),
-        ("AAAAA", PHARMACY_SERVICE_KEY),
-        ("00000", PHARMACY_SERVICE_KEY),
-        ("V001234", DENTIST_SERVICE_KEY),
+        ("FXXX1", 5),
+        ("AAAAA", 5),
+        ("00000", 5),
+        ("V001234", 7),
     ],
 )
-def test_check_ods_code_length(odscode, service_type):
+def test_check_ods_code_length(odscode, odscode_length):
     # Act & Assert
-    check_ods_code_length(odscode, service_type)
+    check_ods_code_length(odscode, odscode_length)
 
 
 @pytest.mark.parametrize(
-    "odscode, service_type",
+    "odscode, odscode_length",
     [
-        ("FXXX11", PHARMACY_SERVICE_KEY),
-        ("AAAA", PHARMACY_SERVICE_KEY),
-        ("V0345", DENTIST_SERVICE_KEY),
-        ("V01234567", DENTIST_SERVICE_KEY),
+        ("FXXX11", 5),
+        ("AAAA", 5),
+        ("V0345", 7),
+        ("V01234567", 7),
     ],
 )
-def test_check_ods_code_length_incorrect_length(odscode, service_type):
+def test_check_ods_code_length_incorrect_length(odscode, odscode_length):
     # Act & Assert
     with raises(ValidationException):
-        check_ods_code_length(odscode, service_type)
+        check_ods_code_length(odscode, odscode_length)
