@@ -73,7 +73,7 @@ def a_new_dentist_change_event_is_valid():
 def valid_dentist_change_event():
     context = {}
     context["change_event"] = create_pharmacy_change_event()
-    context["change_event"]["ODSCode"] = "V01521"
+    context["change_event"]["ODSCode"] = "V00393a"
     context["change_event"]["OrganisationName"] = "Test Dentist"
     context["change_event"]["OrganisationTypeId"] = "Dentist"
     context["change_event"]["OrganisationSubType"] = "TBA"
