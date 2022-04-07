@@ -115,15 +115,27 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
-    odscode = get_new_odscode_for_dos(odscode, org_type_id)
-    logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
-    sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        " WHERE odscode LIKE %(ODS)s"
-    )
-    named_args = {"ODS": f"{odscode}%"}
+    odscode_5_or_6 = get_new_odscode_for_dos(odscode, org_type_id)
+    if org_type_id == PHARMACY_ORG_TYPE_ID:
+        logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode_5_or_6}'")
+        sql_query = (
+            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+            " WHERE odscode LIKE %(ODS)s"
+        )
+        named_args = {"ODS": f"{odscode_5_or_6}%"}
+    elif org_type_id == DENTIST_ORG_TYPE_ID:
+        logger.info(
+            f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode[0:7]} or {odscode_5_or_6}'"
+        )
+        sql_query = (
+            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+            " WHERE odscode LIKE %(ODS)s or odscode LIKE %(ODS6)s"
+        )
+        named_args = {"ODS": f"{odscode[0:7]}%", "ODS6": f"{odscode_5_or_6}%"}
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
@@ -134,22 +146,14 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
 
 def get_new_odscode_for_dos(odscode: str, org_type_id: str) -> str:
     def get_odscode_6():
-        return odscode[0:1] + "0" + odscode[1:6]
+        return odscode[0:1] + odscode[2:7] if odscode.startswith("V0") else odscode[0:6]
 
     if org_type_id == PHARMACY_ORG_TYPE_ID:
         return odscode[0:5]
     elif org_type_id == DENTIST_ORG_TYPE_ID:
-        odscode_length = len(odscode)
-        if odscode_length == 10:
-            return odscode[0:7]
-        elif odscode_length == 9:
-            return get_odscode_6()
-        elif odscode_length == 7:
-            return odscode
-        elif odscode_length == 6:
-            return get_odscode_6()
-        else:
-            return odscode
+        return get_odscode_6()
+    else:
+        return odscode
 
 
 def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpeningTime]:
