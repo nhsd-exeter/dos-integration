@@ -1,15 +1,19 @@
-resource "aws_cloudwatch_event_rule" "cron_for_delete_images" {
+resource "aws_cloudwatch_event_rule" "delete_ecr_images_rule" {
+  count               = var.environment == "dev" ? 1 : 0
   name                = "${var.project_id}-${var.environment}-delete-ecr-images-rule"
-  schedule_expression = "cron(0 20 * * ? *)"
+  description         = "Delete ECR images on the first of every month"
+  schedule_expression = "cron(0 0 1 * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "trigger_delete_ecr_images" {
-  rule = aws_cloudwatch_event_rule.cron_for_delete_images.name
-  arn  = aws_codebuild_project.di_delete_ecr_images.arn
+resource "aws_cloudwatch_event_target" "delete_ecr_images_trigger" {
+  count    = var.environment == "dev" ? 1 : 0
+  rule     = aws_cloudwatch_event_rule.delete_ecr_images_rule[0].name
+  arn      = aws_codebuild_project.di_delete_ecr_images[0].arn
+  role_arn = data.aws_iam_role.pipeline_role.arn
 }
-
 
 resource "aws_codebuild_project" "di_delete_ecr_images" {
+  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-delete-ecr-images-stage"
   description    = "Deletes ECR images"
   build_timeout  = "30"
@@ -78,5 +82,4 @@ resource "aws_codebuild_project" "di_delete_ecr_images" {
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.delete_ecr_images_buildspec.rendered
   }
-
 }
