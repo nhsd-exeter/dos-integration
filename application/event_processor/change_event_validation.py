@@ -11,7 +11,7 @@ from common.service_type import validate_organisation_keys
 logger = Logger(child=True)
 
 PHARMACY_ODSCODE_LENGTH = 5
-MIN_DENTIST_ODSCODE_LENGTH = 6
+DENTIST_ODSCODE_LENGTH = 7
 
 
 def validate_event(event: Dict[str, Any]) -> None:
@@ -40,10 +40,8 @@ def check_ods_code_length(odscode: str, service_type: str) -> None:
         if len(odscode) != PHARMACY_ODSCODE_LENGTH:
             raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}.")
     if service_type == DENTIST_SERVICE_KEY:
-        if len(odscode) < MIN_DENTIST_ODSCODE_LENGTH:
-            raise ValidationException(
-                f"ODSCode Wrong Length, '{odscode}' should be greater than or equal to  {MIN_DENTIST_ODSCODE_LENGTH}."
-            )
+        if len(odscode) != DENTIST_ODSCODE_LENGTH:
+            raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length  {DENTIST_ODSCODE_LENGTH}.")
 
 
 INPUT_SCHEMA = {

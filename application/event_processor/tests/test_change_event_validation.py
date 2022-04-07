@@ -34,7 +34,7 @@ def test_validate_event_missing_key(mock_check_ods_code_length, mock_validate_or
         ("FXXX1", PHARMACY_SERVICE_KEY),
         ("AAAAA", PHARMACY_SERVICE_KEY),
         ("00000", PHARMACY_SERVICE_KEY),
-        ("V0012345", DENTIST_SERVICE_KEY),
+        ("V001234", DENTIST_SERVICE_KEY),
     ],
 )
 def test_check_ods_code_length(odscode, service_type):
@@ -44,7 +44,12 @@ def test_check_ods_code_length(odscode, service_type):
 
 @pytest.mark.parametrize(
     "odscode, service_type",
-    [("FXXX11", PHARMACY_SERVICE_KEY), ("AAAA", PHARMACY_SERVICE_KEY), ("V0345", DENTIST_SERVICE_KEY)],
+    [
+        ("FXXX11", PHARMACY_SERVICE_KEY),
+        ("AAAA", PHARMACY_SERVICE_KEY),
+        ("V0345", DENTIST_SERVICE_KEY),
+        ("V01234567", DENTIST_SERVICE_KEY),
+    ],
 )
 def test_check_ods_code_length_incorrect_length(odscode, service_type):
     # Act & Assert
