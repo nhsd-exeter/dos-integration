@@ -60,8 +60,8 @@ def a_change_event_is_valid():
     return context
 
 
-@given("a dentist Changed Event is valid", target_fixture="context")
-def a_dentist_change_event_is_valid():
+@given("a new dentist Changed Event is valid", target_fixture="context")
+def a_new_dentist_change_event_is_valid():
     context = {}
     context["change_event"] = create_pharmacy_change_event()
     context["change_event"]["OrganisationTypeId"] = "Dentist"
