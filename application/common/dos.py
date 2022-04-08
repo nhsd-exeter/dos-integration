@@ -118,18 +118,22 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
 
     if org_type_id == PHARMACY_ORG_TYPE_ID:
-        odscode_for_sql = odscode[0:5]
+        conditions = "odscode LIKE %(ODS)s"
+        named_args = {"ODS": f"{odscode[0:5]}%"}
     elif org_type_id == DENTIST_ORG_TYPE_ID:
-        odscode_for_sql = odscode[0:1] + odscode[2:]
+        conditions = "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
+        named_args = {"ODS": f"{odscode[0] + odscode[2:]}", "ODS7": f"{odscode[0:7]}%"}
     else:
-        odscode_for_sql = odscode
+        conditions = "odscode = %(ODS)s"
+        named_args = {"ODS": f"{odscode}%"}
+
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
         " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        " WHERE odscode LIKE %(ODS)s"
+        f" WHERE {conditions}"
     )
-    named_args = {"ODS": f"{odscode_for_sql}%"}
+
     c = query_dos_db(query=sql_query, vars=named_args)
 
     # Create list of DoSService objects from returned rows
