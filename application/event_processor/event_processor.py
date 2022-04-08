@@ -3,17 +3,16 @@ from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
 from typing import Dict, List, Union
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
-
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
@@ -22,11 +21,11 @@ from common.service_type import get_valid_service_types
 from common.utilities import extract_body, get_sequence_number
 from nhs import NHSEntity
 from reporting import (
+    log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_service_with_generic_bank_holiday,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
-    log_closed_or_hidden_services,
-    log_service_with_generic_bank_holiday,
 )
 
 logger = Logger()
@@ -192,7 +191,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
-
     now_ms = time_ns() // 1000000
     logger.append_keys(ods_code=None)
     logger.append_keys(org_type=None)
