@@ -12,7 +12,6 @@ from ..dos import (
     DoSService,
     get_dos_locations,
     get_matching_dos_services,
-    get_new_odscode_for_dos,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
@@ -147,6 +146,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
+    ods6_code = "V0393a"
     # Act
     response = get_matching_dos_services(odscode, DENTIST_ORG_TYPE_ID)
     # Assert
@@ -159,9 +159,9 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
             "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
             " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
             " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-            " WHERE odscode LIKE %(ODS)s"
+            " WHERE odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
-        vars={"ODS": f"{odscode}%"},
+        vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
     )
     mock_connection.fetchall.assert_called_with()
     mock_connection.close.assert_called_with()
@@ -367,24 +367,6 @@ def test_get_dos_locations(mock_query_dos_db):
         "FROM locations WHERE postcode ~* %(pc_regex)s",
         {"pc_regex": " *".join(postcode.replace(" ", "").upper())},
     )
-
-
-@pytest.mark.parametrize(
-    "odscode,org_type_id, expected_result",
-    [
-        ("V006800", DENTIST_ORG_TYPE_ID, "V006800"),
-        ("V0032623456789", DENTIST_ORG_TYPE_ID, "V0032623456789"),
-        ("V123456789", DENTIST_ORG_TYPE_ID, "V123456"),
-        ("V0393a000", DENTIST_ORG_TYPE_ID, "V00393a"),
-        ("V12345", DENTIST_ORG_TYPE_ID, "V012345"),
-        ("FA18923", PHARMACY_ORG_TYPE_ID, "FA189"),
-    ],
-)
-def test_get_new_odscode_for_dos(odscode, org_type_id, expected_result):
-    # Act
-    response = get_new_odscode_for_dos(odscode, org_type_id)
-    # Assert
-    assert response == expected_result
 
 
 def get_db_item(odscode, name):
