@@ -23,10 +23,10 @@ def log_capture():
 
 def dummy_dos_service() -> DoSService:
     """Creates a DoSService Object with random data for the unit testing"""
-    test_data = []
-    for col in DoSService.db_columns:
+    test_data = {}
+    for col in DoSService.field_names():
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
-        test_data.append(random_str)
+        test_data[col] = random_str
     dos_service = DoSService(test_data)
     dos_service._standard_opening_times = StandardOpeningTimes()
     dos_service._specified_opening_times = []

@@ -1,12 +1,13 @@
 from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
-
+from pyrsistent import field
 import pytest
+from dataclasses import fields
 
+from .conftest import dummy_dos_location, dummy_dos_service
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from ..opening_times import OpenPeriod, StandardOpeningTimes
-
 from ..dos import (
     DoSLocation,
     DoSService,
@@ -15,26 +16,47 @@ from ..dos import (
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
-from .conftest import dummy_dos_location, dummy_dos_service
 
 FILE_PATH = "application.common.dos"
 
+def test_field_names():
+    assert DoSService.field_names() == [
+        "id",
+        "uid",
+        "name",
+        "odscode",
+        "address",
+        "town",
+        "postcode",
+        "web",
+        "email",
+        "fax",
+        "nonpublicphone",
+        "typeid",
+        "parentid",
+        "subregionid",
+        "statusid",
+        "createdtime",
+        "modifiedtime",
+        "publicphone",
+        "publicname",
+        "servicename"
+    ]
 
 def test__init__():
     """Pass in random list of values as a mock database row then make sure
     they're correctly set as the attributes of the created object.
     """
     # Arrange
-    test_db_row = []
-    for column in DoSService.db_columns:
+    test_db_row = {}
+    for column in DoSService.field_names():
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
-        test_db_row.append(random_str)
-    test_db_row = tuple(test_db_row)
+        test_db_row[column] = random_str
     # Act
     dos_service = DoSService(test_db_row)
     # Assert
-    for i, column in enumerate(DoSService.db_columns):
-        assert getattr(dos_service, column) == test_db_row[i]
+    for field_name in DoSService.field_names():
+        assert getattr(dos_service, field_name) == test_db_row[field_name]
 
 
 def test__init__public_name():
@@ -370,27 +392,25 @@ def test_get_dos_locations(mock_query_dos_db):
 
 
 def get_db_item(odscode, name):
-    return [
-        (
-            22851351399,
-            "159514725",
-            name,
-            odscode,
-            "80 Street$Town",
-            "Town",
-            "TES T12",
-            None,
-            None,
-            None,
-            None,
-            13,
-            123486,
-            21813557,
-            1,
-            datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
-            datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
-            "0123 012 012",
-            None,
-            "my service",
-        )
-    ]
+    return [{
+            "id": 22851351399,
+            "uid": "159514725",
+            "name": name,
+            "odscode": odscode,
+            "address": "80 Street$Town",
+            "town": "Town",
+            "postcode": "TES T12",
+            "web": None,
+            "email": None,
+            "fax": None,
+            "nonpublicphone": None,
+            "typeid": 13,
+            "parentid": 123486,
+            "subregionid": 21813557,
+            "statusid": 1,
+            "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
+            "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
+            "publicphone": "0123 012 012",
+            "publicname": None,
+            "servicename": "my service",
+    }]

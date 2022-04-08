@@ -1,10 +1,12 @@
 from dataclasses import dataclass, field, fields
 from itertools import groupby
 from typing import List, Union
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from datetime import date, datetime
 
+from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from .dos_db_connection import query_dos_db
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -13,44 +15,45 @@ logger = Logger(child=True)
 dos_location_cache = {}
 
 
+@dataclass
 class DoSService:
-    """Class to represent a DoS Service"""
+    """Class to represent a DoS Service, field names are equal to equivalent db column names."""
 
-    # These values are which columns are selected from the database and then
-    # are passed in as attributes into the DoSService object.
-    db_columns = [
-        "id",
-        "uid",
-        "name",
-        "odscode",
-        "address",
-        "town",
-        "postcode",
-        "web",
-        "email",
-        "fax",
-        "nonpublicphone",
-        "typeid",
-        "parentid",
-        "subregionid",
-        "statusid",
-        "createdtime",
-        "modifiedtime",
-        "publicphone",
-        "publicname",
-        "servicename",
-    ]
+    id: int
+    uid: int
+    name: str
+    odscode: str
+    address: str
+    town: str
+    postcode: str
+    web: str
+    email: str
+    fax: str
+    nonpublicphone: str
+    typeid: int
+    parentid: int
+    subregionid: int
+    statusid: int
+    createdtime: datetime
+    modifiedtime: datetime
+    publicphone: str
+    publicname: str
+    servicename: str
 
-    def __init__(self, db_cursor_row: tuple) -> None:
+    @staticmethod
+    def field_names() -> List[str]:
+        return [f.name for f in fields(DoSService)]
+
+    def __init__(self, db_cursor_row: dict) -> None:
         """Sets the attributes of this object to those found in the db row
         Args:
-            db_cursor_row (dict): Change Request changes
+            db_cursor_row (dict): row from db as key/val pairs
         """
-        for i, attribute_name in enumerate(self.db_columns):
-            attribute_value = db_cursor_row[i]
-            setattr(self, attribute_name, attribute_value)
+        self.data = db_cursor_row
 
-        # Do not use these, access them via their corresponding methods
+        for row_key, row_value in db_cursor_row.items():
+            setattr(self, row_key, row_value)
+
         self._standard_opening_times = None
         self._specified_opening_times = None
 
