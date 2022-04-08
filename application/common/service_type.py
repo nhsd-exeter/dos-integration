@@ -1,8 +1,20 @@
 from typing import List
-from aws_lambda_powertools import Logger
-from common.change_event_exceptions import ValidationException
-from common.constants import ORGANISATION_SUB_TYPES_KEY, SERVICE_TYPES, SERVICE_TYPES_NAME_KEY, VALID_SERVICE_TYPES_KEY
 
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities.feature_flags.appconfig import AppConfigStore
+from aws_lambda_powertools.utilities.feature_flags.feature_flags import FeatureFlags
+from common.change_event_exceptions import ValidationException
+from common.constants import (
+    DENTIST_ORG_TYPE_ID,
+    ORGANISATION_SUB_TYPES_KEY,
+    PHARMACY_SERVICE_KEY,
+    SERVICE_TYPES,
+    SERVICE_TYPES_NAME_KEY,
+    VALID_SERVICE_TYPES_KEY,
+)
+
+app_config = AppConfigStore(environment="di-393", application="uec-dos-integration-jack-test", name="event-processor")
+feature_flags = FeatureFlags(store=app_config)
 logger = Logger(child=True)
 
 
@@ -16,16 +28,41 @@ def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
     Raises:
         ValidationException: Either Org Type ID or Org Sub Type is not part of the valid list
     """
-    if org_type_id in SERVICE_TYPES:
+    validate_organisation_type_id(org_type_id)
+    if org_sub_type in SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]:
+        logger.info(f"Subtype type id: {org_sub_type} validated")
+    else:
+        raise ValidationException(f"Unexpected Org Sub Type ID: '{org_sub_type}'")
+
+
+def validate_organisation_type_id(org_type_id: str) -> bool:
+    """Check if the organisation type id is valid
+
+    Args:
+        org_type_id (str): organisation type id
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    is_pharmacy_accepted: bool = feature_flags.evaluate(name="is_pharmacy_accepted", default=False)
+    is_dentist_accepted: bool = feature_flags.evaluate(name="is_dentist_accepted", default=False)
+    logger.debug(f"Pharmacy organisation type accepted: {is_pharmacy_accepted}")
+    logger.debug(f"Dentist organisation type accepted: {is_dentist_accepted}")
+    response = False
+    if (
+        org_type_id == PHARMACY_SERVICE_KEY
+        and is_pharmacy_accepted
+        or org_type_id == DENTIST_ORG_TYPE_ID
+        and is_dentist_accepted
+    ):
         logger.append_keys(service_type=SERVICE_TYPES[org_type_id][SERVICE_TYPES_NAME_KEY])
         logger.info(f"Org type id: {org_type_id} validated")
-        logger.info(f"real: {org_sub_type} expected: {SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]}")
-        if org_sub_type in SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]:
-            logger.info(f"Subtype type id: {org_sub_type} validated")
-        else:
-            raise ValidationException(f"Unexpected Org Sub Type ID: '{org_sub_type}'")
     else:
-        raise ValidationException(f"Unexpected Org Type ID: '{org_type_id}'")
+        raise ValidationException(
+            f"Unexpected Org Type ID: '{org_type_id}'",
+            extra={"is_pharmacy_accepted": is_pharmacy_accepted, "is_dentist_accepted": is_dentist_accepted},
+        )
+    return response
 
 
 def get_valid_service_types(organisation_type_id: str) -> List[int]:

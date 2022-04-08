@@ -38,6 +38,13 @@ resource "aws_iam_role_policy" "event_processor_policy" {
     {
       "Effect": "Allow",
       "Action": [
+        "appconfig:GetConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "rds-db:connect",
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
