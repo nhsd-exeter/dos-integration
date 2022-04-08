@@ -55,3 +55,41 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
+
+@complete @splunk
+  Scenario: F001S009. Dentist Hidden reports to Splunk
+    Given a new Dentist Changed Event is valid
+    And the new dentist request has odscode "V00393a"
+    When the OrganisationStatus is defined as "Hidden"
+    And the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "HIDDEN_OR_CLOSED"
+
+@complete @splunk
+  Scenario: F001S010. Dentist Invalid Postcode reports to Splunk
+    Given a new Dentist Changed Event is valid
+    And the new dentist request has odscode "V00393a"
+    When the postcode is invalid
+    And the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "INVALID_POSTCODE"
+
+@complete @splunk
+  Scenario: F001S011. Dentist Invalid Opening Times reports to Splunk
+    Given a new Dentist Changed Event is valid
+    And the new dentist request has odscode "V00393a"
+    And a Changed Event where OpeningTimeType is NOT defined correctly
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
+
+@complete @splunk
+  Scenario: F001S012. Dentist Unmatched Service Type reports to Splunk
+    Given a new Dentist Changed Event is valid
+    And the new dentist request has odscode "FQG8101"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "UNMATCHED_SERVICE_TYPE"
+
+@complete @splunk
+  Scenario: F001S013. Dentist Unmatched Service reports to Splunk
+    Given a new Dentist Changed Event is valid
+    And the new dentist request has odscode "V00393b"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "UNMATCHED_PHARMACY"
