@@ -60,23 +60,6 @@ def a_change_event_is_valid():
     return context
 
 
-@given("a new Dentist Changed Event is valid", target_fixture="context")
-def valid_dentist_change_event_no_ods():
-    context = {}
-    context["change_event"] = create_pharmacy_change_event()
-    context["change_event"]["OrganisationName"] = "Test Dentist"
-    context["change_event"]["OrganisationTypeId"] = "Dentist"
-    context["change_event"]["OrganisationSubType"] = "TBA"
-    context["change_event"]["Address1"] = FAKER.street_name()
-    return context
-
-
-@given(parsers.parse('the new dentist request has odscode "{odscode}"'), target_fixture="context")
-def dentist_update_ods_change_event(context, odscode):
-    context["change_event"]["ODSCode"] = odscode
-    return context
-
-
 @given("a Dentist Changed Event is valid", target_fixture="context")
 def valid_dentist_change_event():
     context = {}
