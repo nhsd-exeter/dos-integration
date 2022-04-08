@@ -63,7 +63,7 @@ def test_type_get_dentist_odscodes(mock_run_query, lambda_context):
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT odscode FROM services WHERE typeid = 12"
+        "SELECT odscode FROM services WHERE typeid = 12 "
         "AND statusid = 1 AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'",
         None,
     )
