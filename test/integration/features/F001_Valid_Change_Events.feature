@@ -56,39 +56,39 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
-@complete @splunk
-  Scenario: F001S009. Dentist Hidden reports to Splunk
+@complete @splunk @cloudwatch_queries
+  Scenario: F001S009. Dentist Hidden uses correct report key
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "V00393a"
     When the OrganisationStatus is defined as "Hidden"
     And the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs to splunk with report key "HIDDEN_OR_CLOSED"
 
-@complete @splunk
-  Scenario: F001S010. Dentist Invalid Postcode reports to Splunk
+@complete @splunk @cloudwatch_queries
+  Scenario: F001S010. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "V00393a"
     When the postcode is invalid
     And the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs to splunk with report key "INVALID_POSTCODE"
 
-@complete @splunk
-  Scenario: F001S011. Dentist Invalid Opening Times reports to Splunk
+@complete @splunk @cloudwatch_queries
+  Scenario: F001S011. Dentist Invalid Opening Times uses correct report key
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "V00393a"
     And a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
 
-@complete @splunk
-  Scenario: F001S012. Dentist Unmatched Service Type reports to Splunk
+@complete @splunk @cloudwatch_queries
+  Scenario: F001S012. Dentist Unmatched Service Type uses correct report key
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "FQG8101"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs to splunk with report key "UNMATCHED_SERVICE_TYPE"
 
-@complete @splunk
-  Scenario: F001S013. Dentist Unmatched Service reports to Splunk
+@complete @splunk @cloudwatch_queries
+  Scenario: F001S013. Dentist Unmatched Service uses correct report key
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "V00393b"
     When the Changed Event is sent for processing with "valid" api key
