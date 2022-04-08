@@ -885,7 +885,7 @@ def check_logs_for_correct_sent_cr(context, odscode):
 @then(parsers.parse('the Event Processor logs to splunk with report key "{reportkey}"'))
 def check_logs_for_correct_report_key(context, reportkey):
     query = (
-        'fields message, report_key, ods_code | sort @timestamp asc'
+        "fields message, report_key, ods_code | sort @timestamp asc"
         f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{reportkey}"'
     )
     logs = get_logs(query, "processor", context["start_time"])
