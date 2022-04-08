@@ -118,7 +118,6 @@ smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRON
 		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
@@ -138,7 +137,6 @@ integration-test-local:
 	URL=https://$(DOS_INTEGRATION_URL) \
 	EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
 	EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-	SQS_URL=$(SQS_QUEUE_URL) \
 	TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
 	EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 	DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
@@ -164,7 +162,6 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
 		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-		-e SQS_URL=$(SQS_QUEUE_URL) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \

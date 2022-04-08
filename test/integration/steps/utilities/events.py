@@ -13,14 +13,21 @@ from .utils import (
     get_odscodes_list,
     get_single_service_odscode,
 )
+from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID
 
-odscode_list = None
+pharmacy_odscode_list = None
+dentist_odscode_list = None
 
 
-def create_pharmacy_change_event() -> Dict[str, Any]:
+def create_change_event(service_type: str) -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
-        payload["ODSCode"] = random_pharmacy_odscode()
+        if service_type.upper() == "PHARMACY":
+            payload["ODSCode"] = random_pharmacy_odscode()
+        elif service_type.upper() == "DENTIST":
+            payload["ODSCode"] = random_dentist_odscode()
+        else:
+            raise ValueError(f"Service type {service_type} does not exist")
         payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
         return payload
@@ -60,10 +67,20 @@ def change_request() -> Dict[str, Any]:
 
 
 def random_pharmacy_odscode() -> str:
-    global odscode_list
-    if odscode_list is None:
-        odscode_list = get_odscodes_list("PHA")
-    return choice(odscode_list)[0]
+    global pharmacy_odscode_list
+    if pharmacy_odscode_list is None:
+        lambda_payload = {"type": "get_pharmacy_odscodes"}
+        pharmacy_odscode_list = get_odscodes_list(lambda_payload)
+    return choice(pharmacy_odscode_list)[0]
+
+
+def random_dentist_odscode() -> str:
+    global dentist_odscode_list
+    if dentist_odscode_list is None:
+        lambda_payload = {"type": "get_dentist_odscodes"}
+        dentist_odscode_list = get_odscodes_list(lambda_payload)
+    odscode = choice(dentist_odscode_list)[0]
+    return f"{odscode[0]}0{odscode[1:]}"
 
 
 def get_payload(payload_name: str) -> str:
@@ -76,12 +93,17 @@ def get_payload(payload_name: str) -> str:
         return dumps(load(json_file))
 
 
-def build_same_as_dos_change_event():
+def build_same_as_dos_change_event(service_type: str):
     # TODO Refactor into change event class
-    change_event = create_pharmacy_change_event()
-    change_event["ODSCode"] = get_single_service_odscode("PHA")
+    change_event = create_change_event(service_type)
+    if service_type.upper() == "PHARMACY":
+        change_event["ODSCode"] = get_single_service_odscode(PHARMACY_ORG_TYPE_ID)
+        demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
+    elif service_type.upper() == "DENTIST":
+        demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
+    else:
+        raise ValueError(f"Service type {service_type} does not exist")
     print(f"Latest selected ODSCode: {change_event['ODSCode']}")
-    demographics_data = get_change_event_demographics(change_event["ODSCode"], "PHA")
     change_event["OrganisationName"] = demographics_data["publicname"]
     change_event["Postcode"] = demographics_data["postcode"]
     change_event["Contacts"][0]["ContactValue"] = demographics_data["web"]
@@ -125,7 +147,7 @@ def build_same_as_dos_change_event():
     if valid_change_event(change_event):
         return change_event
     else:
-        return build_same_as_dos_change_event()
+        return build_same_as_dos_change_event(service_type)
 
 
 def valid_change_event(change_event: dict) -> bool:
@@ -140,8 +162,8 @@ def valid_change_event(change_event: dict) -> bool:
     return True
 
 
-def set_opening_times_change_event():
-    change_event = build_same_as_dos_change_event()
+def set_opening_times_change_event(service_type: str):
+    change_event = build_same_as_dos_change_event(service_type)
     date = datetime.today() + relativedelta(months=1)
     has_set_closed_day = False
     for day in change_event["OpeningTimes"]:
