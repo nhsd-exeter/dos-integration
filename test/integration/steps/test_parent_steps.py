@@ -843,3 +843,35 @@ def dentist_changes_confirmed_in_dos(context):
     ]
     change_request_service_type = get_service_type_from_cr(context["correlation_id"])
     assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
+
+
+@then(parsers.parse('the Changed Event finds a matching dentist with ods "{odscode}"'))
+def check_logs_for_dentist_match(context, odscode):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "services with typeid in allowlist"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert odscode in logs, "ERROR!!.. error processor does not have correct ods."
+
+
+@then(parsers.parse('the Event Sender sends the ods "{odscode}"'))
+def check_logs_for_correct_sent_cr(context, odscode):
+    query = (
+        f'fields message, ods_code | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Attempting to send change request to DoS"'
+    )
+    logs = get_logs(query, "sender", context["start_time"])
+    assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
+
+
+@then(parsers.parse('the Event Processor logs to splunk with report key "{reportkey}"'))
+def check_logs_for_correct_report_key(context, reportkey):
+    query = (
+        "fields message, report_key, ods_code | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{reportkey}"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert (
+        context["change_event"]["ODSCode"] in logs
+    ), f"ERROR!!.. error event processor did not detect the report key {reportkey}."
