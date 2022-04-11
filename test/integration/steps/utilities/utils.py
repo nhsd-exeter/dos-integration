@@ -139,8 +139,8 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
     return data
 
 
-def get_single_service_odscode(organisation_type_id: str) -> str:
-    lambda_payload = {"type": "get_single_service_odscode", "organisation_type_id": organisation_type_id}
+def get_single_service_odscode() -> str:
+    lambda_payload = {"type": "get_single_pharmacy_service_odscode"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
