@@ -37,8 +37,8 @@
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
     - [Prerequisites](#prerequisites)
-    - [How to deploy](#how-to-deploy)
-      - [Example](#example)
+    - [How to deploy full environment](#how-to-deploy-full-environment)
+    - [How to deploy an AppConfig update (Configuration Update/Feature Flags)](#how-to-deploy-an-appconfig-update-configuration-updatefeature-flags)
   - [Architecture](#architecture)
     - [Diagrams](#diagrams)
       - [System Context Diagram](#system-context-diagram)
@@ -347,7 +347,7 @@ The production pipeline terraform stack must be deployed
 
     make deploy-deployment-pipelines PROFILE=tools ENVIRONMENT=dev
 
-### How to deploy
+### How to deploy full environment
 
 To deploy an update/new version to a production environment the commit must be tagged using the command below. This will automatically run a Github web hook that will trigger an AWS Codebuild project that will deploy the environment based on the git tag.
 
@@ -361,9 +361,27 @@ To Deploy Live
 
     make tag-commit-for-deployment PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
 
-#### Example
+Example
 
     make tag-commit-for-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
+
+### How to deploy an AppConfig update (Configuration Update/Feature Flags)
+
+To deploy an update of the feature flags to a production environment the commit must be tagged using the command below. This will automatically run a Github web hook that will trigger an AWS Codebuild project that will deploy the environment based on the git tag.
+
+Note: This should only be run against a commit on the master branch as the code has been built into an image and pushed to ECR. Also short commit hash is the first 7 characters of the commit hash.
+
+To Deploy Demo
+
+    make tag-commit-for-configuration-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=[short commit hash]
+
+To Deploy Live
+
+    make tag-commit-for-configuration-deployment PROFILE=live ENVIRONMENT=live COMMIT=[short commit hash]
+
+Example
+
+    make tag-commit-for-configuration-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
 ## Architecture
 
