@@ -35,14 +35,14 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
 	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -456,7 +456,17 @@ wait-for-codebuild-to-finish: # Wait for codebuild project to finish
 
 tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
+		tag=$(BUILD_TIMESTAMP)-$(ENVIRONMENT)-deploy
+		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+	else
+		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
+		echo Recommended: you run this command from the master branch
+	fi
+
+tag-commit-for-configuration-deployment: # Tag git commit for configuration deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
+	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
+		tag=$(BUILD_TIMESTAMP)-$(ENVIRONMENT)-config-deploy
+		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
 	else
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
 		echo Recommended: you run this command from the master branch

@@ -1,3 +1,4 @@
+from os import getenv
 from typing import List
 
 from aws_lambda_powertools import Logger
@@ -13,10 +14,11 @@ from common.constants import (
     VALID_SERVICE_TYPES_KEY,
 )
 
+ENVIRONMENT: str = getenv("ENV")
 app_config = AppConfigStore(
-    environment="di-393",
-    application="uec-dos-int-di-393-lambda-app-config",
-    name="uec-dos-int-di-393-event-processor-profile",
+    environment=ENVIRONMENT,
+    application=f"uec-dos-int-{ENVIRONMENT}-lambda-app-config",
+    name="event-processor",
 )
 feature_flags = FeatureFlags(store=app_config)
 logger = Logger(child=True)

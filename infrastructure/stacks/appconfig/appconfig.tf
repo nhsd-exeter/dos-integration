@@ -5,7 +5,7 @@ resource "aws_appconfig_application" "di_lambdas" {
 
 resource "aws_appconfig_configuration_profile" "event_processor" {
   application_id = aws_appconfig_application.di_lambdas.id
-  name           = "${var.project_id}-${var.environment}-event-processor-profile"
+  name           = "event-processor"
   description    = "AppConfig Configuration Profile for Event Processor"
   location_uri   = "hosted"
   type           = "AWS.Freeform"
@@ -31,4 +31,13 @@ resource "aws_appconfig_hosted_configuration_version" "event_processor_version" 
       default : var.is_dentist_accepted
     }
   })
+}
+
+resource "aws_appconfig_deployment" "deployment" {
+  application_id           = aws_appconfig_application.di_lambdas.id
+  configuration_profile_id = aws_appconfig_configuration_profile.event_processor.configuration_profile_id
+  configuration_version    = aws_appconfig_hosted_configuration_version.event_processor_version.version_number
+  deployment_strategy_id   = "AppConfig.AllAtOnce"
+  description              = "AppConfig Deployment for Event Processor"
+  environment_id           = aws_appconfig_environment.lambdas_environment.environment_id
 }
