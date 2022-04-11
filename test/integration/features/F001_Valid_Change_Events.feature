@@ -55,38 +55,3 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
-
-@complete @cloudwatch_queries
-  Scenario: F001S009. Dentist Hidden uses correct report key
-    Given a Dentist Changed Event is valid
-    When the OrganisationStatus is defined as "Hidden"
-    And the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "HIDDEN_OR_CLOSED"
-
-@complete @cloudwatch_queries
-  Scenario: F001S010. Dentist Invalid Postcode uses correct report key
-    Given a Dentist Changed Event is valid
-    When the postcode is invalid
-    And the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "INVALID_POSTCODE"
-
-@complete @cloudwatch_queries
-  Scenario: F001S011. Dentist Invalid Opening Times uses correct report key
-    Given a Dentist Changed Event is valid
-    And a Changed Event where OpeningTimeType is NOT defined correctly
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
-
-@complete @cloudwatch_queries
-  Scenario: F001S012. Dentist Unmatched Service Type uses correct report key
-    Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "FQG8101"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "UNMATCHED_SERVICE_TYPE"
-
-@complete @cloudwatch_queries
-  Scenario: F001S013. Dentist Unmatched Service uses correct report key
-    Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "V00393b"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "UNMATCHED_PHARMACY"

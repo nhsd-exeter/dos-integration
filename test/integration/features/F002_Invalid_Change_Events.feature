@@ -135,3 +135,38 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And the generic bank holiday exception is reported to cloudwatch
+
+@complete @cloudwatch_queries
+  Scenario: F002S018. Dentist Hidden uses correct report key
+    Given a Dentist Changed Event is valid
+    When the OrganisationStatus is defined as "Hidden"
+    And the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "HIDDEN_OR_CLOSED"
+
+@complete @cloudwatch_queries
+  Scenario: F002S019. Dentist Invalid Postcode uses correct report key
+    Given a Dentist Changed Event is valid
+    When the postcode is invalid
+    And the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "INVALID_POSTCODE"
+
+@complete @cloudwatch_queries
+  Scenario: F002S020. Dentist Invalid Opening Times uses correct report key
+    Given a Dentist Changed Event is valid
+    And a Changed Event where OpeningTimeType is NOT defined correctly
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
+
+@complete @cloudwatch_queries
+  Scenario: F002S021. Dentist Unmatched Service Type uses correct report key
+    Given a Dentist Changed Event is valid
+    And the Changed Event has ODS Code "FQG8101"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "UNMATCHED_SERVICE_TYPE"
+
+@complete @cloudwatch_queries
+  Scenario: F002S022. Dentist Unmatched Service uses correct report key
+    Given a Dentist Changed Event is valid
+    And the Changed Event has ODS Code "V00393b"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor logs to splunk with report key "UNMATCHED_PHARMACY"
