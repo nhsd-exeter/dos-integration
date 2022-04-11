@@ -1,8 +1,9 @@
 from os import environ
 from unittest.mock import patch
 
-from dos import dos_location_cache
-
+from common.tests.conftest import dummy_dos_location, dummy_dos_service
+from common.dos import dos_location_cache
+from ..nhs import NHSEntity
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     ADDRESS_LINES_KEY,
@@ -19,8 +20,7 @@ from ..changes import (
     update_changes_with_opening_times,
     update_changes_with_address_and_postcode,
 )
-from ..nhs import NHSEntity
-from .conftest import dummy_dos_location, dummy_dos_service
+
 
 FILE_PATH = "application.event_processor.changes"
 
