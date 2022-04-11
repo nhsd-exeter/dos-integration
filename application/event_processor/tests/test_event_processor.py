@@ -22,7 +22,7 @@ from ..change_request import (
 )
 from ..event_processor import EXPECTED_ENVIRONMENT_VARIABLES, EventProcessor, lambda_handler
 from ..nhs import NHSEntity
-from .conftest import dummy_dos_location, dummy_dos_service
+from common.tests.conftest import dummy_dos_location, dummy_dos_service
 
 FILE_PATH = "application.event_processor.event_processor"
 

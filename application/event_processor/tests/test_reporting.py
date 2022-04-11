@@ -13,7 +13,7 @@ from common.constants import (
     GENERIC_BANK_HOLIDAY_REPORT_ID,
 )
 from common.opening_times import OpenPeriod
-from .conftest import dummy_dos_service
+from common.tests.conftest import dummy_dos_service
 from ..nhs import NHSEntity
 from ..reporting import (
     log_invalid_open_times,
