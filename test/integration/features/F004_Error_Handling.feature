@@ -51,7 +51,7 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with sequence id ABCD1
     Then the change request has status code "400"
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @cloudwatch_queries
   Scenario Outline: F004S008. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id <seqid>

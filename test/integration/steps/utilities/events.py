@@ -97,7 +97,7 @@ def build_same_as_dos_change_event(service_type: str):
     # TODO Refactor into change event class
     change_event = create_change_event(service_type)
     if service_type.upper() == "PHARMACY":
-        change_event["ODSCode"] = get_single_service_odscode(PHARMACY_ORG_TYPE_ID)
+        change_event["ODSCode"] = get_single_service_odscode()
         demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
     elif service_type.upper() == "DENTIST":
         demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)

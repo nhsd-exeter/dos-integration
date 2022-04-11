@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @smoke @no_log_searches
+@complete @smoke @no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -20,7 +20,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then no Changed request is created
     And the Changed Event is stored in dynamo db
 
-  @complete @no_log_searches
+@complete @no_log_searches
   Scenario: F001S004. A valid change event with changed Phone number is processed and captured by DOS
     Given a Changed Event with changed "phone_no" is valid
     When the Changed Event is sent for processing with "valid" api key
