@@ -14,7 +14,7 @@ from boto3.dynamodb.types import TypeDeserializer
 from requests import Response
 
 from .aws import get_secret
-from .constant import SERVICE_TYPES
+from .constants import SERVICE_TYPES
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -68,13 +68,6 @@ def process_change_request_payload(payload: dict, api_key_valid: bool) -> Respon
     }
     output = requests.request("POST", CR_URL, headers=headers, data=dumps(payload))
     return output
-
-
-def debug_purge_queue():
-    try:
-        SQS_CLIENT.purge_queue(QueueUrl=SQS_URL)
-    except Exception as e:
-        print(f"ERROR!..UNABLE TO PURGE. {e}")
 
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
@@ -139,8 +132,7 @@ def generate_random_int() -> str:
     return str(random.sample(range(1000), 1)[0])
 
 
-def get_odscodes_list(organisation_type_id: str) -> list[list[str]]:
-    lambda_payload = {"type": "get_odscodes", "organisation_type_id": organisation_type_id}
+def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
