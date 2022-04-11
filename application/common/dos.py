@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field, fields
 from itertools import groupby
 from typing import List, Union
-from datetime import date, datetime
+from datetime import datetime
 
-from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID

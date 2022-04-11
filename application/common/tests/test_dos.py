@@ -1,9 +1,7 @@
 from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
-from pyrsistent import field
 import pytest
-from dataclasses import fields
 
 from .conftest import dummy_dos_location, dummy_dos_service
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
@@ -18,6 +16,7 @@ from ..dos import (
 )
 
 FILE_PATH = "application.common.dos"
+
 
 def test_field_names():
     assert DoSService.field_names() == [
@@ -42,6 +41,7 @@ def test_field_names():
         "publicname",
         "servicename"
     ]
+
 
 def test__init__():
     """Pass in random list of values as a mock database row then make sure
@@ -392,7 +392,8 @@ def test_get_dos_locations(mock_query_dos_db):
 
 
 def get_db_item(odscode, name):
-    return [{
+    return [
+        {
             "id": 22851351399,
             "uid": "159514725",
             "name": name,
@@ -413,4 +414,5 @@ def get_db_item(odscode, name):
             "publicphone": "0123 012 012",
             "publicname": None,
             "servicename": "my service",
-    }]
+        }
+    ]
