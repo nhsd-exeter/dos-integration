@@ -143,10 +143,9 @@ resource "aws_codebuild_project" "di_build" {
   }
 }
 
-resource "aws_codebuild_project" "di_deploy_dev" {
-  for_each       = local.deploy_envs
-  name           = "${var.project_id}-${var.environment}-deploy-${each.key}-stage"
-  description    = "Deploy to the ${each.key} environment"
+resource "aws_codebuild_project" "di_deploy" {
+  name           = "${var.project_id}-${var.environment}-deploy-stage"
+  description    = "Deploy to the environment expects ENVIRONMENT variable passed in"
   build_timeout  = "10"
   queued_timeout = "30"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -172,10 +171,7 @@ resource "aws_codebuild_project" "di_deploy_dev" {
       name  = "PROFILE"
       value = each.key
     }
-    environment_variable {
-      name  = "ENVIRONMENT"
-      value = each.key
-    }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
@@ -282,72 +278,5 @@ resource "aws_codebuild_project" "di_integration_tests" {
   source {
     type      = "CODEPIPELINE"
     buildspec = data.template_file.integration_tests_buildspec.rendered
-  }
-}
-
-
-resource "aws_codebuild_project" "di_deploy_fresh" {
-  name           = "${var.project_id}-${var.environment}-deploy-fresh-stage"
-  description    = "Deploy to the fresh environment"
-  build_timeout  = "50"
-  queued_timeout = "30"
-  service_role   = data.aws_iam_role.pipeline_role.arn
-
-  artifacts {
-    type = "CODEPIPELINE"
-  }
-
-  cache {
-    type  = "LOCAL"
-    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
-  }
-
-
-  environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
-    type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "CODEBUILD"
-    privileged_mode             = true
-
-    environment_variable {
-      name  = "PROFILE"
-      value = "dev"
-    }
-    environment_variable {
-      name  = "ENVIRONMENT"
-      value = "fresh"
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
-      value = var.aws_account_id_live_parent
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_MGMT"
-      value = var.aws_account_id_mgmt
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_NONPROD"
-      value = var.aws_account_id_nonprod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_PROD"
-      value = var.aws_account_id_prod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_IDENTITIES"
-      value = var.aws_account_id_identities
-    }
-  }
-
-  logs_config {
-    cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-fresh-stage"
-      stream_name = ""
-    }
-  }
-  source {
-    type      = "CODEPIPELINE"
-    buildspec = data.template_file.deploy_buildspec.rendered
   }
 }
