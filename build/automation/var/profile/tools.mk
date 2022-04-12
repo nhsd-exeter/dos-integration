@@ -28,5 +28,5 @@ TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
 TF_VAR_test_signing_key_alias := $(PROJECT_ID)-test-signing-key-alias
 TF_VAR_aws_np_vpc_name = lk8s-nonprod.texasplatform.uk
 
-SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-dev/deployment
-SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
+TF_VAR_service_state_bucket = $(TERRAFORM_STATE_STORE)
+TF_VAR_development_pipeline_state = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)/dev/development-pipeline/terraform.state

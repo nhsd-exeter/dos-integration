@@ -44,10 +44,10 @@ variable "aws_account_id_tools" {
 variable "aws_account_id_live_parent" {
   description = ""
 }
+
 # ##############
 # # TEXAS COMMON
 # ##############
-
 
 variable "code_pipeline_branch_name" {
   description = ""
@@ -64,7 +64,11 @@ variable "pipeline_topic_name" {
   description = ""
 }
 
-variable "github_token" {
+variable "github_owner" {
+  description = ""
+}
+
+variable "github_repo" {
   description = ""
 }
 
@@ -81,4 +85,12 @@ variable "project_id" {
 }
 variable "environment" {
   description = "Environment name"
+}
+
+variable "service_state_bucket" {
+  description = "The S3 bucket used to store the service state"
+}
+
+variable "development_pipeline_state" {
+  description = "Location of the Terraform state file for the development pipeline"
 }
