@@ -34,7 +34,7 @@ def get_sender_log_stream_name() -> str:
     return log_stream["logStreams"][0]["logStreamName"]
 
 
-def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
+def get_logs(query: str, event_lambda: str, start_time: Timestamp, retrycount=32) -> str:
     log_groups = {
         "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
         "sender": LOG_GROUP_NAME_EVENT_SENDER,
@@ -61,9 +61,37 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp) -> str:
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == 32:
+        elif counter == retrycount:
             raise Exception("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
+
+
+def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> str:
+    log_groups = {
+        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
+        "sender": LOG_GROUP_NAME_EVENT_SENDER,
+        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
+    }
+    if event_lambda == "processor" or "sender" or "cr_dlq":
+        log_group_name = log_groups[event_lambda]
+    else:
+        raise Exception("Error.. log group name not correctly specified")
+
+    start_query_response = LAMBDA_CLIENT_LOGS.start_query(
+        logGroupName=log_group_name,
+        startTime=int(start_time),
+        endTime=int(datetime.now().timestamp()),
+        queryString=query,
+    )
+
+    query_id = start_query_response["queryId"]
+    sleep(120)
+    response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
+
+    if response["results"] == []:
+        return True
+    else:
+        raise Exception("Matching logs have been found")
 
 
 def get_processor_logs_list_for_debug(seconds_ago: int = 0) -> list:

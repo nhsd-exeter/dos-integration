@@ -170,3 +170,19 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event has ODS Code "V00393b"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs to splunk with report key "UNMATCHED_PHARMACY"
+
+@complete @cloudwatch_queries
+  Scenario: F002S023. Dentist Request with ODS code too short.
+    Given a Dentist Changed Event is valid
+    And the Changed Event has ODS Code "V00393"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor shows field "error" with message "ODSCode Wrong Length"
+    And the Event Processor does not show "message" with message "Getting matching DoS Services for odscode"
+
+@complete @cloudwatch_queries
+  Scenario: F002S024. Dentist Request with ODS code too long.
+    Given a Dentist Changed Event is valid
+    And the Changed Event has ODS Code "V00393abc"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event Processor shows field "error" with message "ODSCode Wrong Length"
+    And the Event Processor does not show "message" with message "Getting matching DoS Services for odscode"

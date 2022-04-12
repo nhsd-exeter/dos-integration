@@ -18,7 +18,7 @@ from .utilities.events import (
     valid_change_event,
 )
 from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
-from .utilities.aws import get_logs
+from .utilities.aws import get_logs, negative_log_check
 from .utilities.utils import (
     generate_correlation_id,
     get_changes,
@@ -875,3 +875,49 @@ def check_logs_for_correct_report_key(context, reportkey):
     assert (
         context["change_event"]["ODSCode"] in logs
     ), f"ERROR!!.. error event processor did not detect the report key {reportkey}."
+
+
+@then(parsers.parse('the Event Processor shows field "{field}" with message "{message}"'))
+def generic_processor_check_function(context, field, message):
+    if field != "message":
+        fields = "message, " + field
+    else:
+        fields = field
+
+    query = (
+        f"fields {fields} | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter {field} like "{message}"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parsers.parse('the Event Processor does not show "{field}" with message "{message}"'))
+def generic_processor_negative_check_function(context, field, message):
+    if field != "message":
+        field = "message, " + field
+    else:
+        fields = field
+
+    find_request_id_query = (
+        f"fields function_request_id | sort @timestamp asc" f' | filter correlation_id="{context["correlation_id"]}"'
+    )
+    find_request_id = loads(get_logs(find_request_id_query, "processor", context["start_time"]))
+
+    request_id = ""
+    for x in find_request_id["results"][0]:
+        if x["field"] == "function_request_id":
+            request_id = x["value"]
+
+    finished_check = "fields @message" f' | filter @requestId == "{request_id}" | filter @type == "END"'
+    logs = get_logs(finished_check, "processor", context["start_time"], 10)
+    if logs == []:
+        raise ValueError("The Lambda has not finished running")
+
+    query = (
+        f"fields {fields} | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter {field} like "{message}"'
+    )
+    logs_found = negative_log_check(query, "processor", context["start_time"])
+
+    assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
