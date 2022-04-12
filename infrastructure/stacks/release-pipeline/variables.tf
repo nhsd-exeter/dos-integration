@@ -49,7 +49,7 @@ variable "aws_account_id_live_parent" {
 # # TEXAS COMMON
 # ##############
 
-variable "code_pipeline_branch_name" {
+variable "release_pipeline_branch" {
   description = ""
 }
 variable "pipeline_notification_name" {

@@ -6,6 +6,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_processor_logs_subscrip
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "event_sender_logs_subscription_filter" {
@@ -16,6 +17,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_sender_logs_subscriptio
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "orchestrator_logs_subscription_filter" {
@@ -26,6 +28,7 @@ resource "aws_cloudwatch_log_subscription_filter" "orchestrator_logs_subscriptio
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "fifo_dlq_handler_logs_subscription_filter" {
@@ -36,6 +39,7 @@ resource "aws_cloudwatch_log_subscription_filter" "fifo_dlq_handler_logs_subscri
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "cr_fifo_dlq_handler_logs_subscription_filter" {
@@ -46,6 +50,7 @@ resource "aws_cloudwatch_log_subscription_filter" "cr_fifo_dlq_handler_logs_subs
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "event_replay_logs_subscription_filter" {
@@ -56,6 +61,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_replay_logs_subscriptio
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
@@ -66,4 +72,9 @@ resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
   distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
+}
+
+resource "time_sleep" "wait_3_minutes" {
+  create_duration = "3m"
 }
