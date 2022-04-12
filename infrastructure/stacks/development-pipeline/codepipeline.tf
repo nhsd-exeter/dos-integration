@@ -74,6 +74,11 @@ resource "aws_codepipeline" "codepipeline" {
           ProjectName = "${var.project_id}-${var.environment}-deploy-${action.key}-stage"
           EnvironmentVariables = jsonencode([
             {
+              name  = "PROFILE"
+              value = "${action.key}"
+              type  = "PLAINTEXT"
+            },
+            {
               name  = "ENVIRONMENT"
               value = "${action.key}"
               type  = "PLAINTEXT"

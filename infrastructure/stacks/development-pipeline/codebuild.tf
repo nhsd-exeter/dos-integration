@@ -168,11 +168,6 @@ resource "aws_codebuild_project" "di_deploy" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "PROFILE"
-      value = each.key
-    }
-
-    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
@@ -200,7 +195,7 @@ resource "aws_codebuild_project" "di_deploy" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-${each.key}-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-stage"
       stream_name = ""
     }
   }
