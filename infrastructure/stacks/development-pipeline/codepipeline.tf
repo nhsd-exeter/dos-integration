@@ -72,6 +72,13 @@ resource "aws_codepipeline" "codepipeline" {
         version         = "1"
         configuration = {
           ProjectName = "${var.project_id}-${var.environment}-deploy-${action.key}-stage"
+          EnvironmentVariables = jsonencode([
+            {
+              name  = "ENVIRONMENT"
+              value = "${action.key}"
+              type  = "PLAINTEXT"
+            }
+          ])
         }
       }
     }
