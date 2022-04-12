@@ -21,7 +21,7 @@ resource "aws_codepipeline" "release_codepipeline" {
       configuration = {
         ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
-        BranchName       = var.code_pipeline_branch_name
+        BranchName       = var.release_pipeline_branch
         DetectChanges    = true
       }
     }
@@ -102,6 +102,13 @@ resource "aws_codepipeline" "release_codepipeline" {
         version         = "1"
         configuration = {
           ProjectName = "${var.project_id}-dev-integration-test-stage-${action.key}"
+          EnvironmentVariables = jsonencode([
+            {
+              name  = "ENVIRONMENT"
+              value = "${var.environment}-test"
+              type  = "PLAINTEXT"
+            }
+          ])
         }
       }
     }

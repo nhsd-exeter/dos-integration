@@ -17,6 +17,6 @@ data "aws_sns_topic" "development_pipeline_topic" {
 
 locals {
   deploy_envs      = toset(["test", "perf"])
-  to_build         = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway", "slack-messenger"])
+  to_build         = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "slack-messenger"])
   integration_tags = toset(["cloudwatch_queries", "no_log_searches"])
 }

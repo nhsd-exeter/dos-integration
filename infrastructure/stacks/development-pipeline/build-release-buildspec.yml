@@ -8,7 +8,7 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
-      - make docker-hub-signin PROFILE=dev
+      - make docker-hub-signin
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
@@ -16,15 +16,11 @@ phases:
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^branch/release/||" | sed -e "s|\.|-|g")
+      - echo $BUILD_BRANCH"
       - echo $ENVIRONMENT
       - |
         if [ -n "$BUILD_BRANCH" ]; then
-          make terraform-plan STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT > log.txt
-          if [ grep -Fq "No changes. Your infrastructure matches the configuration" log.txt ]; then
-            echo "No changes required"
-          else
-            make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT
-          fi
+          make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT TF_VAR_release_pipeline_branch=$BUILD_BRANCH
         fi
     finally:
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
@@ -33,9 +29,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - |
         if [ -n "$BUILD_BRANCH" ]; then
-          if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build Release Pipeline Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed Please investigate"
-          else
+          if [ $CODEBUILD_BUILD_SUCCEEDING -eq 1 ]; then
             make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build Release Pipeline Codebuild Stage" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Succeeded"
           fi
         else
