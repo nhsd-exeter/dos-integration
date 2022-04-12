@@ -42,7 +42,7 @@ resource "aws_codebuild_project" "di_build_release" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "tools"
+      value = "dev"
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
@@ -78,7 +78,7 @@ resource "aws_codebuild_project" "di_build_release" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.build_release_buildspec.rendered
   }
