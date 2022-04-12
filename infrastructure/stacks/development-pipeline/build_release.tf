@@ -1,35 +1,25 @@
-resource "aws_codebuild_webhook" "build_image_webhook" {
-  for_each     = var.environment == "dev" ? local.independent_build_images : {}
-  project_name = "${var.project_id}-${var.environment}-build-${each.key}-stage"
+resource "aws_codebuild_webhook" "build_release_webhook" {
+  # count        = var.environment == "dev" ? 1 : 0
+  project_name = aws_codebuild_project.di_build_release.name
   build_type   = "BUILD"
   filter_group {
     filter {
       type    = "EVENT"
-      pattern = "PULL_REQUEST_CREATED"
+      pattern = "PUSH"
     }
     filter {
-      type    = "FILE_PATH"
-      pattern = local.independent_build_images[each.key].filematch
+      type    = "HEAD_REF"
+      pattern = "refs/heads/release/*"
     }
   }
-  filter_group {
-    filter {
-      type    = "EVENT"
-      pattern = "PULL_REQUEST_UPDATED"
-    }
-    filter {
-      type    = "FILE_PATH"
-      pattern = local.independent_build_images[each.key].filematch
-    }
-  }
-  depends_on = [aws_codebuild_project.di_build_image]
+  depends_on = [aws_codebuild_project.di_build_release]
 }
 
-resource "aws_codebuild_project" "di_build_image" {
-  for_each       = var.environment == "dev" ? local.independent_build_images : {}
-  name           = "${var.project_id}-${var.environment}-build-${each.key}-stage"
-  description    = "Builds ${each.key} docker container image"
-  build_timeout  = "10"
+resource "aws_codebuild_project" "di_build_release" {
+  # count          = var.environment == "dev" ? 1 : 0
+  name           = "${var.project_id}-${var.environment}-build-release-stage"
+  description    = "Builds release pipeline for release branches"
+  build_timeout  = "30"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
@@ -44,7 +34,7 @@ resource "aws_codebuild_project" "di_build_image" {
 
 
   environment {
-    compute_type                = "BUILD_GENERAL1_SMALL"
+    compute_type                = "BUILD_GENERAL1_LARGE"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
@@ -52,20 +42,13 @@ resource "aws_codebuild_project" "di_build_image" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "local"
+      value = "tools"
     }
     environment_variable {
-      name  = "BUILD_TARGET"
-      value = "${each.key}-build"
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-build-release-stage"
     }
-    environment_variable {
-      name  = "BUILD_ITEM_NAME"
-      value = each.key
-    }
-    environment_variable {
-      name  = "ENVIRONMENT"
-      value = var.environment
-    }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
@@ -89,7 +72,7 @@ resource "aws_codebuild_project" "di_build_image" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-${each.key}-image-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-release-stage"
       stream_name = ""
     }
   }
@@ -97,7 +80,7 @@ resource "aws_codebuild_project" "di_build_image" {
     type            = "GITHUB"
     git_clone_depth = 0 # Full Git Clone
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
-    buildspec       = data.template_file.build_image_buildspec.rendered
+    buildspec       = data.template_file.build_release_buildspec.rendered
   }
 
 }
