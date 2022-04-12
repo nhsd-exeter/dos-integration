@@ -14,10 +14,17 @@ phases:
       - unset AWS_SESSION_TOKEN
   build:
     commands:
-      - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^branch/release/||")
+      - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
+      - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^branch/release/||" | sed -e "s|\.|-|g")
       - echo $ENVIRONMENT
-      - if [ -n "$BUILD_BRANCH" ]; then
-          make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT DOCKER_BUILDKIT=1 ;
+      - |
+        if [ -n "$BUILD_BRANCH" ]; then
+          make terraform-plan STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT > log.txt
+          if [ grep -Fq "No changes. Your infrastructure matches the configuration" log.txt ]; then
+            echo "No changes required"
+          else
+            make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT
+          fi
         fi
     finally:
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
