@@ -158,31 +158,26 @@ Feature: F002. Invalid change event Exception handling
     Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
 
 @complete @cloudwatch_queries
-  Scenario: F002S021. Dentist Unmatched Service Type uses correct report key
+  Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "FQG8101"
+    And the Changed Event has ODS Code "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "UNMATCHED_SERVICE_TYPE"
+    Then the Event Processor logs to splunk with report key "<report_key>"
+
+  Examples:
+    | ods_code |       report_key       |
+    | FQG8101  | UNMATCHED_SERVICE_TYPE |
+    | V00393b  |   UNMATCHED_PHARMACY   |
 
 @complete @cloudwatch_queries
-  Scenario: F002S022. Dentist Unmatched Service uses correct report key
+  Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "V00393b"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "UNMATCHED_PHARMACY"
-
-@complete @cloudwatch_queries
-  Scenario: F002S023. Dentist Request with ODS code too short.
-    Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "V00393"
+    And the Changed Event has ODS Code "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "error" with message "ODSCode Wrong Length"
     And the Event "processor" does not show "message" with message "Getting matching DoS Services for odscode"
 
-@complete @cloudwatch_queries
-  Scenario: F002S024. Dentist Request with ODS code too long.
-    Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "V00393abc"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "error" with message "ODSCode Wrong Length"
-    And the Event "processor" does not show "message" with message "Getting matching DoS Services for odscode"
+  Examples:
+    |  ods_code   |
+    |   V00393    |
+    |  V00393abc  |
