@@ -85,7 +85,7 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
     )
 
     query_id = start_query_response["queryId"]
-    sleep(120)
+    sleep(30)
     response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
 
     if response["results"] == []:
