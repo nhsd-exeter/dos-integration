@@ -192,7 +192,7 @@ class SpecifiedOpeningTime:
     @staticmethod
     def valid_list(list: List["SpecifiedOpeningTime"]) -> bool:
         return all([x.is_valid() for x in list])
-
+        
 
 @dataclass(unsafe_hash=True)
 class StandardOpeningTimes:

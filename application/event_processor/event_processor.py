@@ -20,7 +20,7 @@ from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.service_type import get_valid_service_types
 from common.utilities import extract_body, get_sequence_number
-from nhs import NHSEntity
+from common.nhs import NHSEntity
 from reporting import (
     log_invalid_open_times,
     log_unmatched_nhsuk_service,
