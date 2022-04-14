@@ -7,3 +7,7 @@ module "codepipeline_artefact_bucket" {
   versioning_enabled = "true"
   force_destroy      = "true"
 }
+
+resource "aws_sns_topic" "pipeline_notification_topic" {
+  name = var.pipeline_topic_name
+}

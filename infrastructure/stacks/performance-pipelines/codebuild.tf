@@ -1,6 +1,7 @@
-resource "aws_codebuild_project" "di_stress_tests" {
-  name           = "${var.project_id}-${var.environment}-stress-test-stage"
-  description    = "Runs the stress tests for the DI Project"
+resource "aws_codebuild_project" "di_performance_tests" {
+  for_each       = local.performance_tests
+  name           = "${var.project_id}-${var.environment}-${each.key}-test-stage"
+  description    = "Runs the ${each.key} tests for the DI Project"
   build_timeout  = "480"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -42,16 +43,20 @@ resource "aws_codebuild_project" "di_stress_tests" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = var.environment
+    }
   }
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-stress-test-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-${each.key}-test-stage"
       stream_name = ""
     }
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.stress_tests_buildspec.rendered
+    buildspec = local.performance_tests[each.key].buildspec
   }
 }

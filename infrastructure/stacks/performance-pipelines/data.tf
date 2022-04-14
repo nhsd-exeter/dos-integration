@@ -18,3 +18,14 @@ data "template_file" "load_tests_buildspec" {
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
+
+locals {
+  performance_tests = {
+    stress = {
+      buildspec = data.template_file.stress_tests_buildspec.rendered
+    }
+    load = {
+      buildspec = data.template_file.load_tests_buildspec.rendered
+    }
+  }
+}
