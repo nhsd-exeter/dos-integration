@@ -1,6 +1,6 @@
-resource "aws_codebuild_webhook" "destroy_environment_on_pr_merged_deployment_webhook" {
+resource "aws_codebuild_webhook" "destroy_task_environment_on_pr_merged_deployment_webhook" {
   count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_destroy_environment_on_pr_merged[0].name
+  project_name = aws_codebuild_project.di_destroy_task_environment_on_pr_merged[0].name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -10,7 +10,7 @@ resource "aws_codebuild_webhook" "destroy_environment_on_pr_merged_deployment_we
   }
 }
 
-resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
+resource "aws_codebuild_project" "di_destroy_task_environment_on_pr_merged" {
   count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
   description    = "Destroys task environment based on pr merged"

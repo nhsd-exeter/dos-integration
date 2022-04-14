@@ -3,12 +3,9 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      docker: 19
     commands:
       - wget https://github.com/cli/cli/releases/download/v2.6.0/gh_2.6.0_linux_amd64.rpm
       - yum localinstall -y gh_2.6.0_linux_amd64.rpm
-      - gh version
   pre_build:
     commands:
       - make wait-for-codebuild-to-finish PROJECT_NAME=$SERVERLESS_BUILD_PROJECT_NAME
@@ -27,24 +24,31 @@ phases:
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export PR_NUMBER=$(echo $CODEBUILD_WEBHOOK_TRIGGER | grep -Eo '[0-9]*')
       - echo $PR_NUMBER
-      - export ENVIRONMENT=$(make -s get-environment-from-pr PR_NUMBER=$PR_NUMBER)
-      # Check if release and not task
+      - export ENVIRONMENT=$(make -s get-environment-from-pr PR_NUMBER=$PR_NUMBER | sed -e "s|\.|-|g")
       - echo $ENVIRONMENT
-      - export TEST_ENV=$(echo $ENVIRONMENT-test)
-      - echo $TEST_ENV
-      - export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$TEST_ENV)
-      - echo $ENVIRONMENT_DEPLOYED
-      - if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
-          make undeploy PROFILE=$PROFILE ENVIRONMENT=$TEST_ENV ;
+      - |
+        if [[ "$ENVIRONMENT" =~ .*"release".* ]]; then
+          export ENVIRONMENT=$(echo $ENVIRONMENT | sed -e "s|release/||")
+          echo $ENVIRONMENT
+          export TEST_ENV=$(echo $ENVIRONMENT-test)
+          echo $TEST_ENV
+          export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$TEST_ENV)
+          echo $ENVIRONMENT_DEPLOYED
+          if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+            make undeploy PROFILE=test ENVIRONMENT=$TEST_ENV ;
+          fi
+          export PERF_ENV=$(echo $ENVIRONMENT-perf)
+          echo $PERF_ENV
+          export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$PERF_ENV)
+          echo $ENVIRONMENT_DEPLOYED
+          if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+            make undeploy PROFILE=perf ENVIRONMENT=$PERF_ENV ;
+          fi
         fi
-      - export PERF_ENV=$(echo $ENVIRONMENT-perf)
-      - echo $PERF_ENV
-      - export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$PERF_ENV)
-      - echo $ENVIRONMENT_DEPLOYED
-      - if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
-          make undeploy PROFILE=$PROFILE ENVIRONMENT=$PERF_ENV ;
+      - |
+        if [[ "$ENVIRONMENT" =~ .*"release".* ]]; then
+          unset AWS_ACCESS_KEY_ID
+          unset AWS_SECRET_ACCESS_KEY
+          unset AWS_SESSION_TOKEN
+          make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline
         fi
-      - unset AWS_ACCESS_KEY_ID
-      - unset AWS_SECRET_ACCESS_KEY
-      - unset AWS_SESSION_TOKEN
-      - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline

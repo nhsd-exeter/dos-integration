@@ -16,7 +16,7 @@ phases:
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^branch/release/||" | sed -e "s|\.|-|g")
-      - echo $BUILD_BRANCH"
+      - echo $BUILD_BRANCH
       - echo $ENVIRONMENT
       - |
         if [ -n "$BUILD_BRANCH" ]; then

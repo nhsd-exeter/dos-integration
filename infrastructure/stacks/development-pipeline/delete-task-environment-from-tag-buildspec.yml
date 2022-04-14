@@ -16,7 +16,6 @@ phases:
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^tag/||" -e "s|-destroy.*||")
       - echo $ENVIRONMENT
-      # Check for task not release
       - export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
       - echo $ENVIRONMENT_DEPLOYED
       - if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
