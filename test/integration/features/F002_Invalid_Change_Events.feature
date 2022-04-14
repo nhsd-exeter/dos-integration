@@ -165,7 +165,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Event Processor logs with report key "<report_key>"
 
   Examples:
-      | ods_code | report_key |
+    | ods_code | report_key |
     | FQG8101  | UNMATCHED_SERVICE_TYPE |
     | V00393b  |   UNMATCHED_PHARMACY   |
 
