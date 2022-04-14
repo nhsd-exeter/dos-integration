@@ -9,7 +9,7 @@ resource "aws_codebuild_webhook" "live_deployment_webhook" {
 
     filter {
       type    = "HEAD_REF"
-      pattern = "^refs/tags/.*-live-deploy"
+      pattern = "^refs/tags/.*-live"
     }
   }
 }
@@ -82,7 +82,7 @@ resource "aws_codebuild_project" "di_deploy_live" {
   source_version = "master"
   source {
     type            = "GITHUB"
-    git_clone_depth = 0
+    git_clone_depth = 0 # Full Git Clone
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.deploy_buildspec.rendered
   }
@@ -100,4 +100,8 @@ resource "aws_codestarnotifications_notification_rule" "live_notification_rule" 
     type    = "AWSChatbotSlack"
     address = "arn:aws:chatbot::${var.aws_account_id_mgmt}:chat-configuration/slack-channel/${var.pipeline_chatbot_channel}"
   }
+}
+
+resource "aws_sns_topic" "live_pipeline_notification_topic" {
+  name = "${var.project_id}-live-deploy-stage-notifications"
 }

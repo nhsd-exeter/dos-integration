@@ -455,17 +455,7 @@ wait-for-codebuild-to-finish: # Wait for codebuild project to finish
 
 tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		tag=$(BUILD_TIMESTAMP)-$(ENVIRONMENT)-deploy
-		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
-	else
-		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
-		echo Recommended: you run this command from the master branch
-	fi
-
-tag-commit-for-configuration-deployment: # Tag git commit for configuration deployment - mandatory: PROFILE=[demo/live], COMMIT=[short commit hash]
-	if [ "$(PROFILE)" == "$(ENVIRONMENT)" ]; then
-		tag=$(BUILD_TIMESTAMP)-$(ENVIRONMENT)-config-deploy
-		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
 	else
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
 		echo Recommended: you run this command from the master branch
