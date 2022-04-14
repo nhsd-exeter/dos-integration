@@ -7,12 +7,8 @@ data "terraform_remote_state" "development_pipeline" {
   }
 }
 
-data "template_file" "stress_tests_buildspec" {
-  template = file("stress-test-buildspec.yml")
-}
-
-data "template_file" "load_tests_buildspec" {
-  template = file("load-test-buildspec.yml")
+data "template_file" "perf_buildspec" {
+  template = file("perf-buildspec.yml")
 }
 
 data "aws_iam_role" "pipeline_role" {
@@ -20,12 +16,5 @@ data "aws_iam_role" "pipeline_role" {
 }
 
 locals {
-  performance_tests = {
-    stress = {
-      buildspec = data.template_file.stress_tests_buildspec.rendered
-    }
-    load = {
-      buildspec = data.template_file.load_tests_buildspec.rendered
-    }
-  }
+  performance_tests = toset(["stress", "load"])
 }

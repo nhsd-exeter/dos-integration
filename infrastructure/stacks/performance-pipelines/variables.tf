@@ -84,8 +84,15 @@ variable "programme" {
 variable "project_id" {
   description = "Project ID"
 }
+
 variable "environment" {
   description = "Environment name"
+}
+
+variable "from_release_branch" {
+  description = "This is from a release branch"
+  type        = bool
+  default     = false
 }
 
 variable "service_state_bucket" {

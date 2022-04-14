@@ -7,7 +7,7 @@ resource "aws_codebuild_project" "di_performance_tests" {
   service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
-    type = "CODEPIPELINE"
+    type = "NO_ARTIFACTS"
   }
 
   cache {
@@ -45,7 +45,20 @@ resource "aws_codebuild_project" "di_performance_tests" {
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.environment
+      value = var.from_release_branch == true ? "${var.environment}-perf" : var.environment
+    }
+    environment_variable {
+      name  = "PERF_TEST_NAME"
+      value = each.key
+    }
+    environment_variable {
+      name  = "PERF_TEST_TITLE"
+      value = title(each.key)
+    }
+
+    environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-${each.key}-test-stage"
     }
   }
 
@@ -56,7 +69,9 @@ resource "aws_codebuild_project" "di_performance_tests" {
     }
   }
   source {
-    type      = "CODEPIPELINE"
-    buildspec = local.performance_tests[each.key].buildspec
+    type            = "GITHUB"
+    git_clone_depth = 0
+    location        = "https://github.com/nhsd-exeter/dos-integration.git"
+    buildspec       = data.template_file.perf_buildspec.rendered
   }
 }
