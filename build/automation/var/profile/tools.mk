@@ -18,7 +18,8 @@ TERRAFORM_NETWORKING_ROUTE53_ZONE_NAME = $(PROJECT_GROUP_SHORT).$(TEXAS_TLD_NAME
 TERRAFORM_NHSD_IDENTITIES_ACCOUNT_ID = $(AWS_ACCOUNT_ID_IDENTITIES)
 
 
-TF_VAR_code_pipeline_branch_name := master
+TF_VAR_code_pipeline_branch_name := develop
+
 TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel

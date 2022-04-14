@@ -1,8 +1,3 @@
-resource "aws_codestarconnections_connection" "github" {
-  name          = "${var.project_id}-codestarconnection"
-  provider_type = "GitHub"
-
-}
 module "codepipeline_artefact_bucket" {
   source             = "../../modules/s3"
   name               = "${var.project_id}-${var.environment}-performance-codepipeline-artefact-bucket"

@@ -2,6 +2,7 @@ resource "aws_cloudwatch_event_rule" "stress_test_cron" {
   name                = "${var.project_id}-${var.environment}-stress-test-trigger"
   description         = "Trigger performance pipeline every Sunday, Tuesday, Thursday at 3AM"
   schedule_expression = "cron(0 3 ? * SUN,TUE,THU *)"
+  is_enabled          = false
 }
 
 resource "aws_cloudwatch_event_target" "trigger_stress_test_pipeline" {
@@ -15,6 +16,7 @@ resource "aws_cloudwatch_event_rule" "load_test_cron" {
   name                = "${var.project_id}-${var.environment}-load-test-trigger"
   description         = "Trigger performance pipeline at Midnight every day"
   schedule_expression = "cron(0 0 * * ? *)"
+  is_enabled          = false
 }
 
 

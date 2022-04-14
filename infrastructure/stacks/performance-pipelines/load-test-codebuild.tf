@@ -3,7 +3,7 @@ resource "aws_codebuild_project" "di_load_tests" {
   description    = "Runs the load tests for the DI Project"
   build_timeout  = "480"
   queued_timeout = "5"
-  service_role   = aws_iam_role.codebuild_role.arn
+  service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"

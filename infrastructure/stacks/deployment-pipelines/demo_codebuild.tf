@@ -79,7 +79,6 @@ resource "aws_codebuild_project" "di_deploy_demo" {
       stream_name = ""
     }
   }
-  source_version = "master"
   source {
     type            = "GITHUB"
     git_clone_depth = 0

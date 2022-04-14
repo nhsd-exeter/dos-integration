@@ -1,6 +1,6 @@
 resource "aws_codepipeline" "load_test_codepipeline" {
   name     = "${var.project_id}-${var.environment}-load-test-codepipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  role_arn = data.aws_iam_role.pipeline_role.arn
 
   artifact_store {
     location = "${var.project_id}-${var.environment}-performance-codepipeline-artefact-bucket"
@@ -19,9 +19,9 @@ resource "aws_codepipeline" "load_test_codepipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
-        BranchName       = var.code_pipeline_branch_name
+        BranchName       = var.perf_pipeline_branch_name
         DetectChanges    = false
       }
     }
