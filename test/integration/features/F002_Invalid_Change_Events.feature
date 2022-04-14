@@ -141,28 +141,28 @@ Feature: F002. Invalid change event Exception handling
     Given a Dentist Changed Event is valid
     When the OrganisationStatus is defined as "Hidden"
     And the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "HIDDEN_OR_CLOSED"
+    Then the Event Processor logs with report key "HIDDEN_OR_CLOSED"
 
 @complete @cloudwatch_queries
   Scenario: F002S019. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
     When the postcode is invalid
     And the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "INVALID_POSTCODE"
+    Then the Event Processor logs with report key "INVALID_POSTCODE"
 
 @complete @cloudwatch_queries
   Scenario: F002S020. Dentist Invalid Opening Times uses correct report key
     Given a Dentist Changed Event is valid
     And a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "INVALID_OPEN_TIMES"
+    Then the Event Processor logs with report key "INVALID_OPEN_TIMES"
 
 @complete @cloudwatch_queries
   Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event Processor logs to splunk with report key "<report_key>"
+    Then the Event Processor logs with report key "<report_key>"
 
   Examples:
     | ods_code |       report_key       |

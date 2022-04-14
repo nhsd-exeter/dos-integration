@@ -865,7 +865,7 @@ def check_logs_for_correct_sent_cr(context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parsers.parse('the Event Processor logs to splunk with report key "{reportkey}"'))
+@then(parsers.parse('the Event Processor logs with report key "{reportkey}"'))
 def check_logs_for_correct_report_key(context, reportkey):
     query = (
         "fields message, report_key, ods_code | sort @timestamp asc"
