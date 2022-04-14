@@ -311,6 +311,7 @@ def test_send_changes_when_no_change_requests(mock_client, mock_logger):
     mock_client.return_value.send_message_batch.assert_not_called()
 
 
+@patch(f"{FILE_PATH}.validate_event")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
 @patch(f"{FILE_PATH}.EventProcessor")
@@ -328,6 +329,7 @@ def test_lambda_handler_unmatched_service(
     mock_event_processor,
     mock_add_change_request_to_dynamodb,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    mock_validate_event,
     change_event,
     lambda_context,
     mock_metric_logger,
@@ -359,6 +361,7 @@ def test_lambda_handler_unmatched_service(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.validate_event")
 @patch(f"{FILE_PATH}.disconnect_dos_db")
 @patch(f"{FILE_PATH}.log_unmatched_nhsuk_service")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
@@ -374,6 +377,7 @@ def test_lambda_handler_no_matching_dos_services(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_unmatched_nhsuk_service,
     mock_disconnect_dos_db,
+    mock_validate_event,
     change_event,
     lambda_context,
 ):
@@ -401,6 +405,7 @@ def test_lambda_handler_no_matching_dos_services(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.validate_event")
 @patch(f"{FILE_PATH}.disconnect_dos_db")
 @patch(f"{FILE_PATH}.log_closed_or_hidden_services")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
@@ -416,6 +421,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_closed_or_hidden_services,
     mock_disconnect_dos_db,
+    mock_validate_event,
     change_event,
     lambda_context,
 ):
@@ -452,6 +458,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.validate_event")
 @patch(f"{FILE_PATH}.disconnect_dos_db")
 @patch(f"{FILE_PATH}.log_invalid_open_times")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
@@ -467,6 +474,7 @@ def test_lambda_handler_invalid_open_times(
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_invalid_open_times,
     mock_disconnect_dos_db,
+    mock_validate_event,
     change_event,
     lambda_context,
 ):

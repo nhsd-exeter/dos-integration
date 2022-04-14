@@ -39,7 +39,7 @@ def test_field_names():
         "modifiedtime",
         "publicphone",
         "publicname",
-        "servicename"
+        "servicename",
     ]
 
 
