@@ -71,10 +71,6 @@ resource "aws_codebuild_project" "di_build_image" {
       value = "${var.project_id}-${var.environment}-build-${each.key}-stage"
     }
     environment_variable {
-      name  = "ENVIRONMENT"
-      value = var.environment
-    }
-    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
