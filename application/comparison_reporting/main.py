@@ -8,12 +8,14 @@ from collections import defaultdict
 from logging import Logger
 from datetime import datetime
 
-from common.constants import DENTIST_ORG_TYPE_ID
+from common.constants import SERVICE_TYPES
 from common.nhs import NHSEntity
-from common.dos import get_matching_dos_services
+from common.dos import DoSService, get_matching_dos_services
+from common.dos_db_connection import query_dos_db
 from common.opening_times import StandardOpeningTimes, OpenPeriod, SpecifiedOpeningTime
 
 logger = Logger("")
+DENTIST_TYPE_IDS = SERVICE_TYPES["Dentist"]["VALID_SERVICE_TYPES"]
 
 
 def csv_to_dicts(csv_file, delimiter=",") -> List[dict]:
@@ -101,19 +103,47 @@ def get_dentists() -> List[NHSEntity]:
     return dentists         
 
 
-def run_report():
+def get_dentist_services():
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
+        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+        f" WHERE typeid = ANY ({', '.join(str(id) for id in DENTIST_TYPE_IDS)})"
+    )
 
-    dentists = get_dentists()
+    c = query_dos_db(sql_query)
+    services = [DoSService(row) for row in c.fetchall()]
+    c.close()
+    return services
+
+class DentistReporter:
+
+    def __init__(self):
+        self._dentists = None
+        self._services = None
+
+    def get_dentists(self):
+        if self._dentists is None:
+            self._dentists = get_dentists()
+        return self._dentists
+
+    def get_services(self):
+        if self._services is None:
+            self._services = get_dentist_services()
+        return self._services
+
+
+    
     
 
 
-    for dentist in dentists:
-        print(f"Searching for dentist services {dentist}")
-        services = get_matching_dos_services(dentist.odscode, DENTIST_ORG_TYPE_ID)
-        pp(services)
-        print(f"{len(services)} found.")
-        if len(services) > 0:
-            break
+def run_report():
+
+    dentists = get_dentists()
+    print(f"{len(dentists)} dentists found.")
+
+    
+
 
 
 run_report()
