@@ -1,19 +1,21 @@
-resource "aws_codebuild_webhook" "destroy_environment_on_pr_merged_deployment_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_destroy_environment_on_pr_merged[0].name
-  build_type   = "BUILD"
-  filter_group {
-    filter {
-      type    = "EVENT"
-      pattern = "PULL_REQUEST_MERGED"
-    }
-  }
+resource "aws_cloudwatch_event_rule" "delete_ecr_images_rule" {
+  count               = var.environment == "dev" ? 1 : 0
+  name                = "${var.project_id}-${var.environment}-delete-ecr-images-rule"
+  description         = "Delete ECR images on the first of every month"
+  schedule_expression = "cron(0 0 1 * ? *)"
 }
 
-resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
+resource "aws_cloudwatch_event_target" "delete_ecr_images_trigger" {
+  count    = var.environment == "dev" ? 1 : 0
+  rule     = aws_cloudwatch_event_rule.delete_ecr_images_rule[0].name
+  arn      = aws_codebuild_project.di_delete_ecr_images[0].arn
+  role_arn = data.aws_iam_role.pipeline_role.arn
+}
+
+resource "aws_codebuild_project" "di_delete_ecr_images" {
   count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
-  description    = "Destroys task environment based on pr merged"
+  name           = "${var.project_id}-${var.environment}-delete-ecr-images-stage"
+  description    = "Deletes ECR images"
   build_timeout  = "30"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -24,7 +26,7 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
 
   cache {
     type  = "LOCAL"
-    modes = ["LOCAL_DOCKER_LAYER_CACHE"]
+    modes = ["LOCAL_DOCKER_LAYER_CACHE", "LOCAL_SOURCE_CACHE"]
   }
 
 
@@ -37,11 +39,15 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "task"
+      value = "dev"
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "dev"
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
+      value = "${var.project_id}-${var.environment}-delete-ecr-images-stage"
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -63,14 +69,10 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
-    environment_variable {
-      name  = "SERVERLESS_BUILD_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-serverless-stage"
-    }
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-delete-ecr-images"
       stream_name = ""
     }
   }
@@ -78,7 +80,6 @@ resource "aws_codebuild_project" "di_destroy_environment_on_pr_merged" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
-    buildspec       = data.template_file.delete_task_environment_on_pr_merged_buildspec.rendered
+    buildspec       = data.template_file.delete_ecr_images_buildspec.rendered
   }
-
 }

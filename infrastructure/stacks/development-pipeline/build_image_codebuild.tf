@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_image_webhook" {
-  for_each     = local.independent_build_images
+  for_each     = var.environment == "dev" ? local.independent_build_images : {}
   project_name = "${var.project_id}-${var.environment}-build-${each.key}-stage"
   build_type   = "BUILD"
   filter_group {
@@ -52,7 +52,11 @@ resource "aws_codebuild_project" "di_build_image" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "local"
+      value = "dev"
+    }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "dev"
     }
     environment_variable {
       name  = "BUILD_TARGET"
@@ -61,6 +65,10 @@ resource "aws_codebuild_project" "di_build_image" {
     environment_variable {
       name  = "BUILD_ITEM_NAME"
       value = each.key
+    }
+    environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-build-${each.key}-stage"
     }
     environment_variable {
       name  = "ENVIRONMENT"
@@ -95,7 +103,7 @@ resource "aws_codebuild_project" "di_build_image" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.build_image_buildspec.rendered
   }
