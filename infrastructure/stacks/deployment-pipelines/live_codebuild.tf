@@ -14,7 +14,7 @@ resource "aws_codebuild_webhook" "live_deployment_webhook" {
   }
 }
 resource "aws_codebuild_project" "di_deploy_live" {
-  name           = "${var.project_id}-live-deploy-stage"
+  name           = "${var.project_id}-${var.environment}-deploy-live-stage"
   description    = "Deploy to the live environment"
   build_timeout  = "30"
   queued_timeout = "30"
@@ -75,7 +75,7 @@ resource "aws_codebuild_project" "di_deploy_live" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-live-deploy-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-live-stage"
       stream_name = ""
     }
   }

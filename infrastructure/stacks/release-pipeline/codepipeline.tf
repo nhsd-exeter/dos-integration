@@ -59,7 +59,7 @@ resource "aws_codepipeline" "release_codepipeline" {
     }
   }
   stage {
-    name = "Deploy"
+    name = "Deploy_Non_Prod_Environments"
     dynamic "action" {
       for_each = local.deploy_envs
       content {
@@ -113,6 +113,28 @@ resource "aws_codepipeline" "release_codepipeline" {
       }
     }
   }
+  stage {
+    name = "Deploy_Prod_Environments"
+    action {
+      name            = "Deploy_Demo"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-dev-deploy-demo-stage"
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "ENVIRONMENT"
+            value = "${var.environment}-demo"
+            type  = "PLAINTEXT"
+          }
+        ])
+      }
+    }
+  }
   depends_on = [module.codepipeline_artefact_bucket]
 }
 
@@ -121,7 +143,6 @@ module "codepipeline_artefact_bucket" {
   name               = "${var.project_id}-release-${var.environment}-codepipeline-artefact-bucket-mgmt"
   project_id         = var.project_id
   acl                = "private"
-  profile            = var.profile
   versioning_enabled = "true"
   force_destroy      = "true"
 }

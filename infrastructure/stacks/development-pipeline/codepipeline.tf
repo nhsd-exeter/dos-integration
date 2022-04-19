@@ -119,7 +119,6 @@ module "codepipeline_artefact_bucket" {
   name               = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"
   project_id         = var.project_id
   acl                = "private"
-  profile            = var.profile
   versioning_enabled = "true"
   force_destroy      = "true"
 }
