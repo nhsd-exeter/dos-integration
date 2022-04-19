@@ -6,7 +6,7 @@ resource "aws_codebuild_project" "di_deploy_demo" {
   service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
-    type = "NO_ARTIFACTS"
+    type = "CODEPIPELINE"
   }
 
   cache {
@@ -60,9 +60,7 @@ resource "aws_codebuild_project" "di_deploy_demo" {
     }
   }
   source {
-    type            = "GITHUB"
-    git_clone_depth = 0
-    location        = "https://github.com/nhsd-exeter/dos-integration.git"
-    buildspec       = data.template_file.demo_deploy_buildspec.rendered
+    type      = "CODEPIPELINE"
+    buildspec = data.template_file.demo_deploy_buildspec.rendered
   }
 }
