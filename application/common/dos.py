@@ -89,6 +89,20 @@ class DoSService:
         return len(self.get_standard_opening_times().generic_bankholiday) > 0
 
 
+    def nhs_odscode_match(self, nhs_odscode: str) -> bool:
+        if self.typeid == PHARMACY_ORG_TYPE_ID:
+            return self.odscode[:5] == nhs_odscode[:5]
+
+        elif self.typeid == DENTIST_ORG_TYPE_ID:
+            odscode_extra_0 = f"{self.odscode[0]}0{self.odscode[1:]}"
+            return nhs_odscode[:7] in (self.odscode[:7], odscode_extra_0[:7])
+
+        logger.warning(f"Failed nhs code match check for unknown typeid '{self.typeid}'")
+        return False
+
+
+
+
 @dataclass(init=True, repr=True)
 class DoSLocation:
     id: int

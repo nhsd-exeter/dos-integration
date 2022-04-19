@@ -105,10 +105,11 @@ def get_dentists() -> List[NHSEntity]:
 
 def get_dentist_services():
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        f" WHERE typeid = ANY ({', '.join(str(id) for id in DENTIST_TYPE_IDS)})"
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
+        "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename "
+        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+        f"WHERE typeid = ANY ({', '.join(str(id) for id in DENTIST_TYPE_IDS)})"
+        f"AND statusid = 1"
     )
 
     c = query_dos_db(sql_query)
@@ -116,25 +117,31 @@ def get_dentist_services():
     c.close()
     return services
 
+
+def match_nhs_entiity_to_service(dentists: List[NHSEntity], services: List[DoSService]):
+    dentist_servicelist_map = defaultdict(list)
+    for dentist in dentists:
+        for service in services:
+            if service.nhs_odscode_match():
+                dentist_servicelist_map[dentist.odscode].append(service)
+    return dentist_servicelist_map
+
+
 class DentistReporter:
 
     def __init__(self):
         self._dentists = None
         self._services = None
 
-    def get_dentists(self):
+    def run(self):
         if self._dentists is None:
             self._dentists = get_dentists()
-        return self._dentists
-
-    def get_services(self):
         if self._services is None:
             self._services = get_dentist_services()
-        return self._services
 
+        
+        
 
-    
-    
 
 
 def run_report():
