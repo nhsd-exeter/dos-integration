@@ -51,12 +51,7 @@ variable "environment" {
 # # FEATURE FLAGS
 # ##############
 
-variable "is_pharmacy_accepted" {
-  description = "Is pharmacy accepted feature flag"
-  type        = bool
-}
-
-variable "is_dentist_accepted" {
-  description = "Is dentist accepted feature flag"
-  type        = bool
+variable "accepted_org_types" {
+  description = "Accepted org types"
+  type        = string
 }

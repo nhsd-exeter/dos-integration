@@ -27,5 +27,4 @@ SLACK_ALERT_CHANNEL := dos-integration-live-status
 # ==============================================================================
 # Organisation Types Feature Flags
 
-PHARMACY_ORGANISATION_TYPE_FEATURE_FLAG := true
-DENTIST_ORGANISATION_FEATURE_FLAG := false
+ACCEPTED_ORG_TYPES := PHA,Dentist

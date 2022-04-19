@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 from common.change_event_exceptions import ValidationException
@@ -57,41 +57,36 @@ def test_validate_organisation_keys_org_sub_type_id_exception(
 
 
 @pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID])
-@patch(f"{FILE_PATH}.get_feature_flags")
-def test_validate_organisation_type_id(mock_get_feature_flags, org_type_id):
+@patch(f"{FILE_PATH}.AppConfig")
+def test_validate_organisation_type_id(mock_app_config, org_type_id):
     # Arrange
     feature_flags = MagicMock()
-    mock_get_feature_flags.return_value = feature_flags
+    mock_app_config().get_feature_flags.return_value = feature_flags
     feature_flags.evaluate.return_value = True
     # Act
     validate_organisation_type_id(org_type_id)
     # Assert
-    feature_flags.evaluate.assert_has_calls(
-        [
-            call(name="is_pharmacy_accepted", default=False),
-            call(name="is_dentist_accepted", default=False),
-        ]
+    feature_flags.evaluate.assert_called_once_with(
+        name="accepted_org_types", context={"org_type": org_type_id}, default=False
     )
 
 
 @pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID])
-@patch(f"{FILE_PATH}.get_feature_flags")
-def test_validate_organisation_type_id_wrong_org_type_id_exception(mock_get_feature_flags, org_type_id):
+@patch(f"{FILE_PATH}.AppConfig")
+def test_validate_organisation_type_id_wrong_org_type_id_exception(mock_app_config, org_type_id):
     # Arrange
     feature_flags = MagicMock()
-    mock_get_feature_flags.return_value = feature_flags
+    mock_app_config().get_feature_flags.return_value = feature_flags
     feature_flags.evaluate.return_value = False
     # Act
     with raises(ValidationException) as exception:
         validate_organisation_type_id(org_type_id)
         assert f"Unexpected Org Type ID: '{org_type_id}'" in str(exception.value)
     # Assert
-    feature_flags.evaluate.assert_has_calls(
-        [
-            call(name="is_pharmacy_accepted", default=False),
-            call(name="is_dentist_accepted", default=False),
-        ]
+    feature_flags.evaluate.assert_called_once_with(
+        name="accepted_org_types", context={"org_type": org_type_id}, default=False
     )
+    mock_app_config().get_raw_configuration.assert_called_once_with()
 
 
 @pytest.mark.parametrize(

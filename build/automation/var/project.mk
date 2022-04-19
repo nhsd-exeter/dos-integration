@@ -124,5 +124,4 @@ TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
 TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
 
 # AppConfig
-TF_VAR_is_pharmacy_accepted = $(PHARMACY_ORGANISATION_TYPE_FEATURE_FLAG)
-TF_VAR_is_dentist_accepted = $(DENTIST_ORGANISATION_FEATURE_FLAG)
+TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)

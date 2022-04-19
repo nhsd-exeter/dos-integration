@@ -24,13 +24,23 @@ resource "aws_appconfig_hosted_configuration_version" "event_processor_version" 
   content_type             = "application/json"
 
   content = jsonencode({
-    is_pharmacy_accepted : {
-      default : var.is_pharmacy_accepted
-    },
-    is_dentist_accepted : {
-      default : var.is_dentist_accepted
+    "accepted_org_types" : {
+      "default" : false,
+      "rules" : {
+        "org_type_in_list" : {
+          "when_match" : true,
+          "conditions" : [
+            {
+              "action" : "KEY_IN_VALUE",
+              "key" : "org_type",
+              "value" : var.accepted_org_types
+            }
+          ]
+        }
+      }
     }
-  })
+    }
+  )
 }
 
 resource "aws_appconfig_deployment" "deployment" {

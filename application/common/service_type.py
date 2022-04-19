@@ -1,7 +1,7 @@
 from typing import List
 
 from aws_lambda_powertools import Logger
-from common.appconfig import get_feature_flags
+from common.appconfig import AppConfig
 from common.change_event_exceptions import ValidationException
 from common.constants import (
     DENTIST_ORG_TYPE_ID,
@@ -38,25 +38,26 @@ def validate_organisation_type_id(org_type_id: str) -> None:
     Args:
         org_type_id (str): organisation type id
     """
-    feature_flags = get_feature_flags("event-processor")
-    is_pharmacy_accepted: bool = feature_flags.evaluate(name="is_pharmacy_accepted", default=False)
-    is_dentist_accepted: bool = feature_flags.evaluate(name="is_dentist_accepted", default=False)
-    logger.debug(f"Pharmacy organisation type accepted: {is_pharmacy_accepted}")
-    logger.debug(f"Dentist organisation type accepted: {is_dentist_accepted}")
+    app_config = AppConfig("event-processor")
+    feature_flags = app_config.get_feature_flags()
+    in_accepted_org_types: bool = feature_flags.evaluate(
+        name="accepted_org_types", context={"org_type": org_type_id}, default=False
+    )
+    logger.debug(f"Accepted org types: {in_accepted_org_types}")
     if (
         org_type_id == PHARMACY_ORG_TYPE_ID
-        and is_pharmacy_accepted
+        and in_accepted_org_types
         or org_type_id == DENTIST_ORG_TYPE_ID
-        and is_dentist_accepted
+        and in_accepted_org_types
     ):
         logger.append_keys(service_type_alias=SERVICE_TYPES[org_type_id][SERVICE_TYPES_ALIAS_KEY])
         logger.info(
             f"Org type id: {org_type_id} validated",
-            extra={"is_pharmacy_accepted": is_pharmacy_accepted, "is_dentist_accepted": is_dentist_accepted},
+            extra={"in_accepted_org_types": in_accepted_org_types},
         )
     else:
-        logger.append_keys(is_pharmacy_accepted=is_pharmacy_accepted)
-        logger.append_keys(is_dentist_accepted=is_dentist_accepted)
+        logger.append_keys(in_accepted_org_types=in_accepted_org_types)
+        logger.append_keys(app_config=app_config.get_raw_configuration())
         raise ValidationException(f"Unexpected Org Type ID: '{org_type_id}'")
 
 
