@@ -176,7 +176,7 @@ Feature: F002. Invalid change event Exception handling
     | V00393b  |   UNMATCHED_PHARMACY   |
 
 @complete @cloudwatch_queries
-  Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
+  Scenario Outline: F002S022. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
