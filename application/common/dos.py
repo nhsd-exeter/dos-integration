@@ -1,11 +1,20 @@
+from base64 import standard_b64decode
 from dataclasses import dataclass, field, fields
 from itertools import groupby
-from typing import List, Union
+from typing import DefaultDict, List, Union, Any
 from datetime import datetime
+from collections.abc import Iterable
+from collections import defaultdict
 
+from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from common.constants import (
+    DENTIST_ORG_TYPE_ID,
+    PHARMACY_ORG_TYPE_ID,
+    DENTIST_SERVICE_TYPE_IDS,
+    PHARMACY_SERVICE_TYPE_IDS
+)
 from .dos_db_connection import query_dos_db
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -90,10 +99,13 @@ class DoSService:
 
 
     def nhs_odscode_match(self, nhs_odscode: str) -> bool:
-        if self.typeid == PHARMACY_ORG_TYPE_ID:
+        if self.odscode is None:
+            return False
+
+        if self.typeid in PHARMACY_SERVICE_TYPE_IDS:
             return self.odscode[:5] == nhs_odscode[:5]
 
-        elif self.typeid == DENTIST_ORG_TYPE_ID:
+        elif self.typeid in DENTIST_SERVICE_TYPE_IDS:
             odscode_extra_0 = f"{self.odscode[0]}0{self.odscode[1:]}"
             return nhs_odscode[:7] in (self.odscode[:7], odscode_extra_0[:7])
 
@@ -259,3 +271,110 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     return dos_locations[0].postcode
 
 
+def get_services_from_db(typeids: Any) -> List[DoSService]:
+
+    # Find base services
+    if not isinstance(typeids, Iterable):
+        type_condtion = f"typeid = {typeids}"
+    elif len(typeids) == 1:
+        type_condtion = f"typeid = {typeids[0]}"
+    elif len(typeids) > 1:
+        type_condtion = f"typeid IN ({', '.join(str(id) for id in typeids)})"
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
+        "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename "
+        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+        f"WHERE {type_condtion} "
+        f"AND statusid = 1"
+    )
+
+    c = query_dos_db(sql_query)
+    services = [DoSService(row) for row in c.fetchall()]
+    c.close()
+    service_ids = set(s.id for s in services)
+
+    # Collect and apply all std open_times
+    sql_query = (
+        "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
+        "FROM servicedayopenings sdo "
+        "INNER JOIN servicedayopeningtimes sdot "
+        "ON sdo.id = sdot.servicedayopeningid "
+        "LEFT JOIN openingtimedays otd "
+        "ON sdo.dayid = otd.id "
+        f"WHERE sdo.serviceid IN {','.join(service_ids)}"
+    )
+    c = query_dos_db(sql_query)
+    db_rows = [db_row for db_row in c.fethcall()]
+    c.close()
+    std_open_times = db_rows_to_std_open_times(db_rows)
+    for service in services:
+        service._standard_opening_times = std_open_times.get(service.id)
+
+    # Collect and apply all spec open_times
+    sql_query = (
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        "FROM servicespecifiedopeningdates ssod "
+        "INNER JOIN servicespecifiedopeningtimes ssot "
+        "ON ssod.id = ssot.servicespecifiedopeningdateid "
+        f"WHERE ssod.serviceid IN {','.join(service_ids)}"
+    )
+    c = query_dos_db(sql_query)
+    db_rows = [db_row for db_row in c.fethcall()]
+    c.close()
+    spec_open_times = db_rows_to_spec_open_times(db_rows)
+    for service in services:
+        service._specified_opening_times = spec_open_times.get(service.id)
+
+    
+    return services
+
+
+def db_rows_to_spec_open_time(db_rows) -> List[SpecifiedOpeningTime]:
+
+    specified_opening_times = []
+    date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
+    for date, db_rows in groupby(date_sorted_rows, lambda row: (row["date"], row["starttime"])):
+        is_open = True
+        open_periods = []
+        for row in list(db_rows):
+            if row["is_closed"] is True:
+                is_open = False
+            else:
+                open_periods.append(OpenPeriod(row["starttime"], row["endtime"]))
+        specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
+
+    return specified_opening_times
+
+def db_rows_to_spec_open_times(db_rows) -> dict:
+    serviceid_dbrows_map = defaultdict(list)
+    for db_row in db_rows:
+        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
+    
+    serviceid_specopentimes_map = {}
+    for service_id, db_rows in serviceid_dbrows_map.items():
+        serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_time(db_rows)
+
+    return serviceid_specopentimes_map
+
+
+def db_rows_to_std_open_time(db_rows) -> StandardOpeningTimes:
+    standard_opening_times = StandardOpeningTimes()
+    for row in db_rows:
+        weekday = row["dayid"].lower()
+        start = row["starttime"]
+        end = row["endtime"]
+        open_period = OpenPeriod(start, end)
+        standard_opening_times.add_open_period(open_period, weekday)
+    return standard_opening_times
+
+
+def db_rows_to_std_open_times(db_rows) -> dict:
+    serviceid_dbrows_map = defaultdict(list)
+    for db_row in db_rows:
+        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
+    
+    serviceid_stdopentimes_map = {}
+    for service_id, db_rows in serviceid_dbrows_map.items():
+        serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_time(db_rows)
+
+    return serviceid_stdopentimes_map

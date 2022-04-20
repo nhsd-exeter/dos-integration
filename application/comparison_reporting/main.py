@@ -1,21 +1,24 @@
-from asyncio.log import logger
+from os import path
 from itertools import groupby
-from operator import imod
 from typing import List
 import csv
 from pprint import pprint as pp
 from collections import defaultdict
-from logging import Logger
 from datetime import datetime
+from pandas import DataFrame
+import pathlib
 
-from common.constants import SERVICE_TYPES
+from aws_lambda_powertools import Logger
+
+from common.constants import DENTIST_SERVICE_TYPE_IDS
 from common.nhs import NHSEntity
 from common.dos import DoSService, get_matching_dos_services
 from common.dos_db_connection import query_dos_db
 from common.opening_times import StandardOpeningTimes, OpenPeriod, SpecifiedOpeningTime
 
-logger = Logger("")
-DENTIST_TYPE_IDS = SERVICE_TYPES["Dentist"]["VALID_SERVICE_TYPES"]
+logger = Logger(child=True)
+THIS_DIR = pathlib.Path(__file__).parent.resolve()
+OUTPUT_DIR = path.join(THIS_DIR, "out")
 
 
 def csv_to_dicts(csv_file, delimiter=",") -> List[dict]:
@@ -103,54 +106,62 @@ def get_dentists() -> List[NHSEntity]:
     return dentists         
 
 
-def get_dentist_services():
-    sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
-        "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename "
-        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        f"WHERE typeid = ANY ({', '.join(str(id) for id in DENTIST_TYPE_IDS)})"
-        f"AND statusid = 1"
-    )
-
-    c = query_dos_db(sql_query)
-    services = [DoSService(row) for row in c.fetchall()]
-    c.close()
-    return services
 
 
-def match_nhs_entiity_to_service(dentists: List[NHSEntity], services: List[DoSService]):
-    dentist_servicelist_map = defaultdict(list)
-    for dentist in dentists:
+def match_nhs_entiity_to_services(nhs_entities: List[NHSEntity], services: List[DoSService]):
+    logger.info("Matching all NHS Entities to corresponding list of services.")
+    servicelist_map = defaultdict(list)
+    for nhs_entity in nhs_entities:
         for service in services:
-            if service.nhs_odscode_match():
-                dentist_servicelist_map[dentist.odscode].append(service)
-    return dentist_servicelist_map
+            if service.nhs_odscode_match(nhs_entity.odscode):
+                servicelist_map[nhs_entity.odscode].append(service)
+    unmatched = len(nhs_entities) - len(servicelist_map)
+    logger.info(
+        f"{len(servicelist_map)}/{len(nhs_entities)} nhs entities matches with at least 1 service. "
+        f"{unmatched} not matched."
+    )
+    return servicelist_map
 
 
-class DentistReporter:
+class Reporter:
 
     def __init__(self):
-        self._dentists = None
-        self._services = None
+        self.nhs_entities = None
+        self.services = None
 
-    def run(self):
-        if self._dentists is None:
-            self._dentists = get_dentists()
-        if self._services is None:
-            self._services = get_dentist_services()
+    def create_postcode_comparison_report(self):
+        if self.nhs_entities is None:
+            self.nhs_entities = get_dentists()
+        if self.services is None:
+            self.services = get_services(DENTIST_SERVICE_TYPE_IDS)
+
+        servicelist_map = match_nhs_entiity_to_services(self.nhs_entities, self.services)
+
+        headers = [
+            "NHSUK Postcode",
+            "DoS Service Postcode",
+            "DoS Service UID",
+            "NHSUK Postcode",
+            "DoS Service Postcode"
+        ]
+        rows = []
+        for nhs_entity in self.nhs_entities:
+            services = servicelist_map.get(nhs_entity.odscode, [])
+            for service in services:
+                if service.normal_postcode() != nhs_entity.normal_postcode():
+                    rows.append([
+                        nhs_entity.odscode,
+                        service.odscode,
+                        service.uid,
+                        nhs_entity.postcode,
+                        service.postcode
+                    ])
+        
+        df = DataFrame(data=rows, columns=headers)
+        filename = "postcode_comparison_report.csv"
+        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
+        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
 
         
-        
-
-
-
-def run_report():
-
-    dentists = get_dentists()
-    print(f"{len(dentists)} dentists found.")
-
-    
-
-
-
-run_report()
+     
+Reporter().create_postcode_comparison_report()
