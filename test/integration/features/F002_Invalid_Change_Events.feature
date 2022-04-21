@@ -1,6 +1,6 @@
 Feature: F002. Invalid change event Exception handling
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S001. Unmatched DOS services exception is logged
     Given a Changed Event with invalid ODSCode is provided
     When the Changed Event is sent for processing with "valid" api key
@@ -10,7 +10,7 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event is not sent to Dos
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S002. Changed Event with Hidden Organisation status is reported
     Given a Changed Event is valid
     When the OrganisationStatus is defined as "Hidden"
@@ -18,7 +18,7 @@ Feature: F002. Invalid change event Exception handling
     Then the hidden or closed exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S003. Changed Event with Closed Organisation status is not processed
     Given a Changed Event is valid
     When the OrganisationStatus is defined as "Closed"
@@ -26,7 +26,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is not processed any further
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
     Given a Changed Event contains an incorrect OrganisationTypeID
     When the Changed Event is sent for processing with "valid" api key
@@ -34,7 +34,7 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event is not processed any further
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S005. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
     Given a Changed Event contains an incorrect OrganisationSubtype
     When the Changed Event is sent for processing with "valid" api key
@@ -42,7 +42,7 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event is not processed any further
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S006. A Changed Event with no postcode LAT Long Values is reported
     Given a Changed Event is valid
     When the postcode has no LAT Long values
@@ -50,7 +50,7 @@ Feature: F002. Invalid change event Exception handling
     Then the invalid postcode exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a Changed Event is valid
     When the postcode is invalid
@@ -59,21 +59,21 @@ Feature: F002. Invalid change event Exception handling
     And the 'postcode' from the changes is not included in the change request
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S008. Invalid Opening Times reported where Weekday is not identified
     Given a Changed Event with the Weekday NOT present in the Opening Times data
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S009. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
     Given a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S010. IsOpen is true AND Times is blank
     Given a Changed Event is valid
     When the OpeningTimes Opening and Closing Times data are not defined
@@ -81,14 +81,14 @@ Feature: F002. Invalid change event Exception handling
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S011. IsOpen is false AND Times NOT blank
     Given a Changed Event with the openingTimes IsOpen status set to false
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S012. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
     Given a Changed Event is valid
     When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
@@ -96,7 +96,7 @@ Feature: F002. Invalid change event Exception handling
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-  @complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S013. An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
     Given a Changed Event is valid
     When an AdditionalOpeningDate contains data with both true and false IsOpen status
@@ -104,7 +104,7 @@ Feature: F002. Invalid change event Exception handling
     Then the OpeningTimes exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S014. All data required in the Opening times exception report is identifiable in the logs
     Given a Changed Event is valid
     When the OpeningTimes Opening and Closing Times data are not defined
@@ -112,7 +112,7 @@ Feature: F002. Invalid change event Exception handling
     Then the attributes for invalid opening times report is identified in the logs
     And the Changed Event is stored in dynamo db
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S015. Pharmacy with overlapping opening times
     Given a Changed Event is valid
     And the Changed Event has overlapping opening times
@@ -120,7 +120,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is stored in dynamo db
     And an invalid opening times error is generated
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S016. Pharmacy with non '13%' service type code prompts error.
     Given a Changed Event is valid
     And the Changed Event has ODS Code "TP68G"
@@ -128,7 +128,7 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is stored in dynamo db
     And the unmatched service type exception is reported to cloudwatch
 
-@complete @dev @cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
     Given a Changed Event is valid
     And the Changed Event has ODS Code "FJQ49"
@@ -136,28 +136,28 @@ Feature: F002. Invalid change event Exception handling
     Then the Changed Event is stored in dynamo db
     And the generic bank holiday exception is reported to cloudwatch
 
-@complete @cloudwatch_queries
+@complete @dentist_cloudwatch_queries
   Scenario: F002S018. Dentist Hidden uses correct report key
     Given a Dentist Changed Event is valid
     When the OrganisationStatus is defined as "Hidden"
     And the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "HIDDEN_OR_CLOSED"
 
-@complete @cloudwatch_queries
+@complete @dentist_cloudwatch_queries
   Scenario: F002S019. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
     When the postcode is invalid
     And the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "INVALID_POSTCODE"
 
-@complete @cloudwatch_queries
+@complete @dentist_cloudwatch_queries
   Scenario: F002S020. Dentist Invalid Opening Times uses correct report key
     Given a Dentist Changed Event is valid
     And a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "INVALID_OPEN_TIMES"
 
-@complete @cloudwatch_queries
+@complete @dentist_cloudwatch_queries
   Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "<ods_code>"
@@ -165,11 +165,11 @@ Feature: F002. Invalid change event Exception handling
     Then the Event Processor logs with report key "<report_key>"
 
   Examples:
-    | ods_code |       report_key       |
+      | ods_code | report_key |
     | FQG8101  | UNMATCHED_SERVICE_TYPE |
     | V00393b  |   UNMATCHED_PHARMACY   |
 
-@complete @cloudwatch_queries
+@complete @dentist_cloudwatch_queries
   Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
     And the Changed Event has ODS Code "<ods_code>"
