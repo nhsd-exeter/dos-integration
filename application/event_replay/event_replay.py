@@ -36,6 +36,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     logger.append_keys(ods_code=odscode)
     logger.append_keys(sequence_number=sequence_number)
     change_event = get_change_event(odscode, Decimal(sequence_number))
+    org_type_id = change_event.get("OrganisationTypeId")
+    logger.append_keys(org_type_id=org_type_id)
     send_change_event(change_event, odscode, int(sequence_number), correlation_id)
     return dumps({"message": "The change event has been re-sent successfully", "correlation_id": correlation_id})
 
