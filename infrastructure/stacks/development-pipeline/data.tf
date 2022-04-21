@@ -30,6 +30,10 @@ data "template_file" "build_environment_buildspec" {
   template = file("build-environment-buildspec.yml")
 }
 
+data "template_file" "delete_ecr_images_buildspec" {
+  template = file("delete-ecr-images-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
