@@ -60,12 +60,28 @@ def a_change_event_is_valid():
     return context
 
 
+@given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
+def an_org_type_change_event(org_type):
+    context = {}
+    context["change_event"] = create_change_event(org_type)
+    if org_type == "dentist":
+        context["change_event"]["OrganisationName"] = "Test Dentist"
+        context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+        context["change_event"]["OrganisationType"] = "Dental practice"
+        context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
+            ORGANISATION_SUB_TYPES_KEY
+        ][0]
+    context["change_event"]["Address1"] = FAKER.street_name()
+    return context
+
+
 @given("a Dentist Changed Event is valid", target_fixture="context")
 def valid_dentist_change_event():
     context = {}
     context["change_event"] = create_change_event("dentist")
     context["change_event"]["OrganisationName"] = "Test Dentist"
     context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+    context["change_event"]["OrganisationType"] = "Dental practice"
     context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
         ORGANISATION_SUB_TYPES_KEY
     ][0]
@@ -212,9 +228,9 @@ def a_change_event_with_invalid_odscode():
     return context
 
 
-@given(parsers.parse('the Changed Event has ODS Code "{odscode}"'), target_fixture="context")
-def a_change_event_with_custom_ods(context, odscode: str):
-    context["change_event"]["ODSCode"] = odscode
+@given(parsers.parse('the Changed Event has ODS Code "{ods_code}"'), target_fixture="context")
+def a_change_event_with_custom_ods(context, ods_code: str):
+    context["change_event"]["ODSCode"] = ods_code
     return context
 
 
@@ -329,7 +345,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 
 # # Request with custom sequence id
 @when(
-    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    parsers.parse('the Changed Event is sent for processing with sequence id "{seqid}"'),
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
@@ -865,16 +881,16 @@ def check_logs_for_correct_sent_cr(context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parsers.parse('the Event Processor logs with report key "{reportkey}"'))
-def check_logs_for_correct_report_key(context, reportkey):
+@then(parsers.parse('the Event Processor logs with report key "{report_key}"'))
+def check_logs_for_correct_report_key(context, report_key):
     query = (
         "fields message, report_key, ods_code | sort @timestamp asc"
-        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{reportkey}"'
+        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{report_key}"'
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert (
         context["change_event"]["ODSCode"] in logs
-    ), f"ERROR!!.. error event processor did not detect the report key {reportkey}."
+    ), f'ERROR!!.. error event processor did not detect the report key "{report_key}".'
 
 
 @then(parsers.parse('the Event "{processor}" shows field "{field}" with message "{message}"'))

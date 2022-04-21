@@ -8,4 +8,4 @@ TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 # ==============================================================================
 # Organisation Types Feature Flags
 
-ACCEPTED_ORG_TYPES := PHA,Dentist
+ACCEPTED_ORG_TYPES := PHA
