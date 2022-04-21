@@ -21,10 +21,7 @@ FILE_PATH = "application.event_replay.event_replay"
 
 @fixture
 def event() -> Dict[str, Any]:
-    return {
-        "odscode": "FXXX1",
-        "sequence_number": "1",
-    }
+    return {"odscode": "FXXX1", "sequence_number": "1"}
 
 
 @fixture
