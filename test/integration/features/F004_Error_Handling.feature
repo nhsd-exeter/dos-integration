@@ -48,7 +48,7 @@ Feature: F004. Error Handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S007. An Alphanumeric Sequence number raises a 400 Bad Request exception
     Given an ODS has an entry in dynamodb
-    When the Changed Event is sent for processing with sequence id ABCD1
+    When the Changed Event is sent for processing with sequence id "ABCD1"
     Then the change request has status code "400"
 
 # @complete @dev @pharmacy_cloudwatch_queries
