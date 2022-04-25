@@ -12,9 +12,8 @@ from aws_lambda_powertools import Logger
 
 from common.constants import DENTIST_SERVICE_TYPE_IDS
 from common.nhs import NHSEntity
-from common.dos import DoSService, get_matching_dos_services
-from common.dos_db_connection import query_dos_db
-from common.opening_times import StandardOpeningTimes, OpenPeriod, SpecifiedOpeningTime
+from common.dos import DoSService, get_services_from_db
+from common.opening_times import StandardOpeningTimes, OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
 
 logger = Logger(child=True)
 THIS_DIR = pathlib.Path(__file__).parent.resolve()
@@ -123,30 +122,35 @@ def match_nhs_entiity_to_services(nhs_entities: List[NHSEntity], services: List[
     return servicelist_map
 
 
+def run_dentist_reports():
+
+    nhsuk_dentists = get_dentists()
+    dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
+    reporter = Reporter(nhs_entities=nhsuk_dentists, dos_services=dentist_dos_services)
+    reporter.create_postcode_comparison_report(filename="dentists_postcode_comparison_report.csv")
+    reporter.create_std_opening_times_comparison_report(filename="dentists_standard_opening_times_comparison_report.csv")
+    reporter.create_spec_opening_times_comparison_report(filename="dentists_specified_opening_times_comparison_report.csv")
+
 class Reporter:
 
-    def __init__(self):
-        self.nhs_entities = None
-        self.services = None
+    def __init__(self, nhs_entities: List[NHSEntity], dos_services: List[DoSService]):
+        self.nhs_entities = nhs_entities
+        self.dos_services = dos_services
+        self.entity_service_map = match_nhs_entiity_to_services(self.nhs_entities, self.dos_services)
 
-    def create_postcode_comparison_report(self):
-        if self.nhs_entities is None:
-            self.nhs_entities = get_dentists()
-        if self.services is None:
-            self.services = get_services(DENTIST_SERVICE_TYPE_IDS)
 
-        servicelist_map = match_nhs_entiity_to_services(self.nhs_entities, self.services)
-
+    def create_postcode_comparison_report(self, filename: str):
+        logger.info("Running postcode comparison report.")
         headers = [
-            "NHSUK Postcode",
-            "DoS Service Postcode",
+            "NHSUK ODSCode",
+            "DoS Service ODSCode",
             "DoS Service UID",
             "NHSUK Postcode",
             "DoS Service Postcode"
         ]
         rows = []
         for nhs_entity in self.nhs_entities:
-            services = servicelist_map.get(nhs_entity.odscode, [])
+            services = self.entity_service_map.get(nhs_entity.odscode, [])
             for service in services:
                 if service.normal_postcode() != nhs_entity.normal_postcode():
                     rows.append([
@@ -158,10 +162,70 @@ class Reporter:
                     ])
         
         df = DataFrame(data=rows, columns=headers)
-        filename = "postcode_comparison_report.csv"
         pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
         df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
 
+
+    def create_std_opening_times_comparison_report(self, filename: str):
+        logger.info("Running standard opening times comparison report.")
+        headers = [
+            "NHSUK ODSCode",
+            "DoS Service ODSCode",
+            "DoS Service UID",
+            "NHSUK Standard Opening Times",
+            "DoS Standard Opening Times"
+        ]
+        rows = []
+        for nhs_entity in self.nhs_entities:
+            services = self.entity_service_map.get(nhs_entity.odscode, [])
+            for service in services:
+                if nhs_entity.standard_opening_times != service._standard_opening_times:
+                    rows.append([
+                        nhs_entity.odscode,
+                        service.odscode,
+                        service.uid,
+                        "\n".join([f"{day}={OpenPeriod.list_string(getattr(nhs_entity.standard_opening_times, day))}"
+                            for day in WEEKDAYS]),
+                        "\n".join([f"{day}={OpenPeriod.list_string(getattr(service._standard_opening_times, day))}"
+                            for day in WEEKDAYS])
+                    ])
         
+        df = DataFrame(data=rows, columns=headers)
+        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
+        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+
+
+    def create_spec_opening_times_comparison_report(self, filename: str):
+        logger.info("Running specified opening times comparison report.")
+        headers = [
+            "NHSUK ODSCode",
+            "DoS Service ODSCode",
+            "DoS Service UID",
+            "NHSUK Specified Opening Times",
+            "DoS Specified Opening Times"
+        ]
+        rows = []
+        for nhs_entity in self.nhs_entities:
+            services = self.entity_service_map.get(nhs_entity.odscode, [])
+            for service in services:
+
+                if not SpecifiedOpeningTime.equal_lists(
+                        nhs_entity.specified_opening_times, 
+                        service._specified_opening_times):
+
+                    rows.append([
+                        nhs_entity.odscode,
+                        service.odscode,
+                        service.uid,
+                        "\n".join(str(sot) for sot in nhs_entity.specified_opening_times),
+                        "\n".join(str(sot) for sot in service._specified_opening_times)
+                    ])
+        
+        df = DataFrame(data=rows, columns=headers)
+        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
+        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+
+
+
      
-Reporter().create_postcode_comparison_report()
+run_dentist_reports()

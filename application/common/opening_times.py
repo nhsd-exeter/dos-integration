@@ -143,6 +143,14 @@ class SpecifiedOpeningTime:
     def __repr__(self):
         return f"<SpecifiedOpenTime: {self.date_string()} open={self.is_open} {self.open_periods_string()}>"
 
+    def __str__(self):
+        return f"{self.open_string()} on {self.date_string()} {self.open_periods_string()}"
+
+    def open_string(self):
+        if self.is_open:
+            return "OPEN"
+        return "CLOSED"
+
     def __eq__(self, other):
         return (
             isinstance(other, SpecifiedOpeningTime)
@@ -214,13 +222,14 @@ class StandardOpeningTimes:
         self.explicit_closed_days = set()
 
     def __repr__(self):
-        day_opening_strs = [f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS]
-
         closed_days_str = ""
         if len(self.explicit_closed_days) > 0:
             closed_days_str = f" exp_closed_days={self.explicit_closed_days}"
 
-        return f"<StandardOpeningTimes: {' '.join(day_opening_strs)}{closed_days_str}>"
+        return f"<StandardOpeningTimes: {str(self)}{closed_days_str}>"
+
+    def __str__(self):
+        return ", ".join([f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS])
 
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
@@ -235,12 +244,15 @@ class StandardOpeningTimes:
             return False
 
         for day in WEEKDAYS:
-            if not OpenPeriod.equal_lists(getattr(self, day), getattr(other, day)):
+            if not OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day)):
                 return False
 
         return True
 
-    def all_closed_days(self):
+    def get_openings(self, day: str) -> List[OpenPeriod]:
+        return getattr(self, day.lower())
+
+    def all_closed_days(self) -> List[str]:
         """Returns a set of all implicit AND explicit closed days."""
         all_closed_days = self.explicit_closed_days
 
