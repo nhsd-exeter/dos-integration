@@ -2,11 +2,12 @@ from json import loads
 
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
-from pytest import raises
+from pytest import raises, mark
 from ..utilities import (
     extract_body,
     get_sequence_number,
     handle_sqs_msg_attributes,
+    is_val_none_or_empty,
 )
 
 
@@ -55,6 +56,11 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
     attributes = handle_sqs_msg_attributes(msg_attributes=msg_attributes)
     assert attributes["error_msg"] == msg_attributes["error_msg"]["stringValue"]
     assert attributes["error_msg_http_code"] == "400"
+
+
+@mark.parametrize("val,expected", [("", True), ("    ", True), (None, True), ("True val", False)])
+def test_is_val_none_or_empty(val, expected):
+    assert is_val_none_or_empty(val) == expected
 
 
 SQS_EVENT = {
