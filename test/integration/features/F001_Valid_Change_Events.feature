@@ -64,8 +64,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
     Examples: With the contact fields being empty in DOS, these phone inputs from NHS Uk CE should not trigger a CR
       | contact_field | data |
-      | phone_no      | None |
-      | phone_no      |      |
+      | phone_no | None |
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F001S010. No CR created without website data
@@ -73,7 +72,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
 
-    Examples: With the contact fields being empty in DOS, these website inputs from NHS Uk CE should not trigger a CR
+    Examples: With the website contact fields being empty in DOS, these inputs from NHS Uk CE should not trigger a CR
       | contact_field | data |
-      | website       | None |
-      | website |  |
+      | website | None |

@@ -111,12 +111,13 @@ def a_changed_contact_event_is_valid(contact):
 @given(parsers.parse('a Changed Event with no value "{data}" for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
-        if data == 'None':
+        if data == "None":
             return None
         elif data == "' '":
             return " "
         else:
             return data
+
     context = {}
     context["change_event"] = create_change_event("pharmacy")
     context["change_event"]["ODSCode"] = "FAA96"
