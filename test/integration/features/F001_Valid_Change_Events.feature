@@ -58,7 +58,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
   @complete @dev @pharmacy_cloudwatch_queries @wip
   Scenario Outline: F002S024. No CR created from CE with no actual contact data
-    Given a Changed Event with '{data}' for '{contact_field}'
+    Given a Changed Event with "{data}" for "{contact_field}"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "No changes identified"
 

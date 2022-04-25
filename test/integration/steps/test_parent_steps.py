@@ -108,7 +108,7 @@ def a_changed_contact_event_is_valid(contact):
     return context
 
 
-@given(parsers.parse("a Changed Event with '{data}' for '{contact_field}'"), target_fixture="context")
+@given(parsers.parse('a Changed Event with "{data}" for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
         if data == 'None':
