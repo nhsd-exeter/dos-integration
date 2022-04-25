@@ -55,3 +55,18 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
+
+  @complete @dev @pharmacy_cloudwatch_queries @wip
+  Scenario Outline: F002S024. No CR created from CE with no actual contact data
+    Given a Changed Event with "{data}" for "{contact_field}"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event "processor" shows field "message" with message "No changes identified"
+
+    Examples:
+      | contact_field | data |
+      | website       | None |
+      | website       |      |
+      | website       | ' '  |
+      | phone         | None |
+      | phone         |      |
+      | phone         | ' '  |

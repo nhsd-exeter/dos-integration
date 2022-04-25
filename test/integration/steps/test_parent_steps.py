@@ -108,6 +108,26 @@ def a_changed_contact_event_is_valid(contact):
     return context
 
 
+@given(parsers.parse('a Changed Event with "{data}" for "{contact_field}"'), target_fixture="context")
+def a_valid_changed_event_with_empty_contact(data, contact_field):
+    def get_value_from_data():
+        if data == 'None':
+            return None
+        elif data == "' '":
+            return ' '
+        else:
+            return data
+    context = {}
+    context["change_event"] = build_same_as_dos_change_event("pharmacy")
+    if contact_field == "website":
+        context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
+    elif contact_field == "phone":
+        context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+    else:
+        raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
+    return context
+
+
 @given("a specific Changed Event is valid", target_fixture="context")
 def a_specific_change_event_is_valid():
     context = {}
