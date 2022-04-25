@@ -1,6 +1,8 @@
 from os import environ
 from unittest.mock import patch
 
+import pytest
+
 from common.tests.conftest import dummy_dos_location, dummy_dos_service
 from common.dos import dos_location_cache
 from ..nhs import NHSEntity
@@ -125,6 +127,69 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     update_changes(changes, WEBSITE_CHANGE_KEY, "www.wow.co.uk", "www.wow.co.uk")
     # Assert
     assert changes == {}, f"Should return empty dict, actually: {changes}"
+
+
+@pytest.mark.parametrize(
+    "dos_val, nhs_val,expected",
+    [
+        ("www.test1.com", "www.test2.com", {"website": "www.test2.com"}),
+        ("", "www.test2.com", {"website": "www.test2.com"}),
+        (None, "www.test2.com", {"website": "www.test2.com"}),
+        ("www.test2.com", "www.test2.com", {}),
+        ("", None, {}),
+        (None, "", {}),
+        ("", " ", {}),
+        (None, None, {}),
+    ],
+)
+def test_update_changes_for_website(dos_val, nhs_val, expected):
+    # Arrange
+    changes = {}
+    # Act
+    update_changes(changes, WEBSITE_CHANGE_KEY, dos_val, nhs_val)
+    assert changes == expected, f"Should return {expected}, actually: {changes}"
+
+
+@pytest.mark.parametrize(
+    "dos_val, nhs_val,expected",
+    [
+        ("test1", "test2", {"public_name": "test2"}),
+        ("", "test2", {"public_name": "test2"}),
+        (None, "test2", {"public_name": "test2"}),
+        ("test2", "test2", {}),
+        ("", None, {}),
+        (None, "", {}),
+        ("", " ", {}),
+        (None, None, {}),
+    ],
+)
+def test_update_changes_for_publicname(dos_val, nhs_val, expected):
+    # Arrange
+    changes = {}
+    # Act
+    update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_val, nhs_val)
+    assert changes == expected, f"Should return {expected}, actually: {changes}"
+
+
+@pytest.mark.parametrize(
+    "dos_val, nhs_val,expected",
+    [
+        ("000000000", "123456789", {"phone": "123456789"}),
+        ("", "123456789", {"phone": "123456789"}),
+        (None, "123456789", {"phone": "123456789"}),
+        ("123456789", "123456789", {}),
+        ("", None, {}),
+        (None, "", {}),
+        ("", " ", {}),
+        (None, None, {}),
+    ],
+)
+def test_update_changes_for_phone(dos_val, nhs_val, expected):
+    # Arrange
+    changes = {}
+    # Act
+    update_changes(changes, PHONE_CHANGE_KEY, dos_val, nhs_val)
+    assert changes == expected, f"Should return {expected}, actually: {changes}"
 
 
 def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
