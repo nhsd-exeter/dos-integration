@@ -56,9 +56,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
-  @complete @dev @pharmacy_cloudwatch_queries @wip
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F001S009. No CR created without phone data
-    Given a Changed Event with no value "{data}" for "{contact_field}"
+    Given a Changed Event with no value "<data>" for "<contact_field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "phone is not equal"
 
@@ -67,9 +67,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | phone_no      | None |
       | phone_no      |      |
 
-  @complete @dev @pharmacy_cloudwatch_queries @wip
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F001S010. No CR created without website data
-    Given a Changed Event with no value "{data}" for "{contact_field}"
+    Given a Changed Event with no value "<data>" for "<contact_field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
 
