@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 from aws_lambda_powertools import Logger
 from change_request import (
@@ -13,6 +13,7 @@ from change_request import (
 )
 from common.dos import DoSService, get_valid_dos_postcode
 from common.opening_times import SpecifiedOpeningTime
+from common.utilities import is_val_none_or_empty
 from nhs import NHSEntity
 from reporting import log_invalid_nhsuk_postcode
 
@@ -32,18 +33,20 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str
     return changes
 
 
-def update_changes(changes: dict, change_key: str, dos_value: str, nhs_uk_value: str) -> None:
+def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value: Any) -> None:
     """Adds field to the change request if the field is not equal
     Args:
         changes (dict): Change Request changes
         change_key (str): Key to add to the change request
-        dos_value (str): Field from the DoS database for comparision
-        nhs_uk_value (str): NHS UK Entity value for comparision
+        dos_value (str|None): Field from the DoS database for comparision
+        nhs_uk_value (str|None): NHS UK Entity value for comparision
 
     Returns:
         dict: Change Request changes
     """
-    if str(dos_value) != str(nhs_uk_value):
+    if str(dos_value) != str(nhs_uk_value) and (
+        not is_val_none_or_empty(dos_value) or not is_val_none_or_empty(nhs_uk_value)
+    ):
         logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
         changes[change_key] = nhs_uk_value
 
