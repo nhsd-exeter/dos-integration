@@ -747,26 +747,6 @@ def verify_replayed_changed_event(context):
     assert response != [], "Error!.. Re-processed change event not found in Dos"
 
 
-@then("the event processor logs should record a sequence error")
-def sequence_id_error_logs(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Sequence id is smaller than the existing one"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. Sequence id error message not found."
-
-
-@then("an invalid opening times error is generated")
-def invalid_opening_times_error(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter report_key like "INVALID_OPEN_TIMES"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
-
-
 @then("the opening times changes are confirmed valid")
 def no_opening_times_errors(context):
     response = confirm_changes(context["correlation_id"])

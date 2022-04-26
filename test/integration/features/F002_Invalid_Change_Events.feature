@@ -120,7 +120,8 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event has overlapping opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
-    And an invalid opening times error is generated
+    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
+
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S016. Pharmacy with non '13%' service type code prompts error.
