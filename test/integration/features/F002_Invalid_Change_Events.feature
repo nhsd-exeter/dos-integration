@@ -21,7 +21,7 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S003. Changed Event with Closed Organisation status is not processed
     Given a Changed Event is valid
-    And the field "OrganisationStatus" is set to "Hidden"
+    And the field "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is not processed any further
     And the Changed Event is stored in dynamo db
@@ -55,7 +55,6 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a Changed Event is valid
-    #When the postcode is invalid
     And the field "Postcode" is set to "AAAA 123"
     When the Changed Event is sent for processing with "valid" api key
     Then the 'address' from the changes is not included in the change request
@@ -126,7 +125,6 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S016. Pharmacy with non '13%' service type code prompts error.
     Given a Changed Event is valid
-    #And the Changed Event has ODS Code "TP68G"
     And the field "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
@@ -135,7 +133,6 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
     Given a Changed Event is valid
-    #And the Changed Event has ODS Code "FJQ49"
     And the field "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
@@ -145,7 +142,6 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002S018. Dentist Hidden uses correct report key
     Given a Dentist Changed Event is valid
     And the field "OrganisationStatus" is set to "Hidden"
-    #When the OrganisationStatus is defined as "Hidden"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "HIDDEN_OR_CLOSED"
 
@@ -153,7 +149,6 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002S019. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
     And the field "Postcode" is set to "AAAA 123"
-    #When the postcode is invalid
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "INVALID_POSTCODE"
 
@@ -167,7 +162,6 @@ Feature: F002. Invalid change event Exception handling
 @complete @dentist_cloudwatch_queries
   Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
-    #And the Changed Event has ODS Code "<ods_code>"
     And the field "ODSCode" is set to "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "<report_key>"
@@ -180,7 +174,6 @@ Feature: F002. Invalid change event Exception handling
 @complete @dentist_cloudwatch_queries
   Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
-    #And the Changed Event has ODS Code "<ods_code>"
     And the field "ODSCode" is set to "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "error" with message "ODSCode Wrong Length"

@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from decimal import Decimal
-from time import sleep, time
+from time import sleep
 from os import getenv
 from random import randint
 from faker import Faker
@@ -191,14 +191,14 @@ def a_change_request_is_valid():
 
 
 @given(parsers.parse('the field "{field}" is set to "{value}"'), target_fixture="context")
-def generic_event_config(context, field :str, value :str):
-    if field[0:7]=="Contact":
+def generic_event_config(context, field: str, value: str):
+    if field[0:7] == "Contact":
         # If the change is a website then change the website entry, otherwise change the telephone one
-        if value[0:4]=="http":
-            context["change_event"]["Contacts"][0][field] = value # noqa: W605
+        if value[0:4] == "http":
+            context["change_event"]["Contacts"][0][field] = value  # noqa: W605
         else:
             context["change_event"]["Contacts"][1][field] = value
-    #If there's no Contact change, just change the root level
+    # If there's no Contact change, just change the root level
     else:
         context["change_event"][field] = value
     return context
@@ -228,16 +228,6 @@ def change_event_with_two_breaks_in_opening_times(context):
     context["change_event"]["OpeningTimes"][1]["ClosingTime"] = "14:00"
     context["change_event"]["OpeningTimes"][2]["Weekday"] = "Monday"
     context["change_event"]["OpeningTimes"][2]["OpeningTime"] = "16:00"
-    return context
-
-
-@given("the website field contains special characters", target_fixture="context")
-def change_event_with_special_address_characters(context):
-    uniqueval = int(time())
-    context["change_event"]["Contacts"][0][
-        "ContactValue"
-    ] = f"https:\/\/www.rowlandspharmacy.co.uk\/test?foo={uniqueval}"  # noqa: W605
-    context["uri_timestamp"] = uniqueval
     return context
 
 
@@ -277,28 +267,6 @@ def a_change_event_with_invalid_odscode():
     change_event = create_change_event("pharmacy")
     change_event["ODSCode"] = "F8KE1"
     context = {"change_event": change_event}
-    return context
-
-
-@given(parsers.parse('the Changed Event has ODS Code "{ods_code}"'), target_fixture="context")
-def a_change_event_with_custom_ods(context, ods_code: str):
-    context["change_event"]["ODSCode"] = ods_code
-    return context
-
-
-@given("a Changed Event contains an incorrect OrganisationSubtype", target_fixture="context")
-def a_change_event_with_invalid_organisationsubtype():
-    context = {}
-    context["change_event"] = create_change_event("pharmacy")
-    context["change_event"]["OrganisationSubType"] = "com"
-    return context
-
-
-@given("a Changed Event contains an incorrect OrganisationTypeID", target_fixture="context")
-def a_change_event_with_invalid_organisationtypeid():
-    context = {}
-    context["change_event"] = create_change_event("pharmacy")
-    context["change_event"]["OrganisationTypeId"] = "DEN"
     return context
 
 
@@ -431,24 +399,6 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
     seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
-    return context
-
-
-@when("the postcode has no LAT Long values", target_fixture="context")
-def postcode_with_no_lat_long_values(context):
-    context["change_event"]["Postcode"] = "BT4 2HU"
-    return context
-
-
-@when(parsers.parse('the OrganisationStatus is defined as "{org_status}"'), target_fixture="context")
-def a_change_event_with_orgstatus_value(context, org_status: str):
-    context["change_event"]["OrganisationStatus"] = org_status
-    return context
-
-
-@when("the postcode is invalid", target_fixture="context")
-def postcode_is_invalid(context):
-    context["change_event"]["Postcode"] = "AAAA 123"
     return context
 
 
