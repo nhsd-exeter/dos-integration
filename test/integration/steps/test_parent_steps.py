@@ -190,6 +190,20 @@ def a_change_request_is_valid():
     return context
 
 
+@given(parsers.parse('the field "{field}" is set to "{value}"'), target_fixture="context")
+def generic_event_config(context, field :str, value :str):
+    if field[0:7]=="Contact":
+        # If the change is a website then change the website entry, otherwise change the telephone one
+        if value[0:4]=="http":
+            context["change_event"]["Contacts"][0][field] = value # noqa: W605
+        else:
+            context["change_event"]["Contacts"][1][field] = value
+    #If there's no Contact change, just change the root level
+    else:
+        context["change_event"][field] = value
+    return context
+
+
 @given("the Changed Event has overlapping opening times", target_fixture="context")
 def change_event_with_overlapping_opening_times(context):
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "12:00"

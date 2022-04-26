@@ -13,22 +13,23 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S002. Changed Event with Hidden Organisation status is reported
     Given a Changed Event is valid
-    When the OrganisationStatus is defined as "Hidden"
-    And the Changed Event is sent for processing with "valid" api key
+    And the field "OrganisationStatus" is set to "Hidden"
+    When the Changed Event is sent for processing with "valid" api key
     Then the hidden or closed exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S003. Changed Event with Closed Organisation status is not processed
     Given a Changed Event is valid
-    When the OrganisationStatus is defined as "Closed"
-    And the Changed Event is sent for processing with "valid" api key
+    And the field "OrganisationStatus" is set to "Hidden"
+    When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is not processed any further
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
-    Given a Changed Event contains an incorrect OrganisationTypeID
+    Given a Changed Event is valid
+    And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
@@ -36,7 +37,8 @@ Feature: F002. Invalid change event Exception handling
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S005. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
-    Given a Changed Event contains an incorrect OrganisationSubtype
+    Given a Changed Event is valid
+    And the field "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
     Then the exception is reported to cloudwatch
     And the Changed Event is not processed any further
@@ -45,16 +47,17 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S006. A Changed Event with no postcode LAT Long Values is reported
     Given a Changed Event is valid
-    When the postcode has no LAT Long values
-    And the Changed Event is sent for processing with "valid" api key
+    And the field "Postcode" is set to "BT4 2HU"
+    When the Changed Event is sent for processing with "valid" api key
     Then the invalid postcode exception is reported to cloudwatch
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a Changed Event is valid
-    When the postcode is invalid
-    And the Changed Event is sent for processing with "valid" api key
+    #When the postcode is invalid
+    And the field "Postcode" is set to "AAAA 123"
+    When the Changed Event is sent for processing with "valid" api key
     Then the 'address' from the changes is not included in the change request
     And the 'postcode' from the changes is not included in the change request
     And the Changed Event is stored in dynamo db
@@ -123,7 +126,8 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S016. Pharmacy with non '13%' service type code prompts error.
     Given a Changed Event is valid
-    And the Changed Event has ODS Code "TP68G"
+    #And the Changed Event has ODS Code "TP68G"
+    And the field "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And the unmatched service type exception is reported to cloudwatch
@@ -131,7 +135,8 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
     Given a Changed Event is valid
-    And the Changed Event has ODS Code "FJQ49"
+    #And the Changed Event has ODS Code "FJQ49"
+    And the field "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And the generic bank holiday exception is reported to cloudwatch
@@ -139,15 +144,17 @@ Feature: F002. Invalid change event Exception handling
 @complete @dentist_cloudwatch_queries
   Scenario: F002S018. Dentist Hidden uses correct report key
     Given a Dentist Changed Event is valid
-    When the OrganisationStatus is defined as "Hidden"
-    And the Changed Event is sent for processing with "valid" api key
+    And the field "OrganisationStatus" is set to "Hidden"
+    #When the OrganisationStatus is defined as "Hidden"
+    When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "HIDDEN_OR_CLOSED"
 
 @complete @dentist_cloudwatch_queries
   Scenario: F002S019. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
-    When the postcode is invalid
-    And the Changed Event is sent for processing with "valid" api key
+    And the field "Postcode" is set to "AAAA 123"
+    #When the postcode is invalid
+    When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "INVALID_POSTCODE"
 
 @complete @dentist_cloudwatch_queries
@@ -160,7 +167,8 @@ Feature: F002. Invalid change event Exception handling
 @complete @dentist_cloudwatch_queries
   Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "<ods_code>"
+    #And the Changed Event has ODS Code "<ods_code>"
+    And the field "ODSCode" is set to "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event Processor logs with report key "<report_key>"
 
@@ -172,7 +180,8 @@ Feature: F002. Invalid change event Exception handling
 @complete @dentist_cloudwatch_queries
   Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
-    And the Changed Event has ODS Code "<ods_code>"
+    #And the Changed Event has ODS Code "<ods_code>"
+    And the field "ODSCode" is set to "<ods_code>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "error" with message "ODSCode Wrong Length"
     And the Event "processor" does not show "message" with message "Getting matching DoS Services for odscode"
