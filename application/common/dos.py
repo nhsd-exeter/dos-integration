@@ -1,12 +1,9 @@
-from base64 import standard_b64decode
 from dataclasses import dataclass, field, fields
 from itertools import groupby
-from typing import DefaultDict, List, Union, Any, Iterable
+from typing import Set, List, Union, Iterable, Dict
 from datetime import datetime
-from collections.abc import Iterable
 from collections import defaultdict
 
-from psycopg2.extras import DictCursor
 from aws_lambda_powertools import Logger
 
 from common.constants import (
@@ -97,7 +94,6 @@ class DoSService:
     def any_generic_bankholiday_open_periods(self) -> bool:
         return len(self.get_standard_opening_times().generic_bankholiday) > 0
 
-
     def nhs_odscode_match(self, nhs_odscode: str) -> bool:
         if self.odscode is None:
             return False
@@ -111,8 +107,6 @@ class DoSService:
 
         logger.warning(f"Failed nhs code match check for unknown typeid '{self.typeid}'")
         return False
-
-
 
 
 @dataclass(init=True, repr=True)
@@ -240,7 +234,7 @@ def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
     return standard_opening_times
 
 
-def get_dos_locations(postcode: str) -> List[DoSLocation]:
+def get_dos_locations(postcode: Union[str, None] = None) -> List[DoSLocation]:
     logger.info(f"Searching for DoS locations with postcode of '{postcode}'")
 
     normalised_pc = postcode.replace(" ", "").upper()
@@ -261,6 +255,15 @@ def get_dos_locations(postcode: str) -> List[DoSLocation]:
     logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
 
     return dos_locations
+
+
+def get_all_valid_dos_postcodes() -> Set[str]:
+    logger.info("Collecting all valid postcodes from DoS DB")
+    sql_command = "SELECT postcode FROM locations"
+    c = query_dos_db(sql_command)
+    postcodes = set(row["postcode"].replace(" ", "").upper() for row in c.fetchall())
+    logger.info(f"Found {len(postcodes)} unique postcodes from DoS DB.")
+    return postcodes
 
 
 def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
@@ -317,11 +320,13 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         service._specified_opening_times = spec_open_times.get(service.id, [])
     c.close()
 
-    
     return services
 
 
-def db_rows_to_spec_open_time(db_rows) -> List[SpecifiedOpeningTime]:
+def db_rows_to_spec_open_time(db_rows: Iterable[dict]) -> List[SpecifiedOpeningTime]:
+    """Turns a set of dos database rows into a list of SpecifiedOpenTime objects
+    note: The rows are assumed to be for the same service
+    """
     specified_opening_times = []
     date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
     for date, db_rows in groupby(date_sorted_rows, lambda row: row["date"]):
@@ -336,11 +341,16 @@ def db_rows_to_spec_open_time(db_rows) -> List[SpecifiedOpeningTime]:
 
     return specified_opening_times
 
-def db_rows_to_spec_open_times_map(db_rows) -> dict:
+
+def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> Dict[str, List[SpecifiedOpeningTime]]:
+    """Turns a set of dos database rows (from multiple services) into lists of SpecifiedOpenTime objects
+    which are sorted into a dictionary where the key is the service id of the service those SpecifiedOpenTime
+    objects correspond to.
+    """
     serviceid_dbrows_map = defaultdict(list)
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-    
+
     serviceid_specopentimes_map = {}
     for service_id, db_rows in serviceid_dbrows_map.items():
         serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_time(db_rows)
@@ -348,7 +358,7 @@ def db_rows_to_spec_open_times_map(db_rows) -> dict:
     return serviceid_specopentimes_map
 
 
-def db_rows_to_std_open_time(db_rows) -> StandardOpeningTimes:
+def db_rows_to_std_open_time(db_rows: Iterable[dict]) -> StandardOpeningTimes:
     standard_opening_times = StandardOpeningTimes()
     for row in db_rows:
         weekday = row["name"].lower()
@@ -359,11 +369,11 @@ def db_rows_to_std_open_time(db_rows) -> StandardOpeningTimes:
     return standard_opening_times
 
 
-def db_rows_to_std_open_times_map(db_rows) -> dict:
+def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, StandardOpeningTimes]:
     serviceid_dbrows_map = defaultdict(list)
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-    
+
     serviceid_stdopentimes_map = {}
     for service_id, db_rows in serviceid_dbrows_map.items():
         serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_time(db_rows)
