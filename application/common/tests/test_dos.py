@@ -5,10 +5,11 @@ import pytest
 
 from .conftest import dummy_dos_location, dummy_dos_service
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
-from ..opening_times import OpenPeriod, StandardOpeningTimes
+from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from ..dos import (
     DoSLocation,
     DoSService,
+    db_rows_to_spec_open_time,
     get_dos_locations,
     get_matching_dos_services,
     get_specified_opening_times_from_db,
@@ -497,6 +498,67 @@ def test_get_services_from_db(mock_query_dos_db):
     ]
 
     assert actual_service_repr == expected_reprs
+
+
+def test_db_rows_to_spec_open_time():
+    db_rows = [
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(21, 0, 0),
+            "endtime": time(22, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 27),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 8, 26),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 9, 20),
+            "starttime": None,
+            "endtime": None,
+            "isclosed": True
+        },
+        {
+            "serviceid": 1,
+            "date": date(2020, 5, 6),
+            "starttime": time(6, 0, 0),
+            "endtime": time(7, 0, 0),
+            "isclosed": False
+        }
+    ]
+
+    spec_open_times = db_rows_to_spec_open_time(db_rows)
+
+    expected_spec_open_times = [
+        SpecifiedOpeningTime(
+            [OpenPeriod.from_string("08:00-20:00"), OpenPeriod.from_string("21:00-22:00")], date(2019, 5, 6), True
+        ),
+        SpecifiedOpeningTime([OpenPeriod.from_string("08:00-20:00")], date(2019, 5, 27), True),
+        SpecifiedOpeningTime([OpenPeriod.from_string("08:00-20:00")], date(2019, 8, 26), True),
+        SpecifiedOpeningTime([], date(2019, 9, 20), False),
+        SpecifiedOpeningTime([OpenPeriod.from_string("06:00-07:00")], date(2020, 5, 6), True),
+    ]
+
+    assert spec_open_times == expected_spec_open_times
 
 
 def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):

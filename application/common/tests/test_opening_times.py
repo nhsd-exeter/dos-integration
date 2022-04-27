@@ -197,6 +197,8 @@ def test_openperiod_from_string():
     assert OpenPeriod.from_string("08:00-24:00") is None
     assert OpenPeriod.from_string("38:00-12:00") is None
     assert OpenPeriod.from_string("08:00-44:00") is None
+    assert OpenPeriod.from_string("08:0044:00") is None
+    assert OpenPeriod.from_string("08:00-44:00-08:00") is None
     assert OpenPeriod.from_string(231892) is None
     assert OpenPeriod.from_string(None) is None
     assert OpenPeriod.from_string(2.38) is None
