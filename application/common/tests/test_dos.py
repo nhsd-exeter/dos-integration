@@ -435,11 +435,41 @@ def test_get_services_from_db(mock_query_dos_db):
             {"serviceid": 2, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)}
         ],
         [
-            {"serviceid": 1, "date": date(2019, 5, 6), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
-            {"serviceid": 1, "date": date(2019, 5, 27), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
-            {"serviceid": 2, "date": date(2019, 8, 26), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
-            {"serviceid": 1, "date": date(2019, 9, 20), "starttime": None, "endtime": None, "isclosed": True},
-            {"serviceid": 2, "date": date(2019, 5, 6), "starttime": time(6, 0, 0), "endtime": time(7, 0, 0), "isclosed": False}
+            {
+                "serviceid": 1,
+                "date": date(2019, 5, 6),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 1,
+                "date": date(2019, 5, 27),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 2,
+                "date": date(2019, 8, 26),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 1,
+                "date": date(2019, 9, 20),
+                "starttime": None,
+                "endtime": None,
+                "isclosed": True
+            },
+            {
+                "serviceid": 2,
+                "date": date(2019, 5, 6),
+                "starttime": time(6, 0, 0),
+                "endtime": time(7, 0, 0),
+                "isclosed": False
+            }
         ]
     ]
     mock_connection.fetchall.side_effect = db_returns
@@ -451,9 +481,7 @@ def test_get_services_from_db(mock_query_dos_db):
         "friday=[], saturday=[], sunday=[13:00:00-15:30:00]>"
         "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>"
         "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>"
-        "<SpecifiedOpenTime: 20-09-2019 open=False []>"
-        ,
-
+        "<SpecifiedOpenTime: 20-09-2019 open=False []>",
         "<DoSService: name='fake name' id=2 uid=159514725 odscode=FA9321 type=14 status=1>"
         "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
         "friday=[13:00:00-15:30:00], saturday=[], sunday=[]>"
@@ -461,11 +489,10 @@ def test_get_services_from_db(mock_query_dos_db):
         "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>"
     ])
 
-
     # Act
     services = get_services_from_db([12, 14])
     actual_service_repr = [
-        repr(s) + repr(s._standard_opening_times) + "".join(repr(spectime) for spectime in s._specified_opening_times) 
+        repr(s) + repr(s._standard_opening_times) + "".join(repr(spectime) for spectime in s._specified_opening_times)
         for s in services
     ]
 
