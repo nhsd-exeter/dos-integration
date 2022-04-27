@@ -5,8 +5,10 @@ Feature: F004. Error Handling
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
+    #I think this can be changed
     Then the event is sent to the DLQ
     And the DLQ logs the error for Splunk
+    #This can probably be changed
     And the "cr_dlq" logs show status code "400"
     And the Changed Event is stored in dynamo db
 
@@ -15,6 +17,7 @@ Feature: F004. Error Handling
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
+    #This can probably be changed
     Then the "cr_dlq" logs show error message "Message Abandoned"
     And the Changed Event is stored in dynamo db
 

@@ -129,7 +129,8 @@ Feature: F002. Invalid change event Exception handling
     And the field "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
-    And the unmatched service type exception is reported to cloudwatch
+    And the Event "processor" shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
+
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
@@ -137,7 +138,8 @@ Feature: F002. Invalid change event Exception handling
     And the field "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
-    And the generic bank holiday exception is reported to cloudwatch
+    And the Event "processor" shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
+
 
 @complete @dentist_cloudwatch_queries
   Scenario: F002S018. Dentist Hidden uses correct report key
