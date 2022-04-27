@@ -239,6 +239,8 @@ def get_dos_locations(postcode: Union[str, None] = None) -> List[DoSLocation]:
 
 
 def get_all_valid_dos_postcodes() -> Set[str]:
+    """Gets all the valid DoS postcodes that are found in the locations table.
+    Returns: A set of normalised postcodes as strings"""
     logger.info("Collecting all valid postcodes from DoS DB")
     sql_command = "SELECT postcode FROM locations"
     c = query_dos_db(sql_command)

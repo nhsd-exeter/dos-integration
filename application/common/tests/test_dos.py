@@ -13,6 +13,8 @@ from ..dos import (
     get_matching_dos_services,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
+    get_all_valid_dos_postcodes,
+    get_services_from_db
 )
 
 FILE_PATH = "application.common.dos"
@@ -103,7 +105,8 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
-    db_return = get_db_item(odscode, name)
+    id = 22851351399
+    db_return = [get_db_item(odscode, name, id=id)]
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -112,7 +115,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == 22851351399
+    assert service.id == id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
@@ -164,7 +167,8 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     # Arrange
     odscode = "V00393a"
     name = "My Dental Practice"
-    db_return = get_db_item(odscode, name)
+    id = 22851351399
+    db_return = [get_db_item(odscode, name, id=id)]
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -174,7 +178,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == 22851351399
+    assert service.id == id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
@@ -241,7 +245,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
     )
     # Act
     responses = get_specified_opening_times_from_db(service_id)
-    responses_str = sorted([str(s) for s in responses])
+    responses_str = sorted([repr(s) for s in responses])
     # Assert
     assert (
         responses_str == expected_responses_set
@@ -391,28 +395,103 @@ def test_get_dos_locations(mock_query_dos_db):
     )
 
 
-def get_db_item(odscode, name):
-    return [
-        {
-            "id": 22851351399,
-            "uid": "159514725",
-            "name": name,
-            "odscode": odscode,
-            "address": "80 Street$Town",
-            "town": "Town",
-            "postcode": "TES T12",
-            "web": None,
-            "email": None,
-            "fax": None,
-            "nonpublicphone": None,
-            "typeid": 13,
-            "parentid": 123486,
-            "subregionid": 21813557,
-            "statusid": 1,
-            "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
-            "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
-            "publicphone": "0123 012 012",
-            "publicname": None,
-            "servicename": "my service",
-        }
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_all_valid_dos_postcodes(mock_query_dos_db):
+    # Arrange
+    mock_connection = MagicMock()
+    db_return = [
+        {"postcode": "BA2 7AF"},
+        {"postcode": "EY8 8AH"},
+        {"postcode": "SW9 5EZ"},
+        {"postcode": "W2 8PP"},
+        {"postcode": "PO1 9"},
+        {"postcode": "B W 4 5 H D"},
+        {"postcode": "BA2 7AF"}
     ]
+    mock_connection.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_connection
+
+    expected_result = {"BA27AF", "EY88AH", "SW95EZ", "W28PP", "PO19", "BW45HD"}
+
+    # Act
+    response = get_all_valid_dos_postcodes()
+    # Assert
+    assert response == expected_result
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_services_from_db(mock_query_dos_db):
+    # Arrange
+    mock_connection = MagicMock()
+    db_returns = [
+        [
+            get_db_item(id=1, typeid=12),
+            get_db_item(id=2, typeid=14)
+        ],
+        [
+            {"serviceid": 1, "dayid": 4, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+            {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+            {"serviceid": 2, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+            {"serviceid": 2, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)}
+        ],
+        [
+            {"serviceid": 1, "date": date(2019, 5, 6), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
+            {"serviceid": 1, "date": date(2019, 5, 27), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
+            {"serviceid": 2, "date": date(2019, 8, 26), "starttime": time(8, 0, 0), "endtime": time(20, 0, 0), "isclosed": False},
+            {"serviceid": 1, "date": date(2019, 9, 20), "starttime": None, "endtime": None, "isclosed": True},
+            {"serviceid": 2, "date": date(2019, 5, 6), "starttime": time(6, 0, 0), "endtime": time(7, 0, 0), "isclosed": False}
+        ]
+    ]
+    mock_connection.fetchall.side_effect = db_returns
+    mock_query_dos_db.return_value = mock_connection
+
+    expected_reprs = sorted([
+        "<DoSService: name='fake name' id=1 uid=159514725 odscode=FA9321 type=12 status=1>"
+        "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
+        "friday=[], saturday=[], sunday=[13:00:00-15:30:00]>"
+        "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>"
+        "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>"
+        "<SpecifiedOpenTime: 20-09-2019 open=False []>"
+        ,
+
+        "<DoSService: name='fake name' id=2 uid=159514725 odscode=FA9321 type=14 status=1>"
+        "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
+        "friday=[13:00:00-15:30:00], saturday=[], sunday=[]>"
+        "<SpecifiedOpenTime: 06-05-2019 open=True [06:00:00-07:00:00]>"
+        "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>"
+    ])
+
+
+    # Act
+    services = get_services_from_db([12, 14])
+    actual_service_repr = [
+        repr(s) + repr(s._standard_opening_times) + "".join(repr(spectime) for spectime in s._specified_opening_times) 
+        for s in services
+    ]
+
+    assert actual_service_repr == expected_reprs
+
+
+def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):
+    return {
+        "id": id,
+        "uid": "159514725",
+        "name": name,
+        "odscode": odscode,
+        "address": "80 Street$Town",
+        "town": "Town",
+        "postcode": "TES T12",
+        "web": None,
+        "email": None,
+        "fax": None,
+        "nonpublicphone": None,
+        "typeid": typeid,
+        "parentid": 123486,
+        "subregionid": 21813557,
+        "statusid": 1,
+        "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
+        "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
+        "publicphone": "0123 012 012",
+        "publicname": None,
+        "servicename": "my service"
+    }
