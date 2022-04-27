@@ -2,11 +2,12 @@ Feature: F002. Invalid change event Exception handling
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S001. Unmatched DOS services exception is logged
-    Given a Changed Event with invalid ODSCode is provided
+    Given a Changed Event is valid
+    And the field "ODSCode" is set to "F8KE1"
     When the Changed Event is sent for processing with "valid" api key
-    Then no matched services were found
-    And the unmatched service exception is reported to cloudwatch
-    Then the Changed Event is not processed any further
+    Then the Event "processor" shows field "message" with message "Found 0 services in DB"
+    And the Event "processor" shows field "message" with message "No matching DOS services"
+    And the Changed Event is not processed any further
     And the Changed Event is not sent to Dos
     And the Changed Event is stored in dynamo db
 

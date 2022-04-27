@@ -198,7 +198,7 @@ def generic_event_config(context, field: str, value: str):
             context["change_event"]["Contacts"][0][field] = value  # noqa: W605
         else:
             context["change_event"]["Contacts"][1][field] = value
-    # If there's no Contact change, just change the root level
+    # If there's no Contact change, just change the root level of the CE
     else:
         context["change_event"][field] = value
     return context
@@ -259,14 +259,6 @@ def bank_holiday_pharmacy_closed(context):
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
-    return context
-
-
-@given("a Changed Event with invalid ODSCode is provided", target_fixture="context")
-def a_change_event_with_invalid_odscode():
-    change_event = create_change_event("pharmacy")
-    change_event["ODSCode"] = "F8KE1"
-    context = {"change_event": change_event}
     return context
 
 
@@ -409,16 +401,6 @@ def the_change_request_is_sent(context, valid_or_invalid):
     return context
 
 
-@then("no matched services were found")
-def no_matched_services_found(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "Found 0 services in DB"'
-    )
-    event_logs = get_logs(query, "processor", context["start_time"])
-    assert event_logs != [], "ERROR!! No unmatched services log found.."
-
-
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
     odscode = context["change_event"]["ODSCode"]
@@ -430,18 +412,6 @@ def stored_dynamo_db_events_are_pulled(context):
         odscode == db_event_record["ODSCode"]
     ), f"ERROR!!.. Change event record({odscode} - {db_event_record['ODSCode']}) mismatch!!"
     assert sequence_num == db_event_record["SequenceNumber"], "ERROR!!.. Change event record(sequence no) mismatch!!"
-    return context
-
-
-@then("the unmatched service exception is reported to cloudwatch", target_fixture="context")
-def unmatched_service_exception(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "No matching DOS services"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    odscode = context["change_event"]["ODSCode"]
-    assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
     return context
 
 
