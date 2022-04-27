@@ -15,7 +15,7 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event is valid
     And the field "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
-    Then the hidden or closed exception is reported to cloudwatch
+    Then the Event "processor" shows field "message" with message "NHS Service marked as closed or hidden"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -49,7 +49,7 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event is valid
     And the field "Postcode" is set to "BT4 2HU"
     When the Changed Event is sent for processing with "valid" api key
-    Then the invalid postcode exception is reported to cloudwatch
+    Then the Event "processor" shows field "report_key" with message "INVALID_POSTCODE"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries

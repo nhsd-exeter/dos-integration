@@ -477,29 +477,6 @@ def openingtimes_service_exception(context):
     assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not captured."
 
 
-@then("the invalid postcode exception is reported to cloudwatch")
-def unmatched_postcode_exception(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter report_key like "INVALID_POSTCODE"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    postcode = context["change_event"]["Postcode"]
-    assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected Invalid Postcode exception not found."
-
-
-@then("the hidden or closed exception is reported to cloudwatch")
-def hidden_or_closed_exception(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message like "NHS Service marked as closed or hidden"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert (
-        "no change requests will be produced" in logs
-    ), "ERROR!!.. Expected hidden or closed exception logs not found."
-
-
 @then(parsers.parse("the {address} from the changes is not included in the change request"))
 def address_change_is_discarded_in_event_sender(context, address: str):
     query = (
