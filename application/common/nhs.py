@@ -5,6 +5,8 @@ from typing import List, Union
 
 from aws_lambda_powertools import Logger
 from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.dos import DoSService
+from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 
 logger = Logger(child=True)
 
@@ -145,6 +147,20 @@ class NHSEntity:
 
         # Check validity of both types of open times
         return self.standard_opening_times.is_valid() and SpecifiedOpeningTime.valid_list(self.specified_opening_times)
+
+    def is_matching_dos_service(self, dos_service: DoSService) -> bool:
+        if None in (self.odscode, dos_service.odscode):
+            return False
+
+        if dos_service.typeid in PHARMACY_SERVICE_TYPE_IDS:
+            return dos_service.odscode[:5] == self.odscode[:5]
+
+        if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
+            odscode_extra_0 = f"{dos_service.odscode[0]}0{dos_service.odscode[1:]}"
+            return self.odscode[:7] in (dos_service.odscode[:7], odscode_extra_0[:7])
+
+        logger.warning(f"Failed nhs code match check for unknown typeid '{dos_service.typeid}'")
+        return False
 
 
 def is_std_opening_json(item: dict) -> bool:

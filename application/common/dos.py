@@ -6,12 +6,7 @@ from collections import defaultdict
 
 from aws_lambda_powertools import Logger
 
-from common.constants import (
-    DENTIST_ORG_TYPE_ID,
-    PHARMACY_ORG_TYPE_ID,
-    DENTIST_SERVICE_TYPE_IDS,
-    PHARMACY_SERVICE_TYPE_IDS
-)
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from .dos_db_connection import query_dos_db
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -93,20 +88,6 @@ class DoSService:
 
     def any_generic_bankholiday_open_periods(self) -> bool:
         return len(self.get_standard_opening_times().generic_bankholiday) > 0
-
-    def nhs_odscode_match(self, nhs_odscode: str) -> bool:
-        if self.odscode is None:
-            return False
-
-        if self.typeid in PHARMACY_SERVICE_TYPE_IDS:
-            return self.odscode[:5] == nhs_odscode[:5]
-
-        if self.typeid in DENTIST_SERVICE_TYPE_IDS:
-            odscode_extra_0 = f"{self.odscode[0]}0{self.odscode[1:]}"
-            return nhs_odscode[:7] in (self.odscode[:7], odscode_extra_0[:7])
-
-        logger.warning(f"Failed nhs code match check for unknown typeid '{self.typeid}'")
-        return False
 
 
 @dataclass(init=True, repr=True)
