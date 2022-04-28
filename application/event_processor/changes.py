@@ -48,7 +48,11 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
         not is_val_none_or_empty(dos_value) or not is_val_none_or_empty(nhs_uk_value)
     ):
         logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
-        changes[change_key] = nhs_uk_value
+        if nhs_uk_value is None:
+            changes[change_key] = ""
+        else:
+            changes[change_key] = nhs_uk_value
+
 
 
 def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_entity: NHSEntity) -> dict:
