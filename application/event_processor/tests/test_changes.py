@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from common.tests.conftest import dummy_dos_location, dummy_dos_service
 from common.dos import dos_location_cache
-from ..nhs import NHSEntity
+from common.nhs import NHSEntity
 from ..change_request import (
     ADDRESS_CHANGE_KEY,
     ADDRESS_LINES_KEY,

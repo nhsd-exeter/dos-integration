@@ -14,7 +14,7 @@ from common.constants import (
 )
 from common.opening_times import OpenPeriod
 from common.tests.conftest import dummy_dos_service
-from ..nhs import NHSEntity
+from common.nhs import NHSEntity
 from ..reporting import (
     log_invalid_open_times,
     log_unmatched_service_types,
