@@ -95,7 +95,7 @@ def get_payload(payload_name: str) -> str:
 
 def build_same_as_dos_change_event(service_type: str):
     ods_code = get_single_service_odscode()
-    change_event =  build_same_as_dos_change_event_by_ods(service_type, ods_code)
+    change_event = build_same_as_dos_change_event_by_ods(service_type, ods_code)
     if valid_change_event(change_event):
         return change_event
     else:
