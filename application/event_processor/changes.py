@@ -54,7 +54,6 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
             changes[change_key] = nhs_uk_value
 
 
-
 def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_entity: NHSEntity) -> dict:
     """Adds the address to the change request if the address is not equal
 

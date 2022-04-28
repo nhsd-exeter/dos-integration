@@ -94,10 +94,19 @@ def get_payload(payload_name: str) -> str:
 
 
 def build_same_as_dos_change_event(service_type: str):
+    ods_code = get_single_service_odscode()
+    change_event =  build_same_as_dos_change_event_by_ods(service_type, ods_code)
+    if valid_change_event(change_event):
+        return change_event
+    else:
+        return build_same_as_dos_change_event(service_type)
+
+
+def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
     # TODO Refactor into change event class
     change_event = create_change_event(service_type)
     if service_type.upper() == "PHARMACY":
-        change_event["ODSCode"] = get_single_service_odscode()
+        change_event["ODSCode"] = ods_code
         demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
     elif service_type.upper() == "DENTIST":
         demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
@@ -144,10 +153,7 @@ def build_same_as_dos_change_event(service_type: str):
                     "IsOpen": True,
                 }
             )
-    if valid_change_event(change_event):
-        return change_event
-    else:
-        return build_same_as_dos_change_event(service_type)
+    return change_event
 
 
 def valid_change_event(change_event: dict) -> bool:

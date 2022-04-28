@@ -75,3 +75,11 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Examples: With the website contact fields being empty in DOS, these inputs from NHS Uk CE should not trigger a CR
       | contact_field | data |
       | website | None |
+
+
+@complete @smoke @pharmacy_no_log_searches
+  Scenario: F001S011. A valid change with website removal is processed by dos
+    Given a Changed Event to unset website
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Request is accepted by DoS with website delete
+    And the Changed Event is stored in dynamo db

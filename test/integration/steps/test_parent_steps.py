@@ -29,6 +29,7 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    check_website_delete_in_dos,
     process_payload_with_sequence,
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
@@ -164,6 +165,14 @@ def a_standard_opening_time_change_event_is_valid():
 def a_change_event_is_valid_and_matches_dos():
     context = {}
     context["change_event"] = build_same_as_dos_change_event("pharmacy")
+    return context
+
+
+@given("a Changed Event to unset website", target_fixture="context")
+def a_change_event_is_valid_with_website_set():
+    context = {}
+    context["change_event"] = build_same_as_dos_change_event("pharmacy", "FXT27")
+    del context["change_event"]["Contacts"][0]
     return context
 
 
@@ -584,6 +593,14 @@ def the_changed_event_is_not_processed(context):
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     response = confirm_changes(context["correlation_id"])
+    assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+    return context
+
+
+@then("the Changed Request is accepted by Dos with website delete")
+def the_changed_request_is_accepted_by_dos_with_website_delete(context):
+
+    response = check_website_delete_in_dos(context["correlation_id"], "cmsurl")
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
 
