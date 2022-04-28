@@ -92,7 +92,7 @@ resource "aws_codepipeline" "release_codepipeline" {
   stage {
     name = "Integration_Test"
     dynamic "action" {
-      for_each = local.integration_tags
+      for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_codebuild_stage
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"
