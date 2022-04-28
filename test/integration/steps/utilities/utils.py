@@ -325,8 +325,6 @@ def check_website_delete_in_dos(corr_id: str, search_key: str):
             if k == search_key:
                 if dict(loads(row[0]))["new"][k]["changetype"] != "delete":
                     data = dict(loads(row[0]))["new"][k]["data"]
-                    # Convert and format 'search_param' to datetime type
-
                     if data == "":
                         row_found = True
     if row_found is True:
