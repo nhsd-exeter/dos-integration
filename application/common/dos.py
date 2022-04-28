@@ -341,7 +341,7 @@ def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> Dict[str, List[Sp
     return serviceid_specopentimes_map
 
 
-def db_rows_to_std_open_time(db_rows: Iterable[dict]) -> StandardOpeningTimes:
+def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
     standard_opening_times = StandardOpeningTimes()
     for row in db_rows:
         weekday = row["name"].lower()
@@ -359,6 +359,6 @@ def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, Standard
 
     serviceid_stdopentimes_map = {}
     for service_id, db_rows in serviceid_dbrows_map.items():
-        serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_time(db_rows)
+        serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_times(db_rows)
 
     return serviceid_stdopentimes_map

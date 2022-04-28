@@ -1,5 +1,5 @@
 from os import path
-import io
+from io import StringIO
 from typing import List
 import csv
 from collections import defaultdict
@@ -21,9 +21,8 @@ OUTPUT_DIR = path.join(THIS_DIR, "out")
 def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
     """Takes a url of a csv to download from the web and then returns it as a list of dictionaries."""
     resp = requests.get(url)
-    csv_file_like_obj = io.StringIO(resp.text)
     return [{k: v if v != "" else None for k, v in row.items()}
-            for row in csv.DictReader(csv_file_like_obj, skipinitialspace=True, delimiter=delimiter)]
+            for row in csv.DictReader(StringIO(resp.text), skipinitialspace=True, delimiter=delimiter)]
 
 
 def match_nhs_entities_to_services(nhs_entities: List[NHSEntity], services: List[DoSService]):
