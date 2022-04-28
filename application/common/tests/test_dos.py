@@ -17,7 +17,7 @@ from ..dos import (
     get_services_from_db,
     db_rows_to_std_open_times,
     db_rows_to_std_open_times_map,
-    db_rows_to_spec_open_time,
+    db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map
 )
 
@@ -228,13 +228,55 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
     # Arrange
     mock_connection = MagicMock()
     db_return = [
-        (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 5, 27), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 8, 26), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 8, 26), time(21, 0, 0), time(22, 0, 0), False),
-        (28334, date(2019, 9, 20), time(0, 0, 0), time(0, 0, 0), True),
-        (28334, date(2019, 9, 21), time(14, 30, 0), time(16, 0, 0), True),
-        (28334, date(2019, 5, 6), time(6, 0, 0), time(7, 0, 0), False),
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 6),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 27),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 8, 26),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 8, 26),
+            "starttime": time(21, 0, 0),
+            "endtime": time(22, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 9, 20),
+            "starttime": time(0, 0, 0),
+            "endtime": time(0, 0, 0),
+            "isclosed": True
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 9, 21),
+            "starttime": time(14, 30, 0),
+            "endtime": time(16, 0, 0),
+            "isclosed": True
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 6),
+            "starttime": time(6, 0, 0),
+            "endtime": time(7, 0, 0),
+            "isclosed": False
+        }
     ]
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -270,9 +312,9 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
 def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db):
     # Arrange
     db_return = [
-        (28334, 1, "Tuesday", time(8, 0, 0), time(17, 0, 0)),
-        (28334, 1, "Friday", time(9, 0, 0), time(11, 30, 0)),
-        (28334, 1, "Friday", time(13, 0, 0), time(15, 30, 0)),
+        {"serviceid": 28334, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(9, 0, 0), "endtime": time(11, 30, 0)},
+        {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)}
     ]
     mock_connection = MagicMock()
     service_id = 123456
@@ -504,7 +546,7 @@ def test_get_services_from_db(mock_query_dos_db):
     assert actual_service_repr == expected_reprs
 
 
-def test_db_rows_to_spec_open_time():
+def test_db_rows_to_spec_open_times():
     db_rows = [
         {
             "serviceid": 1,
@@ -550,7 +592,7 @@ def test_db_rows_to_spec_open_time():
         }
     ]
 
-    spec_open_times = db_rows_to_spec_open_time(db_rows)
+    spec_open_times = db_rows_to_spec_open_times(db_rows)
 
     expected_spec_open_times = [
         SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),

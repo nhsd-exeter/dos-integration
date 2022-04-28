@@ -166,28 +166,14 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     )
     named_args = {"service_id": service_id}
     c = query_dos_db(sql_query, named_args)
-
-    """sort by date and then by starttime"""
-    sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
-
-    specified_opening_times = []
-    for date, db_rows in groupby(sorted_list, lambda row: (row[1])):
-        is_open = True
-        open_periods = []
-        for row in list(db_rows):
-            if row[4] is True:  # row[4] is the 'is_closed' column
-                is_open = False
-            else:
-                open_periods.append(OpenPeriod(row[2], row[3]))
-
-        specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
-
+    specified_opening_times = db_rows_to_spec_open_times(c.fetchall())
     c.close()
     return specified_opening_times
 
 
 def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
-    """Retrieves standard opening times from DoS database"""
+    """Retrieves standard opening times from DoS database. If ther service id does not even match any service this
+    function will still return a blank StandardOpeningTime with no opening periods."""
 
     logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
 
@@ -202,15 +188,7 @@ def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
     )
     named_args = {"service_id": service_id}
     c = query_dos_db(sql_command, named_args)
-
-    standard_opening_times = StandardOpeningTimes()
-    for row in c.fetchall():
-        weekday = row[2].lower()
-        start = row[3]
-        end = row[4]
-        open_period = OpenPeriod(start, end)
-        standard_opening_times.add_open_period(open_period, weekday)
-
+    standard_opening_times = db_rows_to_std_open_times(c.fetchall())
     c.close()
     return standard_opening_times
 
@@ -306,9 +284,9 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
     return services
 
 
-def db_rows_to_spec_open_time(db_rows: Iterable[dict]) -> List[SpecifiedOpeningTime]:
+def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> List[SpecifiedOpeningTime]:
     """Turns a set of dos database rows into a list of SpecifiedOpenTime objects
-    note: The rows are assumed to be for the same service
+    note: The rows must to be for the same service
     """
     specified_opening_times = []
     date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
@@ -336,12 +314,15 @@ def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> Dict[str, List[Sp
 
     serviceid_specopentimes_map = {}
     for service_id, db_rows in serviceid_dbrows_map.items():
-        serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_time(db_rows)
+        serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_times(db_rows)
 
     return serviceid_specopentimes_map
 
 
 def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
+    """Turns a set of dos database rows into a StandardOpeningTime object
+    note: The rows must be for the same service
+    """
     standard_opening_times = StandardOpeningTimes()
     for row in db_rows:
         weekday = row["name"].lower()
@@ -353,6 +334,10 @@ def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
 
 
 def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, StandardOpeningTimes]:
+    """Turns a set of dos database rows (from multiple services) into StandardOpeningTime objects
+    which are sorted into a dictionary where the key is the service id of the service those StandardOpeningTime
+    objects correspond to.
+    """
     serviceid_dbrows_map = defaultdict(list)
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)

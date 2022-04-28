@@ -54,7 +54,7 @@ def disconnect_dos_db() -> None:
 
 
 def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCursor:
-    """Querie   s the dos database with given sql command and returns the resulting cursor object"""
+    """Queries the dos database with given sql command and returns the resulting cursor object"""
 
     # Check if new connection needed.
     global db_connection
@@ -67,7 +67,7 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
 
     query_string_log = f"Running SQL command: {c.mogrify(query, vars)}"
     if len(query_string_log) > 1000:
-        query_string_log = f"{query_string_log[:490]}...         ...{query_string_log[-490:]}"
+        query_string_log = f"{query_string_log[:490]}...       ...{query_string_log[-490:]}"
     logger.info(query_string_log)
 
     c.execute(query, vars)

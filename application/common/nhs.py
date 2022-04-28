@@ -153,9 +153,13 @@ class NHSEntity:
             return False
 
         if dos_service.typeid in PHARMACY_SERVICE_TYPE_IDS:
-            return dos_service.odscode[:5] == self.odscode[:5]
+            return (len(dos_service.odscode) >= 5 and
+                    len(self.odscode) >= 5 and
+                    dos_service.odscode[:5] == self.odscode[:5])
 
         if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
+            if not (len(dos_service.odscode) >= 6 and len(self.odscode) >= 7):
+                return False
             odscode_extra_0 = f"{dos_service.odscode[0]}0{dos_service.odscode[1:]}"
             return self.odscode[:7] in (dos_service.odscode[:7], odscode_extra_0[:7])
 
