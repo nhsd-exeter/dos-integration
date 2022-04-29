@@ -315,6 +315,24 @@ def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key:
         raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
 
 
+def check_contact_delete_in_dos(corr_id: str, search_key: str):
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    row_found = False
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                if dict(loads(row[0]))["new"][k]["changetype"] == "delete":
+                    data = dict(loads(row[0]))["new"][k]["data"]
+                    if data == "":
+                        row_found = True
+    if row_found is True:
+        return True
+    else:
+        raise ValueError("Expected a 'delete' on the website but didn't find one")
+
+
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
