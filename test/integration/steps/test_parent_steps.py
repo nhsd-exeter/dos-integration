@@ -122,7 +122,7 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
 
     context = {}
     context["change_event"] = create_change_event("pharmacy")
-    context["change_event"]["ODSCode"] = "FNE89"
+    context["change_event"]["ODSCode"] = "FAA96"
     if contact_field == "website":
         context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
     elif contact_field == "phone_no":
