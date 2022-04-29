@@ -122,3 +122,6 @@ TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
 TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
+
+# AppConfig
+TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)

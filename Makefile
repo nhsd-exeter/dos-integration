@@ -35,14 +35,14 @@ deploy: # Deploys whole project - mandatory: PROFILE
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
 	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -53,7 +53,6 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build VERSION=$(BUILD_TAG)
 	make push-images VERSION=$(BUILD_TAG)
-	make -s terraform-clean
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
@@ -485,6 +484,46 @@ slack-codebuild-notification: ### Send codebuild pipeline notification - mandato
 		BUILD_TIME=$$(( $$time / 60 ))m$$(( $$time % 60 ))s \
 		BUILD_URL=$$(echo https://$(AWS_REGION).console.aws.amazon.com/codesuite/codebuild/$(AWS_ACCOUNT_ID_MGMT)/projects/$(CODEBUILD_PROJECT_NAME)/build/$(CODEBUILD_BUILD_ID)/log?region=$(AWS_REGION)) \
 		SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))
+
+aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g. event-sender,slack-messenger]
+	export THIS_YEAR=$$(date +%Y)
+	export LAST_YEAR=$$(date -d "1 year ago" +%Y)
+	DELETE_IMAGES_OLDER_THAN=$$(date +%s --date='1 month ago')
+	for REPOSITORY in $$(echo $(REPOS) | tr "," "\n"); do
+		REPOSITORY_NAME=$$(echo $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$$REPOSITORY)
+		echo Repository is $$REPOSITORY_NAME
+		make remove-untagged-images REPOSITORY=$$REPOSITORY_NAME
+		make remove-task-images REPOSITORY=$$REPOSITORY_NAME DELETE_IMAGES_OLDER_THAN=$$DELETE_IMAGES_OLDER_THAN
+	done
+
+remove-task-images: # Removes task ecr images in repository older than certain date, REPOSITORY=[$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/REPOSITORY_NAME], DELETE_IMAGES_OLDER_THAN=[date/time in epoch]
+	COUNTER=0
+	IMAGE_IDS=$$(aws ecr describe-images --registry-id $(AWS_ACCOUNT_ID_MGMT) --region $(AWS_REGION) --repository-name $(REPOSITORY) --filter "tagStatus=TAGGED" --max-items 1000 --output json | jq -r '.imageDetails[] | select (.imageTags[0] | contains("$(LAST_YEAR)") or contains ("$(THIS_YEAR)")) | select (.imagePushedAt < $(DELETE_IMAGES_OLDER_THAN)).imageDigest')
+	for DIGEST in $$(echo $$IMAGE_IDS | tr " " "\n"); do
+			IMAGES_TO_DELETE+=$$(echo $$DIGEST | sed '$$s/$$/ /')
+			COUNTER=$$((COUNTER+1))
+			if [ $$COUNTER -eq 100 ]; then
+				make batch-delete-ecr-images LIST_OF_DIGESTS="$$IMAGES_TO_DELETE"
+				IMAGES_TO_DELETE=""
+				COUNTER=0
+			fi
+	done
+	if [[ ! -z "$$IMAGES_TO_DELETE" ]]; then
+		make batch-delete-ecr-images LIST_OF_DIGESTS="$$IMAGES_TO_DELETE"
+	fi
+
+remove-untagged-images: # Removes untagged ecr images in repository, Mandatory - REPOSITORY=[$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/REPOSITORY_NAME]
+	IMAGE_DIGESTS=$$(aws ecr describe-images --registry-id $(AWS_ACCOUNT_ID_MGMT) --region $(AWS_REGION) --region $(AWS_REGION) --repository-name $(REPOSITORY) --filter "tagStatus=UNTAGGED" --max-items 100 --output json | jq -r .imageDetails[].imageDigest | tr "\n" " ")
+	if [[ ! -z "$$IMAGE_DIGESTS" ]]; then
+		make batch-delete-ecr-images LIST_OF_DIGESTS="$$IMAGE_DIGESTS"
+	fi
+
+batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" separated by spaces], REPOSITORY=[$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/REPOSITORY_NAME]
+	for DIGEST in $$(echo $(LIST_OF_DIGESTS) | tr " " "\n"); do
+		IMAGES_TO_DELETE+=$$(echo imageDigest=\"$$DIGEST\" | sed 's/$$/ /')
+	done
+	IMAGE_IDS=$$(echo $$IMAGES_TO_DELETE | sed 's/ $$//')
+	aws ecr batch-delete-image --registry-id $(AWS_ACCOUNT_ID_MGMT) --region $(AWS_REGION) --repository-name $(REPOSITORY) --image-ids $$IMAGE_IDS
 
 # ==============================================================================
 # Tester

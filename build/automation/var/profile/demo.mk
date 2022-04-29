@@ -23,3 +23,8 @@ TF_VAR_ip_address_secret := uec-dos-int-demo-ip-addresses-allowlist
 SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-$(PROFILE)/deployment
 SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-dev-status
+
+# ==============================================================================
+# Organisation Types Feature Flags
+
+ACCEPTED_ORG_TYPES := PHA

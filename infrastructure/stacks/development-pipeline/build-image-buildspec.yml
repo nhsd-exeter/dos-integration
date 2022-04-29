@@ -18,3 +18,8 @@ phases:
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$BUILD_ITEM_NAME
+  finally:
+      - |
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
+          make slack-codebuild-notification PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT PIPELINE_NAME="Build $BUILD_ITEM_NAME Image" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Failed Please investigate"
+        fi

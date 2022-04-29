@@ -8,7 +8,8 @@ from ..change_event_validation import ValidationException, check_ods_code_length
 FILE_PATH = "application.event_processor.change_event_validation"
 
 
-def test_validate_event(change_event):
+@patch(f"{FILE_PATH}.validate_organisation_keys")
+def test_validate_event(mock_validate_organisation_keys, change_event):
     # Act & Assert
     validate_event(change_event)
 

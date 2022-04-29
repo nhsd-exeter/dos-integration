@@ -56,6 +56,10 @@ resource "aws_codebuild_project" "di_destroy_environment_from_tag" {
       value = "task"
     }
     environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-destroy-task-environments-stage"
+    }
+    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
@@ -84,7 +88,7 @@ resource "aws_codebuild_project" "di_destroy_environment_from_tag" {
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0 # Full Git Clone
+    git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
     buildspec       = data.template_file.delete_task_environment_from_tag_buildspec.rendered
   }

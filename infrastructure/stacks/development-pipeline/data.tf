@@ -30,6 +30,10 @@ data "template_file" "build_environment_buildspec" {
   template = file("build-environment-buildspec.yml")
 }
 
+data "template_file" "delete_ecr_images_buildspec" {
+  template = file("delete-ecr-images-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
@@ -37,7 +41,7 @@ data "aws_iam_role" "pipeline_role" {
 locals {
   deploy_envs      = toset(["dev", "test", "perf"])
   to_build         = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway", "slack-messenger"])
-  integration_tags = toset(["cloudwatch_queries", "no_log_searches"])
+  integration_tags = toset(["pharmacy_cloudwatch_queries", "pharmacy_no_log_searches"])
   independent_build_images = {
     tester = {
       "filematch" = "requirement"

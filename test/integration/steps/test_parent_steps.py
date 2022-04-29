@@ -18,7 +18,7 @@ from .utilities.events import (
     valid_change_event,
 )
 from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
-from .utilities.aws import get_logs
+from .utilities.aws import get_logs, negative_log_check
 from .utilities.utils import (
     generate_correlation_id,
     get_changes,
@@ -60,12 +60,28 @@ def a_change_event_is_valid():
     return context
 
 
+@given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
+def an_org_type_change_event(org_type):
+    context = {}
+    context["change_event"] = create_change_event(org_type)
+    if org_type == "dentist":
+        context["change_event"]["OrganisationName"] = "Test Dentist"
+        context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+        context["change_event"]["OrganisationType"] = "Dental practice"
+        context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
+            ORGANISATION_SUB_TYPES_KEY
+        ][0]
+    context["change_event"]["Address1"] = FAKER.street_name()
+    return context
+
+
 @given("a Dentist Changed Event is valid", target_fixture="context")
 def valid_dentist_change_event():
     context = {}
     context["change_event"] = create_change_event("dentist")
     context["change_event"]["OrganisationName"] = "Test Dentist"
     context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+    context["change_event"]["OrganisationType"] = "Dental practice"
     context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
         ORGANISATION_SUB_TYPES_KEY
     ][0]
@@ -89,6 +105,28 @@ def a_changed_contact_event_is_valid(contact):
             raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
 
         validated = valid_change_event(context["change_event"])
+    return context
+
+
+@given(parsers.parse('a Changed Event with no value "{data}" for "{contact_field}"'), target_fixture="context")
+def a_valid_changed_event_with_empty_contact(data, contact_field):
+    def get_value_from_data():
+        if data == "None":
+            return None
+        elif data == "' '":
+            return " "
+        else:
+            return data
+
+    context = {}
+    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"]["ODSCode"] = "FAA96"
+    if contact_field == "website":
+        context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
+    elif contact_field == "phone_no":
+        context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+    else:
+        raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     return context
 
 
@@ -212,9 +250,9 @@ def a_change_event_with_invalid_odscode():
     return context
 
 
-@given(parsers.parse('the Changed Event has ODS Code "{odscode}"'), target_fixture="context")
-def a_change_event_with_custom_ods(context, odscode: str):
-    context["change_event"]["ODSCode"] = odscode
+@given(parsers.parse('the Changed Event has ODS Code "{ods_code}"'), target_fixture="context")
+def a_change_event_with_custom_ods(context, ods_code: str):
+    context["change_event"]["ODSCode"] = ods_code
     return context
 
 
@@ -329,7 +367,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 
 # # Request with custom sequence id
 @when(
-    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    parsers.parse('the Changed Event is sent for processing with sequence id "{seqid}"'),
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
@@ -865,13 +903,48 @@ def check_logs_for_correct_sent_cr(context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parsers.parse('the Event Processor logs to splunk with report key "{reportkey}"'))
-def check_logs_for_correct_report_key(context, reportkey):
+@then(parsers.parse('the Event Processor logs with report key "{report_key}"'))
+def check_logs_for_correct_report_key(context, report_key):
     query = (
         "fields message, report_key, ods_code | sort @timestamp asc"
-        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{reportkey}"'
+        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{report_key}"'
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert (
         context["change_event"]["ODSCode"] in logs
-    ), f"ERROR!!.. error event processor did not detect the report key {reportkey}."
+    ), f'ERROR!!.. error event processor did not detect the report key "{report_key}".'
+
+
+@then(parsers.parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
+def generic_processor_check_function(context, processor, field, message):
+    query = (
+        f"fields {field} | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter {field} like "{message}"'
+    )
+    logs = get_logs(query, processor, context["start_time"])
+    assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parsers.parse('the Event "{processor}" does not show "{field}" with message "{message}"'))
+def generic_processor_negative_check_function(context, processor, field, message):
+    find_request_id_query = (
+        "fields function_request_id | sort @timestamp asc" f' | filter correlation_id="{context["correlation_id"]}"'
+    )
+    find_request_id = loads(get_logs(find_request_id_query, processor, context["start_time"]))
+
+    request_id = ""
+    for x in find_request_id["results"][0]:
+        if x["field"] == "function_request_id":
+            request_id = x["value"]
+
+    finished_check = f'fields @message | filter @requestId == "{request_id}" | filter @type == "END"'
+
+    get_logs(finished_check, processor, context["start_time"], 2)
+
+    query = (
+        f"fields {field} | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter {field} like "{message}"'
+    )
+    logs_found = negative_log_check(query, processor, context["start_time"])
+
+    assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."

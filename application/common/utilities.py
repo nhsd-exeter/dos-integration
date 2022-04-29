@@ -7,6 +7,10 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 logger = Logger()
 
 
+def is_val_none_or_empty(val: Any) -> bool:
+    return not (val and not val.isspace())
+
+
 def extract_body(body: str) -> Dict[str, Any]:
     """Extracts the event body from the lambda function invocation event
 
