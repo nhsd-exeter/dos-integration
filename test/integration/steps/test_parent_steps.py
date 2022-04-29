@@ -12,6 +12,7 @@ from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.events import (
     build_same_as_dos_change_event,
+    build_same_as_dos_change_event_by_ods,
     change_request,
     create_change_event,
     set_opening_times_change_event,
@@ -29,6 +30,7 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    check_contact_delete_in_dos,
     process_payload_with_sequence,
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
@@ -63,8 +65,8 @@ def a_change_event_is_valid():
 @given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
 def an_org_type_change_event(org_type):
     context = {}
-    context["change_event"] = create_change_event(org_type)
-    if org_type == "dentist":
+    context["change_event"] = create_change_event(org_type.lower())
+    if org_type.lower() == "dentist":
         context["change_event"]["OrganisationName"] = "Test Dentist"
         context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
         context["change_event"]["OrganisationType"] = "Dental practice"
@@ -108,13 +110,13 @@ def a_changed_contact_event_is_valid(contact):
     return context
 
 
-@given(parsers.parse('a Changed Event with no value "{data}" for "{contact_field}"'), target_fixture="context")
+@given(parsers.parse('a Changed Event with value "{data}" for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
         if data == "None":
             return None
-        elif data == "' '":
-            return " "
+        elif data == "''":
+            return ""
         else:
             return data
 
@@ -164,6 +166,20 @@ def a_standard_opening_time_change_event_is_valid():
 def a_change_event_is_valid_and_matches_dos():
     context = {}
     context["change_event"] = build_same_as_dos_change_event("pharmacy")
+    return context
+
+
+@given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
+def a_change_event_is_valid_with_contact_set(contact: str):
+    context = {}
+
+    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", "FYH55")
+    if contact.lower() == "website":
+        del context["change_event"]["Contacts"][0]
+    elif contact.lower() == "phone":
+        del context["change_event"]["Contacts"][1]
+    else:
+        raise ValueError(f"Invalid contact '{contact}' provided")
     return context
 
 
@@ -315,8 +331,7 @@ def current_ods_exists_in_ddb():
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
     # New address prevents SQS dedupe
-    newaddr = randint(100, 500)
-    context["change_event"]["Address1"] = f"{newaddr} New Street"
+    context["change_event"]["Address1"] = FAKER.street_name()
     return context
 
 
@@ -585,6 +600,22 @@ def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     response = confirm_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+    return context
+
+
+@then(parsers.parse('the Changed Request is accepted by Dos with "{contact}" deleted'))
+def the_changed_request_is_accepted_by_dos_with_contact_delete(context, contact):
+    service_id = get_service_id(context["correlation_id"])
+    approver_status = confirm_approver_status(context["correlation_id"])
+    if contact == "phone":
+        cms = "cmstelephoneno"
+    elif contact == "website":
+        cms = "cmsurl"
+    else:
+        raise ValueError(f"Invalid contact provided: '{contact}'")
+    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
+    response = check_contact_delete_in_dos(context["correlation_id"], cms)
+    assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
 
 
