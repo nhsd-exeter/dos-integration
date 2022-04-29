@@ -1,6 +1,6 @@
-resource "aws_codebuild_webhook" "destroy_task_environment_on_pr_merged_deployment_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_destroy_task_environment_on_pr_merged[0].name
+resource "aws_codebuild_webhook" "destroy_release_environment_and_pipeline_on_pr_merged_deployment_webhook" {
+  # count        = var.environment == "dev" ? 1 : 0
+  project_name = aws_codebuild_project.di_destroy_release_environment_and_pipeline_on_pr_merged.name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -9,16 +9,16 @@ resource "aws_codebuild_webhook" "destroy_task_environment_on_pr_merged_deployme
     }
     filter {
       type    = "HEAD_REF"
-      pattern = "refs/heads/task"
+      pattern = "refs/heads/release"
     }
   }
 }
 
-resource "aws_codebuild_project" "di_destroy_task_environment_on_pr_merged" {
-  count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
-  description    = "Destroys task environment based on pr merged"
-  build_timeout  = "30"
+resource "aws_codebuild_project" "di_destroy_release_environment_and_pipeline_on_pr_merged" {
+  # count          = var.environment == "dev" ? 1 : 0
+  name           = "${var.project_id}-${var.environment}-destroy-release-environment-on-pr-merged-stage"
+  description    = "Destroys release environments and release pipelines based on pr merged"
+  build_timeout  = "180"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
@@ -40,14 +40,6 @@ resource "aws_codebuild_project" "di_destroy_task_environment_on_pr_merged" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "PROFILE"
-      value = "task"
-    }
-    environment_variable {
-      name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
-    }
-    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
@@ -67,22 +59,18 @@ resource "aws_codebuild_project" "di_destroy_task_environment_on_pr_merged" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
-    environment_variable {
-      name  = "SERVERLESS_BUILD_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-serverless-stage"
-    }
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-destroy-task-environment-on-pr-merged-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-destroy-release-environment-on-pr-merged-stage"
       stream_name = ""
     }
   }
   source {
     type            = "GITHUB"
-    git_clone_depth = 0
+    git_clone_depth = 0 # Full Git Clone
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
-    buildspec       = data.template_file.delete_task_environment_on_pr_merged_buildspec.rendered
+    buildspec       = data.template_file.delete_release_environment_and_pipeline_on_pr_merged_buildspec.rendered
   }
 
 }

@@ -6,10 +6,6 @@
 # AWS COMMON
 ############
 
-variable "aws_profile" {
-  description = "The AWS profile"
-}
-
 variable "aws_region" {
   description = "The AWS region"
 }
@@ -50,7 +46,7 @@ variable "aws_account_id_live_parent" {
 # # TEXAS COMMON
 # ##############
 
-variable "code_pipeline_branch_name" {
+variable "perf_pipeline_branch_name" {
   description = ""
 }
 variable "pipeline_notification_name" {
@@ -84,18 +80,21 @@ variable "programme" {
 variable "project_id" {
   description = "Project ID"
 }
+
 variable "environment" {
   description = "Environment name"
 }
 
-variable "texas_s3_logs_bucket" {
-  description = "The texas s3 log bucket for s3 bucket logs"
+variable "from_release_branch" {
+  description = "This is from a release branch"
+  type        = bool
+  default     = false
 }
 
-variable "texas_terraform_state_store" {
-  description = ""
+variable "service_state_bucket" {
+  description = "The S3 bucket used to store the service state"
 }
 
-variable "texas_terraform_state_lock" {
-  description = ""
+variable "development_pipeline_state" {
+  description = "Location of the Terraform state file for the development pipeline"
 }

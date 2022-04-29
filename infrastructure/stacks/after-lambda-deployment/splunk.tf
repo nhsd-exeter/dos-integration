@@ -5,7 +5,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_processor_logs_subscrip
   log_group_name  = "/aws/lambda/${var.event_processor_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "event_sender_logs_subscription_filter" {
@@ -15,7 +15,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_sender_logs_subscriptio
   log_group_name  = "/aws/lambda/${var.event_sender_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "orchestrator_logs_subscription_filter" {
@@ -25,7 +25,7 @@ resource "aws_cloudwatch_log_subscription_filter" "orchestrator_logs_subscriptio
   log_group_name  = "/aws/lambda/${var.orchestrator_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "fifo_dlq_handler_logs_subscription_filter" {
@@ -35,7 +35,7 @@ resource "aws_cloudwatch_log_subscription_filter" "fifo_dlq_handler_logs_subscri
   log_group_name  = "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "cr_fifo_dlq_handler_logs_subscription_filter" {
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_log_subscription_filter" "cr_fifo_dlq_handler_logs_subs
   log_group_name  = "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "event_replay_logs_subscription_filter" {
@@ -55,7 +55,7 @@ resource "aws_cloudwatch_log_subscription_filter" "event_replay_logs_subscriptio
   log_group_name  = "/aws/lambda/${var.event_replay_lambda_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
@@ -65,5 +65,9 @@ resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
   log_group_name  = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
   filter_pattern  = ""
   destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  distribution    = ""
+  depends_on      = [time_sleep.wait_3_minutes]
+}
+
+resource "time_sleep" "wait_3_minutes" {
+  create_duration = "3m"
 }

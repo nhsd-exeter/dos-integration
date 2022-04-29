@@ -1,12 +1,13 @@
-resource "aws_codebuild_project" "di_load_tests" {
-  name           = "${var.project_id}-${var.environment}-load-test-stage"
-  description    = "Runs the load tests for the DI Project"
+resource "aws_codebuild_project" "di_performance_tests" {
+  for_each       = local.performance_tests
+  name           = "${var.project_id}-${var.environment}-${each.key}-test-stage"
+  description    = "Runs the ${each.key} tests for the DI Project"
   build_timeout  = "480"
   queued_timeout = "5"
-  service_role   = aws_iam_role.codebuild_role.arn
+  service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
-    type = "CODEPIPELINE"
+    type = "NO_ARTIFACTS"
   }
 
   cache {
@@ -42,16 +43,35 @@ resource "aws_codebuild_project" "di_load_tests" {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
     }
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = var.from_release_branch == true ? "${var.environment}-perf" : var.environment
+    }
+    environment_variable {
+      name  = "PERF_TEST_NAME"
+      value = each.key
+    }
+    environment_variable {
+      name  = "PERF_TEST_TITLE"
+      value = title(each.key)
+    }
+
+    environment_variable {
+      name  = "CB_PROJECT_NAME"
+      value = "${var.project_id}-${var.environment}-${each.key}-test-stage"
+    }
   }
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-load-test-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-${each.key}-test-stage"
       stream_name = ""
     }
   }
   source {
-    type      = "CODEPIPELINE"
-    buildspec = data.template_file.load_tests_buildspec.rendered
+    type            = "GITHUB"
+    git_clone_depth = 0
+    location        = "https://github.com/nhsd-exeter/dos-integration.git"
+    buildspec       = data.template_file.perf_buildspec.rendered
   }
 }

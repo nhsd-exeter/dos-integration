@@ -34,6 +34,18 @@ data "template_file" "delete_ecr_images_buildspec" {
   template = file("delete-ecr-images-buildspec.yml")
 }
 
+data "template_file" "build_release_buildspec" {
+  template = file("build-release-buildspec.yml")
+}
+
+data "template_file" "delete_release_environment_and_pipeline_on_pr_merged_buildspec" {
+  template = file("delete-release-environment-and-pipeline-on-pr-merged-buildspec.yml")
+}
+
+data "template_file" "demo_deploy_buildspec" {
+  template = file("demo-deploy-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
