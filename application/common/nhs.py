@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import List, Union
+from typing import List, Union, Dict
+from collections import defaultdict
 
 from aws_lambda_powertools import Logger
 from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -224,3 +225,22 @@ def is_spec_opening_json(item: dict) -> bool:
         return False
 
     return True
+
+
+def match_nhs_entities_to_services(
+        nhs_entities: List[NHSEntity], services: List[DoSService]) -> Dict[str, List[DoSService]]:
+    """Takes lists of NHS Entities and DoS Services and creates a dict where the keys are NHS odscodes
+    and the values are the corresponding lists of services that match that code."""
+
+    logger.info("Matching all NHS Entities to corresponding list of services.")
+    servicelist_map = defaultdict(list)
+    for nhs_entity in nhs_entities:
+        for service in services:
+            if nhs_entity.is_matching_dos_service(service):
+                servicelist_map[nhs_entity.odscode].append(service)
+
+    logger.info(
+        f"{len(servicelist_map)}/{len(nhs_entities)} nhs entities matches with at least 1 service. "
+        f"{len(nhs_entities) - len(servicelist_map)} not matched."
+    )
+    return dict(servicelist_map)

@@ -1,7 +1,9 @@
+from os import path
 from datetime import datetime
 from itertools import groupby
 from collections import defaultdict
 from typing import List
+import pathlib
 
 from aws_lambda_powertools import Logger
 
@@ -15,6 +17,8 @@ from reporting import Reporter, download_csv_as_dicts
 logger = Logger(child=True)
 DENTIST_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/Dentists.csv"
 DENTIST_OPENING_TIMES_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/DentistOpeningTimes.csv"
+THIS_DIR = pathlib.Path(__file__).parent.resolve()
+OUTPUT_DIR = path.join(THIS_DIR, "out")
 
 
 def get_dentists() -> List[NHSEntity]:
@@ -94,16 +98,10 @@ def get_dentists() -> List[NHSEntity]:
 
 
 def run_dentist_reports():
-
     nhsuk_dentists = get_dentists()
     dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
     reporter = Reporter(nhs_entities=nhsuk_dentists, dos_services=dentist_dos_services)
-    reporter.create_postcode_comparison_report("dentists_postcode_comparison_report.csv")
-    reporter.create_std_opening_times_comparison_report("dentists_standard_opening_times_comparison_report.csv")
-    reporter.create_spec_opening_times_comparison_report("dentists_specified_opening_times_comparison_report.csv")
-    reporter.create_invalid_postcode_report("dentists_invalid_postcode_report.csv")
-    reporter.create_invalid_spec_opening_times_report("dentists_invalid_spec_opening_times_report.csv")
-    reporter.create_invalid_std_opening_times_report("dentists_invalid_std_opening_times_report.csv")
+    reporter.run_and_save_reports("dentists", OUTPUT_DIR)
 
 
 if __name__ == "__main__":

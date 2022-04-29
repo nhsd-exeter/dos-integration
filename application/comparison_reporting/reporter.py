@@ -2,20 +2,17 @@ from os import path
 from io import StringIO
 from typing import List
 import csv
-from collections import defaultdict
 from pandas import DataFrame
 import pathlib
 import requests
 
 from aws_lambda_powertools import Logger
 
-from common.nhs import NHSEntity
+from common.nhs import NHSEntity, match_nhs_entities_to_services
 from common.dos import DoSService, get_all_valid_dos_postcodes
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
 
 logger = Logger(child=True)
-THIS_DIR = pathlib.Path(__file__).parent.resolve()
-OUTPUT_DIR = path.join(THIS_DIR, "out")
 
 
 def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
@@ -23,21 +20,6 @@ def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
     resp = requests.get(url)
     return [{k: v if v != "" else None for k, v in row.items()}
             for row in csv.DictReader(StringIO(resp.text), skipinitialspace=True, delimiter=delimiter)]
-
-
-def match_nhs_entities_to_services(nhs_entities: List[NHSEntity], services: List[DoSService]):
-    logger.info("Matching all NHS Entities to corresponding list of services.")
-    servicelist_map = defaultdict(list)
-    for nhs_entity in nhs_entities:
-        for service in services:
-            if nhs_entity.is_matching_dos_service(service):
-                servicelist_map[nhs_entity.odscode].append(service)
-
-    logger.info(
-        f"{len(servicelist_map)}/{len(nhs_entities)} nhs entities matches with at least 1 service. "
-        f"{len(nhs_entities) - len(servicelist_map)} not matched."
-    )
-    return servicelist_map
 
 
 class Reporter:
@@ -48,7 +30,22 @@ class Reporter:
         self.entity_service_map = match_nhs_entities_to_services(self.nhs_entities, self.dos_services)
         self.valid_normalised_postcodes = None
 
-    def create_postcode_comparison_report(self, filename: str):
+    def run_and_save_reports(self, file_prefix: str, output_dir: str) -> None:
+        reports = (
+            (self.create_postcode_comparison_report(), "postcode_comparison_report"),
+            (self.create_postcode_comparison_report(), "postcode_comparison_report"),
+            (self.create_std_opening_times_comparison_report(), "std_opening_times_comparison_report"),
+            (self.create_spec_opening_times_comparison_report(), "spec_opening_times_comparison_report"),
+            (self.create_invalid_postcode_report(), "invalid_postcode_report"),
+            (self.create_invalid_spec_opening_times_report(), "invalid_spec_opening_times_report"),
+            (self.create_invalid_std_opening_times_report(), "invalid_std_opening_times_report")
+        )
+        pathlib.Path(output_dir).mkdir(exist_ok=True)
+        for report, report_name in reports:
+            filename = f"{file_prefix}_{report_name}.csv"
+            report.to_csv(path.join(output_dir, filename), index=False)
+
+    def create_postcode_comparison_report(self) -> DataFrame:
         logger.info("Running postcode comparison report.")
         headers = [
             "NHSUK ODSCode",
@@ -70,11 +67,9 @@ class Reporter:
                         service.postcode
                     ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
 
-    def create_std_opening_times_comparison_report(self, filename: str):
+    def create_std_opening_times_comparison_report(self) -> DataFrame:
         logger.info("Running standard opening times comparison report.")
         headers = [
             "NHSUK ODSCode",
@@ -98,11 +93,9 @@ class Reporter:
                                 for day in WEEKDAYS])
                     ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
 
-    def create_spec_opening_times_comparison_report(self, filename: str):
+    def create_spec_opening_times_comparison_report(self) -> DataFrame:
         logger.info("Running specified opening times comparison report.")
         headers = [
             "NHSUK ODSCode",
@@ -128,11 +121,9 @@ class Reporter:
                         "\n".join(str(sot) for sot in service._specified_opening_times)
                     ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
 
-    def create_invalid_spec_opening_times_report(self, filename: str):
+    def create_invalid_spec_opening_times_report(self) -> DataFrame:
         logger.info("Running invalid specified opening times comparison report.")
         headers = [
             "NHSUK ODSCode",
@@ -149,11 +140,9 @@ class Reporter:
                     "\n".join(str(sot) for sot in nhs_entity.specified_opening_times)
                 ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
 
-    def create_invalid_std_opening_times_report(self, filename: str):
+    def create_invalid_std_opening_times_report(self) -> DataFrame:
         logger.info("Running invalid standard opening times comparison report.")
         headers = [
             "NHSUK ODSCode",
@@ -171,11 +160,9 @@ class Reporter:
                             for day in WEEKDAYS])
                 ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
 
-    def create_invalid_postcode_report(self, filename: str):
+    def create_invalid_postcode_report(self) -> DataFrame:
         logger.info("Running Invalid Postcode report.")
 
         if self.valid_normalised_postcodes is None:
@@ -195,6 +182,4 @@ class Reporter:
                     nhs_entity.postcode
                 ])
 
-        df = DataFrame(data=rows, columns=headers)
-        pathlib.Path(OUTPUT_DIR).mkdir(exist_ok=True)
-        df.to_csv(path.join(OUTPUT_DIR, filename), index=False)
+        return DataFrame(data=rows, columns=headers)
