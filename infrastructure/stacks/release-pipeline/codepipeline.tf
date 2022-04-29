@@ -22,7 +22,7 @@ resource "aws_codepipeline" "release_codepipeline" {
         ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.release_pipeline_branch
-        DetectChanges    = true
+        DetectChanges    = false
       }
     }
   }
