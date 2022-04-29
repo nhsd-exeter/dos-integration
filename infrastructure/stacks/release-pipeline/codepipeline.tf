@@ -7,7 +7,6 @@ resource "aws_codepipeline" "release_codepipeline" {
     type     = "S3"
   }
 
-
   stage {
     name = "Source"
     action {
@@ -17,7 +16,6 @@ resource "aws_codepipeline" "release_codepipeline" {
       provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
-
       configuration = {
         ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
@@ -101,7 +99,7 @@ resource "aws_codepipeline" "release_codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-dev-integration-test-stage-${action.key}"
+          ProjectName = "${var.project_id}-${var.environment}-integration-test-stage-${action.key}"
           EnvironmentVariables = jsonencode([
             {
               name  = "ENVIRONMENT"

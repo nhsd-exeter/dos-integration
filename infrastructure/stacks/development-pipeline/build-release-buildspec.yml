@@ -19,7 +19,7 @@ phases:
       - echo $RELEASE_BRANCH
       - echo $ENVIRONMENT
       - |
-        APPLY=$(make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true | grep "No changes")
+        APPLY=$(make terraform-apply-auto-approve STACKS=release-pipeline PROFILE=tools ENVIRONMENT=$ENVIRONMENT TF_VAR_release_pipeline_branch=$RELEASE_BRANCH | grep "No changes")
         echo $APPLY
         if [[ "$APPLY" != *"No changes"* ]]; then
           aws codepipeline start-pipeline-execution --name uec-dos-int-release-$ENVIRONMENT-codepipeline;
