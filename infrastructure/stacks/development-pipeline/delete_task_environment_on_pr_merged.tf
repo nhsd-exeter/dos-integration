@@ -7,6 +7,10 @@ resource "aws_codebuild_webhook" "destroy_task_environment_on_pr_merged_deployme
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
     }
+    filter {
+      type    = "HEAD_REF"
+      pattern = "refs/heads/task"
+    }
   }
 }
 

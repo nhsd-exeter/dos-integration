@@ -7,6 +7,10 @@ resource "aws_codebuild_webhook" "destroy_release_environment_and_pipeline_on_pr
       type    = "EVENT"
       pattern = "PULL_REQUEST_MERGED"
     }
+    filter {
+      type    = "HEAD_REF"
+      pattern = "refs/heads/release"
+    }
   }
 }
 
