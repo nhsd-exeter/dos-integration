@@ -415,17 +415,6 @@ def stored_dynamo_db_events_are_pulled(context):
     return context
 
 
-@then("no Changed request is created", target_fixture="context")
-def no_cr_created(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter message = "No changes identified"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert logs != [], "ERROR!!.. Unexpected Changed request found.."
-    return context
-
-
 @then("the exception is reported to cloudwatch", target_fixture="context")
 def service_exception(context):
     query = (
@@ -475,7 +464,7 @@ def processed_changed_request_sent_to_dos(context):
     assert cr_sent_logs != [], "ERROR!!.. Expected sent event confirmation in service logs not found."
     return context
 
-
+#This step doesn't actually do anything
 @then("the Changed Event is not processed any further")
 def the_changed_event_is_not_processed(context):
     cr_received_search_param = "Received change request"
@@ -568,48 +557,6 @@ def the_changed_address_is_accepted_by_dos(context):
 def the_changed_event_is_not_sent_to_dos(context):
     response = get_changes(context["correlation_id"])
     assert response == [], "ERROR!!.. Event data found in Dos."
-
-
-@then("the event is sent to the DLQ", target_fixture="context")
-def event_sender_triggers_DLQ(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter response_text like "Fake Bad Request"'
-    )
-    logs = get_logs(query, "sender", context["start_time"])
-    assert "Failed to send change request to DoS" in logs, "ERROR!!.. expected exception logs not found."
-    return context
-
-
-@then("the DLQ logs the error for Splunk", target_fixture="context")
-def event_bridge_dlq_log_check(context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        ' | filter report_key="CR_DLQ_HANDLER_RECEIVED_EVENT"'
-    )
-    logs = get_logs(query, "cr_dlq", context["start_time"])
-    assert "Change Request DLQ Handler hit" in logs, "ERROR!!.. expected exception logs not found."
-    return context
-
-
-@then(parsers.parse('the "{lambda_name}" logs show status code "{status_code}"'))
-def lambda_status_code_check(context, lambda_name, status_code):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        f" | filter error_msg_http_code={status_code}"
-    )
-    logs = get_logs(query, lambda_name, context["start_time"])
-    assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
-
-
-@then(parsers.parse('the "{lambda_name}" logs show error message "{error_message}"'))
-def lambda_error_msg_check(context, lambda_name, error_message):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
-        f' | filter error_msg like "{error_message}"'
-    )
-    logs = get_logs(query, lambda_name, context["start_time"])
-    assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
 
 
 @then(parsers.parse('the change request has status code "{status}"'))
