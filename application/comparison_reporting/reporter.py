@@ -10,7 +10,7 @@ from aws_lambda_powertools import Logger
 
 from common.nhs import NHSEntity, match_nhs_entities_to_services
 from common.dos import DoSService, get_all_valid_dos_postcodes
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
+from common.opening_times import SpecifiedOpeningTime
 
 logger = Logger(child=True)
 
@@ -87,10 +87,8 @@ class Reporter:
                         nhs_entity.odscode,
                         service.odscode,
                         service.uid,
-                        "\n".join([f"{day}={OpenPeriod.list_string(getattr(nhs_entity.standard_opening_times, day))}"
-                                for day in WEEKDAYS]),
-                        "\n".join([f"{day}={OpenPeriod.list_string(getattr(service._standard_opening_times, day))}"
-                                for day in WEEKDAYS])
+                        nhs_entity.standard_opening_times.to_string("\n"),
+                        service._standard_opening_times.to_string("\n")
                     ])
 
         return DataFrame(data=rows, columns=headers)
@@ -156,8 +154,7 @@ class Reporter:
                 rows.append([
                     nhs_entity.odscode,
                     nhs_entity.org_name,
-                    "\n".join([f"{day}={OpenPeriod.list_string(getattr(nhs_entity.standard_opening_times, day))}"
-                            for day in WEEKDAYS])
+                    nhs_entity.standard_opening_times.to_string("\n")
                 ])
 
         return DataFrame(data=rows, columns=headers)

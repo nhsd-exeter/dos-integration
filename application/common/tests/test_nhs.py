@@ -7,6 +7,8 @@ from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 test_attr_names = ("odscode", "website", "PublicPhone", "Phone", "Postcode")
+DENTIST_SERVICE_ID = DENTIST_SERVICE_TYPE_IDS[0]
+PHARMACY_SERVICE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 
 
 def test__init__():
@@ -635,11 +637,11 @@ def test_match_nhs_entities_to_services():
 
     dos1a = dummy_dos_service()
     dos1a.odscode = "V123456789"
-    dos1a.typeid = 12
+    dos1a.typeid = DENTIST_SERVICE_ID
 
     dos1b = dummy_dos_service()
     dos1b.odscode = "V123456222"
-    dos1b.typeid = 12
+    dos1b.typeid = DENTIST_SERVICE_ID
 
     dos1c = dummy_dos_service()
     dos1c.odscode = "V123456222"
@@ -647,11 +649,11 @@ def test_match_nhs_entities_to_services():
 
     dos2a = dummy_dos_service()
     dos2a.odscode = "FA912333"
-    dos2a.typeid = 13
+    dos2a.typeid = PHARMACY_SERVICE_ID
 
     dos2a = dummy_dos_service()
     dos2a.odscode = "FA912333"
-    dos2a.typeid = 999
+    dos2a.typeid = PHARMACY_SERVICE_ID
 
     expected_result = {
         nhs1.odscode: [dos1a, dos1b],

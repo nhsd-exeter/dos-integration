@@ -213,7 +213,7 @@ class StandardOpeningTimes:
         return f"<StandardOpeningTimes: {str(self)}{closed_days_str}>"
 
     def __str__(self):
-        return ", ".join([f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS])
+        return self.to_string(", ")
 
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
@@ -232,6 +232,9 @@ class StandardOpeningTimes:
                 return False
 
         return True
+
+    def to_string(self, seperator: str = ", ") -> str:
+        return seperator.join([f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS])
 
     def get_openings(self, day: str) -> List[OpenPeriod]:
         return getattr(self, day.lower())
