@@ -17,6 +17,7 @@ phases:
       - chown -R 999:999 $CODEBUILD_SRC_DIR
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | sed -e "s|refs/heads/release/||" | sed -e "s|\.|-|g")
+      - export RELEASE_BRANCH=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | sed -e "s|refs/heads/||")
       - echo $ENVIRONMENT
       - export TEST_ENV=$(echo $ENVIRONMENT-test)
       - echo $TEST_ENV
@@ -24,6 +25,7 @@ phases:
       - echo $ENVIRONMENT_DEPLOYED
       - |
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+          make terraform-clean
           make undeploy PROFILE=test ENVIRONMENT=$TEST_ENV
           unset ENVIRONMENT_DEPLOYED
         fi
@@ -33,6 +35,7 @@ phases:
       - echo $ENVIRONMENT_DEPLOYED
       - |
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+          make terraform-clean
           make undeploy PROFILE=perf ENVIRONMENT=$PERF_ENV
           unset ENVIRONMENT_DEPLOYED
         fi
@@ -49,9 +52,11 @@ phases:
       - echo $ENVIRONMENT_DEPLOYED
       - |
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+            make terraform-clean
             make undeploy PROFILE=demo ENVIRONMENT=$DEMO_ENV
         fi
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
-      - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline,performance-pipeline
+      - make terraform-clean
+      - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline,performance-pipeline TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true

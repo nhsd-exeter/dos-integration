@@ -235,10 +235,6 @@ resource "aws_codebuild_project" "di_integration_tests" {
       value = "test"
     }
     environment_variable {
-      name  = "ENVIRONMENT"
-      value = "test"
-    }
-    environment_variable {
       name  = "INTEGRATION_TAGS"
       value = each.key
     }

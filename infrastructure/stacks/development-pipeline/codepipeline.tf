@@ -102,6 +102,13 @@ resource "aws_codepipeline" "codepipeline" {
         version         = "1"
         configuration = {
           ProjectName = "${var.project_id}-${var.environment}-integration-test-stage-${action.key}"
+          EnvironmentVariables = jsonencode([
+            {
+              name  = "ENVIRONMENT"
+              value = "${action.key}"
+              type  = "PLAINTEXT"
+            }
+          ])
         }
       }
     }

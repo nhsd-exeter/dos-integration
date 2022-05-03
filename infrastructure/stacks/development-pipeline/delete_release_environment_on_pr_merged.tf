@@ -18,7 +18,7 @@ resource "aws_codebuild_project" "di_destroy_release_environment_and_pipeline_on
   # count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-destroy-release-environment-on-pr-merged-stage"
   description    = "Destroys release environments and release pipelines based on pr merged"
-  build_timeout  = "180"
+  build_timeout  = "480"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
