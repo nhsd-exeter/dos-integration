@@ -1,4 +1,0 @@
-OrganisationID¬OrganisationCode¬OrganisationType¬SubType¬OrganisationStatus¬IsPimsManaged¬OrganisationName¬Address1¬Address2¬Address3¬City¬County¬Postcode¬Latitude¬Longitude¬ParentODSCode¬ParentName¬Phone¬Email¬Website¬Fax
-111¬V001201¬Dentists 1¬UNKNOWN¬Visible¬True¬mydentist1, Fake road1, Blackburn ¬¬15-17 Fake Road¬¬Blackburn¬Lancashire¬BB8 6AZ¬¬-¬QE1¬Fake parent org¬01254 999999¬beee@mydentist.co.uk¬https://www.dentist.co.uk¬
-222¬V001202¬Dentists 2¬UNKNOWN¬Visible¬True¬mydentist2, Fake road2, Blackburn ¬¬15-17 Fake Road¬¬Blackburn¬Lancashire¬BB8 6AZ¬¬-¬QE1¬Fake parent org¬01254 999999¬beee@mydentist.co.uk¬https://www.dentist.co.uk¬
-333¬V001203¬Dentists 3¬UNKNOWN¬Visible¬True¬mydentist3, Fake road3, Blackburn ¬¬15-17 Fake Road¬¬Blackburn¬Lancashire¬BB8 6AZ¬¬-¬QE1¬Fake parent org¬01254 999999¬beee@mydentist.co.uk¬https://www.dentist.co.uk¬
