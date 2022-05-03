@@ -11,7 +11,7 @@ from common.dos import get_services_from_db
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, StandardOpeningTimes, SpecifiedOpeningTime
 from common.constants import DENTIST_SERVICE_TYPE_IDS
-from reporting import Reporter, download_csv_as_dicts
+from comparison_reporting.reporter import Reporter, download_csv_as_dicts
 
 
 logger = Logger(child=True)
@@ -44,7 +44,7 @@ def get_dentists() -> List[NHSEntity]:
     # Initialise dentists as NHS Entity objects
     dentists = []
     for entity_data in dentists_data:
-        id = entity_data.get("OrganisationID")
+        id = entity_data.get("OrganisationId")
 
         nhs_entity = NHSEntity({})
         nhs_entity.odscode = entity_data.get("OrganisationCode")
