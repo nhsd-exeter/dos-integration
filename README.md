@@ -70,23 +70,35 @@
 
 ## Overview
 
-A few sentences what business problem this project solves...
+The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both seperatley house a lot of the same data on Pharamcies/Dentists and other health orgnisations around the UK. This often leads to the management of these individual services having to update information in mutliple places online. The DoS Integration project aims to keep any updates made on NHS.uk consistent with the data which is then stored in DoS.
 
 ## Quick Start
 
 ### Development Requirements
 
-- macOS operating system provisioned with the `curl -L bit.ly/make-devops-macos-setup | bash` command
-- `iTerm2` command-line terminal and `Visual Studio Code` source code editor, which will be installed automatically for you in the next steps
+It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux enviornment to work with.
+
+This project contains a macOS enviornment which can be installed and setup to give the user a wide range of tools. More info on this is in the mac setup section.
+
+The main components you will need are your OS version of the below.
+
+- Python 3.9(.7)
+- Docker
+- Git
+- A VPN Client (OpenVPN or Tunnelblick are 2 simple options)
+
 
 ### Local Environment Configuration
 
 Clone the repository
 
-    git clone [project-url]
-    cd ./[project-dir]
+    git clone git@github.com:nhsd-exeter/dos-integration.git
+    cd ./dos-integration
 
-The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bash` command. If that step has already been done it can be omitted at this point
+
+### Mac setup
+
+The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bash` command.
 
     make macos-setup
 
@@ -98,15 +110,6 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 
     make devops-setup-aws-accounts
 
-Generate and trust a self-signed certificate that will be used locally to enable encryption in transit
-
-    make trust-certificate
-
-### Local Project Setup
-
-    # Terminal 1
-    make build
-    make start log
 
 ## Contributing
 
