@@ -88,6 +88,7 @@ The main components you will need for *basic* development work, are your OS vers
 - Git
 - Python (The project currenly runs on 3.9.7)
 - AWS CLI
+- Docker
 
 
 ### Download repo
@@ -219,6 +220,13 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
+    
+The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own enviornment directly by going to the /application directory and running.
+
+    python3 -m pytest --cov=. -vv
+    
+It is always a good idea to run the unit tests in the IMAGE enviornment for a final run-through to ensure they pass in the correct enviormental conditions.
+
 
 ### Integration Testing
 
