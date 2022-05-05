@@ -8,7 +8,7 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
-      - make aws-ecr-cleanup REPOS=authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,slack-messenger,test-db-checker-handler
+      - make aws-ecr-cleanup REPOS=authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,slack-messenger,test-db-checker-handler,orchestrator,tester,serverless
     finally:
         - |
           if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
