@@ -104,7 +104,7 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
 
-There is also an automated ways to setup AWS access within the mac setup. Once the mac stup scripts have been run. The following command can be used to switch between AWS roles.
+There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles.
 
      tx-mfa
 
@@ -139,23 +139,28 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 ### Add IP Address to IP Allow List
 
+To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
+
+An IP Allowlist is kept in secrets manager for each enviornment (task, dev, live etc) Where the task env will be used for every task env created. The Secret Name for each is of the format
+
+    uec-dos-int-XXXX-ip-addresses-allowlist
+
+where XXXX is the name of the enviornment in lowercase. For most development work you only need to add your IP to the task and dev enviornments list.
+
+You can also add your IP to the lists with a script.
+
 Prerequisites (first setup only)
 
     make tester-build
 
-Requirements to update IP allow list (Every time)
 
-    tx-mfa
-
-To add an IP address to the IP allow lists, run the following command.
+To add an IP address to the IP allow lists, Ensure you're authenticated for access to AWS and run the following command.
 
     make update-all-ip-allowlists
 
 To add an IP address to the IP allow lists and deploy the allow list to environment run the following command.The `PROFILE` delineates which environment to update with the latest IP allow list. Set `ENVIRONMENT` if you are changing an environment not linked to your branch
 
     make update-ip-allowlists-and-deploy-allowlist PROFILE=task
-
-Note: IP Addresses are held in the AWS Secrets Manager with the secret name being the variable `TF_VAR_ip_address_secret`. You can find your IP address in the AWS console with your Git username as the key and the IP address as the value
 
 ### Database Connection
 
