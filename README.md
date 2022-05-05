@@ -70,30 +70,27 @@
 
 ## Overview
 
-The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both seperatley house a lot of the same data on Pharamcies/Dentists and other health orgnisations around the UK. This often leads to the management of these individual services having to update information in mutliple places online. The DoS Integration project aims to keep any updates made on NHS.uk consistent with the data which is then stored in DoS.
+The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both house a lot of the same data on Pharamcies/Dentists/other health orgnisations, around the UK. This often leads to the management of these individual services having to update information in mutliple places online. The DoS Integration project aims to keep any updates made on NHS.uk consistent with the data which is then stored in DoS.
 
 ## Quick Start
 
 ### Development Requirements
 
-It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux enviornment to work with.
+It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux enviornment to work with. Try not to use the Windows command line. 
 
-This project contains a macOS enviornment which can be installed and setup to give the user a wide range of tools. More info on this is in the mac setup section.
+A mac is no longer required for basic development since task branches are automatically built on the push of a new commit. However the build/deploy commands currently are only designed to work with macOS.
 
-The main components you will need are your OS version of the below.
+This project contains a macOS enviornment which can be installed and setup that gives the user a wide range of tools useful for development. More info on this is in the mac setup section.
 
-- Python 3.9(.7)
-- Docker
+The main components you will need for *basic* development work, are your OS version of the below.
+
+- An VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
-- A VPN Client (OpenVPN or Tunnelblick are 2 simple options)
+- Python (The project currenly runs on 3.9.7)
+- AWS CLI
 
+### AWS Authentication
 
-### Local Environment Configuration
-
-Clone the repository
-
-    git clone git@github.com:nhsd-exeter/dos-integration.git
-    cd ./dos-integration
 
 
 ### Mac setup
@@ -102,13 +99,21 @@ The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bas
 
     make macos-setup
 
-There are essential configuration options that **must** be set before proceeding any further. As a minimum the following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you have `tx-mfa` into non-prod first before running `make setup`
+There are configuration options that should be set before proceeding. The following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you authenticated in the AWS non-prod account first before running `make setup`
 
     make setup
 
 Please, ask one of your colleagues for the AWS account numbers used by the project. The next command will prompt you to provide them. This information can be sourced from a properly set up project by running `make show-configuration | grep ^AWS_ACCOUNT_ID_`
 
     make devops-setup-aws-accounts
+
+
+### Local Environment Configuration
+
+Clone the repository
+
+    git clone git@github.com:nhsd-exeter/dos-integration.git
+    cd ./dos-integration
 
 
 ## Contributing
