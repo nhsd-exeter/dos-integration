@@ -142,7 +142,7 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
 
-An IP Allowlist is kept in secrets manager for each enviornment (task, dev, live etc) Where the task env will be used for every task env created. The Secret Name for each is of the format
+An IP Allowlist is kept in secrets manager for each enviornment (task, dev, live etc). The task enviornment list is used for each task enviornment deployed. The Secret Name for each is of the format
 
     uec-dos-int-XXXX-ip-addresses-allowlist
 
