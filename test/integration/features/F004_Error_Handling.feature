@@ -10,7 +10,7 @@ Feature: F004. Error Handling
     Then the Event "cr_dlq" shows field "error_msg_http_code" with message "400"
     And the Changed Event is stored in dynamo db
 
-  @dev
+  @dev @kit
   Scenario: F004S002. A CR with invalid Correlation ID gets rejected by events bridge and is NOT sent to DOS
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
@@ -54,7 +54,7 @@ Feature: F004. Error Handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S008. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
-    When the Changed Event is sent for processing with sequence id <seqid>
+    When the Changed Event is sent for processing with sequence id "<seqid>"
     Then the Event "processor" shows field "message" with message "Sequence id is smaller than the existing one"
 
     Examples: These are both lower than the default sequence-id values
@@ -63,7 +63,7 @@ Feature: F004. Error Handling
       | -1234 |
 
 
-@complete
+@complete @kit
   Scenario Outline: F004S009. Dentist and Pharmacy org types not accepted
     Given a "<org_type>" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

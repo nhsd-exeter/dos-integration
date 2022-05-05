@@ -7,7 +7,6 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "Found 0 services in DB"
     And the Event "processor" shows field "message" with message "No matching DOS services"
-    #And the Changed Event is not processed any further
     And the Event "processor" does not show "message" with message "Changes for nhs"
     And the Changed Event is not sent to Dos
     And the Changed Event is stored in dynamo db
@@ -25,7 +24,6 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event is valid
     And the field "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
-    #Then the Changed Event is not processed any further
     Then the Event "processor" does not show "message" with message "Changes for nhs"
     And the Changed Event is stored in dynamo db
 
@@ -35,7 +33,6 @@ Feature: F002. Invalid change event Exception handling
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the exception is reported to cloudwatch
-    #And the Changed Event is not processed any further
     And the Event "processor" does not show "message" with message "Changes for nhs"
     And the Changed Event is stored in dynamo db
 
@@ -45,7 +42,6 @@ Feature: F002. Invalid change event Exception handling
     And the field "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
     Then the exception is reported to cloudwatch
-    #And the Changed Event is not processed any further
     And the Event "processor" does not show "message" with message "Changes for nhs"
     And the Changed Event is stored in dynamo db
 

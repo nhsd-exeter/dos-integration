@@ -464,7 +464,8 @@ def processed_changed_request_sent_to_dos(context):
     assert cr_sent_logs != [], "ERROR!!.. Expected sent event confirmation in service logs not found."
     return context
 
-#This step doesn't actually do anything
+
+# This step doesn't actually do anything
 @then("the Changed Event is not processed any further")
 def the_changed_event_is_not_processed(context):
     cr_received_search_param = "Received change request"
