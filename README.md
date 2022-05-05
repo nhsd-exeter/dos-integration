@@ -84,14 +84,27 @@ This project contains a macOS enviornment which can be installed and setup that 
 
 The main components you will need for *basic* development work, are your OS version of the below.
 
-- An VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
+- A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
 - Python (The project currenly runs on 3.9.7)
 - AWS CLI
 
+
+### Download repo
+
+Clone the repository
+
+    git clone git@github.com:nhsd-exeter/dos-integration.git
+    cd ./dos-integration
+
 ### AWS Authentication
 
+Please, ask one of your colleagues for the AWS account numbers used by the project. You will use these as roles which you will assume from your account.
 
+Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+
+There is also an automated ways to setup AWS access within the mac setup.
 
 ### Mac setup
 
@@ -108,20 +121,12 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
     make devops-setup-aws-accounts
 
 
-### Local Environment Configuration
-
-Clone the repository
-
-    git clone git@github.com:nhsd-exeter/dos-integration.git
-    cd ./dos-integration
-
-
 ## Contributing
 
 Here is the list of the development practices that have to be followed by the team and the individual members:
 
-- Only use single canonical branch **master**. Any intermediate branch significantly increases the maintenance overhead of the repository.
-- Apply the git rebase workflow and never merge from master to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
+- Only use single canonical branch **develop**. Any intermediate branch significantly increases the maintenance overhead of the repository.
+- Apply the git rebase workflow and never merge from develop to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
 - Cryptographically sign your commits using **gpg** to ensure its content have not been tampered with.
 - Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complies and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.
