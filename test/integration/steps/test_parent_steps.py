@@ -26,6 +26,7 @@ from .utilities.utils import (
     get_service_id,
     get_change_event_standard_opening_times,
     get_change_event_specified_opening_times,
+    get_odscode_with_contact_data,
     confirm_approver_status,
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
@@ -173,7 +174,7 @@ def a_change_event_is_valid_and_matches_dos():
 def a_change_event_is_valid_with_contact_set(contact: str):
     context = {}
 
-    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", "FYH55")
+    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", get_odscode_with_contact_data())
     if contact.lower() == "website":
         del context["change_event"]["Contacts"][0]
     elif contact.lower() == "phone":
