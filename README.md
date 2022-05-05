@@ -104,7 +104,9 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
 https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
 
-There is also an automated ways to setup AWS access within the mac setup.
+There is also an automated ways to setup AWS access within the mac setup. Once the mac stup scripts have been run. The following command can be used to switch between AWS roles.
+
+     tx-mfa
 
 ### Mac setup
 
