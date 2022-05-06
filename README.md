@@ -181,7 +181,17 @@ To add an IP address to the IP allow lists and deploy the allow list to environm
 
     make update-ip-allowlists-and-deploy-allowlist PROFILE=task
 
-### Database Connection
+### DoS Database Connection
+
+The following env vars are required for the project to establish a connection to the DoS database (or a replica).
+
+DB_SECRET_NAME
+DB_SERVER
+DB_PORT
+DB_NAME
+DB_SCHEMA
+DB_USER_NAME
+DB_SECRET_KEY
 
 To connect to the local postgres database use these connection
 
@@ -194,13 +204,21 @@ To connect to the local postgres database use these connection
 
 ### Code Formatting
 
-  To format the code run:
+Code quality checks can be done with the pip installed 'black' module and run with the command.
+    python -m black --line-length 120
+
+This is also wrapped in a function
+ To format the code run:
     make python-code-format FILES=./application
     make python-code-format FILES=./test
 
 ### Code Quality
 
-  To check the code quality run:
+Code quality checks can be done with the pip installed 'flake8' module and run with the command.
+    python3 -m flake8 --max-line-length=120
+
+This is also wrapped in a function
+To check the code quality run:
     make python-code-check FILES=./application
     make python-code-check FILES=./test
 
