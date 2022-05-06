@@ -76,6 +76,15 @@ The DoS Integration project aims to keep any updates made on NHS.uk consistent w
 
 <img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
 
+### Technology Stack
+
+The current technology stack is:
+
+- Python (3.9.7) - Main programming language
+- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS
+- Serverless Framework - (Where supported)
+- Terraform - Infrastructure as code tool (Where serverless not supported)
+
 ## Quick Start
 
 ### Development Requirements
@@ -416,19 +425,7 @@ What sort of data system operates on and processes
 
 It is recommended that any other documentation related to the aspect of security should be stored in a private workspace.
 
-### Technology Stack
 
-What are the technologies and programming languages used to implement the solution
-
-The current technology stack is:
-
-- Python (typically latest version) - Main programming language
-- Serverless Framework - Infrastructure as code tool (we use where possible)
-- Terraform - Infrastructure as code tool (we use when infrastructure is not supported by Serverless Framework)
-
-### Key Architectural Decisions
-
-Architectural decisions records (ADRs) are stored in `documentation/adr`
 
 ### Guiding Principles
 
@@ -470,19 +467,13 @@ What are the links of the supporting systems?
 
   The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
 
-### Auditing
-
-Are there any auditing requirements in accordance with the data retention policies?
-
-### Backups
-
-- Frequency and type of the backups
-- Instructions on how to recover the data
 
 ### Cloud Environments
 
 List all the environments and their relation to profiles
 
+- Task
+  - Profile: 'task'
 - Dev
   - Profile: `dev`
 - Demo
@@ -490,11 +481,10 @@ List all the environments and their relation to profiles
 - Live
   - Profile: `live`
 
-To deploy a environment run `make deploy PROFILE=task`
-
 ### Runbooks
 
-List all the operational runbooks
+The runbooks for this project can be found on the DI confluence.
+https://nhsd-confluence.digital.nhs.uk/display/DI/Runbooks
 
 ## Product
 
