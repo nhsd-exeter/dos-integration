@@ -49,7 +49,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         query = (
             f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
-            "AND web != '' AND publicphone != ''"
+            "AND web != '' AND publicphone != '' "
             "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
         )
         result = run_query(query, None)

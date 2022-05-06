@@ -88,7 +88,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
 
-@complete @dev @pharmacy_cloudwatch_queries @wip
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S014. No CR created with empty website data
     Given a Changed Event with value "''" for "website"
     When the Changed Event is sent for processing with "valid" api key
