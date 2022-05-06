@@ -399,52 +399,6 @@ To Deploy Live
 
 ## Architecture
 
-### Diagrams
-
-#### System Context Diagram
-
-Include an image of the [C4 model](https://c4model.com/) System Context diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-SystemContext.png" width="1024" /><br /><br />
-
-#### Container Diagram
-
-Include an image of the [C4 model](https://c4model.com/) Container diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-Container.png" width="1024" /><br /><br />
-
-#### Component Diagram
-
-Include an image of the [C4 model](https://c4model.com/) Component diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-Component.png" width="1024" /><br /><br />
-
-#### Processes and Data Flow
-
-Include an image of the Processes and Data Flow diagram
-
-#### Infrastructure
-
-Include an image of the Infrastructure diagram. Please, be aware that any sensitive information that can be potentially misused either directly or indirectly must not be stored and accessible publicly. This could be IP addresses, domain names or detailed infrastructure information.
-
-<img src="./documentation/diagrams/Infrastructure-Component.png" width="1024" /><br /><br />
-
-#### Networking
-
-Include an image of the Networking diagram. Please, be aware that any sensitive information must not be stored and accessible publicly. This could be IP addresses, domain names or detailed networking information.
-
-### Integration
-
-#### Interfaces
-
-Document all the system external interfaces
-
-- API documentation should be generated automatically
-
-#### Dependencies
-
-Document all the system external dependencies and integration points
-
 ### Data
 
 What sort of data system operates on and processes
@@ -476,17 +430,6 @@ The current technology stack is:
 
 Architectural decisions records (ADRs) are stored in `documentation/adr`
 
-### System Quality Attributes
-
-- Accessibility, usability
-- Resilience, durability, fault-tolerance
-- Scalability, elasticity
-- Consistency
-- Performance
-- Interoperability
-- Security
-- Supportability
-
 ### Guiding Principles
 
 List of the high level principles that a product /development team must adhere to:
@@ -500,10 +443,6 @@ List of the high level principles that a product /development team must adhere t
 - Use of the Make DevOps automation scripts (macOS and Linux)
 
 ## Operation
-
-### Error Handling
-
-- What is the system response under the erroneous conditions
 
 ### Observability
 
