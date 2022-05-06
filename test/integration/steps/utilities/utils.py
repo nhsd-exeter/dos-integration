@@ -259,6 +259,7 @@ def get_change_event_specified_opening_times(service_id: str) -> Any:
     data = literal_eval(data)
     return data
 
+
 def get_odscode_with_contact_data() -> str:
     lambda_payload = {"type": "get_odscode_with_contact_data"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
@@ -266,6 +267,7 @@ def get_odscode_with_contact_data() -> str:
     data = literal_eval(data)
     odscode = choice(data)[0]
     return odscode
+
 
 def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
     response_status = False
