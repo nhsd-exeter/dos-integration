@@ -74,6 +74,11 @@ The NHS.uk website, and the DoS (Directory of Services) service are seperate ent
 
 The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
 
+### DI Confluence Page
+https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
+
+### Architecture
+
 <img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
 
 ### Technology Stack
