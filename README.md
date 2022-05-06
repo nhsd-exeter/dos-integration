@@ -86,7 +86,7 @@ https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
 The current technology stack is:
 
 - Python (3.9.7) - Main programming language
-- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS
+- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS
 - Serverless Framework - (Where supported)
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
