@@ -70,7 +70,9 @@
 
 ## Overview
 
-The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both house a lot of the same data on Pharamcies/Dentists/other health orgnisations, around the UK. This often leads to the management of these individual services having to update information in mutliple places online. The DoS Integration project aims to keep any updates made on NHS.uk consistent with the data which is then stored in DoS.
+The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both store a lot of the same important data about Pharamcies/Dentists and other health orgnisations around the UK. The management of these individual services therefore needs to update information in mutliple places online to keep their data fully up to date for their users.
+
+The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
 
 <img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
 
