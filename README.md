@@ -95,7 +95,7 @@ The main components you will need for *basic* development work, are your OS vers
 - Docker
 
 
-### Download repo
+### Clone Repository
 
 Clone the repository
 
