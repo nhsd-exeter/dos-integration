@@ -11,9 +11,9 @@ from aws_lambda_powertools import Logger
 from common.nhs import NHSEntity, match_nhs_entities_to_services
 from common.dos import DoSService, get_all_valid_dos_postcodes
 from common.opening_times import SpecifiedOpeningTime
+from common.tests.conftest import blank_dos_service
 
 logger = Logger(child=True)
-
 
 def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
     """Takes a url of a csv to download from the web and then returns it as a list of dictionaries."""
@@ -168,15 +168,27 @@ class Reporter:
         headers = [
             "NHSUK ODSCode",
             "NHSUK Organisation Name",
-            "NHSUK Invalid Postcode"
+            "NHSUK Invalid Postcode",
+            "DoS service ID",
+            "DoS service UID",
+            "DoS service Postcode",
+            "DoS service Status"
         ]
         rows = []
         for nhs_entity in self.nhs_entities:
             if nhs_entity.normal_postcode() not in self.valid_normalised_postcodes:
-                rows.append([
-                    nhs_entity.odscode,
-                    nhs_entity.org_name,
-                    nhs_entity.postcode
-                ])
+                dos_services = self.entity_service_map.get(nhs_entity.odscode)
+                if dos_services is None:
+                    dos_services = [blank_dos_service()]
+                for dos_service in dos_services:
+                    rows.append([
+                        nhs_entity.odscode,
+                        nhs_entity.org_name,
+                        nhs_entity.postcode,
+                        dos_service.id,
+                        dos_service.uid,
+                        dos_service.postcode,
+                        dos_service.statusid
+                    ])
 
         return DataFrame(data=rows, columns=headers)

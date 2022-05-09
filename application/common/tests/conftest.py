@@ -31,6 +31,19 @@ def dummy_dos_service(**kwargs) -> DoSService:
 
     return dos_service
 
+def blank_dos_service(**kwargs) -> DoSService:
+    """Creates a DoSService Object with blank str data for the unit testing"""
+    test_data = {}
+    for col in DoSService.field_names():
+        test_data[col] = ""
+    dos_service = DoSService(test_data)
+
+    for name, value in kwargs.items():
+        if value is not None:
+            setattr(dos_service, name, value)
+
+    return dos_service
+
 
 def dummy_dos_location() -> DoSLocation:
     """Creates a DoSLocation Object with random data for the unit testing"""

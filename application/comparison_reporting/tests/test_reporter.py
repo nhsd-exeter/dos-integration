@@ -9,8 +9,8 @@ from common.nhs import NHSEntity
 from common.opening_times import StandardOpeningTimes, SpecifiedOpeningTime, OpenPeriod
 from common.constants import PHARMACY_SERVICE_TYPE_IDS, DENTIST_SERVICE_TYPE_IDS
 
-P_TYPE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
-D_TYPE_ID = DENTIST_SERVICE_TYPE_IDS[0]
+PHARMACY_TYPE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
+DENTIST_TYPE_ID = DENTIST_SERVICE_TYPE_IDS[0]
 OP = OpenPeriod.from_string
 
 
@@ -42,8 +42,10 @@ def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
         "Postcode": "R3 7YX"
     })
 
+    dos1 = dummy_dos_service(odscode="FAT91111", typeid=PHARMACY_TYPE_ID)
+
     nhs_entities = [nhs1, nhs2, nhs3]
-    dos_services = []
+    dos_services = [dos1]
     reporter = Reporter(nhs_entities, dos_services)
 
     pc_report = reporter.create_invalid_postcode_report()
@@ -51,10 +53,14 @@ def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
         columns=[
             "NHSUK ODSCode",
             "NHSUK Organisation Name",
-            "NHSUK Invalid Postcode"
+            "NHSUK Invalid Postcode",
+            "DoS service ID",
+            "DoS service UID",
+            "DoS service Postcode",
+            "DoS service Status"
         ],
         data=[
-            [nhs1.odscode, nhs1.org_name, nhs1.postcode]
+            [nhs1.odscode, nhs1.org_name, nhs1.postcode, dos1.id, dos1.uid, dos1.postcode, dos1.statusid]
         ])
 
     assert_frame_equal(expected_pc_report, pc_report)
@@ -79,12 +85,12 @@ def test_create_postcode_comparison_report():
         "Postcode": "R3 7YX"
     })
 
-    dos1a = dummy_dos_service(odscode="FAT911a", postcode="TE57EH", typeid=P_TYPE_ID)
-    dos1b = dummy_dos_service(odscode="FAT911b", postcode="TE57EW", typeid=P_TYPE_ID)
-    dos2a = dummy_dos_service(odscode="QR132a", postcode="BA27EB", typeid=P_TYPE_ID)
-    dos2b = dummy_dos_service(odscode="QR132b", postcode="KA27EB", typeid=P_TYPE_ID)
-    dos3a = dummy_dos_service(odscode="V3272456a", postcode="R3 7YX", typeid=D_TYPE_ID)
-    dos3b = dummy_dos_service(odscode="V3272456b", postcode="R3 7YY", typeid=D_TYPE_ID)
+    dos1a = dummy_dos_service(odscode="FAT911a", postcode="TE57EH", typeid=PHARMACY_TYPE_ID)
+    dos1b = dummy_dos_service(odscode="FAT911b", postcode="TE57EW", typeid=PHARMACY_TYPE_ID)
+    dos2a = dummy_dos_service(odscode="QR132a", postcode="BA27EB", typeid=PHARMACY_TYPE_ID)
+    dos2b = dummy_dos_service(odscode="QR132b", postcode="KA27EB", typeid=PHARMACY_TYPE_ID)
+    dos3a = dummy_dos_service(odscode="V3272456a", postcode="R3 7YX", typeid=PHARMACY_TYPE_ID)
+    dos3b = dummy_dos_service(odscode="V3272456b", postcode="R3 7YY", typeid=PHARMACY_TYPE_ID)
 
     nhs_entities = [nhs1, nhs2, nhs3]
     dos_services = [dos1a, dos1b, dos2a, dos2b, dos3a, dos3b]
@@ -138,17 +144,17 @@ def test_create_std_opening_times_comparison_report():
     nhs3 = NHSEntity({"ODSCode": "QR334"})
     nhs3.standard_opening_times = std3
 
-    dos1a = dummy_dos_service(odscode="FAT91", typeid=P_TYPE_ID)
+    dos1a = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
     dos1a._standard_opening_times = std1
-    dos1b = dummy_dos_service(odscode="FAT91", typeid=P_TYPE_ID)
+    dos1b = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
     dos1b._standard_opening_times = std3
-    dos2a = dummy_dos_service(odscode="GH291", typeid=P_TYPE_ID)
+    dos2a = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
     dos2a._standard_opening_times = std2
-    dos2b = dummy_dos_service(odscode="GH291", typeid=P_TYPE_ID)
+    dos2b = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
     dos2b._standard_opening_times = std1
-    dos3a = dummy_dos_service(odscode="QR334", typeid=P_TYPE_ID)
+    dos3a = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
     dos3a._standard_opening_times = std3
-    dos3b = dummy_dos_service(odscode="QR334", typeid=P_TYPE_ID)
+    dos3b = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
     dos3b._standard_opening_times = std1
 
     nhs_entities = [nhs1, nhs2, nhs3]
@@ -269,17 +275,17 @@ def test_create_spec_opening_times_comparison_report():
     nhs3 = NHSEntity({"ODSCode": "QR334"})
     nhs3.specified_opening_times = [spec2, spec3]
 
-    dos1a = dummy_dos_service(odscode="FAT91", typeid=P_TYPE_ID)
+    dos1a = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
     dos1a._specified_opening_times = [spec1, spec2]
-    dos1b = dummy_dos_service(odscode="FAT91", typeid=P_TYPE_ID)
+    dos1b = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
     dos1b._specified_opening_times = [spec2, spec3]
-    dos2a = dummy_dos_service(odscode="GH291", typeid=P_TYPE_ID)
+    dos2a = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
     dos2a._specified_opening_times = [spec2, spec4]
-    dos2b = dummy_dos_service(odscode="GH291", typeid=P_TYPE_ID)
+    dos2b = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
     dos2b._specified_opening_times = [spec1, spec2]
-    dos3a = dummy_dos_service(odscode="QR334", typeid=P_TYPE_ID)
+    dos3a = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
     dos3a._specified_opening_times = [spec2, spec3]
-    dos3b = dummy_dos_service(odscode="QR334", typeid=P_TYPE_ID)
+    dos3b = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
     dos3b._specified_opening_times = [spec1, spec2]
 
     nhs_entities = [nhs1, nhs2, nhs3]
