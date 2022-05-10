@@ -185,6 +185,13 @@ class SpecifiedOpeningTime:
     def valid_list(list: List["SpecifiedOpeningTime"]) -> bool:
         return all([x.is_valid() for x in list])
 
+    @staticmethod
+    def from_list(list: List["SpecifiedOpeningTime"], chosen_date: date, default=None) -> bool:
+        for item in list:
+            if item.date == chosen_date:
+                return item
+        return default
+
 
 @dataclass(unsafe_hash=True)
 class StandardOpeningTimes:
@@ -252,6 +259,9 @@ class StandardOpeningTimes:
 
     def is_open(self, weekday: str) -> bool:
         return len(getattr(self, weekday)) > 0
+
+    def same_openings(self, other: 'StandardOpeningTimes', day: str) -> bool:
+        return OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day))
 
     def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:
         """Adds a formatted open period to the specified weekda

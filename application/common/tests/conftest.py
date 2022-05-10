@@ -31,6 +31,7 @@ def dummy_dos_service(**kwargs) -> DoSService:
 
     return dos_service
 
+
 def blank_dos_service(**kwargs) -> DoSService:
     """Creates a DoSService Object with blank str data for the unit testing"""
     test_data = {}

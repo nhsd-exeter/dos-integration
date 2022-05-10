@@ -100,15 +100,45 @@ def test_create_postcode_comparison_report():
     expected_pc_report = DataFrame(
         columns=[
             "NHSUK ODSCode",
+            "NHSUK Name",
+            "NHSUK Postcode",
             "DoS Service ODSCode",
             "DoS Service UID",
-            "NHSUK Postcode",
-            "DoS Service Postcode"
+            "DoS Service Name",
+            "DoS Service Postcode",
+            "DoS Service Status"
         ],
         data=[
-            [nhs1.odscode, dos1b.odscode, dos1b.uid, nhs1.postcode, dos1b.postcode],
-            [nhs2.odscode, dos2b.odscode, dos2b.uid, nhs2.postcode, dos2b.postcode],
-            [nhs3.odscode, dos3b.odscode, dos3b.uid, nhs3.postcode, dos3b.postcode]
+            [
+                nhs1.odscode,
+                nhs1.org_name,
+                nhs1.postcode,
+                dos1b.odscode,
+                dos1b.uid,
+                dos1b.name,
+                dos1b.postcode,
+                dos1b.statusid
+            ],
+            [
+                nhs2.odscode,
+                nhs2.org_name,
+                nhs2.postcode,
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                dos2b.postcode,
+                dos2b.statusid
+            ],
+            [
+                nhs3.odscode,
+                nhs3.org_name,
+                nhs3.postcode,
+                dos3b.odscode,
+                dos3b.uid,
+                dos3b.name,
+                dos3b.postcode,
+                dos3b.statusid
+            ]
         ])
 
     assert_frame_equal(expected_pc_report, pc_report)
@@ -125,7 +155,7 @@ def test_create_std_opening_times_comparison_report():
     std1 = StandardOpeningTimes()
     std1.add_open_period(op1, "monday")
     std1.add_open_period(op2, "tuesday")
-    std1.add_open_period(op3, "wedesday")
+    std1.add_open_period(op3, "wednesday")
 
     std2 = StandardOpeningTimes()
     std2.add_open_period(op2, "wednesday")
@@ -154,43 +184,113 @@ def test_create_std_opening_times_comparison_report():
     dos2b._standard_opening_times = std1
     dos3a = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
     dos3a._standard_opening_times = std3
-    dos3b = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
-    dos3b._standard_opening_times = std1
 
     nhs_entities = [nhs1, nhs2, nhs3]
-    dos_services = [dos1a, dos1b, dos2a, dos2b, dos3a, dos3b]
+    dos_services = [dos1a, dos1b, dos2a, dos2b, dos3a]
     reporter = Reporter(nhs_entities, dos_services)
     pc_report = reporter.create_std_opening_times_comparison_report()
 
     expected_pc_report = DataFrame(
         columns=[
             "NHSUK ODSCode",
+            "NHSUK Standard Opening Times",
+            "Weekday",
             "DoS Service ODSCode",
             "DoS Service UID",
-            "NHSUK Standard Opening Times",
-            "DoS Standard Opening Times"
+            "DoS Service Name",
+            "DoS Standard Opening Times",
+            "DoS Service Status"
         ],
         data=[
             [
                 nhs1.odscode,
+                OpenPeriod.list_string(nhs1.standard_opening_times.get_openings("monday")),
+                "monday",
                 dos1b.odscode,
                 dos1b.uid,
-                nhs1.standard_opening_times.to_string("\n"),
-                dos1b._standard_opening_times.to_string("\n")
+                dos1b.name,
+                OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("monday")),
+                dos1b.statusid
+            ],
+            [
+                nhs1.odscode,
+                OpenPeriod.list_string(nhs1.standard_opening_times.get_openings("tuesday")),
+                "tuesday",
+                dos1b.odscode,
+                dos1b.uid,
+                dos1b.name,
+                OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("tuesday")),
+                dos1b.statusid
+            ],
+            [
+                nhs1.odscode,
+                OpenPeriod.list_string(nhs1.standard_opening_times.get_openings("wednesday")),
+                "wednesday",
+                dos1b.odscode,
+                dos1b.uid,
+                dos1b.name,
+                OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("wednesday")),
+                dos1b.statusid
+            ],
+            [
+                nhs1.odscode,
+                OpenPeriod.list_string(nhs1.standard_opening_times.get_openings("saturday")),
+                "saturday",
+                dos1b.odscode,
+                dos1b.uid,
+                dos1b.name,
+                OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("saturday")),
+                dos1b.statusid
             ],
             [
                 nhs2.odscode,
+                OpenPeriod.list_string(nhs2.standard_opening_times.get_openings("monday")),
+                "monday",
                 dos2b.odscode,
                 dos2b.uid,
-                nhs2.standard_opening_times.to_string("\n"),
-                dos2b._standard_opening_times.to_string("\n")
+                dos2b.name,
+                OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("monday")),
+                dos2b.statusid
             ],
             [
-                nhs3.odscode,
-                dos3b.odscode,
-                dos3b.uid,
-                nhs3.standard_opening_times.to_string("\n"),
-                dos3b._standard_opening_times.to_string("\n")
+                nhs2.odscode,
+                OpenPeriod.list_string(nhs2.standard_opening_times.get_openings("tuesday")),
+                "tuesday",
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("tuesday")),
+                dos2b.statusid
+            ],
+            [
+                nhs2.odscode,
+                OpenPeriod.list_string(nhs2.standard_opening_times.get_openings("wednesday")),
+                "wednesday",
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("wednesday")),
+                dos2b.statusid
+            ],
+            [
+                nhs2.odscode,
+                OpenPeriod.list_string(nhs2.standard_opening_times.get_openings("thursday")),
+                "thursday",
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("thursday")),
+                dos2b.statusid
+            ],
+            [
+                nhs2.odscode,
+                OpenPeriod.list_string(nhs2.standard_opening_times.get_openings("friday")),
+                "friday",
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("friday")),
+                dos2b.statusid
             ]
         ])
 
@@ -229,26 +329,41 @@ def test_create_invalid_std_opening_times_report():
     nhs3 = NHSEntity({"ODSCode": "QR334", "OrganisationName": "org 3"})
     nhs3.standard_opening_times = std3
 
+    dos2 = dummy_dos_service(odscode="GH29111", typeid=PHARMACY_TYPE_ID)
+
     nhs_entities = [nhs1, nhs2, nhs3]
-    reporter = Reporter(nhs_entities, [])
+    dos_services = [dos2]
+    reporter = Reporter(nhs_entities, dos_services)
     pc_report = reporter.create_invalid_std_opening_times_report()
 
     expected_pc_report = DataFrame(
         columns=[
             "NHSUK ODSCode",
             "NHSUK Org Name",
-            "NHSUK Standard Opening Times"
+            "NHSUK Standard Opening Times",
+            "DoS Service ID",
+            "DoS Service UID",
+            "DoS Service Name",
+            "DoS Service Status"
         ],
         data=[
             [
                 nhs2.odscode,
                 nhs2.org_name,
-                nhs2.standard_opening_times.to_string("\n")
+                nhs2.standard_opening_times.to_string("\n"),
+                dos2.id,
+                dos2.uid,
+                dos2.name,
+                dos2.statusid
             ],
             [
                 nhs3.odscode,
                 nhs3.org_name,
-                nhs3.standard_opening_times.to_string("\n")
+                nhs3.standard_opening_times.to_string("\n"),
+                "",
+                "",
+                "",
+                ""
             ],
         ])
 
@@ -270,60 +385,90 @@ def test_create_spec_opening_times_comparison_report():
 
     nhs1 = NHSEntity({"ODSCode": "FAT91"})
     nhs1.specified_opening_times = [spec1, spec2]
+
     nhs2 = NHSEntity({"ODSCode": "GH291"})
     nhs2.specified_opening_times = [spec2, spec4]
+
     nhs3 = NHSEntity({"ODSCode": "QR334"})
     nhs3.specified_opening_times = [spec2, spec3]
 
-    dos1a = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
+    dos1a = dummy_dos_service(odscode="FAT91a", typeid=PHARMACY_TYPE_ID)
     dos1a._specified_opening_times = [spec1, spec2]
-    dos1b = dummy_dos_service(odscode="FAT91", typeid=PHARMACY_TYPE_ID)
+    dos1b = dummy_dos_service(odscode="FAT91b", typeid=PHARMACY_TYPE_ID)
     dos1b._specified_opening_times = [spec2, spec3]
-    dos2a = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
+    dos2a = dummy_dos_service(odscode="GH291a", typeid=PHARMACY_TYPE_ID)
     dos2a._specified_opening_times = [spec2, spec4]
-    dos2b = dummy_dos_service(odscode="GH291", typeid=PHARMACY_TYPE_ID)
+
+    dos2b = dummy_dos_service(odscode="GH291b", typeid=PHARMACY_TYPE_ID)
     dos2b._specified_opening_times = [spec1, spec2]
-    dos3a = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
+
+    dos3a = dummy_dos_service(odscode="QR334a", typeid=PHARMACY_TYPE_ID)
     dos3a._specified_opening_times = [spec2, spec3]
-    dos3b = dummy_dos_service(odscode="QR334", typeid=PHARMACY_TYPE_ID)
-    dos3b._specified_opening_times = [spec1, spec2]
 
     nhs_entities = [nhs1, nhs2, nhs3]
-    dos_services = [dos1a, dos1b, dos2a, dos2b, dos3a, dos3b]
+    dos_services = [dos1a, dos1b, dos2a, dos2b, dos3a]
     reporter = Reporter(nhs_entities, dos_services)
     pc_report = reporter.create_spec_opening_times_comparison_report()
 
     expected_pc_report = DataFrame(
         columns=[
             "NHSUK ODSCode",
+            "NHSUK Specified Opening Times",
+            "Date",
             "DoS Service ODSCode",
             "DoS Service UID",
-            "NHSUK Specified Opening Times",
-            "DoS Specified Opening Times"
+            "DoS Service Name",
+            "DoS Specified Opening Times",
+            "DoS Service Status"
         ],
         data=[
             [
                 nhs1.odscode,
+                "[08:00:00-12:00:00, 13:00:00-18:00:00]",
+                "2021-09-01",
                 dos1b.odscode,
                 dos1b.uid,
-                "\n".join(str(sot) for sot in nhs1.specified_opening_times),
-                "\n".join(str(sot) for sot in dos1b._specified_opening_times)
+                dos1b.name,
+                "NULL",
+                dos1b.statusid
+            ],
+            [
+                nhs1.odscode,
+                "NULL",
+                "2021-10-03",
+                dos1b.odscode,
+                dos1b.uid,
+                dos1b.name,
+                "[07:00:00-10:00:00]",
+                dos1b.statusid
+            ],
+
+            [
+                nhs2.odscode,
+                "[]",
+                "2021-03-25",
+                dos2b.odscode,
+                dos2b.uid,
+                dos2b.name,
+                "NULL",
+                dos2b.statusid
             ],
             [
                 nhs2.odscode,
+                "NULL",
+                "2021-09-01",
                 dos2b.odscode,
                 dos2b.uid,
-                "\n".join(str(sot) for sot in nhs2.specified_opening_times),
-                "\n".join(str(sot) for sot in dos3b._specified_opening_times)
-            ],
-            [
-                nhs3.odscode,
-                dos3b.odscode,
-                dos3b.uid,
-                "\n".join(str(sot) for sot in nhs3.specified_opening_times),
-                "\n".join(str(sot) for sot in dos3b._specified_opening_times)
+                dos2b.name,
+                "[08:00:00-12:00:00, 13:00:00-18:00:00]",
+                dos2b.statusid
             ]
         ])
+
+    expected_pc_report.sort_values(["NHSUK ODSCode", "Date"], inplace=True, ignore_index=True)
+    pc_report.sort_values(["NHSUK ODSCode", "Date"], inplace=True, ignore_index=True)
+
+    print(expected_pc_report.to_string(), "\n\n", pc_report.to_string())
 
     assert_frame_equal(expected_pc_report, pc_report)
 
@@ -351,26 +496,41 @@ def test_invalid_spec_opening_times_report():
     nhs3 = NHSEntity({"ODSCode": "QR334", "OrganisationName": "org 3"})
     nhs3.specified_opening_times = [spec2, spec6]
 
+    dos2 = dummy_dos_service(odscode="GH29111", typeid=PHARMACY_TYPE_ID)
+
     nhs_entities = [nhs1, nhs2, nhs3]
-    reporter = Reporter(nhs_entities, [])
+    dos_services = [dos2]
+    reporter = Reporter(nhs_entities, dos_services)
     pc_report = reporter.create_invalid_spec_opening_times_report()
 
     expected_pc_report = DataFrame(
         columns=[
             "NHSUK ODSCode",
             "NHSUK Org Name",
-            "NHSUK Specified Opening Times"
+            "NHSUK Standard Opening Times",
+            "DoS Service ID",
+            "DoS Service UID",
+            "DoS Service Name",
+            "DoS Service Status"
         ],
         data=[
             [
                 nhs2.odscode,
                 nhs2.org_name,
-                "\n".join(str(sot) for sot in nhs2.specified_opening_times)
+                "\n".join(str(sot) for sot in nhs2.specified_opening_times),
+                dos2.id,
+                dos2.uid,
+                dos2.name,
+                dos2.statusid
             ],
             [
                 nhs3.odscode,
                 nhs3.org_name,
-                "\n".join(str(sot) for sot in nhs3.specified_opening_times)
+                "\n".join(str(sot) for sot in nhs3.specified_opening_times),
+                "",
+                "",
+                "",
+                ""
             ]
         ])
 
