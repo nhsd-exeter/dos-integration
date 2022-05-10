@@ -142,14 +142,14 @@ Feature: F002. Invalid change event Exception handling
     And the Event "processor" shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
 
 
-@complete @dentist_cloudwatch_queries @kit
+@complete @dentist_cloudwatch_queries
   Scenario: F002S018. Dentist Hidden uses correct report key
     Given a Dentist Changed Event is valid
     And the field "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "report_key" with message "HIDDEN_OR_CLOSED"
 
-@complete @dentist_cloudwatch_queries @kit
+@complete @dentist_cloudwatch_queries
   Scenario: F002S019. Dentist Invalid Postcode uses correct report key
     Given a Dentist Changed Event is valid
     And the field "Postcode" is set to "AAAA 123"
@@ -163,7 +163,7 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
 
-@complete @dentist_cloudwatch_queries @kit
+@complete @dentist_cloudwatch_queries
   Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
     Given a Dentist Changed Event is valid
     And the field "ODSCode" is set to "<ods_code>"
@@ -175,7 +175,7 @@ Feature: F002. Invalid change event Exception handling
     | FQG8101  | UNMATCHED_SERVICE_TYPE |
     | V00393b  |   UNMATCHED_PHARMACY   |
 
-@complete @dentist_cloudwatch_queries @kit
+@complete @dentist_cloudwatch_queries
   Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
     Given a Dentist Changed Event is valid
     And the field "ODSCode" is set to "<ods_code>"
