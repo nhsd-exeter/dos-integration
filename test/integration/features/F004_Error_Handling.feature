@@ -63,7 +63,7 @@ Feature: F004. Error Handling
       | -1234 |
 
 
-@complete @kit
+@complete
   Scenario Outline: F004S009. Dentist and Pharmacy org types not accepted
     Given a "<org_type>" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
