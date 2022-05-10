@@ -10,7 +10,7 @@ Feature: F004. Error Handling
     Then the Event "cr_dlq" shows field "error_msg_http_code" with message "400"
     And the Changed Event is stored in dynamo db
 
-  @dev @kit
+  @dev
   Scenario: F004S002. A CR with invalid Correlation ID gets rejected by events bridge and is NOT sent to DOS
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
@@ -63,7 +63,7 @@ Feature: F004. Error Handling
       | -1234 |
 
 
-@complete @kit
+@complete
   Scenario Outline: F004S009. Dentist and Pharmacy org types not accepted
     Given a "<org_type>" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -72,7 +72,6 @@ Feature: F004. Error Handling
     Examples: Organisation types
       | org_type |
       | dentist  |
-      | pharmacy |
 
 
 @complete

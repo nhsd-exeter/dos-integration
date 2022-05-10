@@ -751,18 +751,6 @@ def check_logs_for_correct_sent_cr(context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parsers.parse('the Event Processor logs with report key "{report_key}"'))
-def check_logs_for_correct_report_key(context, report_key):
-    query = (
-        "fields message, report_key, ods_code | sort @timestamp asc"
-        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{report_key}"'
-    )
-    logs = get_logs(query, "processor", context["start_time"])
-    assert (
-        context["change_event"]["ODSCode"] in logs
-    ), f'ERROR!!.. error event processor did not detect the report key "{report_key}".'
-
-
 @then(parsers.parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
 def generic_processor_check_function(context, processor, field, message):
     query = (
