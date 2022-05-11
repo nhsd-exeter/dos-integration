@@ -15,7 +15,7 @@ with open(std_event_path, "r") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 
-def dummy_dos_service() -> DoSService:
+def dummy_dos_service(**kwargs) -> DoSService:
     """Creates a DoSService Object with random data for the unit testing"""
     test_data = {}
     for col in DoSService.field_names():
@@ -24,6 +24,25 @@ def dummy_dos_service() -> DoSService:
     dos_service = DoSService(test_data)
     dos_service._standard_opening_times = StandardOpeningTimes()
     dos_service._specified_opening_times = []
+
+    for name, value in kwargs.items():
+        if value is not None:
+            setattr(dos_service, name, value)
+
+    return dos_service
+
+
+def blank_dos_service(**kwargs) -> DoSService:
+    """Creates a DoSService Object with blank str data for the unit testing"""
+    test_data = {}
+    for col in DoSService.field_names():
+        test_data[col] = ""
+    dos_service = DoSService(test_data)
+
+    for name, value in kwargs.items():
+        if value is not None:
+            setattr(dos_service, name, value)
+
     return dos_service
 
 
