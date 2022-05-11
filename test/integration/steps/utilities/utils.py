@@ -315,6 +315,24 @@ def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key:
         raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
 
 
+def check_contact_delete_in_dos(corr_id: str, search_key: str):
+    response = get_changes(corr_id)
+    if search_key not in str(response):
+        raise ValueError(f"{search_key} not found..")
+    row_found = False
+    for row in response:
+        for k in dict(loads(row[0]))["new"]:
+            if k == search_key:
+                if dict(loads(row[0]))["new"][k]["changetype"] == "delete":
+                    data = dict(loads(row[0]))["new"][k]["data"]
+                    if data == "":
+                        row_found = True
+    if row_found is True:
+        return True
+    else:
+        raise ValueError("Expected a 'delete' on the website but didn't find one")
+
+
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
@@ -354,10 +372,10 @@ def time_to_sec(t):
     return (h * 3600) + (m * 60)
 
 
-def generate_correlation_id(prefix=None) -> str:
+def generate_correlation_id(suffix=None) -> str:
     name_no_space = getenv("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
-    correlation_id = f"{run_id}_{name_no_space}" if prefix is None else f"{prefix}_{run_id}"
+    correlation_id = f"{run_id}_{name_no_space}" if suffix is None else f"{run_id}_{suffix}"
     correlation_id = (
         correlation_id if len(correlation_id) < 80 else correlation_id[:79]
     )  # DoS API Gateway max reference is 100 characters

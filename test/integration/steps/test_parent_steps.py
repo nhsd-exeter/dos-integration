@@ -12,6 +12,7 @@ from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.events import (
     build_same_as_dos_change_event,
+    build_same_as_dos_change_event_by_ods,
     change_request,
     create_change_event,
     set_opening_times_change_event,
@@ -29,6 +30,7 @@ from .utilities.utils import (
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
     process_payload,
+    check_contact_delete_in_dos,
     process_payload_with_sequence,
     re_process_payload,
     get_latest_sequence_id_for_a_given_odscode,
@@ -60,12 +62,28 @@ def a_change_event_is_valid():
     return context
 
 
+@given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
+def an_org_type_change_event(org_type):
+    context = {}
+    context["change_event"] = create_change_event(org_type.lower())
+    if org_type.lower() == "dentist":
+        context["change_event"]["OrganisationName"] = "Test Dentist"
+        context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+        context["change_event"]["OrganisationType"] = "Dental practice"
+        context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
+            ORGANISATION_SUB_TYPES_KEY
+        ][0]
+    context["change_event"]["Address1"] = FAKER.street_name()
+    return context
+
+
 @given("a Dentist Changed Event is valid", target_fixture="context")
 def valid_dentist_change_event():
     context = {}
     context["change_event"] = create_change_event("dentist")
     context["change_event"]["OrganisationName"] = "Test Dentist"
     context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+    context["change_event"]["OrganisationType"] = "Dental practice"
     context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
         ORGANISATION_SUB_TYPES_KEY
     ][0]
@@ -89,6 +107,28 @@ def a_changed_contact_event_is_valid(contact):
             raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
 
         validated = valid_change_event(context["change_event"])
+    return context
+
+
+@given(parsers.parse('a Changed Event with value "{data}" for "{contact_field}"'), target_fixture="context")
+def a_valid_changed_event_with_empty_contact(data, contact_field):
+    def get_value_from_data():
+        if data == "None":
+            return None
+        elif data == "''":
+            return ""
+        else:
+            return data
+
+    context = {}
+    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"]["ODSCode"] = "FAA96"
+    if contact_field == "website":
+        context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
+    elif contact_field == "phone_no":
+        context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+    else:
+        raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     return context
 
 
@@ -126,6 +166,20 @@ def a_standard_opening_time_change_event_is_valid():
 def a_change_event_is_valid_and_matches_dos():
     context = {}
     context["change_event"] = build_same_as_dos_change_event("pharmacy")
+    return context
+
+
+@given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
+def a_change_event_is_valid_with_contact_set(contact: str):
+    context = {}
+
+    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", "FYH55")
+    if contact.lower() == "website":
+        del context["change_event"]["Contacts"][0]
+    elif contact.lower() == "phone":
+        del context["change_event"]["Contacts"][1]
+    else:
+        raise ValueError(f"Invalid contact '{contact}' provided")
     return context
 
 
@@ -212,9 +266,9 @@ def a_change_event_with_invalid_odscode():
     return context
 
 
-@given(parsers.parse('the Changed Event has ODS Code "{odscode}"'), target_fixture="context")
-def a_change_event_with_custom_ods(context, odscode: str):
-    context["change_event"]["ODSCode"] = odscode
+@given(parsers.parse('the Changed Event has ODS Code "{ods_code}"'), target_fixture="context")
+def a_change_event_with_custom_ods(context, ods_code: str):
+    context["change_event"]["ODSCode"] = ods_code
     return context
 
 
@@ -277,8 +331,7 @@ def current_ods_exists_in_ddb():
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
     # New address prevents SQS dedupe
-    newaddr = randint(100, 500)
-    context["change_event"]["Address1"] = f"{newaddr} New Street"
+    context["change_event"]["Address1"] = FAKER.street_name()
     return context
 
 
@@ -329,7 +382,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
 
 # # Request with custom sequence id
 @when(
-    parsers.parse("the Changed Event is sent for processing with sequence id {seqid}"),
+    parsers.parse('the Changed Event is sent for processing with sequence id "{seqid}"'),
     target_fixture="context",
 )
 def the_change_event_is_sent_with_custom_sequence(context, seqid):
@@ -392,6 +445,16 @@ def the_change_request_is_sent(context, valid_or_invalid):
     return context
 
 
+@then("no matched services were found")
+def no_matched_services_found(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Found 0 services in DB"'
+    )
+    event_logs = get_logs(query, "processor", context["start_time"])
+    assert event_logs != [], "ERROR!! No unmatched services log found.."
+
+
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context):
     odscode = context["change_event"]["ODSCode"]
@@ -406,6 +469,18 @@ def stored_dynamo_db_events_are_pulled(context):
     return context
 
 
+@then("the unmatched service exception is reported to cloudwatch", target_fixture="context")
+def unmatched_service_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "No matching DOS services"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    odscode = context["change_event"]["ODSCode"]
+    assert f"ODSCode '{odscode}'" in logs, "ERROR!!.. Expected unmatched service logs not found."
+    return context
+
+
 @then("no Changed request is created", target_fixture="context")
 def no_cr_created(context):
     query = (
@@ -417,6 +492,17 @@ def no_cr_created(context):
     return context
 
 
+@then("the exception is reported to cloudwatch", target_fixture="context")
+def service_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter level="ERROR"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. Expected exception not logged."
+    return context
+
+
 @then("the OpeningTimes exception is reported to cloudwatch")
 def openingtimes_service_exception(context):
     query = (
@@ -425,6 +511,51 @@ def openingtimes_service_exception(context):
     )
     logs = get_logs(query, "processor", context["start_time"])
     assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not captured."
+
+
+@then("the invalid postcode exception is reported to cloudwatch")
+def unmatched_postcode_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "INVALID_POSTCODE"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    postcode = context["change_event"]["Postcode"]
+    assert f"postcode '{postcode}'" in logs, "ERROR!!.. Expected Invalid Postcode exception not found."
+
+
+@then("the unmatched service type exception is reported to cloudwatch")
+def unmatched_service_type_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "UNMATCHED_SERVICE_TYPE"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    odscode = context["change_event"]["ODSCode"]
+    assert f"{odscode}" in logs, "ERROR!!.. Expected Unmatched Service Type exception not found."
+
+
+@then("the generic bank holiday exception is reported to cloudwatch")
+def generic_bank_holiday_exception(context):
+    query = (
+        f'fields message, ods_code | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "GENERIC_BANK_HOLIDAY"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    odscode = context["change_event"]["ODSCode"]
+    assert f"{odscode}" in logs, "ERROR!!.. Expected Generic Bank Holiday exception not found."
+
+
+@then("the hidden or closed exception is reported to cloudwatch")
+def hidden_or_closed_exception(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "NHS Service marked as closed or hidden"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert (
+        "no change requests will be produced" in logs
+    ), "ERROR!!.. Expected hidden or closed exception logs not found."
 
 
 @then(parsers.parse("the {address} from the changes is not included in the change request"))
@@ -456,11 +587,35 @@ def processed_changed_request_sent_to_dos(context):
     return context
 
 
+@then("the Changed Event is not processed any further")
+def the_changed_event_is_not_processed(context):
+    cr_received_search_param = "Received change request"
+    query = f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+    logs = get_logs(query, "processor", context["start_time"])
+    assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
+
+
 @then("the Changed Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     response = confirm_changes(context["correlation_id"])
     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+    return context
+
+
+@then(parsers.parse('the Changed Request is accepted by Dos with "{contact}" deleted'))
+def the_changed_request_is_accepted_by_dos_with_contact_delete(context, contact):
+    service_id = get_service_id(context["correlation_id"])
+    approver_status = confirm_approver_status(context["correlation_id"])
+    if contact == "phone":
+        cms = "cmstelephoneno"
+    elif contact == "website":
+        cms = "cmsurl"
+    else:
+        raise ValueError(f"Invalid contact provided: '{contact}'")
+    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
+    response = check_contact_delete_in_dos(context["correlation_id"], cms)
+    assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
 
 
@@ -526,6 +681,48 @@ def the_changed_event_is_not_sent_to_dos(context):
     assert response == [], "ERROR!!.. Event data found in Dos."
 
 
+@then("the event is sent to the DLQ", target_fixture="context")
+def event_sender_triggers_DLQ(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter response_text like "Fake Bad Request"'
+    )
+    logs = get_logs(query, "sender", context["start_time"])
+    assert "Failed to send change request to DoS" in logs, "ERROR!!.. expected exception logs not found."
+    return context
+
+
+@then("the DLQ logs the error for Splunk", target_fixture="context")
+def event_bridge_dlq_log_check(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key="CR_DLQ_HANDLER_RECEIVED_EVENT"'
+    )
+    logs = get_logs(query, "cr_dlq", context["start_time"])
+    assert "Change Request DLQ Handler hit" in logs, "ERROR!!.. expected exception logs not found."
+    return context
+
+
+@then(parsers.parse('the "{lambda_name}" logs show status code "{status_code}"'))
+def lambda_status_code_check(context, lambda_name, status_code):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        f" | filter error_msg_http_code={status_code}"
+    )
+    logs = get_logs(query, lambda_name, context["start_time"])
+    assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
+
+
+@then(parsers.parse('the "{lambda_name}" logs show error message "{error_message}"'))
+def lambda_error_msg_check(context, lambda_name, error_message):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        f' | filter error_msg like "{error_message}"'
+    )
+    logs = get_logs(query, lambda_name, context["start_time"])
+    assert logs != [], "ERROR!!.. expected DLQ exception logs not found."
+
+
 @then(parsers.parse('the change request has status code "{status}"'))
 def step_then_should_transform_into(context, status):
     message = context["response"].json
@@ -584,6 +781,26 @@ def replaying_changed_event(context):
 def verify_replayed_changed_event(context):
     response = confirm_changes(context["correlation_id"])
     assert response != [], "Error!.. Re-processed change event not found in Dos"
+
+
+@then("the event processor logs should record a sequence error")
+def sequence_id_error_logs(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter message like "Sequence id is smaller than the existing one"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert logs != [], "ERROR!!.. Sequence id error message not found."
+
+
+@then("an invalid opening times error is generated")
+def invalid_opening_times_error(context):
+    query = (
+        f'fields message | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        ' | filter report_key like "INVALID_OPEN_TIMES"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert "misformatted or illogical set of opening times." in logs, "ERROR!!.. error message not found."
 
 
 @then("the opening times changes are confirmed valid")
@@ -715,6 +932,18 @@ def check_logs_for_correct_sent_cr(context, odscode):
     )
     logs = get_logs(query, "sender", context["start_time"])
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
+
+
+@then(parsers.parse('the Event Processor logs with report key "{report_key}"'))
+def check_logs_for_correct_report_key(context, report_key):
+    query = (
+        "fields message, report_key, ods_code | sort @timestamp asc"
+        f' | filter correlation_id="{context["correlation_id"]}" | filter report_key like "{report_key}"'
+    )
+    logs = get_logs(query, "processor", context["start_time"])
+    assert (
+        context["change_event"]["ODSCode"] in logs
+    ), f'ERROR!!.. error event processor did not detect the report key "{report_key}".'
 
 
 @then(parsers.parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
