@@ -17,7 +17,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   Scenario: F001S003. A Changed event with aligned data does not create a CR
     Given a Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
-    Then no Changed request is created
+    Then the Event "processor" shows field "message" with message "No changes identified"
     And the Changed Event is stored in dynamo db
 
 @complete @pharmacy_no_log_searches
@@ -44,7 +44,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S007. A valid change event with special characters is processed by DOS
     Given a Changed Event is valid
-    And the website field contains special characters
+    And the field "ContactValue" is set to "https:\/\/www.rowlandspharmacy.co.uk\/test?foo=test"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request with special characters is accepted by DOS
     And the Changed Event is stored in dynamo db

@@ -5,9 +5,9 @@ Feature: F004. Error Handling
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
-    Then the event is sent to the DLQ
-    And the DLQ logs the error for Splunk
-    And the "cr_dlq" logs show status code "400"
+    Then the Event "sender" shows field "response_text" with message "Fake Bad Request"
+    Then the Event "cr_dlq" shows field "report_key" with message "CR_DLQ_HANDLER_RECEIVED_EVENT"
+    Then the Event "cr_dlq" shows field "error_msg_http_code" with message "400"
     And the Changed Event is stored in dynamo db
 
   @dev
@@ -15,7 +15,7 @@ Feature: F004. Error Handling
     Given a Changed Event is valid
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "cr_dlq" logs show error message "Message Abandoned"
+    Then the Event "cr_dlq" shows field "error_msg" with message "Message Abandoned"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -51,11 +51,11 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with sequence id "ABCD1"
     Then the change request has status code "400"
 
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario Outline: F004S008. Sequence number less than previous raises exception
+@complete @dev @pharmacy_cloudwatch_queries
+  Scenario Outline: F004S008. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id "<seqid>"
-    Then the event processor logs should record a sequence error
+    Then the Event "processor" shows field "message" with message "Sequence id is smaller than the existing one"
 
     Examples: These are both lower than the default sequence-id values
       | seqid |
