@@ -10,7 +10,7 @@ Option selection report - Technology for centralized messaging broker
 
 ## Context
 
-DI is a greenfield integration project enabling the changes made by service owners such as Pharmacies to their contact information and opening times oN NHS.uk to be reflected in DoS to ensure consumers of DoS have up to date and accurate information about UEC services.
+DI is a greenfield integration project enabling the changes made by service owners such as Pharmacies to their contact information and opening times on NHS.uk to be reflected in DoS to ensure consumers of DoS have up to date and accurate information about UEC services.
 
 It replaces Profile updater which provided a separate UI for service providers to update data for DoS. The new solution ensures service providers only need to make the changes in 1 place. As an interim solution Profile updater was updated to take a CSV feed from NSH Uk once a day and passed this information to DoS. This solution has its own limitations like data won't reflect to the end user immediately. The proposed solution is based on Messaging Queue technology (publish/subscribe). This paper provides the available options and our recommendations. we are evaluating the options available as "Cloud native solutions/services"  which are  as follows
 
@@ -33,7 +33,7 @@ High level requirements:
 
 #### Option 1 - Use AWS Managed Services
 
-This solution utilises SQS and EventBridge to handle the asynchronous orchestration of change events from NHS Uk through to delivery of change requests to DoS.
+This solution utilises SQS and EventBridge to handle the asynchronous orchestration of change events from NHS UK through to delivery of change requests to DoS.
 
 Pros:
 
@@ -82,9 +82,9 @@ The diagram below shows the physical architecture of the solution.
 
 ### The Happy Path
 
-1. Service owners make changes to their service through the NHS Uk website. They can make the changes through a Web user interface or through an API. The API will likely be used by large pharmacy groups such as LLoyds and Boots that manage thousands of pharmacies. Address and organisation name changes cannot be made via the NHS UK website or API and will come via NHS UK from a weekly BSA file uploaded into NHS UK.
+1. Service owners make changes to their service through the NHS UK website. They can make the changes through a Web user interface or through an API. The API will likely be used by large pharmacy groups such as LLoyds and Boots that manage thousands of pharmacies. Address and organisation name changes cannot be made via the NHS UK website or API and will come via NHS UK from a weekly BSA file uploaded into NHS UK.
 
-2. NHS Uk updates their record and sends a full service record including updated and non updated fields onto two queues. One queue is used internally to update search indexes the other is for DoS integration, there are two separate queues to allow the two consumers to diverge in the messages they need to receive.
+2. NHS UK updates their record and sends a full service record including updated and non updated fields onto two queues. One queue is used internally to update search indexes the other is for DoS integration, there are two separate queues to allow the two consumers to diverge in the messages they need to receive.
 
 3. An Azure function is triggered when new messages appear on DoS integration queue.
 
@@ -113,7 +113,7 @@ There are a number of scenarios that could occur that will not result in a chang
 * ODS code not in DoS
 * Postcode not in DoS or in DoS without lat/lon and easting/northing
 * Invalid opening times, including overlaps
-* Service marked as Hidden or Closed from NHS Uk
+* Service marked as Hidden or Closed from NHS UK
 
 In each of these scenarios a specific log record will be written. All logs are shipped to Splunk via Kinesis Firehose. Reports will be written in Splunk to look for these specific scenarios and notifications sent to relevant teams for investigation. All reports are saved under the `Texas UEC Profile Updater` App in Splunk and all logs are in the `cw_logs_uec_dos_int_prod` and `cw_logs_uec_dos_int_nonprod` indexes
 
