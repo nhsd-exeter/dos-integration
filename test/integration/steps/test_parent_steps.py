@@ -132,6 +132,7 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
         raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     return context
 
+
 @given(parsers.parse('a "{org_type}" Changed Event with no website and phone data'), target_fixture="context")
 def a_change_event_with_no_web_and_phone_contact(org_type):
     # SET CONTACT VALUE IN DOS FOR NHS UK CHANGE EVENT
@@ -141,9 +142,7 @@ def a_change_event_with_no_web_and_phone_contact(org_type):
     context["change_event"]["Contacts"][1]["ContactValue"] = None
     if "correlation_id" not in context:
         context["correlation_id"] = generate_correlation_id()
-    context["response"] = process_payload(
-        context["change_event"], True, context["correlation_id"]
-    )
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     assert confirm_approver_status(context["correlation_id"]) != []
     return context
 
