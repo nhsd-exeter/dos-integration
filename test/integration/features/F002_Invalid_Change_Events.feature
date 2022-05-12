@@ -28,12 +28,12 @@ Feature: F002. Invalid change event Exception handling
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
+  Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
     Given a Changed Event is valid
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the exception is reported to cloudwatch
-    And the Event "processor" does not show "message" with message "Changes for nhs"
+    And the Event "processor" shows field "message" with message "Accepted org types: False"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries

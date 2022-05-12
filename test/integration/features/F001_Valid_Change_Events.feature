@@ -63,7 +63,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Request is accepted by DoS with "website" deleted
     And the Changed Event is stored in dynamo db
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches @wip
+@complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S010. A valid change with phone removal is processed by dos
     Given a Changed Event to unset "phone"
     When the Changed Event is sent for processing with "valid" api key
@@ -93,3 +93,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a Changed Event with value "''" for "website"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
+
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario: F001S015. New scenario
+    Given a "pharmacy" Changed Event with no website and phone data
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event "processor" shows field "message" with message "No changes identified"
