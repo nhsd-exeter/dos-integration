@@ -26,6 +26,7 @@ from .utilities.utils import (
     get_service_id,
     get_change_event_standard_opening_times,
     get_change_event_specified_opening_times,
+    get_odscode_with_contact_data,
     confirm_approver_status,
     get_stored_events_from_dynamo_db,
     process_change_request_payload,
@@ -41,6 +42,7 @@ from .utilities.utils import (
     time_to_sec,
     confirm_changes,
     get_service_type_data,
+    generate_random_int,
     get_service_type_from_cr,
 )
 
@@ -110,7 +112,7 @@ def a_changed_contact_event_is_valid(contact):
     return context
 
 
-@given(parsers.parse('a Changed Event with value "{data}" for "{contact_field}"'), target_fixture="context")
+@given(parsers.parse('a Changed Event with a "{data}" value for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
         if data == "None":
@@ -122,13 +124,21 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
 
     context = {}
     context["change_event"] = create_change_event("pharmacy")
-    context["change_event"]["ODSCode"] = "FAA96"
+    del context["change_event"]["Contacts"][0]["ContactValue"]
+    del context["change_event"]["Contacts"][1]["ContactValue"]
+    if "correlation_id" not in context:
+        run_id = getenv("RUN_ID")
+        unique_key = generate_random_int()
+        context["correlation_id"] = f"{run_id}_{unique_key}_contact_data_alignment_run"
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
+    assert confirm_approver_status(context["correlation_id"]) != []
     if contact_field == "website":
         context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
     elif contact_field == "phone_no":
         context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
     else:
         raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
+    del context["correlation_id"]
     return context
 
 
@@ -173,7 +183,7 @@ def a_change_event_is_valid_and_matches_dos():
 def a_change_event_is_valid_with_contact_set(contact: str):
     context = {}
 
-    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", "FYH55")
+    context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", get_odscode_with_contact_data())
     if contact.lower() == "website":
         del context["change_event"]["Contacts"][0]
     elif contact.lower() == "phone":

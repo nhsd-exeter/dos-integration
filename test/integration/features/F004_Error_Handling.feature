@@ -62,8 +62,7 @@ Feature: F004. Error Handling
       | 1     |
       | -1234 |
 
-
-@complete
+@pharmacy_dentist_off_smoke_test
   Scenario Outline: F004S009. Dentist and Pharmacy org types not accepted
     Given a "<org_type>" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -75,7 +74,7 @@ Feature: F004. Error Handling
       | pharmacy |
 
 
-@complete
+@complete @pharmacy_dentist_smoke_test
   Scenario Outline: F004S010. Dentist and Pharmacy org types accepted
     Given a "<org_type>" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -87,28 +86,28 @@ Feature: F004. Error Handling
       | dentist  |
 
 
-@complete @dev @dentist_cloudwatch_queries
-  Scenario Outline: F004S011. Only the Dentist org type accepted
+  @complete @dev @dentist_cloudwatch_queries
+  Scenario Outline: F004S011. A Changed Event with Dentist org type is accepted
     Given a "dentist" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
 
-@complete @dev @dentist_cloudwatch_queries
+@dev @dentist_cloudwatch_queries
   Scenario Outline: F004S012. Exception is raised when unaccepted Pharmacy org type CE is processed
     Given a "pharmacy" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "Validation Error"
 
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario Outline: F004S013. Only the Pharmacy org type accepted
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario Outline: F004S013. A Changed Event with Pharmacy org type is accepted
     Given a "pharmacy" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
 
-@complete @dev @pharmacy_cloudwatch_queries
+@dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S014. Exception is raised when unaccepted Dentist org type CE is processed
     Given a "dentist" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

@@ -72,24 +72,24 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S011. No CR created with a None value as phone data
-    Given a Changed Event with value "None" for "phone_no"
+    Given a Changed Event with a "None" value for "phone_no"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "phone is not equal"
+    Then the Event "processor" shows field "message" with message "No changes identified"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S012. No CR created with empty phone data
-    Given a Changed Event with value "''" for "phone_no"
+    Given a Changed Event with a "''" value for "phone_no"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "phone is not equal"
+    Then the Event "processor" shows field "message" with message "No changes identified"
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S013. No CR created with a None value as website data
-    Given a Changed Event with value "None" for "website"
+    Given a Changed Event with a "None" value for "website"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "website is not equal"
+    Then the Event "processor" shows field "message" with message "No changes identified"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S014. No CR created with empty website data
-    Given a Changed Event with value "''" for "website"
+    Given a Changed Event with a "''" value for "website"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "website is not equal"
+    Then the Event "processor" shows field "message" with message "No changes identified"
