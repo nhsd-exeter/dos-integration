@@ -42,6 +42,7 @@ from .utilities.utils import (
     time_to_sec,
     confirm_changes,
     get_service_type_data,
+    generate_random_int,
     get_service_type_from_cr,
 )
 
@@ -111,7 +112,7 @@ def a_changed_contact_event_is_valid(contact):
     return context
 
 
-@given(parsers.parse('a Changed Event with value "{data}" for "{contact_field}"'), target_fixture="context")
+@given(parsers.parse('a Changed Event with a "{data}" value for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
         if data == "None":
@@ -123,27 +124,21 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
 
     context = {}
     context["change_event"] = create_change_event("pharmacy")
-    context["change_event"]["ODSCode"] = "FAA96"
+    del context["change_event"]["Contacts"][0]["ContactValue"]
+    del context["change_event"]["Contacts"][1]["ContactValue"]
+    if "correlation_id" not in context:
+        run_id = getenv("RUN_ID")
+        unique_key = generate_random_int()
+        context["correlation_id"] = f"{run_id}_{unique_key}_contact_data_alignment_run"
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
+    assert confirm_approver_status(context["correlation_id"]) != []
     if contact_field == "website":
         context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
     elif contact_field == "phone_no":
         context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
     else:
         raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
-    return context
-
-
-@given(parsers.parse('a "{org_type}" Changed Event with no website and phone data'), target_fixture="context")
-def a_change_event_with_no_web_and_phone_contact(org_type):
-    # SET CONTACT VALUE IN DOS FOR NHS UK CHANGE EVENT
-    context = {}
-    context["change_event"] = create_change_event(org_type)
-    context["change_event"]["Contacts"][0]["ContactValue"] = None
-    context["change_event"]["Contacts"][1]["ContactValue"] = None
-    if "correlation_id" not in context:
-        context["correlation_id"] = generate_correlation_id()
-    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
-    assert confirm_approver_status(context["correlation_id"]) != []
+    del context["correlation_id"]
     return context
 
 

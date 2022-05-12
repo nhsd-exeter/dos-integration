@@ -86,8 +86,8 @@ Feature: F004. Error Handling
       | dentist  |
 
 
-@dev @dentist_cloudwatch_queries
-  Scenario Outline: F004S011. Only the Dentist org type accepted
+  @complete @dev @dentist_cloudwatch_queries
+  Scenario Outline: F004S011. A Changed Event with Dentist org type is accepted
     Given a "dentist" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
@@ -100,8 +100,8 @@ Feature: F004. Error Handling
     Then the Event "processor" shows field "message" with message "Validation Error"
 
 
-@dev @pharmacy_cloudwatch_queries
-  Scenario Outline: F004S013. Only the Pharmacy org type accepted
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario Outline: F004S013. A Changed Event with Pharmacy org type is accepted
     Given a "pharmacy" Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
