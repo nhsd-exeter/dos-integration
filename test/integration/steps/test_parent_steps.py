@@ -123,7 +123,7 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
             return data
 
     context = {}
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = build_same_as_dos_change_event("pharmacy")
     del context["change_event"]["Contacts"][0]["ContactValue"]
     del context["change_event"]["Contacts"][1]["ContactValue"]
     if "correlation_id" not in context:
