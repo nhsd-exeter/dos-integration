@@ -31,7 +31,7 @@ restart: stop start # Restart project
 log: project-log # Show project logs
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make mock-dos-api-gateway-deployment
 	fi
 	eval "$$(make -s populate-deployment-variables)"
