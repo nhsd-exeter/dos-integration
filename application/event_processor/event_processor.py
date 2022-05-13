@@ -274,6 +274,3 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         disconnect_dos_db()
 
     event_processor.send_changes(sqs_timestamp, record_id, sequence_number)
-
-
-print("Hello")
