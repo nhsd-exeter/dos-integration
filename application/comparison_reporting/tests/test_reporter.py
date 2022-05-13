@@ -54,10 +54,10 @@ def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
             "NHSUK ODSCode",
             "NHSUK Organisation Name",
             "NHSUK Invalid Postcode",
-            "DoS service ID",
-            "DoS service UID",
-            "DoS service Postcode",
-            "DoS service Status"
+            "DoS Service ID",
+            "DoS Service UID",
+            "DoS Service Postcode",
+            "DoS Service Status"
         ],
         data=[
             [nhs1.odscode, nhs1.org_name, nhs1.postcode, dos1.id, dos1.uid, dos1.postcode, dos1.statusid]

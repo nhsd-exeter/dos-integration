@@ -32,7 +32,7 @@ def get_dentists() -> List[NHSEntity]:
     std_open_data = defaultdict(list)
     spec_open_data = defaultdict(list)
     for item in dentists_open_times_data:
-        id = item["OrganisationId"]
+        id = str(item["OrganisationId"])
         opening_type = item["OpeningTimeType"]
         if opening_type == "General":
             std_open_data[id].append(item)
@@ -44,9 +44,10 @@ def get_dentists() -> List[NHSEntity]:
     # Initialise dentists as NHS Entity objects
     dentists = []
     for entity_data in dentists_data:
-        id = entity_data.get("OrganisationId")
+        id = str(entity_data.get("OrganisationID"))
 
         nhs_entity = NHSEntity({})
+        nhs_entity.org_id = entity_data.get("OrganisationID")
         nhs_entity.odscode = entity_data.get("OrganisationCode")
         nhs_entity.org_name = entity_data.get("OrganisationName")
         nhs_entity.org_type = entity_data.get("OrganisationType")

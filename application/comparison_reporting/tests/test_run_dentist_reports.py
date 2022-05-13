@@ -13,7 +13,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
     mock_download_csv_as_dicts.side_effect = [
         [
             {
-                "OrganisationId": 111,
+                "OrganisationID": 111,
                 "OrganisationCode": "V001111",
                 "OrganisationType": "Dentists",
                 "SubType": "UNKNOWN",
@@ -32,7 +32,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Website": "www.faketeeth.com"
             },
             {
-                "OrganisationId": 222,
+                "OrganisationID": 222,
                 "OrganisationCode": "V001112",
                 "OrganisationType": "Dentists",
                 "SubType": "UNKNOWN",

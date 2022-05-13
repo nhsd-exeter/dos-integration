@@ -18,6 +18,7 @@ logger = Logger(child=True)
 
 def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
     """Takes a url of a csv to download from the web and then returns it as a list of dictionaries."""
+    logger.info(f"Attempting to download file: {url}")
     resp = requests.get(url)
     return [{k: v if v != "" else None for k, v in row.items()}
             for row in csv.DictReader(StringIO(resp.text), skipinitialspace=True, delimiter=delimiter)]
@@ -217,10 +218,10 @@ class Reporter:
             "NHSUK ODSCode",
             "NHSUK Organisation Name",
             "NHSUK Invalid Postcode",
-            "DoS service ID",
-            "DoS service UID",
-            "DoS service Postcode",
-            "DoS service Status"
+            "DoS Service ID",
+            "DoS Service UID",
+            "DoS Service Postcode",
+            "DoS Service Status"
         ]
         rows = []
         for nhs_entity in self.nhs_entities:
