@@ -5,6 +5,7 @@ from typing import List, Union, Dict
 from collections import defaultdict
 
 from aws_lambda_powertools import Logger
+
 from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from common.dos import DoSService
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS

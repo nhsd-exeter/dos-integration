@@ -15,7 +15,7 @@ from common.constants import (
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
     GENERIC_BANK_HOLIDAY_REPORT_ID,
 )
-from nhs import NHSEntity
+from common.nhs import NHSEntity
 
 
 logger = Logger(child=True)

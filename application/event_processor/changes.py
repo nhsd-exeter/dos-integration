@@ -14,7 +14,7 @@ from change_request import (
 from common.dos import DoSService, get_valid_dos_postcode
 from common.opening_times import SpecifiedOpeningTime
 from common.utilities import is_val_none_or_empty
-from nhs import NHSEntity
+from common.nhs import NHSEntity
 from reporting import log_invalid_nhsuk_postcode
 
 logger = Logger(child=True)
