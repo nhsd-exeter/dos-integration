@@ -381,10 +381,10 @@ def time_to_sec(t):
     return (h * 3600) + (m * 60)
 
 
-def generate_correlation_id(prefix=None) -> str:
+def generate_correlation_id(suffix=None) -> str:
     name_no_space = getenv("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
-    correlation_id = f"{run_id}_{name_no_space}" if prefix is None else f"{prefix}_{run_id}"
+    correlation_id = f"{run_id}_{name_no_space}" if suffix is None else f"{run_id}_{suffix}"
     correlation_id = (
         correlation_id if len(correlation_id) < 80 else correlation_id[:79]
     )  # DoS API Gateway max reference is 100 characters

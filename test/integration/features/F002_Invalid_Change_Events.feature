@@ -67,7 +67,6 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event with the Weekday NOT present in the Opening Times data
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -75,7 +74,6 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event where OpeningTimeType is NOT defined correctly
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -84,7 +82,6 @@ Feature: F002. Invalid change event Exception handling
     When the OpeningTimes Opening and Closing Times data are not defined
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -92,7 +89,6 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event with the openingTimes IsOpen status set to false
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -101,7 +97,6 @@ Feature: F002. Invalid change event Exception handling
     When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
@@ -110,7 +105,6 @@ Feature: F002. Invalid change event Exception handling
     When an AdditionalOpeningDate contains data with both true and false IsOpen status
     And the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
-    And the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
