@@ -1,11 +1,15 @@
 from os import path
+import sys
 from datetime import datetime
 from itertools import groupby
 from collections import defaultdict
 from typing import List
 import pathlib
+from pprint import pprint as pp
 
 from aws_lambda_powertools import Logger
+
+sys.path.append("")
 
 from common.dos import get_services_from_db
 from common.nhs import NHSEntity
@@ -15,6 +19,7 @@ from comparison_reporting.reporter import Reporter, download_csv_as_dicts
 
 
 logger = Logger(child=True)
+logger.setLevel("DEBUG")
 DENTIST_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/Dentists.csv"
 DENTIST_OPENING_TIMES_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/DentistOpeningTimes.csv"
 THIS_DIR = pathlib.Path(__file__).parent.resolve()

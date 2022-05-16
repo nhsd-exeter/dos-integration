@@ -167,6 +167,20 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
+create-dentist-reports:
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	CMD="python comparison_reporting/run_dentist_reports.py" \
+	DIR=./application \
+	ARGS=" \
+		-e 
+		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
+		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
+		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
+		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME)"
+
+
 clean: # Runs whole project clean
 	make \
 		docker-clean \
