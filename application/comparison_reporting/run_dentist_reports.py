@@ -1,4 +1,5 @@
 from os import path
+import os
 import sys
 from datetime import datetime
 from itertools import groupby

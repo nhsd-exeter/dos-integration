@@ -173,12 +173,14 @@ create-dentist-reports:
 	CMD="python comparison_reporting/run_dentist_reports.py" \
 	DIR=./application \
 	ARGS=" \
-		-e 
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME)"
+		-e DB_SERVER=$(DB_SERVER) \
+		-e DB_PORT=$(DB_PORT) \
+		-e DB_NAME=$(DB_NAME) \
+		-e DB_USER_NAME=$(DB_USER_NAME) \
+		-e DB_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
+		-e DB_SCHEMA=$(DB_SCHEMA) \
+	"
 
 
 clean: # Runs whole project clean
