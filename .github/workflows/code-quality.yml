@@ -1,7 +1,7 @@
 name: "Check code format and quality"
 on:
   push:
-    branches: [develop]
+    branches: [develop, master]
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
