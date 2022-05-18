@@ -71,7 +71,7 @@ resource "aws_codepipeline" "codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-${var.environment}-deploy-${action.key}-stage"
+          ProjectName = "${var.project_id}-${var.environment}-deploy-stage"
           EnvironmentVariables = jsonencode([
             {
               name  = "PROFILE"
