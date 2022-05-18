@@ -1,12 +1,11 @@
-resource "aws_codepipeline" "codepipeline" {
-  name     = "${var.project_id}-${var.environment}-codepipeline"
+resource "aws_codepipeline" "release_codepipeline" {
+  name     = "${var.project_id}-release-${var.environment}-codepipeline"
   role_arn = data.aws_iam_role.pipeline_role.arn
 
   artifact_store {
-    location = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"
+    location = "${var.project_id}-release-${var.environment}-codepipeline-artefact-bucket-mgmt"
     type     = "S3"
   }
-
 
   stage {
     name = "Source"
@@ -17,11 +16,10 @@ resource "aws_codepipeline" "codepipeline" {
       provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["source_output"]
-
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
-        BranchName       = var.code_pipeline_branch_name
+        BranchName       = var.release_pipeline_branch
         DetectChanges    = true
       }
     }
@@ -37,7 +35,7 @@ resource "aws_codepipeline" "codepipeline" {
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-unit-test-stage"
+        ProjectName = "${var.project_id}-dev-unit-test-stage"
       }
     }
   }
@@ -53,13 +51,13 @@ resource "aws_codepipeline" "codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-${var.environment}-build-${action.key}-stage"
+          ProjectName = "${var.project_id}-dev-build-${action.key}-stage"
         }
       }
     }
   }
   stage {
-    name = "Deploy"
+    name = "Deploy_Non_Prod_Environments"
     dynamic "action" {
       for_each = local.deploy_envs
       content {
@@ -71,7 +69,7 @@ resource "aws_codepipeline" "codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-${var.environment}-deploy-${action.key}-stage"
+          ProjectName = "${var.project_id}-dev-deploy-${action.key}-stage"
           EnvironmentVariables = jsonencode([
             {
               name  = "PROFILE"
@@ -80,7 +78,7 @@ resource "aws_codepipeline" "codepipeline" {
             },
             {
               name  = "ENVIRONMENT"
-              value = "${action.key}"
+              value = "${var.environment}-${action.key}"
               type  = "PLAINTEXT"
             }
           ])
@@ -92,7 +90,7 @@ resource "aws_codepipeline" "codepipeline" {
   stage {
     name = "Integration_Test"
     dynamic "action" {
-      for_each = local.integration_tags
+      for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_codebuild_stage
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"
@@ -105,7 +103,7 @@ resource "aws_codepipeline" "codepipeline" {
           EnvironmentVariables = jsonencode([
             {
               name  = "ENVIRONMENT"
-              value = "${action.key}"
+              value = "${var.environment}-test"
               type  = "PLAINTEXT"
             }
           ])
@@ -113,17 +111,34 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
+  stage {
+    name = "Deploy_Prod_Environments"
+    action {
+      name            = "Deploy_Demo"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-dev-deploy-demo-stage"
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "ENVIRONMENT"
+            value = "${var.environment}-demo"
+            type  = "PLAINTEXT"
+          }
+        ])
+      }
+    }
+  }
   depends_on = [module.codepipeline_artefact_bucket]
-}
-
-resource "aws_codestarconnections_connection" "github" {
-  name          = "${var.project_id}-codestarconnection"
-  provider_type = "GitHub"
 }
 
 module "codepipeline_artefact_bucket" {
   source             = "../../modules/s3"
-  name               = "${var.project_id}-${var.environment}-codepipeline-artefact-bucket-mgmt"
+  name               = "${var.project_id}-release-${var.environment}-codepipeline-artefact-bucket-mgmt"
   project_id         = var.project_id
   acl                = "private"
   versioning_enabled = "true"

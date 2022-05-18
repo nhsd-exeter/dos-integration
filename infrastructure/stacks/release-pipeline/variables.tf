@@ -6,15 +6,13 @@
 # AWS COMMON
 ############
 
+
 variable "aws_region" {
   description = "The AWS region"
 }
 
 variable "aws_account_id" {
   description = "AWS account Number for Athena log location"
-}
-variable "lambda_security_group_name" {
-  description = "Name of the lambda security group"
 }
 variable "aws_account_id_nonprod" {
   description = ""
@@ -40,12 +38,12 @@ variable "aws_account_id_tools" {
 variable "aws_account_id_live_parent" {
   description = ""
 }
+
 # ##############
 # # TEXAS COMMON
 # ##############
 
-
-variable "code_pipeline_branch_name" {
+variable "release_pipeline_branch" {
   description = ""
 }
 variable "pipeline_notification_name" {
@@ -60,7 +58,11 @@ variable "pipeline_topic_name" {
   description = ""
 }
 
-variable "github_token" {
+variable "github_owner" {
+  description = ""
+}
+
+variable "github_repo" {
   description = ""
 }
 
@@ -77,4 +79,12 @@ variable "project_id" {
 }
 variable "environment" {
   description = "Environment name"
+}
+
+variable "service_state_bucket" {
+  description = "The S3 bucket used to store the service state"
+}
+
+variable "development_pipeline_state" {
+  description = "Location of the Terraform state file for the development pipeline"
 }

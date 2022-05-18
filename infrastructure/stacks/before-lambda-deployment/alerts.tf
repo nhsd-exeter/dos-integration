@@ -15,8 +15,8 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access" {
     principals {
       type = "Service"
       identifiers = [
-        "codestar-notifications.amazonaws.com",
-        "cloudwatch.amazonaws.com"
+        "cloudwatch.amazonaws.com",
+        "codestar-notifications.amazonaws.com"
       ]
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack.arn]

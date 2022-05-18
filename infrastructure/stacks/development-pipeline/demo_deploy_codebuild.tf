@@ -1,9 +1,9 @@
-resource "aws_codebuild_project" "di_stress_tests" {
-  name           = "${var.project_id}-${var.environment}-stress-test-stage"
-  description    = "Runs the stress tests for the DI Project"
-  build_timeout  = "480"
-  queued_timeout = "5"
-  service_role   = aws_iam_role.codebuild_role.arn
+resource "aws_codebuild_project" "di_deploy_demo" {
+  name           = "${var.project_id}-${var.environment}-deploy-demo-stage"
+  description    = "Deploy to the demo environment"
+  build_timeout  = "30"
+  queued_timeout = "30"
+  service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -23,21 +23,30 @@ resource "aws_codebuild_project" "di_stress_tests" {
     privileged_mode             = true
 
     environment_variable {
+      name  = "PROFILE"
+      value = "demo"
+    }
+
+    environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
     }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_MGMT"
       value = var.aws_account_id_mgmt
     }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_NONPROD"
       value = var.aws_account_id_nonprod
     }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_PROD"
       value = var.aws_account_id_prod
     }
+
     environment_variable {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
@@ -46,12 +55,12 @@ resource "aws_codebuild_project" "di_stress_tests" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-stress-test-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-demo-stage"
       stream_name = ""
     }
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.stress_tests_buildspec.rendered
+    buildspec = data.template_file.demo_deploy_buildspec.rendered
   }
 }

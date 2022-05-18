@@ -27,3 +27,6 @@ TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-ni
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
 TF_VAR_test_signing_key_alias := $(PROJECT_ID)-test-signing-key-alias
 TF_VAR_aws_np_vpc_name = lk8s-nonprod.texasplatform.uk
+
+TF_VAR_service_state_bucket = $(TERRAFORM_STATE_STORE)
+TF_VAR_development_pipeline_state = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)/dev/development-pipeline/terraform.state
