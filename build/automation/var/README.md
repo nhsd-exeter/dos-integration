@@ -13,3 +13,5 @@ Profile is a set of configuration options specific to an environment expressed a
 * `demo` - production, UX (AWS Prod Account)
 * `live` - production, service (AWS Prod Account)
 * `tools,tools-nonprod,tools-prod` - CI/CD execution environment
+* `perf` - a profile for performance testing which uses the DoS Perf DB but uses the DoS API Mock
+* `p2` - a profile for P2P testing which uses the DoS P2P DB and uses the DoS Performance API
