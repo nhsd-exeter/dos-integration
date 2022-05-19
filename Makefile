@@ -46,7 +46,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
 	fi
 
