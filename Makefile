@@ -427,18 +427,18 @@ plan-deployment-pipelines:
 		echo "PROFILE must be tools and ENVIRONMENT must be dev"
 	fi
 
-deploy-performance-pipelines:
-	make terraform-apply-auto-approve STACKS=performance-pipelines PROFILE=dev
+deploy-perf-test-tools:
+	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
 
-undeploy-performance-pipelines:
-	make terraform-destroy-auto-approve STACKS=performance-pipelines PROFILE=dev
+undeploy-perf-test-tools:
+	make terraform-destroy-auto-approve STACKS=perf-test-tools PROFILE=tools
 
-plan-performance-pipelines:
-	if [ "$(PROFILE)" == "dev" ]; then
+plan-perf-test-tools:
+	if [ "$(PROFILE)" == "tools" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=performance-pipelines
+		make terraform-plan STACKS=perf-test-tools
 	else
-		echo "Only dev profile supported at present"
+		echo "Only tools profile supported at present"
 	fi
 
 docker-hub-signin: # Sign into Docker hub
