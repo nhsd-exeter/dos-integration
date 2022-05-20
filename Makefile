@@ -654,6 +654,16 @@ send-performance-dashboard-slack-message:
 	"detail": {}
 	}'
 
+update-perf-environment-to-use-mock-api: # Updates the performance environment to connect to mock DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
+	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
+	eval "$$(make -s populate-deployment-variables PROFILE=perf)"
+	make serverless-deploy PROFILE=perf VERSION=$$IMAGE_TAG
+
+update-perf-environment-to-use-real-api: # Updates the performance environment to connect to real DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
+	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
+	eval "$$(make -s populate-deployment-variables PROFILE=p2)"
+	make serverless-deploy PROFILE=p2 VERSION=$$IMAGE_TAG
+
 # -----------------------------
 # Chaos Testing
 
