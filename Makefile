@@ -168,11 +168,12 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		"
 
 create-dentist-reports:
-	make -s docker-run-python \
+	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="python comparison_reporting/run_dentist_reports.py" \
 	DIR=./application \
 	ARGS=" \
+		-e PYTHONPATH="." \
 		-e DB_SERVER=$(DB_SERVER) \
 		-e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) \
