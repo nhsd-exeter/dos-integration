@@ -59,4 +59,4 @@ phases:
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
       - make terraform-clean
-      - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline,performance-pipeline TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true
+      - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline,perf-test-tools TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true

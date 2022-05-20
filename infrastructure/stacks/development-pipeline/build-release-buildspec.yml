@@ -24,7 +24,7 @@ phases:
         if [[ "$APPLY" != *"No changes"* ]]; then
           aws codepipeline start-pipeline-execution --name uec-dos-int-release-$ENVIRONMENT-codepipeline;
         fi
-      - make terraform-apply-auto-approve STACKS=performance-pipelines PROFILE=tools ENVIRONMENT=$ENVIRONMENT TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true
+      - make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools ENVIRONMENT=$ENVIRONMENT TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true
     finally:
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
