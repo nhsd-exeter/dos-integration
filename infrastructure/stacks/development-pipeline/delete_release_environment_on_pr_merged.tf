@@ -1,6 +1,6 @@
 resource "aws_codebuild_webhook" "destroy_release_environment_and_pipeline_on_pr_merged_deployment_webhook" {
-  # count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_destroy_release_environment_and_pipeline_on_pr_merged.name
+  count        = var.environment == "dev" ? 1 : 0
+  project_name = aws_codebuild_project.di_destroy_release_environment_and_pipeline_on_pr_merged[0].name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -15,7 +15,7 @@ resource "aws_codebuild_webhook" "destroy_release_environment_and_pipeline_on_pr
 }
 
 resource "aws_codebuild_project" "di_destroy_release_environment_and_pipeline_on_pr_merged" {
-  # count          = var.environment == "dev" ? 1 : 0
+  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-destroy-release-environment-on-pr-merged-stage"
   description    = "Destroys release environments and release pipelines based on pr merged"
   build_timeout  = "480"
