@@ -464,14 +464,14 @@ To run and generate the comparison reports for dentists. Ensure you are Authenti
 
     make create-dentist-reports PROFILE=dev
 
-    make create-dentist-reports 
-    DB_SERVER= ************.eu-west-2.rds.amazonaws.com 
-    DB_PORT=5432 
-    DB_NAME=pathwaysdos_regressiondi 
-    DB_USER_NAME=pathwaysdos 
-    DB_SECRET_NAME=core-dos-dev/deployment 
-    DB_SECRET_KEY=DB_USER_PASSWORD 
-    DB_SCHEMA=pathwaysdos
+    make create-dentist-reports \
+      DB_SERVER= ************.eu-west-2.rds.amazonaws.com \
+      DB_PORT=5432 \
+      DB_NAME=pathwaysdos_regressiondi \
+      DB_USER_NAME=pathwaysdos \
+      DB_SECRET_NAME=core-dos-dev/deployment \
+      DB_SECRET_KEY=DB_USER_PASSWORD \
+      DB_SCHEMA=pathwaysdos
 
 ## Architecture
 
