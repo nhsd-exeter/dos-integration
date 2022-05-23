@@ -477,7 +477,7 @@ or
       DB_SCHEMA=pathwaysdos
 
 
-These can also be run directly with Python if the required packages are installed. Ensure you have all the the env vars setup (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
+These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
 
     python3 comparison_reporting/run_dentist_reports.py
 
