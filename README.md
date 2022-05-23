@@ -453,6 +453,26 @@ To Deploy Live
 
     make tag-commit-for-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
+#### Creating Batch Comparison Reports
+
+Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
+
+## Dentists
+
+To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use. And run the following command. Either specifying PROFILE, or a full set of DoS DB details.
+
+
+    make create-dentist-reports PROFILE=dev
+
+    make create-dentist-reports 
+    DB_SERVER= ************.eu-west-2.rds.amazonaws.com 
+    DB_PORT=5432 
+    DB_NAME=pathwaysdos_regressiondi 
+    DB_USER_NAME=pathwaysdos 
+    DB_SECRET_NAME=core-dos-dev/deployment 
+    DB_SECRET_KEY=DB_USER_PASSWORD 
+    DB_SCHEMA=pathwaysdos
+
 ## Architecture
 
 ### Data
