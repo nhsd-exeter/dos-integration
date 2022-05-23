@@ -459,8 +459,9 @@ Batch comparison reports can be generated for whole datasets at once. Pulling a 
 
 #### Dentists
 
-To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use. And run the following command. Either specifying PROFILE, or a full set of DoS DB details.
+To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
 
+You can use a make command. Either specifying PROFILE, or a full set of DoS DB details.
 
     make create-dentist-reports PROFILE=dev
 
@@ -474,6 +475,11 @@ or
       DB_SECRET_NAME=secret_name_for_secret_manager \
       DB_SECRET_KEY=DB_USER_PASSWORD \
       DB_SCHEMA=pathwaysdos
+
+
+These can also be run directly with Python. Ensure you have all the the env vars setup (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
+
+  python3 comparison_reporting/run_dentist_reports.py
 
 ## Architecture
 
