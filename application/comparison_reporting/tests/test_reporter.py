@@ -507,7 +507,7 @@ def test_invalid_spec_opening_times_report():
         columns=[
             "NHSUK ODSCode",
             "NHSUK Org Name",
-            "NHSUK Standard Opening Times",
+            "NHSUK Specified Opening Times",
             "DoS Service ID",
             "DoS Service UID",
             "DoS Service Name",

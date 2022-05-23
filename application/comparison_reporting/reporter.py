@@ -154,7 +154,7 @@ class Reporter:
         headers = [
             "NHSUK ODSCode",
             "NHSUK Org Name",
-            "NHSUK Standard Opening Times",
+            "NHSUK Specified Opening Times",
             "DoS Service ID",
             "DoS Service UID",
             "DoS Service Name",
