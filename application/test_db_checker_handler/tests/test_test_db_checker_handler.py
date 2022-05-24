@@ -38,10 +38,10 @@ def test_type_get_pharmacy_odscodes(mock_run_query, lambda_context):
 
 
 @patch(f"{FILE_PATH}.run_query")
-def test_type_get_single_pharmacy_service_odscode(mock_run_query, lambda_context):
+def test_type_get_single_service_pharmacy_odscode(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_single_pharmacy_service_odscode"}
+    test_input = {"type": "get_single_service_pharmacy_odscode"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert

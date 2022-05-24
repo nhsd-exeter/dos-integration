@@ -39,17 +39,17 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     elif request["type"] == "get_pharmacy_odscodes_with_contacts":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
-            f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} AND LENGTH(LEFT(odscode,5)) = 5 "
+            f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} AND LENGTH(odscode) > 4 "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
-            "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
+            "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
         )
         result = run_query(query, None)
-    elif request["type"] == "get_single_pharmacy_service_odscode":
+    elif request["type"] == "get_single_service_pharmacy_odscode":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
             f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
-            "AND LENGTH(LEFT(odscode,5)) = 5 GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1"
+            "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
         )
         result = run_query(query, None)
     elif request["type"] == "get_dentist_odscodes":
