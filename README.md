@@ -468,10 +468,11 @@ You can use a make command. Either specifying PROFILE, or a full set of DoS DB d
 or
 
     make create-dentist-reports \
-      DB_SERVER= ************.eu-west-2.rds.amazonaws.com \
+      DB_SERVER_NAME= server_name \
       DB_PORT=5432 \
       DB_NAME=name_of_the_db \
-      DB_USER_NAME=some_db_name \
+      DB_USER_NAME_SECRET_NAME=some_db_name \
+      DB_USER_NAME_SECRET_KEY=some_key \
       DB_SECRET_NAME=secret_name_for_secret_manager \
       DB_SECRET_KEY=DB_USER_PASSWORD \
       DB_SCHEMA=pathwaysdos
