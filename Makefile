@@ -174,10 +174,10 @@ create-dentist-reports:
 	DIR=./application \
 	ARGS=" \
 		-e PYTHONPATH="." \
-		-e DB_SERVER=$(DB_SERVER) \
+		-e DB_SERVER=$(DB_SERVER_NAME) \
 		-e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) \
-		-e DB_USER_NAME=$(DB_USER_NAME) \
+		-e DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY)) \
 		-e DB_SECRET_NAME=$(DB_SECRET_NAME) \
 		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
 		-e DB_SCHEMA=$(DB_SCHEMA) \
