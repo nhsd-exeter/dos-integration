@@ -174,7 +174,7 @@ create-dentist-reports: # Must use a PROFILE argument with appropriate DB detail
 	DIR=./application \
 	ARGS=" \
 		-e PYTHONPATH="." \
-		-e DB_SERVER_NAME=$(DB_SERVER_NAME) \
+		-e DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address) \
 		-e DB_PORT=$(DB_PORT) \
 		-e DB_NAME=$(DB_NAME) \
 		-e DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY)) \
