@@ -147,6 +147,20 @@ integration-test-local:
 	RUN_ID=${RUN_ID} \
 	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
 
+integration-test-auto-flags:
+	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
+	--configuration event-processor --client-id test-id test_tmp.txt
+	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
+	if [[ $$VALUE =~ .*"PHA".* ]]; then
+		echo "PHA"
+		MY_TAG="pharmacy_no_log_searches"
+	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
+		echo "Dentist"
+		MY_TAG=$$(echo dentist_no_log_searches)
+	fi
+	rm -rf test_tmp.txt
+	make integration-test TAGS=$$MY_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT)
+
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \

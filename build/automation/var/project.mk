@@ -29,7 +29,7 @@ TF_VAR_programme = $(PROGRAMME)
 TF_VAR_environment = $(ENVIRONMENT)
 TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
-PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
+PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
