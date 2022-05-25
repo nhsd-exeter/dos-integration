@@ -19,7 +19,7 @@ def test_query_dos_db(mock_connect, mock_get_secret):
     environ["DB_SECRET_KEY"] = "my_secret_key"
     mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
     db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
-    query = "SELECT * FROM my_table"
+    query = "SELECT * FROM my_table" + ("text filler" * 500)
     vars = None
     # Act
     query_dos_db(query, vars)

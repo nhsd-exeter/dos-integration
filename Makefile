@@ -167,6 +167,23 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
+create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	CMD="python comparison_reporting/run_dentist_reports.py" \
+	DIR=./application \
+	ARGS=" \
+		-e PYTHONPATH="." \
+		-e DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address) \
+		-e DB_PORT=$(DB_PORT) \
+		-e DB_NAME=$(DB_NAME) \
+		-e DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY)) \
+		-e DB_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
+		-e DB_SCHEMA=$(DB_SCHEMA) \
+	"
+
+
 clean: # Runs whole project clean
 	make \
 		docker-clean \

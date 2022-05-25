@@ -5,7 +5,7 @@ import pytest
 
 from .conftest import dummy_dos_location, dummy_dos_service
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
-from ..opening_times import OpenPeriod, StandardOpeningTimes
+from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from ..dos import (
     DoSLocation,
     DoSService,
@@ -13,8 +13,15 @@ from ..dos import (
     get_matching_dos_services,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
+    get_all_valid_dos_postcodes,
+    get_services_from_db,
+    db_rows_to_std_open_times,
+    db_rows_to_std_open_times_map,
+    db_rows_to_spec_open_times,
+    db_rows_to_spec_open_times_map
 )
 
+OP = OpenPeriod.from_string
 FILE_PATH = "application.common.dos"
 
 
@@ -103,7 +110,8 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
-    db_return = get_db_item(odscode, name)
+    id = 22851351399
+    db_return = [get_db_item(odscode, name, id=id)]
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -112,7 +120,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == 22851351399
+    assert service.id == id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
@@ -164,7 +172,8 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     # Arrange
     odscode = "V00393a"
     name = "My Dental Practice"
-    db_return = get_db_item(odscode, name)
+    id = 22851351399
+    db_return = [get_db_item(odscode, name, id=id)]
     mock_connection = MagicMock()
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -174,7 +183,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == 22851351399
+    assert service.id == id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
@@ -219,13 +228,55 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
     # Arrange
     mock_connection = MagicMock()
     db_return = [
-        (28334, date(2019, 5, 6), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 5, 27), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 8, 26), time(8, 0, 0), time(20, 0, 0), False),
-        (28334, date(2019, 8, 26), time(21, 0, 0), time(22, 0, 0), False),
-        (28334, date(2019, 9, 20), time(0, 0, 0), time(0, 0, 0), True),
-        (28334, date(2019, 9, 21), time(14, 30, 0), time(16, 0, 0), True),
-        (28334, date(2019, 5, 6), time(6, 0, 0), time(7, 0, 0), False),
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 6),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 27),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 8, 26),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 8, 26),
+            "starttime": time(21, 0, 0),
+            "endtime": time(22, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 9, 20),
+            "starttime": time(0, 0, 0),
+            "endtime": time(0, 0, 0),
+            "isclosed": True
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 9, 21),
+            "starttime": time(14, 30, 0),
+            "endtime": time(16, 0, 0),
+            "isclosed": True
+        },
+        {
+            "serviceid": 28334,
+            "date": date(2019, 5, 6),
+            "starttime": time(6, 0, 0),
+            "endtime": time(7, 0, 0),
+            "isclosed": False
+        }
     ]
     mock_connection.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_connection
@@ -241,7 +292,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
     )
     # Act
     responses = get_specified_opening_times_from_db(service_id)
-    responses_str = sorted([str(s) for s in responses])
+    responses_str = sorted([repr(s) for s in responses])
     # Assert
     assert (
         responses_str == expected_responses_set
@@ -261,9 +312,9 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
 def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db):
     # Arrange
     db_return = [
-        (28334, 1, "Tuesday", time(8, 0, 0), time(17, 0, 0)),
-        (28334, 1, "Friday", time(9, 0, 0), time(11, 30, 0)),
-        (28334, 1, "Friday", time(13, 0, 0), time(15, 30, 0)),
+        {"serviceid": 28334, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(9, 0, 0), "endtime": time(11, 30, 0)},
+        {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)}
     ]
     mock_connection = MagicMock()
     service_id = 123456
@@ -391,28 +442,338 @@ def test_get_dos_locations(mock_query_dos_db):
     )
 
 
-def get_db_item(odscode, name):
-    return [
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_all_valid_dos_postcodes(mock_query_dos_db):
+    # Arrange
+    mock_connection = MagicMock()
+    db_return = [
+        {"postcode": "BA2 7AF"},
+        {"postcode": "EY8 8AH"},
+        {"postcode": "SW9 5EZ"},
+        {"postcode": "W2 8PP"},
+        {"postcode": "PO1 9"},
+        {"postcode": "B W 4 5 H D"},
+        {"postcode": "BA2 7AF"}
+    ]
+    mock_connection.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_connection
+
+    expected_result = {"BA27AF", "EY88AH", "SW95EZ", "W28PP", "PO19", "BW45HD"}
+
+    # Act
+    response = get_all_valid_dos_postcodes()
+    # Assert
+    assert response == expected_result
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_services_from_db(mock_query_dos_db):
+    # Arrange
+    mock_connection = MagicMock()
+    db_returns = [
+        [
+            get_db_item(id=1, typeid=12),
+            get_db_item(id=2, typeid=14)
+        ],
+        [
+            {"serviceid": 1, "dayid": 4, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+            {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+            {"serviceid": 2, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+            {"serviceid": 2, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)}
+        ],
+        [
+            {
+                "serviceid": 1,
+                "date": date(2019, 5, 6),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 1,
+                "date": date(2019, 5, 27),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 2,
+                "date": date(2019, 8, 26),
+                "starttime": time(8, 0, 0),
+                "endtime": time(20, 0, 0),
+                "isclosed": False
+            },
+            {
+                "serviceid": 1,
+                "date": date(2019, 9, 20),
+                "starttime": None,
+                "endtime": None,
+                "isclosed": True
+            },
+            {
+                "serviceid": 2,
+                "date": date(2019, 5, 6),
+                "starttime": time(6, 0, 0),
+                "endtime": time(7, 0, 0),
+                "isclosed": False
+            }
+        ]
+    ]
+    mock_connection.fetchall.side_effect = db_returns
+    mock_query_dos_db.return_value = mock_connection
+
+    expected_reprs = sorted([
+        "<DoSService: name='fake name' id=1 uid=159514725 odscode=FA9321 type=12 status=1>"
+        "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
+        "friday=[], saturday=[], sunday=[13:00:00-15:30:00]>"
+        "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>"
+        "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>"
+        "<SpecifiedOpenTime: 20-09-2019 open=False []>",
+        "<DoSService: name='fake name' id=2 uid=159514725 odscode=FA9321 type=14 status=1>"
+        "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
+        "friday=[13:00:00-15:30:00], saturday=[], sunday=[]>"
+        "<SpecifiedOpenTime: 06-05-2019 open=True [06:00:00-07:00:00]>"
+        "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>"
+    ])
+
+    # Act
+    services = get_services_from_db([12, 14])
+    actual_service_repr = [
+        repr(s) + repr(s._standard_opening_times) + "".join(repr(spectime) for spectime in s._specified_opening_times)
+        for s in services
+    ]
+
+    assert actual_service_repr == expected_reprs
+
+
+def test_db_rows_to_spec_open_times():
+    db_rows = [
         {
-            "id": 22851351399,
-            "uid": "159514725",
-            "name": name,
-            "odscode": odscode,
-            "address": "80 Street$Town",
-            "town": "Town",
-            "postcode": "TES T12",
-            "web": None,
-            "email": None,
-            "fax": None,
-            "nonpublicphone": None,
-            "typeid": 13,
-            "parentid": 123486,
-            "subregionid": 21813557,
-            "statusid": 1,
-            "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
-            "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
-            "publicphone": "0123 012 012",
-            "publicname": None,
-            "servicename": "my service",
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(21, 0, 0),
+            "endtime": time(22, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 27),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 8, 26),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 9, 20),
+            "starttime": None,
+            "endtime": None,
+            "isclosed": True
+        },
+        {
+            "serviceid": 1,
+            "date": date(2020, 5, 6),
+            "starttime": time(6, 0, 0),
+            "endtime": time(7, 0, 0),
+            "isclosed": False
         }
     ]
+
+    spec_open_times = db_rows_to_spec_open_times(db_rows)
+
+    expected_spec_open_times = [
+        SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
+        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True),
+        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
+        SpecifiedOpeningTime([], date(2019, 9, 20), False),
+        SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True),
+    ]
+
+    assert spec_open_times == expected_spec_open_times
+
+
+def test_db_rows_to_spec_open_times_map():
+    db_rows = [
+        {
+            "serviceid": 214,
+            "date": date(2019, 9, 20),
+            "starttime": None,
+            "endtime": None,
+            "isclosed": True
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 6),
+            "starttime": time(21, 0, 0),
+            "endtime": time(22, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 1,
+            "date": date(2019, 5, 27),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 214,
+            "date": date(2019, 8, 26),
+            "starttime": time(8, 0, 0),
+            "endtime": time(20, 0, 0),
+            "isclosed": False
+        },
+        {
+            "serviceid": 333,
+            "date": date(2020, 5, 6),
+            "starttime": time(6, 0, 0),
+            "endtime": time(7, 0, 0),
+            "isclosed": False
+        }
+    ]
+
+    spec_open_times_map = db_rows_to_spec_open_times_map(db_rows)
+
+    expected_spec_open_times_map = {
+        1: [
+            SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
+            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True)
+        ],
+        214: [
+            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
+            SpecifiedOpeningTime([], date(2019, 9, 20), False)
+        ],
+        333: [
+            SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True)
+        ]
+    }
+
+    assert spec_open_times_map == expected_spec_open_times_map
+
+
+def test_db_rows_to_std_open_time():
+    db_rows = [
+        {"serviceid": 1, "dayid": 0, "name": "Monday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
+        {"serviceid": 1, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 1, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
+        {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)}
+    ]
+
+    expcted_std_open_times = StandardOpeningTimes()
+    expcted_std_open_times.monday = [OP("08:00-17:00")]
+    expcted_std_open_times.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
+    expcted_std_open_times.wednesday = [OP("07:00-15:30")]
+    expcted_std_open_times.thursday = [OP("11:00-13:30")]
+    expcted_std_open_times.friday = [OP("13:00-15:30")]
+    expcted_std_open_times.sunday = [OP("13:00-15:30")]
+
+    actual_std_open_times = db_rows_to_std_open_times(db_rows)
+
+    assert actual_std_open_times == expcted_std_open_times
+
+
+def test_db_rows_to_std_open_times_map():
+    db_rows = [
+        {"serviceid": 22, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 22, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
+        {"serviceid": 22, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
+        {"serviceid": 1, "dayid": 0, "name": "Monday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
+        {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
+        {"serviceid": 333, "dayid": 0, "name": "Monday", "starttime": time(10, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 333, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 22, "dayid": 0, "name": "Monday", "starttime": time(13, 0, 0), "endtime": time(17, 0, 0)},
+        {"serviceid": 22, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
+        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
+        {"serviceid": 333, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 333, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
+        {"serviceid": 333, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
+        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
+        {"serviceid": 1, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
+        {"serviceid": 1, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)}
+    ]
+
+    expcted_std_open_times_1 = StandardOpeningTimes()
+    expcted_std_open_times_1.monday = [OP("08:00-17:00")]
+    expcted_std_open_times_1.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
+    expcted_std_open_times_1.wednesday = [OP("07:00-15:30")]
+    expcted_std_open_times_1.thursday = [OP("11:00-13:30")]
+    expcted_std_open_times_1.friday = [OP("13:00-15:30")]
+    expcted_std_open_times_1.sunday = [OP("13:00-15:30")]
+
+    expcted_std_open_times_22 = StandardOpeningTimes()
+    expcted_std_open_times_22.monday = [OP("13:00-17:00")]
+    expcted_std_open_times_22.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
+    expcted_std_open_times_22.wednesday = [OP("07:00-15:30")]
+    expcted_std_open_times_22.thursday = [OP("11:00-13:30")]
+    expcted_std_open_times_22.friday = [OP("13:00-15:30")]
+    expcted_std_open_times_22.sunday = [OP("13:00-15:30")]
+
+    expcted_std_open_times_333 = StandardOpeningTimes()
+    expcted_std_open_times_333.monday = [OP("10:00-17:00")]
+    expcted_std_open_times_333.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
+    expcted_std_open_times_333.wednesday = [OP("07:00-15:30")]
+    expcted_std_open_times_333.thursday = [OP("11:00-13:30")]
+    expcted_std_open_times_333.friday = [OP("13:00-15:30")]
+    expcted_std_open_times_333.sunday = [OP("13:00-15:30")]
+
+    expcted_std_open_times_map = {
+        1: expcted_std_open_times_1,
+        22: expcted_std_open_times_22,
+        333: expcted_std_open_times_333
+    }
+
+    actual_std_open_times_map = db_rows_to_std_open_times_map(db_rows)
+
+    assert actual_std_open_times_map == expcted_std_open_times_map
+
+
+def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):
+    return {
+        "id": id,
+        "uid": "159514725",
+        "name": name,
+        "odscode": odscode,
+        "address": "80 Street$Town",
+        "town": "Town",
+        "postcode": "TES T12",
+        "web": None,
+        "email": None,
+        "fax": None,
+        "nonpublicphone": None,
+        "typeid": typeid,
+        "parentid": 123486,
+        "subregionid": 21813557,
+        "statusid": 1,
+        "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
+        "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
+        "publicphone": "0123 012 012",
+        "publicname": None,
+        "servicename": "my service"
+    }

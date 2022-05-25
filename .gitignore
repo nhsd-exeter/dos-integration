@@ -8,3 +8,4 @@
 .vscode
 *.code-workspace
 !project.code-workspace
+.coverage

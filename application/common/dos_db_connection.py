@@ -28,6 +28,9 @@ def _connect_dos_db() -> connection:
     logger.debug(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} user={db_user}")
 
+    logger.info(f"Attempting connection to database '{server}'")
+    logger.info(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} user={db_user}")
+
     db = psycopg2.connect(
         host=server,
         port=port,
@@ -64,7 +67,12 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
         logger.info("Using existing open database connection.")
 
     c = db_connection.cursor(cursor_factory=DictCursor)
-    logger.info(f"Running SQL command: {c.mogrify(query, vars)}")
+
+    query_string_log = f"Running SQL command: {c.mogrify(query, vars)}"
+    if len(query_string_log) > 1000:
+        query_string_log = f"{query_string_log[:490]}...       ...{query_string_log[-490:]}"
+    logger.info(query_string_log)
+
     c.execute(query, vars)
     return c
 
