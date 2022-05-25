@@ -33,6 +33,9 @@
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
     - [Remove deployment on Pull Request merge](#remove-deployment-on-pull-request-merge)
+    - [Switch Performance Testing Environment](#switch-performance-testing-environment)
+      - [Switch Performance Environment to use DoS Mock](#switch-performance-environment-to-use-dos-mock)
+      - [Switch Performance Environment to use DoS Performance API Gateway](#switch-performance-environment-to-use-dos-performance-api-gateway)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
@@ -327,6 +330,27 @@ You can remove a task deployment using a single command to create a tag which th
 
 When a pull request is merged it will run an AWS Codebuild project that will destroy the environment if it exists.
 The codebuild stage can be found within the development-pipeline terraform stack.
+
+
+### Switch Performance Testing Environment
+
+These make targets are to switch an environment between the DoS API Gateway they use. This means that the make targets only work on an existing environment. This doesn't deploy a new fresh environment.
+
+#### Switch Performance Environment to use DoS Mock
+
+This is to switch the DoS API Gateway to use the DoS Mock API Gateway. This is useful for performance testing without changing the DoS DB which means that the tests are more repeatable.
+
+  make deploy-perf-environment-mock-api ENVIRONMENT=perf # Deploys the Event Sender to point to DoS Mock API Gateway
+
+NOTE: `PROFILE` variable doesn't need to be set as it is set by the make target. `ENVIRONMENT` variable sets which environment to switch.
+
+#### Switch Performance Environment to use DoS Performance API Gateway
+
+This is to switch the DoS API Gateway to use the DoS Performance API Gateway. This is useful for performance testing with changing the DoS DB which means that the tests are more live like.
+
+  make deploy-perf-environment-real-api ENVIRONMENT=perf # Deploys the Event Sender to point to DoS Performance API Gateway
+
+NOTE: `PROFILE` variable doesn't need to be set as it is set by the make target. `ENVIRONMENT` variable sets which environment to switch.
 
 ### Secrets
 
