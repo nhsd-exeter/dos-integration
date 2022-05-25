@@ -5,14 +5,18 @@
 - [DoS Integration](#dos-integration)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+    - [DI Confluence Page](#di-confluence-page)
+    - [Architecture](#architecture)
+    - [Technology Stack](#technology-stack)
   - [Quick Start](#quick-start)
     - [Development Requirements](#development-requirements)
-    - [Local Environment Configuration](#local-environment-configuration)
-    - [Local Project Setup](#local-project-setup)
+    - [Clone Repository](#clone-repository)
+    - [AWS Authentication](#aws-authentication)
+    - [Mac setup](#mac-setup)
   - [Contributing](#contributing)
   - [Development](#development)
     - [Add IP Address to IP Allow List](#add-ip-address-to-ip-allow-list)
-    - [Database Connection](#database-connection)
+    - [DoS Database Connection](#dos-database-connection)
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
@@ -24,7 +28,7 @@
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
-    - [Artefact Versioning](#artefact-versioning)
+    - [Artifacts Versioning](#artifacts-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
     - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
@@ -42,29 +46,13 @@
     - [Prerequisites](#prerequisites)
     - [How to deploy](#how-to-deploy)
       - [Example](#example)
-  - [Architecture](#architecture)
-    - [Diagrams](#diagrams)
-      - [System Context Diagram](#system-context-diagram)
-      - [Container Diagram](#container-diagram)
-      - [Component Diagram](#component-diagram)
-      - [Processes and Data Flow](#processes-and-data-flow)
-      - [Infrastructure](#infrastructure)
-      - [Networking](#networking)
-    - [Integration](#integration)
-      - [Interfaces](#interfaces)
-      - [Dependencies](#dependencies)
+  - [Architecture](#architecture-1)
     - [Data](#data)
     - [Authentication and Authorisation](#authentication-and-authorisation)
-    - [Technology Stack](#technology-stack)
-    - [Key Architectural Decisions](#key-architectural-decisions)
-    - [System Quality Attributes](#system-quality-attributes)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
-    - [Error Handling](#error-handling)
     - [Observability](#observability)
       - [Tracing Change events and requests Correlation Id](#tracing-change-events-and-requests-correlation-id)
-    - [Auditing](#auditing)
-    - [Backups](#backups)
     - [Cloud Environments](#cloud-environments)
     - [Runbooks](#runbooks)
   - [Product](#product)
@@ -73,7 +61,7 @@
 
 ## Overview
 
-The NHS.uk website, and the DoS (Directory of Services) service are seperate entities which both store a lot of the same important data about Pharamcies/Dentists and other health orgnisations around the UK. The management of these individual services therefore needs to update information in mutliple places online to keep their data fully up to date for their users.
+The NHS.uk website, and the DoS (Directory of Services) service are separate entities which both store a lot of the same important data about Pharmacies/Dentists and other health organisations around the UK. The management of these individual services therefore needs to update information in multiple places online to keep their data fully up to date for their users.
 
 The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
 
@@ -88,7 +76,7 @@ https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
 
 The current technology stack is:
 
-- Python (3.9.7) - Main programming language
+- Python - Main programming language
 - AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS
 - Serverless Framework - (Where supported)
 - Terraform - Infrastructure as code tool (Where serverless not supported)
@@ -97,11 +85,11 @@ The current technology stack is:
 
 ### Development Requirements
 
-It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux enviornment to work with. Try not to use the Windows command line. 
+It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux environment to work with. Try not to use the Windows command line.
 
 A mac is no longer required for basic development since task branches are automatically built on the push of a new commit. However the build/deploy commands currently are only designed to work with macOS.
 
-This project contains a macOS enviornment which can be installed and setup that gives the user a wide range of tools useful for development. More info on this is in the mac setup section.
+This project contains a macOS environment which can be installed and setup that gives the user a wide range of tools useful for development. More info on this is in the mac setup section.
 
 The main components you will need for *basic* development work, are your OS version of the below.
 
@@ -110,7 +98,6 @@ The main components you will need for *basic* development work, are your OS vers
 - Python (The project currenly runs on 3.9.7)
 - AWS CLI
 - Docker
-
 
 ### Clone Repository
 
@@ -163,18 +150,17 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
 
-An IP Allowlist is kept in secrets manager for each enviornment (task, dev, live etc). The task enviornment list is used for each task enviornment deployed. The Secret Name for each is of the format
+An IP Allowlist is kept in secrets manager for each environment (task, dev, live etc). The task environment list is used for each task environment deployed. The Secret Name for each is of the format
 
     uec-dos-int-XXXX-ip-addresses-allowlist
 
-where XXXX is the name of the enviornment in lowercase. For most development work you only need to add your IP to the task and dev enviornments list.
+where XXXX is the name of the environment in lowercase. For most development work you only need to add your IP to the task and dev environments list.
 
 You can also add your IP to the lists with a script.
 
 Prerequisites (first setup only)
 
     make tester-build
-
 
 To add an IP address to the IP allow lists, Ensure you're authenticated for access to AWS and run the following command.
 
@@ -259,11 +245,11 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
-    
+
 The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own enviornment directly by going to the /application directory and running.
 
     python3 -m pytest --cov=. -vv
-    
+
 It is always a good idea to run the unit tests in the IMAGE enviornment for a final run-through to ensure they pass in the correct enviormental conditions.
 
 
@@ -342,18 +328,26 @@ It will return a error a code if it hasn't worked successfully. It use the json 
 
 API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
 
-### Artefact Versioning
+### Artifacts Versioning
 
 E.g. semantic versioning vs. timestamp-based
 
 ### CI/CD Pipelines
 
-List all the pipelines and their purpose
+All `test` pipelines are found in the AWS CodePipeline app in `Texas` `non-prod` account and included the following:
 
-- Development
-- Test
-- Cleanup
-- Production (deployment)
+- uec-dos-int-local-load-test-codepipeline
+- uec-dos-int-local-stress-test-codepipeline
+- uec-dos-int-dev-stress-test-codepipeline
+- uec-dos-int-dev-load-test-codepipeline
+
+All other pipeline can be found in the AWS CodePipeline app in `Texas` `mgmt` account:
+
+- uec-dos-int-dev-codepipeline
+- uec-dos-int-release-X-X-X-codepipeline
+- uec-dos-int-di-XXX-codepipeline <!-- TODO Remove and replace with list of codebuild projects based of githooks -->
+
+Where Xs are the release versions or the Jira number for a deploy task branch
 
 Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
 
