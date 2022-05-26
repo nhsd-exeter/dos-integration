@@ -109,7 +109,9 @@ class EventProcessor:
             changes = get_changes(service, self.nhs_entity)
             logger.info(f"Changes for nhs:{self.nhs_entity.odscode}/dos:{service.id} : {changes}")
             if len(changes) > 0:
-                change_requests.append(ChangeRequest(service.id, changes))
+                change_request = ChangeRequest(service.id, changes)
+                logger.info("Change Request Created", extra={"change_request": change_request})
+                change_requests.append(change_request)
 
         payload_list = dumps([cr.create_payload() for cr in change_requests], default=str)
         logger.info(f"Created {len(change_requests)} change requests {payload_list}")
