@@ -59,6 +59,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'"
         )
         result = run_query(query, None)
+    elif request["type"] == "get_services_count":
+        cid = request.get("odscode")
+        if cid is not None:
+            query = f"SELECT count(*) from services where odscode like '{cid}%'"
+            result = run_query(query, None)
+        else:
+            raise ValueError("Missing odscode")
     elif request["type"] == "get_changes":
         cid = request.get("correlation_id")
         if cid is not None:

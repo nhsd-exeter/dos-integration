@@ -148,6 +148,13 @@ def get_single_service_odscode() -> str:
     return odscode
 
 
+def get_services_count() -> str:
+    lambda_payload = {"type": "get_services_count", "odscode": get_single_service_odscode()}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return data
+
+
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
