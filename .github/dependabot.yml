@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: ".github/workflows"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+  # Maintain dependencies for Python
+  - package-ecosystem: "pip"
+    directory: "application"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+  # Maintain dependencies for Dockerfile
+  - package-ecosystem: "docker"
+    directory: "build/docker"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+  # Maintain dependencies for Terraform
+  - package-ecosystem: "terraform"
+    directory: "infrastructure"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+  # Maintain dependencies for Yarn(Serverless Framework)
+  - package-ecosystem: "npm"
+    directory: "build/docker/serverless"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
