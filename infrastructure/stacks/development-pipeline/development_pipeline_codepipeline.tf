@@ -105,7 +105,7 @@ resource "aws_codepipeline" "codepipeline" {
   stage {
     name = "Integration_Test"
     dynamic "action" {
-      for_each = local.integration_tags
+      for_each = local.integration_make_targets
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"
@@ -114,7 +114,7 @@ resource "aws_codepipeline" "codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-${var.environment}-integration-test-stage-${action.key}"
+          ProjectName = "${var.project_id}-${var.environment}-${action.key}"
         }
       }
     }

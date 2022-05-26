@@ -283,8 +283,8 @@ resource "aws_codebuild_project" "di_setup_integration_tests" {
 }
 
 resource "aws_codebuild_project" "di_integration_tests" {
-  for_each       = local.integration_tags
-  name           = "${var.project_id}-${var.environment}-integration-test-stage-${each.key}"
+  for_each       = local.integration_make_targets
+  name           = "${var.project_id}-${var.environment}-${each.key}"
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
   queued_timeout = "30"
@@ -316,7 +316,7 @@ resource "aws_codebuild_project" "di_integration_tests" {
       value = "test"
     }
     environment_variable {
-      name  = "INTEGRATION_TAGS"
+      name  = "INTEGRATION_MAKE_TARGET"
       value = each.key
     }
     environment_variable {
