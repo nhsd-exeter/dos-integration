@@ -1,6 +1,6 @@
 resource "aws_codebuild_webhook" "build_release_webhook" {
-  # count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_build_release.name
+  count        = var.environment == "dev" ? 1 : 0
+  project_name = aws_codebuild_project.di_build_release[0].name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -16,7 +16,7 @@ resource "aws_codebuild_webhook" "build_release_webhook" {
 }
 
 resource "aws_codebuild_project" "di_build_release" {
-  # count          = var.environment == "dev" ? 1 : 0
+  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-build-release-stage"
   description    = "Builds release pipeline for release branches"
   build_timeout  = "30"

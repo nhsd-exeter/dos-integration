@@ -87,7 +87,7 @@ unit-test:
 		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make -s python-code-coverage CMD="-m pytest application" DIR=/ \
+	make -s python-code-coverage CMD="-m pytest application --junitxml=./testresults.xml" DIR=/ \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
@@ -729,6 +729,23 @@ delete-ip-from-allowlist: # Update your IP address in AWS secrets manager to ace
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		CMD="python delete-ip-address.py $(USERNAME)" \
 		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
+
+trigger-dos-deployment-pipeline:
+	JENKINS_URL=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_MOM_URL)
+	JENKINS_USERNAME=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_USERNAME)
+	JENKINS_PASSWORD=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_PASSWORD)
+	JENKINS_CRUMB=$$(curl -L -X GET "$$JENKINS_URL/crumbIssuer/api/json" --user $$JENKINS_USERNAME:$$JENKINS_PASSWORD --cookie-jar jenkins.cookies | jq --raw-output '.crumb')
+	curl -L -X POST "$$JENKINS_URL/view/DoS/job/dos-deploy/job/develop/buildWithParameters" --cookie jenkins.cookies \
+	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
+	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
+	-F "TARGET=\"regressiondi\"" \
+	-F "IMAGE_TAG=\"7.8.0_9525147\"" \
+	-F "REFRESH=\"true\""
+	echo Jenkins Job has started
+	echo Sleeping for 5 minutes
+	sleep 300
+	echo Jenkins Job expected to have finished
+	rm -rf jenkins.cookies
 
 python-linting:
 	make python-code-check FILES=application

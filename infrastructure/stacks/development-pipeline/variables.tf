@@ -83,3 +83,7 @@ variable "project_id" {
 variable "environment" {
   description = "Environment name"
 }
+
+variable "mgmt_vpc_name" {
+  description = "Name of the management VPC"
+}

@@ -30,3 +30,4 @@ TF_VAR_aws_np_vpc_name = lk8s-nonprod.texasplatform.uk
 
 TF_VAR_service_state_bucket = $(TERRAFORM_STATE_STORE)
 TF_VAR_development_pipeline_state = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)/dev/development-pipeline/terraform.state
+TF_VAR_mgmt_vpc_name := mgmt.texasplatform.uk
