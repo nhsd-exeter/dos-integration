@@ -4,7 +4,7 @@ jobs:
   check-code-security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Check if code contains any secrets
