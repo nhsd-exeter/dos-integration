@@ -56,7 +56,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+@complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S009. A valid change with website removal is processed by dos
     Given a Changed Event to unset "website"
     When the Changed Event is sent for processing with "valid" api key

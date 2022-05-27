@@ -11,7 +11,7 @@ from .utils import (
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_odscodes_list,
-    get_single_service_odscode,
+    get_single_service_pharmacy,
 )
 from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID
 
@@ -94,7 +94,7 @@ def get_payload(payload_name: str) -> str:
 
 
 def build_same_as_dos_change_event(service_type: str):
-    ods_code = get_single_service_odscode()
+    ods_code = get_single_service_pharmacy()
     change_event = build_same_as_dos_change_event_by_ods(service_type, ods_code)
     if valid_change_event(change_event):
         return change_event

@@ -3,7 +3,7 @@ output "codestarconnection_arn" {
   value       = aws_codestarconnections_connection.github.arn
 }
 
-output "integration_test_codebuild_stage" {
-  description = "CodeBuild Integration Test Stages"
+output "integration_test_make_targets" {
+  description = "Integration Test Make Targets"
   value       = local.integration_make_targets
 }
