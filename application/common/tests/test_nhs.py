@@ -2,7 +2,7 @@ import pytest
 from datetime import time, date
 
 from .conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from common.nhs import NHSEntity, is_std_opening_json, is_spec_opening_json, match_nhs_entities_to_services
+from ..nhs import NHSEntity, is_std_opening_json, is_spec_opening_json, match_nhs_entities_to_services
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -655,10 +655,7 @@ def test_match_nhs_entities_to_services():
     dos2a.odscode = "FA912333"
     dos2a.typeid = PHARMACY_SERVICE_ID
 
-    expected_result = {
-        nhs1.odscode: [dos1a, dos1b],
-        nhs2.odscode: [dos2a]
-    }
+    expected_result = {nhs1.odscode: [dos1a, dos1b], nhs2.odscode: [dos2a]}
 
     nhs_entities = [nhs1, nhs2]
     dos_services = [dos1a, dos1b, dos1c, dos2a]
