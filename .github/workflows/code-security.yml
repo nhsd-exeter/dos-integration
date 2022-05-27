@@ -1,4 +1,4 @@
-name: "Check code for secrets"
+name: "Check code for Secrets and Security Vulnerabilities"
 on: push
 jobs:
   check-code-security:
@@ -8,7 +8,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check if code contains any secrets
-        run: |
-          make \
-            git-config \
-            git-secrets-scan-repo-files
+        run: make git-config git-secrets-scan-repo-files
+      - name: Check if code contains any Terraform Security Vulnerabilities
+        run: make docker-run-terraform-tfsec

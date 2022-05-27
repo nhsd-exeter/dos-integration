@@ -47,7 +47,6 @@ provider:
         burstLimit: 5
   endpointType: regional
 
-
 custom:
   vpcDiscovery:
   # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
