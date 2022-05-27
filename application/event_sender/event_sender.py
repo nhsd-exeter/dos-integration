@@ -84,7 +84,7 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             # No need to change the status of the circuit, it will remain open until a success
         else:
             # TODO: The current DoS Api returns 500 when it should return 400, this isn't ideal
-            # as it means we will circuit break unnecessarily and this could happen repeatidly until
+            # as it means we will circuit break unnecessarily and this could happen repeatedly until
             # the message is DLQ'd - 5 times, if we can fix that then these message could be sent to the dlq
             # and deleted to avoid circuit breaking and even replaying when we know it will fail again
             if response is None:
