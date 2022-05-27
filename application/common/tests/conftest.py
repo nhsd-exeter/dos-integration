@@ -9,7 +9,7 @@ from pytest import fixture
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-std_event_path = "event_processor/tests/STANDARD_EVENT.json"
+std_event_path = "application/event_processor/tests/STANDARD_EVENT.json"
 
 with open(std_event_path, "r") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)

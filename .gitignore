@@ -9,3 +9,4 @@
 *.code-workspace
 !project.code-workspace
 .coverage
+*.xml
