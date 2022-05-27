@@ -69,11 +69,12 @@ unit-test-local:
 unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
-	DIR=./application \
+	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
@@ -86,11 +87,13 @@ unit-test:
 		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	make -s python-code-coverage CMD="-m pytest application" DIR=/ \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
