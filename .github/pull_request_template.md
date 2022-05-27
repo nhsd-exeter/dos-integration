@@ -36,7 +36,7 @@ Please tick the testing that has been completed
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Tests have added that prove my fix is effective or that my feature works (Integration tests)
 - [ ] I have made corresponding changes to the documentation
-- [ ] I have cleaned down my environment (if created)
+- [ ] I have updated Dependabot to include my changes (if applicable)
 
 ## Code Reviewer Checklist
 
