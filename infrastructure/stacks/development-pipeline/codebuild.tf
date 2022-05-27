@@ -16,9 +16,9 @@ resource "aws_codebuild_project" "di_unit_tests" {
 
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
-    image                       = "${var.aws_account_id_mgmt}.dkr.ecr.eu-west-2.amazonaws.com/uec-dos/int/tester:latest"
+    image                       = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
     type                        = "LINUX_CONTAINER"
-    image_pull_credentials_type = "SERVICE_ROLE"
+    image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
 
     environment_variable {
