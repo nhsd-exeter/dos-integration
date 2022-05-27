@@ -2,13 +2,14 @@ from unittest.mock import patch
 from datetime import date
 
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from ..run_dentist_reports import get_dentists
 
 OP = OpenPeriod.from_string
+FILE_PATH = "application.comparison_reporting.run_dentist_reports"
 
 
-@patch("comparison_reporting.reporter.download_csv_as_dicts")
+@patch(f"{FILE_PATH}.download_csv_as_dicts")
 def test_get_dentists(mock_download_csv_as_dicts):
-    from comparison_reporting.run_dentist_reports import get_dentists
 
     mock_download_csv_as_dicts.side_effect = [
         [
@@ -29,7 +30,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "ParentName": "Fake Parent",
                 "Phone": "01234566544",
                 "Email": "fakemail@gmail.com",
-                "Website": "www.faketeeth.com"
+                "Website": "www.faketeeth.com",
             },
             {
                 "OrganisationID": 222,
@@ -48,8 +49,8 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "ParentName": "Fake Parent",
                 "Phone": "01234566544",
                 "Email": "fakemail@gmail.com",
-                "Website": "www.faketeeth.com"
-            }
+                "Website": "www.faketeeth.com",
+            },
         ],
         [
             {
@@ -58,7 +59,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "08:00-16:00",
                 "IsOpen": "True",
                 "OpeningTimeType": "General",
-                "AdditonalOpeningDate": ""
+                "AdditonalOpeningDate": "",
             },
             {
                 "OrganisationId": 111,
@@ -66,7 +67,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "08:00-16:00",
                 "IsOpen": "True",
                 "OpeningTimeType": "General",
-                "AdditonalOpeningDate": ""
+                "AdditonalOpeningDate": "",
             },
             {
                 "OrganisationId": 111,
@@ -74,7 +75,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "08:00-16:00",
                 "IsOpen": "True",
                 "OpeningTimeType": "Additional",
-                "AdditonalOpeningDate": "May 3 2022"
+                "AdditonalOpeningDate": "May 3 2022",
             },
             {
                 "OrganisationId": 111,
@@ -82,7 +83,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "09:00-16:00",
                 "IsOpen": "True",
                 "OpeningTimeType": "Additional",
-                "AdditonalOpeningDate": "May 8 2022"
+                "AdditonalOpeningDate": "May 8 2022",
             },
             {
                 "OrganisationId": 222,
@@ -90,7 +91,7 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "",
                 "IsOpen": "False",
                 "OpeningTimeType": "Additional",
-                "AdditonalOpeningDate": "May 8 2022"
+                "AdditonalOpeningDate": "May 8 2022",
             },
             {
                 "OrganisationId": 222,
@@ -98,9 +99,9 @@ def test_get_dentists(mock_download_csv_as_dicts):
                 "Times": "09:00-19:00",
                 "IsOpen": "True",
                 "OpeningTimeType": "General",
-                "AdditonalOpeningDate": ""
+                "AdditonalOpeningDate": "",
             },
-        ]
+        ],
     ]
 
     std1 = StandardOpeningTimes()
@@ -108,14 +109,12 @@ def test_get_dentists(mock_download_csv_as_dicts):
     std1.tuesday.append(OP("08:00-16:00"))
     spec1 = [
         SpecifiedOpeningTime([OP("08:00-16:00")], date(2022, 5, 3)),
-        SpecifiedOpeningTime([OP("09:00-16:00")], date(2022, 5, 8))
+        SpecifiedOpeningTime([OP("09:00-16:00")], date(2022, 5, 8)),
     ]
 
     std2 = StandardOpeningTimes()
     std2.friday.append(OP("09:00-19:00"))
-    spec2 = [
-        SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)
-    ]
+    spec2 = [SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)]
 
     actual_dentists = get_dentists()
 

@@ -8,39 +8,22 @@ from common.tests.conftest import dummy_dos_service
 from common.nhs import NHSEntity
 from common.opening_times import StandardOpeningTimes, SpecifiedOpeningTime, OpenPeriod
 from common.constants import PHARMACY_SERVICE_TYPE_IDS, DENTIST_SERVICE_TYPE_IDS
+from ..reporter import Reporter
 
 PHARMACY_TYPE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 DENTIST_TYPE_ID = DENTIST_SERVICE_TYPE_IDS[0]
 OP = OpenPeriod.from_string
+FILE_PATH = "application.comparison_reporting.reporter"
 
 
-@patch("common.dos.get_all_valid_dos_postcodes")
+@patch(f"{FILE_PATH}.get_all_valid_dos_postcodes")
 def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
-    from comparison_reporting.reporter import Reporter
-
-    test_valid_postcodes = set(pc.replace(" ", "").upper() for pc in [
-        "BA2 7EB",
-        "TE57ER",
-        "QR8 9PM",
-        "R3 7YX"
-    ])
+    test_valid_postcodes = set(pc.replace(" ", "").upper() for pc in ["BA2 7EB", "TE57ER", "QR8 9PM", "R3 7YX"])
     mock_get_all_valid_dos_postcodes.return_value = test_valid_postcodes
 
-    nhs1 = NHSEntity({
-        "ODSCode": "FAT911",
-        "OrganisationName": "Fakey Mcfakename",
-        "Postcode": "TE57EH"
-    })
-    nhs2 = NHSEntity({
-        "ODSCode": "QR132",
-        "OrganisationName": "Fakey Mcfakename 2",
-        "Postcode": "BA27EB"
-    })
-    nhs3 = NHSEntity({
-        "ODSCode": "TR272",
-        "OrganisationName": "Fakey Mcfakename 3",
-        "Postcode": "R3 7YX"
-    })
+    nhs1 = NHSEntity({"ODSCode": "FAT911", "OrganisationName": "Fakey Mcfakename", "Postcode": "TE57EH"})
+    nhs2 = NHSEntity({"ODSCode": "QR132", "OrganisationName": "Fakey Mcfakename 2", "Postcode": "BA27EB"})
+    nhs3 = NHSEntity({"ODSCode": "TR272", "OrganisationName": "Fakey Mcfakename 3", "Postcode": "R3 7YX"})
 
     dos1 = dummy_dos_service(odscode="FAT91111", typeid=PHARMACY_TYPE_ID)
 
@@ -57,33 +40,19 @@ def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
             "DoS Service ID",
             "DoS Service UID",
             "DoS Service Postcode",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
-        data=[
-            [nhs1.odscode, nhs1.org_name, nhs1.postcode, dos1.id, dos1.uid, dos1.postcode, dos1.statusid]
-        ])
+        data=[[nhs1.odscode, nhs1.org_name, nhs1.postcode, dos1.id, dos1.uid, dos1.postcode, dos1.statusid]],
+    )
 
     assert_frame_equal(expected_pc_report, pc_report)
 
 
 def test_create_postcode_comparison_report():
-    from comparison_reporting.reporter import Reporter
 
-    nhs1 = NHSEntity({
-        "ODSCode": "FAT91",
-        "OrganisationName": "Fakey Mcfakename",
-        "Postcode": "TE57EH"
-    })
-    nhs2 = NHSEntity({
-        "ODSCode": "QR132",
-        "OrganisationName": "Fakey Mcfakename 2",
-        "Postcode": "BA27EB"
-    })
-    nhs3 = NHSEntity({
-        "ODSCode": "V3272456",
-        "OrganisationName": "Fakey Mcfakename 3",
-        "Postcode": "R3 7YX"
-    })
+    nhs1 = NHSEntity({"ODSCode": "FAT91", "OrganisationName": "Fakey Mcfakename", "Postcode": "TE57EH"})
+    nhs2 = NHSEntity({"ODSCode": "QR132", "OrganisationName": "Fakey Mcfakename 2", "Postcode": "BA27EB"})
+    nhs3 = NHSEntity({"ODSCode": "V3272456", "OrganisationName": "Fakey Mcfakename 3", "Postcode": "R3 7YX"})
 
     dos1a = dummy_dos_service(odscode="FAT911a", postcode="TE57EH", typeid=PHARMACY_TYPE_ID)
     dos1b = dummy_dos_service(odscode="FAT911b", postcode="TE57EW", typeid=PHARMACY_TYPE_ID)
@@ -106,7 +75,7 @@ def test_create_postcode_comparison_report():
             "DoS Service UID",
             "DoS Service Name",
             "DoS Service Postcode",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
         data=[
             [
@@ -117,7 +86,7 @@ def test_create_postcode_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 dos1b.postcode,
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -127,7 +96,7 @@ def test_create_postcode_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 dos2b.postcode,
-                dos2b.statusid
+                dos2b.statusid,
             ],
             [
                 nhs3.odscode,
@@ -137,15 +106,15 @@ def test_create_postcode_comparison_report():
                 dos3b.uid,
                 dos3b.name,
                 dos3b.postcode,
-                dos3b.statusid
-            ]
-        ])
+                dos3b.statusid,
+            ],
+        ],
+    )
 
     assert_frame_equal(expected_pc_report, pc_report)
 
 
 def test_create_std_opening_times_comparison_report():
-    from comparison_reporting.reporter import Reporter
 
     op1 = OP("08:00-12:00")
     op2 = OP("03:00-18:00")
@@ -199,7 +168,7 @@ def test_create_std_opening_times_comparison_report():
             "DoS Service UID",
             "DoS Service Name",
             "DoS Standard Opening Times",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
         data=[
             [
@@ -210,7 +179,7 @@ def test_create_std_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("monday")),
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs1.odscode,
@@ -220,7 +189,7 @@ def test_create_std_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("tuesday")),
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs1.odscode,
@@ -230,7 +199,7 @@ def test_create_std_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("wednesday")),
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs1.odscode,
@@ -240,7 +209,7 @@ def test_create_std_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 OpenPeriod.list_string(dos1b._standard_opening_times.get_openings("saturday")),
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -250,7 +219,7 @@ def test_create_std_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("monday")),
-                dos2b.statusid
+                dos2b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -260,7 +229,7 @@ def test_create_std_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("tuesday")),
-                dos2b.statusid
+                dos2b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -270,7 +239,7 @@ def test_create_std_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("wednesday")),
-                dos2b.statusid
+                dos2b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -280,7 +249,7 @@ def test_create_std_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("thursday")),
-                dos2b.statusid
+                dos2b.statusid,
             ],
             [
                 nhs2.odscode,
@@ -290,15 +259,15 @@ def test_create_std_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 OpenPeriod.list_string(dos2b._standard_opening_times.get_openings("friday")),
-                dos2b.statusid
-            ]
-        ])
+                dos2b.statusid,
+            ],
+        ],
+    )
 
     assert_frame_equal(expected_pc_report, pc_report)
 
 
 def test_create_invalid_std_opening_times_report():
-    from comparison_reporting.reporter import Reporter
 
     op1 = OP("08:00-12:00")
     op2 = OP("13:00-18:00")
@@ -344,7 +313,7 @@ def test_create_invalid_std_opening_times_report():
             "DoS Service ID",
             "DoS Service UID",
             "DoS Service Name",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
         data=[
             [
@@ -354,24 +323,16 @@ def test_create_invalid_std_opening_times_report():
                 dos2.id,
                 dos2.uid,
                 dos2.name,
-                dos2.statusid
+                dos2.statusid,
             ],
-            [
-                nhs3.odscode,
-                nhs3.org_name,
-                nhs3.standard_opening_times.to_string("\n"),
-                "",
-                "",
-                "",
-                ""
-            ],
-        ])
+            [nhs3.odscode, nhs3.org_name, nhs3.standard_opening_times.to_string("\n"), "", "", "", ""],
+        ],
+    )
 
     assert_frame_equal(expected_pc_report, pc_report)
 
 
 def test_create_spec_opening_times_comparison_report():
-    from comparison_reporting.reporter import Reporter
 
     op1 = OP("08:00-12:00")
     op2 = OP("13:00-18:00")
@@ -419,7 +380,7 @@ def test_create_spec_opening_times_comparison_report():
             "DoS Service UID",
             "DoS Service Name",
             "DoS Specified Opening Times",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
         data=[
             [
@@ -430,7 +391,7 @@ def test_create_spec_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 "NULL",
-                dos1b.statusid
+                dos1b.statusid,
             ],
             [
                 nhs1.odscode,
@@ -440,19 +401,9 @@ def test_create_spec_opening_times_comparison_report():
                 dos1b.uid,
                 dos1b.name,
                 "[07:00:00-10:00:00]",
-                dos1b.statusid
+                dos1b.statusid,
             ],
-
-            [
-                nhs2.odscode,
-                "[]",
-                "2021-03-25",
-                dos2b.odscode,
-                dos2b.uid,
-                dos2b.name,
-                "NULL",
-                dos2b.statusid
-            ],
+            [nhs2.odscode, "[]", "2021-03-25", dos2b.odscode, dos2b.uid, dos2b.name, "NULL", dos2b.statusid],
             [
                 nhs2.odscode,
                 "NULL",
@@ -461,9 +412,10 @@ def test_create_spec_opening_times_comparison_report():
                 dos2b.uid,
                 dos2b.name,
                 "[08:00:00-12:00:00, 13:00:00-18:00:00]",
-                dos2b.statusid
-            ]
-        ])
+                dos2b.statusid,
+            ],
+        ],
+    )
 
     expected_pc_report.sort_values(["NHSUK ODSCode", "Date"], inplace=True, ignore_index=True)
     pc_report.sort_values(["NHSUK ODSCode", "Date"], inplace=True, ignore_index=True)
@@ -474,7 +426,6 @@ def test_create_spec_opening_times_comparison_report():
 
 
 def test_invalid_spec_opening_times_report():
-    from comparison_reporting.reporter import Reporter
 
     op1 = OP("08:00-12:00")
     op2 = OP("13:00-18:00")
@@ -511,7 +462,7 @@ def test_invalid_spec_opening_times_report():
             "DoS Service ID",
             "DoS Service UID",
             "DoS Service Name",
-            "DoS Service Status"
+            "DoS Service Status",
         ],
         data=[
             [
@@ -521,17 +472,10 @@ def test_invalid_spec_opening_times_report():
                 dos2.id,
                 dos2.uid,
                 dos2.name,
-                dos2.statusid
+                dos2.statusid,
             ],
-            [
-                nhs3.odscode,
-                nhs3.org_name,
-                "\n".join(str(sot) for sot in nhs3.specified_opening_times),
-                "",
-                "",
-                "",
-                ""
-            ]
-        ])
+            [nhs3.odscode, nhs3.org_name, "\n".join(str(sot) for sot in nhs3.specified_opening_times), "", "", "", ""],
+        ],
+    )
 
     assert_frame_equal(expected_pc_report, pc_report)
