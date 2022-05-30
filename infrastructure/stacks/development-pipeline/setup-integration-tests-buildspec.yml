@@ -8,16 +8,6 @@ phases:
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
-      - make docker-hub-signin
   build:
     commands:
-      - make docker-pull NAME=tester VERSION=latest
-      - make coverage-report
-
-reports:
-  unit-tests:
-    files:
-      - testresults.xml
-    base-directory: $CODEBUILD_SRC_DIR
-    discard-paths: yes
-    file-format: JUNITXML
+      - make trigger-dos-deployment-pipeline

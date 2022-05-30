@@ -18,6 +18,10 @@ data "template_file" "integration_tests_buildspec" {
   template = file("integration-tests-buildspec.yml")
 }
 
+data "template_file" "setup_integration_tests_buildspec" {
+  template = file("setup-integration-tests-buildspec.yml")
+}
+
 data "template_file" "delete_task_environment_from_tag_buildspec" {
   template = file("delete-task-environment-from-tag-buildspec.yml")
 }
@@ -50,16 +54,28 @@ data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
 
-locals {
-  deploy_envs      = toset(["dev", "test", "perf"])
-  to_build         = toset(["event-sender", "event-processor", "fifo-dlq-handler", "orchestrator", "cr-fifo-dlq-handler", "test-db-checker-handler", "event-replay", "authoriser", "dos-api-gateway", "slack-messenger"])
-  integration_tags = toset(["pharmacy_cloudwatch_queries", "pharmacy_no_log_searches"])
-  independent_build_images = {
-    tester = {
-      "filematch" = "requirement"
-    }
-    serverless = {
-      "filematch" = "serverless.yml"
-    }
+data "aws_vpc" "texas_mgmt_vpc" {
+  tags = {
+    "Name" = var.mgmt_vpc_name
+  }
+}
+data "aws_subnet" "vpc_subnet_one" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.mgmt_vpc_name}-private-${var.aws_region}a"]
+  }
+}
+
+data "aws_subnet" "vpc_subnet_two" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.mgmt_vpc_name}-private-${var.aws_region}b"]
+  }
+}
+
+data "aws_subnet" "vpc_subnet_three" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.mgmt_vpc_name}-private-${var.aws_region}c"]
   }
 }

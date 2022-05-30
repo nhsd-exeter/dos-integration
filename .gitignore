@@ -10,3 +10,4 @@
 !project.code-workspace
 .coverage
 *.xml
+jenkins.cookies

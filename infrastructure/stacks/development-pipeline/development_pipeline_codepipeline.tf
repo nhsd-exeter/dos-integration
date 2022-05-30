@@ -22,7 +22,7 @@ resource "aws_codepipeline" "codepipeline" {
         ConnectionArn    = aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.code_pipeline_branch_name
-        DetectChanges    = true
+        DetectChanges    = var.environment == "dev" ? true : false
       }
     }
   }
@@ -88,7 +88,20 @@ resource "aws_codepipeline" "codepipeline" {
       }
     }
   }
-
+  stage {
+    name = "SetupDoSIntegrationEnvironment"
+    action {
+      name            = "SetupIntegrationTest"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-setup-integration-test-stage"
+      }
+    }
+  }
   stage {
     name = "Integration_Test"
     dynamic "action" {
