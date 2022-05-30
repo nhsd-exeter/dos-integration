@@ -103,7 +103,7 @@ resource "aws_codepipeline" "release_codepipeline" {
   stage {
     name = "Integration_Test"
     dynamic "action" {
-      for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_codebuild_stage
+      for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_make_targets
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"
@@ -112,7 +112,7 @@ resource "aws_codepipeline" "release_codepipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = "${var.project_id}-dev-integration-test-stage-${action.key}"
+          ProjectName = "${var.project_id}-dev-${action.key}"
           EnvironmentVariables = jsonencode([
             {
               name  = "ENVIRONMENT"

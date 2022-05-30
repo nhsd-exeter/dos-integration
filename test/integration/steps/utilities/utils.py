@@ -139,13 +139,23 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
     return data
 
 
-def get_single_service_odscode() -> str:
-    lambda_payload = {"type": "get_single_pharmacy_service_odscode"}
+def get_pharmacy_odscode() -> str:
+    lambda_payload = {"type": "get_single_service_pharmacy_odscode"}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     odscode = choice(data)[0]
     return odscode
+
+
+def get_single_service_pharmacy() -> str:
+    ods_code = get_pharmacy_odscode()
+    lambda_payload = {"type": "get_services_count", "odscode": ods_code}
+    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    data = loads(loads(response))[0][0]
+    if data != 1:
+        ods_code = get_single_service_pharmacy()
+    return ods_code
 
 
 def get_changes(correlation_id: str) -> list:

@@ -38,20 +38,32 @@ def test_type_get_pharmacy_odscodes(mock_run_query, lambda_context):
 
 
 @patch(f"{FILE_PATH}.run_query")
-def test_type_get_single_pharmacy_service_odscode(mock_run_query, lambda_context):
+def test_type_get_single_service_pharmacy_odscode(mock_run_query, lambda_context):
     # Arrange
     mock_run_query.return_value = [("ODS12"), ("ODS11")]
-    test_input = {"type": "get_single_pharmacy_service_odscode"}
+    test_input = {"type": "get_single_service_pharmacy_odscode"}
     # Act
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
         "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (13, 131, 132, 134, 137) "
-        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' AND LENGTH(LEFT(odscode,5)) = 5 "
-        "GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1",
+        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+        "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1",
         None,
     )
     assert response == '["ODS12", "ODS11"]'
+
+
+@patch(f"{FILE_PATH}.run_query")
+def test_type_get_services_count(mock_run_query, lambda_context):
+    # Arrange
+    mock_run_query.return_value = 2
+    test_input = {"type": "get_services_count", "odscode": "ODS12"}
+    # Act
+    response = lambda_handler(test_input, lambda_context)
+    # Assert
+    mock_run_query.assert_called_once_with("SELECT count(*) from services where odscode like 'ODS12%'", None)
+    assert response == '2'
 
 
 @patch(f"{FILE_PATH}.run_query")
@@ -63,9 +75,9 @@ def test_type_get_pharmacy_odscodes_with_contacts(mock_run_query, lambda_context
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with(
-        "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (13, 131, 132, 134, 137) AND LENGTH(LEFT(odscode,5)) = 5 "
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid IN (13, 131, 132, 134, 137) AND LENGTH(odscode) > 4 "
         "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
-        "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(LEFT(odscode,5)) = 1",
+        "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1",
         None,
     )
     assert response == '["ODS12", "ODS11"]'
