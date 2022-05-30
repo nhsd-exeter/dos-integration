@@ -28,24 +28,17 @@ resource "aws_iam_role_policy" "event_processor_policy" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "secretsmanager:Describe*",
-        "secretsmanager:Get*",
-        "secretsmanager:List*"
-      ],
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "appconfig:GetConfiguration",
       "Resource": "*"
     },
     {
       "Effect": "Allow",
       "Action": [
-        "appconfig:GetConfiguration"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "rds-db:connect",
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
@@ -144,12 +137,8 @@ resource "aws_iam_role_policy" "event_sender_policy" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "secretsmanager:Describe*",
-        "secretsmanager:Get*",
-        "secretsmanager:List*"
-      ],
-      "Resource": "*"
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*"
     },
     {
       "Effect": "Allow",
@@ -506,10 +495,8 @@ resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "secretsmanager:Get*",
-      ],
-      "Resource": "*"
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*"
     }
   ]
 }
@@ -554,7 +541,6 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
     {
       "Effect": "Allow",
       "Action": [
-        "rds-db:connect",
         "logs:CreateLogGroup",
         "logs:CreateLogStream",
         "logs:PutLogEvents",
