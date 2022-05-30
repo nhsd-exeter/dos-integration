@@ -1,8 +1,8 @@
 from unittest.mock import patch
-from common.appconfig import AppConfig
+from ..appconfig import AppConfig
 from os import environ
 
-FILE_PATH = "common.appconfig"
+FILE_PATH = "application.common.appconfig"
 
 
 @patch(f"{FILE_PATH}.AppConfigStore")

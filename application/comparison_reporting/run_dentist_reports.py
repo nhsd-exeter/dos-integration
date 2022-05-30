@@ -80,8 +80,7 @@ def get_dentists() -> List[NHSEntity]:
 
         # Add spec opening times to the dentist
         date_grouping = groupby(
-            spec_open_data.get(id, []),
-            lambda k: datetime.strptime(k["AdditonalOpeningDate"], "%b  %d  %Y").date()
+            spec_open_data.get(id, []), lambda k: datetime.strptime(k["AdditonalOpeningDate"], "%b  %d  %Y").date()
         )
         for date, open_period_items in date_grouping:
 
