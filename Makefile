@@ -793,3 +793,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=test-db-checker-handler
 	make docker-create-repository NAME=tester
+
+terraform-security:
+	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"

@@ -9,15 +9,25 @@ resource "aws_security_group" "uec_dos_int_lambda_sg" {
 
 }
 
-resource "aws_security_group_rule" "allow_all_out" {
+resource "aws_security_group_rule" "allow_https_out" {
   type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
+  description       = "Allow all HTTPS outbound traffic"
 }
 
+resource "aws_security_group_rule" "allow_postgres_out" {
+  type              = "egress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
+  description       = "Allow all Postgres outbound traffic"
+}
 resource "aws_security_group_rule" "allow_in_from_lambda" {
   type                     = "ingress"
   from_port                = 5432

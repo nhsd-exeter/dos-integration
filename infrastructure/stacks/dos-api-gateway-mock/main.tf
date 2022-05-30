@@ -46,9 +46,10 @@ resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
 }
 
 resource "aws_api_gateway_stage" "dos_api_gateway_stage" {
-  deployment_id = aws_api_gateway_deployment.dos_api_gateway_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.dos_api_gateway.id
-  stage_name    = var.dos_api_gateway_stage
+  deployment_id        = aws_api_gateway_deployment.dos_api_gateway_deployment.id
+  rest_api_id          = aws_api_gateway_rest_api.dos_api_gateway.id
+  stage_name           = var.dos_api_gateway_stage
+  xray_tracing_enabled = true
 }
 
 resource "aws_api_gateway_usage_plan" "dos_api_gateway_usage_plan" {

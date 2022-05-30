@@ -43,3 +43,4 @@ Please tick the testing that has been completed
 - [ ] I have run the unit tests and they run correctly
 - [ ] I can confirm the changes have been tested or approved by a tester
 - [ ] I can confirm no remaining infrastructure is left over from this branch
+- [ ] I have checked any ignore commands for code linting tools and I agree that the code is safe
