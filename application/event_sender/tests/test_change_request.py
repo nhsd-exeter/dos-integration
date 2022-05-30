@@ -4,8 +4,8 @@ from aws_lambda_powertools import Logger
 from requests.auth import HTTPBasicAuth
 from responses import POST, activate, add
 
-from event_sender import change_request
-from event_sender.change_request import ChangeRequest
+from .. import change_request
+from ..change_request import ChangeRequest
 
 FILE_PATH = "application.event_sender.change_request"
 

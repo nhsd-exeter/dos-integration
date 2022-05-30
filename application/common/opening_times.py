@@ -260,7 +260,7 @@ class StandardOpeningTimes:
     def is_open(self, weekday: str) -> bool:
         return len(getattr(self, weekday)) > 0
 
-    def same_openings(self, other: 'StandardOpeningTimes', day: str) -> bool:
+    def same_openings(self, other: "StandardOpeningTimes", day: str) -> bool:
         return OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day))
 
     def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:

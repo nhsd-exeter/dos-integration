@@ -2,7 +2,7 @@ from pytest import fixture, raises
 from os import environ
 from json import dumps, loads
 from decimal import Decimal
-from common.dynamodb import (
+from ..dynamodb import (
     add_change_request_to_dynamodb,
     put_circuit_is_open,
     get_circuit_is_open,

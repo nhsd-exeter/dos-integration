@@ -155,9 +155,9 @@ class NHSEntity:
             return False
 
         if dos_service.typeid in PHARMACY_SERVICE_TYPE_IDS:
-            return (len(dos_service.odscode) >= 5 and
-                    len(self.odscode) >= 5 and
-                    dos_service.odscode[:5] == self.odscode[:5])
+            return (
+                len(dos_service.odscode) >= 5 and len(self.odscode) >= 5 and dos_service.odscode[:5] == self.odscode[:5]
+            )
 
         if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
             if not (len(dos_service.odscode) >= 6 and len(self.odscode) >= 7):
@@ -229,7 +229,8 @@ def is_spec_opening_json(item: dict) -> bool:
 
 
 def match_nhs_entities_to_services(
-        nhs_entities: List[NHSEntity], services: List[DoSService]) -> Dict[str, List[DoSService]]:
+    nhs_entities: List[NHSEntity], services: List[DoSService]
+) -> Dict[str, List[DoSService]]:
     """Takes lists of NHS Entities and DoS Services and creates a dict where the keys are NHS odscodes
     and the values are the corresponding lists of services that match that code."""
 

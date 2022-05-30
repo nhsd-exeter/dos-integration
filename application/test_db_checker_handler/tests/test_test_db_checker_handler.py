@@ -63,7 +63,7 @@ def test_type_get_services_count(mock_run_query, lambda_context):
     response = lambda_handler(test_input, lambda_context)
     # Assert
     mock_run_query.assert_called_once_with("SELECT count(*) from services where odscode like 'ODS12%'", None)
-    assert response == '2'
+    assert response == "2"
 
 
 @patch(f"{FILE_PATH}.run_query")
