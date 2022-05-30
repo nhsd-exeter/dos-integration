@@ -122,6 +122,12 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/development-pipeline"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/dos-api-gateway-mock"
     schedule:
       interval: "daily"
