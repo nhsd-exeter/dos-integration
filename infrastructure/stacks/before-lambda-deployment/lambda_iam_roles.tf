@@ -507,9 +507,7 @@ resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
     {
       "Effect": "Allow",
       "Action": [
-        "secretsmanager:Describe*",
         "secretsmanager:Get*",
-        "secretsmanager:List*"
       ],
       "Resource": "*"
     }
@@ -546,15 +544,6 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:Describe*",
-        "secretsmanager:Get*",
-        "secretsmanager:List*"
-      ],
-      "Resource": "*"
-    },
     {
       "Effect": "Allow",
       "Action": [

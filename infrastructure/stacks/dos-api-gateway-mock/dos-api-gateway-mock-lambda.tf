@@ -65,6 +65,7 @@ resource "aws_iam_role_policy" "dos_api_gateway_lambda_role_policy" {
 POLICY
 }
 
+#tfsec:ignore:aws-cloudwatch-log-group-customer-key
 resource "aws_cloudwatch_log_group" "dos_api_gateway_lambda_log_group" {
   name              = "/aws/lambda/${var.dos_api_gateway_lambda_name}"
   retention_in_days = "1"

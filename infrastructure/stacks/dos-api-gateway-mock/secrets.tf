@@ -1,3 +1,4 @@
+#tfsec:ignore:aws-ssm-secret-use-customer-key
 resource "aws_secretsmanager_secret" "dos_api_gateway_secret" {
   name                    = var.dos_api_gateway_secret
   description             = "Connection details for DoS API Gateway ${var.environment}"

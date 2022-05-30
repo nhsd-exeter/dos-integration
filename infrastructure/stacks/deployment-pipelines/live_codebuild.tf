@@ -101,6 +101,8 @@ resource "aws_codestarnotifications_notification_rule" "live_notification_rule" 
   }
 }
 
+#tfsec:ignore:aws-sns-enable-topic-encryption
 resource "aws_sns_topic" "live_pipeline_notification_topic" {
-  name = "${var.project_id}-live-deploy-stage-notifications"
+  name              = "${var.project_id}-live-deploy-stage-notifications"
+  kms_master_key_id = "alias/aws/sns"
 }

@@ -45,6 +45,7 @@ resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
   }
 }
 
+#tfsec:ignore:aws-api-gateway-enable-access-logging
 resource "aws_api_gateway_stage" "dos_api_gateway_stage" {
   deployment_id        = aws_api_gateway_deployment.dos_api_gateway_deployment.id
   rest_api_id          = aws_api_gateway_rest_api.dos_api_gateway.id

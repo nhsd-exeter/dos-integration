@@ -106,9 +106,9 @@ resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   }
 }
 
+#tfsec:ignore:aws-cloudwatch-log-group-customer-key
 resource "aws_cloudwatch_log_group" "api_gw" {
-  name = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
-
+  name              = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
   retention_in_days = 30
 }
 

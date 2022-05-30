@@ -87,7 +87,7 @@ unit-test:
 		"
 
 coverage-report: # Runs whole project coverage unit tests
-	make -s python-code-coverage CMD="-m pytest application --junitxml=./testresults.xml" DIR=/ \
+	make -s python-code-coverage CMD="-m pytest application" DIR=/ \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \

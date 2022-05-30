@@ -6,7 +6,6 @@ resource "aws_security_group" "uec_dos_int_lambda_sg" {
   tags = {
     Name = var.lambda_security_group_name
   }
-
 }
 
 resource "aws_security_group_rule" "allow_https_out" {
@@ -14,7 +13,6 @@ resource "aws_security_group_rule" "allow_https_out" {
   from_port         = 443
   to_port           = 443
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
   description       = "Allow all HTTPS outbound traffic"
 }
@@ -24,7 +22,6 @@ resource "aws_security_group_rule" "allow_postgres_out" {
   from_port         = 5432
   to_port           = 5432
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
   description       = "Allow all Postgres outbound traffic"
 }
