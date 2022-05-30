@@ -9,6 +9,7 @@ from aws_lambda_powertools import Logger, Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+
 from change_event_validation import validate_event
 from change_request import ChangeRequest
 from changes import get_changes
@@ -193,13 +194,17 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
-    now_ms = time_ns() // 1000000
-    logger.append_keys(ods_code=None)
-    logger.append_keys(org_type=None)
-    logger.append_keys(org_sub_type=None)
-    logger.append_keys(dynamo_record_id=None)
-    logger.append_keys(message_received=None)
-    logger.append_keys(service_type=None)
+    time_start_ms = time_ns() // 1000000
+
+    logger.append_keys(
+        ods_code=None,
+        org_type=None,
+        org_sub_type=None,
+        dynamo_record_id=None,
+        message_received=None,
+        service_type=None
+    )
+
     for env_var in EXPECTED_ENVIRONMENT_VARIABLES:
         if env_var not in environ:
             logger.error(f"Environmental variable {env_var} not present")
@@ -209,21 +214,23 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         raise Exception(f"{len(list(event.records))} records found in event. Expected 1.")
 
     record = next(event.records)
-    message = record.body
-    change_event = extract_body(message)
+    change_event = extract_body(record.body)
     ods_code = change_event.get("ODSCode")
     logger.append_keys(ods_code=ods_code)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
-
     s, ms = divmod(sqs_timestamp, 1000)
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
     logger.info("Change Event received", extra={"change-event": change_event})
+
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
     metrics.set_property("message_received", message_received_pretty)
+
+    time_setup = time_ns() // 1000000
+
     logger.info("Getting latest sequence number")
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
     logger.info("Writing change event to dynamo")
@@ -234,8 +241,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", record_id)
     metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QueueToProcessorLatency", now_ms - sqs_timestamp, "Milliseconds")
+    metrics.put_metric("QueueToProcessorLatency", time_start_ms - sqs_timestamp, "Milliseconds")
     logger.append_keys(dynamo_record_id=record_id)
+
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
@@ -246,6 +254,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         )
         return
 
+    time_corr_seq = time_ns() // 1000000
+
     try:
         validate_event(change_event)
         nhs_entity = NHSEntity(change_event)
@@ -255,7 +265,13 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
+
+        time_event_setup = time_ns() // 1000000
+
         matching_services = event_processor.get_matching_services()
+
+        time_match_servs = time_ns() // 1000000
+
         if len(matching_services) == 0:
             log_unmatched_nhsuk_service(nhs_entity)
             return
@@ -272,7 +288,26 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
                 log_service_with_generic_bank_holiday(nhs_entity, dos_service)
 
         event_processor.get_change_requests()
+
+        time_comparing = time_ns() // 1000000
+
     finally:
         disconnect_dos_db()
 
+    time_disc_db = time_ns() // 1000000
+
     event_processor.send_changes(sqs_timestamp, record_id, sequence_number)
+
+    time_send_changes = time_ns() // 1000000
+
+    timings = {
+        "all in-code": time_send_changes - time_start_ms,
+        "setup": time_setup - time_start_ms,
+        "corr_seq": time_corr_seq - time_setup,
+        "event_setup": time_event_setup - time_corr_seq,
+        "matching": time_match_servs - time_event_setup,
+        "comparing": time_comparing - time_match_servs,
+        "disc_db": time_disc_db - time_comparing,
+        "send_changes": time_send_changes - time_disc_db
+    }
+    logger.info("Timings ready", extra={"timings": timings})

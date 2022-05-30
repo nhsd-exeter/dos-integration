@@ -1,5 +1,6 @@
 from os import environ, getenv
 from typing import Union
+from time import time_ns
 
 import psycopg2
 from aws_lambda_powertools import Logger
@@ -60,6 +61,7 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
     """Queries the dos database with given sql command and returns the resulting cursor object"""
 
     # Check if new connection needed.
+    time_start = time_ns() // 1000000
     global db_connection
     if db_connection is None or db_connection.closed != 0:
         db_connection = _connect_dos_db()
@@ -74,6 +76,7 @@ def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCurso
     logger.info(query_string_log)
 
     c.execute(query, vars)
+    logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
     return c
 
 
