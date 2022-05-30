@@ -59,8 +59,9 @@ resource "aws_api_gateway_method_settings" "di_endpoint_method_settings" {
   method_path = "*/*"
 
   settings {
-    metrics_enabled = true
-    logging_level   = "INFO"
+    metrics_enabled      = true
+    logging_level        = "INFO"
+    cache_data_encrypted = true
   }
 }
 

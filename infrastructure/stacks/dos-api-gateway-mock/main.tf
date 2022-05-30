@@ -20,6 +20,17 @@ resource "aws_api_gateway_method" "dos_api_gateway_method" {
   authorizer_id = aws_api_gateway_authorizer.dos_api_gateway_authoriser.id
 }
 
+resource "aws_api_gateway_method_settings" "di_endpoint_method_settings" {
+  rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
+  stage_name  = aws_api_gateway_stage.dos_api_gateway_stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled      = true
+    cache_data_encrypted = true
+  }
+}
+
 resource "aws_api_gateway_integration" "dos_api_gateway_integration" {
   http_method             = aws_api_gateway_method.dos_api_gateway_method.http_method
   resource_id             = aws_api_gateway_resource.dos_api_gateway_resource.id
