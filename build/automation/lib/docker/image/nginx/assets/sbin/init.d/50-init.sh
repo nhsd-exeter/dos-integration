@@ -38,9 +38,14 @@ function _replace_variables() {
   for str in $(cat $file | grep -Eo "[A-Za-z0-9_]*_TO_REPLACE" | sort | uniq); do
     key=$(cut -d "=" -f1 <<<"$str" | sed "s/_TO_REPLACE//g")
     value=$(echo $(eval echo "\$$key"))
-    [ -z "$value" ] && echo "WARNING: Variable $key has no value in '$file'" || sed -i \
-      "s;${key}_TO_REPLACE;${value//&/\\&};g" \
-      $file ||:
+    [ -z "$value" ] && echo "WARNING: Variable $key has no value in '$file'" || (
+      # Replace `${VARIABLE_TO_REPLACE}`
+      sed -i "s;\${${key}_TO_REPLACE};${value//&/\\&};g" $file ||:
+      # Replace `$VARIABLE_TO_REPLACE`
+      sed -i "s;\$${key}_TO_REPLACE;${value//&/\\&};g" $file ||:
+      # Replace `VARIABLE_TO_REPLACE`
+      sed -i "s;${key}_TO_REPLACE;${value//&/\\&};g" $file ||:
+    )
   done
 }
 

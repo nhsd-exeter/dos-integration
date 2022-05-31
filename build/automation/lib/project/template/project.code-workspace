@@ -1,11 +1,27 @@
 {
   "folders": [
     {
-      "name": "Configuration",
+      "name": "Make DevOps - Docker Images",
+      "path": "./build/automation/lib/docker/image"
+    },
+    {
+      "name": "Make DevOps - Template - Terraform Stacks",
+      "path": "./build/automation/lib/terraform/template/stacks"
+    },
+    {
+      "name": "Make DevOps - Template - Terraform Modules",
+      "path": "./build/automation/lib/terraform/template/modules"
+    },
+    {
+      "name": "Make DevOps - Template - Project Structure",
+      "path": "./build/automation/lib/project/template"
+    },
+    {
+      "name": "Project Configuration",
       "path": "./build/automation/var"
     },
     {
-      "name": "[Repository]",
+      "name": "Project Repository",
       "path": "."
     }
   ],
@@ -15,6 +31,7 @@
     "editor.bracketPairColorization.enabled": true,
     "editor.fontSize": 14,
     "editor.formatOnSave": true,
+    "editor.guides.bracketPairs": "active",
     "editor.renderWhitespace": "all",
     "editor.rulers": [
       120
@@ -22,7 +39,7 @@
     "editor.suggestSelection": "recentlyUsedByPrefix",
     "explorer.autoReveal": true,
     "explorer.sortOrder": "type",
-    "extensions.ignoreRecommendations": true,
+    "extensions.ignoreRecommendations": false,
     "files.associations": {
       "Jenkinsfile*": "jenkinsfile"
     },
@@ -47,7 +64,7 @@
     "java.completion.enabled": true,
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.format.enabled": false,
-    "java.home": "/Library/Java/JavaVirtualMachines/adoptopenjdk-16.jdk/Contents/Home",
+    "java.jdt.ls.java.home": "/Library/Java/JavaVirtualMachines/adoptopenjdk-16.jdk/Contents/Home",
     "php.suggest.basic": false,
     "php.validate.executablePath": "/usr/bin/php",
     "python.formatting.blackArgs": [
@@ -60,14 +77,14 @@
       "--max-line-length=120"
     ],
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Path": "~/.pyenv/versions/3.9.7/bin/flake8",
+    "python.linting.flake8Path": "~/.pyenv/versions/3.10.2/bin/flake8",
     "python.linting.mypyArgs": [],
     "python.linting.mypyEnabled": true,
-    "python.linting.mypyPath": "~/.pyenv/versions/3.9.7/bin/mypy",
+    "python.linting.mypyPath": "~/.pyenv/versions/3.10.2/bin/mypy",
     "python.linting.pylintArgs": [],
     "python.linting.pylintEnabled": true,
-    "python.linting.pylintPath": "~/.pyenv/versions/3.9.7/bin/pylint",
-    "python.pythonPath": "~/.pyenv/versions/3.9.7/bin/python",
+    "python.linting.pylintPath": "~/.pyenv/versions/3.10.2/bin/pylint",
+    "python.pythonPath": "~/.pyenv/versions/3.10.2/bin/python",
     "python.terminal.activateEnvironment": false,
     "search.exclude": {
       "**/.git": true,
@@ -76,8 +93,6 @@
       "**/target": true,
       "**/tmp": true
     },
-    "telemetry.enableCrashReporter": false,
-    "telemetry.enableTelemetry": false,
     "terminal.integrated.fontFamily": "Hack Nerd Font",
     "window.title": "${activeEditorMedium}${separator}${rootName}${separator}${rootPath}",
     "window.zoomLevel": 0,
@@ -177,6 +192,26 @@
           "cmd": "/usr/local/bin/google-java-format --replace ${file}"
         }
       ]
-    }
+    },
+    "workbench.colorCustomizations": {
+      "activityBar.background": "#1accff",
+      "activityBar.activeBackground": "#1accff",
+      "activityBar.activeBorder": "#df00ad",
+      "activityBar.foreground": "#15202b",
+      "activityBar.inactiveForeground": "#15202b99",
+      "activityBarBadge.background": "#df00ad",
+      "activityBarBadge.foreground": "#e7e7e7",
+      "titleBar.activeBackground": "#00b3e6",
+      "titleBar.inactiveBackground": "#00b3e699",
+      "titleBar.activeForeground": "#15202b",
+      "titleBar.inactiveForeground": "#15202b99",
+      "statusBar.background": "#00b3e6",
+      "statusBarItem.hoverBackground": "#008bb3",
+      "statusBar.foreground": "#15202b",
+      "sash.hoverBorder": "#1accff",
+      "statusBarItem.remoteBackground": "#00b3e6",
+      "statusBarItem.remoteForeground": "#15202b"
+    },
+    "peacock.color": "#00b3e6"
   }
 }

@@ -32,7 +32,7 @@ This is a generic onboarding template that can be used by any team to help to br
 
 ### Technical Setup
 
-- macOS [configuration](https://github.com/nhsd-exeter/make-devops/blob/master/build/automation/lib/macos/README.md)
+- macOS [configuration](https://github.com/nhsd-exeter/make-devops/blob/main/build/automation/lib/macos/README.md)
 - CPaaS Texas VPN access
 - [GitLab](https://gitlab.mgmt.texasplatform.uk/)
 - [Jenkins](https://jenkins.mgmt.texasplatform.uk/)

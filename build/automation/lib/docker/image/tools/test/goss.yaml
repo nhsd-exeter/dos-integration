@@ -43,22 +43,22 @@ command:
     exit-status: 0
   gosu --version:
     exit-status: 0
-  pip list | grep -iE 'awscli-local.*0.15':
+  pip list | grep -iE 'awscli-local.*0.18':
     exit-status: 0
     timeout: 60000
-  pip list | grep -iE 'awscli.*1.20':
+  pip list | grep -iE 'awscli.*1.22':
     exit-status: 0
     timeout: 60000
-  pip list | grep -iE 'black.*21.9':
+  pip list | grep -iE 'black.*22.1':
     exit-status: 0
     timeout: 60000
-  pip list | grep -iE 'boto3.*1.18':
+  pip list | grep -iE 'boto3.*1.21':
     exit-status: 0
     timeout: 60000
-  pip list | grep -iE 'diagrams.*0.20':
+  pip list | grep -iE 'diagrams.*0.21':
     exit-status: 0
     timeout: 60000
-  pip list | grep -iE 'requests.*2.26':
+  pip list | grep -iE 'requests.*2.27':
     exit-status: 0
     timeout: 60000
   aws-iam-authenticator version:

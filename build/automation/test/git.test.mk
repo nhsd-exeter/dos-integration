@@ -61,7 +61,7 @@ test-git-config:
 
 test-git-check-if-branch-name-is-correct:
 	# assert
-	mk_test "01" "$$(make git-check-if-branch-name-is-correct BUILD_BRANCH=master) = true"
+	mk_test "01" "$$(make git-check-if-branch-name-is-correct BUILD_BRANCH=main) = true"
 	mk_test "02" "$$(make git-check-if-branch-name-is-correct BUILD_BRANCH=task/ABC-123_Descriptive_branch_name) = true"
 	mk_test "03" "$$(make git-check-if-branch-name-is-correct BUILD_BRANCH=task/Update_automation_scripts) = true"
 	mk_test "04" "$$(make git-check-if-branch-name-is-correct BUILD_BRANCH=task/Update_dependencies) = true"
@@ -89,23 +89,23 @@ test-git-check-if-commit-msg-is-correct:
 	# arrange
 	echo -e "ABC-123 This commit message is ok\n\nHere is more information" > $(TEST_GIT_COMMIT_MESSAGE_FILE)
 	# assert
-	mk_test "01" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="ABC-123 This is a test") = true"
-	mk_test "02" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update automation scripts") = true"
-	mk_test "03" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update automation scripts to 20210609082320-b083a16") = true"
-	mk_test "04" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update dependencies") = true"
-	mk_test "05" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update dependencies!") = false"
-	mk_test "06" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update dependencies this time?") = false"
-	mk_test "07" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update versions") = true"
-	mk_test "08" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update documentation") = true"
-	mk_test "09" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Update this thing") = true"
-	mk_test "10" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Refactor this thing") = true"
-	mk_test "11" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Automate this thing") = true"
-	mk_test "12" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Test this thing") = true"
-	mk_test "13" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Fix this thing") = true"
-	mk_test "14" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Release to live") = true"
-	mk_test "15" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Migrate this to alternative") = true"
-	mk_test "16" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="Put not conventional commit message") = false"
-	mk_test "17" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=master BUILD_COMMIT_MESSAGE="start with a lowercase letter") = false"
+	mk_test "01" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="ABC-123 This is a test") = true"
+	mk_test "02" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update automation scripts") = true"
+	mk_test "03" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update automation scripts to 20210609082320-b083a16") = true"
+	mk_test "04" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update dependencies") = true"
+	mk_test "05" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update dependencies!") = false"
+	mk_test "06" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update dependencies this time?") = false"
+	mk_test "07" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update versions") = true"
+	mk_test "08" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update documentation") = true"
+	mk_test "09" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Update this thing") = true"
+	mk_test "10" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Refactor this thing") = true"
+	mk_test "11" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Automate this thing") = true"
+	mk_test "12" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Test this thing") = true"
+	mk_test "13" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Fix this thing") = true"
+	mk_test "14" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Release to live") = true"
+	mk_test "15" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Migrate this to alternative") = true"
+	mk_test "16" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="Put not conventional commit message") = false"
+	mk_test "17" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=main BUILD_COMMIT_MESSAGE="start with a lowercase letter") = false"
 	mk_test "18" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=task/ABC-123_Descriptive_branch_name BUILD_COMMIT_MESSAGE="ABC-123 Too short") = false"
 	mk_test "19" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=task/ABC-123_Descriptive_branch_name BUILD_COMMIT_MESSAGE="abc-123 Not so ok commit message") = false"
 	mk_test "20" "$$(make git-check-if-commit-msg-is-correct BUILD_BRANCH=task/ABC-123_Descriptive_branch_name BUILD_COMMIT_MESSAGE="ABC-123 another not so ok commit message") = false"
@@ -122,8 +122,8 @@ test-git-check-if-commit-msg-is-correct:
 
 test-git-check-if-pull-request-title-is-correct:
 	# assert
-	mk_test "01" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=master PULL_REQUEST_TITLE="ABC-123 This is a passing test") = true"
-	mk_test "02" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=master PULL_REQUEST_TITLE="ABC-123 This is a failing tast due to the summary being too long being too long being too long being too long being too long") = false"
+	mk_test "01" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=main PULL_REQUEST_TITLE="ABC-123 This is a passing test") = true"
+	mk_test "02" "$$(make git-check-if-pull-request-title-is-correct BUILD_BRANCH=main PULL_REQUEST_TITLE="ABC-123 This is a failing tast due to the summary being too long being too long being too long being too long being too long") = false"
 
 test-git-secrets-load:
 	mk_test_skip
@@ -149,7 +149,7 @@ test-git-secrets-scan-repo-files:
 test-git-check-if-commit-changed-directory:
 	# act
 	output=$$(make git-check-if-commit-changed-directory DIR=build/automation/tmp)
-	# assert
+	# assert
 	mk_test "false == $$output"
 
 test-git-commit-get-hash:

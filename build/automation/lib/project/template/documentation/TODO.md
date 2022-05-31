@@ -13,7 +13,7 @@
 
 List here all the technical tasks for prioritisation that need to be discussed with the team but are not ready yet to be placed on the backlog. This should form a holistic view of the state of the project and show the direction for incremental development and refactoring of certain areas of the software listed below. The idea behind this list is to ensure backlog hygiene and that it only consists of stories that can be completed within the next two sprints. Therefore, the focus can be changed dynamically depending on the business need.
 
-This document must be discussed regularly with the Tech Lead and considered in the context of the [Engineering Quality Checks](https://github.com/NHSDigital/software-engineering-quality-framework/blob/master/quality-checks.md) provided as a guidance by NHS Digital Product Development directorate.
+This document must be discussed regularly with the Tech Lead and considered in the context of the [Engineering Quality Checks](https://github.com/NHSDigital/software-engineering-quality-framework/blob/main/quality-checks.md) provided as a guidance by NHS Digital Product Development directorate.
 
 ## Regular tasks
 
