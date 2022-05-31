@@ -117,7 +117,7 @@ https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
 
 There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
 
-     tx-mfa
+    tx-mfa
 
 ### Mac setup
 
@@ -199,7 +199,7 @@ Code quality checks can be done with the pip installed 'black' module and run wi
     python -m black --line-length 120
 
 This is also wrapped in a function
- To format the code run:
+To format the code run:
     make python-code-format FILES=./application
     make python-code-format FILES=./test
 
