@@ -796,3 +796,18 @@ create-ecr-repositories:
 
 terraform-security:
 	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"
+
+# ==============================================================================
+# Checkov (Code Best Practices)
+
+docker-best-practices:
+	make docker-run-checkov DIR=/build/docker
+
+serverless-best-practices:
+	make docker-run-checkov DIR=/deployment
+
+terraform-best-practices:
+	make docker-run-checkov DIR=/infrastructure
+
+github-actions-best-practices:
+	make docker-run-checkov DIR=/.github
