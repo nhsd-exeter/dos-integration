@@ -17,9 +17,6 @@ jobs:
       - name: Check Python files format
         run: |
           make python-linting
-      - name: Check Terraform files format
-        run: |
-          build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
       - name: Create coverage report
         run: |
           make tester-build coverage-report

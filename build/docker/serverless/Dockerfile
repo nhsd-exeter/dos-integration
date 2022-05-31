@@ -1,3 +1,4 @@
+# checkov:skip=CKV_DOCKER_7:Uses NHSD Node Image
 FROM node:latest
 WORKDIR /
 # Install serverless

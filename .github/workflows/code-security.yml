@@ -11,3 +11,18 @@ jobs:
         run: make git-config git-secrets-scan-repo-files
       - name: Check if code contains any Terraform Security Vulnerabilities
         run: make terraform-security
+      - name: Checkov Secret Scanner
+        run: |
+          make checkov-secret-scanning
+      - name: Checkov Security and Best Practices - Serverless Framework
+        run: |
+          make -s serverless-best-practices
+      - name: Checkov Security and Best Practices - Docker
+        run: |
+          make -s docker-best-practices
+      # - name: Checkov Security and Best Practices - Terraform
+      #   run: |
+      #     make -s terraform-best-practices TODO: Get Terraform to place nice with Checkov
+      - name: Checkov Security and Best Practices - Github Actions
+        run: |
+          make -s github-actions-best-practices
