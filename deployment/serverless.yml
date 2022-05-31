@@ -5,6 +5,7 @@ configValidationMode: error
 
 provider:
   name: aws
+  deploymentMethod: direct
   lambdaHashingVersion: 20201221
   architecture: x86_64
   region: ${env:AWS_REGION}

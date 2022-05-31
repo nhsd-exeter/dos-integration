@@ -31,7 +31,7 @@ phases:
           export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
           echo $ENVIRONMENT_DEPLOYED
           if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
-              make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT ;
+              make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT OPTS="-parallelism=30";
           fi
         fi
     finally:
