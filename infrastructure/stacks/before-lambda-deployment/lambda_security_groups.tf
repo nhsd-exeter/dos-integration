@@ -1,4 +1,5 @@
 resource "aws_security_group" "uec_dos_int_lambda_sg" {
+  #checkov:skip=CKV2_AWS_5:Attached outside of Terraform
   vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
   name        = var.lambda_security_group_name
   description = "DI Lambda Security Group"

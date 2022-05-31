@@ -4,6 +4,9 @@ resource "aws_api_gateway_rest_api" "di_endpoint" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_rest_api_policy" "di_endpoint_policy" {
@@ -114,10 +117,12 @@ resource "aws_cloudwatch_log_group" "api_gw" {
 }
 
 resource "aws_api_gateway_stage" "di_endpoint_stage" {
+  #checkov:skip=CKV2_AWS_4:Logs setting are set in the method
   deployment_id        = aws_api_gateway_deployment.di_endpoint_deployment.id
   rest_api_id          = aws_api_gateway_rest_api.di_endpoint.id
   stage_name           = var.di_endpoint_api_gateway_stage
   xray_tracing_enabled = true
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_gw.arn
     format = jsonencode({
@@ -147,6 +152,7 @@ resource "aws_api_gateway_usage_plan" "di_endpoint_usage_plan" {
     stage  = aws_api_gateway_stage.di_endpoint_stage.stage_name
   }
 }
+
 
 resource "aws_api_gateway_api_key" "di_endpoint_api_key" {
   name  = var.api_gateway_api_key_name
