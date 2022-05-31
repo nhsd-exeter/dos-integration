@@ -28,7 +28,7 @@
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
-    - [Artifacts Versioning](#artifacts-versioning)
+    - [Artefacts Versioning](#artefacts-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
     - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
@@ -330,7 +330,7 @@ It will return a error a code if it hasn't worked successfully. It use the json 
 
 API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
 
-### Artifacts Versioning
+### Artefacts Versioning
 
 E.g. semantic versioning vs. timestamp-based
 
