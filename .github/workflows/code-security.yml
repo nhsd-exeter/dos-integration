@@ -20,9 +20,9 @@ jobs:
       - name: Checkov Security and Best Practices - Docker
         run: |
           make -s docker-best-practices
-      # - name: Checkov Security and Best Practices - Terraform
-      #   run: |
-      #     make -s terraform-best-practices TODO: Get Terraform to place nice with Checkov
+      - name: Checkov Security and Best Practices - Terraform
+        run: |
+          make -s terraform-best-practices
       - name: Checkov Security and Best Practices - Github Actions
         run: |
           make -s github-actions-best-practices
