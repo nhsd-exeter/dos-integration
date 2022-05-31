@@ -46,6 +46,8 @@
     - [Prerequisites](#prerequisites)
     - [How to deploy](#how-to-deploy)
       - [Example](#example)
+  - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
+      - [Dentists](#dentists)
   - [Architecture](#architecture-1)
     - [Data](#data)
     - [Authentication and Authorisation](#authentication-and-authorisation)
@@ -334,24 +336,13 @@ E.g. semantic versioning vs. timestamp-based
 
 ### CI/CD Pipelines
 
-All `test` pipelines are found in the AWS CodePipeline app in `Texas` `non-prod` account and included the following:
+<img src="./documentation/diagrams/DevOps-Pipelines and Automations.drawio.png" width="1024" /><br /><br />
 
-- uec-dos-int-local-load-test-codepipeline
-- uec-dos-int-local-stress-test-codepipeline
-- uec-dos-int-dev-stress-test-codepipeline
-- uec-dos-int-dev-load-test-codepipeline
+All `test`  Codebuild automations can be found in the AWS CodePipeline app in `Texas` `mgmt` account and included the following:
 
-All other pipeline can be found in the AWS CodePipeline app in `Texas` `mgmt` account:
+- uec-dos-int-tools-stress-test-stage
+- uec-dos-int-tools-load-test-stage
 
-- uec-dos-int-dev-codepipeline
-- uec-dos-int-release-X-X-X-codepipeline
-- uec-dos-int-di-XXX-codepipeline <!-- TODO Remove and replace with list of codebuild projects based of githooks -->
-
-Where Xs are the release versions or the Jira number for a deploy task branch
-
-Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
-
-<img src="./documentation/diagrams/DevOps-Pipelines.png" width="1024" /><br /><br />
 
 ### Deployment From the Command-line
 
