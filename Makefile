@@ -801,13 +801,17 @@ terraform-security:
 # Checkov (Code Security Best Practices)
 
 docker-best-practices:
-	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
+	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--framework dockerfile --skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
 
 serverless-best-practices:
-	make docker-run-checkov DIR=/deployment
+	make docker-run-checkov DIR=/deployment CHECKOV_OPTS="--framework serverless"
 
 terraform-best-practices:
-	make docker-run-checkov DIR=/infrastructure
+	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --download-external-modules true \
+	--skip-check CKV_AWS_116,CKV_AWS_149"
 
 github-actions-best-practices:
 	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
+
+checkov-secret-scanning:
+	make docker-run-checkov CHECKOV_OPTS="--framework secrets"

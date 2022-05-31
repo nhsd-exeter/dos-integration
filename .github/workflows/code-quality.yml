@@ -17,18 +17,6 @@ jobs:
       - name: Check Python files format
         run: |
           make python-linting
-      - name: Checkov Best Practices - Serverless Framework
-        run: |
-          make -s serverless-best-practices
-      - name: Checkov Best Practices - Docker
-        run: |
-          make -s docker-best-practices
-      - name: Checkov Best Practices - Terraform
-        run: |
-          make -s terraform-best-practices
-      - name: Checkov Best Practices - Github Actions
-        run: |
-          make -s github-actions-best-practices
       - name: Create coverage report
         run: |
           make tester-build coverage-report
