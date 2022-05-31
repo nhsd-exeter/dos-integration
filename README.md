@@ -5,14 +5,18 @@
 - [DoS Integration](#dos-integration)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+    - [DI Confluence Page](#di-confluence-page)
+    - [Architecture](#architecture)
+    - [Technology Stack](#technology-stack)
   - [Quick Start](#quick-start)
     - [Development Requirements](#development-requirements)
-    - [Local Environment Configuration](#local-environment-configuration)
-    - [Local Project Setup](#local-project-setup)
+    - [Clone Repository](#clone-repository)
+    - [AWS Authentication](#aws-authentication)
+    - [Mac setup](#mac-setup)
   - [Contributing](#contributing)
   - [Development](#development)
     - [Add IP Address to IP Allow List](#add-ip-address-to-ip-allow-list)
-    - [Database Connection](#database-connection)
+    - [DoS Database Connection](#dos-database-connection)
     - [Code Formatting](#code-formatting)
     - [Code Quality](#code-quality)
   - [Testing](#testing)
@@ -24,7 +28,7 @@
     - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
-    - [Artefact Versioning](#artefact-versioning)
+    - [Artefacts Versioning](#artefacts-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
     - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
@@ -42,29 +46,15 @@
     - [Prerequisites](#prerequisites)
     - [How to deploy](#how-to-deploy)
       - [Example](#example)
-  - [Architecture](#architecture)
-    - [Diagrams](#diagrams)
-      - [System Context Diagram](#system-context-diagram)
-      - [Container Diagram](#container-diagram)
-      - [Component Diagram](#component-diagram)
-      - [Processes and Data Flow](#processes-and-data-flow)
-      - [Infrastructure](#infrastructure)
-      - [Networking](#networking)
-    - [Integration](#integration)
-      - [Interfaces](#interfaces)
-      - [Dependencies](#dependencies)
+  - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
+      - [Dentists](#dentists)
+  - [Architecture](#architecture-1)
     - [Data](#data)
     - [Authentication and Authorisation](#authentication-and-authorisation)
-    - [Technology Stack](#technology-stack)
-    - [Key Architectural Decisions](#key-architectural-decisions)
-    - [System Quality Attributes](#system-quality-attributes)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
-    - [Error Handling](#error-handling)
     - [Observability](#observability)
       - [Tracing Change events and requests Correlation Id](#tracing-change-events-and-requests-correlation-id)
-    - [Auditing](#auditing)
-    - [Backups](#backups)
     - [Cloud Environments](#cloud-environments)
     - [Runbooks](#runbooks)
   - [Product](#product)
@@ -73,27 +63,69 @@
 
 ## Overview
 
-A few sentences what business problem this project solves...
+The NHS.uk website, and the DoS (Directory of Services) service are separate entities which both store a lot of the same important data about Pharmacies/Dentists and other health organisations around the UK. The management of these individual services therefore needs to update information in multiple places online to keep their data fully up to date for their users.
+
+The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
+
+### DI Confluence Page
+https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
+
+### Architecture
+
+<img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
+
+### Technology Stack
+
+The current technology stack is:
+
+- Python - Main programming language
+- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS
+- Serverless Framework - (Where supported)
+- Terraform - Infrastructure as code tool (Where serverless not supported)
 
 ## Quick Start
 
 ### Development Requirements
 
-- macOS operating system provisioned with the `curl -L bit.ly/make-devops-macos-setup | bash` command
-- `iTerm2` command-line terminal and `Visual Studio Code` source code editor, which will be installed automatically for you in the next steps
+It is recommended to use either a macOS or Linux. If using a Windows machine it is highly recommended to run a VM using WSL2 to create a Linux environment to work with. Try not to use the Windows command line.
 
-### Local Environment Configuration
+A mac is no longer required for basic development since task branches are automatically built on the push of a new commit. However the build/deploy commands currently are only designed to work with macOS.
+
+This project contains a macOS environment which can be installed and setup that gives the user a wide range of tools useful for development. More info on this is in the mac setup section.
+
+The main components you will need for *basic* development work, are your OS version of the below.
+
+- A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
+- Git
+- Python (The project currenly runs on 3.9.7)
+- AWS CLI
+- Docker
+
+### Clone Repository
 
 Clone the repository
 
-    git clone [project-url]
-    cd ./[project-dir]
+    git clone git@github.com:nhsd-exeter/dos-integration.git
+    cd ./dos-integration
 
-The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bash` command. If that step has already been done it can be omitted at this point
+### AWS Authentication
+
+Please, ask one of your colleagues for the AWS account numbers used by the project. You will use these as roles which you will assume from your account.
+
+Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
+https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+
+There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
+
+    tx-mfa
+
+### Mac setup
+
+The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bash` command.
 
     make macos-setup
 
-There are essential configuration options that **must** be set before proceeding any further. As a minimum the following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you have `tx-mfa` into non-prod first before running `make setup`
+There are configuration options that should be set before proceeding. The following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you authenticated in the AWS non-prod account first before running `make setup`
 
     make setup
 
@@ -101,22 +133,13 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 
     make devops-setup-aws-accounts
 
-Generate and trust a self-signed certificate that will be used locally to enable encryption in transit
-
-    make trust-certificate
-
-### Local Project Setup
-
-    # Terminal 1
-    make build
-    make start log
 
 ## Contributing
 
 Here is the list of the development practices that have to be followed by the team and the individual members:
 
-- Only use single canonical branch **master**. Any intermediate branch significantly increases the maintenance overhead of the repository.
-- Apply the git rebase workflow and never merge from master to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
+- Only use single canonical branch **develop**. Any intermediate branch significantly increases the maintenance overhead of the repository.
+- Apply the git rebase workflow and never merge from develop to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
 - Cryptographically sign your commits using **gpg** to ensure its content have not been tampered with.
 - Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complies and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.
@@ -127,15 +150,21 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 ### Add IP Address to IP Allow List
 
+To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
+
+An IP Allowlist is kept in secrets manager for each environment (task, dev, live etc). The task environment list is used for each task environment deployed. The Secret Name for each is of the format
+
+    uec-dos-int-XXXX-ip-addresses-allowlist
+
+where XXXX is the name of the environment in lowercase. For most development work you only need to add your IP to the task and dev environments list.
+
+You can also add your IP to the lists with a script.
+
 Prerequisites (first setup only)
 
     make tester-build
 
-Requirements to update IP allow list (Every time)
-
-    tx-mfa
-
-To add an IP address to the IP allow lists, run the following command.
+To add an IP address to the IP allow lists, Ensure you're authenticated for access to AWS and run the following command.
 
     make update-all-ip-allowlists
 
@@ -143,9 +172,17 @@ To add an IP address to the IP allow lists and deploy the allow list to environm
 
     make update-ip-allowlists-and-deploy-allowlist PROFILE=task
 
-Note: IP Addresses are held in the AWS Secrets Manager with the secret name being the variable `TF_VAR_ip_address_secret`. You can find your IP address in the AWS console with your Git username as the key and the IP address as the value
+### DoS Database Connection
 
-### Database Connection
+The following env vars are required for the project to establish a connection to the DoS database (or a replica).
+
+DB_SECRET_NAME
+DB_SERVER
+DB_PORT
+DB_NAME
+DB_SCHEMA
+DB_USER_NAME
+DB_SECRET_KEY
 
 To connect to the local postgres database use these connection
 
@@ -158,13 +195,21 @@ To connect to the local postgres database use these connection
 
 ### Code Formatting
 
-  To format the code run:
+Code quality checks can be done with the pip installed 'black' module and run with the command.
+    python -m black --line-length 120
+
+This is also wrapped in a function
+To format the code run:
     make python-code-format FILES=./application
     make python-code-format FILES=./test
 
 ### Code Quality
 
-  To check the code quality run:
+Code quality checks can be done with the pip installed 'flake8' module and run with the command.
+    python3 -m flake8 --max-line-length=120
+
+This is also wrapped in a function
+To check the code quality run:
     make python-code-check FILES=./application
     make python-code-check FILES=./test
 
@@ -202,6 +247,13 @@ To run unit tests run the following commands
 For coverage run
 
     make coverage-report
+
+The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own enviornment directly by going to the /application directory and running.
+
+    python3 -m pytest --cov=. -vv
+
+It is always a good idea to run the unit tests in the IMAGE enviornment for a final run-through to ensure they pass in the correct enviormental conditions.
+
 
 ### Integration Testing
 
@@ -278,22 +330,19 @@ It will return a error a code if it hasn't worked successfully. It use the json 
 
 API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
 
-### Artefact Versioning
+### Artefacts Versioning
 
 E.g. semantic versioning vs. timestamp-based
 
 ### CI/CD Pipelines
 
-List all the pipelines and their purpose
+<img src="./documentation/diagrams/DevOps-Pipelines and Automations.drawio.png" width="1024" /><br /><br />
 
-- Development
-- Test
-- Cleanup
-- Production (deployment)
+All `test`  Codebuild automations can be found in the AWS CodePipeline app in `Texas` `mgmt` account and included the following:
 
-Reference the [jenkins/README.md](build/automation/lib/jenkins/README.md) file
+- uec-dos-int-tools-stress-test-stage
+- uec-dos-int-tools-load-test-stage
 
-<img src="./documentation/diagrams/DevOps-Pipelines.png" width="1024" /><br /><br />
 
 ### Deployment From the Command-line
 
@@ -389,53 +438,36 @@ To Deploy Live
 
     make tag-commit-for-deployment PROFILE=demo ENVIRONMENT=demo COMMIT=1b4ef5a
 
+## Creating Batch Comparison Reports
+
+Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
+
+#### Dentists
+
+To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
+
+You can use a make command. Either specifying PROFILE, or a full set of DoS DB details.
+
+    make create-dentist-reports PROFILE=dev
+
+or
+
+    make create-dentist-reports \
+      DB_SERVER_NAME= server_name \
+      DB_PORT=5432 \
+      DB_NAME=name_of_the_db \
+      DB_USER_NAME_SECRET_NAME=some_db_name \
+      DB_USER_NAME_SECRET_KEY=some_key \
+      DB_SECRET_NAME=secret_name_for_secret_manager \
+      DB_SECRET_KEY=DB_USER_PASSWORD \
+      DB_SCHEMA=pathwaysdos
+
+
+These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
+
+    python3 comparison_reporting/run_dentist_reports.py
+
 ## Architecture
-
-### Diagrams
-
-#### System Context Diagram
-
-Include an image of the [C4 model](https://c4model.com/) System Context diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-SystemContext.png" width="1024" /><br /><br />
-
-#### Container Diagram
-
-Include an image of the [C4 model](https://c4model.com/) Container diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-Container.png" width="1024" /><br /><br />
-
-#### Component Diagram
-
-Include an image of the [C4 model](https://c4model.com/) Component diagram exported as a `.png` file from the draw.io application.
-
-<img src="./documentation/diagrams/C4model-Component.png" width="1024" /><br /><br />
-
-#### Processes and Data Flow
-
-Include an image of the Processes and Data Flow diagram
-
-#### Infrastructure
-
-Include an image of the Infrastructure diagram. Please, be aware that any sensitive information that can be potentially misused either directly or indirectly must not be stored and accessible publicly. This could be IP addresses, domain names or detailed infrastructure information.
-
-<img src="./documentation/diagrams/Infrastructure-Component.png" width="1024" /><br /><br />
-
-#### Networking
-
-Include an image of the Networking diagram. Please, be aware that any sensitive information must not be stored and accessible publicly. This could be IP addresses, domain names or detailed networking information.
-
-### Integration
-
-#### Interfaces
-
-Document all the system external interfaces
-
-- API documentation should be generated automatically
-
-#### Dependencies
-
-Document all the system external dependencies and integration points
 
 ### Data
 
@@ -454,30 +486,7 @@ What sort of data system operates on and processes
 
 It is recommended that any other documentation related to the aspect of security should be stored in a private workspace.
 
-### Technology Stack
 
-What are the technologies and programming languages used to implement the solution
-
-The current technology stack is:
-
-- Python (typically latest version) - Main programming language
-- Serverless Framework - Infrastructure as code tool (we use where possible)
-- Terraform - Infrastructure as code tool (we use when infrastructure is not supported by Serverless Framework)
-
-### Key Architectural Decisions
-
-Architectural decisions records (ADRs) are stored in `documentation/adr`
-
-### System Quality Attributes
-
-- Accessibility, usability
-- Resilience, durability, fault-tolerance
-- Scalability, elasticity
-- Consistency
-- Performance
-- Interoperability
-- Security
-- Supportability
 
 ### Guiding Principles
 
@@ -492,10 +501,6 @@ List of the high level principles that a product /development team must adhere t
 - Use of the Make DevOps automation scripts (macOS and Linux)
 
 ## Operation
-
-### Error Handling
-
-- What is the system response under the erroneous conditions
 
 ### Observability
 
@@ -523,19 +528,13 @@ What are the links of the supporting systems?
 
   The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
 
-### Auditing
-
-Are there any auditing requirements in accordance with the data retention policies?
-
-### Backups
-
-- Frequency and type of the backups
-- Instructions on how to recover the data
 
 ### Cloud Environments
 
 List all the environments and their relation to profiles
 
+- Task
+  - Profile: 'task'
 - Dev
   - Profile: `dev`
 - Demo
@@ -543,11 +542,10 @@ List all the environments and their relation to profiles
 - Live
   - Profile: `live`
 
-To deploy a environment run `make deploy PROFILE=task`
-
 ### Runbooks
 
-List all the operational runbooks
+The runbooks for this project can be found on the DI confluence.
+https://nhsd-confluence.digital.nhs.uk/display/DI/Runbooks
 
 ## Product
 
