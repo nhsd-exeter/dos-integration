@@ -810,4 +810,4 @@ terraform-best-practices:
 	make docker-run-checkov DIR=/infrastructure
 
 github-actions-best-practices:
-	make docker-run-checkov DIR=/.github
+	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
