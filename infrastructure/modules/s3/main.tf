@@ -1,7 +1,8 @@
 module "s3_bucket" {
-  source = "terraform-aws-modules/s3-bucket/aws"
-  bucket = var.name
-  acl    = var.acl
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.2.3"
+  bucket  = var.name
+  acl     = var.acl
 
   // S3 bucket-level Public Access Block configuration
   block_public_acls       = true

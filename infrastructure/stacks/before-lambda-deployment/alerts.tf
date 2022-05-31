@@ -1,7 +1,6 @@
 resource "aws_sns_topic" "sns_topic_app_alerts_for_slack" {
-
-  name = var.sns_topic_app_alerts_for_slack
-
+  name              = var.sns_topic_app_alerts_for_slack
+  kms_master_key_id = "alias/${var.signing_key_alias}"
 }
 
 resource "aws_sns_topic_policy" "sns_topic_app_alerts_for_slack_policy" {

@@ -35,6 +35,11 @@ resource "aws_dynamodb_table" "message-history-table" {
     range_key       = "SequenceNumber"
     projection_type = "ALL"
   }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
   depends_on = [
     aws_kms_key.signing_key
   ]
