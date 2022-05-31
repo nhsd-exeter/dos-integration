@@ -7,14 +7,15 @@ updates:
       interval: "daily"
     target-branch: "develop"
 
+  # Maintain dependencies for Python (Works recursively in application directories)
+  - package-ecosystem: "pip"
+    directory: "/application"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
 # AWS ECR Gallery not working yet for Docker Dependabot
   # https://github.com/dependabot/dependabot-core/issues/4212
-  # # Maintain dependencies for Python (Works recursively in application directories)
-  # - package-ecosystem: "pip"
-  #   directory: "/application"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
 
   # # Docker Dependencies
   # - package-ecosystem: "docker"

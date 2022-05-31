@@ -798,10 +798,10 @@ terraform-security:
 	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"
 
 # ==============================================================================
-# Checkov (Code Best Practices)
+# Checkov (Code Security Best Practices)
 
 docker-best-practices:
-	make docker-run-checkov DIR=/build/docker
+	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
 
 serverless-best-practices:
 	make docker-run-checkov DIR=/deployment

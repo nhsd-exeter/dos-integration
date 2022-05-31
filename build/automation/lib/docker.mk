@@ -641,7 +641,7 @@ docker-run-checkov: ### Run checkov container - optional: DIR,ARGS=[Docker args]
 		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
 		$(ARGS) \
 		$$image \
-			--directory /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g")
+			--directory /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") $(CHECKOV_OPTS)
 
 docker-run-terraform-compliance: ### Run terraform compliance container - mandatory: CMD=[-p file -f repo]; optional: DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]; SEE: https://github.com/terraform-compliance/cli
 	make docker-config > /dev/null 2>&1
