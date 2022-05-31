@@ -807,8 +807,7 @@ serverless-best-practices:
 	make docker-run-checkov DIR=/deployment CHECKOV_OPTS="--framework serverless"
 
 terraform-best-practices:
-	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --download-external-modules true \
-	--skip-check CKV_AWS_116,CKV_AWS_149"
+	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --download-external-modules true"
 
 github-actions-best-practices:
 	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
