@@ -101,14 +101,15 @@ def a_changed_contact_event_is_valid(contact):
     context["change_event"] = create_change_event("pharmacy")
     validated = False
     while validated is False:
-        if contact == "website":
-            context["change_event"]["Contacts"][0]["ContactValue"] = FAKER.domain_word() + ".nhs.uk"
-        elif contact == "phone_no":
-            context["change_event"]["Contacts"][1]["ContactValue"] = FAKER.phone_number()
-        elif contact == "address":
-            context["change_event"]["Address1"] = FAKER.street_name()
-        else:
-            raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
+        match contact:
+            case "website":
+                context["change_event"]["Contacts"][0]["ContactValue"] = FAKER.domain_word() + ".nhs.uk"
+            case "phone_no":
+                context["change_event"]["Contacts"][1]["ContactValue"] = FAKER.phone_number()
+            case "address":
+                context["change_event"]["Address1"] = FAKER.street_name()
+            case _:
+                raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
 
         validated = valid_change_event(context["change_event"])
     return context
@@ -117,12 +118,14 @@ def a_changed_contact_event_is_valid(contact):
 @given(parsers.parse('a Changed Event with a "{data}" value for "{contact_field}"'), target_fixture="context")
 def a_valid_changed_event_with_empty_contact(data, contact_field):
     def get_value_from_data():
-        if data == "None":
-            return None
-        elif data == "''":
-            return ""
-        else:
-            return data
+
+        match data:
+            case "None":
+                return None
+            case "''":
+                return ""
+            case _:
+                return data
 
     context = {}
     context["change_event"] = build_same_as_dos_change_event("pharmacy")
@@ -134,12 +137,13 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
         context["correlation_id"] = f"{run_id}_{unique_key}_contact_data_alignment_run"
     context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     assert confirm_approver_status(context["correlation_id"]) != []
-    if contact_field == "website":
-        context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
-    elif contact_field == "phone_no":
-        context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
-    else:
-        raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
+    match contact_field:
+        case "website":
+            context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
+        case "phone_no":
+            context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+        case _:
+            raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     del context["correlation_id"]
     return context
 
@@ -186,12 +190,13 @@ def a_change_event_is_valid_with_contact_set(contact: str):
     context = {}
 
     context["change_event"] = build_same_as_dos_change_event_by_ods("pharmacy", get_odscode_with_contact_data())
-    if contact.lower() == "website":
-        del context["change_event"]["Contacts"][0]
-    elif contact.lower() == "phone":
-        del context["change_event"]["Contacts"][1]
-    else:
-        raise ValueError(f"Invalid contact '{contact}' provided")
+    match contact.lower():
+        case "website":
+            del context["change_event"]["Contacts"][0]
+        case "phone":
+            del context["change_event"]["Contacts"][1]
+        case _:
+            raise ValueError(f"Invalid contact '{contact}' provided")
     return context
 
 
@@ -251,14 +256,17 @@ def one_off_opening_date_set(context, open_closed: str):
     selectedday = randint(10, 30)
     context["change_event"]["OpeningTimes"][0]["AdditionalOpeningDate"] = f"Dec {selectedday} 2025"
     context["change_event"]["OpeningTimes"][0]["Weekday"] = ""
-    if open_closed.lower() == "open":
-        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
-        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "17:00"
-        context["change_event"]["OpeningTimes"][0]["IsOpen"] = True
-    elif open_closed.lower() == "closed":
-        context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
-        context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
-        context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    match open_closed.lower():
+        case "open":
+            context["change_event"]["OpeningTimes"][0]["OpeningTime"] = "09:00"
+            context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "17:00"
+            context["change_event"]["OpeningTimes"][0]["IsOpen"] = True
+        case "closed":
+            context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
+            context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
+            context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+        case _:
+            raise ValueError("Invalid opening value provided")
     return context
 
 
@@ -498,12 +506,13 @@ def the_changed_request_is_accepted_by_dos(context):
 def the_changed_request_is_accepted_by_dos_with_contact_delete(context, contact):
     service_id = get_service_id(context["correlation_id"])
     approver_status = confirm_approver_status(context["correlation_id"])
-    if contact == "phone":
-        cms = "cmstelephoneno"
-    elif contact == "website":
-        cms = "cmsurl"
-    else:
-        raise ValueError(f"Invalid contact provided: '{contact}'")
+    match contact:
+        case "phone":
+            cms = "cmstelephoneno"
+        case "website":
+            cms = "cmsurl"
+        case _:
+            raise ValueError(f"Invalid contact provided: '{contact}'")
     assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
     response = check_contact_delete_in_dos(context["correlation_id"], cms)
     assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
@@ -513,14 +522,15 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context, contact)
 @then(parsers.parse('the Changed Request with changed "{contact}" is captured by Dos'))
 def the_changed_contact_is_accepted_by_dos(context, contact):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    if contact == "phone_no":
-        cms = "cmstelephoneno"
-        changed_data = context["change_event"]["Contacts"][1]["ContactValue"]
-    elif contact == "website":
-        cms = "cmsurl"
-        changed_data = context["change_event"]["Contacts"][0]["ContactValue"]
-    else:
-        raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+    match contact:
+        case "phone_no":
+            cms = "cmstelephoneno"
+            changed_data = context["change_event"]["Contacts"][1]["ContactValue"]
+        case "website":
+            cms = "cmsurl"
+            changed_data = context["change_event"]["Contacts"][0]["ContactValue"]
+        case _:
+            raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
     assert (
         check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
@@ -696,18 +706,19 @@ def specified_date_is_removed_from_dos(context):
 @then(parsers.parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
 def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_closed):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
-    if open_or_closed.upper() == "OPEN":
-        context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
-        context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
-        context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
-        context["correlation_id"] = f'{context["correlation_id"]}_open_replay'
-    elif open_or_closed.upper() == "CLOSED":
-        context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = ""
-        context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = ""
-        context["change_event"]["OpeningTimes"][-2]["IsOpen"] = False
-        context["correlation_id"] = f'{context["correlation_id"]}_closed_replay'
-    else:
-        raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
+    match open_or_closed.upper():
+        case "OPEN":
+            context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = "00:01"
+            context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
+            context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
+            context["correlation_id"] = f'{context["correlation_id"]}_open_replay'
+        case "CLOSED":
+            context["change_event"]["OpeningTimes"][-2]["OpeningTime"] = ""
+            context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = ""
+            context["change_event"]["OpeningTimes"][-2]["IsOpen"] = False
+            context["correlation_id"] = f'{context["correlation_id"]}_closed_replay'
+        case _:
+            raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )
@@ -721,16 +732,17 @@ def standard_day_confirmed_open(context, open_or_closed):
     service_id = get_service_id(context["correlation_id"])
     opening_time_event = get_change_event_standard_opening_times(service_id)
     week_day = context["change_event"]["OpeningTimes"][-2]["Weekday"]
-    if open_or_closed.upper() == "CLOSED":
-        assert (
-            opening_time_event[week_day] == []
-        ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{week_day}"'
-    elif open_or_closed.upper() == "OPEN":
-        assert (
-            opening_time_event[week_day] != []
-        ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{week_day}"'
-    else:
-        raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
+    match open_or_closed.upper():
+        case "CLOSED":
+            assert (
+                opening_time_event[week_day] == []
+            ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{week_day}"'
+        case "OPEN":
+            assert (
+                opening_time_event[week_day] != []
+            ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{week_day}"'
+        case _:
+            raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
 
 
