@@ -17,6 +17,10 @@ exclude = ["authoriser/tests",
   "common/nhs",
   "common/dos",
   "comparison_reporting"]
-# TODO: Remove unused variables bottom three lines
+# TODO: Remove unused variables in the following files:
+# - common/nhs
+# - common/dos
+# - comparison_reporting
+
 sort_by_size = true
 ignore_names = ["lambda_handler", "*db_connection"]
