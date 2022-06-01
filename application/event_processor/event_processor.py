@@ -122,9 +122,7 @@ class EventProcessor:
         return self.change_requests
 
     def send_changes(self, message_received: int, record_id: str, sequence_number: int) -> None:
-        """Sends change request payload off to next part of workflow
-        [Which at the moment is straight to the next lambda]
-        """
+        """Sends change request payload off to next part of workflow"""
         if self.change_requests is None:
             logger.error("Attempting to send change requests before get_change_requests has been called.")
             return
@@ -167,11 +165,12 @@ class EventProcessor:
                 }
             )
         if len(messages) > 0:
-            chunks = divide_chunks(messages, 10)
-            for chunk in chunks:
+            chunks = list(divide_chunks(messages, 10))
+            for i, chunk in enumerate(chunks):
                 # TODO: Handle errors?
+                logger.debug(f"Sending off message chunk {i+1}/{len(chunks)}")
                 response = sqs.send_message_batch(QueueUrl=environ["CR_QUEUE_URL"], Entries=chunk)
-                logger.info("Response from sqs send_message_batch", extra={"response": response})
+                logger.info("Response received", extra={"response": response})
                 logger.info(f"Sent off change payload for id={change_request.service_id}")
         else:
             logger.info("No changes identified")
@@ -194,7 +193,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     Some code may need to be changed if the exact input format is changed.
     """
-    time_start_ms = time_ns() // 1000000
+    time_start_ns = time_ns()
 
     logger.append_keys(
         ods_code=None,
@@ -229,8 +228,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("function_name", context.function_name)
     metrics.set_property("message_received", message_received_pretty)
 
-    time_setup = time_ns() // 1000000
-
     logger.info("Getting latest sequence number")
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
     logger.info("Writing change event to dynamo")
@@ -241,7 +238,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.set_property("dynamo_record_id", record_id)
     metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QueueToProcessorLatency", time_start_ms - sqs_timestamp, "Milliseconds")
+    metrics.put_metric("QueueToProcessorLatency", (time_start_ns // 1000000) - sqs_timestamp, "Milliseconds")
     logger.append_keys(dynamo_record_id=record_id)
 
     if sequence_number is None:
@@ -254,7 +251,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         )
         return
 
-    time_corr_seq = time_ns() // 1000000
+    time_corr_seq = time_ns()
 
     try:
         validate_event(change_event)
@@ -266,11 +263,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
 
-        time_event_setup = time_ns() // 1000000
+        time_event_setup = time_ns()
 
         matching_services = event_processor.get_matching_services()
 
-        time_match_servs = time_ns() // 1000000
+        time_match_servs = time_ns()
 
         if len(matching_services) == 0:
             log_unmatched_nhsuk_service(nhs_entity)
@@ -289,25 +286,21 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
         event_processor.get_change_requests()
 
-        time_comparing = time_ns() // 1000000
+        time_comparing = time_ns()
 
     finally:
         disconnect_dos_db()
 
-    time_disc_db = time_ns() // 1000000
-
     event_processor.send_changes(sqs_timestamp, record_id, sequence_number)
 
-    time_send_changes = time_ns() // 1000000
+    time_send_changes = time_ns()
 
     timings = {
-        "all in-code": time_send_changes - time_start_ms,
-        "setup": time_setup - time_start_ms,
-        "corr_seq": time_corr_seq - time_setup,
-        "event_setup": time_event_setup - time_corr_seq,
-        "matching": time_match_servs - time_event_setup,
-        "comparing": time_comparing - time_match_servs,
-        "disc_db": time_disc_db - time_comparing,
-        "send_changes": time_send_changes - time_disc_db
+        "all in-code": (time_send_changes - time_start_ns) // 1000000,
+        "corr_seq": (time_corr_seq - time_start_ns) // 1000000,
+        "event_setup": (time_event_setup - time_corr_seq) // 1000000,
+        "matching": (time_match_servs - time_event_setup) // 1000000,
+        "comparing": (time_comparing - time_match_servs) // 1000000,
+        "send_changes": (time_send_changes - time_comparing) // 1000000
     }
     logger.info("Timings ready", extra={"timings": timings})
