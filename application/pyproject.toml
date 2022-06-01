@@ -13,6 +13,10 @@ exclude = ["authoriser/tests",
   "orchestrator/tests",
   "slack_messenger/tests",
   "test_db_checker_handler/tests",
-  "common/types"]
+  "common/types",
+  "common/nhs",
+  "common/dos",
+  "comparison_reporting"]
+# TODO: Remove unused variables bottom three lines
 sort_by_size = true
 ignore_names = ["lambda_handler", "*db_connection"]

@@ -19,7 +19,7 @@ jobs:
           make python-linting
       - name: Python Dead Code Check
         run: |
-          make tester-build vulture
+          make tester-build python-dead-code-scanning
       - name: Create coverage report
         run: |
           make coverage-report

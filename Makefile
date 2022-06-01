@@ -779,7 +779,7 @@ python-linting:
 	make python-code-check FILES=application
 	make python-code-check FILES=test
 
-vulture:
+python-dead-code-scanning:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		DIR=$(APPLICATION_DIR) \
