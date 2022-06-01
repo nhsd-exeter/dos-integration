@@ -2,7 +2,7 @@ import random
 from ast import literal_eval
 from datetime import datetime
 from decimal import Decimal
-from json import dumps, loads
+from json import dumps, loads, load
 from os import getenv
 from random import choice
 from time import sleep, time_ns
@@ -25,6 +25,9 @@ LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs")
 DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
+
+pharmacy_odscode_list = None
+dentist_odscode_list = None
 
 
 def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
@@ -410,3 +413,30 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
     )
     response_payload = response["Payload"].read().decode("utf-8")
     return response_payload
+
+
+def random_pharmacy_odscode() -> str:
+    global pharmacy_odscode_list
+    if pharmacy_odscode_list is None:
+        lambda_payload = {"type": "get_pharmacy_odscodes"}
+        pharmacy_odscode_list = get_odscodes_list(lambda_payload)
+    return choice(pharmacy_odscode_list)[0]
+
+
+def random_dentist_odscode() -> str:
+    global dentist_odscode_list
+    if dentist_odscode_list is None:
+        lambda_payload = {"type": "get_dentist_odscodes"}
+        dentist_odscode_list = get_odscodes_list(lambda_payload)
+    odscode = choice(dentist_odscode_list)[0]
+    return f"{odscode[0]}0{odscode[1:]}"
+
+
+def get_payload(payload_name: str) -> str:
+    values = {"valid": "expected_schema.json", "invalid": "invalid_payload.json"}
+    if payload_name in ["valid", "invalid"]:
+        payload_file_name = values[payload_name]
+    else:
+        raise Exception("Unable to find Payload by request name")
+    with open(f"./features/resources/payloads/{payload_file_name}", "r", encoding="utf-8") as json_file:
+        return dumps(load(json_file))

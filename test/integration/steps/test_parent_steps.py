@@ -10,15 +10,15 @@ import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from .utilities.events import (
+from .utilities.change_request import (
     change_request,
-    create_change_event,
-    set_opening_times_change_event,
 )
 from .utilities.change_event import (
+    create_change_event,
     build_same_as_dos_change_event_by_ods,
     build_same_as_dos_change_event,
     valid_change_event,
+    set_opening_times_change_event,
 )
 from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
 from .utilities.aws import get_logs, negative_log_check

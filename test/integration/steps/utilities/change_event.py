@@ -1,17 +1,32 @@
 from datetime import datetime
 import re
-
+from dateutil.relativedelta import relativedelta
+from json import load
+from typing import Dict, Any
 from .utils import (
     get_change_event_demographics,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_single_service_pharmacy,
+    random_dentist_odscode,
+    random_pharmacy_odscode,
 )
 from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID
 
-from .events import (
-    create_change_event,
-)
+
+def create_change_event(service_type: str) -> Dict[str, Any]:
+    with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
+        payload = load(json_file)
+        match service_type.upper():
+            case "PHARMACY":
+                payload["ODSCode"] = random_pharmacy_odscode()
+            case "DENTIST":
+                payload["ODSCode"] = random_dentist_odscode()
+            case _:
+                raise ValueError(f"Service type {service_type} does not exist")
+        payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
+        print(payload["ODSCode"])
+        return payload
 
 
 def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
@@ -87,3 +102,44 @@ def valid_change_event(change_event: dict) -> bool:
     if not re.fullmatch(r"[+0][0-9 ()]{9,}", str(change_event["Contacts"][1]["ContactValue"])):  # Phone
         return False
     return True
+
+
+def set_opening_times_change_event(service_type: str):
+    change_event = build_same_as_dos_change_event(service_type)
+    date = datetime.today() + relativedelta(months=1)
+    has_set_closed_day = False
+    for day in change_event["OpeningTimes"]:
+        if day["IsOpen"] and day["OpeningTimeType"] == "General":
+            closed_day = day["Weekday"]
+            has_set_closed_day = True
+            break
+    if has_set_closed_day is False:
+        raise ValueError("ERROR!.. Unable to find 'Open' Standard opening time")
+    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] != closed_day, change_event["OpeningTimes"]))
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": closed_day,
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False,
+        }
+    )
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
+            "IsOpen": False,
+        }
+    )
+    return change_event
