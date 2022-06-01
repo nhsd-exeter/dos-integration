@@ -10,7 +10,7 @@ import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
-from .utilities.events import (
+from .utilities.change_request import (
     change_request,
 )
 from .utilities.change_event import (

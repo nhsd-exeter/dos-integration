@@ -3,18 +3,16 @@ import re
 from dateutil.relativedelta import relativedelta
 from json import load
 from typing import Dict, Any
-from .events import(
-    random_dentist_odscode,
-    random_pharmacy_odscode
-)
-
 from .utils import (
     get_change_event_demographics,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_single_service_pharmacy,
+    random_dentist_odscode,
+    random_pharmacy_odscode
 )
 from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID
+
 
 def create_change_event(service_type: str) -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
@@ -29,6 +27,7 @@ def create_change_event(service_type: str) -> Dict[str, Any]:
         payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
         return payload
+
 
 def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
     change_event = create_change_event(service_type)
