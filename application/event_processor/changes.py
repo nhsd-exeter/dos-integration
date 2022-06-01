@@ -54,28 +54,6 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
             changes[change_key] = nhs_uk_value
 
 
-def update_changes_with_address(changes: dict, dos_service: DoSService, nhs_uk_entity: NHSEntity) -> dict:
-    """Adds the address to the change request if the address is not equal
-
-    Args:
-        changes (dict): Change Request changes
-        change_key (str): Key to add to the change request
-        dos_address (str): Address from the DoS database for comparision
-        nhs_uk_entity (NHSEntity): NHS UK Entity for comparision
-
-    Returns:
-        dict: Change Request changes
-    """
-    nhs_uk_address_string = "$".join(nhs_uk_entity.address_lines)
-    dos_address = dos_service.address
-
-    if dos_address != nhs_uk_address_string:
-        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
-        changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_uk_entity.address_lines}
-
-    return changes
-
-
 def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
     """Adds the standard opening times and specified opening times to the change request if not equal and
     nhsuk times are valid.

@@ -1,19 +1,30 @@
-from unittest.mock import patch
 from datetime import date
+from unittest.mock import patch
 
+import responses
+from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
+from common.nhs import NHSEntity
+from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.tests.conftest import dummy_dos_service
 from pandas import DataFrame
 from pandas.testing import assert_frame_equal
 
-from common.tests.conftest import dummy_dos_service
-from common.nhs import NHSEntity
-from common.opening_times import StandardOpeningTimes, SpecifiedOpeningTime, OpenPeriod
-from common.constants import PHARMACY_SERVICE_TYPE_IDS, DENTIST_SERVICE_TYPE_IDS
-from ..reporter import Reporter
+from ..reporter import Reporter, download_csv_as_dicts
 
 PHARMACY_TYPE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 DENTIST_TYPE_ID = DENTIST_SERVICE_TYPE_IDS[0]
 OP = OpenPeriod.from_string
 FILE_PATH = "application.comparison_reporting.reporter"
+
+
+@responses.activate
+def test_download_csv_as_dicts():
+    # Arrange
+    test_url = "https://www.test.com/test.csv"
+    rsp1 = responses.Response(method="GET", url=test_url)
+    responses.add(rsp1)
+    # Act
+    download_csv_as_dicts(test_url)
 
 
 @patch(f"{FILE_PATH}.get_all_valid_dos_postcodes")

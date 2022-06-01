@@ -16,3 +16,4 @@ pytest-xdist
 requests
 responses
 testfixtures
+vulture

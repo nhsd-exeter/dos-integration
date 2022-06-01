@@ -17,9 +17,12 @@ jobs:
       - name: Check Python files format
         run: |
           make python-linting
+      - name: Python Dead Code Check
+        run: |
+          make tester-build python-dead-code-scanning
       - name: Create coverage report
         run: |
-          make tester-build coverage-report
+          make coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
         # SEE: https://github.com/SonarSource/sonarcloud-github-action
         env:
