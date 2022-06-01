@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+
 def change_request() -> Dict[str, Any]:
     return {
         "change_payload": {

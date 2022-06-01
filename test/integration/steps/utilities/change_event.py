@@ -9,7 +9,7 @@ from .utils import (
     get_change_event_standard_opening_times,
     get_single_service_pharmacy,
     random_dentist_odscode,
-    random_pharmacy_odscode
+    random_pharmacy_odscode,
 )
 from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID
 
