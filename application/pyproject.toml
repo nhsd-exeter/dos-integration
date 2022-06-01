@@ -13,14 +13,19 @@ exclude = ["authoriser/tests",
   "orchestrator/tests",
   "slack_messenger/tests",
   "test_db_checker_handler/tests",
+  "common/constants",
   "common/types",
   "common/nhs",
   "common/dos",
-  "comparison_reporting"]
+  "common/opening_times",
+  "comparison_reporting",
+  "dos_api_gateway/dos_api_gateway"]
 # TODO: Remove unused variables in the following files:
 # - common/nhs
 # - common/dos
+# - common/opening_times
 # - comparison_reporting
+# - dos_api_gateway/dos_api_gateway
 
 sort_by_size = true
 ignore_names = ["lambda_handler", "*db_connection"]
