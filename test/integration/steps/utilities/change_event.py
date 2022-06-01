@@ -16,13 +16,14 @@ from .events import (
 
 def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
     change_event = create_change_event(service_type)
-    if service_type.upper() == "PHARMACY":
-        change_event["ODSCode"] = ods_code
-        demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
-    elif service_type.upper() == "DENTIST":
-        demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
-    else:
-        raise ValueError(f"Service type {service_type} does not exist")
+    match service_type.upper():
+        case "PHARMACY":
+            change_event["ODSCode"] = ods_code
+            demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
+        case "DENTIST":
+            demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
+        case _:
+            raise ValueError(f"Service type {service_type} does not exist")
     print(f"Latest selected ODSCode: {change_event['ODSCode']}")
     change_event["OrganisationName"] = demographics_data["publicname"]
     change_event["Postcode"] = demographics_data["postcode"]

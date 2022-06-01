@@ -17,12 +17,13 @@ dentist_odscode_list = None
 def create_change_event(service_type: str) -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
-        if service_type.upper() == "PHARMACY":
-            payload["ODSCode"] = random_pharmacy_odscode()
-        elif service_type.upper() == "DENTIST":
-            payload["ODSCode"] = random_dentist_odscode()
-        else:
-            raise ValueError(f"Service type {service_type} does not exist")
+        match service_type.upper():
+            case "PHARMACY":
+                payload["ODSCode"] = random_pharmacy_odscode()
+            case "DENTIST":
+                payload["ODSCode"] = random_dentist_odscode()
+            case _:
+                raise ValueError(f"Service type {service_type} does not exist")
         payload["OrganisationName"] = f'{payload["OrganisationName"]} {datetime.now()}'
         print(payload["ODSCode"])
         return payload
