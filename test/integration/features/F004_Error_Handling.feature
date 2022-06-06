@@ -2,7 +2,7 @@ Feature: F004. Error Handling
 
   @dev
   Scenario: F004S001. DOS rejects CE and returns SC 400 with invalid Correlation ID and logs error in Splunk
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "sender" shows field "response_text" with message "Fake Bad Request"
@@ -12,7 +12,7 @@ Feature: F004. Error Handling
 
   @dev
   Scenario: F004S002. A CR with invalid Correlation ID gets rejected by events bridge and is NOT sent to DOS
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the correlation-id is "Bad Request"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "cr_dlq" shows field "error_msg" with message "Message Abandoned"
@@ -64,7 +64,7 @@ Feature: F004. Error Handling
 
 @pharmacy_dentist_off_smoke_test
   Scenario Outline: F004S009. Dentist and Pharmacy org types not accepted
-    Given a "<org_type>" Changed Event is valid
+    Given a "<org_type>" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "Validation Error"
 
@@ -76,7 +76,7 @@ Feature: F004. Error Handling
 
 @complete @pharmacy_dentist_smoke_test
   Scenario Outline: F004S010. Dentist and Pharmacy org types accepted
-    Given a "<org_type>" Changed Event is valid
+    Given a "<org_type>" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
@@ -88,27 +88,27 @@ Feature: F004. Error Handling
 
   @complete @dev @dentist_cloudwatch_queries
   Scenario Outline: F004S011. A Changed Event with Dentist org type is accepted
-    Given a "dentist" Changed Event is valid
+    Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
 
 @dev @dentist_cloudwatch_queries
   Scenario Outline: F004S012. Exception is raised when unaccepted Pharmacy org type CE is processed
-    Given a "pharmacy" Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "Validation Error"
 
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S013. A Changed Event with Pharmacy org type is accepted
-    Given a "pharmacy" Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 
 
 @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S014. Exception is raised when unaccepted Dentist org type CE is processed
-    Given a "dentist" Changed Event is valid
+    Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "Validation Error"

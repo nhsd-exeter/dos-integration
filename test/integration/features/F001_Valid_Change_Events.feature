@@ -2,20 +2,20 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S002. All received Changed Events are archived in Dynamo DB
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S003. A Changed event with aligned data does not create a CR
-    Given a Changed Event is aligned with Dos
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "No changes identified"
     And the Changed Event is stored in dynamo db
@@ -43,7 +43,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S007. A valid change event with special characters is processed by DOS
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the field "ContactValue" is set to "https:\/\/www.rowlandspharmacy.co.uk\/test?foo=test"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request with special characters is accepted by DOS
@@ -51,7 +51,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 @complete @dentist_no_log_searches @dentist_smoke_test
   Scenario: F001S008. A valid Dentist change event is processed into DOS
-    Given a Dentist Changed Event is valid
+    Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos

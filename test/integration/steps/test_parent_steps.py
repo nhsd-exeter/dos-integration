@@ -20,7 +20,9 @@ from .utilities.change_event import (
     valid_change_event,
     set_opening_times_change_event,
 )
-from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
+
+# from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
+
 from .utilities.aws import get_logs, negative_log_check
 from .utilities.utils import (
     generate_correlation_id,
@@ -59,46 +61,46 @@ scenarios(
 FAKER = Faker("en_GB")
 
 
-@given("a Changed Event is valid", target_fixture="context")
-def a_change_event_is_valid():
-    context = {}
-    context["change_event"] = create_change_event("pharmacy")
-    return context
+# @given("a Changed Event is valid", target_fixture="context")
+# def a_change_event_is_valid():
+#     context = {}
+#     context["change_event"] = create_change_event("pharmacy")
+#     return context
 
 
-@given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
-def an_org_type_change_event(org_type):
-    context = {}
-    context["change_event"] = create_change_event(org_type.lower())
-    if org_type.lower() == "dentist":
-        context["change_event"]["OrganisationName"] = "Test Dentist"
-        context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
-        context["change_event"]["OrganisationType"] = "Dental practice"
-        context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
-            ORGANISATION_SUB_TYPES_KEY
-        ][0]
-    context["change_event"]["Address1"] = FAKER.street_name()
-    return context
+# @given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
+# def an_org_type_change_event(org_type):
+#     context = {}
+#     context["change_event"] = create_change_event(org_type.lower())
+#     if org_type.lower() == "dentist":
+#         context["change_event"]["OrganisationName"] = "Test Dentist"
+#         context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+#         context["change_event"]["OrganisationType"] = "Dental practice"
+#         context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
+#             ORGANISATION_SUB_TYPES_KEY
+#         ][0]
+#     context["change_event"]["Address1"] = FAKER.street_name()
+#     return context
 
 
-@given("a Dentist Changed Event is valid", target_fixture="context")
-def valid_dentist_change_event():
-    context = {}
-    context["change_event"] = create_change_event("dentist")
-    context["change_event"]["OrganisationName"] = "Test Dentist"
-    context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
-    context["change_event"]["OrganisationType"] = "Dental practice"
-    context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
-        ORGANISATION_SUB_TYPES_KEY
-    ][0]
-    context["change_event"]["Address1"] = FAKER.street_name()
-    return context
+# @given("a Dentist Changed Event is valid", target_fixture="context")
+# def valid_dentist_change_event():
+#     context = {}
+#     context["change_event"] = create_change_event("dentist")
+#     context["change_event"]["OrganisationName"] = "Test Dentist"
+#     context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
+#     context["change_event"]["OrganisationType"] = "Dental practice"
+#     context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
+#         ORGANISATION_SUB_TYPES_KEY
+#     ][0]
+#     context["change_event"]["Address1"] = FAKER.street_name()
+#     return context
 
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact):
     context = {}
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = build_same_as_dos_change_event("pharmacy")
     validated = False
     while validated is False:
         match contact:
@@ -178,11 +180,21 @@ def a_standard_opening_time_change_event_is_valid():
     return context
 
 
-@given("a Changed Event is aligned with Dos", target_fixture="context")
-def a_change_event_is_valid_and_matches_dos():
-    context = {}
-    context["change_event"] = build_same_as_dos_change_event("pharmacy")
-    return context
+# @given("a Changed Event is aligned with Dos", target_fixture="context")
+# def a_change_event_is_valid_and_matches_dos():
+#     context = {}
+#     context["change_event"] = build_same_as_dos_change_event("pharmacy")
+#     return context
+
+
+@given(parsers.parse('a "{event_type}" Changed Event is aligned with Dos'), target_fixture="context")
+def dos_event_from_scratch(event_type: str):
+    if event_type.lower() in ["pharmacy", "dentist"]:
+        context = {}
+        context["change_event"] = build_same_as_dos_change_event("pharmacy")
+        return context
+    else:
+        raise ValueError(f"Invalid event type '{event_type}' provided")
 
 
 @given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
@@ -320,7 +332,7 @@ def a_change_event_with_isopen_status_set_to_false():
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb():
     context = {}
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = build_same_as_dos_change_event("pharmacy")
     odscode = context["change_event"]["ODSCode"]
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
