@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "task/*"
+    - "test/*"
 
 jobs:
   pull-request:
