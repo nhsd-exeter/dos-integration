@@ -1,0 +1,19 @@
+name: "Create Test Pull Requests"
+on:
+  push:
+    branches:
+    - "test/*"
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: pull-request
+      uses: repo-sync/pull-request@v2
+      with:
+        destination_branch: "develop"
+        pr_title: "${{ github.ref_name }} into develop"
+        pr_template: ".github/pull-request-templates/test_pull_request_template.md"
+        pr_draft: true
+        github_token: ${{ secrets.GITHUB_TOKEN }}
