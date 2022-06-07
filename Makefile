@@ -506,7 +506,7 @@ tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=
 		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
 	else
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
-		echo Recommended: you run this command from the master branch
+		echo Recommended: you run this command from the main branch
 	fi
 
 tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[di-number], COMMIT=[short commit hash]
