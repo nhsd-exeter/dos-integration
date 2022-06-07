@@ -599,9 +599,9 @@ JQ_DIR_REL := $(shell echo $(abspath $(LIB_DIR)/jq) | sed "s;$(PROJECT_DIR);;g")
 GIT_BRANCH_PATTERN_MAIN := ^(main|master|develop)$$
 GIT_BRANCH_PATTERN_PREFIX := ^(task|spike|automation|test|bugfix|hotfix|fix|release|migration|refactor)
 GIT_BRANCH_PATTERN_SUFFIX := ([A-Z]{2,5}-([0-9]{1,5}|X{1,5})_[A-Z][a-z]+_[A-Za-z0-9]+_[A-Za-z0-9_]+)$$
-GIT_BRANCH_PATTERN_ADDITIONAL := ^(task/Update_(automation_scripts|dependencies|documentation|tests|versions)|task/Refactor|task/Refactor_[A-Za-z0-9_]+_[A-Za-z0-9_]+|refactor/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|devops/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|alignment/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+)$$
+GIT_BRANCH_PATTERN_ADDITIONAL := ^(task/Update_(automation_scripts|dependencies|documentation|tests|versions)|task/Refactor|task/Refactor_[A-Za-z0-9_]+_[A-Za-z0-9_]+|refactor/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|devops/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|alignment/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|dependabot/.*)$$
 GIT_BRANCH_PATTERN := $(GIT_BRANCH_PATTERN_MAIN)|$(GIT_BRANCH_PATTERN_PREFIX)/$(GIT_BRANCH_PATTERN_SUFFIX)|$(GIT_BRANCH_PATTERN_ADDITIONAL)
-GIT_BRANCH_MAX_LENGTH := 72
+GIT_BRANCH_MAX_LENGTH := 100
 GIT_TAG_PATTERN := [0-9]{12,14}-[a-z]{3,10}
 GIT_COMMIT_MESSAGE_PATTERN_MAIN := ^(([A-Z]{2,5}-([0-9]{1,5}|X{1,5}) [A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-]|Update (automation scripts|dependencies|documentation|tests|versions))([[:print:]][^!?,.:;=-])*)$$|^((Update|Refactor|Automate|Test|Fix|Release|Migrate) [[:print:]]+ [[:print:]]+[^!?,.:;=-])$$
 GIT_COMMIT_MESSAGE_PATTERN_ADDITIONAL := ^([A-Z]{2,5}-([0-9]{1,5}|X{1,5}) [A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-]|[A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-])$$|([A-Z][[:print:]]+ \[ci:[[:blank:]]?[,a-z0-9-]+\])
