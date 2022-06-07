@@ -1,0 +1,32 @@
+name: "Create Pull Requests"
+on:
+  push:
+    branches:
+    - "task/*"
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Get branch number
+        run: echo "BRANCH_NUMBER=$(echo ${{ github.ref_name }} | grep -Eo \"[A-Za-z]{2,5}-[0-9]{1,5})\"" >> $GITHUB_ENV
+      - name: Get branch designator
+        run: echo "BRANCH_DESIGNATION=$(echo ${{ github.ref_name }} | sed 's|/.*||'" >> $GITHUB_ENV
+      - name: Render Pull Request template
+        id: template
+        uses: chuhlomin/render-template@v1.4
+        with:
+          template: .github/pull-request-templates/task_pull_request_template.md
+          vars: |
+            BRANCH_NUMBER: ${{ env.BRANCH_NUMBER }}
+            BRANCH_DESIGNATION: ${{ env.BRANCH_DESIGNATION }}
+      - name: Create Pull Request
+        uses: repo-sync/pull-request@v2
+        with:
+          destination_branch: "develop"
+          pr_title: "${{ github.ref_name }} into develop"
+          pr_body: ${{ steps.template.outputs.result }}
+          pr_draft: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
