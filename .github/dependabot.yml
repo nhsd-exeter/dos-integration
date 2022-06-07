@@ -89,59 +89,59 @@ updates:
   - package-ecosystem: "terraform"
     directory: "/infrastructure/modules/s3"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/after-lambda-deployment"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/api-key"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/appconfig"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/before-lambda-deployment"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/deployment-pipelines"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/development-pipeline"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/dos-api-gateway-mock"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/perf-test-tools"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/release-pipeline"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
