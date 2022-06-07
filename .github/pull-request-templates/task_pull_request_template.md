@@ -1,6 +1,4 @@
-# Task Branch Pull Request Template
-
-## Link to JIRA Ticket
+# Task Branch Pull Request
 
 **<https://nhsd-jira.digital.nhs.uk/browse/{{ .BRANCH_NUMBER }}>**
 

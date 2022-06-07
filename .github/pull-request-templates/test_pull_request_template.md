@@ -1,4 +1,4 @@
-# Test Branch Pull Request Template
+# Test Branch Pull Request
 
 ## What branch do these tests check?
 
