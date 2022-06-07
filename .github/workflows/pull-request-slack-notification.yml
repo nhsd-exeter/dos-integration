@@ -1,0 +1,14 @@
+name: "Send Slack Notification for Ready for Review Pull Requests"
+on:
+  pull_request:
+    types: [ready_for_review]
+jobs:
+  slackNotification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
