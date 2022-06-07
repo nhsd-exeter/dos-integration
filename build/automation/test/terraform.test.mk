@@ -43,7 +43,7 @@ test-terraform-teardown:
 # ==============================================================================
 
 test-terraform-export-variables:
-	# arrange
+	# arrange
 	export AWS_ACCESS_KEY_ID_test=value
 	export AWS_SECRET_ACCESS_KEY_test=value
 	export AWS_SESSION_TOKEN_test=value
@@ -54,7 +54,7 @@ test-terraform-export-variables:
 	mk_test "3 = $$count"
 
 test-terraform-export-variables-from-secret:
-	# arrange
+	# arrange
 	export _TEST_DB_USERNAME=admin
 	export _TEST_DB_PASSWORD=secret
 	make secret-create NAME=service/deployment-$(@) VARS=_TEST_DB_USERNAME,_TEST_DB_PASSWORD
@@ -65,7 +65,7 @@ test-terraform-export-variables-from-secret:
 	mk_test "true = $$(echo "$$export" | grep -q "export TF_VAR__test_db_username='admin'" && echo $$export | grep -q "export TF_VAR__test_db_password='secret'" && echo true)"
 
 test-terraform-export-variables-from-shell-vars:
-	# arrange
+	# arrange
 	export _TEST_DB_USERNAME=admin
 	export _TEST_DB_PASSWORD=secret
 	# act
@@ -75,7 +75,7 @@ test-terraform-export-variables-from-shell-vars:
 	mk_test "2 = $$count"
 
 test-terraform-export-variables-from-shell-pattern:
-	# arrange
+	# arrange
 	export _TEST_DB_USERNAME=admin
 	export _TEST_DB_PASSWORD=secret
 	# act
@@ -85,7 +85,7 @@ test-terraform-export-variables-from-shell-pattern:
 	mk_test "2 = $$count"
 
 test-terraform-export-variables-from-shell-pattern-and-vars:
-	# arrange
+	# arrange
 	export _TEST_DB_USERNAME=admin
 	export _TEST_DB_PASSWORD=secret
 	export _TEST_UI_USERNAME=user
@@ -100,7 +100,7 @@ test-terraform-export-variables-from-shell-pattern-and-vars:
 	mk_test "6 = $$count"
 
 test-terraform-export-variables-from-json:
-	# arrange
+	# arrange
 	json='{"DB_USERNAME":"admin","DB_PASSWORD":"secret"}'
 	# act
 	export=$$(make terraform-export-variables-from-json JSON="$$json")
@@ -108,7 +108,7 @@ test-terraform-export-variables-from-json:
 	mk_test "true = $$(echo "$$export" | grep -q "TF_VAR_db_username='admin'" && echo "$$export" | grep -q "export TF_VAR_db_password='secret'" && echo true)"
 
 test-terraform-fmt:
-	# arrange
+	# arrange
 	make TEST_TERRAFORM_FORMATTING_INPUT
 	# act
 	make terraform-fmt DIR=$$(echo $(TMP_DIR) | sed "s;$(PROJECT_DIR);;g")
@@ -123,7 +123,7 @@ test-terraform-plan-before-apply:
 	# act
 	output=$$(make terraform-plan STACKS=service)
 	# assert
-	str="1 to add, 0 to change, 0 to destroy\."
+	str="2 to add, 0 to change, 0 to destroy\."
 	count=$$(echo "$$output" | grep "$$str" | wc -l)
 	mk_test "1 = $$count"
 
@@ -131,7 +131,7 @@ test-terraform-apply:
 	# act
 	output=$$(make terraform-apply-auto-approve STACKS=service)
 	# assert
-	str="Apply complete! Resources: 1 added, 0 changed, 0 destroyed\."
+	str="Apply complete! Resources: 2 added, 0 changed, 0 destroyed\."
 	count=$$(echo "$$output" | grep "$$str" | wc -l)
 	mk_test "1 = $$count"
 
@@ -153,7 +153,7 @@ test-terraform-destroy:
 	# act
 	output=$$(make terraform-destroy-auto-approve STACKS=service)
 	# assert
-	str="Destroy complete! Resources: 1 destroyed\."
+	str="Destroy complete! Resources: 2 destroyed\."
 	count=$$(echo "$$output" | grep "$$str" | wc -l)
 	mk_test "1 = $$count"
 

@@ -13,8 +13,8 @@ function set_file_permissions() {
 
 function set_application_directory() {
   if [ -z "$APP" ]; then
-      dir=$(ls -1 -d */ | head -n 1)
-      export APP=${dir%?}
+    dir=$(ls -1 -d */ | head -n 1)
+    export APP=${dir%?}
   fi
 }
 

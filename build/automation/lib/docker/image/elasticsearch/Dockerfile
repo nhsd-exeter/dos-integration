@@ -1,7 +1,7 @@
 FROM bitnami/elasticsearch:latest
 ENV \
     DEBIAN_FRONTEND="noninteractive" \
-    GOSU_VERSION="1.12" \
+    GOSU_VERSION="1.14" \
     LANG="C.UTF-8" \
     LC_ALL="C.UTF-8" \
     SYSTEM_USER_GID="999" \

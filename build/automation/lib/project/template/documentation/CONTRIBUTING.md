@@ -132,13 +132,13 @@ Upload the public key to your GitHub and GitLab accounts using the links below.
 Principles to follow
 
 - A direct merge to the canonical branch is not allowed and can only be done by creating a pull request (merge request)
-- If not stated otherwise the only long-lived branch is master, i.e. canonical branch
-- Any new branch should be created from master
+- If not stated otherwise the only long-lived branch is main, i.e. canonical branch
+- Any new branch should be created from main
 - The preferred short-lived branch name format is `task/JIRA-XXX_Descriptive_branch_name`
 - The preferred hotfix branch name format is `bugfix/JIRA-XXX_Descriptive_branch_name`
 - All commits must be cryptographically signed
 - Commits should be made often and pushed to the remote
-- Use rebase to get the latest commits from the master while working with a short-lived or a bugfix branch
+- Use rebase to get the latest commits from the main while working with a short-lived or a bugfix branch
 - Squash commits when appropriate
 - Merge commits are not allowed
 
@@ -174,7 +174,7 @@ Contributing to an already existing branch
     git commit -S -m "Meaningful description of change"
     git push
 
-Rebasing a branch onto master
+Rebasing a branch onto main
 
     git checkout task/JIRA-XXX_Descriptive_branch_name
     git rebase -i HEAD~X                                # Squash X number of commits, all into one
@@ -182,19 +182,19 @@ Rebasing a branch onto master
     # On the following screen replace pre-inserted comments by a single summary
     git push --force-with-lease
 
-    git checkout master
+    git checkout main
     git pull
     git checkout task/JIRA-XXX_Descriptive_branch_name
-    git rebase master
+    git rebase main
     # Resolve conflicts
     git add .
     git rebase --continue
     git push --force-with-lease
 
-Merging a branch to master - this should be done only in an exceptional circumstance as the proper process is to raise an MR
+Merging a branch to main - this should be done only in an exceptional circumstance as the proper process is to raise an MR
 
-    git checkout master
-    git pull --prune                                    # Make sure master is up-to-date
+    git checkout main
+    git pull --prune                                    # Make sure main is up-to-date
     git checkout task/JIRA-XXX_Descriptive_branch_name
     git pull                                            # Make sure the task branch is up-to-date
 
@@ -202,10 +202,10 @@ Merging a branch to master - this should be done only in an exceptional circumst
     # When prompted change commit type to `squash` for all the commits except the top one
     # On the following screen replace pre-inserted comments by a single summary
 
-    git rebase master                                   # Rebase the task branch on top of master
-    git checkout master                                 # Switch to master branch
+    git rebase main                                     # Rebase the task branch on top of main
+    git checkout main                                   # Switch to main branch
     git merge -ff task/JIRA-XXX_Descriptive_branch_name # Fast-forward merge
-    git push                                            # Push master to remote
+    git push                                            # Push main to remote
 
     git push -d origin task/JIRA-XXX_Descriptive_branch_name   # Remove remote branch
     git branch -d task/JIRA-XXX_Descriptive_branch_name        # Remove local branch
@@ -252,7 +252,7 @@ Git hooks are located in `build/automation/etc/githooks/scripts` and executed au
 
 ### Git tags
 
-Aim at driving more complex deployment workflows by tags with an exception of the master branch where the continuous deployment to a development environment should be enabled by default.
+Aim at driving more complex deployment workflows by tags with an exception of the main branch where the continuous deployment to a development environment should be enabled by default.
 
 ## Pull request (merge request)
 
@@ -260,7 +260,7 @@ Aim at driving more complex deployment workflows by tags with an exception of th
 - Ensure all commits will be squashed and the source branch will be removed once the request is accepted
 - Notify the team on Slack to give your colleagues opportunity to review changes and share the knowledge
 - If the change has not been pair or mob programmed it must follow the code review process and be approved by at least one peer, all discussions must be resolved
-- A merge to master must be squashed and rebased on top, preserving the list of all commit messages
+- A merge to main must be squashed and rebased on top, preserving the list of all commit messages
 
 ## Code review
 

@@ -1,4 +1,4 @@
-NODE_VERSION = 16.2.0
+NODE_VERSION = 16.14.0
 
 # TODO: Print Node.js version in prompt always when `.nvmrc` file is present, not only if diffrent to global
 

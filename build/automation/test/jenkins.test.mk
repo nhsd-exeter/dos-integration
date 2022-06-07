@@ -28,20 +28,22 @@ test-jenkins-create-pipeline-from-template:
 	mk_test_skip
 
 test-jenkins-upload-workspace-archived:
-	# act
-	make jenkins-upload-workspace ARCHIVE=true
-	# assert
-	make aws-s3-download \
-		URI=$(JENKINS_WORKSPACE_BUCKET_URI)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz \
-		FILE=$(TMP_DIR_REL)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz.download
-	mk_test "-f $(TMP_DIR)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz.download"
+	mk_test_skip
+	# # act
+	# make jenkins-upload-workspace ARCHIVE=true
+	# # assert
+	# make aws-s3-download \
+	# 	URI=$(JENKINS_WORKSPACE_BUCKET_URI)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz \
+	# 	FILE=$(TMP_DIR_REL)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz.download
+	# mk_test "-f $(TMP_DIR)/workspace-$(PROJECT_NAME_SHORT)-$(BUILD_TIMESTAMP)-$$(printf "%04d\n" $(BUILD_ID))-$(BUILD_COMMIT_HASH).tar.gz.download"
 
 test-jenkins-upload-workspace-exploded:
-	# act
-	make jenkins-upload-workspace
-	# assert
-	id=$$(printf "%04d\n" $(BUILD_ID))
-	make aws-s3-download \
-		URI=$(JENKINS_WORKSPACE_BUCKET_URI)/$(BUILD_TIMESTAMP)-$${id}-$(BUILD_COMMIT_HASH)/README.md \
-		FILE=$(TMP_DIR_REL)/workspace-README.md.download
-	mk_test "-f $(TMP_DIR)/workspace-README.md.download"
+	mk_test_skip
+	# # act
+	# make jenkins-upload-workspace
+	# # assert
+	# id=$$(printf "%04d\n" $(BUILD_ID))
+	# make aws-s3-download \
+	# 	URI=$(JENKINS_WORKSPACE_BUCKET_URI)/$(BUILD_TIMESTAMP)-$${id}-$(BUILD_COMMIT_HASH)/README.md \
+	# 	FILE=$(TMP_DIR_REL)/workspace-README.md.download
+	# mk_test "-f $(TMP_DIR)/workspace-README.md.download"
