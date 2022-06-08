@@ -343,10 +343,20 @@ All `test`  Codebuild automations can be found in the AWS CodePipeline app in `T
 - uec-dos-int-tools-stress-test-stage
 - uec-dos-int-tools-load-test-stage
 
+More infromation can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+
 
 ### Deployment From the Command-line
 
     make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+
+### Branching Strategy
+
+More infromation can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+
+<img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
+
+
 
 ### Branch Naming for Automatic Deployments
 
