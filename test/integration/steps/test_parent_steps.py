@@ -21,8 +21,6 @@ from .utilities.change_event import (
     set_opening_times_change_event,
 )
 
-# from .utilities.constants import DENTIST_ORG_TYPE_ID, ORGANISATION_SUB_TYPES_KEY
-
 from .utilities.aws import get_logs, negative_log_check
 from .utilities.utils import (
     generate_correlation_id,
@@ -59,42 +57,6 @@ scenarios(
     "../features/F006_Opening_times.feature",
 )
 FAKER = Faker("en_GB")
-
-
-# @given("a Changed Event is valid", target_fixture="context")
-# def a_change_event_is_valid():
-#     context = {}
-#     context["change_event"] = create_change_event("pharmacy")
-#     return context
-
-
-# @given(parsers.parse('a "{org_type}" Changed Event is valid'), target_fixture="context")
-# def an_org_type_change_event(org_type):
-#     context = {}
-#     context["change_event"] = create_change_event(org_type.lower())
-#     if org_type.lower() == "dentist":
-#         context["change_event"]["OrganisationName"] = "Test Dentist"
-#         context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
-#         context["change_event"]["OrganisationType"] = "Dental practice"
-#         context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
-#             ORGANISATION_SUB_TYPES_KEY
-#         ][0]
-#     context["change_event"]["Address1"] = FAKER.street_name()
-#     return context
-
-
-# @given("a Dentist Changed Event is valid", target_fixture="context")
-# def valid_dentist_change_event():
-#     context = {}
-#     context["change_event"] = create_change_event("dentist")
-#     context["change_event"]["OrganisationName"] = "Test Dentist"
-#     context["change_event"]["OrganisationTypeId"] = DENTIST_ORG_TYPE_ID
-#     context["change_event"]["OrganisationType"] = "Dental practice"
-#     context["change_event"]["OrganisationSubType"] = get_service_type_data(DENTIST_ORG_TYPE_ID)[
-#         ORGANISATION_SUB_TYPES_KEY
-#     ][0]
-#     context["change_event"]["Address1"] = FAKER.street_name()
-#     return context
 
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
@@ -178,13 +140,6 @@ def a_standard_opening_time_change_event_is_valid():
     context["change_event"]["OpeningTimes"][-2]["ClosingTime"] = closing_time
     context["change_event"]["OpeningTimes"][-2]["IsOpen"] = True
     return context
-
-
-# @given("a Changed Event is aligned with Dos", target_fixture="context")
-# def a_change_event_is_valid_and_matches_dos():
-#     context = {}
-#     context["change_event"] = build_same_as_dos_change_event("pharmacy")
-#     return context
 
 
 @given(parsers.parse('a "{event_type}" Changed Event is aligned with Dos'), target_fixture="context")
