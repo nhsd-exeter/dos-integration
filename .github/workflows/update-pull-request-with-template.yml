@@ -1,9 +1,7 @@
 name: "Update Pull Request with Template"
 on:
-  push:
-    branches:
-    - "task/*"
-    - "test/*"
+  pull_request:
+    types: [created]
 
 jobs:
   update-pull-request:
