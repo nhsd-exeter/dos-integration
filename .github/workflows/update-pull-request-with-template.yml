@@ -1,7 +1,7 @@
 name: "Update Pull Request with Template"
 on:
   pull_request:
-    types: [created]
+    types: [created, opened, ready_for_review, synchronize, reopened]
 
 jobs:
   update-pull-request:
@@ -17,7 +17,7 @@ jobs:
         id: template
         uses: chuhlomin/render-template@v1.4
         with:
-          template: .github/pull-request-templates/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md
+          template: .github/PULL_REQUEST_TEMPLATE/task_pull_request_template.md
           vars: |
             BRANCH_NUMBER: ${{ env.BRANCH_NUMBER }}
             BRANCH_DESIGNATOR: ${{ env.BRANCH_DESIGNATOR }}
@@ -25,7 +25,7 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           base-branch-regex: 'develop'
-          head-branch-regex: ' ${{ github.ref_name }}'
+          head-branch-regex: '${{ github.ref_name }}'
           body-template: ${{ steps.template.outputs.result }}
           body-update-action: 'suffix'
           body-uppercase-base-match: false
