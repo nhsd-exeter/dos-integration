@@ -142,14 +142,14 @@ def a_standard_opening_time_change_event_is_valid():
     return context
 
 
-@given(parsers.parse('a "{event_type}" Changed Event is aligned with Dos'), target_fixture="context")
-def dos_event_from_scratch(event_type: str):
-    if event_type.lower() in ["pharmacy", "dentist"]:
+@given(parsers.parse('a "{org_type}" Changed Event is aligned with Dos'), target_fixture="context")
+def dos_event_from_scratch(org_type: str):
+    if org_type.lower() in ["pharmacy", "dentist"]:
         context = {}
-        context["change_event"] = build_same_as_dos_change_event(event_type)
+        context["change_event"] = build_same_as_dos_change_event(org_type.lower())
         return context
     else:
-        raise ValueError(f"Invalid event type '{event_type}' provided")
+        raise ValueError(f"Invalid event type '{org_type}' provided")
 
 
 @given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
