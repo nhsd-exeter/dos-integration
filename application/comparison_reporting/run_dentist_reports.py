@@ -46,7 +46,6 @@ def get_dentists() -> List[NHSEntity]:
     dentists = []
     for entity_data in dentists_data:
         id = str(entity_data.get("OrganisationID"))
-
         nhs_entity = NHSEntity({})
         nhs_entity.odscode = entity_data.get("OrganisationCode")
         nhs_entity.org_name = entity_data.get("OrganisationName")

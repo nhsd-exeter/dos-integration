@@ -32,18 +32,12 @@ def test_field_names():
         "name",
         "odscode",
         "address",
-        "town",
         "postcode",
         "web",
-        "email",
-        "fax",
-        "nonpublicphone",
         "typeid",
         "parentid",
         "subregionid",
         "statusid",
-        "createdtime",
-        "modifiedtime",
         "publicphone",
         "publicname",
         "servicename",
@@ -436,8 +430,7 @@ def test_get_dos_locations(mock_query_dos_db):
     assert dos_location.longitude == 2.0
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT id, postcode, easting, northing, latitude, longitude, postaltown "
-        "FROM locations WHERE postcode ~* %(pc_regex)s",
+        "SELECT id, postcode, easting, northing, latitude, longitude" "FROM locations WHERE postcode ~* %(pc_regex)s",
         {"pc_regex": " *".join(postcode.replace(" ", "").upper())},
     )
 

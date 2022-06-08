@@ -1,4 +1,4 @@
-from json import load
+import json
 from os import environ
 from random import choices, randint, uniform
 
@@ -9,10 +9,10 @@ from pytest import fixture
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
+std_event_path = "application/event_processor/tests/STANDARD_EVENT.json"
 
-with open(STD_EVENT_PATH, "r") as file:
-    PHARMACY_STANDARD_EVENT = load(file)
+with open(std_event_path, "r") as file:
+    PHARMACY_STANDARD_EVENT = json.load(file)
 
 
 def dummy_dos_service(**kwargs) -> DoSService:
