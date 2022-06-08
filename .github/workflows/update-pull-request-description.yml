@@ -1,4 +1,4 @@
-name: "Update Pull Request with Template"
+name: "Update Pull Request description with Template"
 on:
   pull_request:
     types: [created]
