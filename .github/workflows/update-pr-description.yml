@@ -9,10 +9,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Get Branch Name
+        uses: mdecoleman/pr-branch-name@1.2.0
+        id: branch_name
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Get branch number
-        run: echo "BRANCH_NUMBER=$(echo ${{ github.event.pull_request.head.ref }} | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}')" >> $GITHUB_ENV
+        run: echo "BRANCH_NUMBER=$(echo ${{ steps.branch_name.outputs.branch }} | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}')" >> $GITHUB_ENV
       - name: Get branch designator
-        run: echo "BRANCH_DESIGNATOR=$(echo ${{ github.event.pull_request.head.ref }} | sed 's|/.*||')" >> $GITHUB_ENV
+        run: echo "BRANCH_DESIGNATOR=$(echo ${{ steps.branch_name.outputs.branch }} | sed 's|/.*||')" >> $GITHUB_ENV
       - name: Render Pull Request template
         id: template
         uses: chuhlomin/render-template@v1.4
@@ -25,7 +30,6 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           base-branch-regex: 'develop'
-          head-branch-regex: ' ${{ github.event.pull_request.head.ref}}'
+          head-branch-regex: '${{ steps.branch_name.outputs.branch }}.*'
           body-template: ${{ steps.template.outputs.result }}
-          body-update-action: 'suffix'
-          body-uppercase-base-match: false
+          body-update-action: 'replace'
