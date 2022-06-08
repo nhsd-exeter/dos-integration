@@ -146,7 +146,7 @@ def a_standard_opening_time_change_event_is_valid():
 def dos_event_from_scratch(event_type: str):
     if event_type.lower() in ["pharmacy", "dentist"]:
         context = {}
-        context["change_event"] = build_same_as_dos_change_event("pharmacy")
+        context["change_event"] = build_same_as_dos_change_event(event_type)
         return context
     else:
         raise ValueError(f"Invalid event type '{event_type}' provided")
