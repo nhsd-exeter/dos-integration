@@ -1,7 +1,8 @@
 [tool.vulture]
 make_whitelist = true
 paths=["."]
-exclude = ["authoriser/tests",
+exclude = [
+  "authoriser/tests",
   "common/tests",
   "comparison_reporting/tests",
   "cr_fifo_dlq_handler/tests",
@@ -12,20 +13,12 @@ exclude = ["authoriser/tests",
   "fifo_dlq_handler/tests",
   "orchestrator/tests",
   "slack_messenger/tests",
-  "test_db_checker_handler/tests",
-  "common/constants",
-  "common/types",
-  "common/nhs",
-  "common/dos",
-  "common/opening_times",
-  "comparison_reporting",
-  "dos_api_gateway/dos_api_gateway"]
-# TODO: Remove unused variables in the following files:
-# - common/nhs
-# - common/dos
-# - common/opening_times
-# - comparison_reporting
-# - dos_api_gateway/dos_api_gateway
-
+  "test_db_checker_handler/tests"
+  ]
 sort_by_size = true
-ignore_names = ["lambda_handler", "*db_connection"]
+ignore_names = [
+  "lambda_handler",
+  "*db_connection",
+  "field_names",
+  "recipient_id"
+  ]

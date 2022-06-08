@@ -1,7 +1,6 @@
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from itertools import groupby
 from typing import Set, List, Union, Iterable, Dict
-from datetime import datetime
 from collections import defaultdict
 
 from aws_lambda_powertools import Logger
@@ -24,18 +23,10 @@ class DoSService:
     name: str
     odscode: str
     address: str
-    town: str
     postcode: str
     web: str
-    email: str
-    fax: str
-    nonpublicphone: str
     typeid: int
-    parentid: int
-    subregionid: int
     statusid: int
-    createdtime: datetime
-    modifiedtime: datetime
     publicphone: str
     publicname: str
     servicename: str
@@ -49,7 +40,6 @@ class DoSService:
         Args:
             db_cursor_row (dict): row from db as key/val pairs
         """
-        self.data = db_cursor_row
 
         for row_key, row_value in db_cursor_row.items():
             setattr(self, row_key, row_value)
@@ -98,7 +88,6 @@ class DoSLocation:
     northing: int
     latitude: float
     longitude: float
-    postaltown: str = field(default=None)
 
     def normal_postcode(self) -> str:
         return self.postcode.replace(" ", "").upper()
@@ -131,8 +120,8 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         named_args = {"ODS": f"{odscode}%"}
 
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+        "statusid, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
         f" WHERE {conditions}"
     )
@@ -239,8 +228,8 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
 
     # Find base services
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid, "
-        "parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename "
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "
+        "statusid, publicphone, publicname, st.name servicename "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
         f"WHERE typeid IN ({','.join(map(str, typeids))}) "
         f"AND statusid = 1 AND odscode IS NOT NULL"

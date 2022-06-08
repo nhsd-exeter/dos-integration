@@ -1,18 +1,18 @@
-import json
-import os
+from json import load
+from os import environ
 from random import choices, randint, uniform
 
-import boto3
+from boto3 import client
 from moto import mock_dynamodb2
 from pytest import fixture
 
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-std_event_path = "application/event_processor/tests/STANDARD_EVENT.json"
+STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
 
-with open(std_event_path, "r") as file:
-    PHARMACY_STANDARD_EVENT = json.load(file)
+with open(STD_EVENT_PATH, "r") as file:
+    PHARMACY_STANDARD_EVENT = load(file)
 
 
 def dummy_dos_service(**kwargs) -> DoSService:
@@ -68,18 +68,18 @@ def change_event():
 @fixture
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
-    os.environ["AWS_REGION"] = "us-east-2"
+    environ["AWS_ACCESS_KEY_ID"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    environ["AWS_SECURITY_TOKEN"] = "testing"
+    environ["AWS_SESSION_TOKEN"] = "testing"
+    environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
+    environ["AWS_REGION"] = "us-east-2"
 
 
 @fixture
 def dynamodb_client(aws_credentials):
     with mock_dynamodb2():
-        conn = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
+        conn = client("dynamodb", region_name=environ["AWS_REGION"])
         yield conn
 
 

@@ -20,7 +20,6 @@ def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
     """Takes a url of a csv to download from the web and then returns it as a list of dictionaries."""
     logger.info(f"Attempting to download file: {url}")
     resp = requests.get(url)
-    resp.encoding = "ISO-8859-1"
     return [
         {k: v if v != "" else None for k, v in row.items()}
         for row in csv.DictReader(StringIO(resp.text), skipinitialspace=True, delimiter=delimiter)
