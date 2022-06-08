@@ -17,7 +17,7 @@ jobs:
         id: template
         uses: chuhlomin/render-template@v1.4
         with:
-          template: .github/pull-request-templates/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md
+          template: .github/PULL_REQUEST_TEMPLATE/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md
           vars: |
             BRANCH_NUMBER: ${{ env.BRANCH_NUMBER }}
             BRANCH_DESIGNATOR: ${{ env.BRANCH_DESIGNATOR }}
