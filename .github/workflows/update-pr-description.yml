@@ -29,7 +29,7 @@ jobs:
       - uses: tzkhan/pr-update-action@v2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          base-branch-regex: 'develop'
-          head-branch-regex: '${{ steps.branch_name.outputs.branch }}.*'
+          base-branch-regex: '.*'
+          head-branch-regex: '${{ env.BRANCH_DESIGNATOR }}/.*'
           body-template: ${{ steps.template.outputs.result }}
           body-update-action: 'replace'
