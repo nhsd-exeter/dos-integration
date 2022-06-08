@@ -28,5 +28,3 @@ Delete not appropriate
 
 - [ ] I can confirm the changes have been tested or approved by a tester
 - [ ] I have checked any ignore commands for code linting tools and I agree that the code is safe
-
-**Note: Please don't approve your own pull requests if avoidable.**

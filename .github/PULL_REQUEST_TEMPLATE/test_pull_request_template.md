@@ -20,5 +20,3 @@ Why do these tests need to exist?/When should the test be run?
 - [ ] I am confident the tests are stable and have passed
 - [ ] I am confident the tests will be run in the development pipeline
 - [ ] I believe the tests developed in a way which makes them reusable and maintainable
-
-**Note: Please don't approve your own pull requests if avoidable.**

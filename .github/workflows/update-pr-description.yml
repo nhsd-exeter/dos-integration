@@ -1,7 +1,7 @@
 name: "Update Pull Request with Template"
 on:
   pull_request:
-    types: [created, edited, reopened, synchronize]
+    types: [created]
 
 jobs:
   update-pull-request:
@@ -29,7 +29,6 @@ jobs:
       - uses: tzkhan/pr-update-action@v2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          base-branch-regex: '.*'
           head-branch-regex: '${{ env.BRANCH_DESIGNATOR }}/.*'
           body-template: ${{ steps.template.outputs.result }}
           body-update-action: 'replace'
