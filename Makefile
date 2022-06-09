@@ -703,3 +703,39 @@ github-actions-best-practices:
 
 checkov-secret-scanning:
 	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
+
+docker-security-scan: ### Fetches container scan report and returns findings - Mandatory REPOSITORY, TAG=[image tag], VULNERABILITY_LEVELS=[LOW,MEDIUM,HIGH,CRITICAL]
+	make -s aws-ecr-wait-for-image-scan-complete REPOSITORY=$(REPOSITORY) TAG=$(TAG)
+	SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG) | jq '.imageScanFindings.findingSeverityCounts')
+	CRITICAL=$$(echo $$SCAN_FINDINGS | jq '.CRITICAL')
+	HIGH=$$(echo $$SCAN_FINDINGS | jq '.HIGH')
+	MEDIUM=$$(echo $$SCAN_FINDINGS | jq '.MEDIUM')
+	LOW=$$(echo $$SCAN_FINDINGS | jq '.LOW')
+	INFORMATIONAL=$$(echo $$SCAN_FINDINGS | jq '.INFORMATIONAL')
+	UNDEFINED=$$(echo $$SCAN_FINDINGS | jq '.UNDEFINED')
+	if [ $$CRITICAL != null ] || [ $$HIGH != null ]|| [ $$MEDIUM != null ]; then
+		echo Docker image contains vulnerabilities at CRITICAL, HIGH or MEDIUM
+		echo "CRITICAL: $$CRITICAL"
+		echo "HIGH: $$HIGH"
+		echo "MEDIUM: $$MEDIUM"
+		echo "For more details visit https://$(AWS_REGION).console.aws.amazon.com/ecr/repositories/private/$(AWS_ACCOUNT_ID_MGMT)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY)?region=$(AWS_REGION)"
+		exit 1
+	fi
+
+aws-ecr-wait-for-image-scan-complete: ### Waits for ECR image scan report - REPOSITORY, TAG=[image tag]
+	make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr wait image-scan-complete \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
+
+aws-ecr-describe-image-scan-findings: ### Describes ECR image scan report - REPOSITORY, TAG=[image tag]
+		make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr describe-image-scan-findings \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
