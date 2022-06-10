@@ -1,0 +1,34 @@
+name: "Update Pull Request description with Template"
+on:
+  pull_request:
+    types: [created]
+
+jobs:
+  update-pull-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Get Branch Name
+        uses: mdecoleman/pr-branch-name@1.2.0
+        id: branch_name
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get branch number
+        run: echo "BRANCH_NUMBER=$(echo ${{ steps.branch_name.outputs.branch }} | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}')" >> $GITHUB_ENV
+      - name: Get branch designator
+        run: echo "BRANCH_DESIGNATOR=$(echo ${{ steps.branch_name.outputs.branch }} | sed 's|/.*||')" >> $GITHUB_ENV
+      - name: Render Pull Request template
+        id: template
+        uses: chuhlomin/render-template@v1.4
+        with:
+          template: .github/pull-request-templates/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md
+          vars: |
+            BRANCH_NUMBER: ${{ env.BRANCH_NUMBER }}
+            BRANCH_DESIGNATOR: ${{ env.BRANCH_DESIGNATOR }}
+      - uses: tzkhan/pr-update-action@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          head-branch-regex: '${{ env.BRANCH_DESIGNATOR }}/.*'
+          body-template: ${{ steps.template.outputs.result }}
+          body-update-action: 'replace'
