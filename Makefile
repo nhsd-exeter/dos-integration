@@ -61,13 +61,13 @@ populate-deployment-variables:
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
 
 build-lambda: ### Build lambda docker image - mandatory: NAME
-	UNDERSCORE_NAME=$$(echo $(NAME) | tr '-' '_')
-	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
-	cd $(APPLICATION_DIR)/$$UNDERSCORE_NAME
+	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
+	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
+	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make docker-image GENERIC_IMAGE_NAME=lambda BUILD_ARGS="--build-arg python_entrypoint_file=$$UNDERSCORE_NAME"
+	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 unit-test-local:
