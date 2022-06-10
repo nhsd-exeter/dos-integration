@@ -1,7 +1,7 @@
 name: "Update Pull Request description with Template"
 on:
   pull_request:
-    types: [created]
+    types: [opened]
 
 jobs:
   update-pull-request:
