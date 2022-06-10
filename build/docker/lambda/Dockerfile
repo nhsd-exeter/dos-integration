@@ -4,6 +4,7 @@ COPY assets/requirements.txt /
 # Install Python requirements
 RUN pip install -r /requirements.txt --upgrade
 # Copy function code
-ADD assets/authoriser-app.tar.gz "/var/task"
+ADD assets/app.tar.gz "/var/task"
+ENV python_entrypoint_file=$python_entrypoint_file
 # Set the CMD to your handler
-CMD [ "authoriser.lambda_handler" ]
+CMD [ "event_sender." ]

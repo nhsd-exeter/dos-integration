@@ -80,6 +80,9 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
 	# Dockerfile
 	make NAME=$(NAME) \
@@ -217,6 +220,7 @@ docker-prune: docker-clean ### Clean Docker resources - optional: ALL=true
 
 docker-create-dockerfile: ### Create effective Dockerfile - mandatory: NAME; optional FILE=[Dockerfile name, defaults to Dockerfile]
 	dir=$$(pwd)
+	make _docker-get-dir
 	cd $$(make _docker-get-dir)
 	cat $(or $(FILE), Dockerfile) $(DOCKER_LIB_DIR)/image/Dockerfile.metadata > Dockerfile.effective
 	sed -i " \
@@ -797,6 +801,8 @@ _docker-get-dir:
 		echo $(DOCKER_CUSTOM_DIR)/$(NAME)
 	elif [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ]; then
 		echo $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ ! -z $(GENERIC_IMAGE_NAME) ] ; then
+		echo $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 	else
 		echo $(DOCKER_DIR)/$(NAME)
 	fi
