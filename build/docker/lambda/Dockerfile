@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.9
+FROM amazon/aws-lambda-python:3.9
 # Update all packages
 RUN yum update -y
 # Copy Python requirements

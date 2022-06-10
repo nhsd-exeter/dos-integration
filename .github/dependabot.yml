@@ -14,78 +14,20 @@ updates:
       interval: "daily"
     target-branch: "develop"
 
-# AWS ECR Gallery not working yet for Docker Dependabot
-  # https://github.com/dependabot/dependabot-core/issues/4212
+  # Docker Dependencies
+  - package-ecosystem: "docker"
+    directory: "/build/docker/lambda"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
 
-  # # Docker Dependencies
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/authoriser"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/cr-fifo-dlq-handler"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/dos-api-gateway"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/event-processor"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/event-replay"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/event-sender"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/fifo-dlq-handler"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/orchestrator"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/slack-messenger"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-  # - package-ecosystem: "docker"
-  #   directory: "/build/docker/test-db-checker-handler"
-  #   schedule:
-  #     interval: "daily"
-  #   target-branch: "develop"
-
-# Docker Dependencies
   - package-ecosystem: "docker"
     directory: "/build/docker/tester"
     schedule:
       interval: "daily"
     target-branch: "develop"
 
-# Terraform Dependencies
+  # Terraform Dependencies
   - package-ecosystem: "terraform"
     directory: "/infrastructure/modules/s3"
     schedule:

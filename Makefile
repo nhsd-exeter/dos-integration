@@ -231,17 +231,7 @@ clean: # Runs whole project clean
 		terraform-clean \
 		serverless-clean \
 		python-clean \
-		event-sender-clean \
-		event-processor-clean \
-		fifo-dlq-handler-clean \
-		slack-messenger-clean \
-		orchestrator-clean \
-		cr-fifo-dlq-handler-clean \
-		event-replay-clean \
-		test-db-checker-handler-clean \
 		tester-clean \
-		authoriser-clean \
-		dos-api-gateway-clean \
 		performance-test-clean
 
 # ==============================================================================
