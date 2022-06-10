@@ -28,7 +28,7 @@ resource "aws_codepipeline" "codepipeline" {
   }
 
   stage {
-    name = "UnitTests"
+    name = "Unit_Tests"
     action {
       name            = "UnitTests"
       category        = "Build"
@@ -59,7 +59,7 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
   stage {
-    name = "Deploy"
+    name = "Deploy_Nonprod_Environments"
     dynamic "action" {
       for_each = local.deploy_envs
       content {
@@ -89,7 +89,7 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
   stage {
-    name = "SetupDoSIntegrationEnvironment"
+    name = "Setup_DoS_Integration_Environment"
     action {
       name            = "SetupIntegrationTest"
       category        = "Build"
@@ -116,6 +116,28 @@ resource "aws_codepipeline" "codepipeline" {
         configuration = {
           ProjectName = "${var.project_id}-${var.environment}-${action.key}"
         }
+      }
+    }
+  }
+  stage {
+    name = "Deploy_Prod_Environments"
+    action {
+      name            = "Deploy_Demo"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = "${var.project_id}-${var.environment}-deploy-demo-stage"
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "ENVIRONMENT"
+            value = "demo"
+            type  = "PLAINTEXT"
+          }
+        ])
       }
     }
   }
