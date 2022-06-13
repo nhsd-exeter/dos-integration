@@ -220,7 +220,6 @@ docker-prune: docker-clean ### Clean Docker resources - optional: ALL=true
 
 docker-create-dockerfile: ### Create effective Dockerfile - mandatory: NAME; optional FILE=[Dockerfile name, defaults to Dockerfile]
 	dir=$$(pwd)
-	make _docker-get-dir
 	cd $$(make _docker-get-dir)
 	cat $(or $(FILE), Dockerfile) $(DOCKER_LIB_DIR)/image/Dockerfile.metadata > Dockerfile.effective
 	sed -i " \
