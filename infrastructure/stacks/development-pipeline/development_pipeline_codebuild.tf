@@ -98,10 +98,6 @@ resource "aws_codebuild_project" "di_build" {
       value = "local"
     }
     environment_variable {
-      name  = "BUILD_TARGET"
-      value = "${each.key}-build"
-    }
-    environment_variable {
       name  = "BUILD_ITEM_NAME"
       value = each.key
     }

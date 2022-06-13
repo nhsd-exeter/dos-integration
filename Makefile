@@ -9,26 +9,26 @@ setup: project-config # Set up project
 	make tester-build
 
 build: # Build lambdas
-	make -s event-sender-build \
-		event-processor-build \
-		fifo-dlq-handler-build \
-		cr-fifo-dlq-handler-build \
-		orchestrator-build \
-		slack-messenger-build \
-		authoriser-build \
-		dos-api-gateway-build \
-		event-replay-build \
-		test-db-checker-handler-build
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-processor
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-replay
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-sender
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=slack-messenger
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=test-db-checker-handler
 
-start: # Stop project
-	make project-start
-
-stop: # Stop project
-	make project-stop
-
-restart: stop start # Restart project
-
-log: project-log # Show project logs
+build-lambda: ### Build lambda docker image - mandatory: NAME
+	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
+	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
+	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
+	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
+	cd $(PROJECT_DIR)
+	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
@@ -59,16 +59,6 @@ populate-deployment-variables:
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
-
-build-lambda: ### Build lambda docker image - mandatory: NAME
-	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
-	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
-	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
-	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME
-	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 unit-test-local:
 	pyenv local .venv
@@ -224,7 +214,6 @@ create-dentist-reports: # Must use a PROFILE argument with appropriate DB detail
 		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 	"
 
-
 clean: # Runs whole project clean
 	make \
 		docker-clean \
@@ -237,17 +226,11 @@ clean: # Runs whole project clean
 # ==============================================================================
 # Event Sender
 
-event-sender-build: ### Build event sender lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-sender
-
 event-sender-build-and-deploy: ### Build and deploy event sender lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-sender
 
 # ==============================================================================
 # Slack Messenger
-
-slack-messenger-build: ### Build slack messenger lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=slack-messenger
 
 slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
@@ -255,17 +238,11 @@ slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda do
 # ==============================================================================
 # Event Processor
 
-event-processor-build: ### Build event processor lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-processor
-
 event-processor-build-and-deploy: ### Build and deploy event processor lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-processor
 
 # ==============================================================================
 # First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
-
-fifo-dlq-handler-build: ### Build fifo dlq handler lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler
 
 fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=fifo-dlq-handler
@@ -273,17 +250,11 @@ fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda 
 # ==============================================================================
 # CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
 
-cr-fifo-dlq-handler-build: ### Build cr fifo dlq handler lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler
-
 cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=cr-fifo-dlq-handler
 
 # ==============================================================================
 # Event Replay lambda (event-replay)
-
-event-replay-build: ### Build event replay lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-replay
 
 event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-replay
@@ -291,32 +262,17 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 # ==============================================================================
 # Test DB Checker Handler (test-db-checker-handler)
 
-test-db-checker-handler-build: ### Build test db checker handler lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=test-db-checker-handler
-
 test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=test-db-checker-handler
 
 # ==============================================================================
 # Orchestrator
 
-orchestrator-build: ### Build orchestrator lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator
-
 orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
-# Authoriser (for dos api gateway mock)
-
-authoriser-build: ### Build authoriser lambda docker image
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
-
-# ==============================================================================
 # DoS API Gateway Mock lambda
-
-dos-api-gateway-build:
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
 
 mock-dos-api-gateway-deployment:
 	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
@@ -334,22 +290,22 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
 
 build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
-	make $(FUNCTION_NAME)-build VERSION=$(BUILD_TAG)
+	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
 	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
-	make docker-push NAME=event-sender
-	make docker-push NAME=event-processor
-	make docker-push NAME=fifo-dlq-handler
-	make docker-push NAME=cr-fifo-dlq-handler
-	make docker-push NAME=event-replay
-	make docker-push NAME=test-db-checker-handler
-	make docker-push NAME=orchestrator
 	make docker-push NAME=authoriser
+	make docker-push NAME=cr-fifo-dlq-handler
 	make docker-push NAME=dos-api-gateway
+	make docker-push NAME=event-processor
+	make docker-push NAME=event-replay
+	make docker-push NAME=event-sender
+	make docker-push NAME=fifo-dlq-handler
+	make docker-push NAME=orchestrator
 	make docker-push NAME=slack-messenger
+	make docker-push NAME=test-db-checker-handler
 
 push-tester-image:
 	make docker-push NAME=tester
