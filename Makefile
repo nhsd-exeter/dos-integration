@@ -214,7 +214,6 @@ create-dentist-reports: # Must use a PROFILE argument with appropriate DB detail
 		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 	"
 
-
 clean: # Runs whole project clean
 	make \
 		docker-clean \
