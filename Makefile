@@ -10,13 +10,13 @@ setup: project-config # Set up project
 
 build: # Build lambdas
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler-build
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-processor
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-replay
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-sender
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler-build
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator-build
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=slack-messenger
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=test-db-checker-handler
 
@@ -27,7 +27,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME
+	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.lambda_handler
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 deploy: # Deploys whole project - mandatory: PROFILE
@@ -290,7 +290,7 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
 
 build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
-	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG)
+	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
 	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
