@@ -32,18 +32,10 @@ def test_field_names():
         "name",
         "odscode",
         "address",
-        "town",
         "postcode",
         "web",
-        "email",
-        "fax",
-        "nonpublicphone",
         "typeid",
-        "parentid",
-        "subregionid",
         "statusid",
-        "createdtime",
-        "modifiedtime",
         "publicphone",
         "publicname",
         "servicename",
@@ -124,10 +116,9 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db)
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-            " WHERE odscode LIKE %(ODS)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, publicphone, publicname, st.name servicename FROM services s "
+            "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         vars={"ODS": f"{odscode[0:5]}%"},
     )
@@ -187,10 +178,9 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-            " WHERE odscode = %(ODS)s or odscode LIKE %(ODS7)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
+            "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
+            "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
         vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
     )
@@ -212,10 +202,9 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
     assert response == []
     mock_query_dos_db.assert_called_once_with(
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-            " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
-            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-            " WHERE odscode LIKE %(ODS)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, "
+            "publicphone, publicname, st.name servicename FROM services s LEFT JOIN servicetypes"
+            " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         vars={"ODS": f"{odscode[0:5]}%"},
     )
@@ -436,8 +425,7 @@ def test_get_dos_locations(mock_query_dos_db):
     assert dos_location.longitude == 2.0
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT id, postcode, easting, northing, latitude, longitude, postaltown "
-        "FROM locations WHERE postcode ~* %(pc_regex)s",
+        "SELECT id, postcode, easting, northing, latitude, longitude FROM locations WHERE postcode ~* %(pc_regex)s",
         {"pc_regex": " *".join(postcode.replace(" ", "").upper())},
     )
 

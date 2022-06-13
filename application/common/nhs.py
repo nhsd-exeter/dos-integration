@@ -48,8 +48,6 @@ class NHSEntity:
         self.odscode = entity_data.get("ODSCode")
         self.postcode = entity_data.get("Postcode")
         self.parent_org_name = entity_data.get("ParentOrganisation", {}).get("OrganisationName")
-        self.city = entity_data.get("City")
-        self.county = entity_data.get("County")
         self.address_lines = [
             line
             for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]

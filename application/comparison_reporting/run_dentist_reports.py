@@ -46,9 +46,7 @@ def get_dentists() -> List[NHSEntity]:
     dentists = []
     for entity_data in dentists_data:
         id = str(entity_data.get("OrganisationID"))
-
         nhs_entity = NHSEntity({})
-        nhs_entity.org_id = entity_data.get("OrganisationID")
         nhs_entity.odscode = entity_data.get("OrganisationCode")
         nhs_entity.org_name = entity_data.get("OrganisationName")
         nhs_entity.org_type = entity_data.get("OrganisationType")
@@ -56,8 +54,6 @@ def get_dentists() -> List[NHSEntity]:
         nhs_entity.org_status = entity_data.get("OrganisationStatus")
         nhs_entity.postcode = entity_data.get("Postcode")
         nhs_entity.parent_org_name = entity_data.get("ParentName")
-        nhs_entity.city = entity_data.get("City")
-        nhs_entity.county = entity_data.get("County")
         nhs_entity.address_lines = [
             line
             for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]

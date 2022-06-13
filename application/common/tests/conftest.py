@@ -1,8 +1,8 @@
 import json
-import os
+from os import environ
 from random import choices, randint, uniform
 
-import boto3
+from boto3 import client
 from moto import mock_dynamodb2
 from pytest import fixture
 
@@ -55,7 +55,6 @@ def dummy_dos_location() -> DoSLocation:
         northing=randint(1111, 9999),
         latitude=uniform(-200.0, 200.0),
         longitude=uniform(-200.0, 200.0),
-        postaltown="".join(choices("ABCDEFGHIJKLM", k=8)),
     )
 
 
@@ -68,18 +67,18 @@ def change_event():
 @fixture
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
-    os.environ["AWS_REGION"] = "us-east-2"
+    environ["AWS_ACCESS_KEY_ID"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    environ["AWS_SECURITY_TOKEN"] = "testing"
+    environ["AWS_SESSION_TOKEN"] = "testing"
+    environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
+    environ["AWS_REGION"] = "us-east-2"
 
 
 @fixture
 def dynamodb_client(aws_credentials):
     with mock_dynamodb2():
-        conn = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
+        conn = client("dynamodb", region_name=environ["AWS_REGION"])
         yield conn
 
 
