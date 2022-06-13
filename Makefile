@@ -60,6 +60,16 @@ populate-deployment-variables:
 	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
 
+build-lambda: ### Build lambda docker image - mandatory: NAME
+	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
+	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
+	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
+	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
+	cd $(PROJECT_DIR)
+	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME
+	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
+
 unit-test-local:
 	pyenv local .venv
 	pip install -r application/requirements-dev.txt -r application/event_processor/requirements.txt -r application/event_replay/requirements.txt -r application/event_sender/requirements.txt -r application/fifo_dlq_handler/requirements.txt
@@ -221,32 +231,14 @@ clean: # Runs whole project clean
 		terraform-clean \
 		serverless-clean \
 		python-clean \
-		event-sender-clean \
-		event-processor-clean \
-		fifo-dlq-handler-clean \
-		slack-messenger-clean \
-		orchestrator-clean \
-		cr-fifo-dlq-handler-clean \
-		event-replay-clean \
-		test-db-checker-handler-clean \
 		tester-clean \
-		authoriser-clean \
-		dos-api-gateway-clean \
 		performance-test-clean
 
 # ==============================================================================
 # Event Sender
 
 event-sender-build: ### Build event sender lambda docker image
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_sender
-	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-sender
-
-event-sender-clean: ### Clean event sender lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-sender/assets/*.tar.gz $(DOCKER_DIR)/event-sender/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-sender
 
 event-sender-build-and-deploy: ### Build and deploy event sender lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-sender
@@ -255,15 +247,7 @@ event-sender-build-and-deploy: ### Build and deploy event sender lambda docker i
 # Slack Messenger
 
 slack-messenger-build: ### Build slack messenger lambda docker image
-	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/slack-messenger/assets/requirements.txt
-	cd $(APPLICATION_DIR)/slack_messenger
-	tar -czf $(DOCKER_DIR)/slack-messenger/assets/slack-messenger-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=slack-messenger
-
-slack-messenger-clean: ### Clean slack messenger lambda docker image directory
-	rm -f $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz $(DOCKER_DIR)/slack-messenger/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=slack-messenger
 
 slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
@@ -272,15 +256,7 @@ slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda do
 # Event Processor
 
 event-processor-build: ### Build event processor lambda docker image
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/event-processor/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_processor
-	tar -czf $(DOCKER_DIR)/event-processor/assets/event-processor-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-processor
-
-event-processor-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-processor/assets/*.tar.gz $(DOCKER_DIR)/event-processor/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-processor
 
 event-processor-build-and-deploy: ### Build and deploy event processor lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-processor
@@ -289,15 +265,7 @@ event-processor-build-and-deploy: ### Build and deploy event processor lambda do
 # First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
 
 fifo-dlq-handler-build: ### Build fifo dlq handler lambda docker image
-	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/fifo-dlq-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/fifo_dlq_handler
-	tar -czf $(DOCKER_DIR)/fifo-dlq-handler/assets/fifo-dlq-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=fifo-dlq-handler
-
-fifo-dlq-handler-clean: ### Clean fifo dlq handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/fifo-dlq-handler/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler
 
 fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=fifo-dlq-handler
@@ -306,15 +274,7 @@ fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda 
 # CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
 
 cr-fifo-dlq-handler-build: ### Build cr fifo dlq handler lambda docker image
-	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/cr_fifo_dlq_handler
-	tar -czf $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/cr-fifo-dlq-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=cr-fifo-dlq-handler
-
-cr-fifo-dlq-handler-clean: ### Clean cr fifo dlq handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler
 
 cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=cr-fifo-dlq-handler
@@ -323,15 +283,7 @@ cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler l
 # Event Replay lambda (event-replay)
 
 event-replay-build: ### Build event replay lambda docker image
-	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/event-replay/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_replay
-	tar -czf $(DOCKER_DIR)/event-replay/assets/event-replay-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-replay
-
-event-replay-clean: ### Clean event replay lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-replay/assets/*.tar.gz $(DOCKER_DIR)/event-replay/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-replay
 
 event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-replay
@@ -340,15 +292,7 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 # Test DB Checker Handler (test-db-checker-handler)
 
 test-db-checker-handler-build: ### Build test db checker handler lambda docker image
-	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/test-db-checker-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/test_db_checker_handler
-	tar -czf $(DOCKER_DIR)/test-db-checker-handler/assets/test-db-checker-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=test-db-checker-handler
-
-test-db-checker-handler-clean: ### Clean test db checker handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/test-db-checker-handler/assets/*.tar.gz $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=test-db-checker-handler
 
 test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=test-db-checker-handler
@@ -357,15 +301,7 @@ test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker h
 # Orchestrator
 
 orchestrator-build: ### Build orchestrator lambda docker image
-	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
-	cd $(APPLICATION_DIR)/orchestrator
-	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=orchestrator
-
-orchestrator-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/orchestrator/assets/*.tar.gz $(DOCKER_DIR)/orchestrator/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator
 
 orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
@@ -374,29 +310,13 @@ orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker i
 # Authoriser (for dos api gateway mock)
 
 authoriser-build: ### Build authoriser lambda docker image
-	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
-	cd $(APPLICATION_DIR)/authoriser
-	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
-		--exclude=tests *.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=authoriser
-
-authoriser-clean: ### Clean authoriser lambda docker image directory
-	rm -f $(DOCKER_DIR)/authoriser/assets/*.tar.gz $(DOCKER_DIR)/authoriser/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
 
 # ==============================================================================
 # DoS API Gateway Mock lambda
 
 dos-api-gateway-build:
-	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
-	cd $(APPLICATION_DIR)/dos_api_gateway
-	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
-		--exclude=tests *.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=dos-api-gateway
-
-dos-api-gateway-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
 
 mock-dos-api-gateway-deployment:
 	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock

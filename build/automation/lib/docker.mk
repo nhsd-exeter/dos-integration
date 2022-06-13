@@ -80,6 +80,9 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
 	# Dockerfile
 	make NAME=$(NAME) \
@@ -243,6 +246,7 @@ docker-create-dockerfile: ### Create effective Dockerfile - mandatory: NAME; op
 		s#FROM postman/newman:latest#FROM postman/newman:$(DOCKER_POSTMAN_NEWMAN_VERSION)#g; \
 		s#FROM python:latest#FROM python:$(DOCKER_PYTHON_VERSION)#g; \
 		s#FROM rodolpheche/wiremock:latest#FROM rodolpheche/wiremock:$(DOCKER_WIREMOCK_VERSION)#g; \
+		s#CMD_TO_RPLACE#$(CMD)#g; \
 	" Dockerfile.effective
 	cd $$dir
 
@@ -797,6 +801,8 @@ _docker-get-dir:
 		echo $(DOCKER_CUSTOM_DIR)/$(NAME)
 	elif [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ]; then
 		echo $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ ! -z $(GENERIC_IMAGE_NAME) ] ; then
+		echo $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 	else
 		echo $(DOCKER_DIR)/$(NAME)
 	fi
