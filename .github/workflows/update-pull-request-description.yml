@@ -23,7 +23,7 @@ jobs:
         run: echo "TEMPLATE_NAME=$(cat .github/PULL_REQUEST_TEMPLATE/${{ steps.branch_name.outputs.branch }}_pull_request_template.md > /dev/null 2>&1 && echo ${{ steps.branch_name.outputs.branch }} || echo task)" >> $GITHUB_ENV
       - name: Render Pull Request template
         id: template
-        uses: chuhlomin/render-template@v1.4
+        uses: chuhlomin/render-template@v1.5
         with:
           template: .github/PULL_REQUEST_TEMPLATE/${{ env.TEMPLATE_NAME }}
           vars: |
