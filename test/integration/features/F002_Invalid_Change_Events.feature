@@ -56,11 +56,12 @@ Feature: F002. Invalid change event Exception handling
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a "pharmacy" Changed Event is aligned with Dos
-    And the field "Postcode" is set to "AAAA 123"
+    And the field "Postcode" is set to "FAKE"
+    And the field "OrganisationName" is set to "Test Organisation"
     When the Changed Event is sent for processing with "valid" api key
     Then the 'address' from the changes is not included in the change request
-    And the 'postcode' from the changes is not included in the change request
-    And the Changed Event is stored in dynamo db
+    Then the 'postcode' from the changes is not included in the change request
+    Then the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S008. Invalid Opening Times reported where Weekday is not identified

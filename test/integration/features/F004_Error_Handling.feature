@@ -103,6 +103,7 @@ Feature: F004. Error Handling
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S013. A Changed Event with Pharmacy org type is accepted
     Given a "pharmacy" Changed Event is aligned with Dos
+    And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Request is sent to Dos
 

@@ -3,9 +3,10 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a "pharmacy" Changed Event is aligned with Dos
+    And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
-    And the Changed Event is stored in dynamo db
+    Then the Changed Event is stored in dynamo db
 
 @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S002. All received Changed Events are archived in Dynamo DB
