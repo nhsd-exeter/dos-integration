@@ -7,6 +7,7 @@ from faker import Faker
 import datetime
 from json import loads
 import ast
+from copy import copy
 
 from pytest_bdd import given, parsers, scenarios, then, when
 
@@ -206,6 +207,22 @@ def change_event_with_break_in_opening_times(context):
 
 @given("the Changed Event has two breaks in opening times", target_fixture="context")
 def change_event_with_two_breaks_in_opening_times(context):
+    for count, times in enumerate(context["change_event"]["OpeningTimes"]):
+        if times["Weekday"] == "Monday":
+            del context["change_event"]["OpeningTimes"][count]
+    defaultOpenings = {
+        "Weekday": "Monday",
+        "OpeningTime": "09:00",
+        "ClosingTime": "22:00",
+        "OffsetOpeningTime": 540,
+        "OffsetClosingTime": 780,
+        "OpeningTimeType": "General",
+        "AdditionalOpeningDate": "",
+        "IsOpen": True
+    }
+    context["change_event"]["OpeningTimes"].insert(0, copy(defaultOpenings))
+    context["change_event"]["OpeningTimes"].insert(1, copy(defaultOpenings))
+    context["change_event"]["OpeningTimes"].insert(2, copy(defaultOpenings))
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "11:00"
     context["change_event"]["OpeningTimes"][1]["Weekday"] = "Monday"
     context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "12:00"
@@ -291,6 +308,7 @@ def current_ods_exists_in_ddb():
     odscode = context["change_event"]["ODSCode"]
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
+        context["sequenceid"] = 100
     # New address prevents SQS dedupe
     context["change_event"]["Address1"] = FAKER.street_name()
     return context
@@ -375,7 +393,12 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
     context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     odscode = context["change_event"]["ODSCode"]
-    seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+    seqid = 0
+    if context["sequenceid"] == 100:
+        seqid = 100
+    else:
+        seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+    #if none, send in request
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
     return context
