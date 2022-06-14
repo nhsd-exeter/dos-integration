@@ -70,26 +70,20 @@ unit-test:
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
-	ARGS=" \
-		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
-		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
-		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
-		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
-		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
-		"
+	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
 	make -s python-code-coverage CMD="-m pytest application" DIR=/ \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	ARGS=" \
+	ARGS=$(UNIT_TEST_ARGS)
+
+mutation-test:
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	CMD="mutmut run --paths-to-mutate=application --paths-to-exclude=test --tests-dir=tests --runner='python -m pytest application'" \
+	ARGS=$(UNIT_TEST_ARGS)
+
+UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
@@ -103,29 +97,6 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
-		"
-
-smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --cucumberjson=./testresults.json --disable-pytest-warnings" \
-	DIR=./test/integration \
-	ARGS=" \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
-		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e RUN_ID=${RUN_ID} \
-		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
 integration-test-local:
@@ -460,19 +431,8 @@ batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" se
 # Tester
 
 tester-build: ### Build tester docker image
-	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
-	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-messenger.txt
-	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-orchestrator.txt
-	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
-	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-cr-fifo-dlq-hander.txt
-	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
-	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-test-db-checker-handler.txt
-	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
-	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
+	cat $(APPLICATION_DIR)/*/requirements.txt $(APPLICATION_DIR)/requirements-dev.txt | sort --unique > $(DOCKER_DIR)/tester/assets/requirements.txt
 	make docker-image NAME=tester
-	make tester-clean
 
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt

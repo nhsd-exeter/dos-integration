@@ -11,3 +11,4 @@
 .coverage
 *.xml
 jenkins.cookies
+.mutmut-cache

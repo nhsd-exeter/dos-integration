@@ -1,6 +1,6 @@
 FROM python:3.10.5
 # Install python package build requirements
-RUN apt-get update && apt-get -y install libpq-dev gcc postgresql-client
+RUN apt-get update && apt-get -y install libpq-dev gcc postgresql-client python3-dev musl-dev
 # Copy Python requirements
 COPY assets/requirements.txt /
 # Install Python requirements
