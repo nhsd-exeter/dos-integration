@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from json import dumps
+from os import environ
 
 import pytest
 
@@ -49,8 +50,11 @@ def lambda_context():
 def test_lambda_handler(lambda_context, change_request, expected_response_status_code, expected_response_body):
     # Arrange
     lambda_event = {"body": dumps(change_request)}
+    environ["UNIT_TESTING"] = "True"
     # Act
     response = lambda_handler(lambda_event, lambda_context)
     # Assert
     assert response["statusCode"] == expected_response_status_code
     assert response["body"] == expected_response_body
+    # Clean up
+    del environ["UNIT_TESTING"]

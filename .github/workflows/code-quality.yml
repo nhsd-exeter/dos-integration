@@ -14,15 +14,12 @@ jobs:
       - name: Check text files format
         run: |
           build/automation/etc/githooks/scripts/editorconfig-pre-commit.sh
-      - name: Check Python files format
+      - name: Check Test Python files format
         run: |
-          make python-linting
-      - name: Python Dead Code Check
-        run: |
-          make tester-build python-dead-code-scanning
+          make python-code-check FILES=test
       - name: Create coverage report
         run: |
-          make coverage-report
+          make tester-build coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
         # SEE: https://github.com/SonarSource/sonarcloud-github-action
         env:

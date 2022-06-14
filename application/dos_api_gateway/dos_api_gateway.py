@@ -21,7 +21,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     """
     logger.info("Event Received", extra={"event": event})
     change_request = loads(event["body"])
-    sleep(1.7)
+    if getenv("UNIT_TESTING") != "true":
+        sleep(1.7)
     if change_request == {}:
         logger.warning("Empty change request received, likely a health check")
         return {"statusCode": 200, "body": "Change Request is empty"}

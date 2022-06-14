@@ -1,0 +1,22 @@
+name: "Python code format and quality in Application folder"
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    types: [opened, ready_for_review, synchronize, reopened]
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Python Dead Code Check
+        run: |
+          make tester-build
+      - name: Check Python files format
+        run: |
+          make python-code-check FILES=application
+      - name: Python Dead Code Check
+        run: |
+          make python-dead-code-scanning

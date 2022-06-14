@@ -449,14 +449,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" \
-		DIR=./test/performance/create_change_events \
-		ARGS="\
-			-p 8089:8089 \
-			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-			"
+			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
@@ -464,8 +457,9 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 		CMD="python -m locust -f load_test_locustfile.py --headless \
 			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" \
-		DIR=./test/performance/create_change_events \
+			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+
+PERFORMANCE_TEST_DIR_AND_ARGS=DIR=./test/performance/create_change_events \
 		ARGS="\
 			-p 8089:8089 \
 			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \

@@ -1,0 +1,14 @@
+name: "Mutation Test"
+on:
+  push:
+    branches: [develop]
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Full Mutation Test
+        run: |
+          make mutation-test
