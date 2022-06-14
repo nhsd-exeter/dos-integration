@@ -1,6 +1,7 @@
-from json import dumps, loads
-import pytest
 from dataclasses import dataclass
+from json import dumps
+
+import pytest
 
 from ..dos_api_gateway import lambda_handler
 
@@ -29,7 +30,7 @@ def lambda_context():
                 "changes": {"website": "https://www.google.pl", "public_name": "Test Name"},
             },
             201,
-            {"dosChanges": [{"changeId": "1" * 9}, {"changeId": "2" * 9}]},
+            dumps({"dosChanges": [{"changeId": "1" * 9}, {"changeId": "2" * 9}]}),
         ),
         ({}, 200, "Change Request is empty"),
         (
@@ -47,17 +48,9 @@ def lambda_context():
 )
 def test_lambda_handler(lambda_context, change_request, expected_response_status_code, expected_response_body):
     # Arrange
-    change_request = {
-        "reference": "1",
-        "system": "DoS Integration",
-        "message": "Test message 153181659229",
-        "service_id": "49016",
-        "changes": {"website": "https://www.google.pl", "public_name": "Test Name"},
-    }
-    lambda_event = {}
-    lambda_event["body"] = dumps(change_request)
+    lambda_event = {"body": dumps(change_request)}
     # Act
     response = lambda_handler(lambda_event, lambda_context)
     # Assert
-    assert response["statusCode"] == 201
-    assert loads(response["body"]) == {"dosChanges": [{"changeId": "1" * 9}, {"changeId": "2" * 9}]}
+    assert response["statusCode"] == expected_response_status_code
+    assert response["body"] == expected_response_body
