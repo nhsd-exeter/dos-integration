@@ -6,4 +6,3 @@ Feature: F005. Support Functions
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And the stored Changed Event is reprocessed in DI
-    And the reprocessed Changed Event is sent to Dos

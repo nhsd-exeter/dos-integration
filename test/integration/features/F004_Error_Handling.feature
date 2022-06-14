@@ -108,7 +108,7 @@ Feature: F004. Error Handling
     Then the processed Changed Request is sent to Dos
 
 
-@dev @pharmacy_cloudwatch_queries @wip
+@dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S014. Exception is raised when unaccepted Dentist org type CE is processed
     Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
