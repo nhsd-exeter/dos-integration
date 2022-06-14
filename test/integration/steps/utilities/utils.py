@@ -2,7 +2,7 @@ import random
 from ast import literal_eval
 from datetime import datetime
 from decimal import Decimal
-from json import dumps, loads, load
+from json import dumps, loads
 from os import getenv
 from random import choice
 from time import sleep, time_ns
@@ -430,13 +430,3 @@ def random_dentist_odscode() -> str:
         dentist_odscode_list = get_odscodes_list(lambda_payload)
     odscode = choice(dentist_odscode_list)[0]
     return f"{odscode[0]}0{odscode[1:]}"
-
-
-def get_payload(payload_name: str) -> str:
-    values = {"valid": "expected_schema.json", "invalid": "invalid_payload.json"}
-    if payload_name in ["valid", "invalid"]:
-        payload_file_name = values[payload_name]
-    else:
-        raise Exception("Unable to find Payload by request name")
-    with open(f"./features/resources/payloads/{payload_file_name}", "r", encoding="utf-8") as json_file:
-        return dumps(load(json_file))
