@@ -78,11 +78,8 @@ def lambda_handler(event: ChangeRequestQueueItem, context: LambdaContext, metric
             put_circuit_is_open(environ["CIRCUIT"], False)
         elif event["is_health_check"]:
             message = "Health check failed, assume DoS api is still down"
-            if response is None:
-                logger.warning(message)
-            else:
-                logger.warning(message, extra={"response": response.text})
-
+            # TODO: Log reason for failure when response is not None
+            logger.warning(message)
             metrics.put_metric("DoSApiUnavailable", 1, "Count")
             return {"body": dumps({"message": message})}
             # No need to change the status of the circuit, it will remain open until a success
