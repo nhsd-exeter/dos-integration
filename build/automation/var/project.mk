@@ -15,7 +15,7 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-
+PROJECT_LAMBDAS_LIST = authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator,slack-messenger,test-db-checker-handler
 DOCKER_REPOSITORIES =
 SSL_DOMAINS_PROD =
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment

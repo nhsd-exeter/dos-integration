@@ -9,16 +9,9 @@ setup: project-config # Set up project
 	make tester-build
 
 build: # Build lambdas
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=cr-fifo-dlq-handler
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-processor
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-replay
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=event-sender
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=fifo-dlq-handler
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=orchestrator
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=slack-messenger
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=test-db-checker-handler
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+	done
 
 build-lambda: ### Build lambda docker image - mandatory: NAME
 	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
@@ -67,9 +60,10 @@ unit-test-local:
 	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
+	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -78,10 +72,18 @@ coverage-report: # Runs whole project coverage unit tests
 	ARGS=$(UNIT_TEST_ARGS)
 
 mutation-test:
+	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="mutmut run --paths-to-mutate=application --paths-to-exclude=test --tests-dir=tests --runner='python -m pytest application'" \
+	CMD="mutmut run --paths-to-mutate=$$FOLDER_PATH --paths-to-exclude=test --tests-dir=tests --runner='python -m pytest $$FOLDER_PATH'" \
 	ARGS=$(UNIT_TEST_ARGS)
+
+get-unit-test-path:
+	if [ -z "$(LAMBDA_FOLDER_NAME)" ]; then
+		echo application
+	else
+		echo application/$(LAMBDA_FOLDER_NAME)
+	fi
 
 UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
@@ -274,16 +276,9 @@ build-and-deploy-single-function: # Build and deploy single lambda only (meant t
 	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
-	make docker-push NAME=authoriser
-	make docker-push NAME=cr-fifo-dlq-handler
-	make docker-push NAME=dos-api-gateway
-	make docker-push NAME=event-processor
-	make docker-push NAME=event-replay
-	make docker-push NAME=event-sender
-	make docker-push NAME=fifo-dlq-handler
-	make docker-push NAME=orchestrator
-	make docker-push NAME=slack-messenger
-	make docker-push NAME=test-db-checker-handler
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		make docker-push NAME=$$IMAGE_NAME
+	done
 
 push-tester-image:
 	make docker-push NAME=tester
