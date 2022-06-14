@@ -20,34 +20,29 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         dict: Response to change request
     """
     logger.info("Event Received", extra={"event": event})
-    if event["body"] != '"{}"':
-        change_request = loads(event["body"])
-        sleep(1.7)
-        if change_request == {}:
-            logger.warning("Empty change request received, likely a health check")
-            return {"statusCode": 400, "body": "Change Request is empty"}
+    change_request = loads(event["body"])
+    sleep(1.7)
+    if change_request == {}:
+        logger.warning("Empty change request received, likely a health check")
+        return {"statusCode": 200, "body": "Change Request is empty"}
 
-        correlation_id = change_request["reference"]
-        logger.set_correlation_id(correlation_id)
-        logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
+    correlation_id = change_request["reference"]
+    logger.set_correlation_id(correlation_id)
+    logger.info("MOCK DoS API Gateway - Change request received", extra={"change_request": event})
 
-        if "bad request" in correlation_id.lower():
-            logger.warning("MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
-            return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
+    if "bad request" in correlation_id.lower():
+        logger.warning("MOCK DoS API Gateway - Returning Fake Bad Request", extra={"change_request": event})
+        return {"statusCode": 400, "body": "Fake Bad Request trigged by correlation-id"}
 
-        if getenv("CHAOS_MODE") == "true":
-            logger.warning("CHAOS MODE ENABLED - Returning a 500 response")
-            return {"statusCode": 500, "body": "Chaos mode is enabled"}
+    if getenv("CHAOS_MODE") == "true":
+        logger.warning("CHAOS MODE ENABLED - Returning a 500 response")
+        return {"statusCode": 500, "body": "Chaos mode is enabled"}
 
-        change_request_response = {"dosChanges": []}
+    change_request_response = {"dosChanges": []}
 
-        if "changes" in change_request:
-            counter = 1
-            for row in change_request["changes"]:
-                change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
-                counter += 1
-        body = dumps(change_request_response)
-    else:
-        logger.info("Found Health Check")
-        body = "Health Check"
-    return {"statusCode": 201, "body": body}
+    if "changes" in change_request:
+        counter = 1
+        for row in change_request["changes"]:
+            change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
+            counter += 1
+    return {"statusCode": 201, "body": dumps(change_request_response)}
