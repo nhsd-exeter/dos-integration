@@ -207,9 +207,12 @@ def change_event_with_break_in_opening_times(context):
 
 @given("the Changed Event has two breaks in opening times", target_fixture="context")
 def change_event_with_two_breaks_in_opening_times(context):
+    deletions = []
     for count, times in enumerate(context["change_event"]["OpeningTimes"]):
         if times["Weekday"] == "Monday":
-            del context["change_event"]["OpeningTimes"][count]
+            deletions.insert(0, count)
+    for entries in deletions:
+        del context["change_event"]["OpeningTimes"][entries]
     defaultOpenings = {
         "Weekday": "Monday",
         "OpeningTime": "09:00",
