@@ -218,7 +218,7 @@ def change_event_with_two_breaks_in_opening_times(context):
         "OffsetClosingTime": 780,
         "OpeningTimeType": "General",
         "AdditionalOpeningDate": "",
-        "IsOpen": True
+        "IsOpen": True,
     }
     context["change_event"]["OpeningTimes"].insert(0, copy(defaultOpenings))
     context["change_event"]["OpeningTimes"].insert(1, copy(defaultOpenings))
@@ -398,7 +398,6 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
         seqid = 100
     else:
         seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
-    #if none, send in request
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
     return context
