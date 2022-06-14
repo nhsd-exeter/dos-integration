@@ -100,7 +100,7 @@ Feature: F004. Error Handling
     Then the Event "processor" shows field "message" with message "Validation Error"
 
 
-  @complete @dev @pharmacy_cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S013. A Changed Event with Pharmacy org type is accepted
     Given a "pharmacy" Changed Event is aligned with Dos
     And the field "Postcode" is set to "CT1 1AA"
@@ -108,8 +108,8 @@ Feature: F004. Error Handling
     Then the processed Changed Request is sent to Dos
 
 
-@dev @pharmacy_cloudwatch_queries
+@dev @pharmacy_cloudwatch_queries @wip
   Scenario Outline: F004S014. Exception is raised when unaccepted Dentist org type CE is processed
     Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "message" with message "Validation Error"
+    Then the Event "processor" shows field "message" with message "Unexpected Org Type ID"
