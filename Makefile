@@ -32,7 +32,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make mock-dos-api-gateway-deployment
+		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 	fi
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
@@ -275,7 +275,14 @@ orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker i
 # DoS API Gateway Mock lambda
 
 mock-dos-api-gateway-deployment:
-	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
+	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
+
+build-and-push-mock-dos-api-gateway-docker-images:
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
+	make docker-push NAME=authoriser
+	make docker-push NAME=dos-api-gateway
 
 # ==============================================================================
 # Deployments

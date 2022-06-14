@@ -94,9 +94,13 @@ resource "aws_lambda_function" "dos_api_gateway_lambda" {
   }
 }
 
-resource "aws_lambda_permission" "dos_api_gateway_lambda_permission" {
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.dos_api_gateway_lambda_name
+  function_name = aws_lambda_function.dos_api_gateway_lambda.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.dos_api_gateway.execution_arn}/*/*/*"
+  source_arn    = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.dos_api_gateway.id}/*/${aws_api_gateway_method.dos_api_gateway_method.http_method}${aws_api_gateway_resource.dos_api_gateway_resource.path}"
+  depends_on = [
+    aws_lambda_function.dos_api_gateway_lambda, aws_api_gateway_deployment.dos_api_gateway_deployment
+  ]
 }

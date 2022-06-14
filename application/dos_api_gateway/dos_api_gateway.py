@@ -24,7 +24,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     sleep(1.7)
     if change_request == {}:
         logger.warning("Empty change request received, likely a health check")
-        return {"statusCode": 400, "body": "Change Request is empty"}
+        return {"statusCode": 200, "body": "Change Request is empty"}
 
     correlation_id = change_request["reference"]
     logger.set_correlation_id(correlation_id)
