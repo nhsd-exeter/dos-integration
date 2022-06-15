@@ -429,4 +429,4 @@ def random_dentist_odscode() -> str:
         lambda_payload = {"type": "get_dentist_odscodes"}
         dentist_odscode_list = get_odscodes_list(lambda_payload)
     odscode = choice(dentist_odscode_list)[0]
-    return f"{odscode[0]}0{odscode[1:]}"
+    return f"{odscode[0]}{odscode[1:]}"

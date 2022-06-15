@@ -16,7 +16,7 @@ Feature: F006. Opening times
 
 @complete @pharmacy_no_log_searches
   Scenario: F006S003. Pharmacy with one break in opening times
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event has one break in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
@@ -24,7 +24,7 @@ Feature: F006. Opening times
 
 @complete @pharmacy_no_log_searches
   Scenario: F006S004. Pharmacy with two breaks in opening times
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event has two breaks in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
@@ -32,7 +32,7 @@ Feature: F006. Opening times
 
 @complete @pharmacy_no_log_searches
   Scenario: F006S005. Pharmacy with one off opening date set to closed
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event contains a one off opening date thats "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
@@ -40,7 +40,7 @@ Feature: F006. Opening times
 
 @complete @pharmacy_no_log_searches
   Scenario: F006S006. A Pharmacy with one off opening date set to open
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event contains a one off opening date thats "Open"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
@@ -48,7 +48,7 @@ Feature: F006. Opening times
 
 @complete @pharmacy_no_log_searches
   Scenario: F006S007. Close pharmacy on bank holiday
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event closes the pharmacy on a bank holiday
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
