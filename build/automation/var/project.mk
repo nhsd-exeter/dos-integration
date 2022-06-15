@@ -35,6 +35,8 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
 TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
+
+UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor

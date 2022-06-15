@@ -12,9 +12,10 @@ phases:
   build:
     commands:
       - echo "[Building docker containers]"
-      - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION DOCKER_BUILDKIT=1 FROM_CACHE=true
+      - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION DOCKER_BUILDKIT=1
       - echo "[Pushing images to ECR]"
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true

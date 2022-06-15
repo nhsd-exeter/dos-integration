@@ -703,3 +703,54 @@ github-actions-best-practices:
 
 checkov-secret-scanning:
 	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
+
+aws-ecr-get-security-scan: ### Fetches container scan report and returns findings - Mandatory REPOSITORY, TAG=[image tag], UNACCEPTABLE_VULNERABILITY_LEVELS=[LOW,MEDIUM,HIGH,CRITICAL]; optional: FAIL_ON_WARNINGS=true, SHOW_ALL_WARNINGS=true
+	make -s aws-ecr-wait-for-image-scan-complete REPOSITORY=$(REPOSITORY) TAG=$(TAG)
+	SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG))
+	SCAN_WARNINGS=$$(echo $$SCAN_FINDINGS | jq '.imageScanFindings.findingSeverityCounts')
+	CRITICAL=$$(echo $$SCAN_WARNINGS | jq '.CRITICAL')
+	HIGH=$$(echo $$SCAN_WARNINGS | jq '.HIGH')
+	MEDIUM=$$(echo $$SCAN_WARNINGS | jq '.MEDIUM')
+	LOW=$$(echo $$SCAN_WARNINGS | jq '.LOW')
+	INFORMATIONAL=$$(echo $$SCAN_WARNINGS | jq '.INFORMATIONAL')
+	UNDEFINED=$$(echo $$SCAN_WARNINGS | jq '.UNDEFINED')
+	if [[ "$(SHOW_ALL_WARNINGS)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
+		echo "CRITICAL: $$CRITICAL"
+		echo "HIGH: $$HIGH"
+		echo "MEDIUM: $$MEDIUM"
+		echo "LOW: $$LOW"
+		echo "INFORMATIONAL: $$INFORMATIONAL"
+		echo "UNDEFINED: $$UNDEFINED"
+	fi
+	IS_UNACCEPTABLE_WARNINGS=false
+	for LEVEL in $$(echo $(UNACCEPTABLE_VULNERABILITY_LEVELS) | tr "," "\n" | tr [:lower:] [:upper:]); do
+		if [ "$$(echo $$(eval echo \"\$$$$LEVEL\"))" != null ]; then
+			echo $$LEVEL is above the threshold
+			IS_UNACCEPTABLE_WARNINGS=true
+		fi
+	done
+	echo "For more details visit https://$(AWS_REGION).console.aws.amazon.com/ecr/repositories/private/$(AWS_ACCOUNT_ID_MGMT)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY)?region=$(AWS_REGION)"
+	if [[ "$(FAIL_ON_WARNINGS)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]] && [ $$IS_UNACCEPTABLE_WARNINGS == "true" ]; then
+		exit 1
+	fi
+
+aws-ecr-wait-for-image-scan-complete: ### Waits for ECR image scan report - REPOSITORY, TAG=[image tag]
+	make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr wait image-scan-complete \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
+
+aws-ecr-describe-image-scan-findings: ### Describes ECR image scan report - REPOSITORY, TAG=[image tag]
+		make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr describe-image-scan-findings \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
+
+.SILENT: \
+	aws-ecr-get-security-scan
