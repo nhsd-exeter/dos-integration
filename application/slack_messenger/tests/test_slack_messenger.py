@@ -1,17 +1,18 @@
 from dataclasses import dataclass
 from json import dumps
 from os import environ
-from aws_lambda_powertools.utilities.data_classes import SNSEvent
-from pytest import fixture, raises
-from application.slack_messenger.slack_messenger import (
-    lambda_handler,
-    send_msg_slack,
-    get_message_for_cloudwatch_event,
-    generate_aws_cloudwatch_log_insights_url,
-)
-from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
 from unittest.mock import patch
 
+from aws_lambda_powertools.utilities.data_classes import SNSEvent
+from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
+from pytest import fixture, mark, raises
+
+from application.slack_messenger.slack_messenger import (
+    generate_aws_cloudwatch_log_insights_url,
+    get_message_for_cloudwatch_event,
+    lambda_handler,
+    send_msg_slack,
+)
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
@@ -83,11 +84,12 @@ SNS_EVENT = {
     ]
 }
 
+WEBHOOK_URL = "https://hooks.slack.com/services/1/2/3"
+
 
 @patch(f"{FILE_PATH}.get_message_for_cloudwatch_event")
 @patch(f"{FILE_PATH}.send_msg_slack")
 def test_lambda_handler_slack_messenger(mock_send, mock_get, lambda_context):
-
     expected = {"somefield": "somevalue"}
     mock_send.return_value = None
     mock_get.return_value = expected
@@ -109,42 +111,51 @@ def test_send_message_missing_url(lambda_context):
 
 
 def test_send_message_url_no_channel(lambda_context):
+    # Arrange
     message = {}
-    environ["SLACK_WEBHOOK_URL"] = "www.someexamplethingy.com"
-    # Act
+    environ["SLACK_WEBHOOK_URL"] = WEBHOOK_URL
+    # Act & Assert
     with raises(KeyError):
         send_msg_slack(message)
+    # Clean Up
+    del environ["SLACK_WEBHOOK_URL"]
 
 
 @patch(f"{FILE_PATH}.post")
 def test_send_message(mock_post, lambda_context):
-
+    # Arrange
     message = {"text": "hello dave"}
-    environ["SLACK_WEBHOOK_URL"] = "www.someexamplethingy.com"
+    environ["SLACK_WEBHOOK_URL"] = WEBHOOK_URL
     environ["SLACK_ALERT_CHANNEL"] = "channel5"
     # Act
     send_msg_slack(message)
+    # Assert
     mock_post.assert_called_once_with(
-        url="www.someexamplethingy.com",
+        url=WEBHOOK_URL,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         json={"text": "hello dave", "channel": "channel5", "icon_emoji": ""},
     )
+    # Clean Up
+    del environ["SLACK_WEBHOOK_URL"]
 
 
+@mark.parametrize("new_state_value, colour", (("ALARM", "#e01e5a"), ("OK", "good"), ("INSUFFICIENT_DATA", "warning")))
 @patch(f"{FILE_PATH}.generate_aws_cloudwatch_log_insights_url")
-def test_get_messsage_from_event(mock_cloudwatch_url):
-
+def test_get_message_from_event(mock_cloudwatch_url, new_state_value, colour):
     # Arrange
     sns_event_dict = SNS_EVENT.copy()
+    message = MESSAGE.copy()
+    message["NewStateValue"] = new_state_value
+    sns_event_dict["Records"][0]["Sns"]["Message"] = dumps(message)
     sns_event = SNSEvent(sns_event_dict)
     mock_cloudwatch_url.return_value = "https://test.com"
     # Act
     message = get_message_for_cloudwatch_event(sns_event)
-
+    # Assert
     assert message == {
         "attachments": [
             {
-                "color": "#e01e5a",
+                "color": colour,
                 "fields": [
                     {
                         "short": True,
@@ -154,7 +165,7 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
                     {
                         "short": True,
                         "title": "Alarm State",
-                        "value": "ALARM",
+                        "value": new_state_value,
                     },
                     {
                         "short": False,
@@ -182,9 +193,11 @@ def test_get_messsage_from_event(mock_cloudwatch_url):
             },
         ],
     }
+    mock_cloudwatch_url.assert_called_once()
 
 
 def test_generate_cloudwatch_url():
+    # Arrange
     project_id = "test-service-name"
     region = "eu-west-2"
     metric_name = "InvalidPostcode"
@@ -192,7 +205,9 @@ def test_generate_cloudwatch_url():
     log_groups = [f"{project_id}-event-processor"]
     filters = {"report_key": report_key}
     expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
+    # Act
     url = generate_aws_cloudwatch_log_insights_url(region, log_groups, filters, 10)
+    # Assert
     assert report_key == INVALID_POSTCODE_REPORT_ID
     assert log_groups == ["test-service-name-event-processor"]
     assert url.startswith(expected_url)

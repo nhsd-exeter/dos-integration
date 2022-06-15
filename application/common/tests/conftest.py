@@ -3,15 +3,15 @@ from os import environ
 from random import choices, randint, uniform
 
 from boto3 import client
-from moto import mock_dynamodb2
+from moto import mock_dynamodb
 from pytest import fixture
-
+from dataclasses import dataclass
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-std_event_path = "application/event_processor/tests/STANDARD_EVENT.json"
+STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
 
-with open(std_event_path, "r") as file:
+with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 
@@ -77,7 +77,7 @@ def aws_credentials():
 
 @fixture
 def dynamodb_client(aws_credentials):
-    with mock_dynamodb2():
+    with mock_dynamodb():
         conn = client("dynamodb", region_name=environ["AWS_REGION"])
         yield conn
 
@@ -107,6 +107,18 @@ def dead_letter_message():
                         "stringValue": "400",
                         "stringListValues": [],
                         "binaryListValues": [],
+                        "dataType": "Number",
+                    },
+                    "other": {
+                        "stringValue": "other",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "other",
+                    },
+                    "correlation-id": {
+                        "stringValue": "test",
+                        "stringListValues": [],
+                        "binaryListValues": [],
                         "dataType": "String",
                     },
                 },
@@ -117,3 +129,15 @@ def dead_letter_message():
             }
         ]
     }
+
+
+@fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-processor"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()

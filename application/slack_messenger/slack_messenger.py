@@ -38,12 +38,13 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
         f"{project_id}-fifo-dlq-handler",
     ]
     filters = {"report_key": METRIC_REPORT_KEY_MAP.get(metric_name, "")}
-    color = "warning"
 
-    if message["NewStateValue"] == "ALARM":
-        color = "#e01e5a"
-    elif message["NewStateValue"] == "OK":
-        color = "good"
+    if new_state == "ALARM":
+        colour = "#e01e5a"
+    elif new_state == "OK":
+        colour = "good"
+    else:
+        colour = "warning"
     link = (
         "https://console.aws.amazon.com/cloudwatch/home"
         f"?region={region}#alarm:alarmFilter=ANY;name={quote(alarm_name.encode('utf-8'))}"
@@ -54,7 +55,7 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
         ],
         "attachments": [
             {
-                "color": color,
+                "color": colour,
                 "fields": [
                     {"title": "Alarm Name", "value": alarm_name, "short": True},
                     {"title": "Alarm State", "value": new_state, "short": True},

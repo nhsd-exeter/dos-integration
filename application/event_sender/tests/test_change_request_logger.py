@@ -13,6 +13,17 @@ class TestChangeRequestLogger:
     SUCCESS_STATUS_CODES = [200, 201, 202]
     FAILURE_STATUS_CODES = [400, 401, 404, 500]
     CORRELATION_ID = 2
+    CHANGE_REQUEST_BODY = {"my-key": "my-val"}
+
+    @patch.object(Logger, "info")
+    def test_log_change_request_post_attempt(self, info_logger_mock):
+        # Arrange
+        change_request_logger = ChangeRequestLogger()
+        expected_extra = {"change_request_body": self.CHANGE_REQUEST_BODY}
+        # Act
+        change_request_logger.log_change_request_post_attempt(self.CHANGE_REQUEST_BODY)
+        # Assert
+        info_logger_mock.assert_called_with("Attempting to send change request to DoS", extra=expected_extra)
 
     @patch.object(Logger, "info")
     @pytest.mark.parametrize("status_code", SUCCESS_STATUS_CODES)

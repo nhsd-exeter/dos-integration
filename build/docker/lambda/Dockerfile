@@ -1,6 +1,8 @@
 FROM amazon/aws-lambda-python:3.9
 # Update all packages
 RUN yum update -y
+# Update Pip
+RUN python -m pip install --upgrade pip
 # Copy Python requirements
 COPY assets/requirements.txt /
 # Install Python requirements
