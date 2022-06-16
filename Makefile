@@ -10,7 +10,7 @@ setup: project-config # Set up project
 
 build: # Build lambdas
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
-		make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+		make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME BUILD_OPTS="--platform linux/arm/v8 --build-arg BUILDKIT_INLINE_CACHE=1"
 	done
 
 build-lambda: ### Build lambda docker image - mandatory: NAME

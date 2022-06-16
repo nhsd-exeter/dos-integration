@@ -68,7 +68,7 @@ plugins:
 functions:
   orchestrator:
     image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
     description: ${sls:stage} Orchestrator
     memorySize: 128
@@ -91,7 +91,7 @@ functions:
 
   event-processor:
     image: ${env:DOCKER_REGISTRY}/event-processor:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
     memorySize: 128
@@ -113,7 +113,7 @@ functions:
 
   fifo-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-fifo-dlq-handler
     description: ${sls:stage} FIFO DLQ Handler lambda
     memorySize: 128
@@ -127,7 +127,7 @@ functions:
 
   event-sender:
     image: ${env:DOCKER_REGISTRY}/event-sender:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
     memorySize: 512
@@ -149,7 +149,7 @@ functions:
 
   slack-messenger:
     image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
     description: ${sls:stage} Slack Messenger lambda
     memorySize: 128
@@ -166,7 +166,7 @@ functions:
 
   cr-fifo-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-cr-fifo-dlq-handler
     description: ${sls:stage} cr-fifo DLQ Handler lambda
     memorySize: 128
@@ -178,7 +178,7 @@ functions:
 
   event-replay:
     image: ${env:DOCKER_REGISTRY}/event-replay:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-event-replay
     description: ${sls:stage} Event Replay lambda
     memorySize: 128
@@ -193,7 +193,7 @@ functions:
 
   test-db-checker-handler:
     image: ${env:DOCKER_REGISTRY}/test-db-checker-handler:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:PROJECT_ID}-${sls:stage}-test-db-checker-handler
     description: ${sls:stage} Test DB Checker Handler lambda
     memorySize: 128
