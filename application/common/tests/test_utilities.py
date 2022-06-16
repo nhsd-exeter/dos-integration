@@ -6,6 +6,7 @@ from pytest import raises, mark
 from ..utilities import (
     extract_body,
     get_sequence_number,
+    get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
 )
@@ -48,6 +49,45 @@ def test_get_sequence_number_empty():
     sequence_number = get_sequence_number(record)
     # Assert
     assert sequence_number is None
+
+
+def test_get_sqs_msg_attribute_string(dead_letter_message):
+    # Arrange
+    attribute = "error_msg"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response == msg_attributes[attribute]["stringValue"]
+
+
+def test_get_sqs_msg_attribute_number(dead_letter_message):
+    # Arrange
+    attribute = "error_msg_http_code"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response == float(msg_attributes[attribute]["stringValue"])
+
+
+def test_get_sqs_msg_attribute_other(dead_letter_message):
+    # Arrange
+    attribute = "other"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response is None
+
+
+def test_get_sqs_msg_attribute_no_attributes():
+    # Arrange
+    msg_attributes = {}
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key="error_msg")
+    # Assert
+    assert response is None
 
 
 def test_handle_sqs_msg_attributes(dead_letter_message):

@@ -15,7 +15,7 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-
+PROJECT_LAMBDAS_LIST = authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator,slack-messenger,test-db-checker-handler
 DOCKER_REPOSITORIES =
 SSL_DOMAINS_PROD =
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
@@ -32,7 +32,6 @@ TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
-ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
 TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
 

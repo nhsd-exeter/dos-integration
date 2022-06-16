@@ -5,6 +5,7 @@ from os import environ
 from typing import Any, Dict
 from unittest.mock import patch
 
+from aws_lambda_powertools import Logger
 from boto3.dynamodb.types import TypeSerializer
 from pytest import fixture, raises
 
@@ -48,11 +49,18 @@ def change_event():
     }
 
 
+@patch.object(Logger, "append_keys")
 @patch(f"{FILE_PATH}.send_change_event")
 @patch(f"{FILE_PATH}.get_change_event")
 @patch(f"{FILE_PATH}.build_correlation_id")
 def test_lambda_handler(
-    mock_build_correlation_id, mock_get_change_event, mock_send_change_event, change_event, event, lambda_context
+    mock_build_correlation_id,
+    mock_get_change_event,
+    mock_send_change_event,
+    mock_append_keys,
+    change_event,
+    event,
+    lambda_context,
 ):
     # Arrange
     correlation_id = "CORRELATION_ID"
@@ -64,6 +72,8 @@ def test_lambda_handler(
     assert response == dumps(
         {"message": "The change event has been re-sent successfully", "correlation_id": correlation_id}
     )
+    mock_append_keys.assert_any_call(ods_code=event["odscode"])
+    mock_append_keys.assert_any_call(sequence_number=event["sequence_number"])
     mock_build_correlation_id.assert_called_once_with()
     mock_get_change_event.assert_called_once_with(event["odscode"], Decimal(event["sequence_number"]))
     mock_send_change_event.assert_called_once_with(

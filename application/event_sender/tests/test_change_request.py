@@ -112,6 +112,33 @@ class TestChangeRequest:
         del environ["DOS_API_GATEWAY_PASSWORD_KEY"]
         del environ["PROFILE"]
 
+    @patch.object(change_request, "get_secret", return_value=SECRETS)
+    @activate
+    def test_post_change_request_health_check(self, get_secret_mock):
+        # Arrange
+        environ["PROFILE"] = "remote"
+        environ["DOS_API_GATEWAY_URL"] = self.WEBSITE
+        environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"] = self.TIMEOUT
+        environ["DOS_API_GATEWAY_USERNAME_KEY"] = self.USERNAME_KEY
+        environ["DOS_API_GATEWAY_PASSWORD_KEY"] = self.PASSWORD_KEY
+        change_request = ChangeRequest(self.CHANGE_REQUEST_EVENT)
+        expected_response_body = {"my-key": "my-val"}
+        status_code = 201
+        add(POST, self.WEBSITE, json=expected_response_body, status=status_code)
+        change_request.change_request_logger = MagicMock()
+        # Act
+        response = change_request.post_change_request(True)
+        # Assert
+        get_secret_mock.assert_called_with(self.AWS_SM_API_GATEWAY_SECRET)
+        assert response.status_code == status_code
+        change_request.change_request_logger.log_change_request_response.assert_not_called()
+        # Clean up
+        del environ["DOS_API_GATEWAY_URL"]
+        del environ["DOS_API_GATEWAY_REQUEST_TIMEOUT"]
+        del environ["DOS_API_GATEWAY_USERNAME_KEY"]
+        del environ["DOS_API_GATEWAY_PASSWORD_KEY"]
+        del environ["PROFILE"]
+
     @patch.object(change_request, "post", side_effect=Exception("Test exception"))
     @patch.object(change_request, "get_secret", return_value=SECRETS)
     def test_post_change_request_exception(self, get_secret_mock, mock_post):

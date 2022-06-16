@@ -1,6 +1,7 @@
-from unittest.mock import patch
-from ..appconfig import AppConfig
 from os import environ
+from unittest.mock import MagicMock, patch
+
+from ..appconfig import AppConfig
 
 FILE_PATH = "application.common.appconfig"
 
@@ -17,6 +18,20 @@ def test_app_config(mock_app_config_store):
     mock_app_config_store.assert_called_once_with(
         environment=environment, application=f"uec-dos-int-{environment}-lambda-app-config", name=feature_flags_name
     )
+    # Clean up
+    del environ["ENV"]
+
+
+@patch(f"{FILE_PATH}.AppConfigStore")
+def test_app_config_get_raw_configuration(mock_app_config_store):
+    # Arrange
+    environment = "unittest"
+    environ["ENV"] = environment
+    feature_flags_name = "event-processor"
+    # Act
+    response = AppConfig(feature_flags_name).get_raw_configuration()
+    # Assert
+    assert isinstance(response, MagicMock)
     # Clean up
     del environ["ENV"]
 
