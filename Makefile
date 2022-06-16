@@ -322,7 +322,7 @@ plan-deployment-pipelines:
 		echo "PROFILE must be tools and ENVIRONMENT must be dev"
 	fi
 
-deploy-perf-test-tools:
+deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
 	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
 
 undeploy-perf-test-tools:

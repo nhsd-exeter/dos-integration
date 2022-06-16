@@ -45,7 +45,7 @@ resource "aws_codebuild_project" "di_performance_tests" {
     }
     environment_variable {
       name  = "ENVIRONMENT"
-      value = var.from_release_branch == true ? "${var.environment}-perf" : var.environment
+      value = var.from_release_branch == true ? "${var.environment}-perf" : "perf"
     }
     environment_variable {
       name  = "PERF_TEST_NAME"
