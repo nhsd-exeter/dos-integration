@@ -1,6 +1,4 @@
 FROM public.ecr.aws/lambda/python:3.9-arm64
-# Update all packages
-RUN yum update -y
 # Update Pip
 RUN python -m pip install --upgrade pip
 # Copy Python requirements
