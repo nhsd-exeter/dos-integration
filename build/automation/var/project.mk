@@ -118,7 +118,6 @@ SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_V
 DOS_TRANSACTIONS_PER_SECOND=3
 
 # Performance Pipelines
-TF_VAR_perf_pipeline_branch_name := $(or $(PERF_PIPELINE_BRANCH_NAME), $(TF_VAR_code_pipeline_branch_name))
 TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
