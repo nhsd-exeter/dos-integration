@@ -181,18 +181,20 @@ def confirm_changes(correlation_id: str) -> list:
     return data
 
 
-def get_approver_status(correlation_id: str) -> list:
+def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
     lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
 
-def confirm_approver_status(correlation_id: str) -> list:
+def confirm_approver_status(
+    correlation_id: str, loop_count: int = 15, sleep_between_loops: int = 60
+) -> list[None] | list[Any]:
     approver_loop_count = 0
     data = []
-    while approver_loop_count < 15:
-        sleep(60)
+    while approver_loop_count < loop_count:
+        sleep(sleep_between_loops)
         data = get_approver_status(correlation_id)
         if data != []:
             break
@@ -216,7 +218,7 @@ def get_service_id(correlation_id: str) -> list:
             return data[0][0]
 
         if retries > 8:
-            raise Exception("Error!.. Service Id not found")
+            raise ValueError("Error!.. Service Id not found")
         retries += 1
         sleep(5)
 
@@ -236,7 +238,7 @@ def get_service_type_from_cr(correlation_id: str) -> list:
             return data[0][0]
 
         if retries > 8:
-            raise Exception("Error!.. Service type not found")
+            raise ValueError("Error!.. Service type not found")
         retries += 1
         sleep(5)
 
@@ -297,7 +299,7 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
             return response_payload
 
         if retries > 9:
-            print(f"Errored on this payload: {lambda_payload}")
+            print(f"Error in this payload: {lambda_payload}")
             raise Exception(f"Unable to run test db checker lambda successfully after {retries} retries")
         retries += 1
         sleep(20)
