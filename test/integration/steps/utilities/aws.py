@@ -1,11 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from os import getenv as get_env
 from sqlite3 import Timestamp
 from time import sleep
 from boto3 import client
 from json import dumps
-import json
-from json.decoder import JSONDecodeError
 
 LAMBDA_CLIENT_LOGS = client("logs")
 EVENT_PROCESSOR = get_env("EVENT_PROCESSOR")
@@ -16,34 +14,10 @@ LOG_GROUP_NAME_EVENT_SENDER = f"/aws/lambda/{EVENT_SENDER}"
 LOG_GROUP_NAME_CR_FIFO_DLQ = f"/aws/lambda/{CR_FIFO_DLQ}"
 
 
-def get_processor_log_stream_name() -> str:
-    log_stream = LAMBDA_CLIENT_LOGS.describe_log_streams(
-        logGroupName=LOG_GROUP_NAME_EVENT_PROCESSOR,
-        orderBy="LastEventTime",
-        descending=True,
-    )
-    return log_stream["logStreams"][0]["logStreamName"]
-
-
-def get_sender_log_stream_name() -> str:
-    log_stream = LAMBDA_CLIENT_LOGS.describe_log_streams(
-        logGroupName=LOG_GROUP_NAME_EVENT_SENDER,
-        orderBy="LastEventTime",
-        descending=True,
-    )
-    return log_stream["logStreams"][0]["logStreamName"]
-
-
-def get_logs(query: str, event_lambda: str, start_time: Timestamp, retrycount=32) -> str:
-    log_groups = {
-        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
-        "sender": LOG_GROUP_NAME_EVENT_SENDER,
-        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
-    }
-    if event_lambda == "processor" or "sender" or "cr_dlq":
-        log_group_name = log_groups[event_lambda]
-    else:
-        raise Exception("Error.. log group name not correctly specified")
+def get_logs(
+    query: str, event_lambda: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20
+) -> str:
+    log_group_name = get_log_group_name(event_lambda)
     logs_found = False
     counter = 0
     while logs_found is False:
@@ -56,27 +30,18 @@ def get_logs(query: str, event_lambda: str, start_time: Timestamp, retrycount=32
         query_id = start_query_response["queryId"]
         response = None
         while response is None or response["status"] != "Complete":
-            sleep(20)
+            sleep(sleep_per_loop)
             response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
         counter += 1
         if response["results"] != []:
             logs_found = True
-        elif counter == retrycount:
-            raise Exception("Log search retries exceeded.. no logs found")
+        elif counter == retry_count:
+            raise ValueError("Log search retries exceeded.. no logs found")
     return dumps(response, indent=2)
 
 
 def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> str:
-    log_groups = {
-        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
-        "sender": LOG_GROUP_NAME_EVENT_SENDER,
-        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
-    }
-    if event_lambda == "processor" or "sender" or "cr_dlq":
-        log_group_name = log_groups[event_lambda]
-    else:
-        raise Exception("Error.. log group name not correctly specified")
-
+    log_group_name = get_log_group_name(event_lambda)
     start_query_response = LAMBDA_CLIENT_LOGS.start_query(
         logGroupName=log_group_name,
         startTime=int(start_time),
@@ -91,37 +56,20 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
     if response["results"] == []:
         return True
     else:
-        raise Exception("Matching logs have been found")
+        raise ValueError("Matching logs have been found")
 
 
-def get_processor_logs_list_for_debug(seconds_ago: int = 0) -> list:
-
-    """Work out timestamps"""
-    now = datetime.utcnow()
-    past = now - timedelta(seconds=seconds_ago)
-
-    # Get log events
-    event_log = LAMBDA_CLIENT_LOGS.get_log_events(
-        logGroupName=LOG_GROUP_NAME_EVENT_PROCESSOR,
-        logStreamName=get_processor_log_stream_name(),
-        startTime=int(past.timestamp() * 1000),
-        endTime=int(now.timestamp() * 1000),
-    )
-    # If a message is a JSON string, format the string before returning.
-    messages = []
-    for event in event_log["events"]:
-        try:
-            messages.append(json.dumps(json.loads(event["message"]), indent=2))
-        except JSONDecodeError:
-            messages.append(event["message"])
-
-    return messages
-
-
-def get_processor_logs_within_time_frame_for_debug(time_in_seconds: int = 0) -> dict:
-    logs = get_processor_logs_list_for_debug(time_in_seconds)
-    for m in logs:
-        print(m)
+def get_log_group_name(event_lambda: str) -> str:
+    log_groups = {
+        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
+        "sender": LOG_GROUP_NAME_EVENT_SENDER,
+        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
+    }
+    if event_lambda == "processor" or "sender" or "cr_dlq":
+        log_group_name = log_groups[event_lambda]
+    else:
+        raise ValueError("Error.. log group name not correctly specified")
+    return log_group_name
 
 
 def get_secret(secret_name: str) -> str:

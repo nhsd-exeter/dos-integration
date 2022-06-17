@@ -1,8 +1,17 @@
-from datetime import datetime
 import re
-from dateutil.relativedelta import relativedelta
+from datetime import datetime
 from json import load
-from typing import Dict, Any
+from typing import Any, Dict
+
+from dateutil.relativedelta import relativedelta
+
+from .constants import (
+    DENTIST_ORG_TYPE_ID,
+    DENTIST_SUB_TYPE,
+    PHARMACY_SUB_TYPE,
+    PHARMACY_ORG_TYPE_ID,
+    ServiceTypeAliases,
+)
 from .utils import (
     get_change_event_demographics,
     get_change_event_specified_opening_times,
@@ -11,16 +20,15 @@ from .utils import (
     random_dentist_odscode,
     random_pharmacy_odscode,
 )
-from .constants import PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID, PHARMACY_SUB_TYPE, DENTIST_SUB_TYPE
 
 
 def create_change_event(service_type: str) -> Dict[str, Any]:
     with open("resources/payloads/expected_schema.json", "r", encoding="utf-8") as json_file:
         payload = load(json_file)
         match service_type.upper():
-            case "PHARMACY":
+            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
                 payload["ODSCode"] = random_pharmacy_odscode()
-            case "DENTIST":
+            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
                 payload["ODSCode"] = random_dentist_odscode()
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
@@ -32,12 +40,12 @@ def create_change_event(service_type: str) -> Dict[str, Any]:
 def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
     change_event = create_change_event(service_type)
     match service_type.upper():
-        case "PHARMACY":
+        case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
             change_event["ODSCode"] = ods_code
             demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
             org_type_id = PHARMACY_ORG_TYPE_ID
             org_sub_type = PHARMACY_SUB_TYPE
-        case "DENTIST":
+        case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
             change_event["ODSCode"] = ods_code
             demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
             org_type_id = DENTIST_ORG_TYPE_ID
@@ -92,9 +100,9 @@ def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
 
 def build_same_as_dos_change_event(service_type: str):
     match service_type.upper():
-        case "DENTIST":
+        case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
             ods_code = random_dentist_odscode()
-        case "PHARMACY":
+        case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
             ods_code = get_single_service_pharmacy()
         case _:
             raise ValueError(f"Service type {service_type} does not exist")
