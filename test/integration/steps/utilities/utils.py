@@ -8,10 +8,9 @@ from random import choice
 from time import sleep, time_ns
 from typing import Any, Dict
 
-import requests
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from requests import Response
+from requests import Response, post
 
 from .aws import get_secret
 from .constants import SERVICE_TYPES
@@ -42,7 +41,7 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
         "Content-Type": "application/json",
     }
     payload["Unique_key"] = generate_random_int()
-    output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    output = post(url=URL, headers=headers, data=dumps(payload))
     return output
 
 
@@ -56,7 +55,7 @@ def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_i
     if sequence_id is not None:
         headers["sequence-number"] = str(sequence_id)
     payload["Unique_key"] = generate_random_int()
-    output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    output = post(url=URL, headers=headers, data=dumps(payload))
     return output
 
 
@@ -69,7 +68,7 @@ def process_change_request_payload(payload: dict, api_key_valid: bool) -> Respon
         "x-api-key": api_key,
         "Content-Type": "application/json",
     }
-    output = requests.request("POST", CR_URL, headers=headers, data=dumps(payload))
+    output = post(url=CR_URL, headers=headers, data=dumps(payload))
     return output
 
 

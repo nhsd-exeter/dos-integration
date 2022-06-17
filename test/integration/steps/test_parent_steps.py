@@ -13,9 +13,9 @@ from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.aws import get_logs, negative_log_check
 from .utilities.change_event import (
+    ChangeEventBuilder,
     build_same_as_dos_change_event,
     build_same_as_dos_change_event_by_ods,
-    create_change_event,
     set_opening_times_change_event,
     valid_change_event,
 )
@@ -255,7 +255,7 @@ def bank_holiday_pharmacy_closed(context):
 # # Weekday NOT present on the Opening Time
 @given("a Changed Event with the Weekday NOT present in the Opening Times data", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event}
     del context["change_event"]["OpeningTimes"][0]["Weekday"]
     return context
 
@@ -263,7 +263,7 @@ def a_change_event_with_no_openingtimes_weekday():
 # # OpeningTimeType is NOT "General" or "Additional"
 @given("a Changed Event where OpeningTimeType is NOT defined correctly", target_fixture="context")
 def a_change_event_with_invalid_openingtimetype():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event}
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
     return context
 
@@ -278,7 +278,7 @@ def a_custom_correlation_id_is_set(context, custom_correlation: str):
 # # isOpen is false AND Times in NOT blank
 @given("a Changed Event with the openingTimes IsOpen status set to false", target_fixture="context")
 def a_change_event_with_isopen_status_set_to_false():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event}
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
     return context
 
@@ -299,7 +299,7 @@ def current_ods_exists_in_ddb():
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     return context
@@ -311,7 +311,7 @@ def no_times_data_within_openingtimes(context):
     target_fixture="context",
 )
 def specified_opening_date_not_defined(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = ""
     return context
 
@@ -319,7 +319,7 @@ def specified_opening_date_not_defined(context):
 # # An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
 @when("an AdditionalOpeningDate contains data with both true and false IsOpen status", target_fixture="context")
 def same_specified_opening_date_with_true_and_false_isopen_status(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = "Dec 25 2022"
     context["change_event"]["OpeningTimes"][7]["IsOpen"] = False
     return context
