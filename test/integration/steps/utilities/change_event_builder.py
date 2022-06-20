@@ -6,14 +6,21 @@ from uuid import uuid4
 from dateutil.relativedelta import relativedelta
 
 from .change_event import ChangeEvent
-from .constants import (DENTIST_ORG_TYPE_ID, DENTIST_SUB_TYPE,
-                        PHARMACY_ORG_TYPE_ID, PHARMACY_SUB_TYPE,
-                        ServiceTypeAliases)
-from .utils import (get_change_event_demographics,
-                    get_change_event_specified_opening_times,
-                    get_change_event_standard_opening_times,
-                    get_single_service_pharmacy, random_dentist_odscode,
-                    random_pharmacy_odscode)
+from .constants import (
+    DENTIST_ORG_TYPE_ID,
+    DENTIST_SUB_TYPE,
+    PHARMACY_ORG_TYPE_ID,
+    PHARMACY_SUB_TYPE,
+    ServiceTypeAliases,
+)
+from .utils import (
+    get_change_event_demographics,
+    get_change_event_specified_opening_times,
+    get_change_event_standard_opening_times,
+    get_single_service_pharmacy,
+    random_dentist_odscode,
+    random_pharmacy_odscode,
+)
 
 
 class ChangeEventBuilder:
