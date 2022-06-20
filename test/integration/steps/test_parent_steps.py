@@ -12,7 +12,7 @@ from faker import Faker
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.aws import get_logs, negative_log_check
-from .utilities.change_event import (
+from .utilities.change_event_builder import (
     ChangeEventBuilder,
     build_same_as_dos_change_event,
     set_opening_times_change_event,
@@ -71,6 +71,7 @@ def a_changed_contact_event_is_valid(contact: str):
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
 
         validated = valid_change_event(context["change_event"])
+    print(f"Validated: {validated} - {context['change_event']['Contacts'][1]['ContactValue']}")
     return context
 
 
