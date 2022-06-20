@@ -23,80 +23,19 @@ from .utils import (
 )
 
 
-def build_same_as_dos_change_event_by_ods(service_type: str, ods_code: str):
-    change_event = ChangeEventBuilder(service_type).change_event
-    match service_type.upper():
-        case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-            change_event["ODSCode"] = ods_code
-            demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
-            org_type_id = PHARMACY_ORG_TYPE_ID
-            org_sub_type = PHARMACY_SUB_TYPE
-        case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
-            change_event["ODSCode"] = ods_code
-            demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
-            org_type_id = DENTIST_ORG_TYPE_ID
-            org_sub_type = DENTIST_SUB_TYPE
-        case _:
-            raise ValueError(f"Service type {service_type} does not exist")
-    print(f"Latest selected ODSCode: {change_event['ODSCode']}")
-    change_event["OrganisationTypeId"] = org_type_id
-    change_event["OrganisationSubType"] = org_sub_type
-    change_event["OrganisationName"] = demographics_data["publicname"]
-    change_event["Postcode"] = demographics_data["postcode"]
-    change_event["Contacts"][0]["ContactValue"] = demographics_data["web"]
-    change_event["Contacts"][1]["ContactValue"] = demographics_data["publicphone"]
-    address_keys = ["Address1", "Address2", "Address3", "City", "County"]
-    for address_key in address_keys:
-        change_event[address_key] = None
-    address_parts = demographics_data["address"].split("$", 4)
-    counter = 0
-    for address_part in address_parts:
-        change_event[address_keys[counter]] = address_part
-        counter += 1
-    standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
-    change_event["OpeningTimes"] = []
-    for day in standard_opening_times:
-        for opening_times in standard_opening_times[day]:
-            change_event["OpeningTimes"].append(
-                {
-                    "Weekday": day,
-                    "OpeningTime": opening_times["start_time"],
-                    "ClosingTime": opening_times["end_time"],
-                    "OpeningTimeType": "General",
-                    "AdditionalOpeningDate": "",
-                    "IsOpen": True,
-                }
-            )
-    specified_opening_times = get_change_event_specified_opening_times(demographics_data["id"])
-    for date in specified_opening_times:
-        for opening_times in specified_opening_times[date]:
-            str_date = datetime.strptime(date, "%Y-%m-%d")
-            change_event["OpeningTimes"].append(
-                {
-                    "Weekday": "",
-                    "OpeningTime": opening_times["start_time"],
-                    "ClosingTime": opening_times["end_time"],
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
-                    "IsOpen": True,
-                }
-            )
-    return change_event
-
-
 def build_same_as_dos_change_event(service_type: str):
-    match service_type.upper():
-        case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
-            ods_code = random_dentist_odscode()
-        case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-            ods_code = get_single_service_pharmacy()
-        case _:
-            raise ValueError(f"Service type {service_type} does not exist")
-    change_event = build_same_as_dos_change_event_by_ods(service_type, ods_code)
-    if valid_change_event(change_event):
-        return change_event
-    else:
-        return build_same_as_dos_change_event(service_type)
+    while True:
+        match service_type.upper():
+            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
+                ods_code = random_dentist_odscode()
+            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+                ods_code = get_single_service_pharmacy()
+            case _:
+                raise ValueError(f"Service type {service_type} does not exist")
+        change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
+        if valid_change_event(change_event):
+            break
+    return change_event
 
 
 def valid_change_event(change_event: dict) -> bool:
@@ -112,7 +51,8 @@ def valid_change_event(change_event: dict) -> bool:
 
 
 def set_opening_times_change_event(service_type: str):
-    change_event = ChangeEventBuilder(service_type).change_event
+    change_event: ChangeEvent = ChangeEventBuilder(service_type).change_event
+    change_event: Dict = change_event.get_change_event()
     date = datetime.today() + relativedelta(months=1)
     has_set_closed_day = False
     for day in change_event["OpeningTimes"]:
@@ -168,6 +108,7 @@ class ChangeEvent:
     phone: str | None
     standard_opening_times: List[Dict[str, Any]] | None
     specified_opening_times: List[Dict[str, Any]] | None
+    unique_key: str = ""
 
     def __init__(
         self,
@@ -185,6 +126,7 @@ class ChangeEvent:
         phone: str | None = None,
         standard_opening_times: None = None,
         specified_opening_times: None = None,
+        unique_key: str = "",
     ) -> None:
         self.odscode = odscode
         self.organisation_name = organisation_name
@@ -200,6 +142,7 @@ class ChangeEvent:
         self.phone = phone
         self.standard_opening_times = standard_opening_times
         self.specified_opening_times = specified_opening_times
+        self.unique_key = unique_key
 
     def build_contacts(self) -> List[None | Dict[str, Any]]:
         contacts: List = []
@@ -253,7 +196,7 @@ class ChangeEvent:
 
 class ChangeEventBuilder:
     service_type: str
-    change_event: Dict[str, Any]
+    change_event: ChangeEvent
 
     def __init__(self, service_type: str):
         self.service_type = service_type
@@ -343,10 +286,70 @@ class ChangeEventBuilder:
                     "IsOpen": True,
                 },
             ],
-        ).get_change_event()
+        )
+
+    def build_same_as_dos_change_event_by_ods(self, ods_code: str):
+        change_event = self.change_event.get_change_event()
+        match self.service_type.upper():
+            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+                change_event["ODSCode"] = ods_code
+                demographics_data = get_change_event_demographics(change_event["ODSCode"], PHARMACY_ORG_TYPE_ID)
+                org_type_id = PHARMACY_ORG_TYPE_ID
+                org_sub_type = PHARMACY_SUB_TYPE
+            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
+                change_event["ODSCode"] = ods_code
+                demographics_data = get_change_event_demographics(change_event["ODSCode"], DENTIST_ORG_TYPE_ID)
+                org_type_id = DENTIST_ORG_TYPE_ID
+                org_sub_type = DENTIST_SUB_TYPE
+            case _:
+                raise ValueError(f"Service type {self.service_type} does not exist")
+        print(f"Latest selected ODSCode: {change_event['ODSCode']}")
+        change_event["OrganisationTypeId"] = org_type_id
+        change_event["OrganisationSubType"] = org_sub_type
+        change_event["OrganisationName"] = demographics_data["publicname"]
+        change_event["Postcode"] = demographics_data["postcode"]
+        change_event["Contacts"][0]["ContactValue"] = demographics_data["web"]
+        change_event["Contacts"][1]["ContactValue"] = demographics_data["publicphone"]
+        address_keys = ["Address1", "Address2", "Address3", "City", "County"]
+        for address_key in address_keys:
+            change_event[address_key] = None
+        address_parts = demographics_data["address"].split("$", 4)
+        counter = 0
+        for address_part in address_parts:
+            change_event[address_keys[counter]] = address_part
+            counter += 1
+        standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
+        change_event["OpeningTimes"] = []
+        for day in standard_opening_times:
+            for opening_times in standard_opening_times[day]:
+                change_event["OpeningTimes"].append(
+                    {
+                        "Weekday": day,
+                        "OpeningTime": opening_times["start_time"],
+                        "ClosingTime": opening_times["end_time"],
+                        "OpeningTimeType": "General",
+                        "AdditionalOpeningDate": "",
+                        "IsOpen": True,
+                    }
+                )
+        specified_opening_times = get_change_event_specified_opening_times(demographics_data["id"])
+        for date in specified_opening_times:
+            for opening_times in specified_opening_times[date]:
+                str_date = datetime.strptime(date, "%Y-%m-%d")
+                change_event["OpeningTimes"].append(
+                    {
+                        "Weekday": "",
+                        "OpeningTime": opening_times["start_time"],
+                        "ClosingTime": opening_times["end_time"],
+                        "OpeningTimeType": "Additional",
+                        "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
+                        "IsOpen": True,
+                    }
+                )
+        return change_event
 
     def make_change_event_unique(self):
-        self.change_event["unique_key"] = str(uuid4())
+        self.change_event.unique_key = str(uuid4())
 
     def get_default_random_odscode(self) -> str:
         match self.service_type.upper():

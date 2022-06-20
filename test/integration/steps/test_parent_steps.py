@@ -15,7 +15,6 @@ from .utilities.aws import get_logs, negative_log_check
 from .utilities.change_event import (
     ChangeEventBuilder,
     build_same_as_dos_change_event,
-    build_same_as_dos_change_event_by_ods,
     set_opening_times_change_event,
     valid_change_event,
 )
@@ -147,7 +146,11 @@ def dos_event_from_scratch(org_type: str):
 
 @given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
 def a_change_event_is_valid_with_contact_set(contact: str):
-    context = {"change_event": build_same_as_dos_change_event_by_ods("pharmacy", get_odscode_with_contact_data())}
+    context = {
+        "change_event": ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
+            get_odscode_with_contact_data()
+        )
+    }
     match contact.lower():
         case "website":
             del context["change_event"]["Contacts"][0]
