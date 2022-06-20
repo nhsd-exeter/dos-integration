@@ -23,75 +23,6 @@ from .utils import (
 )
 
 
-def build_same_as_dos_change_event(service_type: str):
-    while True:
-        match service_type.upper():
-            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
-                ods_code = random_dentist_odscode()
-            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-                ods_code = get_single_service_pharmacy()
-            case _:
-                raise ValueError(f"Service type {service_type} does not exist")
-        change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
-        if valid_change_event(change_event):
-            break
-    return change_event
-
-
-def valid_change_event(change_event: dict) -> bool:
-    """This function checks if the data stored in DoS would pass the change request
-    validation within DoS API Gateway"""
-    if not re.fullmatch(
-        r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", str(change_event["Contacts"][0]["ContactValue"])
-    ):  # Website
-        return False
-    if not re.fullmatch(r"[+0][0-9 ()]{9,}", str(change_event["Contacts"][1]["ContactValue"])):  # Phone
-        return False
-    return True
-
-
-def set_opening_times_change_event(service_type: str):
-    change_event: ChangeEvent = ChangeEventBuilder(service_type).change_event
-    change_event: Dict = change_event.get_change_event()
-    date = datetime.today() + relativedelta(months=1)
-    has_set_closed_day = False
-    for day in change_event["OpeningTimes"]:
-        if day["IsOpen"] and day["OpeningTimeType"] == "General":
-            closed_day = day["Weekday"]
-            has_set_closed_day = True
-            break
-    if has_set_closed_day is False:
-        raise ValueError("ERROR!.. Unable to find 'Open' Standard opening time")
-    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] != closed_day, change_event["OpeningTimes"]))
-    change_event["OpeningTimes"].append(
-        {
-            "Weekday": closed_day,
-            "OpeningTime": "",
-            "ClosingTime": "",
-            "Times": "-",
-            "OffsetOpeningTime": 0,
-            "OffsetClosingTime": 0,
-            "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "",
-            "IsOpen": False,
-        }
-    )
-    change_event["OpeningTimes"].append(
-        {
-            "Weekday": "",
-            "OpeningTime": "",
-            "ClosingTime": "",
-            "Times": "-",
-            "OffsetOpeningTime": 0,
-            "OffsetClosingTime": 0,
-            "OpeningTimeType": "Additional",
-            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
-            "IsOpen": False,
-        }
-    )
-    return change_event
-
-
 @dataclass(repr=True)
 class ChangeEvent:
     odscode: str | None
@@ -160,7 +91,7 @@ class ChangeEvent:
                 {
                     "ContactType": "Primary",
                     "ContactAvailabilityType": "Office hours",
-                    "ContactMethodType": "Phone",
+                    "ContactMethodType": "Telephone",
                     "ContactValue": self.phone,
                 }
             )
@@ -382,3 +313,73 @@ class ChangeEventBuilder:
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
         return organisation_sub_type
+
+
+def valid_change_event(change_event: dict) -> bool:
+    """This function checks if the data stored in DoS would pass the change request
+    validation within DoS API Gateway"""
+    if not re.fullmatch(
+        r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
+        str(change_event["Contacts"][0]["ContactValue"]),
+    ):  # Website
+        return False
+    if not re.fullmatch(r"[+0][0-9 ()]{9,}", str(change_event["Contacts"][1]["ContactValue"])):  # Phone
+        return False
+    return True
+
+
+def build_same_as_dos_change_event(service_type: str):
+    while True:
+        match service_type.upper():
+            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
+                ods_code = random_dentist_odscode()
+            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+                ods_code = get_single_service_pharmacy()
+            case _:
+                raise ValueError(f"Service type {service_type} does not exist")
+        change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
+        if valid_change_event(change_event):
+            break
+    return change_event
+
+
+def set_opening_times_change_event(service_type: str):
+    change_event: ChangeEvent = ChangeEventBuilder(service_type).change_event
+    change_event: Dict = change_event.get_change_event()
+    date = datetime.today() + relativedelta(months=1)
+    has_set_closed_day = False
+    for day in change_event["OpeningTimes"]:
+        if day["IsOpen"] and day["OpeningTimeType"] == "General":
+            closed_day = day["Weekday"]
+            has_set_closed_day = True
+            break
+    if has_set_closed_day is False:
+        raise ValueError("ERROR!.. Unable to find 'Open' Standard opening time")
+    change_event["OpeningTimes"] = list(filter(lambda day: day["Weekday"] != closed_day, change_event["OpeningTimes"]))
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": closed_day,
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "General",
+            "AdditionalOpeningDate": "",
+            "IsOpen": False,
+        }
+    )
+    change_event["OpeningTimes"].append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "Times": "-",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
+            "IsOpen": False,
+        }
+    )
+    return change_event

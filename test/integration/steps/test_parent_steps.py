@@ -56,7 +56,7 @@ FAKER = Faker("en_GB")
 
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
-def a_changed_contact_event_is_valid(contact):
+def a_changed_contact_event_is_valid(contact: str):
     context = {"change_event": build_same_as_dos_change_event("pharmacy")}
     validated = False
     while validated is False:
@@ -336,6 +336,7 @@ def the_change_event_is_sent_for_processing(context, valid_or_invalid):
     context["start_time"] = dt.today().timestamp()
     if "correlation_id" not in context:
         context["correlation_id"] = generate_correlation_id()
+        print(f"Phone Number: {context['change_event']['Contacts'][1]['ContactValue']}")
     context["response"] = process_payload(
         context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
     )

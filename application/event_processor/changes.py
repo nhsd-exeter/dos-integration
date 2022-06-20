@@ -36,8 +36,8 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
     Args:
         changes (dict): Change Request changes
         change_key (str): Key to add to the change request
-        dos_value (str|None): Field from the DoS database for comparision
-        nhs_uk_value (str|None): NHS UK Entity value for comparision
+        dos_value (str|None): Field from the DoS database for comparison
+        nhs_uk_value (str|None): NHS UK Entity value for comparison
 
     Returns:
         dict: Change Request changes
@@ -58,8 +58,8 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
     Args:
         changes (dict): Change Request changes
-        dos_service (DoSService): DoS Service for comparision
-        nhs_entity (NHSEntity): NHS UK Entity for comparision
+        dos_service (DoSService): DoS Service for comparison
+        nhs_entity (NHSEntity): NHS UK Entity for comparison
     """
 
     # Skip if invalid times. This check will have already been done and logged out fully in event_processor
@@ -94,7 +94,6 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
 
 def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
-
     nhs_uk_address_string = "$".join(nhs_entity.address_lines)
     dos_address = dos_service.address
     is_address_same = True
