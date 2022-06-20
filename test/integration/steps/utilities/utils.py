@@ -96,13 +96,6 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
     return deserialized
 
 
-def get_lambda_info(info_param: str) -> str:
-    values = {"state": "State", "status": "LastUpdateStatus", "description": "Description"}
-    param = values[info_param]
-    response = LAMBDA_CLIENT_FUNCTIONS.get_function(FunctionName=EVENT_PROCESSOR)
-    return response["Configuration"][param]
-
-
 def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
     """Get latest sequence id for a given odscode from dynamodb"""
     try:
