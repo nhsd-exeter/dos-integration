@@ -300,6 +300,7 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
     """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = confirm_changes(corr_id)
+    if_value_not_in_string_raise_exception(search_key, str(response))
     for row in response:
         change_value = dict(loads(row[0]))
         for dos_change_key in change_value["new"]:
@@ -311,28 +312,20 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
 def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
-    row_found = False
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if dict(loads(row[0]))["new"][k]["changetype"] != "delete":
-                    date_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][:10]
-                    # Convert and format 'search_param' to datetime type
-                    date_in_payload = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
-                    if date_in_dos == date_in_payload:
-                        row_found = True
-    if row_found is True:
-        return True
-    else:
-        raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
+    if_value_not_in_string_raise_exception(search_key, str(response))
+    expected_date = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
+    for db_row in response:
+        change_row = dict(loads(db_row[0])["new"])
+        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
+            for date in change_row[search_key]["data"]["add"]:
+                if expected_date in date:
+                    return True
+    raise ValueError(f'Specified date change "{search_param}" not found in Dos changes..')
 
 
 def check_contact_delete_in_dos(corr_id: str, search_key: str):
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
     row_found = False
     for row in response:
         for k in dict(loads(row[0]))["new"]:
@@ -350,27 +343,21 @@ def check_contact_delete_in_dos(corr_id: str, search_key: str):
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
-    row_found = False
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if dict(loads(row[0]))["new"][k]["changetype"] != "delete":
-                    time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][11:]
-                    if time_in_dos == search_param:
-                        row_found = True
-    if row_found is True:
-        return True
-    else:
-        raise ValueError("Specified Opening-time time change not found in Dos changes..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
+    for db_row in response:
+        change_row = dict(loads(db_row[0])["new"])
+        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
+            time_periods = change_row[search_key]["data"]["add"]
+            for time_period in time_periods:
+                if search_param in time_period:
+                    return True
+    raise ValueError("Specified Opening-time time change not found in Dos changes..")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
     for row in response:
         for k in dict(loads(row[0]))["new"]:
             if k == search_key:
@@ -379,6 +366,11 @@ def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: 
                     return True
                 else:
                     raise ValueError("Standard Opening-time time change not found in Dos changes... {response}")
+
+
+def if_value_not_in_string_raise_exception(value: str, string: str) -> None:
+    if value not in str(string):
+        raise ValueError(f"{value} not found..")
 
 
 def time_to_sec(t):
