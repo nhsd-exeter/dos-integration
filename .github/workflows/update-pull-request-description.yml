@@ -20,7 +20,7 @@ jobs:
       - name: Get branch designator
         run: echo "BRANCH_DESIGNATOR=$(echo ${{ steps.branch_name.outputs.branch }} | sed 's|/.*||')" >> $GITHUB_ENV
       - name: Get template name
-        run: echo "TEMPLATE_NAME=$(cat .github/PULL_REQUEST_TEMPLATE/${{ steps.branch_name.outputs.branch }}_pull_request_template.md > /dev/null 2>&1 && echo ${{ steps.branch_name.outputs.branch }} || echo task_pull_request_template.md)" >> $GITHUB_ENV
+        run: echo "TEMPLATE_NAME=$(cat .github/PULL_REQUEST_TEMPLATE/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md > /dev/null 2>&1 && echo ${{ steps.branch_name.outputs.branch }} || echo task_pull_request_template.md)" >> $GITHUB_ENV
       - name: Render Pull Request template
         id: template
         uses: chuhlomin/render-template@v1.5

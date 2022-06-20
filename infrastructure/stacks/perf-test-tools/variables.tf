@@ -46,9 +46,6 @@ variable "aws_account_id_live_parent" {
 # # TEXAS COMMON
 # ##############
 
-variable "perf_pipeline_branch_name" {
-  description = ""
-}
 variable "pipeline_notification_name" {
   description = ""
 }

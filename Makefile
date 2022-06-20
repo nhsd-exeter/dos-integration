@@ -520,17 +520,7 @@ load-test-in-pipeline: # An all in one load test make target
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 send-performance-dashboard-slack-message:
-	aws sns publish --topic-arn arn:aws:sns:$(AWS_REGION):$(AWS_ACCOUNT_ID_NONPROD):uec-dos-int-dev-pipeline-topic --message '{
-	"version": "0",
-	"id": "13cde686-328b-6117-af20-0e5566167482",
-	"detail-type": "Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)",
-	"source": "aws.ecr",
-	"account": "$(AWS_ACCOUNT_ID_NONPROD)",
-	"time": "2019-11-16T01:54:34Z",
-	"region": "$(AWS_REGION)",
-	"resources": [],
-	"detail": {}
-	}'
+	make slack-codebuild-notification PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PIPELINE_NAME="$(PERF_TEST_TITLE) Tests Codebuild Stage" CODEBUILD_PROJECT_NAME=$(CB_PROJECT_NAME) CODEBUILD_BUILD_ID=$(CODEBUILD_BUILD_ID) SLACK_MESSAGE="Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)"
 
 update-perf-environment-to-use-mock-api: # Updates the performance environment to connect to mock DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
 	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
