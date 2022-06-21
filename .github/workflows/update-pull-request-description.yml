@@ -18,7 +18,7 @@ jobs:
       - name: Get branch number
         run: echo "BRANCH_NUMBER=$(echo ${{ steps.branch_name.outputs.branch }} | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}')" >> $GITHUB_ENV
       - name: Get branch designator
-        run: echo "BRANCH_DESIGNATOR=$(echo ${{ steps.branch_name.outputs.branch }} | sed 's|/.*||')" >> $GITHUB_ENV
+        run: echo "BRANCH_DESIGNATOR=$(echo ${{ steps.branch_name.outputs.branch }}  | sed 's|/.*||' | sed 's|_.*||')" >> $GITHUB_ENV
       - name: Get template name
         run: echo "TEMPLATE_NAME=$(cat .github/PULL_REQUEST_TEMPLATE/${{ env.BRANCH_DESIGNATOR }}_pull_request_template.md > /dev/null 2>&1 && echo ${{ steps.branch_name.outputs.branch }} || echo task_pull_request_template.md)" >> $GITHUB_ENV
       - name: Render Pull Request template
