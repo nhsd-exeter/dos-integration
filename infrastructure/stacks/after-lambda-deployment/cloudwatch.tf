@@ -5,7 +5,8 @@ resource "aws_cloudwatch_query_definition" "errors" {
     "/aws/lambda/${var.event_processor_lambda_name}",
     "/aws/lambda/${var.event_sender_lambda_name}",
     "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}"
+    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.event_replay_lambda_name}"
   ]
 
   query_string = <<EOF
@@ -29,6 +30,24 @@ resource "aws_cloudwatch_query_definition" "by_correlation_id" {
 
   query_string = <<EOF
 fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
+| filter correlation_id == 'REPLACE'
+| sort @timestamp
+EOF
+}
+
+resource "aws_cloudwatch_query_definition" "by_correlation_id_simple" {
+  name = "${var.project_id}/${var.environment}/by-correlation-id-simple"
+
+  log_group_names = [
+    "/aws/lambda/${var.event_processor_lambda_name}",
+    "/aws/lambda/${var.event_sender_lambda_name}",
+    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
+    "/aws/lambda/${var.event_replay_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp, message
 | filter correlation_id == 'REPLACE'
 | sort @timestamp
 EOF
@@ -70,9 +89,6 @@ fields @timestamp,correlation_id,ods_code,level,message_received,function_name, 
 | sort @timestamp
 EOF
 }
-
-
-
 
 resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
 
@@ -310,7 +326,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "period": 300,
+                "period": 60,
                 "stat": "Sum"
             }
         },
