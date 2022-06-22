@@ -8,7 +8,6 @@ from change_request import (
     OPENING_DAYS_KEY,
     PHONE_CHANGE_KEY,
     POSTCODE_CHANGE_KEY,
-    PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
 from common.dos import DoSService, get_valid_dos_postcode
@@ -27,7 +26,6 @@ def get_changes(dos_service: DoSService, nhs_entity: NHSEntity) -> Dict[str, str
     changes = {}
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_service.web, nhs_entity.website)
     update_changes(changes, PHONE_CHANGE_KEY, dos_service.publicphone, nhs_entity.phone)
-    update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_service.publicname, nhs_entity.org_name)
     update_changes_with_address_and_postcode(changes, dos_service, nhs_entity)
     update_changes_with_opening_times(changes, dos_service, nhs_entity)
     return changes
