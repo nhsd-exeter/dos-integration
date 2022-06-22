@@ -182,25 +182,24 @@ def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
     return standard_opening_times
 
 
-def get_dos_locations(postcode: Union[str, None] = None) -> List[DoSLocation]:
+def get_dos_locations(postcode: Union[str, None] = None, try_cache: bool = True) -> List[DoSLocation]:
     logger.info(f"Searching for DoS locations with postcode of '{postcode}'")
 
-    normalised_pc = postcode.replace(" ", "").upper()
+    norm_pc = postcode.replace(" ", "").upper()
     global dos_location_cache
-    if normalised_pc in dos_location_cache:
-        logger.info(f"Postcode {normalised_pc} location/s found in local cache.")
-        return dos_location_cache[normalised_pc]
+    if try_cache and norm_pc in dos_location_cache:
+        logger.info(f"Postcode {norm_pc} location/s found in local cache.")
+        return dos_location_cache[norm_pc]
 
-    # Regex matches any combination of whitespace in postcode
-    pc_regex = " *".join(normalised_pc)
+    # Search for any variation of whitespace in postcode
+    postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode ~* %(pc_regex)s"
-    named_args = {"pc_regex": pc_regex}
-    c = query_dos_db(sql_command, named_args)
+    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode IN %(pc_variations)s"
+    c = query_dos_db(sql_command, named_args={"pc_variations": tuple(postcode_variations)})
 
     dos_locations = [DoSLocation(**row) for row in c.fetchall()]
-    dos_location_cache[normalised_pc] = dos_locations
-    logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
+    dos_location_cache[norm_pc] = dos_locations
+    logger.debug(f"Postcode location/s for {norm_pc} added to local cache.")
 
     return dos_locations
 
