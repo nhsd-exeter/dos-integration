@@ -148,6 +148,7 @@ def test_update_changes_for_website(dos_val, nhs_val, expected):
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_val, nhs_val)
     assert changes == expected, f"Should return {expected}, actually: {changes}"
 
+
 @pytest.mark.parametrize(
     "dos_val, nhs_val,expected",
     [
