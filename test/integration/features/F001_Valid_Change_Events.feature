@@ -93,3 +93,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a Changed Event with value "''" for "website"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
+
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario: F001S015. No CR created with a change of public name data
+    Given a Changed Event with value "New Pharmacy" for "organisation_name"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event with changed "public_name" is not captured by Dos
