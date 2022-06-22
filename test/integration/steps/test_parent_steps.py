@@ -827,7 +827,7 @@ def no_opening_times_errors(context):
 @then("the Changed Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context):
     #   the test env uses a 'prod-like' DOS endpoint which rejects these
-    current_env = getenv("ENVIRONMENT")
+    current_env = getenv("PROFILE")
     if "test" in current_env:
         query = (
             "fields response_status_code | sort @timestamp asc"
