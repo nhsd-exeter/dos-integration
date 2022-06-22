@@ -13,7 +13,6 @@ from ..change_request import (
     OPENING_DAYS_KEY,
     PHONE_CHANGE_KEY,
     POSTCODE_CHANGE_KEY,
-    PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
 )
 from ..changes import (
@@ -108,7 +107,6 @@ def test_get_changes_different_changes():
             ADDRESS_LINES_KEY: [address1, address2, address3, city, county],
             POSTCODE_CHANGE_KEY: nhs_entity.postcode,
         },
-        PUBLICNAME_CHANGE_KEY: organisation_name,
         WEBSITE_CHANGE_KEY: website,
         PHONE_CHANGE_KEY: phone,
     }
@@ -123,7 +121,6 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     changes = {}
     # Act
     update_changes(changes, PHONE_CHANGE_KEY, "000000000", "000000000")
-    update_changes(changes, PUBLICNAME_CHANGE_KEY, "boots", "boots")
     update_changes(changes, WEBSITE_CHANGE_KEY, "www.wow.co.uk", "www.wow.co.uk")
     # Assert
     assert changes == {}, f"Should return empty dict, actually: {changes}"
@@ -150,30 +147,6 @@ def test_update_changes_for_website(dos_val, nhs_val, expected):
     # Act
     update_changes(changes, WEBSITE_CHANGE_KEY, dos_val, nhs_val)
     assert changes == expected, f"Should return {expected}, actually: {changes}"
-
-
-@pytest.mark.parametrize(
-    "dos_val, nhs_val,expected",
-    [
-        ("test1", "test2", {"public_name": "test2"}),
-        ("", "test2", {"public_name": "test2"}),
-        (None, "test2", {"public_name": "test2"}),
-        ("test2", None, {"public_name": ""}),
-        ("test2", "", {"public_name": ""}),
-        ("test2", "test2", {}),
-        ("", None, {}),
-        (None, "", {}),
-        ("", " ", {}),
-        (None, None, {}),
-    ],
-)
-def test_update_changes_for_publicname(dos_val, nhs_val, expected):
-    # Arrange
-    changes = {}
-    # Act
-    update_changes(changes, PUBLICNAME_CHANGE_KEY, dos_val, nhs_val)
-    assert changes == expected, f"Should return {expected}, actually: {changes}"
-
 
 @pytest.mark.parametrize(
     "dos_val, nhs_val,expected",
