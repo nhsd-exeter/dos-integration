@@ -101,6 +101,8 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
             context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
         case "phone_no":
             context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+        case "organisation_name":
+            context["change_event"]["OrganisationName"] = get_value_from_data()
         case _:
             raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     del context["correlation_id"]
@@ -503,6 +505,19 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
     assert (
         check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+
+
+@then(parsers.parse('the Changed Event with changed "{contact}" is not captured by Dos'))
+def the_changed_contact_is_not_accepted_by_dos(context, contact):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    if contact == "public_name":
+        cms = "cmspublicname"
+        changed_data = context["change_event"]["OrganisationName"]
+    else:
+        raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+    assert (
+        check_received_data_in_dos(context["correlation_id"], cms, changed_data) is False
+    ), f"ERROR!.. Dos incorrectly updated with {contact} change: {changed_data}"
 
 
 @then("the Changed Request with changed specified date and time is captured by Dos")
