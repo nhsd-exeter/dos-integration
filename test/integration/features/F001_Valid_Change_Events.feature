@@ -56,7 +56,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+@complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S009. A valid change with website removal is processed by dos
     Given a Changed Event to unset "website"
     When the Changed Event is sent for processing with "valid" api key
@@ -76,7 +76,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "phone is not equal"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S012. No CR created with empty phone data
     Given a Changed Event with value "''" for "phone_no"
     When the Changed Event is sent for processing with "valid" api key
@@ -88,8 +88,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+@complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S014. No CR created with empty website data
     Given a Changed Event with value "''" for "website"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" does not show "message" with message "website is not equal"
+
+@complete @dev @pharmacy_no_log_searches
+  Scenario: F001S015. No CR created with a change of public name data
+    Given a Changed Event with value "New Pharmacy" for "organisation_name"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event with changed "public_name" is not captured by Dos

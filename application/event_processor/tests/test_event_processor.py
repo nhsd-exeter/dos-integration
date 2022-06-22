@@ -16,7 +16,6 @@ from ..change_request import (
     ADDRESS_LINES_KEY,
     PHONE_CHANGE_KEY,
     POSTCODE_CHANGE_KEY,
-    PUBLICNAME_CHANGE_KEY,
     WEBSITE_CHANGE_KEY,
     ChangeRequest,
 )
@@ -128,7 +127,6 @@ def test_get_change_requests_full_change_request():
 
     expected_changes = {
         WEBSITE_CHANGE_KEY: nhs_entity.website,
-        PUBLICNAME_CHANGE_KEY: nhs_entity.org_name,
         ADDRESS_CHANGE_KEY: {
             ADDRESS_LINES_KEY: nhs_entity.address_lines,
             POSTCODE_CHANGE_KEY: nhs_entity.postcode,
