@@ -94,3 +94,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a Changed Event with a "''" value for "website"
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "No changes identified"
+
+@complete @dev @pharmacy_no_log_searches
+  Scenario: F001S015. No CR created with a change of public name data
+    Given a Changed Event with a "New Pharmacy" value for "organisation_name"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event with changed "public_name" is not captured by Dos

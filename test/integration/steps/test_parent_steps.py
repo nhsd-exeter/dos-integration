@@ -101,6 +101,8 @@ def a_valid_changed_event_with_empty_contact(data, contact_field):
             context["change_event"]["Contacts"][0]["ContactValue"] = get_value_from_data()
         case "phone_no":
             context["change_event"]["Contacts"][1]["ContactValue"] = get_value_from_data()
+        case "organisation_name":
+            context["change_event"]["OrganisationName"] = get_value_from_data()
         case _:
             raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
     del context["correlation_id"]
@@ -373,11 +375,7 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
     context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     odscode = context["change_event"]["ODSCode"]
-    seqid = 0
-    if context["sequenceid"] == 100:
-        seqid = 100
-    else:
-        seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+    seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
     return context
@@ -505,6 +503,19 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
 
 
+@then(parsers.parse('the Changed Event with changed "{contact}" is not captured by Dos'))
+def the_changed_contact_is_not_accepted_by_dos(context, contact):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    if contact == "public_name":
+        cms = "cmspublicname"
+        changed_data = context["change_event"]["OrganisationName"]
+    else:
+        raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+    assert (
+        check_received_data_in_dos(context["correlation_id"], cms, changed_data) is False
+    ), f"ERROR!.. Dos incorrectly updated with {contact} change: {changed_data}"
+
+
 @then("the Changed Request with changed specified date and time is captured by Dos")
 def the_changed_opening_time_is_accepted_by_dos(context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
@@ -620,7 +631,7 @@ def no_opening_times_errors(context):
 @then("the Changed Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context):
     #   the test env uses a 'prod-like' DOS endpoint which rejects these
-    current_env = getenv("ENVIRONMENT")
+    current_env = getenv("PROFILE")
     if "test" in current_env:
         query = (
             "fields response_status_code | sort @timestamp asc"

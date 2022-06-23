@@ -305,17 +305,15 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
         sleep(20)
 
 
-def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str):
+def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
     """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = confirm_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
     for row in response:
         change_value = dict(loads(row[0]))
         for dos_change_key in change_value["new"]:
             if dos_change_key == search_key and search_param in change_value["new"][dos_change_key]["data"]:
                 return True
-    raise ValueError(f"{search_param} not found in Dos changes... {response}")
+    return False
 
 
 def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
