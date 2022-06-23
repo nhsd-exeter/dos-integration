@@ -375,11 +375,7 @@ def the_change_event_is_sent_with_duplicate_sequence(context):
     context["start_time"] = dt.today().timestamp()
     context["correlation_id"] = generate_correlation_id()
     odscode = context["change_event"]["ODSCode"]
-    seqid = 0
-    if context["sequenceid"] == 100:
-        seqid = 100
-    else:
-        seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+    seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
     context["response"] = process_payload_with_sequence(context["change_event"], context["correlation_id"], seqid)
     context["sequence_no"] = seqid
     return context
