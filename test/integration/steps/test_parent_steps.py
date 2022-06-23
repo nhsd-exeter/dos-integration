@@ -688,7 +688,7 @@ def specified_date_is_removed_from_dos(context):
 
 
 @then(parsers.parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
-def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_closed):
+def event_replayed_with_pharmacy_closed(context, open_or_closed):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
     match open_or_closed.upper():
         case "OPEN":
@@ -704,7 +704,7 @@ def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_close
         case _:
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     context["response"] = process_payload(
-        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
+        context["change_event"], True, context["correlation_id"]
     )
     return context
 

@@ -300,7 +300,6 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
     """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = confirm_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
     for row in response:
         change_value = dict(loads(row[0]))
         for dos_change_key in change_value["new"]:
