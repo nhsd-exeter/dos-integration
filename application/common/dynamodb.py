@@ -11,6 +11,10 @@ from aws_lambda_powertools.logging.logger import Logger
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 logger = Logger(child=True)
 
+logger.debug("Setting up ddb client")
+dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+logger.debug("ddb client setup done.")
+
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     """MD5 hash of a dictionary."""
@@ -35,10 +39,6 @@ def put_circuit_is_open(circuit: str, is_open: bool) -> None:
         "IsOpen": is_open,
     }
     try:
-        logger.debug("Setting up ddb client")
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        logger.debug("ddb client setup done.")
-
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
@@ -55,10 +55,6 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         Union[bool, None]: returns the status or None if the circuit does not exist
     """
     try:
-        logger.debug("Setting up ddb client")
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        logger.debug("ddb client setup done.")
-
         respone = dynamodb.get_item(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             Key={
@@ -97,10 +93,6 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         "Event": loads(dumps(change_event), parse_float=Decimal),
     }
     try:
-        logger.debug("Setting up ddb client")
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        logger.debug("ddb client setup done.")
-
         serializer = TypeSerializer()
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
@@ -118,10 +110,6 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
         int: Sequence number of the message or None if not present
     """
     try:
-        logger.debug("Setting up ddb client")
-        dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-        logger.debug("ddb client setup done.")
-
         resp = dynamodb.query(
             TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
             IndexName="gsi_ods_sequence",
