@@ -12,10 +12,9 @@ from faker import Faker
 from pytest_bdd import given, parsers, scenarios, then, when
 
 from .utilities.aws import get_logs, negative_log_check
-from .utilities.change_event import (
+from .utilities.change_event_builder import (
+    ChangeEventBuilder,
     build_same_as_dos_change_event,
-    build_same_as_dos_change_event_by_ods,
-    create_change_event,
     set_opening_times_change_event,
     valid_change_event,
 )
@@ -57,7 +56,7 @@ FAKER = Faker("en_GB")
 
 
 @given(parsers.parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
-def a_changed_contact_event_is_valid(contact):
+def a_changed_contact_event_is_valid(contact: str):
     context = {"change_event": build_same_as_dos_change_event("pharmacy")}
     validated = False
     while validated is False:
@@ -72,6 +71,7 @@ def a_changed_contact_event_is_valid(contact):
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
 
         validated = valid_change_event(context["change_event"])
+    print(f"Validated: {validated} - {context['change_event']['Contacts'][1]['ContactValue']}")
     return context
 
 
@@ -147,7 +147,11 @@ def dos_event_from_scratch(org_type: str):
 
 @given(parsers.parse('a Changed Event to unset "{contact}"'), target_fixture="context")
 def a_change_event_is_valid_with_contact_set(contact: str):
-    context = {"change_event": build_same_as_dos_change_event_by_ods("pharmacy", get_odscode_with_contact_data())}
+    context = {
+        "change_event": ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
+            get_odscode_with_contact_data()
+        )
+    }
     match contact.lower():
         case "website":
             del context["change_event"]["Contacts"][0]
@@ -255,7 +259,7 @@ def bank_holiday_pharmacy_closed(context):
 # # Weekday NOT present on the Opening Time
 @given("a Changed Event with the Weekday NOT present in the Opening Times data", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event.get_change_event()}
     del context["change_event"]["OpeningTimes"][0]["Weekday"]
     return context
 
@@ -263,7 +267,7 @@ def a_change_event_with_no_openingtimes_weekday():
 # # OpeningTimeType is NOT "General" or "Additional"
 @given("a Changed Event where OpeningTimeType is NOT defined correctly", target_fixture="context")
 def a_change_event_with_invalid_openingtimetype():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event.get_change_event()}
     context["change_event"]["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
     return context
 
@@ -278,7 +282,7 @@ def a_custom_correlation_id_is_set(context, custom_correlation: str):
 # # isOpen is false AND Times in NOT blank
 @given("a Changed Event with the openingTimes IsOpen status set to false", target_fixture="context")
 def a_change_event_with_isopen_status_set_to_false():
-    context = {"change_event": create_change_event("pharmacy")}
+    context = {"change_event": ChangeEventBuilder("pharmacy").change_event.get_change_event()}
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
     return context
 
@@ -299,7 +303,7 @@ def current_ods_exists_in_ddb():
 # # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event.get_change_event()
     context["change_event"]["OpeningTimes"][0]["OpeningTime"] = ""
     context["change_event"]["OpeningTimes"][0]["ClosingTime"] = ""
     return context
@@ -311,7 +315,7 @@ def no_times_data_within_openingtimes(context):
     target_fixture="context",
 )
 def specified_opening_date_not_defined(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event.get_change_event()
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = ""
     return context
 
@@ -319,7 +323,7 @@ def specified_opening_date_not_defined(context):
 # # An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
 @when("an AdditionalOpeningDate contains data with both true and false IsOpen status", target_fixture="context")
 def same_specified_opening_date_with_true_and_false_isopen_status(context):
-    context["change_event"] = create_change_event("pharmacy")
+    context["change_event"] = ChangeEventBuilder("pharmacy").change_event.get_change_event()
     context["change_event"]["OpeningTimes"][7]["AdditionalOpeningDate"] = "Dec 25 2022"
     context["change_event"]["OpeningTimes"][7]["IsOpen"] = False
     return context
@@ -660,13 +664,11 @@ def the_changed_website_is_accepted_by_dos(context):
 
 
 @then("the Changed Event is replayed with the specified opening date deleted")
-def change_event_is_replayed(context, valid_or_invalid):
+def change_event_is_replayed(context):
     target_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
     del context["change_event"]["OpeningTimes"][-1]
     context["correlation_id"] = f'{context["correlation_id"]}-replay'
-    context["response"] = process_payload(
-        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
-    )
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     context["change_event"]["deleted_date"] = target_date
     return context
 
@@ -684,7 +686,7 @@ def specified_date_is_removed_from_dos(context):
 
 
 @then(parsers.parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
-def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_closed):
+def event_replayed_with_pharmacy_closed(context, open_or_closed):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
     match open_or_closed.upper():
         case "OPEN":
@@ -699,9 +701,7 @@ def event_replayed_with_pharmacy_closed(context, valid_or_invalid, open_or_close
             context["correlation_id"] = f'{context["correlation_id"]}_closed_replay'
         case _:
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
-    context["response"] = process_payload(
-        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
-    )
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     return context
 
 

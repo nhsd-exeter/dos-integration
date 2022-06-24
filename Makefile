@@ -457,13 +457,14 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 			-H https://$(DOS_INTEGRATION_URL) \
 			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
-PERFORMANCE_TEST_DIR_AND_ARGS=DIR=./test/performance/create_change_events \
-		ARGS="\
-			-p 8089:8089 \
-			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-			"
+PERFORMANCE_TEST_DIR_AND_ARGS= \
+	DIR=./test/performance/create_change_events \
+	ARGS="\
+		-p 8089:8089 \
+		-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
+		-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
+		"
 
 performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	make -s docker-run-tools \

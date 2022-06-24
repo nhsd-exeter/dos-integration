@@ -8,10 +8,9 @@ from random import choice
 from time import sleep, time_ns
 from typing import Any, Dict
 
-import requests
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from requests import Response
+from requests import Response, post
 
 from .aws import get_secret
 from .constants import SERVICE_TYPES
@@ -42,7 +41,7 @@ def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> 
         "Content-Type": "application/json",
     }
     payload["Unique_key"] = generate_random_int()
-    output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    output = post(url=URL, headers=headers, data=dumps(payload))
     return output
 
 
@@ -56,7 +55,7 @@ def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_i
     if sequence_id is not None:
         headers["sequence-number"] = str(sequence_id)
     payload["Unique_key"] = generate_random_int()
-    output = requests.request("POST", URL, headers=headers, data=dumps(payload))
+    output = post(url=URL, headers=headers, data=dumps(payload))
     return output
 
 
@@ -69,7 +68,7 @@ def process_change_request_payload(payload: dict, api_key_valid: bool) -> Respon
         "x-api-key": api_key,
         "Content-Type": "application/json",
     }
-    output = requests.request("POST", CR_URL, headers=headers, data=dumps(payload))
+    output = post(url=CR_URL, headers=headers, data=dumps(payload))
     return output
 
 
@@ -95,13 +94,6 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
     return deserialized
-
-
-def get_lambda_info(info_param: str) -> str:
-    values = {"state": "State", "status": "LastUpdateStatus", "description": "Description"}
-    param = values[info_param]
-    response = LAMBDA_CLIENT_FUNCTIONS.get_function(FunctionName=EVENT_PROCESSOR)
-    return response["Configuration"][param]
 
 
 def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
@@ -319,28 +311,20 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
 def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
-    row_found = False
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if dict(loads(row[0]))["new"][k]["changetype"] != "delete":
-                    date_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][:10]
-                    # Convert and format 'search_param' to datetime type
-                    date_in_payload = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
-                    if date_in_dos == date_in_payload:
-                        row_found = True
-    if row_found is True:
-        return True
-    else:
-        raise ValueError(f'Specified date change "{date_in_payload}" not found in Dos changes..')
+    if_value_not_in_string_raise_exception(search_key, str(response))
+    expected_date = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
+    for db_row in response:
+        change_row = dict(loads(db_row[0])["new"])
+        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
+            for date in change_row[search_key]["data"]["add"]:
+                if expected_date in date:
+                    return True
+    raise ValueError(f'Specified date change "{search_param}" not found in Dos changes..')
 
 
 def check_contact_delete_in_dos(corr_id: str, search_key: str):
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
     row_found = False
     for row in response:
         for k in dict(loads(row[0]))["new"]:
@@ -358,27 +342,21 @@ def check_contact_delete_in_dos(corr_id: str, search_key: str):
 def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
-    row_found = False
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if dict(loads(row[0]))["new"][k]["changetype"] != "delete":
-                    time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0][11:]
-                    if time_in_dos == search_param:
-                        row_found = True
-    if row_found is True:
-        return True
-    else:
-        raise ValueError("Specified Opening-time time change not found in Dos changes..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
+    for db_row in response:
+        change_row = dict(loads(db_row[0])["new"])
+        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
+            time_periods = change_row[search_key]["data"]["add"]
+            for time_period in time_periods:
+                if search_param in time_period:
+                    return True
+    raise ValueError("Specified Opening-time time change not found in Dos changes..")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
     """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
     response = get_changes(corr_id)
-    if search_key not in str(response):
-        raise ValueError(f"{search_key} not found..")
+    if_value_not_in_string_raise_exception(search_key, str(response))
     for row in response:
         for k in dict(loads(row[0]))["new"]:
             if k == search_key:
@@ -387,6 +365,11 @@ def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: 
                     return True
                 else:
                     raise ValueError("Standard Opening-time time change not found in Dos changes... {response}")
+
+
+def if_value_not_in_string_raise_exception(value: str, string: str) -> None:
+    if value not in str(string):
+        raise ValueError(f"{value} not found..")
 
 
 def time_to_sec(t):

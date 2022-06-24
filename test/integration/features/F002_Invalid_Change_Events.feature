@@ -57,7 +57,7 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002S007. Address changes are discarded when postcode is invalid
     Given a "pharmacy" Changed Event is aligned with Dos
     And the field "Postcode" is set to "FAKE"
-    And the field "OrganisationName" is set to "Test Organisation"
+    And the field "ContactValue" is set to "https://www.test.com"
     When the Changed Event is sent for processing with "valid" api key
     Then the 'address' from the changes is not included in the change request
     Then the 'postcode' from the changes is not included in the change request
