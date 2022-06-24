@@ -664,12 +664,12 @@ def the_changed_website_is_accepted_by_dos(context):
 
 
 @then("the Changed Event is replayed with the specified opening date deleted")
-def change_event_is_replayed(context, valid_or_invalid):
+def change_event_is_replayed(context):
     target_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
     del context["change_event"]["OpeningTimes"][-1]
     context["correlation_id"] = f'{context["correlation_id"]}-replay'
     context["response"] = process_payload(
-        context["change_event"], valid_or_invalid == "valid", context["correlation_id"]
+        context["change_event"], True, context["correlation_id"]
     )
     context["change_event"]["deleted_date"] = target_date
     return context
@@ -703,9 +703,7 @@ def event_replayed_with_pharmacy_closed(context, open_or_closed):
             context["correlation_id"] = f'{context["correlation_id"]}_closed_replay'
         case _:
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
-    context["response"] = process_payload(
-        context["change_event"], True, context["correlation_id"]
-    )
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     return context
 
 
