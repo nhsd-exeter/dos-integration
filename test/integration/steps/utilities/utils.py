@@ -3,14 +3,14 @@ from ast import literal_eval
 from datetime import datetime
 from decimal import Decimal
 from json import dumps, loads
-from os import getenv
+from os import getenv, environ
 from random import choice
-from time import sleep, time_ns
+from time import sleep, time_ns, time
 from typing import Any, Dict
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from requests import Response, post
+from requests import Response, post, get
 
 from .aws import get_secret
 from .constants import SERVICE_TYPES
@@ -20,6 +20,8 @@ CR_URL = getenv("CR_URL")
 SQS_URL = getenv("SQS_URL")
 EVENT_PROCESSOR = getenv("EVENT_PROCESSOR")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
+SLACK_CHANNEL = getenv("SLACK_CHANNEL_ID")
+SLACK_OAUTH = getenv("SLACK_OAUTH_TOKEN")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs")
 DYNAMO_CLIENT = client("dynamodb")
@@ -413,3 +415,16 @@ def random_dentist_odscode() -> str:
         dentist_odscode_list = get_odscodes_list(lambda_payload)
     odscode = choice(dentist_odscode_list)[0]
     return f"{odscode[0]}{odscode[1:]}"
+
+
+def check_slack() -> str:
+    headers = {
+        "Authorization": environ["SLACK_OAUTH"],
+        "Content-Type": "application/json",
+    }
+    current = str(time() - 3600)
+    output = get(
+        url=f'https://slack.com/api/conversations.history?channel={environ["SLACK_CHANNEL"]}&oldest={current}',
+        headers=headers,
+    )
+    return output.text

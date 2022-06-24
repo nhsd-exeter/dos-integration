@@ -147,6 +147,7 @@ integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandat
 	make integration-test TAGS=$$COULDWATCH_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+	eval "$$(make -s create-slack-details)" \
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
@@ -167,7 +168,13 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=${RUN_ID} \
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
+
 		"
+
+create-slack-details:
+		echo "export SLACK_CHANNEL_ID=$$(make -s secret-get-existing-value NAME=$(SLACK_CHANNEL_SECRET_NAME) KEY=$(SLACK_CHANNEL_SECRET_KEY))" \
+		echo "export -e SLACK_OAUTH_TOKEN=$$(make -s secret-get-existing-value NAME=$(SLACK_OAUTH_SECRET_NAME) KEY=$(SLACK_OAUTH_SECRET_KEY))" \
+
 
 create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
 	make -s docker-run-tools \
