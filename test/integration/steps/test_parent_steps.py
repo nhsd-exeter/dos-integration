@@ -668,9 +668,7 @@ def change_event_is_replayed(context):
     target_date = context["change_event"]["OpeningTimes"][-1]["AdditionalOpeningDate"]
     del context["change_event"]["OpeningTimes"][-1]
     context["correlation_id"] = f'{context["correlation_id"]}-replay'
-    context["response"] = process_payload(
-        context["change_event"], True, context["correlation_id"]
-    )
+    context["response"] = process_payload(context["change_event"], True, context["correlation_id"])
     context["change_event"]["deleted_date"] = target_date
     return context
 
