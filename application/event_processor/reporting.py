@@ -14,6 +14,7 @@ from common.constants import (
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
     GENERIC_BANK_HOLIDAY_REPORT_ID,
+    GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
 )
 from nhs import NHSEntity
 
@@ -180,5 +181,17 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
             "bank_holiday_opening_times": open_periods_str,
             "nhsuk_parentorg": nhs_entity.parent_org_name,
             "dos_service_type_name": dos_service.servicename,
+        },
+    )
+
+
+def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
+    logger.warning(
+        f"Website is not valid, {nhs_website=}",
+        extra={
+            "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
+            "nhs_unedited_website": nhs_uk_entity.website,
+            "nhs_website": nhs_website,
+            "reason": "Website is not valid",
         },
     )

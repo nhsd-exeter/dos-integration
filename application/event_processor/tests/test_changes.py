@@ -20,6 +20,7 @@ from ..changes import (
     update_changes,
     update_changes_with_opening_times,
     update_changes_with_address_and_postcode,
+    update_changes_with_website,
 )
 
 
@@ -121,7 +122,6 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     changes = {}
     # Act
     update_changes(changes, PHONE_CHANGE_KEY, "000000000", "000000000")
-    update_changes(changes, WEBSITE_CHANGE_KEY, "www.wow.co.uk", "www.wow.co.uk")
     # Assert
     assert changes == {}, f"Should return empty dict, actually: {changes}"
 
