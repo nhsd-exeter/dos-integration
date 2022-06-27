@@ -77,3 +77,15 @@ Feature: F006. Opening times
     Then the pharmacy is confirmed "open" for the standard day in Dos
     And the Changed Event is replayed with the pharmacy now "closed"
     And the pharmacy is confirmed "closed" for the standard day in Dos
+
+@complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F006S011. Same dual general opening times
+    Given a Changed Event is aligned with Dos
+    And the Changed Event has equal "<opening_type>" values
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
+
+  Examples:
+    | opening_type |
+    |   General    |
+    |  Additional  |
