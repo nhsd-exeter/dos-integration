@@ -145,11 +145,25 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
 
 
 def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
-    if nhs_entity.website is not None:
+    if (
+        nhs_entity.website is None
+        and dos_service.web is not None
+        and dos_service.web != ""
+        or nhs_entity.website == ""
+        and dos_service.web is not None
+        and dos_service.web != ""
+    ):
+        changes[WEBSITE_CHANGE_KEY] = ""
+    elif nhs_entity.website is not None:
         dos_website = dos_service.web
         nhs_uk_website = urlparse(nhs_entity.website)
-        nhs_uk_website = nhs_uk_website._replace(netloc=nhs_uk_website.netloc.lower())
-        nhs_website = urlunparse(nhs_uk_website)
+        if nhs_uk_website.netloc == "":  # handle website like https://test.com
+            nhs_uk_website = nhs_uk_website.path.split("/")
+            nhs_uk_website[0] = nhs_uk_website[0].lower()
+            nhs_website = "/".join(nhs_uk_website)
+        else:  # handle website like www.test.com
+            nhs_uk_website = nhs_uk_website._replace(netloc=nhs_uk_website.netloc.lower())
+            nhs_website = urlunparse(nhs_uk_website)
         if dos_website != nhs_website:
             logger.info(f"Website is not equal, {dos_website=} != {nhs_website=}")
             # Regular expression to match DoS's websites check
@@ -159,5 +173,3 @@ def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_enti
                 changes[WEBSITE_CHANGE_KEY] = nhs_website
             else:
                 log_website_is_invalid(nhs_entity, nhs_website)
-    else:
-        changes[WEBSITE_CHANGE_KEY] = ""
