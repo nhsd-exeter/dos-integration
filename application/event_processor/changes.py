@@ -1,6 +1,7 @@
-from re import match
+from re import search
 from typing import Any, Dict
 from urllib.parse import urlparse, urlunparse
+
 from aws_lambda_powertools import Logger
 from change_request import (
     ADDRESS_CHANGE_KEY,
@@ -145,31 +146,33 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
 
 
 def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
-    if (
-        nhs_entity.website is None
-        and dos_service.web is not None
-        and dos_service.web != ""
-        or nhs_entity.website == ""
-        and dos_service.web is not None
-        and dos_service.web != ""
-    ):
+    if is_val_none_or_empty(nhs_entity.website) and not is_val_none_or_empty(dos_service.web):
         changes[WEBSITE_CHANGE_KEY] = ""
-    elif nhs_entity.website is not None:
-        dos_website = dos_service.web
+    elif nhs_entity.website is not None and nhs_entity.website != "":
         nhs_uk_website = urlparse(nhs_entity.website)
-        if nhs_uk_website.netloc == "":  # handle website like https://test.com
-            nhs_uk_website = nhs_uk_website.path.split("/")
-            nhs_uk_website[0] = nhs_uk_website[0].lower()
-            nhs_website = "/".join(nhs_uk_website)
-        else:  # handle website like www.test.com
-            nhs_uk_website = nhs_uk_website._replace(netloc=nhs_uk_website.netloc.lower())
-            nhs_website = urlunparse(nhs_uk_website)
-        if dos_website != nhs_website:
-            logger.info(f"Website is not equal, {dos_website=} != {nhs_website=}")
-            # Regular expression to match DoS's websites check
-            # Find on DoS at the directory below
-            # pd-api/module/ChangeRequest/src/ChangeRequest/V1/Rest/ChangeRequest/Service/Translate/RequestValidator.php
-            if match(r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", nhs_website):
-                changes[WEBSITE_CHANGE_KEY] = nhs_website
+        if nhs_uk_website.netloc == "":  # handle website like www.test.com
+            if "/" in nhs_uk_website.path:
+                nhs_uk_website = nhs_uk_website.path.split("/")
+                nhs_uk_website[0] = nhs_uk_website[0].lower()
+                nhs_uk_website = "/".join(nhs_uk_website)
             else:
-                log_website_is_invalid(nhs_entity, nhs_website)
+                nhs_uk_website = urlunparse(nhs_uk_website).lower()
+            compare_website(changes, dos_service, nhs_entity, nhs_uk_website)
+        else:  # handle website like https://www.test.com
+            nhs_uk_website = nhs_uk_website._replace(netloc=nhs_uk_website.netloc.lower())
+            nhs_uk_website = urlunparse(nhs_uk_website)
+            compare_website(changes, dos_service, nhs_entity, nhs_uk_website)
+
+
+def compare_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity, nhs_website: str) -> None:
+    dos_website = dos_service.web
+    print(f"nhs_website={nhs_website} dos_website={dos_website}")
+    if dos_website != nhs_website:
+        logger.info(f"Website is not equal, {dos_website=} != {nhs_website=}")
+        # Regular expression to match DoS's websites check
+        # Find on DoS at the directory below
+        # pd-api/module/ChangeRequest/src/ChangeRequest/V1/Rest/ChangeRequest/Service/Translate/RequestValidator.php
+        if search(r"^(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?$", nhs_website):
+            changes[WEBSITE_CHANGE_KEY] = nhs_website
+        else:
+            log_website_is_invalid(nhs_entity, nhs_website)
