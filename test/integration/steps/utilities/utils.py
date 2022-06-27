@@ -389,3 +389,13 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
     )
     response_payload = response["Payload"].read().decode("utf-8")
     return response_payload
+
+
+def remove_opening_days(opening_times, day) -> dict:
+    deletions = []
+    for count, times in enumerate(opening_times):
+        if times["Weekday"] == day:
+            deletions.insert(0, count)
+    for entries in deletions:
+        del opening_times[entries]
+    return opening_times

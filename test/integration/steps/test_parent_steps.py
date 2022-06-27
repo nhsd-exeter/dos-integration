@@ -6,6 +6,7 @@ from random import randint
 from faker import Faker
 import datetime
 from json import loads
+from copy import copy
 import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
@@ -42,6 +43,7 @@ from .utilities.utils import (
     confirm_changes,
     get_service_type_data,
     get_service_type_from_cr,
+    remove_opening_days,
 )
 
 scenarios(
@@ -321,6 +323,30 @@ def a_change_event_with_isopen_status_set_to_false():
     context = {}
     context["change_event"] = create_change_event("pharmacy")
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
+@given(parsers.parse('the Changed Event has equal "{opening_type}" values'), target_fixture="context")
+def change_event_same_dual(context, opening_type):
+    default_openings = {
+        "Weekday": "Monday",
+        "OpeningTime": "09:00",
+        "ClosingTime": "22:00",
+        "OffsetOpeningTime": 540,
+        "OffsetClosingTime": 780,
+        "OpeningTimeType": opening_type,
+        "AdditionalOpeningDate": "",
+        "IsOpen": True,
+    }
+    if opening_type == "Additional":
+        default_openings["Weekday"] = ""
+        default_openings["AdditionalOpeningDate"] = "Dec 15 2025"
+    else:
+        context["change_event"]["OpeningTimes"] = remove_opening_days(context["change_event"]["OpeningTimes"], "Monday")
+    context["change_event"]["OpeningTimes"].insert(0, copy(default_openings))
+    context["change_event"]["OpeningTimes"].insert(1, copy(default_openings))
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "14:00"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "14:00"
     return context
 
 
