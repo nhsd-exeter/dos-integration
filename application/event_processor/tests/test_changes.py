@@ -1,5 +1,5 @@
 from os import environ
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -20,6 +20,7 @@ from ..changes import (
     update_changes,
     update_changes_with_opening_times,
     update_changes_with_address_and_postcode,
+    update_changes_with_website,
 )
 
 
@@ -121,7 +122,6 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
     changes = {}
     # Act
     update_changes(changes, PHONE_CHANGE_KEY, "000000000", "000000000")
-    update_changes(changes, WEBSITE_CHANGE_KEY, "www.wow.co.uk", "www.wow.co.uk")
     # Assert
     assert changes == {}, f"Should return empty dict, actually: {changes}"
 
@@ -137,16 +137,46 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
         ("www.test2.com", "www.test2.com", {}),
         ("", None, {}),
         (None, "", {}),
-        ("", " ", {}),
         (None, None, {}),
+        (None, "www.Test.com", {"website": "www.test.com"}),
+        (None, "www.Test.com/TEST", {"website": "www.test.com/TEST"}),
+        (None, "https://www.Test.com", {"website": "https://www.test.com"}),
+        (None, "http://www.Test.com", {"website": "http://www.test.com"}),
+        (None, "http://www.Test.com/TeST", {"website": "http://www.test.com/TeST"}),
+        (None, "www.teset.com/Test?Test=Test", {"website": "www.teset.com/Test?Test=Test"}),
+        (None, "https://www.teset.com/Test?Test=Test", {"website": "https://www.teset.com/Test?Test=Test"}),
     ],
 )
-def test_update_changes_for_website(dos_val, nhs_val, expected):
+@patch(f"{FILE_PATH}.log_website_is_invalid")
+def test_update_changes_for_website_success(mock_log_website_is_invalid, dos_val, nhs_val, expected):
     # Arrange
     changes = {}
+    nhs_uk_entity = NHSEntity({})
+    nhs_uk_entity.website = nhs_val
+    dos_service = dummy_dos_service()
+    dos_service.web = dos_val
     # Act
-    update_changes(changes, WEBSITE_CHANGE_KEY, dos_val, nhs_val)
-    assert changes == expected, f"Should return {expected}, actually: {changes}"
+    update_changes_with_website(changes, dos_service, nhs_uk_entity)
+    assert expected == changes, f"Should return {expected}, actually: {changes}"
+    mock_log_website_is_invalid.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "dos_val, nhs_val,expected",
+    [("www.test1.com", "Test@gmail.com", {}), ("1", "test@email.com", {}), ("", " ", {}), (None, " ", {})],
+)
+@patch(f"{FILE_PATH}.log_website_is_invalid")
+def test_update_changes_for_website_fail(mock_log_website_is_invalid, dos_val, nhs_val, expected):
+    # Arrange
+    changes = {}
+    nhs_uk_entity = NHSEntity({})
+    nhs_uk_entity.website = nhs_val
+    dos_service = dummy_dos_service()
+    dos_service.web = dos_val
+    # Act
+    update_changes_with_website(changes, dos_service, nhs_uk_entity)
+    assert expected == changes, f"Should return {expected}, actually: {changes}"
+    mock_log_website_is_invalid.assert_called_once_with(ANY, nhs_val.lower())
 
 
 @pytest.mark.parametrize(
