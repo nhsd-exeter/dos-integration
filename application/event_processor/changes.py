@@ -166,7 +166,6 @@ def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_enti
 
 def compare_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity, nhs_website: str) -> None:
     dos_website = dos_service.web
-    print(f"nhs_website={nhs_website} dos_website={dos_website}")
     if dos_website != nhs_website:
         logger.info(f"Website is not equal, {dos_website=} != {nhs_website=}")
         # Regular expression to match DoS's websites check
