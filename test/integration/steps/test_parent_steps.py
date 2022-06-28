@@ -6,6 +6,7 @@ from random import randint
 from faker import Faker
 import datetime
 from json import loads
+from copy import copy
 import ast
 
 from pytest_bdd import given, parsers, scenarios, then, when
@@ -23,6 +24,7 @@ from .utilities.aws import get_logs, negative_log_check
 from .utilities.utils import (
     generate_correlation_id,
     get_changes,
+    validate_website,
     get_service_id,
     get_change_event_standard_opening_times,
     get_change_event_specified_opening_times,
@@ -42,6 +44,7 @@ from .utilities.utils import (
     confirm_changes,
     get_service_type_data,
     get_service_type_from_cr,
+    remove_opening_days,
 )
 
 scenarios(
@@ -324,6 +327,30 @@ def a_change_event_with_isopen_status_set_to_false():
     return context
 
 
+@given(parsers.parse('the Changed Event has equal "{opening_type}" values'), target_fixture="context")
+def change_event_same_dual(context, opening_type):
+    default_openings = {
+        "Weekday": "Monday",
+        "OpeningTime": "09:00",
+        "ClosingTime": "22:00",
+        "OffsetOpeningTime": 540,
+        "OffsetClosingTime": 780,
+        "OpeningTimeType": opening_type,
+        "AdditionalOpeningDate": "",
+        "IsOpen": True,
+    }
+    if opening_type == "Additional":
+        default_openings["Weekday"] = ""
+        default_openings["AdditionalOpeningDate"] = "Dec 15 2025"
+    else:
+        context["change_event"]["OpeningTimes"] = remove_opening_days(context["change_event"]["OpeningTimes"], "Monday")
+    context["change_event"]["OpeningTimes"].insert(0, copy(default_openings))
+    context["change_event"]["OpeningTimes"].insert(1, copy(default_openings))
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "14:00"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "14:00"
+    return context
+
+
 # # Check that the requested ODS code exists in ddb, and create an entry if not
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb():
@@ -337,7 +364,18 @@ def current_ods_exists_in_ddb():
     return context
 
 
-# # IsOpen is true AND Times is blank
+@given(parsers.parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
+def a_changed_url_event_is_valid(url):
+    context = {}
+    context["change_event"] = build_same_as_dos_change_event("pharmacy")
+    if not validate_website(url):
+        context["change_event"]["Contacts"][0]["ContactValue"] = url
+        context["change_event"]["Postcode"] = "NG5 2JJ"
+    else:
+        raise ValueError(f"ERROR!.. Input web address '{url}' is valid and not compatible")
+    return context
+
+
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context):
     context["change_event"] = create_change_event("pharmacy")
@@ -635,6 +673,27 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
     assert (
         check_received_data_in_dos(context["correlation_id"], cms, changed_data) is True
     ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+
+
+@then(parsers.parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
+def the_changed_web_address_is_accepted_by_dos(context, expected_url):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    cms = "cmsurl"
+    assert (
+        check_received_data_in_dos(context["correlation_id"].replace("/", r"\/"), cms, expected_url) is True
+    ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
+
+
+@then(parsers.parse("the Change is included in the Change request"))
+def change_is_included_in_event_sender(context):
+    if "/" in context["correlation_id"]:
+        context["correlation_id"] = context["correlation_id"].replace("/", r"\/")
+    query = (
+        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context["correlation_id"]}"'
+        '| filter message like "Successfully send change request to DoS"'
+    )
+    logs = get_logs(query, "sender", context["start_time"])
+    assert logs != [], "ERROR!!.. Expected Change not found in logs."
 
 
 @then(parsers.parse('the Changed Event with changed "{contact}" is not captured by Dos'))
@@ -963,6 +1022,8 @@ def check_logs_for_correct_report_key(context, report_key):
 
 @then(parsers.parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
 def generic_processor_check_function(context, processor, field, message):
+    if "/" in context["correlation_id"]:
+        context["correlation_id"] = context["correlation_id"].replace("/", r"\/")
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context["correlation_id"]}" | filter {field} like "{message}"'

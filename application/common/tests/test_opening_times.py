@@ -4,6 +4,9 @@ from datetime import datetime, date, time, timedelta
 from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 
+OP = OpenPeriod.from_string
+
+
 @pytest.mark.parametrize(
     "start, end, other_start, other_end, expected",
     [
@@ -28,6 +31,23 @@ def test_open_period_start_before_end(start, end, expected):
     actual = open_period.start_before_end()
     # Assert
     assert expected == actual, f"Should return {expected} , actually: {actual}"
+
+
+def test_openperiod_overlaps():
+
+    assert OP("08:00-12:00").overlaps(OP("13:00-17:00")) is False
+    assert OP("08:00-12:00").overlaps(OP("12:01-17:00")) is False
+    assert OP("08:00:00-12:00:00").overlaps(OP("12:00:01-17:00:00")) is False
+    assert OP("13:00-17:00").overlaps(OP("08:00-12:00")) is False
+    assert OP("08:00-12:59").overlaps(OP("13:00-17:00")) is False
+    assert OP("12:40-15:23").overlaps(OP("18:03-22:16")) is False
+
+    assert OP("08:00-12:00").overlaps(OP("12:00-17:00"))
+    assert OP("08:00-12:00").overlaps(OP("12:00-17:00"))
+    assert OP("08:00-12:00").overlaps(OP("10:00-17:00"))
+    assert OP("00:00-23:59").overlaps(OP("00:00-23:59"))
+    assert OP("08:00-12:00").overlaps(OP("07:00-17:00"))
+    assert OP("01:00-23:00").overlaps(OP("10:00-17:00"))
 
 
 def test_openperiod_any_overlaps():
