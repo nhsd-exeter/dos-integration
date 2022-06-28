@@ -151,8 +151,8 @@ def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_enti
     elif nhs_entity.website is not None and nhs_entity.website != "":
         nhs_uk_website = urlparse(nhs_entity.website)
         if nhs_uk_website.netloc == "":  # handle website like www.test.com
-            if "/" in nhs_uk_website.path:
-                nhs_uk_website = nhs_uk_website.path.split("/")
+            if "/" in nhs_entity.website:
+                nhs_uk_website = nhs_entity.website.split("/")
                 nhs_uk_website[0] = nhs_uk_website[0].lower()
                 nhs_uk_website = "/".join(nhs_uk_website)
             else:

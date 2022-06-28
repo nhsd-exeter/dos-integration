@@ -143,6 +143,8 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_is_equal():
         (None, "https://www.Test.com", {"website": "https://www.test.com"}),
         (None, "http://www.Test.com", {"website": "http://www.test.com"}),
         (None, "http://www.Test.com/TeST", {"website": "http://www.test.com/TeST"}),
+        (None, "www.teset.com/Test?Test=Test", {"website": "www.teset.com/Test?Test=Test"}),
+        (None, "https://www.teset.com/Test?Test=Test", {"website": "https://www.teset.com/Test?Test=Test"}),
     ],
 )
 @patch(f"{FILE_PATH}.log_website_is_invalid")
