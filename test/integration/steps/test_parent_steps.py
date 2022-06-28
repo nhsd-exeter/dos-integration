@@ -42,6 +42,7 @@ from .utilities.utils import (
     process_payload_with_sequence,
     re_process_payload,
     time_to_sec,
+    remove_opening_days,
 )
 
 scenarios(
@@ -284,6 +285,30 @@ def a_custom_correlation_id_is_set(context, custom_correlation: str):
 def a_change_event_with_isopen_status_set_to_false():
     context = {"change_event": ChangeEventBuilder("pharmacy").change_event.get_change_event()}
     context["change_event"]["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
+@given(parsers.parse('the Changed Event has equal "{opening_type}" values'), target_fixture="context")
+def change_event_same_dual(context, opening_type):
+    default_openings = {
+        "Weekday": "Monday",
+        "OpeningTime": "09:00",
+        "ClosingTime": "22:00",
+        "OffsetOpeningTime": 540,
+        "OffsetClosingTime": 780,
+        "OpeningTimeType": opening_type,
+        "AdditionalOpeningDate": "",
+        "IsOpen": True,
+    }
+    if opening_type == "Additional":
+        default_openings["Weekday"] = ""
+        default_openings["AdditionalOpeningDate"] = "Dec 15 2025"
+    else:
+        context["change_event"]["OpeningTimes"] = remove_opening_days(context["change_event"]["OpeningTimes"], "Monday")
+    context["change_event"]["OpeningTimes"].insert(0, copy(default_openings))
+    context["change_event"]["OpeningTimes"].insert(1, copy(default_openings))
+    context["change_event"]["OpeningTimes"][0]["ClosingTime"] = "14:00"
+    context["change_event"]["OpeningTimes"][1]["OpeningTime"] = "14:00"
     return context
 
 

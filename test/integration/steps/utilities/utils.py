@@ -413,3 +413,13 @@ def random_dentist_odscode() -> str:
         dentist_odscode_list = get_odscodes_list(lambda_payload)
     odscode = choice(dentist_odscode_list)[0]
     return f"{odscode[0]}{odscode[1:]}"
+
+
+def remove_opening_days(opening_times, day) -> dict:
+    deletions = []
+    for count, times in enumerate(opening_times):
+        if times["Weekday"] == day:
+            deletions.insert(0, count)
+    for entries in deletions:
+        del opening_times[entries]
+    return opening_times

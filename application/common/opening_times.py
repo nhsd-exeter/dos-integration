@@ -45,7 +45,7 @@ class OpenPeriod:
     def overlaps(self, other) -> bool:
         assert self.start_before_end()
         assert other.start_before_end()
-        return self.start < other.end and other.start < self.end
+        return self.start <= other.end and other.start <= self.end
 
     def export_cr_format(self) -> Union[Dict[str, str], None]:
         """Exports open period into a DoS change request accepted format"""
