@@ -7,6 +7,7 @@ from os import getenv
 from random import choice
 from time import sleep, time_ns
 from typing import Any, Dict
+from re import match
 
 import requests
 from boto3 import client
@@ -399,3 +400,10 @@ def remove_opening_days(opening_times, day) -> dict:
     for entries in deletions:
         del opening_times[entries]
     return opening_times
+
+
+def validate_website(url: str) -> bool:
+    if match(r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", url):
+        return True
+    else:
+        return False

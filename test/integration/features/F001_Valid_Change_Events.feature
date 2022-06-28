@@ -99,3 +99,18 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a Changed Event with value "New Pharmacy" for "organisation_name"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event with changed "public_name" is not captured by Dos
+
+@complete @pharmacy_no_log_searches
+  Scenario Outline: F001S016 Changed Event with URL variations is formatted and accepted by Dos
+    Given a Changed Event with changed "{url}" variations is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Request with formatted "{expected_url}" is captured by Dos
+
+    Examples: Web address variations
+      | url                            | expected_url                   |
+      | https://www.Test.com           | https://www.test.com           |
+      | https://www.TEST.Com           | https://www.test.com           |
+      | https://www.Test.com/TEST      | https://www.test.com/TEST      |
+      | http://www.TestChemist.co.uk   | http://www.testchemist.co.uk   |
+      | https://Testchemist.co.Uk      | https://testchemist.co.uk      |
+      | https://Www.testpharmacy.co.uk | https://www.testpharmacy.co.uk |
