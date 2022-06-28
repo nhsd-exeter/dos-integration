@@ -6,6 +6,8 @@ TEXAS_WAF_ACL_ID = dfae6ec3-aa05-428f-a022-5fd85f646009
 
 TF_VAR_terraform_platform_state_store = nhsd-texasplatform-terraform-state-store-live-lk8s-$(AWS_ACCOUNT_NAME)
 
+TF_VAR_developer_role_name = UECPUServiceDeveloper
+
 # ==============================================================================
 
 include $(VAR_DIR)/platform-texas/platform-texas-v1.mk

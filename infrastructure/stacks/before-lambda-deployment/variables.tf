@@ -145,6 +145,10 @@ variable "signing_key_alias" {
   description = "Alias of key used for signing"
 }
 
+variable "developer_role_name" {
+  description = "Role name of developer's role so that it can access the KMS key for the dbcloner"
+}
+
 # ######################
 # # CLOUDWATCH ALERTS
 # #######################
