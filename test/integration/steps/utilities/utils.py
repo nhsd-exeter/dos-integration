@@ -33,7 +33,7 @@ def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = str(time_ns())
+    sequence_number = generate_unique_sequence_number(change_event.odscode)
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,

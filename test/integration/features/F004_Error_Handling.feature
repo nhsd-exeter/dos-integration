@@ -23,14 +23,12 @@ Feature: F004. Error Handling
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the date for the specified opening time returns an empty list
-    And the Changed Event is stored in dynamo db
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S004. A Changed Event where Standard opening day is set as closed is captured
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the day for the standard opening time returns an empty list
-    And the Changed Event is stored in dynamo db
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S005. An exception is raised when Sequence number is not present in headers

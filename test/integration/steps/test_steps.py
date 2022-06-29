@@ -451,7 +451,7 @@ def the_change_request_is_sent(context: Context, valid_or_invalid):
 def stored_dynamo_db_events_are_pulled(context: Context):
     odscode = context.change_event.odscode
     sequence_num = Decimal(context.sequence_number)
-    sleep(10)
+    sleep(15)
     db_event_record = get_stored_events_from_dynamo_db(odscode, sequence_num)
     assert db_event_record is not None, f"ERROR!! Event record with odscode {odscode} NOT found!.."
     assert (

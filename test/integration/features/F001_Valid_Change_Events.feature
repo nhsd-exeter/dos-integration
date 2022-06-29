@@ -6,14 +6,12 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
-    Then the Changed Event is stored in dynamo db
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S002. A Changed event with aligned data does not create a CR
     Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "No changes identified"
-    And the Changed Event is stored in dynamo db
 
   @complete @pharmacy_no_log_searches
   Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
@@ -40,7 +38,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given a Changed Event to unset "<field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by DoS with "<field>" deleted
-    And the Changed Event is stored in dynamo db
 
     Examples:
       | field   |
