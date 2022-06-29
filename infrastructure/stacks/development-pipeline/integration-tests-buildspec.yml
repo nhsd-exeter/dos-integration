@@ -12,7 +12,7 @@ phases:
       - make docker-pull NAME=tester VERSION=latest
   build:
     commands:
-      - make $INTEGRATION_MAKE_TARGET PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT PARALLEL_TEST_COUNT=8
+      - make $INTEGRATION_MAKE_TARGET PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT PARALLEL_TEST_COUNT=10
 reports:
   PytestIntegrationReport:
     files:
