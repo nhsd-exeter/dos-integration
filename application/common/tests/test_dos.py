@@ -428,8 +428,9 @@ def test_get_dos_locations(mock_query_dos_db):
     postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT id, postcode, easting, northing, latitude, longitude FROM locations WHERE postcode IN %(pc_variations)s",
-        named_args={"pc_variations": tuple(postcode_variations)},
+        "SELECT id, postcode, easting, northing, latitude, longitude "
+        "FROM locations WHERE postcode IN %(pc_variations)s",
+        vars={"pc_variations": tuple(postcode_variations)},
     )
 
 

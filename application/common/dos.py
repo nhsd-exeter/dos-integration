@@ -195,7 +195,7 @@ def get_dos_locations(postcode: Union[str, None] = None, try_cache: bool = True)
     postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
     db_column_names = [f.name for f in fields(DoSLocation)]
     sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode IN %(pc_variations)s"
-    c = query_dos_db(sql_command, named_args={"pc_variations": tuple(postcode_variations)})
+    c = query_dos_db(sql_command, vars={"pc_variations": tuple(postcode_variations)})
 
     dos_locations = [DoSLocation(**row) for row in c.fetchall()]
     dos_location_cache[norm_pc] = dos_locations
