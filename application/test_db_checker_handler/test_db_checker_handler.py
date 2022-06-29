@@ -9,7 +9,7 @@ from common.dos import (
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
 )
-from common.dos_db_connection import query_dos_db
+from common.dos_db_connection import query_dos_db, _set_db_connection
 from common.middlewares import unhandled_exception_logging
 from common.service_type import get_valid_service_types
 
@@ -149,6 +149,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
 
 def run_query(query, query_vars) -> list:
     logger.info("Running query", extra={"query": query})
+    _set_db_connection(None)
     cursor = query_dos_db(query, query_vars)
     query_result = cursor.fetchall()
     cursor.close()

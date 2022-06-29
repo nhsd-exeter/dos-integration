@@ -101,6 +101,8 @@ UNIT_TEST_ARGS=" \
 
 integration-test-local:
 	cd test/integration
+	RUN_ID=$$RANDOM
+	echo RUN_ID=$$RUN_ID
 	API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 	NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
 	DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
@@ -115,7 +117,7 @@ integration-test-local:
 	DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 	DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 	KEYALIAS=${TF_VAR_signing_key_alias} \
-	RUN_ID=${RUN_ID} \
+	RUN_ID=$$RUN_ID \
 	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
 
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
@@ -147,9 +149,11 @@ integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandat
 	make integration-test TAGS=$$COULDWATCH_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+	RUN_ID=$$RANDOM
+	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
+	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -165,7 +169,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e RUN_ID=${RUN_ID} \
+		-e RUN_ID=$$RUN_ID \
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
@@ -193,6 +197,7 @@ clean: # Runs whole project clean
 		python-clean \
 		tester-clean \
 		performance-test-clean
+	rm -rf test/integration/replay/.*.txt
 
 # ==============================================================================
 # Event Sender
@@ -588,11 +593,11 @@ trigger-dos-deployment-pipeline:
 	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
 	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
 	-F "TARGET=\"regressiondi\"" \
-	-F "IMAGE_TAG=\"7.8.0_9525147\"" \
+	-F "IMAGE_TAG=\"7.9.0_c1d024b\"" \
 	-F "REFRESH=\"true\""
 	echo Jenkins Job has started
-	echo Sleeping for 5 minutes
-	sleep 300
+	echo Sleeping for 3 minutes
+	sleep 180
 	echo Jenkins Job expected to have finished
 	rm -rf jenkins.cookies
 
