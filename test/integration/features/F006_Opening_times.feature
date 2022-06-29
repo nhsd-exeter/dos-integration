@@ -79,7 +79,7 @@ Feature: F006. Opening times
     And the Changed Event is replayed with the pharmacy now "closed"
     And the pharmacy is confirmed "closed" for the standard day in Dos
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries @wip
   Scenario Outline: F006S011. Same dual general opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event has equal "<opening_type>" values

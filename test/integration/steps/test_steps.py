@@ -43,7 +43,9 @@ from .utilities.utils import (
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
+    remove_opening_days,
     time_to_sec,
+    validate_website,
 )
 
 scenarios(
@@ -303,6 +305,36 @@ def a_change_event_with_isopen_status_set_to_false(context: Context):
     return context
 
 
+@given(parse('the Changed Event has equal "{opening_type}" values'), target_fixture="context")
+def change_event_same_dual(context: Context, opening_type):
+    default_openings = {
+        "Weekday": "Monday",
+        "OpeningTime": "09:00",
+        "ClosingTime": "22:00",
+        "OffsetOpeningTime": 540,
+        "OffsetClosingTime": 780,
+        "OpeningTimeType": opening_type,
+        "AdditionalOpeningDate": "",
+        "IsOpen": True,
+    }
+    if opening_type == "Additional":
+        default_openings["Weekday"] = ""
+        default_openings["AdditionalOpeningDate"] = "Dec 15 2025"
+        context.change_event.specified_opening_times.insert(0, copy(default_openings))
+        context.change_event.specified_opening_times.insert(1, copy(default_openings))
+        context.change_event.specified_opening_times[0]["ClosingTime"] = "14:00"
+        context.change_event.specified_opening_times[1]["OpeningTime"] = "14:00"
+    else:
+        context.change_event.standard_opening_times = remove_opening_days(
+            context.change_event.standard_opening_times, "Monday"
+        )
+        context.change_event.standard_opening_times.insert(0, copy(default_openings))
+        context.change_event.standard_opening_times.insert(1, copy(default_openings))
+        context.change_event.standard_opening_times[0]["ClosingTime"] = "14:00"
+        context.change_event.standard_opening_times[1]["OpeningTime"] = "14:00"
+    return context
+
+
 # Check that the requested ODS code exists in ddb, and create an entry if not
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb(context: Context):
@@ -312,6 +344,17 @@ def current_ods_exists_in_ddb(context: Context):
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
         context.sequence_number = 100
     context.change_event.unique_key = generate_random_int()
+    return context
+
+
+@given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
+def a_changed_url_event_is_valid(url: str, context: Context):
+    context.change_event = build_same_as_dos_change_event("pharmacy")
+    if not validate_website(url):
+        context.change_event.website = url
+        context.change_event.postcode = "NG5 2JJ"
+    else:
+        raise ValueError(f"ERROR!.. Input web address '{url}' is valid and not compatible")
     return context
 
 
@@ -504,6 +547,16 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context,
     response = check_contact_delete_in_dos(context.correlation_id, cms)
     assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
+
+
+@then(parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
+def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    cms = "cmsurl"
+    correlation_id = context.correlation_id.replace("/", r"\/")
+    assert (
+        check_received_data_in_dos(correlation_id, cms, expected_url) is True
+    ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
 
 
 @then(parse('the Changed Request with changed "{contact}" is captured by Dos'))

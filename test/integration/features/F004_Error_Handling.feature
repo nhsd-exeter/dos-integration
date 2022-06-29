@@ -108,7 +108,7 @@ Feature: F004. Error Handling
     Then the Event "processor" shows field "message" with message "Unexpected Org Type ID"
 
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries @wip
   Scenario Outline: F004S014 Exception raised and CR created for Changed Event with invalid URL
     Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key

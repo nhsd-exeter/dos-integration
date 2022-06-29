@@ -76,7 +76,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Event is stored in dynamo db
     And the Event "processor" shows field "message" with message "Added record to dynamodb"
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @wip
   Scenario Outline: F001S009 Changed Event with URL variations is formatted and accepted by Dos
     Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
