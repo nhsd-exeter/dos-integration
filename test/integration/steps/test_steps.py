@@ -548,7 +548,6 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context,
     assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
 
-
 @then(parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
 def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
     """assert dos API response and validate processed record in Dos CR Queue database"""
@@ -558,6 +557,16 @@ def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: s
         check_received_data_in_dos(correlation_id, cms, expected_url) is True
     ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
 
+@then(parse("the Change is included in the Change request"))
+def change_is_included_in_event_sender(context: Context):
+    if "/" in context.correlation_id:
+        context.correlation_id = context.correlation_id.replace("/", r"\/")
+    query = (
+        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        '| filter message like "Successfully send change request to DoS"'
+    )
+    logs = get_logs(query, "sender", context.start_time)
+    assert logs != [], "ERROR!!.. Expected Change not found in logs."
 
 @then(parse('the Changed Request with changed "{contact}" is captured by Dos'))
 def the_changed_contact_is_accepted_by_dos(context: Context, contact):

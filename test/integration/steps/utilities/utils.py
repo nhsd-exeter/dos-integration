@@ -172,8 +172,8 @@ def get_changes(correlation_id: str) -> list:
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
     data = []
-    while changes_loop_count < 12:
-        sleep(20)
+    while changes_loop_count < 10:
+        sleep(30)
         data = get_changes(correlation_id)
         if data != []:
             break

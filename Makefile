@@ -153,7 +153,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2" \
+	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 1" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
