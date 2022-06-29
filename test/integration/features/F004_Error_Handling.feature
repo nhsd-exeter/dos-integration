@@ -117,12 +117,12 @@ Feature: F004. Error Handling
 
 @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F004S015 Exception raised and CR created for Changed Event with invalid URL
-    Given a Changed Event with changed "{url}" variations is valid
+    Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "reason" with message "Website is not valid"
     And the Change is included in the Change request
 
     Examples: Invalid Web address variations
-      | url |
+      | url                            |
       | https://TESTPHARMACY@GMAIL.COM |
-      | test@gmail.com |
+      | test@gmail.com                 |

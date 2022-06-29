@@ -103,9 +103,9 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 @complete @pharmacy_no_log_searches
   Scenario Outline: F001S016 Changed Event with URL variations is formatted and accepted by Dos
-    Given a Changed Event with changed "{url}" variations is valid
+    Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request with formatted "{expected_url}" is captured by Dos
+    Then the Changed Request with formatted "<expected_url>" is captured by Dos
 
     Examples: Web address variations
       | url                            | expected_url                   |
