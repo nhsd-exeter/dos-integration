@@ -31,7 +31,7 @@ from .utilities.utils import (
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_changes,
-    validate_website,
+    get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
     get_service_id,
     get_service_type_data,
@@ -41,9 +41,9 @@ from .utilities.utils import (
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
-    time_to_sec,
     remove_opening_days,
-    get_latest_sequence_id_for_a_given_odscode,
+    time_to_sec,
+    validate_website,
 )
 
 scenarios(
@@ -548,8 +548,9 @@ def the_changed_contact_is_accepted_by_dos(context, contact):
 def the_changed_web_address_is_accepted_by_dos(context, expected_url):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     cms = "cmsurl"
+    correlation_id = context["correlation_id"].replace("/", r"\/")
     assert (
-        check_received_data_in_dos(context["correlation_id"].replace("/", r"\/"), cms, expected_url) is True
+        check_received_data_in_dos(correlation_id, cms, expected_url) is True
     ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
 
 
