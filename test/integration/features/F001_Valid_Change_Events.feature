@@ -28,23 +28,15 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | website  |
       | address  |
 
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S004. A valid change event with special characters is processed by DOS
-    Given a "pharmacy" Changed Event is aligned with Dos
-    And the field "Website" is set to "https:\/\/www.rowlandspharmacy.co.uk\/test?foo=test"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request with special characters is accepted by DOS
-    And the Changed Event is stored in dynamo db
-
   @complete @dentist_no_log_searches @dentist_smoke_test
-  Scenario: F001S005. A valid Dentist change event is processed into DOS
+  Scenario: F001S004. A valid Dentist change event is processed into DOS
     Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
   @complete @pharmacy_smoke_test @pharmacy_no_log_searches
-  Scenario Outline: F001S006. A valid change with field removal is processed by dos
+  Scenario Outline: F001S005. A valid change with field removal is processed by dos
     Given a Changed Event to unset "<field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by DoS with "<field>" deleted
@@ -56,7 +48,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | phone   |
 
   @complete @pharmacy_no_log_searches
-  Scenario Outline: F001S007. No CR created when value is set
+  Scenario Outline: F001S006. No CR created when value is set
     Given a Changed Event with a "<value>" value for "<field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event with changed "<field>" is not captured by Dos
@@ -70,23 +62,24 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | organisation_name | New Pharmacy |
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001S008. A duplicate sequence number is allowed
+  Scenario: F001S007. A duplicate sequence number is allowed
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id
     Then the Changed Event is stored in dynamo db
     And the Event "processor" shows field "message" with message "Added record to dynamodb"
 
-  @complete @pharmacy_no_log_searches @wip
-  Scenario Outline: F001S009 Changed Event with URL variations is formatted and accepted by Dos
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001S008 Changed Event with URL variations is formatted and accepted by Dos
     Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request with formatted "<expected_url>" is captured by Dos
 
     Examples: Web address variations
-      | url                            | expected_url                   |
-      | https://www.Test.com           | https://www.test.com           |
-      | https://www.TEST.Com           | https://www.test.com           |
-      | https://www.Test.com/TEST      | https://www.test.com/TEST      |
-      | http://www.TestChemist.co.uk   | http://www.testchemist.co.uk   |
-      | https://Testchemist.co.Uk      | https://testchemist.co.uk      |
-      | https://Www.testpharmacy.co.uk | https://www.testpharmacy.co.uk |
+      | url                                              | expected_url                                     |
+      | https://www.Test.com                             | https://www.test.com                             |
+      | https://www.TEST.Com                             | https://www.test.com                             |
+      | https://www.Test.com/TEST                        | https://www.test.com/TEST                        |
+      | http://www.TestChemist.co.uk                     | http://www.testchemist.co.uk                     |
+      | https://Testchemist.co.Uk                        | https://testchemist.co.uk                        |
+      | https://Www.testpharmacy.co.uk                   | https://www.testpharmacy.co.uk                   |
+      | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test |

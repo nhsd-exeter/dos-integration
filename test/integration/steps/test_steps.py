@@ -45,7 +45,6 @@ from .utilities.utils import (
     re_process_payload,
     remove_opening_days,
     time_to_sec,
-    validate_website,
 )
 
 scenarios(
@@ -350,11 +349,8 @@ def current_ods_exists_in_ddb(context: Context):
 @given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
 def a_changed_url_event_is_valid(url: str, context: Context):
     context.change_event = build_same_as_dos_change_event("pharmacy")
-    if not validate_website(url):
-        context.change_event.website = url
-        context.change_event.postcode = "NG5 2JJ"
-    else:
-        raise ValueError(f"ERROR!.. Input web address '{url}' is valid and not compatible")
+    context.change_event.website = url
+    context.change_event.postcode = "NG5 2JJ"
     return context
 
 
@@ -548,6 +544,7 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context,
     assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
     return context
 
+
 @then(parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
 def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
     """assert dos API response and validate processed record in Dos CR Queue database"""
@@ -556,6 +553,7 @@ def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: s
     assert (
         check_received_data_in_dos(correlation_id, cms, expected_url) is True
     ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
+
 
 @then(parse("the Change is included in the Change request"))
 def change_is_included_in_event_sender(context: Context):
@@ -567,6 +565,7 @@ def change_is_included_in_event_sender(context: Context):
     )
     logs = get_logs(query, "sender", context.start_time)
     assert logs != [], "ERROR!!.. Expected Change not found in logs."
+
 
 @then(parse('the Changed Request with changed "{contact}" is captured by Dos'))
 def the_changed_contact_is_accepted_by_dos(context: Context, contact):
@@ -843,6 +842,8 @@ def check_logs_for_correct_sent_cr(context: Context, odscode):
 
 @then(parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
 def generic_processor_check_function(context: Context, processor, field, message):
+    if "/" in context.correlation_id:
+        context.correlation_id = context.correlation_id.replace("/", r"\/")
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
