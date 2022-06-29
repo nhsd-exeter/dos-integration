@@ -13,7 +13,7 @@ logger = Logger(child=True)
 
 logger.debug("Setting up ddb client")
 dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-logger.debug("ddb client setup done.")
+logger.debug("ddb client setup done..")
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
