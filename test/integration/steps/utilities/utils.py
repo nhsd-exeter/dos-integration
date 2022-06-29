@@ -7,6 +7,7 @@ from os import getenv
 from random import choice
 from time import sleep, time_ns
 from typing import Any, Dict
+from re import match
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
@@ -413,3 +414,20 @@ def random_dentist_odscode() -> str:
         dentist_odscode_list = get_odscodes_list(lambda_payload)
     odscode = choice(dentist_odscode_list)[0]
     return f"{odscode[0]}{odscode[1:]}"
+
+
+def remove_opening_days(opening_times, day) -> dict:
+    deletions = []
+    for count, times in enumerate(opening_times):
+        if times["Weekday"] == day:
+            deletions.insert(0, count)
+    for entries in deletions:
+        del opening_times[entries]
+    return opening_times
+
+
+def validate_website(url: str) -> bool:
+    if match(r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", url):
+        return True
+    else:
+        return False
