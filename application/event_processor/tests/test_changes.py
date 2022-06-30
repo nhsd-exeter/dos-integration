@@ -303,6 +303,7 @@ def test_update_changes_with_address_and_postcode_if_address_is_equal_but_not_po
     mock_get_valid_dos_postcode.return_value = "TA2TA2"
     expected_changes = {
         "address": {
+            "address_lines": address_lines,
             "post_code": "TA2TA2",
         }
     }
