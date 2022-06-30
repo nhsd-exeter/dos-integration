@@ -1,19 +1,18 @@
-import random
 from ast import literal_eval
 from datetime import datetime
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
-from random import choice
+from random import sample, randrange
 from time import sleep, time_ns
 from typing import Any, Dict
-from re import match
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
 from requests import Response, post
 
 from .aws import get_secret
+from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
 
 URL = getenv("URL")
@@ -26,27 +25,29 @@ SQS_CLIENT = client("sqs")
 DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
-pharmacy_odscode_list = None
-dentist_odscode_list = None
+PHARMACY_ODS_CODE_LIST = None
+DENTIST_ODS_CODE_LIST = None
 
 
-def process_payload(payload: dict, valid_api_key: bool, correlation_id: str) -> Response:
+def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = str(time_ns())
+    sequence_number = generate_unique_sequence_number(change_event.odscode)
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
         "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
-    payload["Unique_key"] = generate_random_int()
+    payload = change_event.get_change_event()
     output = post(url=URL, headers=headers, data=dumps(payload))
+    if valid_api_key and output.status_code != 200:
+        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
     return output
 
 
-def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_id) -> Response:
+def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str, sequence_id: Any) -> Response:
     api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     headers = {
         "x-api-key": api_key,
@@ -55,26 +56,30 @@ def process_payload_with_sequence(payload: dict, correlation_id: str, sequence_i
     }
     if sequence_id is not None:
         headers["sequence-number"] = str(sequence_id)
-    payload["Unique_key"] = generate_random_int()
+    payload = change_event.get_change_event()
     output = post(url=URL, headers=headers, data=dumps(payload))
+    if output.status_code != 200 and isinstance(sequence_id, int):
+        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
     return output
 
 
-def process_change_request_payload(payload: dict, api_key_valid: bool) -> Response:
+def process_change_request_payload(change_event: ChangeEvent, valid_api_key: bool) -> Response:
     api_key = "invalid"
-    if api_key_valid:
+    if valid_api_key:
         secret = loads(get_secret(getenv("CR_API_KEY_SECRET")))
         api_key = secret[getenv("CR_API_KEY_KEY")]
     headers = {
         "x-api-key": api_key,
         "Content-Type": "application/json",
     }
+    payload = change_event.get_change_event()
     output = post(url=CR_URL, headers=headers, data=dumps(payload))
+    if valid_api_key and output.status_code != 200:
+        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
     return output
 
 
 def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> dict:
-    print(f"{DYNAMO_DB_TABLE} {odscode} {sequence_number}")
     resp = DYNAMO_CLIENT.query(
         TableName=DYNAMO_DB_TABLE,
         IndexName="gsi_ods_sequence",
@@ -87,10 +92,12 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
                 "N": str(sequence_number),
             },
         },
-        KeyConditionExpression="ODSCode = :v1 and SequenceNumber = :v2 ",
+        KeyConditionExpression="ODSCode = :v1 and SequenceNumber = :v2",
         Limit=1,
         ScanIndexForward=False,
     )
+    if len(resp["Items"]) == 0:
+        raise ValueError(f"No event found in dynamodb for ODSCode {odscode} and SequenceNumber {sequence_number}")
     item = resp["Items"][0]
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -124,8 +131,8 @@ def generate_unique_sequence_number(odscode: str) -> str:
     return str(get_latest_sequence_id_for_a_given_odscode(odscode) + 1)
 
 
-def generate_random_int() -> str:
-    return str(random.sample(range(1000), 1)[0])
+def generate_random_int(start_number: int = 1, stop_number: int = 1000) -> str:
+    return str(randrange(start=start_number, stop=stop_number, step=1))
 
 
 def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
@@ -140,7 +147,7 @@ def get_pharmacy_odscode() -> str:
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
-    odscode = choice(data)[0]
+    odscode = sample(tuple(data), 1)[0][0]
     return odscode
 
 
@@ -164,13 +171,12 @@ def get_changes(correlation_id: str) -> list:
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
     data = []
-    while changes_loop_count < 12:
-        sleep(10)
+    while changes_loop_count < 10:
+        sleep(30)
         data = get_changes(correlation_id)
         if data != []:
             break
         changes_loop_count += 1
-    print(f"Number of confirm-changes retries: {changes_loop_count}")
     return data
 
 
@@ -182,7 +188,7 @@ def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
 
 
 def confirm_approver_status(
-    correlation_id: str, loop_count: int = 15, sleep_between_loops: int = 60
+    correlation_id: str, loop_count: int = 12, sleep_between_loops: int = 60
 ) -> list[None] | list[Any]:
     approver_loop_count = 0
     data = []
@@ -192,7 +198,6 @@ def confirm_approver_status(
         if data != []:
             break
         approver_loop_count += 1
-    print(f"Number of approver retries: {approver_loop_count}")
     return data
 
 
@@ -206,14 +211,12 @@ def get_service_id(correlation_id: str) -> list:
         data = loads(response)
         data = literal_eval(data)
         if data != []:
-            print(f"Number of service_id retries: {retries}")
-            print(data)
             return data[0][0]
 
-        if retries > 8:
+        if retries > 16:
             raise ValueError("Error!.. Service Id not found")
         retries += 1
-        sleep(5)
+        sleep(30)
 
 
 def get_service_type_from_cr(correlation_id: str) -> list:
@@ -273,7 +276,7 @@ def get_odscode_with_contact_data() -> str:
     response = invoke_test_db_checker_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
-    odscode = choice(data)[0]
+    odscode = sample(data, 1)[0][0]
     return odscode
 
 
@@ -291,11 +294,11 @@ def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
         if "errorMessage" not in response_payload:
             return response_payload
 
-        if retries > 9:
+        if retries > 18:
             print(f"Error in this payload: {lambda_payload}")
-            raise Exception(f"Unable to run test db checker lambda successfully after {retries} retries")
+            raise ValueError(f"Unable to run test db checker lambda successfully after {retries} retries")
         retries += 1
-        sleep(20)
+        sleep(10)
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
@@ -381,10 +384,11 @@ def time_to_sec(t):
 def generate_correlation_id(suffix=None) -> str:
     name_no_space = getenv("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
-    correlation_id = f"{run_id}_{name_no_space}" if suffix is None else f"{run_id}_{suffix}"
+    correlation_id = f"{run_id}_{time_ns()}_{name_no_space}" if suffix is None else f"{run_id}_{time_ns()}_{suffix}"
     correlation_id = (
         correlation_id if len(correlation_id) < 80 else correlation_id[:79]
     )  # DoS API Gateway max reference is 100 characters
+    correlation_id = correlation_id.replace("'", "")
     return correlation_id
 
 
@@ -400,19 +404,24 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
 
 
 def random_pharmacy_odscode() -> str:
-    global pharmacy_odscode_list
-    if pharmacy_odscode_list is None:
+    global PHARMACY_ODS_CODE_LIST
+    if PHARMACY_ODS_CODE_LIST is None:
         lambda_payload = {"type": "get_pharmacy_odscodes"}
-        pharmacy_odscode_list = get_odscodes_list(lambda_payload)
-    return choice(pharmacy_odscode_list)[0]
+        PHARMACY_ODS_CODE_LIST = get_odscodes_list(lambda_payload)
+    odscode_list = sample(PHARMACY_ODS_CODE_LIST, 1)[0]
+    PHARMACY_ODS_CODE_LIST.remove(odscode_list)
+    odscode = odscode_list[0]
+    return odscode
 
 
 def random_dentist_odscode() -> str:
-    global dentist_odscode_list
-    if dentist_odscode_list is None:
+    global DENTIST_ODS_CODE_LIST
+    if DENTIST_ODS_CODE_LIST is None:
         lambda_payload = {"type": "get_dentist_odscodes"}
-        dentist_odscode_list = get_odscodes_list(lambda_payload)
-    odscode = choice(dentist_odscode_list)[0]
+        DENTIST_ODS_CODE_LIST = get_odscodes_list(lambda_payload)
+    odscode_list = sample(DENTIST_ODS_CODE_LIST, 1)[0]
+    DENTIST_ODS_CODE_LIST.remove(odscode_list)
+    odscode = odscode_list[0]
     return f"{odscode[0]}{odscode[1:]}"
 
 
@@ -424,10 +433,3 @@ def remove_opening_days(opening_times, day) -> dict:
     for entries in deletions:
         del opening_times[entries]
     return opening_times
-
-
-def validate_website(url: str) -> bool:
-    if match(r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?", url):
-        return True
-    else:
-        return False
