@@ -1,4 +1,4 @@
-from re import search
+from re import search, sub
 from typing import Any, Dict
 from urllib.parse import urlparse, urlunparse
 
@@ -13,9 +13,9 @@ from change_request import (
     WEBSITE_CHANGE_KEY,
 )
 from common.dos import DoSService, get_valid_dos_postcode
+from common.nhs import NHSEntity
 from common.opening_times import SpecifiedOpeningTime
 from common.utilities import is_val_none_or_empty
-from common.nhs import NHSEntity
 from reporting import log_invalid_nhsuk_postcode, log_website_is_invalid
 
 logger = Logger(child=True)
@@ -47,11 +47,13 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
     if str(dos_value) != str(nhs_uk_value) and (
         not is_val_none_or_empty(dos_value) or not is_val_none_or_empty(nhs_uk_value)
     ):
-        logger.debug(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
+        logger.info(f"{change_key} is not equal, {dos_value=} != {nhs_uk_value=}")
         if nhs_uk_value is None:
             changes[change_key] = ""
         else:
             changes[change_key] = nhs_uk_value
+    else:
+        logger.debug(f"{change_key} is equal, {dos_value=} == {nhs_uk_value=}")
 
 
 def __update_changes_with_sp_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
@@ -109,18 +111,30 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
 
 def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+    """Adds the address and postcode to the change request if not equal.
+
+    Args:
+        changes (dict): Change Request changes
+        dos_service (DoSService): DoS Service for comparison
+        nhs_entity (NHSEntity): NHS UK Entity for comparison
+    """
+    logger.debug(f"Address before title casing: {nhs_entity.address_lines}")
+    nhs_entity.address_lines = list(map(set_title_case, nhs_entity.address_lines))
+    logger.debug(f"Address after title casing: {nhs_entity.address_lines}")
     nhs_uk_address_string = "$".join(nhs_entity.address_lines)
     dos_address = dos_service.address
     is_address_same = True
     if dos_address != nhs_uk_address_string:
         is_address_same = False
-        logger.debug(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
+        logger.info(f"Address is not equal, {dos_address=} != {nhs_uk_address_string=}")
         changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_entity.address_lines}
+    else:
+        logger.debug(f"Address is equal, {dos_address=} == {nhs_uk_address_string=}")
 
     dos_postcode = dos_service.normal_postcode()
     nhs_postcode = nhs_entity.normal_postcode()
     if dos_postcode != nhs_postcode:
-        logger.debug(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
+        logger.info(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
 
         valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
         if valid_dos_postcode is None:
@@ -133,9 +147,22 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
                 changes[ADDRESS_CHANGE_KEY] = {ADDRESS_LINES_KEY: nhs_entity.address_lines}
                 logger.debug(f"Address is equal but Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
             changes[ADDRESS_CHANGE_KEY][POSTCODE_CHANGE_KEY] = valid_dos_postcode
+    else:
+        logger.debug(f"Postcode are equal, {dos_postcode=} == {nhs_postcode=}")
+
+
+def set_title_case(value: str) -> str:
+    return sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), value)
 
 
 def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+    """Adds the website to the change request if not equal.
+
+    Args:
+        changes (dict): Change Request changes
+        dos_service (DoSService): DoS Service for comparison
+        nhs_entity (NHSEntity): NHS UK Entity for comparison
+    """
     if is_val_none_or_empty(nhs_entity.website) and not is_val_none_or_empty(dos_service.web):
         changes[WEBSITE_CHANGE_KEY] = ""
     elif nhs_entity.website is not None and nhs_entity.website != "":
@@ -165,3 +192,5 @@ def compare_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntit
             changes[WEBSITE_CHANGE_KEY] = nhs_website
         else:
             log_website_is_invalid(nhs_entity, nhs_website)
+    else:
+        logger.debug(f"Website is equal, {dos_website=} == {nhs_website=}")

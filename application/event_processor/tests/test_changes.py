@@ -215,6 +215,38 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     assert changes == expected_changes, f"Should return {expected_changes} dict, actually: {changes}"
 
 
+@pytest.mark.parametrize(
+    "address, expected_address",
+    [
+        (
+            ["3rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "Herts"],
+            ["3rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "Herts"],
+        ),
+        (
+            ["3rd floor", "24 hour road", "green tye", "much hadham", "county"],
+            ["3rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "County"],
+        ),
+        (
+            ["32A unit", "george's road", "green tye", "less hadham", "herts"],
+            ["32A Unit", "George's Road", "Green Tye", "Much Hadham", "Herts"],
+        ),
+    ],
+)
+def test_update_changes_with_address_and_postcode_address_change(address: list, expected_address: list):
+    # Arrange
+    changes = {}
+    nhs_uk_entity = NHSEntity({})
+    nhs_uk_entity.address_lines = ["address1", "address2", "address3"]
+    nhs_uk_entity.postcode = "postcode"
+    dos_service = dummy_dos_service()
+    dos_service.address = "address1"
+    dos_service.postcode = "postcode"
+    # Act
+    update_changes_with_address_and_postcode(changes, dos_service, nhs_uk_entity)
+    # Assert
+    assert expected_address == changes["address"], f"Should return {expected_address}, actually: {changes}"
+
+
 @patch(f"{FILE_PATH}.get_valid_dos_postcode")
 def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, change_event):
     # Arrange
