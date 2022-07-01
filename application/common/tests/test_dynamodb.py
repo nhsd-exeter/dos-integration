@@ -162,7 +162,6 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
 
     from ..dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 
-
     event_received_time = int(time())
     odscode = change_event["ODSCode"]
     cevent = change_event.copy()

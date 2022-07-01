@@ -1,7 +1,6 @@
 import json
-from os import environ, path
+from os import environ
 from random import choices, randint, uniform
-from pathlib import Path
 
 from boto3 import client
 from moto import mock_dynamodb
@@ -9,7 +8,6 @@ from pytest import fixture
 from dataclasses import dataclass
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
-
 
 STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
 
