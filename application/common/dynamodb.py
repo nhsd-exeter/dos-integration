@@ -8,7 +8,7 @@ from time import time
 from os import environ
 from aws_lambda_powertools.logging.logger import Logger
 
-TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
+TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
 
