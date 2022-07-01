@@ -11,7 +11,8 @@ from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
 
-STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
+STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
+
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
