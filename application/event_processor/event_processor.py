@@ -251,8 +251,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         )
         return
 
-    time_corr_seq = time_ns()
-
     try:
         validate_event(change_event)
         nhs_entity = NHSEntity(change_event)
@@ -262,12 +260,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         metrics.set_property("ods_code", nhs_entity.odscode)
         logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
         event_processor = EventProcessor(nhs_entity)
-
-        time_event_setup = time_ns()
-
         matching_services = event_processor.get_matching_services()
-
-        time_match_servs = time_ns()
 
         if len(matching_services) == 0:
             log_unmatched_nhsuk_service(nhs_entity)
@@ -286,21 +279,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
         event_processor.get_change_requests()
 
-        time_comparing = time_ns()
-
     finally:
         disconnect_dos_db()
 
     event_processor.send_changes(sqs_timestamp, record_id, sequence_number)
-
-    time_send_changes = time_ns()
-
-    timings = {
-        "all in-code": (time_send_changes - time_start_ns) // 1000000,
-        "corr_seq": (time_corr_seq - time_start_ns) // 1000000,
-        "event_setup": (time_event_setup - time_corr_seq) // 1000000,
-        "matching": (time_match_servs - time_event_setup) // 1000000,
-        "comparing": (time_comparing - time_match_servs) // 1000000,
-        "send_changes": (time_send_changes - time_comparing) // 1000000
-    }
-    logger.info("Timings ready", extra={"timings": timings})

@@ -21,7 +21,6 @@ def validate_event(event: Dict[str, Any]) -> None:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
         raise ValidationException(exception)
-    logger.info("Schema validated.")
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
     check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][ODSCODE_LENGTH_KEY])
     logger.info("Event has been validated")

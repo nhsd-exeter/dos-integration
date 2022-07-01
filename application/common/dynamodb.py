@@ -10,10 +10,7 @@ from aws_lambda_powertools.logging.logger import Logger
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 logger = Logger(child=True)
-
-logger.debug("Setting up ddb client")
-dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
-logger.debug("ddb client setup done..")
+dynamodb = boto3.client("dynamodb")
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
