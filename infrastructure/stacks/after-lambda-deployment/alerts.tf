@@ -124,11 +124,11 @@ resource "aws_cloudwatch_metric_alarm" "dos_api_gateway_400_error_alert" {
   alarm_name                = "${var.project_id} | ${var.environment} | DoS API Gateway 400 Error"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
-  dimensions                = { QueueName = var.cr_dead_letter_queue_from_fifo_queue_name }
+  dimensions                = { ENV = var.environment }
   evaluation_periods        = "1"
   insufficient_data_actions = []
-  metric_name               = "NumberOfMessagesReceived"
-  namespace                 = "AWS/SQS"
+  metric_name               = "DoSApiFail"
+  namespace                 = "UEC-DOS-INT"
   period                    = "60"
   statistic                 = "Sum"
   threshold                 = "0"
