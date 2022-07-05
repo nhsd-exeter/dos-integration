@@ -1,5 +1,6 @@
 from os import environ
 from unittest.mock import ANY, patch
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -306,6 +307,19 @@ def test_not_update_changes_with_address_and_postcode_to_change_request_if_addre
 
 
 def test_update_changes_with_opening_times():
+
+    date_now = datetime.now().date()
+    str_date_now = date_now.strftime("%b %d %Y")
+    date_future_4wks = date_now + timedelta(weeks=4)
+    date_future_4wks_2ds = date_now + timedelta(weeks=4, days=2)
+    date_future_6wks = date_now + timedelta(weeks=6)
+    date_future_8wks = date_now + timedelta(weeks=8)
+    date_future_8wks_1ds = date_now + timedelta(weeks=8, days=1)
+    date_future_8wks_3ds = date_now + timedelta(weeks=8, days=3)
+    date_future_8wks_4ds = date_now + timedelta(weeks=8, days=4)
+    date_future_9wks = date_now + timedelta(weeks=9)
+    date_future_7wks = date_now + timedelta(weeks=7)
+    date_past_2wks = date_now - timedelta(weeks=2)
     # Arrange
     nhs_uk_entity = NHSEntity(
         {
@@ -395,7 +409,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "08:00",
                     "ClosingTime": "12:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Apr 15 2022",
+                    "AdditionalOpeningDate": date_future_4wks.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -403,7 +417,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "13:00",
                     "ClosingTime": "16:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Apr 15 2022",
+                    "AdditionalOpeningDate": date_future_4wks.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -411,7 +425,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "07:00",
                     "ClosingTime": "11:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Apr 18 2022",
+                    "AdditionalOpeningDate": date_future_4wks_2ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -419,7 +433,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "12:00",
                     "ClosingTime": "15:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Apr 18 2022",
+                    "AdditionalOpeningDate": date_future_4wks_2ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -427,7 +441,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "16:00",
                     "ClosingTime": "18:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Apr 18 2022",
+                    "AdditionalOpeningDate": date_future_4wks_2ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -435,7 +449,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": None,
                     "ClosingTime": None,
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Feb 21 2022",
+                    "AdditionalOpeningDate": date_future_6wks.strftime("%b %d %Y"),
                     "IsOpen": False,
                 },
                 {
@@ -443,7 +457,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": None,
                     "ClosingTime": None,
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 7 2022",
+                    "AdditionalOpeningDate": date_future_8wks.strftime("%b %d %Y"),
                     "IsOpen": False,
                 },
                 {
@@ -451,7 +465,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": None,
                     "ClosingTime": None,
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 8 2022",
+                    "AdditionalOpeningDate": date_future_8wks_1ds.strftime("%b %d %Y"),
                     "IsOpen": False,
                 },
                 {
@@ -459,7 +473,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "07:00",
                     "ClosingTime": "12:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 10 2022",
+                    "AdditionalOpeningDate": date_future_8wks_3ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -467,7 +481,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "13:00",
                     "ClosingTime": "17:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 10 2022",
+                    "AdditionalOpeningDate": date_future_8wks_3ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -475,7 +489,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "18:00",
                     "ClosingTime": "20:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 10 2022",
+                    "AdditionalOpeningDate": date_future_8wks_3ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -483,7 +497,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "07:00",
                     "ClosingTime": "12:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 11 2022",
+                    "AdditionalOpeningDate": date_future_8wks_4ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -491,7 +505,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "13:00",
                     "ClosingTime": "17:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 11 2022",
+                    "AdditionalOpeningDate": date_future_8wks_4ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -499,7 +513,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "18:00",
                     "ClosingTime": "20:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 11 2022",
+                    "AdditionalOpeningDate": date_future_8wks_4ds.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -507,7 +521,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "06:00",
                     "ClosingTime": "12:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 19 2022",
+                    "AdditionalOpeningDate": date_future_9wks.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -515,7 +529,7 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": "13:00",
                     "ClosingTime": "18:00",
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 19 2022",
+                    "AdditionalOpeningDate": date_future_9wks.strftime("%b %d %Y"),
                     "IsOpen": True,
                 },
                 {
@@ -523,8 +537,16 @@ def test_update_changes_with_opening_times():
                     "OpeningTime": None,
                     "ClosingTime": None,
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Mar 9 2022",
+                    "AdditionalOpeningDate": date_future_7wks.strftime("%b %d %Y"),
                     "IsOpen": False,
+                },
+                {
+                    "Weekday": "",
+                    "OpeningTime": "12:00",
+                    "ClosingTime": "18:00",
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": date_past_2wks.strftime("%b %d %Y"),
+                    "IsOpen": True,
                 },
             ],
         }
@@ -532,27 +554,33 @@ def test_update_changes_with_opening_times():
 
     expected_changes = {
         OPENING_DATES_KEY: {
-            "2022-04-15": [{"start_time": "08:00", "end_time": "12:00"}, {"start_time": "13:00", "end_time": "16:00"}],
-            "2022-04-18": [
+            date_future_4wks.strftime("%Y-%m-%d"): [
+                {"start_time": "08:00", "end_time": "12:00"},
+                {"start_time": "13:00", "end_time": "16:00"},
+            ],
+            date_future_4wks_2ds.strftime("%Y-%m-%d"): [
                 {"start_time": "07:00", "end_time": "11:00"},
                 {"start_time": "12:00", "end_time": "15:00"},
                 {"start_time": "16:00", "end_time": "18:00"},
             ],
-            "2022-02-21": [],
-            "2022-03-07": [],
-            "2022-03-08": [],
-            "2022-03-10": [
+            date_future_6wks.strftime("%Y-%m-%d"): [],
+            date_future_8wks.strftime("%Y-%m-%d"): [],
+            date_future_8wks_1ds.strftime("%Y-%m-%d"): [],
+            date_future_8wks_3ds.strftime("%Y-%m-%d"): [
                 {"start_time": "07:00", "end_time": "12:00"},
                 {"start_time": "13:00", "end_time": "17:00"},
                 {"start_time": "18:00", "end_time": "20:00"},
             ],
-            "2022-03-11": [
+            date_future_8wks_4ds.strftime("%Y-%m-%d"): [
                 {"start_time": "07:00", "end_time": "12:00"},
                 {"start_time": "13:00", "end_time": "17:00"},
                 {"start_time": "18:00", "end_time": "20:00"},
             ],
-            "2022-03-19": [{"start_time": "06:00", "end_time": "12:00"}, {"start_time": "13:00", "end_time": "18:00"}],
-            "2022-03-09": [],
+            date_future_9wks.strftime("%Y-%m-%d"): [
+                {"start_time": "06:00", "end_time": "12:00"},
+                {"start_time": "13:00", "end_time": "18:00"},
+            ],
+            date_future_7wks.strftime("%Y-%m-%d"): [],
         },
         OPENING_DAYS_KEY: {
             "Monday": [

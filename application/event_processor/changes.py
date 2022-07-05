@@ -74,7 +74,8 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.get_specified_opening_times()
-    nhs_spec_open_dates = nhs_entity.specified_opening_times
+    nhs_spec_open_dates = SpecifiedOpeningTime.remove_past_dates(nhs_entity.specified_opening_times)
+    # nhs_spec_open_dates = nhs_entity.specified_opening_times
     compared = SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates)
     if not compared:
         logger.debug(
