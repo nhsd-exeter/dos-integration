@@ -34,7 +34,7 @@ jobs:
             -Dsonar.sources=application,deployment,infrastructure
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/scripts
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9
             -Dsonar.exclusions=application/**/tests/**
