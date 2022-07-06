@@ -119,7 +119,7 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
         nhs_entity (NHSEntity): NHS UK Entity for comparison
     """
     logger.debug(f"Address before title casing: {nhs_entity.address_lines}")
-    nhs_entity.address_lines = list(map(set_title_case, nhs_entity.address_lines))
+    nhs_entity.address_lines = list(map(format_address, nhs_entity.address_lines))
     logger.debug(f"Address after title casing: {nhs_entity.address_lines}")
     nhs_uk_address_string = "$".join(nhs_entity.address_lines)
     dos_address = dos_service.address
@@ -151,8 +151,20 @@ def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSServ
         logger.debug(f"Postcode are equal, {dos_postcode=} == {nhs_postcode=}")
 
 
-def set_title_case(value: str) -> str:
-    return sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), value)
+def format_address(value: str) -> str:
+    """Formats an address line to title case and removes apostrophes. As well it replaces any & symbols with and.
+
+    Args:
+        value (str): Address line to format
+    """
+    address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), value)
+    if "'" in address:
+        address = address.replace("'", "")
+        logger.debug(f"Removed apostrophe from address: {address}")
+    if "&" in address:
+        address = address.replace("&", "and")
+        logger.debug(f"Replaced ampersand with 'and' in address: {address}")
+    return address
 
 
 def update_changes_with_website(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:

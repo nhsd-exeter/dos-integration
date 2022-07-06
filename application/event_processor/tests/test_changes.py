@@ -224,12 +224,12 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
             ["3Rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "Herts"],
         ),
         (
-            ["3rd floor", "24 hour road", "green tye", "much hadham", "county"],
-            ["3Rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "County"],
+            ["3rd floor", "24 hour road", "green tye & woodsham", "much hadham", "county"],
+            ["3Rd Floor", "24 Hour Road", "Green Tye and Woodsham", "Much Hadham", "County"],
         ),
         (
             ["32A unit", "george's road", "green tye", "less hadham", "testerset"],
-            ["32A Unit", "George's Road", "Green Tye", "Less Hadham", "Testerset"],
+            ["32A Unit", "Georges Road", "Green Tye", "Less Hadham", "Testerset"],
         ),
         (
             ["2ND FLOOR", "85A", "ABCDE", "WOODCHURCH ROAD", "TESTERSHIRE"],
