@@ -1,4 +1,4 @@
-from json import loads
+from json import loads, dumps
 from typing import Any, Dict, Union
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
@@ -57,3 +57,18 @@ def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
             attributes["error_msg"] = msg_attributes["error_msg"]["stringValue"]
 
         return attributes
+
+
+def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, msg_limit: int = 10000):
+    """Removing given keys from the dictionary if the dictonary size is morethan message limit
+        Args:
+            event Dict[str, Any]: Message body as a dictionary
+            keys list: keys to be removed
+            msg_limit int: message limit in char length
+        Returns:
+            Dict[str, Any]: Message body as a dictionary
+        """
+    msg_length = len(dumps(event).encode('utf-8'))
+    if msg_length > msg_limit:
+        return {k: v for k, v in event.items() if k not in keys}
+    return event
