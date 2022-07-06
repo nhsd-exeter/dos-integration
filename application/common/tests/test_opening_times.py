@@ -437,6 +437,18 @@ def test_specifiedopentimes_equal_lists():
     assert not SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3], [sp1, sp1, sp3])
     assert not SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3, sp3], [sp1, sp2, sp3])
 
+def test_specifiedopentimes_remove_past_dates():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
+
+    now_date = datetime.now().date()
+
+    future1 = SpecifiedOpeningTime([], (now_date + timedelta(weeks=4)), is_open=False)
+    future2 = SpecifiedOpeningTime([a, b, c], (now_date + timedelta(weeks=5)))
+    past = SpecifiedOpeningTime([b], (now_date - timedelta(weeks=4)))
+
+    assert SpecifiedOpeningTime.remove_past_dates(list=[future1, future2, past]) == [future1, future2]
 
 def test_standard_opening_times_export_cr_format():
 
