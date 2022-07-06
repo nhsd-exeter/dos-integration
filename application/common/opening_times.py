@@ -1,4 +1,3 @@
-from asyncio import futures
 from dataclasses import dataclass
 from datetime import date, time, datetime
 from typing import Any, Dict, List, Union
@@ -194,7 +193,7 @@ class SpecifiedOpeningTime:
         return default
 
     @staticmethod
-    def remove_past_dates(list: List["SpecifiedOpeningTime"], date_now=None ) -> List["SpecifiedOpeningTime"]:
+    def remove_past_dates(list: List["SpecifiedOpeningTime"], date_now=None) -> List["SpecifiedOpeningTime"]:
         if date_now is None:
             date_now = datetime.now().date()
         future_dates = []

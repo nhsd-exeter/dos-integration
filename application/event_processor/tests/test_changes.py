@@ -309,7 +309,6 @@ def test_not_update_changes_with_address_and_postcode_to_change_request_if_addre
 def test_update_changes_with_opening_times():
 
     date_now = datetime.now().date()
-    str_date_now = date_now.strftime("%b %d %Y")
     date_future_4wks = date_now + timedelta(weeks=4)
     date_future_4wks_2ds = date_now + timedelta(weeks=4, days=2)
     date_future_6wks = date_now + timedelta(weeks=6)

@@ -74,18 +74,23 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
 
     # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
     dos_spec_open_dates = dos_service.get_specified_opening_times()
-    nhs_spec_open_dates = SpecifiedOpeningTime.remove_past_dates(nhs_entity.specified_opening_times)
-    # nhs_spec_open_dates = nhs_entity.specified_opening_times
-    compared = SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, nhs_spec_open_dates)
+    nhs_spec_open_dates = nhs_entity.specified_opening_times
+    future_nhs_spec_open_dates = SpecifiedOpeningTime.remove_past_dates(nhs_entity.specified_opening_times)
+    if len(nhs_spec_open_dates) != len(future_nhs_spec_open_dates):
+        logger.debug(
+            "Removing Specified opening times that occur in the past",
+            extra={"all_nhs": nhs_spec_open_dates, "future_nhs": future_nhs_spec_open_dates},
+        )
+    compared = SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, future_nhs_spec_open_dates)
     if not compared:
         logger.debug(
-            "Specified opening times not equal", extra={"dos": dos_spec_open_dates, "nhs": nhs_spec_open_dates}
+            "Specified opening times not equal", extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates}
         )
-        changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(nhs_spec_open_dates)
+        changes[OPENING_DATES_KEY] = SpecifiedOpeningTime.export_cr_format_list(future_nhs_spec_open_dates)
     else:
         logger.debug(
             "Specified opening times are equal, so no change",
-            extra={"dos": dos_spec_open_dates, "nhs": nhs_spec_open_dates, "compared": compared},
+            extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates, "compared": compared},
         )
 
     # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
