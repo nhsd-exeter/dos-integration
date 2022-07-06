@@ -54,25 +54,9 @@ def update_changes(changes: dict, change_key: str, dos_value: Any, nhs_uk_value:
             changes[change_key] = nhs_uk_value
 
 
-def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
-    """Adds the standard opening times and specified opening times to the change request if not equal and
-    nhsuk times are valid.
-
-    Args:
-        changes (dict): Change Request changes
-        dos_service (DoSService): DoS Service for comparison
-        nhs_entity (NHSEntity): NHS UK Entity for comparison
-    """
-
-    # Skip if invalid times. This check will have already been done and logged out fully in event_processor
-    if not nhs_entity.all_times_valid():
-        logger.warning(
-            f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found to be invalid or illogical. "
-            "Skipping change."
-        )
-        return
-
-    # SPECIFIED OPENING TIMES (Comparing a list of SpecifiedOpeningTimes)
+def __update_changes_with_sp_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
+    """Removes past specified openings and adds specified openings to changes if they differ between dos_service
+    and nhs_entity"""
     dos_spec_open_dates = dos_service.get_specified_opening_times()
     nhs_spec_open_dates = nhs_entity.specified_opening_times
     future_nhs_spec_open_dates = SpecifiedOpeningTime.remove_past_dates(nhs_entity.specified_opening_times)
@@ -92,13 +76,38 @@ def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nh
             "Specified opening times are equal, so no change",
             extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates, "compared": compared},
         )
+    return changes
 
-    # STANDARD OPENING TIMES (Comparing single StandardOpeningTimes Objects)
+
+def __update_changes_with_std_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> dict:
+    """Add week opening times to changes if they differ between dos_service and nhs_entity"""
     dos_std_open_dates = dos_service.get_standard_opening_times()
     nhs_std_open_dates = nhs_entity.standard_opening_times
     if dos_std_open_dates != nhs_std_open_dates:
         logger.debug(f"Standard weekly opening times not equal. dos={dos_std_open_dates} nhs={nhs_std_open_dates}")
         changes[OPENING_DAYS_KEY] = nhs_std_open_dates.export_cr_format()
+    return changes
+
+
+def update_changes_with_opening_times(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
+    """Adds the standard opening times and specified opening times to the change request if not equal and
+    nhsuk times are valid.
+
+    Args:
+        changes (dict): Change Request changes
+        dos_service (DoSService): DoS Service for comparison
+        nhs_entity (NHSEntity): NHS UK Entity for comparison
+    """
+
+    if not nhs_entity.all_times_valid():
+        logger.warning(
+            f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found to be invalid or illogical. "
+            "Skipping change."
+        )
+        return
+
+    changes = __update_changes_with_sp_opening_times(changes, dos_service, nhs_entity)
+    __update_changes_with_std_opening_times(changes, dos_service, nhs_entity)
 
 
 def update_changes_with_address_and_postcode(changes: dict, dos_service: DoSService, nhs_entity: NHSEntity) -> None:
