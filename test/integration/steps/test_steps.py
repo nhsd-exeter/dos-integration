@@ -45,6 +45,7 @@ from .utilities.utils import (
     re_process_payload,
     remove_opening_days,
     time_to_sec,
+    slack_retry,
 )
 
 scenarios(
@@ -897,3 +898,9 @@ def generic_processor_negative_check_function(context: Context, processor, field
     logs_found = negative_log_check(query, processor, context.start_time)
 
     assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parse('the Slack channel shows an alert saying "{message}"'))
+def slack_message_check(message):
+    slack_entries = slack_retry(message)
+    assert message in slack_entries

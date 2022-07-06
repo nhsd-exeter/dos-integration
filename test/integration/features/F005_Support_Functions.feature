@@ -6,3 +6,10 @@ Feature: F005. Support Functions
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event is stored in dynamo db
     And the stored Changed Event is reprocessed in DI
+
+  @complete @kit
+  Scenario: F005S002. Slack Alerting for invalid postcodes
+    Given a "pharmacy" Changed Event is aligned with Dos
+    And the field "Postcode" is set to "FAKE"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Slack channel shows an alert saying "Invalid Postcode"

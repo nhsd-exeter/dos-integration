@@ -4,12 +4,12 @@ from decimal import Decimal
 from json import dumps, loads
 from os import getenv
 from random import sample, randrange
-from time import sleep, time_ns
+from time import sleep, time_ns, time
 from typing import Any, Dict
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from requests import Response, post
+from requests import Response, post, get
 
 from .aws import get_secret
 from .change_event import ChangeEvent
@@ -433,3 +433,27 @@ def remove_opening_days(opening_times, day) -> dict:
     for entries in deletions:
         del opening_times[entries]
     return opening_times
+
+
+def slack_retry(message) -> str:
+    counter = 0
+    slack_channel = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_CHANNEL"]
+    slack_oauth = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_OAUTH"]
+    while counter < 10:
+        sleep(10)
+        # responseVal = check_slack("C02QUQUE086", "Bearer xoxb-110454635910-3728705337409-LQcLftPs7DXoMzGWAyqRidF6")
+        responseVal = check_slack(slack_channel, slack_oauth)
+        if message in responseVal:
+            return responseVal
+    raise ValueError("Slack alert message not found")
+
+
+def check_slack(channel, token) -> str:
+    headers = {
+        "Authorization": token,
+        "Content-Type": "application/json",
+    }
+    current = str(time() - 3600)
+
+    output = get(url=f"https://slack.com/api/conversations.history?channel={channel}&oldest={current}", headers=headers)
+    return output.text
