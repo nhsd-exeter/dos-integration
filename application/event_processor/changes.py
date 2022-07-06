@@ -158,12 +158,8 @@ def format_address(value: str) -> str:
         value (str): Address line to format
     """
     address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), value)
-    if "'" in address:
-        address = address.replace("'", "")
-        logger.debug(f"Removed apostrophe from address: {address}")
-    if "&" in address:
-        address = address.replace("&", "and")
-        logger.debug(f"Replaced ampersand with 'and' in address: {address}")
+    address = address.replace("'", "")
+    address = address.replace("&", "and")
     return address
 
 
