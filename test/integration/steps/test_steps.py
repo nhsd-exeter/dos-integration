@@ -46,6 +46,7 @@ from .utilities.utils import (
     remove_opening_days,
     time_to_sec,
     slack_retry,
+    post_sqs_message,
 )
 
 scenarios(
@@ -117,6 +118,13 @@ def a_valid_changed_event_with_empty_contact(value, field, context: Context):
 def a_specific_change_event_is_valid(context: Context):
     context.change_event = set_opening_times_change_event("pharmacy")
     return context
+
+
+@given("an SQS message is added to the queue", target_fixture="context")
+def post_an_sqs_message(context: Context):
+    print("Running the given step")
+    post_sqs_message()
+    assert 1 == 1, "Hello"
 
 
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")

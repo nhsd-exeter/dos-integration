@@ -21,7 +21,7 @@ SQS_URL = getenv("SQS_URL")
 EVENT_PROCESSOR = getenv("EVENT_PROCESSOR")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
-SQS_CLIENT = client("sqs")
+SQS_CLIENT = client("sqs", region_name="eu-west-2")
 DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
 
@@ -441,7 +441,6 @@ def slack_retry(message) -> str:
     slack_oauth = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_OAUTH"]
     while counter < 10:
         sleep(10)
-        # responseVal = check_slack("C02QUQUE086", "Bearer xoxb-110454635910-3728705337409-LQcLftPs7DXoMzGWAyqRidF6")
         responseVal = check_slack(slack_channel, slack_oauth)
         if message in responseVal:
             return responseVal
@@ -457,3 +456,20 @@ def check_slack(channel, token) -> str:
 
     output = get(url=f"https://slack.com/api/conversations.history?channel={channel}&oldest={current}", headers=headers)
     return output.text
+
+
+def post_sqs_message():
+    print("hit teh post sqs function")
+    queue_url = "https://sqs.eu-west-2.amazonaws.com/730319765130/uec-dos-int-test-cr-dead-letter-queue.fifo"
+
+    message = {
+        "reference": "14451_1657015307500997089_//www.test.com]",
+        "system": "DoS Integration",
+        "message": "DoS Integration CR. correlation-id: 14451_1657015307500997089_//www.test.com]",
+        "replace_opening_dates_mode": True,
+        "service_id": "22963",
+        "changes": {"website": "https://www.test.com"},
+    }
+    response = SQS_CLIENT.send_message(QueueUrl=queue_url, MessageBody=dumps(message))
+    print(response)
+    return True

@@ -7,7 +7,7 @@ Feature: F005. Support Functions
     Then the Changed Event is stored in dynamo db
     And the stored Changed Event is reprocessed in DI
 
-  @complete @kit
+  @complete
   Scenario: F005S002. Slack Alerting for invalid postcodes
     Given a "pharmacy" Changed Event is aligned with Dos
     And the field "Postcode" is set to "FAKE"
