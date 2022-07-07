@@ -94,7 +94,7 @@ functions:
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-event-processor
     description: ${sls:stage} Event Processor lambda
-    memorySize: 128
+    memorySize: 192
     timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     maximumRetryAttempts: 0
