@@ -107,7 +107,8 @@ def test_is_val_none_or_empty(val, expected):
 @mark.parametrize("input_dict,keys_tobe_removed,msg_limit,expected", [
     ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
     ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, [""], 20, {"Name": "John", "Address": ["2", "4"], "Age": 34})
+    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, [""], 20, {"Name": "John", "Address": ["2", "4"], "Age": 34}),
+    ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34})
     ])
 def test_remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit, expected):
     event = remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit)
