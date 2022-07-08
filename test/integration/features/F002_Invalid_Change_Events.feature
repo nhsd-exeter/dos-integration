@@ -171,3 +171,19 @@ Feature: F002. Invalid change event Exception handling
       | ods_code  |
       | V00393    |
       | V00393abc |
+
+@complete @dentist_cloudwatch_queries
+  Scenario Outline: F002S024. Dentist past specified opening time
+    Given a "dentist" Changed Event is aligned with Dos
+    And a specified opening time is set to "Jan 1 2022"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event "processor" shows field "message" with message "Removing Specified opening times that occur in the past"
+    And the Event "processor" shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
+
+@complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F002S025. Pharmacy past specified opening time
+    Given a "pharmacy" Changed Event is aligned with Dos
+    And a specified opening time is set to "Jan 1 2022"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Event "processor" shows field "message" with message "Removing Specified opening times that occur in the past"
+    And the Event "processor" shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
