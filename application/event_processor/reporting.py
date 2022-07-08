@@ -191,7 +191,7 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
         extra={
             "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
             "error_reason": "Website is not valid",
-            "error_info": f"NHS unedited website: '{nhs_uk_entity.website}', NHS website='{nhs_website}'",
+            "error_info": f"NHSUK unedited website: '{nhs_uk_entity.website}', NHS website='{nhs_website}'",
             "nhs_unedited_website": nhs_uk_entity.website,
             "nhs_website": nhs_website,
         },
