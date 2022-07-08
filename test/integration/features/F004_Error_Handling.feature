@@ -110,7 +110,7 @@ Feature: F004. Error Handling
   Scenario Outline: F004S014 Exception raised and CR created for Changed Event with invalid URL
     Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "reason" with message "Website is not valid"
+    Then the Event "processor" shows field "error_reason" with message "Website is not valid"
     And the Change is included in the Change request
 
     Examples: Invalid Web address variations
