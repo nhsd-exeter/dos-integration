@@ -163,6 +163,21 @@ def a_change_event_is_valid_with_contact_set(contact: str, context: Context):
     return context
 
 
+@given(parse('a specified opening time is set to "{selected_date}"'), target_fixture="context")
+def adjust_specified_opening_date(context: Context, selected_date: str):
+    additional_date = {
+        "Weekday": "",
+        "Times": "",
+        "OffsetOpeningTime": 0,
+        "OffsetClosingTime": 0,
+        "OpeningTimeType": "Additional",
+        "AdditionalOpeningDate": selected_date,
+        "IsOpen": False,
+    }
+    context.change_event.specified_opening_times.append(additional_date)
+    return context
+
+
 @given(parse('the field "{field}" is set to "{value}"'), target_fixture="context")
 def generic_event_config(context: Context, field: str, value: str):
     match field.lower():
