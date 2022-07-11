@@ -19,7 +19,7 @@ from common.dos_db_connection import disconnect_dos_db
 from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.service_type import get_valid_service_types
-from common.utilities import extract_body, get_sequence_number
+from common.utilities import extract_body, get_sequence_number, remove_given_keys_from_dict_by_msg_limit
 from common.nhs import NHSEntity
 from reporting import (
     log_closed_or_hidden_services,
@@ -221,8 +221,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     s, ms = divmod(sqs_timestamp, 1000)
     message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
     logger.append_keys(message_received=message_received_pretty)
-    logger.info("Change Event received", extra={"change-event": change_event})
-
+    change_event_for_log = remove_given_keys_from_dict_by_msg_limit(change_event, ["Facilities", "Metrics"], 10000)
+    logger.info("Change Event received", extra={"change-event": change_event_for_log})
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
