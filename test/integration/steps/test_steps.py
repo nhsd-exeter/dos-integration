@@ -46,7 +46,8 @@ from .utilities.utils import (
     remove_opening_days,
     time_to_sec,
     slack_retry,
-    post_sqs_message,
+    post_cr_sqs,
+    post_ce_sqs
 )
 
 scenarios(
@@ -120,10 +121,16 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
-@given("an SQS message is added to the queue", target_fixture="context")
-def post_an_sqs_message(context: Context):
-    print("Running the given step")
-    post_sqs_message()
+@given(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+def post_an_sqs_message(queue_type: str, context: Context):
+    match queue_type:
+        case "ce":
+            post_ce_sqs(context)
+        case "cr":
+            post_cr_sqs()
+        case _:
+            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+
     assert 1 == 1, "Hello"
 
 
@@ -183,7 +190,7 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
         "AdditionalOpeningDate": selected_date,
         "IsOpen": False,
     }
-    context.change_event.specified_opening_times.append(additional_date)
+    context.change_event.specified_opening_times.insert(0, additional_date)
     return context
 
 

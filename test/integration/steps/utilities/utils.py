@@ -3,9 +3,10 @@ from datetime import datetime
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
-from random import sample, randrange
+from random import sample, randrange, randint
 from time import sleep, time_ns, time
 from typing import Any, Dict
+from .context import Context
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
@@ -20,6 +21,8 @@ CR_URL = getenv("CR_URL")
 SQS_URL = getenv("SQS_URL")
 EVENT_PROCESSOR = getenv("EVENT_PROCESSOR")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
+CR_DLQ_NAME = getenv("CR_DLQ_NAME")
+CE_DLQ_NAME = getenv("CE_DLQ_NAME")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
 DYNAMO_CLIENT = client("dynamodb")
@@ -444,6 +447,7 @@ def slack_retry(message) -> str:
         responseVal = check_slack(slack_channel, slack_oauth)
         if message in responseVal:
             return responseVal
+        counter += 1
     raise ValueError("Slack alert message not found")
 
 
@@ -458,11 +462,28 @@ def check_slack(channel, token) -> str:
     return output.text
 
 
-def post_sqs_message():
-    print("hit teh post sqs function")
-    queue_url = "https://sqs.eu-west-2.amazonaws.com/730319765130/uec-dos-int-test-cr-dead-letter-queue.fifo"
+def get_sqs_queue(queue_type) -> str:
+    response = ""
+    current_environment = getenv("ENVIRONMENT")
+    match queue_type:
+        case "ce":
+                response = SQS_CLIENT.get_queue_url(
+                    QueueName=f'uec-dos-int-{current_environment}-dead-letter-queue.fifo',
+                )
+        case "cr":
+                response = SQS_CLIENT.get_queue_url(
+                    QueueName=f'uec-dos-int-{current_environment}-cr-dead-letter-queue.fifo',
+                )
+        case _:
+            raise ValueError("Invalid SQS queue type specified")
 
-    message = {
+    return response["QueueUrl"]
+
+
+def post_cr_sqs():
+    queue_url = get_sqs_queue("cr")
+
+    sqs_body = {
         "reference": "14451_1657015307500997089_//www.test.com]",
         "system": "DoS Integration",
         "message": "DoS Integration CR. correlation-id: 14451_1657015307500997089_//www.test.com]",
@@ -470,6 +491,39 @@ def post_sqs_message():
         "service_id": "22963",
         "changes": {"website": "https://www.test.com"},
     }
-    response = SQS_CLIENT.send_message(QueueUrl=queue_url, MessageBody=dumps(message))
-    print(response)
+
+    SQS_CLIENT.send_message(
+        QueueUrl=queue_url,
+        MessageBody=dumps(sqs_body),
+        MessageDeduplicationId=str(randint(10000,99999)),
+        MessageGroupId=str(randint(10000,99999)),
+        MessageAttributes={
+            "correlation_id": {"DataType": "String", "StringValue": f"sqs-injection-id-{randint(0,1000)}"},
+            "message_received": {"DataType": "Number", "StringValue": str(randint(1000,5000))},
+            "dynamo_record_id": {"DataType": "String", "StringValue": "78adf177e2cd469318e854e4e8068dd4"},
+            "ods_code": {"DataType": "String", "StringValue": "FW404"},
+            "error_msg": {"DataType": "String", "StringValue": "error_message"},
+            "error_msg_http_code": {"DataType": "String", "StringValue": "404"},
+        },
+    )
     return True
+
+def post_ce_sqs(context: Context):
+    queue_url = get_sqs_queue("ce")
+    sqs_body = context.change_event.get_change_event()
+
+    SQS_CLIENT.send_message(
+        QueueUrl=queue_url,
+        MessageBody=dumps(sqs_body),
+        MessageDeduplicationId=str(randint(10000,99999)),
+        MessageGroupId=str(randint(10000,99999)),
+        MessageAttributes={
+            "correlation_id": {"DataType": "String", "StringValue": f"sqs-injection-id-{randint(0,1000)}"},
+            "message_received": {"DataType": "Number", "StringValue": str(randint(1000,5000))},
+            "dynamo_record_id": {"DataType": "String", "StringValue": "78adf177e2cd469318e854e4e8068dd4"},
+            "ods_code": {"DataType": "String", "StringValue": "FW404"},
+            "error_msg": {"DataType": "String", "StringValue": "error_message"},
+            "error_msg_http_code": {"DataType": "String", "StringValue": "404"},
+            "sequence-number": {"DataType": "Number", "StringValue": str(time_ns())}
+        },
+    )
