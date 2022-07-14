@@ -13,8 +13,8 @@ resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" 
   metric_name               = "4XXError"
   namespace                 = "AWS/ApiGateway"
   period                    = "60"
-  statistic                 = "Average"
-  threshold                 = "1"
+  statistic                 = "Sum"
+  threshold                 = "0"
   treat_missing_data        = "notBreaching"
 }
 
