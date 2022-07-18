@@ -131,7 +131,7 @@ functions:
     name: ${env:PROJECT_ID}-${sls:stage}-event-sender
     description: ${sls:stage} Event Sender lambda
     memorySize: 512
-    timeout: 10
+    timeout: 20
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
     tags:
       PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
