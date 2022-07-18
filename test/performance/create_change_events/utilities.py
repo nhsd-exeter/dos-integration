@@ -1,7 +1,7 @@
 from csv import reader
 from json import load, loads
 from os import getenv
-from random import choice, randint
+from random import choice
 from time import time_ns
 from typing import Any, Union
 
@@ -10,7 +10,7 @@ from aws import get_secret
 
 def setup_change_event_request() -> dict[str, Any]:
     """Setup the request headers and json payload for the change event endpoint"""
-    payload = load(open("resources/change_events.json", "r+"))
+    payload = load(open("resources/change_event.json", "r+"))
     payload = make_change_event_unique(payload)
     return payload
 
@@ -27,7 +27,9 @@ def get_api_key() -> str:
 
 
 def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
-    payload["OrganisationName"] = f'{payload["OrganisationName"]} {randint(0, 10000000)}'
+    time = time_ns()
+    payload["OrganisationName"] = f'{payload["OrganisationName"]} {time}'
+    payload["Address1"] = f'{payload["Address1"]} {time}'
     return payload
 
 
