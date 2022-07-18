@@ -443,7 +443,7 @@ tester-clean:
 
 stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
 	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 5 --spawn-rate 5 --run-time 30s)
+		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 10 --run-time 1m)
 	else
 		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
 	fi
