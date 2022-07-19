@@ -47,7 +47,8 @@ from .utilities.utils import (
     time_to_sec,
     slack_retry,
     post_cr_sqs,
-    post_ce_sqs
+    post_ce_sqs,
+    post_cr_fifo,
 )
 
 scenarios(
@@ -128,10 +129,10 @@ def post_an_sqs_message(queue_type: str, context: Context):
             post_ce_sqs(context)
         case "cr":
             post_cr_sqs()
+        case "404":
+            post_cr_fifo()
         case _:
             raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
-
-    assert 1 == 1, "Hello"
 
 
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")
@@ -918,4 +919,6 @@ def generic_processor_negative_check_function(context: Context, processor, field
 @then(parse('the Slack channel shows an alert saying "{message}"'))
 def slack_message_check(message):
     slack_entries = slack_retry(message)
-    assert message in slack_entries
+    current_environment = getenv("ENVIRONMENT")
+    assert_string = f"{current_environment} | {message}"
+    assert assert_string in slack_entries

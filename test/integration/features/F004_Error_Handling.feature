@@ -41,6 +41,7 @@ Feature: F004. Error Handling
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id "ABCD1"
     Then the change request has status code "400"
+    And the Slack channel shows an alert saying "DI Endpoint Errors"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S007. An exception is raised when Sequence number is less than previous

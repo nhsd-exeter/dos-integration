@@ -440,8 +440,7 @@ def remove_opening_days(opening_times, day) -> dict:
 
 def slack_retry(message) -> str:
     counter = 0
-    slack_channel = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_CHANNEL"]
-    slack_oauth = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_OAUTH"]
+    slack_channel, slack_oauth = slack_secrets()
     while counter < 10:
         sleep(10)
         responseVal = check_slack(slack_channel, slack_oauth)
@@ -449,6 +448,12 @@ def slack_retry(message) -> str:
             return responseVal
         counter += 1
     raise ValueError("Slack alert message not found")
+
+
+def slack_secrets():
+    slack_channel = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_CHANNEL"]
+    slack_oauth = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_OAUTH"]
+    return slack_channel, slack_oauth
 
 
 def check_slack(channel, token) -> str:
@@ -467,46 +472,77 @@ def get_sqs_queue(queue_type) -> str:
     current_environment = getenv("ENVIRONMENT")
     match queue_type:
         case "ce":
-                response = SQS_CLIENT.get_queue_url(
-                    QueueName=f'uec-dos-int-{current_environment}-dead-letter-queue.fifo',
-                )
+            response = SQS_CLIENT.get_queue_url(
+                QueueName=f"uec-dos-int-{current_environment}-dead-letter-queue.fifo",
+            )
         case "cr":
-                response = SQS_CLIENT.get_queue_url(
-                    QueueName=f'uec-dos-int-{current_environment}-cr-dead-letter-queue.fifo',
-                )
+            response = SQS_CLIENT.get_queue_url(
+                QueueName=f"uec-dos-int-{current_environment}-cr-dead-letter-queue.fifo",
+            )
+        case "404":
+            response = SQS_CLIENT.get_queue_url(
+                QueueName=f"uec-dos-int-{current_environment}-cr-fifo-queue.fifo",
+            )
         case _:
             raise ValueError("Invalid SQS queue type specified")
 
     return response["QueueUrl"]
 
 
-def post_cr_sqs():
-    queue_url = get_sqs_queue("cr")
+def get_sqs_message_attributes(odscode="FW404") -> dict:
+    message_attributes = {
+        "correlation_id": {"DataType": "String", "StringValue": f"sqs-injection-id-{randint(0,1000)}"},
+        "message_received": {"DataType": "Number", "StringValue": str(randint(1000, 5000))},
+        "message_group_id": {"DataType": "Number", "StringValue": str(randint(1000, 5000))},
+        "message_deduplication_id": {"DataType": "String", "StringValue": str(randint(1000, 99999))},
+        "dynamo_record_id": {"DataType": "String", "StringValue": "78adf177e2cd469318e854e4e8068dd4"},
+        "ods_code": {"DataType": "String", "StringValue": odscode},
+        "error_msg": {"DataType": "String", "StringValue": "error_message"},
+        "error_msg_http_code": {"DataType": "String", "StringValue": "404"},
+        "sequence-number": {"DataType": "Number", "StringValue": str(time_ns())},
+    }
+    return message_attributes
 
+
+def generate_sqs_body(website) -> dict:
     sqs_body = {
         "reference": "14451_1657015307500997089_//www.test.com]",
         "system": "DoS Integration",
         "message": "DoS Integration CR. correlation-id: 14451_1657015307500997089_//www.test.com]",
         "replace_opening_dates_mode": True,
         "service_id": "22963",
-        "changes": {"website": "https://www.test.com"},
+        "changes": {"website": website},
     }
+    return sqs_body
+
+
+def post_cr_sqs():
+    queue_url = get_sqs_queue("cr")
+    sqs_body = generate_sqs_body("https://www.test.com")
 
     SQS_CLIENT.send_message(
         QueueUrl=queue_url,
         MessageBody=dumps(sqs_body),
-        MessageDeduplicationId=str(randint(10000,99999)),
-        MessageGroupId=str(randint(10000,99999)),
-        MessageAttributes={
-            "correlation_id": {"DataType": "String", "StringValue": f"sqs-injection-id-{randint(0,1000)}"},
-            "message_received": {"DataType": "Number", "StringValue": str(randint(1000,5000))},
-            "dynamo_record_id": {"DataType": "String", "StringValue": "78adf177e2cd469318e854e4e8068dd4"},
-            "ods_code": {"DataType": "String", "StringValue": "FW404"},
-            "error_msg": {"DataType": "String", "StringValue": "error_message"},
-            "error_msg_http_code": {"DataType": "String", "StringValue": "404"},
-        },
+        MessageDeduplicationId=str(randint(10000, 99999)),
+        MessageGroupId=str(randint(10000, 99999)),
+        MessageAttributes=get_sqs_message_attributes(),
     )
     return True
+
+
+def post_cr_fifo():
+    queue_url = get_sqs_queue("404")
+    sqs_body = generate_sqs_body("abc@def.com")
+
+    SQS_CLIENT.send_message(
+        QueueUrl=queue_url,
+        MessageBody=dumps(sqs_body),
+        MessageDeduplicationId=str(randint(10000, 99999)),
+        MessageGroupId=str(randint(10000, 99999)),
+        MessageAttributes=get_sqs_message_attributes(),
+    )
+    return True
+
 
 def post_ce_sqs(context: Context):
     queue_url = get_sqs_queue("ce")
@@ -515,15 +551,7 @@ def post_ce_sqs(context: Context):
     SQS_CLIENT.send_message(
         QueueUrl=queue_url,
         MessageBody=dumps(sqs_body),
-        MessageDeduplicationId=str(randint(10000,99999)),
-        MessageGroupId=str(randint(10000,99999)),
-        MessageAttributes={
-            "correlation_id": {"DataType": "String", "StringValue": f"sqs-injection-id-{randint(0,1000)}"},
-            "message_received": {"DataType": "Number", "StringValue": str(randint(1000,5000))},
-            "dynamo_record_id": {"DataType": "String", "StringValue": "78adf177e2cd469318e854e4e8068dd4"},
-            "ods_code": {"DataType": "String", "StringValue": "FW404"},
-            "error_msg": {"DataType": "String", "StringValue": "error_message"},
-            "error_msg_http_code": {"DataType": "String", "StringValue": "404"},
-            "sequence-number": {"DataType": "Number", "StringValue": str(time_ns())}
-        },
+        MessageDeduplicationId=str(randint(10000, 99999)),
+        MessageGroupId=str(randint(10000, 99999)),
+        MessageAttributes=get_sqs_message_attributes(context.change_event.odscode),
     )
