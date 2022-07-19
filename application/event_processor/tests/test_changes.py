@@ -31,6 +31,7 @@ FILE_PATH = "application.event_processor.changes"
 def test_get_changes_same_data():
     # Act
     dos_service = dummy_dos_service()
+    dos_service.address = dos_service.address.title()
     nhs_entity = NHSEntity(
         {
             "Postcode": dos_service.postcode,
@@ -106,7 +107,7 @@ def test_get_changes_different_changes():
 
     expected_changes = {
         ADDRESS_CHANGE_KEY: {
-            ADDRESS_LINES_KEY: [address1, address2, address3, city, county],
+            ADDRESS_LINES_KEY: [address1.title(), address2.title(), address3.title(), city.title(), county.title()],
             POSTCODE_CHANGE_KEY: nhs_entity.postcode,
         },
         WEBSITE_CHANGE_KEY: website,
@@ -215,6 +216,46 @@ def test_update_changes_publicphone_to_change_request_if_not_equal_not_equal():
     assert changes == expected_changes, f"Should return {expected_changes} dict, actually: {changes}"
 
 
+@pytest.mark.parametrize(
+    "address, expected_address",
+    [
+        (
+            ["3rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "Herts"],
+            ["3Rd Floor", "24 Hour Road", "Green Tye", "Much Hadham", "Herts"],
+        ),
+        (
+            ["3rd floor", "24 hour road", "green tye & woodsham", "much hadham", "county"],
+            ["3Rd Floor", "24 Hour Road", "Green Tye and Woodsham", "Much Hadham", "County"],
+        ),
+        (
+            ["32A unit", "george's road", "green tye", "less hadham", "testerset"],
+            ["32A Unit", "Georges Road", "Green Tye", "Less Hadham", "Testerset"],
+        ),
+        (
+            ["2ND FLOOR", "85A", "ABCDE", "WOODCHURCH ROAD", "TESTERSHIRE"],
+            ["2Nd Floor", "85A", "Abcde", "Woodchurch Road", "Testershire"],
+        ),
+    ],
+)
+@patch(f"{FILE_PATH}.get_valid_dos_postcode")
+def test_update_changes_with_address_and_postcode_address_change(
+    mock_get_valid_dos_postcode, address: list, expected_address: list, change_event
+):
+    # Arrange
+    changes = {}
+    nhs_entity = NHSEntity(change_event)
+    dos_service = dummy_dos_service()
+    nhs_entity.address_lines = address
+    mock_get_valid_dos_postcode.return_value = "other"
+    # Act
+    update_changes_with_address_and_postcode(changes, dos_service, nhs_entity)
+    # Assert
+    mock_get_valid_dos_postcode.assert_called_once_with(nhs_entity.normal_postcode())
+    assert (
+        expected_address == changes["address"]["address_lines"]
+    ), f'Should return {expected_address}, actually: {changes["address"]["address_lines"]}'
+
+
 @patch(f"{FILE_PATH}.get_valid_dos_postcode")
 def test_do_not_update_address_if_postcode_invalid(mock_get_valid_dos_postcode, change_event):
     # Arrange
@@ -245,30 +286,24 @@ def test_do_not_update_address_if_postcode_invalid_no_address(mock_get_valid_dos
     assert existing_changes == {}, f"Should return empty dict, actually: {existing_changes}"
 
 
-@patch(f"{FILE_PATH}.logger")
 @patch(f"{FILE_PATH}.get_valid_dos_postcode")
-def test_update_changes_with_address_and_postcode_if_address_is_equal_but_not_postcode(
-    mock_get_valid_dos_postcode, mock_logger
-):
+def test_update_changes_with_address_and_postcode_if_address_is_equal_but_not_postcode(mock_get_valid_dos_postcode):
     # Arrange
     changes = {}
 
     nhs_uk_entity = NHSEntity({})
-    nhs_uk_entity.address_lines = ["address1" "address2" "address3" "city" "county"]
+    address_lines = ["Address1", "Address2", "Address3", "City", "County"]
+    nhs_uk_entity.address_lines = address_lines
     nhs_uk_entity.postcode = "TA2 TA2"
 
     dos_service = dummy_dos_service()
     dos_service.address = "$".join(nhs_uk_entity.address_lines)
     dos_service.postcode = "TA1 TA1"
 
-    dos_postcode = dos_service.normal_postcode()
-    nhs_postcode = nhs_uk_entity.normal_postcode()
     mock_get_valid_dos_postcode.return_value = "TA2TA2"
     expected_changes = {
         "address": {
-            "address_lines": [
-                "address1address2address3citycounty",
-            ],
+            "address_lines": address_lines,
             "post_code": "TA2TA2",
         }
     }
@@ -276,9 +311,6 @@ def test_update_changes_with_address_and_postcode_if_address_is_equal_but_not_po
     # Act
     update_changes_with_address_and_postcode(changes, dos_service, nhs_uk_entity)
     # Assert
-    mock_logger.debug.assert_called_with(
-        f"Address is equal but Postcode is not equal, {dos_postcode=} != {nhs_postcode=}"
-    )
     assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"
 
 
@@ -291,7 +323,8 @@ def test_not_update_changes_with_address_and_postcode_to_change_request_if_addre
     changes = {}
 
     nhs_uk_entity = NHSEntity({})
-    nhs_uk_entity.address_lines = ["address1" "address2" "address3" "city" "county"]
+    address_lines = ["Address1", "Address2", "Address3", "City", "County"]
+    nhs_uk_entity.address_lines = address_lines
     nhs_uk_entity.postcode = "TA2 TA2"
 
     dos_service = dummy_dos_service()
@@ -599,6 +632,5 @@ def test_update_changes_with_opening_times():
     # Act
     changes = {}
     update_changes_with_opening_times(changes, dos_service, nhs_uk_entity)
-    print(changes)
     # Assert
     assert expected_changes == changes, f"Should return {expected_changes} dict, actually: {changes}"
