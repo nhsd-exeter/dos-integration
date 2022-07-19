@@ -63,7 +63,7 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
     context.change_event = ChangeEventBuilder("pharmacy").build_change_event_from_default()
     validated = False
     while validated is False:
-        match contact:
+        match contact.lower():
             case "website":
                 context.change_event.website = FAKER.domain_word() + ".nhs.uk"
             case "phone_no":
@@ -77,17 +77,17 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
     return context
 
 
-@given(parse('a Changed Event with a "{data}" value for "{contact_field}"'), target_fixture="context")
-def a_valid_changed_event_with_empty_contact(data, contact_field, context: Context):
+@given(parse('a Changed Event with a "{value}" value for "{field}"'), target_fixture="context")
+def a_valid_changed_event_with_empty_contact(value, field, context: Context):
     def get_value_from_data():
 
-        match data:
+        match value:
             case "None":
                 return None
             case "''":
                 return ""
             case _:
-                return data
+                return value
 
     context.change_event = build_same_as_dos_change_event("pharmacy")
     context.change_event.organisation_name = f"Test Service {get_value_from_data()}"
@@ -99,7 +99,7 @@ def a_valid_changed_event_with_empty_contact(data, contact_field, context: Conte
         context.correlation_id = f"{run_id}_{unique_key}_contact_data_alignment_run"
     context.response = process_payload(context.change_event, True, context.correlation_id)
     assert confirm_approver_status(context.correlation_id) != []
-    match contact_field:
+    match field.lower():
         case "website":
             context.change_event.website = get_value_from_data()
         case "phone_no":
@@ -107,7 +107,7 @@ def a_valid_changed_event_with_empty_contact(data, contact_field, context: Conte
         case "organisation_name":
             context.change_event.organisation_name = get_value_from_data()
         case _:
-            raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
+            raise ValueError(f"ERROR!.. Input parameter '{field}' not compatible")
     context.correlation_id = None
     return context
 
@@ -369,6 +369,13 @@ def a_changed_url_event_is_valid(url: str, context: Context):
     return context
 
 
+@given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
+def a_changed_address_event_is_valid(address: str, context: Context):
+    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event.address_line_1 = address
+    return context
+
+
 # IsOpen is true AND Times is blank
 @when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
 def no_times_data_within_openingtimes(context: Context):
@@ -535,7 +542,7 @@ def the_changed_event_is_not_processed(context: Context):
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
-@then("the Changed Request is accepted by Dos")
+@then("the Change Request is accepted by Dos")
 def the_changed_request_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     response = confirm_changes(context.correlation_id)
@@ -543,11 +550,11 @@ def the_changed_request_is_accepted_by_dos(context: Context):
     return context
 
 
-@then(parse('the Changed Request is accepted by Dos with "{contact}" deleted'))
+@then(parse('the Change Request is accepted by Dos with "{contact}" deleted'))
 def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context, contact):
     service_id = get_service_id(context.correlation_id)
     approver_status = confirm_approver_status(context.correlation_id)
-    match contact:
+    match contact.lower():
         case "phone":
             cms = "cmstelephoneno"
         case "website":
@@ -560,7 +567,7 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context,
     return context
 
 
-@then(parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
+@then(parse('the Change Request with formatted "{expected_url}" is captured by Dos'))
 def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     cms = "cmsurl"
@@ -568,6 +575,15 @@ def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: s
     assert (
         check_received_data_in_dos(correlation_id, cms, expected_url) is True
     ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
+
+
+@then(parse('the Change Request with title cased "{expected_address}" is captured by Dos'))
+def the_changed_title_case_address_is_accepted_by_dos(context, expected_address):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    cms = "postaladdress"
+    assert (
+        check_received_data_in_dos(context.correlation_id, cms, expected_address) is True
+    ), f"ERROR!.. Dos not updated with web address change: {expected_address}"
 
 
 @then(parse("the Change is included in the Change request"))
@@ -582,10 +598,10 @@ def change_is_included_in_event_sender(context: Context):
     assert logs != [], "ERROR!!.. Expected Change not found in logs."
 
 
-@then(parse('the Changed Request with changed "{contact}" is captured by Dos'))
+@then(parse('the Change Request with changed "{contact}" is captured by Dos'))
 def the_changed_contact_is_accepted_by_dos(context: Context, contact):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    match contact:
+    match contact.lower():
         case "phone_no":
             cms = "cmstelephoneno"
             changed_data = context.change_event.phone
@@ -594,7 +610,7 @@ def the_changed_contact_is_accepted_by_dos(context: Context, contact):
             changed_data = context.change_event.website
         case "address":
             cms = "postaladdress"
-            changed_data = context.change_event.address_line_1
+            changed_data = context.change_event.address_line_1.title()
         case _:
             raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
     assert (
@@ -605,7 +621,7 @@ def the_changed_contact_is_accepted_by_dos(context: Context, contact):
 @then(parse('the Changed Event with changed "{field}" is not captured by Dos'))
 def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    match field:
+    match field.lower():
         case "phone_no":
             cms = "cmstelephoneno"
             changed_data = context.change_event.phone
@@ -622,7 +638,7 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
     ), f"ERROR!.. Dos incorrectly updated with {field} change: {changed_data}"
 
 
-@then("the Changed Request with changed specified date and time is captured by Dos")
+@then("the Change Request with changed specified date and time is captured by Dos")
 def the_changed_opening_time_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
@@ -641,7 +657,7 @@ def the_changed_opening_time_is_accepted_by_dos(context: Context):
     return context
 
 
-@then("the Changed Request with changed standard day time is captured by Dos")
+@then("the Change Request with changed standard day time is captured by Dos")
 def the_changed_opening_standard_time_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     open_time = time_to_sec(context.change_event.standard_opening_times[-1]["OpeningTime"])
@@ -651,15 +667,6 @@ def the_changed_opening_standard_time_is_accepted_by_dos(context: Context):
     assert (
         check_standard_received_opening_times_time_in_dos(context.correlation_id, cms, changed_time) is True
     ), f"ERROR!.. Dos not updated with change: {changed_time}"
-
-
-@then("the Changed Request with changed address is captured by Dos")
-def the_changed_address_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    changed_address = context.change_event.address_line_1
-    assert (
-        check_received_data_in_dos(context.correlation_id, "postaladdress", changed_address) is True
-    ), f"ERROR!.. Dos not updated with address change: {changed_address}"
 
 
 @then("the Changed Event is not sent to Dos")
@@ -734,7 +741,7 @@ def no_opening_times_errors(context: Context):
     assert "cmsopentime" in str(response), "Error!.. Opening time Change not found in Dos Changes"
 
 
-@then("the Changed Request with special characters is accepted by DOS")
+@then("the Change Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context: Context):
     #   the test env uses a 'prod-like' DOS endpoint which rejects these
     current_env = getenv("ENVIRONMENT")

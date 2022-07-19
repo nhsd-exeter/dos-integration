@@ -4,22 +4,22 @@ Feature: F006. Opening times
   Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
-    And the Changed Request with changed specified date and time is captured by Dos
+    Then the Change Request is accepted by Dos
+    And the Change Request with changed specified date and time is captured by Dos
 
-  @complete @pharmacy_no_log_searches
+@complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
-    And the Changed Request with changed standard day time is captured by Dos
+    Then the Change Request is accepted by Dos
+    And the Change Request with changed standard day time is captured by Dos
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S003. Pharmacy with one break in opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event has one break in opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
+    Then the Change Request is accepted by Dos
     And the opening times changes are confirmed valid
 
   @complete @pharmacy_no_log_searches
@@ -27,7 +27,7 @@ Feature: F006. Opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event has two breaks in opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
+    Then the Change Request is accepted by Dos
     And the opening times changes are confirmed valid
 
   @complete @pharmacy_no_log_searches
@@ -35,7 +35,7 @@ Feature: F006. Opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event contains a specified opening date that is "Closed"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
+    Then the Change Request is accepted by Dos
     And the opening times changes are confirmed valid
 
   @complete @pharmacy_no_log_searches
@@ -43,7 +43,7 @@ Feature: F006. Opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event contains a specified opening date that is "Open"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
+    Then the Change Request is accepted by Dos
     And the opening times changes are confirmed valid
 
   @complete @pharmacy_no_log_searches
@@ -51,14 +51,14 @@ Feature: F006. Opening times
     Given a "pharmacy" Changed Event is aligned with Dos
     And the Changed Event closes the pharmacy on a bank holiday
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
+    Then the Change Request is accepted by Dos
     And the opening times changes are confirmed valid
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request with changed specified date and time is captured by Dos
+    Then the Change Request with changed specified date and time is captured by Dos
     And the Changed Event is replayed with the specified opening date deleted
     And the deleted specified date is confirmed removed from Dos
 
