@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, time, datetime
 from typing import Any, Dict, List, Union
-import re
 
 from aws_lambda_powertools import Logger
 
@@ -91,27 +90,12 @@ class OpenPeriod:
 
     @staticmethod
     def from_string(open_period_string: str) -> Union["OpenPeriod", None]:
-        """Builds an OpenPeriod object from a string that's in 1 of 2 formats."""
-
-        if not isinstance(open_period_string, str):
+        """Builds an OpenPeriod object from a string like 12:00-13:00 or 12:00:00-13:00:00"""
+        try:
+            startime_str, endtime_str = open_period_string.split("-")
+            return OpenPeriod.from_string_times(startime_str, endtime_str)
+        except (ValueError, AttributeError):
             return None
-
-        # regex looks for HH:MM-HH:MM time format
-        if re.match(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]\-(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", open_period_string):
-
-            start, end = [datetime.strptime(time_str, "%H:%M").time() for time_str in open_period_string.split("-")]
-            return OpenPeriod(start, end)
-
-        # regex looks for HH:MM:SS-HH:MM:SS time format
-        if re.match(
-            r"^(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)\-(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)$",
-            open_period_string,
-        ):
-
-            start, end = [datetime.strptime(time_str, "%H:%M:%S").time() for time_str in open_period_string.split("-")]
-            return OpenPeriod(start, end)
-
-        return None
 
     @staticmethod
     def from_string_times(opening_time_str: str, closing_time_str: str) -> Union["OpenPeriod", None]:
@@ -142,6 +126,14 @@ class SpecifiedOpeningTime:
 
     def __repr__(self):
         return f"<SpecifiedOpenTime: {self.date_string()} open={self.is_open} {self.open_periods_string()}>"
+
+    def __str__(self):
+        return f"{self.open_string()} on {self.date_string()} {self.open_periods_string()}"
+
+    def open_string(self):
+        if self.is_open:
+            return "OPEN"
+        return "CLOSED"
 
     def __eq__(self, other):
         return (
@@ -193,6 +185,23 @@ class SpecifiedOpeningTime:
     def valid_list(list: List["SpecifiedOpeningTime"]) -> bool:
         return all([x.is_valid() for x in list])
 
+    @staticmethod
+    def from_list(list: List["SpecifiedOpeningTime"], chosen_date: date, default=None) -> bool:
+        for item in list:
+            if item.date == chosen_date:
+                return item
+        return default
+
+    @staticmethod
+    def remove_past_dates(list: List["SpecifiedOpeningTime"], date_now=None) -> List["SpecifiedOpeningTime"]:
+        if date_now is None:
+            date_now = datetime.now().date()
+        future_dates = []
+        for item in list:
+            if item.date >= date_now:
+                future_dates.append(item)
+        return future_dates
+
 
 @dataclass(unsafe_hash=True)
 class StandardOpeningTimes:
@@ -214,13 +223,14 @@ class StandardOpeningTimes:
         self.explicit_closed_days = set()
 
     def __repr__(self):
-        day_opening_strs = [f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS]
-
         closed_days_str = ""
         if len(self.explicit_closed_days) > 0:
             closed_days_str = f" exp_closed_days={self.explicit_closed_days}"
 
-        return f"<StandardOpeningTimes: {' '.join(day_opening_strs)}{closed_days_str}>"
+        return f"<StandardOpeningTimes: {str(self)}{closed_days_str}>"
+
+    def __str__(self):
+        return self.to_string(", ")
 
     def __len__(self):
         return sum([len(getattr(self, day)) for day in WEEKDAYS])
@@ -235,12 +245,18 @@ class StandardOpeningTimes:
             return False
 
         for day in WEEKDAYS:
-            if not OpenPeriod.equal_lists(getattr(self, day), getattr(other, day)):
+            if not OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day)):
                 return False
 
         return True
 
-    def all_closed_days(self):
+    def to_string(self, seperator: str = ", ") -> str:
+        return seperator.join([f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS])
+
+    def get_openings(self, day: str) -> List[OpenPeriod]:
+        return getattr(self, day.lower())
+
+    def all_closed_days(self) -> List[str]:
         """Returns a set of all implicit AND explicit closed days."""
         all_closed_days = self.explicit_closed_days
 
@@ -253,6 +269,9 @@ class StandardOpeningTimes:
 
     def is_open(self, weekday: str) -> bool:
         return len(getattr(self, weekday)) > 0
+
+    def same_openings(self, other: "StandardOpeningTimes", day: str) -> bool:
+        return OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day))
 
     def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:
         """Adds a formatted open period to the specified weekda

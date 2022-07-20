@@ -8,8 +8,10 @@ Profile is a set of configuration options specific to an environment expressed a
 
 * `local` - local development profile (Not attached to an AWS Account)
 * `task` - a specific environment for branches. This should be default for creating non-prod infrastructure (AWS Non-prod Account)
-* `dev` - shared development profile that supports automation on every commit to the remote master branch in the CI pipeline or it is used for a cleanup (AWS Non-prod Account)
+* `dev` - shared development profile that supports automation on every commit to the remote main branch in the CI pipeline or it is used for a cleanup (AWS Non-prod Account)
 * `test` - test profile that runs nightly in the CI pipeline (AWS Non-prod Account)
 * `demo` - production, UX (AWS Prod Account)
 * `live` - production, service (AWS Prod Account)
 * `tools,tools-nonprod,tools-prod` - CI/CD execution environment
+* `perf` - a profile for performance testing which uses the DoS Perf DB but uses the DoS API Mock
+* `perf-to-dos` - a profile for performance testing which uses the DoS performance DB and uses the DoS Performance API

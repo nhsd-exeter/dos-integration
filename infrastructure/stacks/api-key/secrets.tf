@@ -1,3 +1,4 @@
+#tfsec:ignore:aws-ssm-secret-use-customer-key
 resource "aws_secretsmanager_secret" "api_gateway_api_key" {
   name                    = var.api_gateway_api_key_name
   description             = "API Key for DI AWS API Gateway"

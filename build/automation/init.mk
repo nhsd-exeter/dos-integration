@@ -108,6 +108,8 @@ devops-copy: ### Copy the DevOps automation toolchain scripts from this codebase
 			cp -fv build/automation/lib/project/template/.github/CODEOWNERS $(DIR)/.github
 			cp -fv build/automation/lib/project/template/.gitattributes $(DIR)
 		)
+		mkdir -p $(DIR)/.vscode
+		cp -fv build/automation/lib/project/template/.vscode/extensions.json $(DIR)/.vscode
 		cp -fv build/automation/tmp/.gitignore $(DIR)/build/automation/tmp/.gitignore
 		cp -fv LICENSE.md $(DIR)/build/automation/LICENSE.md
 		[ -f $(DIR)/docker/docker-compose.yml ] && rm -fv $(DIR)/docker/.gitkeep
@@ -225,6 +227,8 @@ devops-update devops-synchronise: ### Update/upgrade the DevOps automation toolc
 			cp -fv build/automation/lib/project/template/.github/CODEOWNERS $(PARENT_PROJECT_DIR)/.github
 			cp -fv build/automation/lib/project/template/.gitattributes $(PARENT_PROJECT_DIR)
 		)
+		mkdir -p $(PARENT_PROJECT_DIR)/.vscode
+		cp -fv build/automation/lib/project/template/.vscode/extensions.json $(PARENT_PROJECT_DIR)/.vscode/extensions.json
 		cp -fv build/automation/tmp/.gitignore $(PARENT_PROJECT_DIR)/build/automation/tmp/.gitignore
 		cp -fv LICENSE.md $(PARENT_PROJECT_DIR)/build/automation/LICENSE.md
 		[ -f $(PARENT_PROJECT_DIR)/docker/docker-compose.yml ] && rm -fv $(PARENT_PROJECT_DIR)/docker/.gitkeep
@@ -284,7 +288,9 @@ devops-update devops-synchronise: ### Update/upgrade the DevOps automation toolc
 		if [ 0 -lt $$(git status -s | wc -l) ]; then
 			git add .
 			if [[ "$(PERFORM_COMMIT)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-				git commit -S -m "Update automation scripts to $$version" || echo "Please, check and commit the changes with the following message: \"Update automation scripts to $$version\""
+				git commit -S -m "Update automation scripts to $$version"
+			else
+				echo "Please, check and commit the changes with the following message: \"Update automation scripts to $$version\""
 			fi
 		fi
 	}
@@ -573,29 +579,29 @@ VAR_DIR := $(abspath $(DEVOPS_PROJECT_DIR)/var)
 VAR_DIR_REL := $(shell echo $(VAR_DIR) | sed "s;$(PROJECT_DIR);;g")
 
 APPLICATION_DIR := $(abspath $(or $(APPLICATION_DIR), $(PROJECT_DIR)/application))
-APPLICATION_DIR_REL = $(shell echo $(APPLICATION_DIR) | sed "s;$(PROJECT_DIR);;g")
+APPLICATION_DIR_REL := $(shell echo $(APPLICATION_DIR) | sed "s;$(PROJECT_DIR);;g")
 APPLICATION_TEST_DIR := $(abspath $(or $(APPLICATION_TEST_DIR), $(PROJECT_DIR)/test))
 APPLICATION_TEST_DIR_REL = $(shell echo $(APPLICATION_TEST_DIR) | sed "s;$(PROJECT_DIR);;g")
 CONFIG_DIR := $(abspath $(or $(CONFIG_DIR), $(PROJECT_DIR)/config))
-CONFIG_DIR_REL = $(shell echo $(CONFIG_DIR) | sed "s;$(PROJECT_DIR);;g")
+CONFIG_DIR_REL := $(shell echo $(CONFIG_DIR) | sed "s;$(PROJECT_DIR);;g")
 DATA_DIR := $(abspath $(or $(DATA_DIR), $(PROJECT_DIR)/data))
-DATA_DIR_REL = $(shell echo $(DATA_DIR) | sed "s;$(PROJECT_DIR);;g")
+DATA_DIR_REL := $(shell echo $(DATA_DIR) | sed "s;$(PROJECT_DIR);;g")
 DEPLOYMENT_DIR := $(abspath $(or $(DEPLOYMENT_DIR), $(PROJECT_DIR)/deployment))
 DEPLOYMENT_DIR_REL = $(shell echo $(DEPLOYMENT_DIR) | sed "s;$(PROJECT_DIR);;g")
 GITHOOKS_DIR := $(abspath $(ETC_DIR)/githooks)
-GITHOOKS_DIR_REL = $(shell echo $(GITHOOKS_DIR) | sed "s;$(PROJECT_DIR);;g")
+GITHOOKS_DIR_REL := $(shell echo $(GITHOOKS_DIR) | sed "s;$(PROJECT_DIR);;g")
 DOCUMENTATION_DIR := $(abspath $(or $(DOCUMENTATION_DIR), $(PROJECT_DIR)/documentation))
-DOCUMENTATION_DIR_REL = $(shell echo $(DOCUMENTATION_DIR) | sed "s;$(PROJECT_DIR);;g")
+DOCUMENTATION_DIR_REL := $(shell echo $(DOCUMENTATION_DIR) | sed "s;$(PROJECT_DIR);;g")
 INFRASTRUCTURE_DIR := $(abspath $(or $(INFRASTRUCTURE_DIR), $(PROJECT_DIR)/infrastructure))
-INFRASTRUCTURE_DIR_REL = $(shell echo $(INFRASTRUCTURE_DIR) | sed "s;$(PROJECT_DIR);;g")
+INFRASTRUCTURE_DIR_REL := $(shell echo $(INFRASTRUCTURE_DIR) | sed "s;$(PROJECT_DIR);;g")
 JQ_DIR_REL := $(shell echo $(abspath $(LIB_DIR)/jq) | sed "s;$(PROJECT_DIR);;g")
 
-GIT_BRANCH_PATTERN_MAIN := ^(master|develop)$$
-GIT_BRANCH_PATTERN_PREFIX := ^(task|spike|automation|test|bugfix|hotfix|fix|release|migration)
+GIT_BRANCH_PATTERN_MAIN := ^(main|master|develop)$$
+GIT_BRANCH_PATTERN_PREFIX := ^(task|spike|automation|test|bugfix|hotfix|fix|release|migration|refactor)
 GIT_BRANCH_PATTERN_SUFFIX := ([A-Z]{2,5}-([0-9]{1,5}|X{1,5})_[A-Z][a-z]+_[A-Za-z0-9]+_[A-Za-z0-9_]+)$$
-GIT_BRANCH_PATTERN_ADDITIONAL := ^(task/Update_(automation_scripts|dependencies|documentation|tests|versions)|task/Refactor|devops/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|alignment/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+)$$
+GIT_BRANCH_PATTERN_ADDITIONAL := ^(task/Update_(automation_scripts|dependencies|documentation|tests|versions)|task/Refactor|task/Refactor_[A-Za-z0-9_]+_[A-Za-z0-9_]+|refactor/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|devops/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|alignment/[A-Z][a-z]+_[A-Za-z0-9_]+_[A-Za-z0-9_]+|dependabot/.*)$$
 GIT_BRANCH_PATTERN := $(GIT_BRANCH_PATTERN_MAIN)|$(GIT_BRANCH_PATTERN_PREFIX)/$(GIT_BRANCH_PATTERN_SUFFIX)|$(GIT_BRANCH_PATTERN_ADDITIONAL)
-GIT_BRANCH_MAX_LENGTH := 72
+GIT_BRANCH_MAX_LENGTH := 100
 GIT_TAG_PATTERN := [0-9]{12,14}-[a-z]{3,10}
 GIT_COMMIT_MESSAGE_PATTERN_MAIN := ^(([A-Z]{2,5}-([0-9]{1,5}|X{1,5}) [A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-]|Update (automation scripts|dependencies|documentation|tests|versions))([[:print:]][^!?,.:;=-])*)$$|^((Update|Refactor|Automate|Test|Fix|Release|Migrate) [[:print:]]+ [[:print:]]+[^!?,.:;=-])$$
 GIT_COMMIT_MESSAGE_PATTERN_ADDITIONAL := ^([A-Z]{2,5}-([0-9]{1,5}|X{1,5}) [A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-]|[A-Z][a-z]+ [[:print:]]+ [[:print:]]+[^!?,.:;=-])$$|([A-Z][[:print:]]+ \[ci:[[:blank:]]?[,a-z0-9-]+\])
@@ -622,11 +628,14 @@ GOSS_PATH := $(BIN_DIR)/goss-linux-amd64
 SETUP_COMPLETE_FLAG_FILE := $(TMP_DIR)/.make-devops-setup-complete
 
 PROFILE := $(or $(PROFILE), local)
-ENVIRONMENT := $(or $(ENVIRONMENT), $(or $(shell ([ $(PROFILE) = local ] && echo local) || (echo $(BUILD_BRANCH) | grep -Eoq '$(GIT_BRANCH_PATTERN_SUFFIX)' && (echo $(BUILD_BRANCH) | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}' | tr '[:upper:]' '[:lower:]') || (echo $(BUILD_BRANCH) | grep -Eoq '^tags/$(GIT_TAG_PATTERN)' && echo $(PROFILE)) || ([ $(BUILD_BRANCH) = master ] && echo $(PROFILE)))), unknown))
+ENVIRONMENT := $(or $(ENVIRONMENT), $(or $(shell ([ $(PROFILE) = local ] && echo local) || (echo $(BUILD_BRANCH) | grep -Eoq '$(GIT_BRANCH_PATTERN_SUFFIX)' && (echo $(BUILD_BRANCH) | grep -Eo '[A-Za-z]{2,5}-[0-9]{1,5}' | tr '[:upper:]' '[:lower:]') || (echo $(BUILD_BRANCH) | grep -Eoq '^tags/$(GIT_TAG_PATTERN)' && echo $(PROFILE)) || (([ $(BUILD_BRANCH) = main ] || [ $(BUILD_BRANCH) = master ]) && echo $(PROFILE)))), unknown))
 
 PATH_HOMEBREW := /opt/homebrew/opt/coreutils/libexec/gnubin:/opt/homebrew/opt/findutils/libexec/gnubin:/opt/homebrew/opt/grep/libexec/gnubin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:/opt/homebrew/opt/gnu-tar/libexec/gnubin:/opt/homebrew/opt/make/libexec/gnubin:/opt/homebrew/bin:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/findutils/libexec/gnubin:/usr/local/opt/grep/libexec/gnubin:/usr/local/opt/gnu-sed/libexec/gnubin:/usr/local/opt/gnu-tar/libexec/gnubin:/usr/local/opt/make/libexec/gnubin
 PATH_DEVOPS := $(BIN_DIR):$(HOME)/.pyenv/bin:$(HOME)/.pyenv/shims
 PATH_SYSTEM := /usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+
+BASH_VERSION := $(shell bash --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+MAKE_VERSION := $(shell make --version | grep -Eo '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1)
 
 # ==============================================================================
 # `make` configuration

@@ -1,3 +1,5 @@
+# TODO: Look in to rotating kms keeps
+#tfsec:ignore:aws-kms-auto-rotate-keys:2022-01-01
 resource "aws_kms_key" "signing_key" {
   description              = ""
   key_usage                = "ENCRYPT_DECRYPT"

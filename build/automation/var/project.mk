@@ -15,7 +15,7 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-
+PROJECT_LAMBDAS_LIST = authoriser,cr-fifo-dlq-handler,dos-api-gateway,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator,slack-messenger,test-db-checker-handler
 DOCKER_REPOSITORIES =
 SSL_DOMAINS_PROD =
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
@@ -29,12 +29,13 @@ TF_VAR_programme = $(PROGRAMME)
 TF_VAR_environment = $(ENVIRONMENT)
 TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
-PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT) auto)
+PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
-ARTEFACTS := cr-fifo-dlq-handler,event-processor,event-replay,event-sender,fifo-dlq-handler,orchestrator
 TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 DOS_API_GATEWAY_REQUEST_TIMEOUT := 30
+
+UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 LOG_GROUP_NAME_PROCESSOR := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-event-processor
@@ -117,7 +118,6 @@ SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_V
 DOS_TRANSACTIONS_PER_SECOND=3
 
 # Performance Pipelines
-TF_VAR_code_pipeline_branch_name := master
 TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
 TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
 TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel

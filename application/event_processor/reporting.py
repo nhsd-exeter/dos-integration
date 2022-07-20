@@ -16,7 +16,7 @@ from common.constants import (
     GENERIC_BANK_HOLIDAY_REPORT_ID,
     GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
 )
-from nhs import NHSEntity
+from common.nhs import NHSEntity
 
 
 logger = Logger(child=True)
@@ -190,8 +190,9 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
         f"Website is not valid, {nhs_website=}",
         extra={
             "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
+            "error_reason": "Website is not valid",
+            "error_info": f"NHSUK unedited website: '{nhs_uk_entity.website}', NHSUK website='{nhs_website}'",
             "nhs_unedited_website": nhs_uk_entity.website,
             "nhs_website": nhs_website,
-            "reason": "Website is not valid",
         },
     )

@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from itertools import groupby
-from typing import List, Union
-from datetime import datetime
+from typing import Set, List, Union, Iterable, Dict
+from collections import defaultdict
 
 from aws_lambda_powertools import Logger
 
@@ -23,18 +23,10 @@ class DoSService:
     name: str
     odscode: str
     address: str
-    town: str
     postcode: str
     web: str
-    email: str
-    fax: str
-    nonpublicphone: str
     typeid: int
-    parentid: int
-    subregionid: int
     statusid: int
-    createdtime: datetime
-    modifiedtime: datetime
     publicphone: str
     publicname: str
     servicename: str
@@ -48,7 +40,6 @@ class DoSService:
         Args:
             db_cursor_row (dict): row from db as key/val pairs
         """
-        self.data = db_cursor_row
 
         for row_key, row_value in db_cursor_row.items():
             setattr(self, row_key, row_value)
@@ -97,7 +88,6 @@ class DoSLocation:
     northing: int
     latitude: float
     longitude: float
-    postaltown: str = field(default=None)
 
     def normal_postcode(self) -> str:
         return self.postcode.replace(" ", "").upper()
@@ -130,8 +120,8 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         named_args = {"ODS": f"{odscode}%"}
 
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, email, fax, nonpublicphone, typeid,"
-        " parentid, subregionid, statusid, createdtime, modifiedtime, publicphone, publicname, st.name servicename"
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+        "statusid, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
         f" WHERE {conditions}"
     )
@@ -165,28 +155,14 @@ def get_specified_opening_times_from_db(service_id: int) -> List[SpecifiedOpenin
     )
     named_args = {"service_id": service_id}
     c = query_dos_db(sql_query, named_args)
-
-    """sort by date and then by starttime"""
-    sorted_list = sorted(c.fetchall(), key=lambda row: (row[1], row[2]))
-
-    specified_opening_times = []
-    for date, db_rows in groupby(sorted_list, lambda row: (row[1])):
-        is_open = True
-        open_periods = []
-        for row in list(db_rows):
-            if row[4] is True:  # row[4] is the 'is_closed' column
-                is_open = False
-            else:
-                open_periods.append(OpenPeriod(row[2], row[3]))
-
-        specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
-
+    specified_opening_times = db_rows_to_spec_open_times(c.fetchall())
     c.close()
     return specified_opening_times
 
 
 def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
-    """Retrieves standard opening times from DoS database"""
+    """Retrieves standard opening times from DoS database. If ther service id does not even match any service this
+    function will still return a blank StandardOpeningTime with no opening periods."""
 
     logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
 
@@ -201,40 +177,42 @@ def get_standard_opening_times_from_db(service_id: int) -> StandardOpeningTimes:
     )
     named_args = {"service_id": service_id}
     c = query_dos_db(sql_command, named_args)
-
-    standard_opening_times = StandardOpeningTimes()
-    for row in c.fetchall():
-        weekday = row[2].lower()
-        start = row[3]
-        end = row[4]
-        open_period = OpenPeriod(start, end)
-        standard_opening_times.add_open_period(open_period, weekday)
-
+    standard_opening_times = db_rows_to_std_open_times(c.fetchall())
     c.close()
     return standard_opening_times
 
 
-def get_dos_locations(postcode: str) -> List[DoSLocation]:
+def get_dos_locations(postcode: Union[str, None] = None, try_cache: bool = True) -> List[DoSLocation]:
     logger.info(f"Searching for DoS locations with postcode of '{postcode}'")
 
-    normalised_pc = postcode.replace(" ", "").upper()
+    norm_pc = postcode.replace(" ", "").upper()
     global dos_location_cache
-    if normalised_pc in dos_location_cache:
-        logger.info(f"Postcode {normalised_pc} location/s found in local cache.")
-        return dos_location_cache[normalised_pc]
+    if try_cache and norm_pc in dos_location_cache:
+        logger.info(f"Postcode {norm_pc} location/s found in local cache.")
+        return dos_location_cache[norm_pc]
 
-    # Regex matches any combination of whitespace in postcode
-    pc_regex = " *".join(normalised_pc)
+    # Search for any variation of whitespace in postcode
+    postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode ~* %(pc_regex)s"
-    named_args = {"pc_regex": pc_regex}
-    c = query_dos_db(sql_command, named_args)
+    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode IN %(pc_variations)s"
+    c = query_dos_db(sql_command, vars={"pc_variations": tuple(postcode_variations)})
 
     dos_locations = [DoSLocation(**row) for row in c.fetchall()]
-    dos_location_cache[normalised_pc] = dos_locations
-    logger.debug(f"Postcode location/s for {normalised_pc} added to local cache.")
+    dos_location_cache[norm_pc] = dos_locations
+    logger.debug(f"Postcode location/s for {norm_pc} added to local cache.")
 
     return dos_locations
+
+
+def get_all_valid_dos_postcodes() -> Set[str]:
+    """Gets all the valid DoS postcodes that are found in the locations table.
+    Returns: A set of normalised postcodes as strings"""
+    logger.info("Collecting all valid postcodes from DoS DB")
+    sql_command = "SELECT postcode FROM locations"
+    c = query_dos_db(sql_command)
+    postcodes = set(row["postcode"].replace(" ", "").upper() for row in c.fetchall())
+    logger.info(f"Found {len(postcodes)} unique postcodes from DoS DB.")
+    return postcodes
 
 
 def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
@@ -243,3 +221,117 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
     if len(dos_locations) == 0:
         return None
     return dos_locations[0].postcode
+
+
+def get_services_from_db(typeids: Iterable) -> List[DoSService]:
+
+    # Find base services
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "
+        "statusid, publicphone, publicname, st.name servicename "
+        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+        f"WHERE typeid IN ({','.join(map(str, typeids))}) "
+        f"AND statusid = 1 AND odscode IS NOT NULL"
+    )
+
+    c = query_dos_db(sql_query)
+    services = [DoSService(row) for row in c.fetchall()]
+    c.close()
+    service_id_strings = set(str(s.id) for s in services)
+
+    # Collect and apply all std open times to services
+    sql_query = (
+        "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
+        "FROM servicedayopenings sdo "
+        "INNER JOIN servicedayopeningtimes sdot "
+        "ON sdo.id = sdot.servicedayopeningid "
+        "LEFT JOIN openingtimedays otd "
+        "ON sdo.dayid = otd.id "
+        f"WHERE sdo.serviceid IN ({','.join(service_id_strings)})"
+    )
+    c = query_dos_db(sql_query)
+    std_open_times = db_rows_to_std_open_times_map([db_row for db_row in c.fetchall()])
+    for service in services:
+        service._standard_opening_times = std_open_times.get(service.id, StandardOpeningTimes())
+    c.close()
+
+    # Collect and apply all spec open times to services
+    sql_query = (
+        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        "FROM servicespecifiedopeningdates ssod "
+        "INNER JOIN servicespecifiedopeningtimes ssot "
+        "ON ssod.id = ssot.servicespecifiedopeningdateid "
+        f"WHERE ssod.serviceid IN ({','.join(service_id_strings)})"
+    )
+    c = query_dos_db(sql_query)
+    spec_open_times = db_rows_to_spec_open_times_map([row for row in c.fetchall()])
+    for service in services:
+        service._specified_opening_times = spec_open_times.get(service.id, [])
+    c.close()
+
+    return services
+
+
+def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> List[SpecifiedOpeningTime]:
+    """Turns a set of dos database rows into a list of SpecifiedOpenTime objects
+    note: The rows must to be for the same service
+    """
+    specified_opening_times = []
+    date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
+    for date, db_rows in groupby(date_sorted_rows, lambda row: row["date"]):
+        is_open = True
+        open_periods = []
+        for row in list(db_rows):
+            if row["isclosed"] is True:
+                is_open = False
+            else:
+                open_periods.append(OpenPeriod(row["starttime"], row["endtime"]))
+        specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
+
+    return specified_opening_times
+
+
+def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> Dict[str, List[SpecifiedOpeningTime]]:
+    """Turns a set of dos database rows (from multiple services) into lists of SpecifiedOpenTime objects
+    which are sorted into a dictionary where the key is the service id of the service those SpecifiedOpenTime
+    objects correspond to.
+    """
+    serviceid_dbrows_map = defaultdict(list)
+    for db_row in db_rows:
+        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
+
+    serviceid_specopentimes_map = {}
+    for service_id, db_rows in serviceid_dbrows_map.items():
+        serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_times(db_rows)
+
+    return serviceid_specopentimes_map
+
+
+def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
+    """Turns a set of dos database rows into a StandardOpeningTime object
+    note: The rows must be for the same service
+    """
+    standard_opening_times = StandardOpeningTimes()
+    for row in db_rows:
+        weekday = row["name"].lower()
+        start = row["starttime"]
+        end = row["endtime"]
+        open_period = OpenPeriod(start, end)
+        standard_opening_times.add_open_period(open_period, weekday)
+    return standard_opening_times
+
+
+def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, StandardOpeningTimes]:
+    """Turns a set of dos database rows (from multiple services) into StandardOpeningTime objects
+    which are sorted into a dictionary where the key is the service id of the service those StandardOpeningTime
+    objects correspond to.
+    """
+    serviceid_dbrows_map = defaultdict(list)
+    for db_row in db_rows:
+        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
+
+    serviceid_stdopentimes_map = {}
+    for service_id, db_rows in serviceid_dbrows_map.items():
+        serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_times(db_rows)
+
+    return serviceid_stdopentimes_map

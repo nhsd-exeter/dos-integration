@@ -6,10 +6,6 @@
 # AWS COMMON
 ############
 
-variable "aws_profile" {
-  description = "The AWS profile"
-}
-
 variable "aws_region" {
   description = "The AWS region"
 }
@@ -147,6 +143,10 @@ variable "cr_dead_letter_queue_from_fifo_queue_name" {
 
 variable "signing_key_alias" {
   description = "Alias of key used for signing"
+}
+
+variable "developer_role_name" {
+  description = "Role name of developer's role so that it can access the KMS key for the dbcloner"
 }
 
 # ######################

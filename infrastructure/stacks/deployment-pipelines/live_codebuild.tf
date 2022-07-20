@@ -14,7 +14,7 @@ resource "aws_codebuild_webhook" "live_deployment_webhook" {
   }
 }
 resource "aws_codebuild_project" "di_deploy_live" {
-  name           = "${var.project_id}-live-deploy-stage"
+  name           = "${var.project_id}-${var.environment}-deploy-live-stage"
   description    = "Deploy to the live environment"
   build_timeout  = "30"
   queued_timeout = "30"
@@ -75,11 +75,10 @@ resource "aws_codebuild_project" "di_deploy_live" {
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-live-deploy-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-live-stage"
       stream_name = ""
     }
   }
-  source_version = "master"
   source {
     type            = "GITHUB"
     git_clone_depth = 0
@@ -102,6 +101,8 @@ resource "aws_codestarnotifications_notification_rule" "live_notification_rule" 
   }
 }
 
+#tfsec:ignore:aws-sns-enable-topic-encryption
 resource "aws_sns_topic" "live_pipeline_notification_topic" {
-  name = "${var.project_id}-live-deploy-stage-notifications"
+  name              = "${var.project_id}-live-deploy-stage-notifications"
+  kms_master_key_id = "alias/aws/sns"
 }

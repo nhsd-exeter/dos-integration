@@ -217,6 +217,8 @@ def test_openperiod_from_string():
     assert OpenPeriod.from_string("08:00-24:00") is None
     assert OpenPeriod.from_string("38:00-12:00") is None
     assert OpenPeriod.from_string("08:00-44:00") is None
+    assert OpenPeriod.from_string("08:0044:00") is None
+    assert OpenPeriod.from_string("08:00-44:00-08:00") is None
     assert OpenPeriod.from_string(231892) is None
     assert OpenPeriod.from_string(None) is None
     assert OpenPeriod.from_string(2.38) is None
@@ -288,6 +290,14 @@ def test_specifiedopeningtime_eq_and_hash():
     assert hash(sp2) != hash(sp3)
     assert sp1 != sp3
     assert hash(sp1) != hash(sp3)
+
+
+def test_specifiedopeningtime_open_string():
+    s = SpecifiedOpeningTime([], date(2020, 5, 5), is_open=True)
+    assert s.open_string() == "OPEN"
+
+    s.is_open = False
+    assert s.open_string() == "CLOSED"
 
 
 @pytest.mark.parametrize(
@@ -428,6 +438,20 @@ def test_specifiedopentimes_equal_lists():
     assert not SpecifiedOpeningTime.equal_lists([sp1, sp2, sp3, sp3], [sp1, sp2, sp3])
 
 
+def test_specifiedopentimes_remove_past_dates():
+    a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
+    b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
+    c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
+
+    now_date = datetime.now().date()
+
+    future1 = SpecifiedOpeningTime([], (now_date + timedelta(weeks=4)), is_open=False)
+    future2 = SpecifiedOpeningTime([a, b, c], (now_date + timedelta(weeks=5)))
+    past = SpecifiedOpeningTime([b], (now_date - timedelta(weeks=4)))
+
+    assert SpecifiedOpeningTime.remove_past_dates(list=[future1, future2, past]) == [future1, future2]
+
+
 def test_standard_opening_times_export_cr_format():
 
     # Start with empty
@@ -465,7 +489,7 @@ def test_standard_opening_times_export_cr_format():
     assert std_opening_times.export_cr_format() == expected
 
 
-def test_stdopeningtimes_eq():
+def test_stdopeningtimes_eq_len():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -473,23 +497,37 @@ def test_stdopeningtimes_eq():
     st2 = StandardOpeningTimes()
 
     assert st1 == st2
+    assert st1 != 23
+    assert st1 != "Harry Potter"
 
     st1.monday.append(a)
     assert st1 != st2
+    assert len(st1) == 1
 
     st2.monday.append(a)
     assert st1 == st2
+    assert len(st2) == 1
 
     st2.friday += [a, b, c]
     st1.friday += [a, b]
     assert st1 != st2
+    assert len(st1) == 3
+    assert len(st2) == 4
 
     st1.friday.append(c)
     assert st1 == st2
+    assert len(st1) == 4
 
     st1.sunday += [b, a, c]
     st2.sunday += [c, b, a]
     assert st1 == st2
+    assert len(st1) == 7
+    assert len(st2) == 7
+
+    st1.friday = []
+    st2.friday = []
+    assert len(st1) == 4
+    assert len(st1) == 4
 
     # Standard opening times should be equal even if generic bank holidays are not
     # this is expected behaviour because generic bank holidays in DoS are ignored.

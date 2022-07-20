@@ -2,29 +2,15 @@ variable "name" {
   description = "A descriptive name for the S3 instance"
 }
 
-
 variable "acl" {
   description = "The access control list assigned to this bucket"
   default     = "private"
 }
 
-variable "profile" {
-  description = "The type of deployment the S3 is being used for i.e. dev, test, live, etc"
-}
 
 variable "project_id" {
   description = "Project ID"
 }
-
-
-
-# variable "bucket_iam_role" {
-#   description = "The name of the iam role assigned to the created s3 bucket"
-# }
-
-# variable "iam_role_policy_name" {
-#   description = "The policy name of attached to the role"
-# }
 
 variable "bucket_iam_user" {
   description = "The name of the iam user assigned to the created s3 bucket"
@@ -90,4 +76,3 @@ variable "lifecycle_days_to_expiration" {
   description = "Specifies the number of days after object creation when the object expires."
   default     = "365"
 }
-

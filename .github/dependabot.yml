@@ -1,0 +1,89 @@
+version: 2
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
+  # Maintain dependencies for Python (Works recursively in application directories)
+  - package-ecosystem: "pip"
+    directory: "/application"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
+  # Docker Dependencies
+  - package-ecosystem: "docker"
+    directory: "/build/docker/lambda"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
+  - package-ecosystem: "docker"
+    directory: "/build/docker/tester"
+    schedule:
+      interval: "daily"
+    target-branch: "develop"
+
+  # Terraform Dependencies
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/modules/s3"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/after-lambda-deployment"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/api-key"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/appconfig"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/before-lambda-deployment"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/deployment-pipelines"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/development-pipeline"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/dos-api-gateway-mock"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/perf-test-tools"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/release-pipeline"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"

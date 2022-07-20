@@ -1,5 +1,5 @@
 # =====================================================================================================================
-# SEE: https://github.com/github/gitignore/blob/master/Terraform.gitignore
+# SEE: https://github.com/github/gitignore/blob/main/Terraform.gitignore
 
 # Local .terraform directories
 **/.terraform/*
@@ -35,3 +35,6 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# For Checkov
+.external_modules

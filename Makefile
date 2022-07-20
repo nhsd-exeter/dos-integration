@@ -9,30 +9,23 @@ setup: project-config # Set up project
 	make tester-build
 
 build: # Build lambdas
-	make -s event-sender-build \
-		event-processor-build \
-		fifo-dlq-handler-build \
-		cr-fifo-dlq-handler-build \
-		orchestrator-build \
-		slack-messenger-build \
-		authoriser-build \
-		dos-api-gateway-build \
-		event-replay-build \
-		test-db-checker-handler-build
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+	done
 
-start: # Stop project
-	make project-start
-
-stop: # Stop project
-	make project-stop
-
-restart: stop start # Restart project
-
-log: project-log # Show project logs
+build-lambda: ### Build lambda docker image - mandatory: NAME
+	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
+	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
+	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
+	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
+		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
+	cd $(PROJECT_DIR)
+	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
-		make mock-dos-api-gateway-deployment
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
+		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
 	fi
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
@@ -46,7 +39,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ]; then
+	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
 	fi
 
@@ -67,30 +60,34 @@ unit-test-local:
 	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
+	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
-	DIR=./application \
-	ARGS=" \
-		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
-		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
-		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
-		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
-		"
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
+	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
-	make -s python-code-coverage DIR=$(APPLICATION_DIR_REL) \
+	make -s python-code-coverage CMD="-m pytest application" DIR=/ \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	ARGS=" \
+	ARGS=$(UNIT_TEST_ARGS)
+
+coverage-html:
+	make -s docker-run-tools CMD="coverage html" DIR=/ \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		ARGS=$(UNIT_TEST_ARGS)
+
+get-unit-test-path:
+	if [ -z "$(LAMBDA_FOLDER_NAME)" ]; then
+		echo application
+	else
+		echo application/$(LAMBDA_FOLDER_NAME)
+	fi
+
+UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
+		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
 		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
 		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
@@ -100,33 +97,12 @@ coverage-report: # Runs whole project coverage unit tests
 		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
-		"
-
-smoke-test: #Integration Smoke test for DI project - mandatory: PROFILE, ENVIRONMENT=test
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k smoke -vv --gherkin-terminal-reporter -p no:sugar -n auto --cucumberjson=./testresults.json --disable-pytest-warnings" \
-	DIR=./test/integration \
-	ARGS=" \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
-		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e RUN_ID=${RUN_ID} \
-		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
 
 integration-test-local:
 	cd test/integration
+	RUN_ID=$$RANDOM
+	echo RUN_ID=$$RUN_ID
 	API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 	NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
 	DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
@@ -141,13 +117,43 @@ integration-test-local:
 	DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 	DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 	KEYALIAS=${TF_VAR_signing_key_alias} \
-	RUN_ID=${RUN_ID} \
+	RUN_ID=$$RUN_ID \
 	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
 
+integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
+	--configuration event-processor --client-id test-id test_tmp.txt
+	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
+	if [[ $$VALUE =~ .*"PHA".* ]]; then
+		echo "PHA"
+		NO_LOG_TAG="pharmacy_no_log_searches"
+	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
+		echo "Dentist"
+		NO_LOG_TAG="dentist_no_log_searches"
+	fi
+	rm -rf test_tmp.txt
+	make integration-test TAGS=$$NO_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+
+integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
+	--configuration event-processor --client-id test-id test_tmp.txt
+	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
+	if [[ $$VALUE =~ .*"PHA".* ]]; then
+		echo "PHA"
+		COULDWATCH_LOG_TAG="pharmacy_cloudwatch_queries"
+	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
+		echo "Dentist"
+		COULDWATCH_LOG_TAG="dentist_cloudwatch_queries"
+	fi
+	rm -rf test_tmp.txt
+	make integration-test TAGS=$$COULDWATCH_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+	RUN_ID=$$RANDOM
+	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
+	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 300" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -163,9 +169,25 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-		-e RUN_ID=${RUN_ID} \
+		-e RUN_ID=$$RUN_ID \
 		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
 		"
+
+create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
+	make -s docker-run-tools \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	CMD="python application/comparison_reporting/run_dentist_reports.py" \
+	ARGS=" \
+		-e DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address) \
+		-e DB_PORT=$(DB_PORT) \
+		-e DB_NAME=$(DB_NAME) \
+		-e DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY)) \
+		-e DB_SECRET_NAME=$(DB_SECRET_NAME) \
+		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
+		-e DB_SCHEMA=$(DB_SCHEMA) \
+		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
+	"
 
 clean: # Runs whole project clean
 	make \
@@ -173,32 +195,12 @@ clean: # Runs whole project clean
 		terraform-clean \
 		serverless-clean \
 		python-clean \
-		event-sender-clean \
-		event-processor-clean \
-		fifo-dlq-handler-clean \
-		slack-messenger-clean \
-		orchestrator-clean \
-		cr-fifo-dlq-handler-clean \
-		event-replay-clean \
-		test-db-checker-handler-clean \
 		tester-clean \
-		authoriser-clean \
-		dos-api-gateway-clean \
 		performance-test-clean
+	rm -rf test/integration/replay/.*.txt
 
 # ==============================================================================
 # Event Sender
-
-event-sender-build: ### Build event sender lambda docker image
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/event-sender/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_sender
-	tar -czf $(DOCKER_DIR)/event-sender/assets/event-sender-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-sender
-
-event-sender-clean: ### Clean event sender lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-sender/assets/*.tar.gz $(DOCKER_DIR)/event-sender/assets/*.txt
 
 event-sender-build-and-deploy: ### Build and deploy event sender lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-sender
@@ -206,33 +208,11 @@ event-sender-build-and-deploy: ### Build and deploy event sender lambda docker i
 # ==============================================================================
 # Slack Messenger
 
-slack-messenger-build: ### Build slack messenger lambda docker image
-	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/slack-messenger/assets/requirements.txt
-	cd $(APPLICATION_DIR)/slack_messenger
-	tar -czf $(DOCKER_DIR)/slack-messenger/assets/slack-messenger-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=slack-messenger
-
-slack-messenger-clean: ### Clean slack messenger lambda docker image directory
-	rm -f $(DOCKER_DIR)/slack-messenger/assets/*.tar.gz $(DOCKER_DIR)/slack-messenger/assets/*.txt
-
 slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
 
 # ==============================================================================
 # Event Processor
-
-event-processor-build: ### Build event processor lambda docker image
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/event-processor/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_processor
-	tar -czf $(DOCKER_DIR)/event-processor/assets/event-processor-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-processor
-
-event-processor-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-processor/assets/*.tar.gz $(DOCKER_DIR)/event-processor/assets/*.txt
 
 event-processor-build-and-deploy: ### Build and deploy event processor lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-processor
@@ -240,33 +220,11 @@ event-processor-build-and-deploy: ### Build and deploy event processor lambda do
 # ==============================================================================
 # First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
 
-fifo-dlq-handler-build: ### Build fifo dlq handler lambda docker image
-	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/fifo-dlq-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/fifo_dlq_handler
-	tar -czf $(DOCKER_DIR)/fifo-dlq-handler/assets/fifo-dlq-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=fifo-dlq-handler
-
-fifo-dlq-handler-clean: ### Clean fifo dlq handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/fifo-dlq-handler/assets/*.txt
-
 fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=fifo-dlq-handler
 
 # ==============================================================================
 # CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
-
-cr-fifo-dlq-handler-build: ### Build cr fifo dlq handler lambda docker image
-	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/cr_fifo_dlq_handler
-	tar -czf $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/cr-fifo-dlq-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=cr-fifo-dlq-handler
-
-cr-fifo-dlq-handler-clean: ### Clean cr fifo dlq handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.tar.gz $(DOCKER_DIR)/cr-fifo-dlq-handler/assets/*.txt
 
 cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=cr-fifo-dlq-handler
@@ -274,33 +232,11 @@ cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler l
 # ==============================================================================
 # Event Replay lambda (event-replay)
 
-event-replay-build: ### Build event replay lambda docker image
-	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/event-replay/assets/requirements.txt
-	cd $(APPLICATION_DIR)/event_replay
-	tar -czf $(DOCKER_DIR)/event-replay/assets/event-replay-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=event-replay
-
-event-replay-clean: ### Clean event replay lambda docker image directory
-	rm -f $(DOCKER_DIR)/event-replay/assets/*.tar.gz $(DOCKER_DIR)/event-replay/assets/*.txt
-
 event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=event-replay
 
 # ==============================================================================
 # Test DB Checker Handler (test-db-checker-handler)
-
-test-db-checker-handler-build: ### Build test db checker handler lambda docker image
-	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/test-db-checker-handler/assets/requirements.txt
-	cd $(APPLICATION_DIR)/test_db_checker_handler
-	tar -czf $(DOCKER_DIR)/test-db-checker-handler/assets/test-db-checker-handler-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=test-db-checker-handler
-
-test-db-checker-handler-clean: ### Clean test db checker handler lambda docker image directory
-	rm -f $(DOCKER_DIR)/test-db-checker-handler/assets/*.tar.gz $(DOCKER_DIR)/test-db-checker-handler/assets/*.txt
 
 test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=test-db-checker-handler
@@ -308,50 +244,21 @@ test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker h
 # ==============================================================================
 # Orchestrator
 
-orchestrator-build: ### Build orchestrator lambda docker image
-	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/orchestrator/assets/requirements.txt
-	cd $(APPLICATION_DIR)/orchestrator
-	tar -czf $(DOCKER_DIR)/orchestrator/assets/orchestrator-app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=orchestrator
-
-orchestrator-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/orchestrator/assets/*.tar.gz $(DOCKER_DIR)/orchestrator/assets/*.txt
-
 orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
-# Authoriser (for dos api gateway mock)
-
-authoriser-build: ### Build authoriser lambda docker image
-	cp -f $(APPLICATION_DIR)/authoriser/requirements.txt $(DOCKER_DIR)/authoriser/assets/requirements.txt
-	cd $(APPLICATION_DIR)/authoriser
-	tar -czf $(DOCKER_DIR)/authoriser/assets/authoriser-app.tar.gz \
-		--exclude=tests *.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=authoriser
-
-authoriser-clean: ### Clean authoriser lambda docker image directory
-	rm -f $(DOCKER_DIR)/authoriser/assets/*.tar.gz $(DOCKER_DIR)/authoriser/assets/*.txt
-
-# ==============================================================================
 # DoS API Gateway Mock lambda
 
-dos-api-gateway-build:
-	cp -f $(APPLICATION_DIR)/dos_api_gateway/requirements.txt $(DOCKER_DIR)/dos-api-gateway/assets/requirements.txt
-	cd $(APPLICATION_DIR)/dos_api_gateway
-	tar -czf $(DOCKER_DIR)/dos-api-gateway/assets/dos-api-gateway-app.tar.gz \
-		--exclude=tests *.py > /dev/null 2>&1
-	cd $(PROJECT_DIR)
-	make docker-image NAME=dos-api-gateway
-
-dos-api-gateway-clean: ### Clean event processor lambda docker image directory
-	rm -f $(DOCKER_DIR)/dos-api-gateway/assets/*.tar.gz $(DOCKER_DIR)/dos-api-gateway/assets/*.txt
-
 mock-dos-api-gateway-deployment:
-	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
+	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
+
+build-and-push-mock-dos-api-gateway-docker-images:
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
+	make docker-push NAME=authoriser
+	make docker-push NAME=dos-api-gateway
 
 # ==============================================================================
 # Deployments
@@ -366,22 +273,15 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s sls-only-deploy VERSION=$(BUILD_TAG)
 
 build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
-	make $(FUNCTION_NAME)-build VERSION=$(BUILD_TAG)
+	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
 	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
-	make docker-push NAME=event-sender
-	make docker-push NAME=event-processor
-	make docker-push NAME=fifo-dlq-handler
-	make docker-push NAME=cr-fifo-dlq-handler
-	make docker-push NAME=event-replay
-	make docker-push NAME=test-db-checker-handler
-	make docker-push NAME=orchestrator
-	make docker-push NAME=authoriser
-	make docker-push NAME=dos-api-gateway
-	make docker-push NAME=slack-messenger
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		make docker-push NAME=$$IMAGE_NAME
+	done
 
 push-tester-image:
 	make docker-push NAME=tester
@@ -427,18 +327,18 @@ plan-deployment-pipelines:
 		echo "PROFILE must be tools and ENVIRONMENT must be dev"
 	fi
 
-deploy-performance-pipelines:
-	make terraform-apply-auto-approve STACKS=performance-pipelines PROFILE=dev
+deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
+	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
 
-undeploy-performance-pipelines:
-	make terraform-destroy-auto-approve STACKS=performance-pipelines PROFILE=dev
+undeploy-perf-test-tools:
+	make terraform-destroy-auto-approve STACKS=perf-test-tools PROFILE=tools
 
-plan-performance-pipelines:
-	if [ "$(PROFILE)" == "dev" ]; then
+plan-perf-test-tools:
+	if [ "$(PROFILE)" == "tools" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=performance-pipelines
+		make terraform-plan STACKS=perf-test-tools
 	else
-		echo "Only dev profile supported at present"
+		echo "Only tools profile supported at present"
 	fi
 
 docker-hub-signin: # Sign into Docker hub
@@ -458,7 +358,7 @@ tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=
 		make git-tag-create-environment-deployment COMMIT=$(COMMIT)
 	else
 		echo PROFILE=$(PROFILE) should equal ENVIRONMENT=$(ENVIRONMENT)
-		echo Recommended: you run this command from the master branch
+		echo Recommended: you run this command from the main branch
 	fi
 
 tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[di-number], COMMIT=[short commit hash]
@@ -529,19 +429,8 @@ batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" se
 # Tester
 
 tester-build: ### Build tester docker image
-	cp -f $(APPLICATION_DIR)/requirements-dev.txt $(DOCKER_DIR)/tester/assets/
-	cp -f $(APPLICATION_DIR)/event_processor/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-processor.txt
-	cp -f $(APPLICATION_DIR)/event_sender/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-sender.txt
-	cp -f $(APPLICATION_DIR)/slack_messenger/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-messenger.txt
-	cp -f $(APPLICATION_DIR)/orchestrator/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-orchestrator.txt
-	cp -f $(APPLICATION_DIR)/fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-fifo-dlq-hander.txt
-	cp -f $(APPLICATION_DIR)/cr_fifo_dlq_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-cr-fifo-dlq-hander.txt
-	cp -f $(APPLICATION_DIR)/event_replay/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-event-replay.txt
-	cp -f $(APPLICATION_DIR)/test_db_checker_handler/requirements.txt $(DOCKER_DIR)/tester/assets/requirements-test-db-checker-handler.txt
-	cat build/docker/tester/assets/requirements*.txt | sort --unique >> $(DOCKER_DIR)/tester/assets/requirements.txt
-	rm -f $(DOCKER_DIR)/tester/assets/requirements-*.txt
+	cat $(APPLICATION_DIR)/*/requirements.txt $(APPLICATION_DIR)/requirements-dev.txt | sort --unique > $(DOCKER_DIR)/tester/assets/requirements.txt
 	make docker-image NAME=tester
-	make tester-clean
 
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
@@ -563,14 +452,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" \
-		DIR=./test/performance/create_change_events \
-		ARGS="\
-			-p 8089:8089 \
-			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-			"
+			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
@@ -578,14 +460,16 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 		CMD="python -m locust -f load_test_locustfile.py --headless \
 			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
 			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" \
-		DIR=./test/performance/create_change_events \
-		ARGS="\
-			-p 8089:8089 \
-			-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-			-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-			-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-			"
+			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+
+PERFORMANCE_TEST_DIR_AND_ARGS= \
+	DIR=./test/performance/create_change_events \
+	ARGS="\
+		-p 8089:8089 \
+		-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
+		-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
+		-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
+		"
 
 performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
 	make -s docker-run-tools \
@@ -642,17 +526,17 @@ load-test-in-pipeline: # An all in one load test make target
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 send-performance-dashboard-slack-message:
-	aws sns publish --topic-arn arn:aws:sns:$(AWS_REGION):$(AWS_ACCOUNT_ID_NONPROD):uec-dos-int-dev-pipeline-topic --message '{
-	"version": "0",
-	"id": "13cde686-328b-6117-af20-0e5566167482",
-	"detail-type": "Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)",
-	"source": "aws.ecr",
-	"account": "$(AWS_ACCOUNT_ID_NONPROD)",
-	"time": "2019-11-16T01:54:34Z",
-	"region": "$(AWS_REGION)",
-	"resources": [],
-	"detail": {}
-	}'
+	make slack-codebuild-notification PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PIPELINE_NAME="$(PERF_TEST_TITLE) Tests Codebuild Stage" CODEBUILD_PROJECT_NAME=$(CB_PROJECT_NAME) CODEBUILD_BUILD_ID=$(CODEBUILD_BUILD_ID) SLACK_MESSAGE="Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)"
+
+update-perf-environment-to-use-mock-api: # Updates the performance environment to connect to mock DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
+	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
+	eval "$$(make -s populate-deployment-variables PROFILE=perf)"
+	make serverless-deploy PROFILE=perf VERSION=$$IMAGE_TAG
+
+update-perf-environment-to-use-real-api: # Updates the performance environment to connect to real DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
+	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
+	eval "$$(make -s populate-deployment-variables PROFILE=perf-to-dos)"
+	make serverless-deploy PROFILE=perf-to-dos VERSION=$$IMAGE_TAG
 
 # -----------------------------
 # Chaos Testing
@@ -700,9 +584,32 @@ delete-ip-from-allowlist: # Update your IP address in AWS secrets manager to ace
 		CMD="python delete-ip-address.py $(USERNAME)" \
 		DIR=$(BIN_DIR) ARGS="-e IP_SECRET=$(TF_VAR_ip_address_secret)"
 
+trigger-dos-deployment-pipeline:
+	JENKINS_URL=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_MOM_URL)
+	JENKINS_USERNAME=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_USERNAME)
+	JENKINS_PASSWORD=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_PASSWORD)
+	JENKINS_CRUMB=$$(curl -L -X GET "$$JENKINS_URL/crumbIssuer/api/json" --user $$JENKINS_USERNAME:$$JENKINS_PASSWORD --cookie-jar jenkins.cookies | jq --raw-output '.crumb')
+	curl -L -X POST "$$JENKINS_URL/view/DoS/job/dos-deploy/job/develop/buildWithParameters" --cookie jenkins.cookies \
+	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
+	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
+	-F "TARGET=\"regressiondi\"" \
+	-F "IMAGE_TAG=\"7.9.0_c1d024b\"" \
+	-F "REFRESH=\"true\""
+	echo Jenkins Job has started
+	echo Sleeping for 3 minutes
+	sleep 180
+	echo Jenkins Job expected to have finished
+	rm -rf jenkins.cookies
+
 python-linting:
 	make python-code-check FILES=application
 	make python-code-check FILES=test
+
+python-dead-code-scanning:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
+		CMD="python -m vulture"
 
 python-format:
 	make python-code-format FILES=application
@@ -718,3 +625,75 @@ create-ecr-repositories:
 	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=test-db-checker-handler
 	make docker-create-repository NAME=tester
+
+terraform-security:
+	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"
+
+# ==============================================================================
+# Checkov (Code Security Best Practices)
+
+docker-best-practices:
+	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--framework dockerfile --skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
+
+serverless-best-practices:
+	make docker-run-checkov DIR=/deployment CHECKOV_OPTS="--framework serverless"
+
+terraform-best-practices:
+	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_7,CKV_AWS_115,CKV_AWS_116,CKV_AWS_117,CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_158,CKV_AWS_173,CKV_AWS_219,CKV_AWS_225,CKV2_AWS_29"
+
+github-actions-best-practices:
+	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
+
+checkov-secret-scanning:
+	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
+
+aws-ecr-get-security-scan: ### Fetches container scan report and returns findings - Mandatory REPOSITORY, TAG=[image tag], UNACCEPTABLE_VULNERABILITY_LEVELS=[LOW,MEDIUM,HIGH,CRITICAL]; optional: FAIL_ON_WARNINGS=true, SHOW_ALL_WARNINGS=true
+	make -s aws-ecr-wait-for-image-scan-complete REPOSITORY=$(REPOSITORY) TAG=$(TAG)
+	SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG))
+	SCAN_WARNINGS=$$(echo $$SCAN_FINDINGS | jq '.imageScanFindings.findingSeverityCounts')
+	CRITICAL=$$(echo $$SCAN_WARNINGS | jq '.CRITICAL')
+	HIGH=$$(echo $$SCAN_WARNINGS | jq '.HIGH')
+	MEDIUM=$$(echo $$SCAN_WARNINGS | jq '.MEDIUM')
+	LOW=$$(echo $$SCAN_WARNINGS | jq '.LOW')
+	INFORMATIONAL=$$(echo $$SCAN_WARNINGS | jq '.INFORMATIONAL')
+	UNDEFINED=$$(echo $$SCAN_WARNINGS | jq '.UNDEFINED')
+	if [[ "$(SHOW_ALL_WARNINGS)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
+		echo "CRITICAL: $$CRITICAL"
+		echo "HIGH: $$HIGH"
+		echo "MEDIUM: $$MEDIUM"
+		echo "LOW: $$LOW"
+		echo "INFORMATIONAL: $$INFORMATIONAL"
+		echo "UNDEFINED: $$UNDEFINED"
+	fi
+	IS_UNACCEPTABLE_WARNINGS=false
+	for LEVEL in $$(echo $(UNACCEPTABLE_VULNERABILITY_LEVELS) | tr "," "\n" | tr [:lower:] [:upper:]); do
+		if [ "$$(echo $$(eval echo \"\$$$$LEVEL\"))" != null ]; then
+			echo $$LEVEL is above the threshold
+			IS_UNACCEPTABLE_WARNINGS=true
+		fi
+	done
+	echo "For more details visit https://$(AWS_REGION).console.aws.amazon.com/ecr/repositories/private/$(AWS_ACCOUNT_ID_MGMT)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY)?region=$(AWS_REGION)"
+	if [[ "$(FAIL_ON_WARNINGS)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]] && [ $$IS_UNACCEPTABLE_WARNINGS == "true" ]; then
+		exit 1
+	fi
+
+aws-ecr-wait-for-image-scan-complete: ### Waits for ECR image scan report - REPOSITORY, TAG=[image tag]
+	make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr wait image-scan-complete \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
+
+aws-ecr-describe-image-scan-findings: ### Describes ECR image scan report - REPOSITORY, TAG=[image tag]
+		make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+			$(AWSCLI) ecr describe-image-scan-findings \
+			--registry-id $(AWS_ACCOUNT_ID_MGMT) \
+			--repository-name $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(REPOSITORY) \
+			--image-id imageTag=$(TAG) \
+			--output json \
+		"
+
+.SILENT: \
+	aws-ecr-get-security-scan

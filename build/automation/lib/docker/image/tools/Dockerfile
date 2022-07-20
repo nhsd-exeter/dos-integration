@@ -91,12 +91,12 @@ RUN set -eux && \
     mv ./jq-linux64 /usr/local/bin/jq && \
     \
     # Install yq
-    curl -LO https://github.com/mikefarah/yq/releases/download/v4.13.3/yq_linux_amd64 && \
+    curl -LO https://github.com/mikefarah/yq/releases/download/v4.20.2/yq_linux_amd64 && \
     chmod +x ./yq_linux_amd64 && \
     mv ./yq_linux_amd64 /usr/local/bin/yq && \
     \
     # Install kubectl
-    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.22.2/bin/linux/amd64/kubectl && \
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.4/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl && \
     \

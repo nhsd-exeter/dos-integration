@@ -5,5 +5,10 @@
 .nvmrc
 .python-version
 .scannerwork
+.vscode
 *.code-workspace
 !project.code-workspace
+.coverage
+*.xml
+jenkins.cookies
+html

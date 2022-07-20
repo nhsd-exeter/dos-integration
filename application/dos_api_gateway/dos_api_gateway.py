@@ -21,10 +21,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     """
     logger.info("Event Received", extra={"event": event})
     change_request = loads(event["body"])
-    sleep(1.7)
+    sleep(float(getenv("SLEEP_TIME", "1.7")))
     if change_request == {}:
         logger.warning("Empty change request received, likely a health check")
-        return {"statusCode": 400, "body": "Change Request is empty"}
+        return {"statusCode": 200, "body": "Change Request is empty"}
 
     correlation_id = change_request["reference"]
     logger.set_correlation_id(correlation_id)
@@ -45,4 +45,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
         for row in change_request["changes"]:
             change_request_response["dosChanges"].append({"changeId": str(counter) * 9})
             counter += 1
+    else:
+        logger.error("MOCK DoS API Gateway - No changes found in change request", extra={"change_request": event})
+        return {"statusCode": 500, "body": "No changes found in change request"}
     return {"statusCode": 201, "body": dumps(change_request_response)}

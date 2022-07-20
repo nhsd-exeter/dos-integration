@@ -1,5 +1,7 @@
+#tfsec:ignore:aws-sns-enable-topic-encryption
 resource "aws_sns_topic" "pipeline_notification_topic" {
-  name = var.pipeline_topic_name
+  name              = var.pipeline_topic_name
+  kms_master_key_id = "alias/aws/sns"
 }
 
 

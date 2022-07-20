@@ -93,8 +93,8 @@ Generate and trust a self-signed certificate that will be used locally to enable
 
 Here is the list of the development practices that have to be followed by the team and the individual members:
 
-- Only use single canonical branch **master**. Any intermediate branch significantly increases the maintenance overhead of the repository.
-- Apply the git rebase workflow and never merge from master to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
+- Only use single canonical branch **main**. Any intermediate branch significantly increases the maintenance overhead of the repository.
+- Apply the git rebase workflow and never merge from main to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
 - Cryptographically sign your commits using **gpg** to ensure its content have not been tampered with.
 - Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complines and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.

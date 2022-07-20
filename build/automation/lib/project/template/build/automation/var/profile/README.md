@@ -7,7 +7,7 @@ Profile is a set of configuration options specific to an environment expressed a
 ## Defaults
 
 * `local` - local development profile
-* `dev` - shared development profile that supports automation on every commit to the remote master branch in the CI pipeline or it is used for a cleanup
+* `dev` - shared development profile that supports automation on every commit to the remote main branch in the CI pipeline or it is used for a cleanup
 * `test` - test profile that runs nightly in the CI pipeline
 * `demo` - production, UX
 * `live` - production, service

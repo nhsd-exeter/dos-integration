@@ -1,21 +1,21 @@
 import json
-import os
+from os import environ
 from random import choices, randint, uniform
 
-import boto3
-from moto import mock_dynamodb2
+from boto3 import client
+from moto import mock_dynamodb
 from pytest import fixture
-
+from dataclasses import dataclass
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-std_event_path = "event_processor/tests/STANDARD_EVENT.json"
+STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
 
-with open(std_event_path, "r") as file:
+with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 
-def dummy_dos_service() -> DoSService:
+def dummy_dos_service(**kwargs) -> DoSService:
     """Creates a DoSService Object with random data for the unit testing"""
     test_data = {}
     for col in DoSService.field_names():
@@ -24,6 +24,25 @@ def dummy_dos_service() -> DoSService:
     dos_service = DoSService(test_data)
     dos_service._standard_opening_times = StandardOpeningTimes()
     dos_service._specified_opening_times = []
+
+    for name, value in kwargs.items():
+        if value is not None:
+            setattr(dos_service, name, value)
+
+    return dos_service
+
+
+def blank_dos_service(**kwargs) -> DoSService:
+    """Creates a DoSService Object with blank str data for the unit testing"""
+    test_data = {}
+    for col in DoSService.field_names():
+        test_data[col] = ""
+    dos_service = DoSService(test_data)
+
+    for name, value in kwargs.items():
+        if value is not None:
+            setattr(dos_service, name, value)
+
     return dos_service
 
 
@@ -36,7 +55,6 @@ def dummy_dos_location() -> DoSLocation:
         northing=randint(1111, 9999),
         latitude=uniform(-200.0, 200.0),
         longitude=uniform(-200.0, 200.0),
-        postaltown="".join(choices("ABCDEFGHIJKLM", k=8)),
     )
 
 
@@ -49,18 +67,18 @@ def change_event():
 @fixture
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
-    os.environ["AWS_ACCESS_KEY_ID"] = "testing"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    os.environ["AWS_SECURITY_TOKEN"] = "testing"
-    os.environ["AWS_SESSION_TOKEN"] = "testing"
-    os.environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
-    os.environ["AWS_REGION"] = "us-east-2"
+    environ["AWS_ACCESS_KEY_ID"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
+    environ["AWS_SECURITY_TOKEN"] = "testing"
+    environ["AWS_SESSION_TOKEN"] = "testing"
+    environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
+    environ["AWS_REGION"] = "us-east-2"
 
 
 @fixture
 def dynamodb_client(aws_credentials):
-    with mock_dynamodb2():
-        conn = boto3.client("dynamodb", region_name=os.environ["AWS_REGION"])
+    with mock_dynamodb():
+        conn = client("dynamodb", region_name=environ["AWS_REGION"])
         yield conn
 
 
@@ -89,6 +107,18 @@ def dead_letter_message():
                         "stringValue": "400",
                         "stringListValues": [],
                         "binaryListValues": [],
+                        "dataType": "Number",
+                    },
+                    "other": {
+                        "stringValue": "other",
+                        "stringListValues": [],
+                        "binaryListValues": [],
+                        "dataType": "other",
+                    },
+                    "correlation-id": {
+                        "stringValue": "test",
+                        "stringListValues": [],
+                        "binaryListValues": [],
                         "dataType": "String",
                     },
                 },
@@ -99,3 +129,15 @@ def dead_letter_message():
             }
         ]
     }
+
+
+@fixture
+def lambda_context():
+    @dataclass
+    class LambdaContext:
+        function_name: str = "event-processor"
+        memory_limit_in_mb: int = 128
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
+
+    return LambdaContext()

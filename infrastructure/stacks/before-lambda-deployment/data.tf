@@ -16,6 +16,8 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 data "aws_iam_policy_document" "kms_policy" {
+  #checkov:skip=CKV_AWS_109
+  #checkov:skip=CKV_AWS_111
   policy_id     = null
   source_json   = null
   override_json = null
@@ -25,7 +27,8 @@ data "aws_iam_policy_document" "kms_policy" {
     effect = "Allow"
     principals {
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.developer_role_name}"
       ]
       type = "AWS"
     }

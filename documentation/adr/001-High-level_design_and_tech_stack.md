@@ -4,13 +4,13 @@
 
 Option selection report - Technology for centralized messaging broker
 
-* Date: 2021/12/10
-* Status: Decided
-* Deciders: The DoS Integration team, the DoS Tech Strategy team, Edward Sparkes
+* Date: **16/01/2022**
+* Status: **Decided**
+* Deciders: **The DoS Integration team, the DoS Tech Strategy team, Edward Sparkes**
 
 ## Context
 
-DI is a greenfiled integration project enabling the changes made by service owners such as Pharmacies to their contact information and opening times oN NHS.uk to be reflected in DoS to ensure consumers of DoS have up to date and accurate information about UEC services.
+DI is a greenfield integration project enabling the changes made by service owners such as Pharmacies to their contact information and opening times on NHS.uk to be reflected in DoS to ensure consumers of DoS have up to date and accurate information about UEC services.
 
 It replaces Profile updater which provided a separate UI for service providers to update data for DoS. The new solution ensures service providers only need to make the changes in 1 place. As an interim solution Profile updater was updated to take a CSV feed from NSH Uk once a day and passed this information to DoS. This solution has its own limitations like data won't reflect to the end user immediately. The proposed solution is based on Messaging Queue technology (publish/subscribe). This paper provides the available options and our recommendations. we are evaluating the options available as "Cloud native solutions/services"  which are  as follows
 
@@ -33,7 +33,7 @@ High level requirements:
 
 #### Option 1 - Use AWS Managed Services
 
-This solution utilises SQS and EventBridge to handle the asynchronous orchestration of change events from NHS Uk through to delivery of change requests to DoS.
+This solution utilises SQS and EventBridge to handle the asynchronous orchestration of change events from NHS UK through to delivery of change requests to DoS.
 
 Pros:
 
@@ -76,15 +76,15 @@ Cons:
 
 Based on the non-functional requirements, the AWS native solution is a better fit to the overall solution.
 
-The diagram below shows the physical architecture of the solution. The blue numbering shows happy path, yellow numbering shows the known issues routes and the red numbering shows exception routes.
+The diagram below shows the physical architecture of the solution.
 
-![DoS Infrastructure](../diagrams/DoSIntArchitecture.png "Dos Infrastructure")
+![DoS Infrastructure](../diagrams/DoS%20Integration-Infrastructure.drawio.png "Dos Infrastructure")
 
 ### The Happy Path
 
-1. Service owners make changes to their service through the NHS Uk website. They can make the changes through a Web user interface or through an API. The API will likely be used by large pharmacy groups such as LLoyds and Boots that manage thousands of pharmacies.
+1. Service owners make changes to their service through the NHS UK website. They can make the changes through a Web user interface or through an API. The API will likely be used by large pharmacy groups such as LLoyds and Boots that manage thousands of pharmacies. Address and organisation name changes cannot be made via the NHS UK website or API and will come via NHS UK from a weekly BSA file uploaded into NHS UK.
 
-2. NHS Uk puts full service record including updated and non updated fields onto two queues. One queue is used internally to update search indexes the other is for DoS integration, there are two separate queues to allow the two consumers to diverge in the messages they need to receive.
+2. NHS UK updates their record and sends a full service record including updated and non updated fields onto two queues. One queue is used internally to update search indexes the other is for DoS integration, there are two separate queues to allow the two consumers to diverge in the messages they need to receive.
 
 3. An Azure function is triggered when new messages appear on DoS integration queue.
 
@@ -98,23 +98,24 @@ The diagram below shows the physical architecture of the solution. The blue numb
 
 8. The Lambda function will check DynamoDB for the latest sequence number processed for the message ODS code, if there have been no previous messages or the sequence number is greater than the last processed then the Lambda continues execution, if not the message is discarded and logged.
 
-9. The Lambda then retrieves services from the DoS database and compares them to the message to see what changes are required. The Lambda connects to the DoS Database Replica using RDS Proxy which helps manage and reuse database connections.
+9. The Lambda then retrieves services from the DoS database and compares them to the message to see what changes are required. The Lambda connects to a dedicated read replica of the DoS Database, connections are cleared up after use.
 
-10. If changes have been identified the changes are pushed to EventBridge, if not the message is discarded
+10. If changes have been identified they are sent to a separate queue for forwarding to DoS.
 
-11. Once the changes have been sent to EventBridge the sequence number is updated in the DynamoDB.
+11. An orchestrator function is triggered by EventBridge to run every minute with concurrency of 1. It reads messages from the queue and sends them to the event sender lambda via asynchronous invocation at a rate of 3 / second. This rate is configurable in the lambda environment variables.
 
-12. EventBridge is configured to push messages to DoS API gateway using a feature called Api Destinations. Api Destinations allows you to configure the rate at which messages are sent to the third part API (in this case DoS API Gateway).
+12. The event sender forwards the change request to the DoS change request API, and remove the message from the queue.
 
 ### Known issues
 
-There are a number of scenarios that could occur that will not result in a change in DoS and that identify a discrepancy between the two systems. In order to rectify or at the least understand these discrepancies they must be captures. The following known scenarios include.
+There are a number of scenarios that could occur that will not result in a change in DoS and that identify a discrepancy between the two systems. In order to rectify or at the least understand these discrepancies they must be captured. The following known scenarios include.
 
 * ODS code not in DoS
 * Postcode not in DoS or in DoS without lat/lon and easting/northing
-* Service marked as Hidden or Closed from NHS Uk
+* Invalid opening times, including overlaps
+* Service marked as Hidden or Closed from NHS UK
 
-In each of these scenarios a specific log record will be written. All logs are shipped to Splunk via Kinesis Firehose. Reports will be written in Splunk to look for these specific scenarios and notifications sent to relevant teams for investigation.
+In each of these scenarios a specific log record will be written. All logs are shipped to Splunk via Kinesis Firehose. Reports will be written in Splunk to look for these specific scenarios and notifications sent to relevant teams for investigation. All reports are saved under the `Texas UEC Profile Updater` App in Splunk and all logs are in the `cw_logs_uec_dos_int_prod` and `cw_logs_uec_dos_int_nonprod` indexes
 
 For these known scenarios the message is removed from the queue as it will not pass until the underlying issue has been rectified. Once the issue is resolved the message can be replayed at a later date as it has been saved to DynamoDB.
 
@@ -128,5 +129,8 @@ If the lambda fails to process the message for some unknown or intermittent reas
     1.2. The Lambda function will attempt to write the message to Dynamo so we will keep a record of it.
 
     1.3. And fire a notification to inform someone that the message couldn't be processed.
-2. DoS API Gateway returns 429 or 5xx error.
-If the DoS API Gateway returns a 429 or a 5xx error the message will remain on the EventBridge and be retried upto 185 times over 24 hours. After 24 hours if it has still not succeeded it will go to the DLQ.
+
+2. DoS API Gateway returns a potentially intermittent error (429 or 5xx).
+If the DoS API Gateway returns a 429 or a 5xx error the message, the event sender will update a record in the Dynamo DB to say there is an issue with the downstream system, it will also not remove the message from the queue so it can be retried when the downstream system is back up. The orchestrator checks this status before processing next batch of messages and if it finds there is an error, it pauses execution for a configured time and then sends a health check message to the event sender which is forwarded to the DoS API. If the healthcheck returns good then the Event Sender updates the Dynamo DB to say all is well and the orchestrator resumes sending change requests. If it is still down the orchestrator will repeat pausing and sending health checks until the service resumes. This solution ensures the system is resilient to temporary downstream outages. Messages will remain on the queue for upto 14 days or until the queue is full, which provides ample buffer for issues with the DoS Change request api to be resolved and processing continue without any intervention on the DI side.
+
+![DoS Infrastructure](../diagrams/DoS%20Integration-Circuit%20Breaker.drawio.png "Dos Infrastructure")

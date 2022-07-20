@@ -1,0 +1,25 @@
+[tool.vulture]
+make_whitelist = true
+paths=["."]
+exclude = [
+  "authoriser/tests",
+  "common/tests",
+  "comparison_reporting/tests",
+  "cr_fifo_dlq_handler/tests",
+  "dos_api_gateway/tests",
+  "event_processor/tests",
+  "event_replay/tests",
+  "event_sender/tests",
+  "fifo_dlq_handler/tests",
+  "orchestrator/tests",
+  "slack_messenger/tests",
+  "test_db_checker_handler/tests"
+  ]
+sort_by_size = true
+ignore_names = [
+  "lambda_handler",
+  "*db_connection",
+  "field_names",
+  "recipient_id",
+  "encoding"
+  ]

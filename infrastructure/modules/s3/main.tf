@@ -1,87 +1,8 @@
-
-# resource "aws_iam_role" "this" {
-
-#   name = var.bucket_iam_role
-#   path = "/"
-
-#   assume_role_policy = <<EOF
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Action": "sts:AssumeRole",
-#       "Principal": { "Service": "ec2.amazonaws.com" },
-#       "Effect": "Allow",
-#       "Sid": ""
-#     }
-#   ]
-# }
-# EOF
-# }
-
-# data "aws_iam_policy_document" "bucket_policy" {
-#   statement {
-#     principals {
-#       type        = "AWS"
-#       identifiers = [aws_iam_role.this.arn]
-#     }
-#     sid    = "IAMS3BucketPermissions"
-#     effect = "Allow"
-
-#     resources = ["arn:aws:s3:::${var.name}"]
-
-
-#     actions = [
-#       "s3:GetBucketLocation",
-#       "s3:ListBucket",
-#       "s3:ListBucketMultipartUploads",
-#       "s3:ListBucketVersions",
-#     ]
-#   }
-
-#   statement {
-#     principals {
-#       type        = "AWS"
-#       identifiers = [aws_iam_role.this.arn]
-#     }
-#     sid    = "IAMS3ObjectPermissions"
-#     effect = "Allow"
-
-#     resources = ["arn:aws:s3:::${var.name}/*"]
-
-#     actions = [
-#       "s3:AbortMultipartUpload",
-#       "s3:DeleteObject",
-#       "s3:GetObject",
-#       "s3:ListMultipartUploadParts",
-#       "s3:PutObject",
-#     ]
-#   }
-
-#   statement {
-#     principals {
-#       type        = "AWS"
-#       identifiers = ["*"]
-#     }
-#     effect  = "Deny"
-#     actions = ["*"]
-#     resources = [
-#       "arn:aws:s3:::${var.name}",
-#       "arn:aws:s3:::${var.name}/*",
-#     ]
-#     condition {
-#       test     = "Bool"
-#       variable = "aws:SecureTransport"
-#       values   = ["false"]
-#     }
-#   }
-# }
-
 module "s3_bucket" {
-  source = "terraform-aws-modules/s3-bucket/aws"
-
-  bucket = var.name
-  acl    = var.acl
+  source  = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.3.0"
+  bucket  = var.name
+  acl     = var.acl
 
   // S3 bucket-level Public Access Block configuration
   block_public_acls       = true
@@ -96,10 +17,6 @@ module "s3_bucket" {
   versioning = {
     enabled = var.versioning_enabled
   }
-  # logging = {
-  #   target_bucket = var.log_bucket
-  #   target_prefix = "logs/${var.project_id}/${var.name}/"
-  # }
 
   server_side_encryption_configuration = {
     rule = {

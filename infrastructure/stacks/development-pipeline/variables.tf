@@ -6,10 +6,6 @@
 # AWS COMMON
 ############
 
-variable "aws_profile" {
-  description = "The AWS profile"
-}
-
 variable "aws_region" {
   description = "The AWS region"
 }
@@ -86,4 +82,8 @@ variable "project_id" {
 }
 variable "environment" {
   description = "Environment name"
+}
+
+variable "mgmt_vpc_name" {
+  description = "Name of the management VPC"
 }

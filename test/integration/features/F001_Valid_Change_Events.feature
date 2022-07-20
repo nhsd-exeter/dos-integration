@@ -1,116 +1,82 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
-    Given a Changed Event is valid
+    Given a "pharmacy" Changed Event is aligned with Dos
+    And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
-    And the Changed Event is stored in dynamo db
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S002. All received Changed Events are archived in Dynamo DB
-    Given a Changed Event is valid
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario: F001S002. A Changed event with aligned data does not create a CR
+    Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Event is stored in dynamo db
+    Then the Event "processor" shows field "message" with message "No changes identified"
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S003. A Changed event with aligned data does not create a CR
-    Given a Changed Event is aligned with Dos
-    When the Changed Event is sent for processing with "valid" api key
-    Then no Changed request is created
-    And the Changed Event is stored in dynamo db
-
-@complete @pharmacy_no_log_searches
-  Scenario: F001S004. A valid change event with changed Phone number is processed and captured by DOS
-    Given a Changed Event with changed "phone_no" is valid
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
+    Given a Changed Event with changed "<field>" is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
-    And the Changed Request with changed "phone_no" is captured by Dos
+    And the Changed Request with changed "<field>" is captured by Dos
 
-@complete @pharmacy_no_log_searches
-  Scenario: F001S005. A valid change event with changed website is processed and captured by DOS
-    Given a Changed Event with changed "website" is valid
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
-    And the Changed Request with changed "website" is captured by Dos
+    Examples:
+      | field    |
+      | phone_no |
+      | website  |
+      | address  |
 
-@complete @pharmacy_no_log_searches
-  Scenario: F001S006. A valid change event with changed address is processed and captured by DOS
-    Given a Changed Event with changed "address" is valid
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos
-    And the Changed Request with changed address is captured by Dos
-
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S007. A valid change event with special characters is processed by DOS
-    Given a Changed Event is valid
-    And the website field contains special characters
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request with special characters is accepted by DOS
-    And the Changed Event is stored in dynamo db
-
-@complete @dentist_no_log_searches @dentist_smoke_test
-  Scenario: F001S008. A valid Dentist change event is processed into DOS
-    Given a Dentist Changed Event is valid
+  @complete @dentist_no_log_searches @dentist_smoke_test
+  Scenario: F001S004. A valid Dentist change event is processed into DOS
+    Given a "dentist" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Request is accepted by Dos
     And the Dentist changes with service type id is captured by Dos
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches
-  Scenario: F001S009. A valid change with website removal is processed by dos
-    Given a Changed Event to unset "website"
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  Scenario Outline: F001S005. A valid change with field removal is processed by dos
+    Given a Changed Event to unset "<field>"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by DoS with "website" deleted
-    And the Changed Event is stored in dynamo db
+    Then the Changed Request is accepted by DoS with "<field>" deleted
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches
-  Scenario: F001S010. A valid change with phone removal is processed by dos
-    Given a Changed Event to unset "phone"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request is accepted by Dos with "phone" deleted
-    And the Changed Event is stored in dynamo db
+    Examples:
+      | field   |
+      | website |
+      | phone   |
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S011. No CR created with a None value as phone data
-    Given a Changed Event with value "None" for "phone_no"
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001S006. No CR created when value is set
+    Given a Changed Event with a "<value>" value for "<field>"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "phone is not equal"
+    Then the Changed Event with changed "<field>" is not captured by Dos
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S012. No CR created with empty phone data
-    Given a Changed Event with value "''" for "phone_no"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "phone is not equal"
+    Examples:
+      | field             | value        |
+      | phone_no          | None         |
+      | website           | ''           |
+      | phone_no          | None         |
+      | website           | ''           |
+      | organisation_name | New Pharmacy |
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S013. No CR created with a None value as website data
-    Given a Changed Event with value "None" for "website"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "website is not equal"
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F001S007. A duplicate sequence number is allowed
+    Given an ODS has an entry in dynamodb
+    When the Changed Event is sent for processing with a duplicate sequence id
+    Then the Changed Event is stored in dynamo db
+    And the Event "processor" shows field "message" with message "Added record to dynamodb"
 
-@complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001S014. No CR created with empty website data
-    Given a Changed Event with value "''" for "website"
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001S008 Changed Event with URL variations is formatted and accepted by Dos
+    Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" does not show "message" with message "website is not equal"
-
-@complete @dev @pharmacy_no_log_searches
-  Scenario: F001S015. No CR created with a change of public name data
-    Given a Changed Event with value "New Pharmacy" for "organisation_name"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Event with changed "public_name" is not captured by Dos
-
-@complete @pharmacy_no_log_searches
-  Scenario Outline: F001S016 Changed Event with URL variations is formatted and accepted by Dos
-    Given a Changed Event with changed "{url}" variations is valid
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Changed Request with formatted "{expected_url}" is captured by Dos
+    Then the Changed Request with formatted "<expected_url>" is captured by Dos
 
     Examples: Web address variations
-      | url                            | expected_url                   |
-      | https://www.Test.com           | https://www.test.com           |
-      | https://www.TEST.Com           | https://www.test.com           |
-      | https://www.Test.com/TEST      | https://www.test.com/TEST      |
-      | http://www.TestChemist.co.uk   | http://www.testchemist.co.uk   |
-      | https://Testchemist.co.Uk      | https://testchemist.co.uk      |
-      | https://Www.testpharmacy.co.uk | https://www.testpharmacy.co.uk |
+      | url                                              | expected_url                                     |
+      | https://www.Test.com                             | https://www.test.com                             |
+      | https://www.TEST.Com                             | https://www.test.com                             |
+      | https://www.Test.com/TEST                        | https://www.test.com/TEST                        |
+      | http://www.TestChemist.co.uk                     | http://www.testchemist.co.uk                     |
+      | https://Testchemist.co.Uk                        | https://testchemist.co.uk                        |
+      | https://Www.testpharmacy.co.uk                   | https://www.testpharmacy.co.uk                   |
+      | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test |

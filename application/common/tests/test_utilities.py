@@ -6,8 +6,10 @@ from pytest import raises, mark
 from ..utilities import (
     extract_body,
     get_sequence_number,
+    get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
+    remove_given_keys_from_dict_by_msg_limit,
 )
 
 
@@ -50,6 +52,45 @@ def test_get_sequence_number_empty():
     assert sequence_number is None
 
 
+def test_get_sqs_msg_attribute_string(dead_letter_message):
+    # Arrange
+    attribute = "error_msg"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response == msg_attributes[attribute]["stringValue"]
+
+
+def test_get_sqs_msg_attribute_number(dead_letter_message):
+    # Arrange
+    attribute = "error_msg_http_code"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response == float(msg_attributes[attribute]["stringValue"])
+
+
+def test_get_sqs_msg_attribute_other(dead_letter_message):
+    # Arrange
+    attribute = "other"
+    msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key=attribute)
+    # Assert
+    assert response is None
+
+
+def test_get_sqs_msg_attribute_no_attributes():
+    # Arrange
+    msg_attributes = {}
+    # Act
+    response = get_sqs_msg_attribute(msg_attributes=msg_attributes, key="error_msg")
+    # Assert
+    assert response is None
+
+
 def test_handle_sqs_msg_attributes(dead_letter_message):
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
 
@@ -61,6 +102,19 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
 @mark.parametrize("val,expected", [("", True), ("    ", True), (None, True), ("True val", False)])
 def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
+
+
+@mark.parametrize("input_dict,keys_tobe_removed,msg_limit,expected", [
+    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
+    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
+    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, [""], 20, {"Name": "John", "Address": ["2", "4"], "Age": 34}),
+    ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34})
+    ])
+def test_remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit, expected):
+    event = remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit)
+    assert (
+        event == expected
+    ), f"Change event should be {expected} but is {event}"
 
 
 SQS_EVENT = {

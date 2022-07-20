@@ -1,4 +1,5 @@
 resource "aws_api_gateway_rest_api" "dos_api_gateway" {
+  #checkov:skip=CKV_AWS_237:This is a mock which doesn't matter if deleted
   name        = var.dos_api_gateway_name
   description = "DoS API Gateway Mock for DI environment: ${var.dos_api_gateway_stage}"
   endpoint_configuration {
@@ -18,6 +19,17 @@ resource "aws_api_gateway_method" "dos_api_gateway_method" {
   rest_api_id   = aws_api_gateway_rest_api.dos_api_gateway.id
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.dos_api_gateway_authoriser.id
+}
+
+resource "aws_api_gateway_method_settings" "di_endpoint_method_settings" {
+  rest_api_id = aws_api_gateway_rest_api.dos_api_gateway.id
+  stage_name  = aws_api_gateway_stage.dos_api_gateway_stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled      = true
+    cache_data_encrypted = true
+  }
 }
 
 resource "aws_api_gateway_integration" "dos_api_gateway_integration" {
@@ -45,10 +57,14 @@ resource "aws_api_gateway_deployment" "dos_api_gateway_deployment" {
   }
 }
 
+#tfsec:ignore:aws-api-gateway-enable-access-logging
 resource "aws_api_gateway_stage" "dos_api_gateway_stage" {
-  deployment_id = aws_api_gateway_deployment.dos_api_gateway_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.dos_api_gateway.id
-  stage_name    = var.dos_api_gateway_stage
+  #checkov:skip=CKV_AWS_76:No need to check this as it is a mock4
+  #checkov:skip=CKV2_AWS_4:Logs are not enabled for mock
+  deployment_id        = aws_api_gateway_deployment.dos_api_gateway_deployment.id
+  rest_api_id          = aws_api_gateway_rest_api.dos_api_gateway.id
+  stage_name           = var.dos_api_gateway_stage
+  xray_tracing_enabled = true
 }
 
 resource "aws_api_gateway_usage_plan" "dos_api_gateway_usage_plan" {

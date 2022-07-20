@@ -6,10 +6,6 @@
 # AWS COMMON
 ############
 
-variable "aws_profile" {
-  description = "The AWS profile"
-}
-
 variable "aws_region" {
   description = "The AWS region"
 }

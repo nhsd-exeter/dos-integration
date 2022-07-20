@@ -90,6 +90,7 @@ resource "aws_iam_role_policy" "authoriser_lambda_role_policy" {
 POLICY
 }
 
+#tfsec:ignore:aws-cloudwatch-log-group-customer-key
 resource "aws_cloudwatch_log_group" "authoriser_lambda_log_group" {
   name              = "/aws/lambda/${var.authoriser_lambda_name}"
   retention_in_days = "1"

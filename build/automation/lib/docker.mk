@@ -9,25 +9,25 @@ DOCKER_NETWORK = $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(BUILD_ID)
 DOCKER_REGISTRY = $(AWS_ECR)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)
 DOCKER_LIBRARY_REGISTRY = nhsd
 
-DOCKER_ALPINE_VERSION = 3.14.2
+DOCKER_ALPINE_VERSION = 3.15.0
 DOCKER_COMPOSER_VERSION = 2.0.13
 DOCKER_CONFIG_LINT_VERSION = v1.6.0
-DOCKER_DIND_VERSION = 20.10.8-dind
-DOCKER_EDITORCONFIG_CHECKER_VERSION = 2.3.5
-DOCKER_ELASTICSEARCH_VERSION = 7.13.0
+DOCKER_DIND_VERSION = 20.10.12-dind
+DOCKER_EDITORCONFIG_CHECKER_VERSION = 2.4.0
+DOCKER_ELASTICSEARCH_VERSION = 7.17.0
 DOCKER_GRADLE_VERSION = 7.0.2-jdk$(JAVA_VERSION)
 DOCKER_LOCALSTACK_VERSION = $(LOCALSTACK_VERSION)
 DOCKER_MAVEN_VERSION = 3.8.1-openjdk-$(JAVA_VERSION)-slim
-DOCKER_NGINX_VERSION = 1.21.0-alpine
+DOCKER_NGINX_VERSION = 1.21.6-alpine
 DOCKER_NODE_VERSION = $(NODE_VERSION)-alpine
 DOCKER_OPENJDK_VERSION = $(JAVA_VERSION)-alpine
 DOCKER_POSTGRES_VERSION = $(POSTGRES_VERSION)-alpine
 DOCKER_POSTMAN_NEWMAN_VERSION = $(POSTMAN_NEWMAN_VERSION)-alpine
 DOCKER_PYTHON_VERSION = $(PYTHON_VERSION)-alpine
 DOCKER_SONAR_SCANNER_CLI_VERSION = $(SONAR_SCANNER_CLI_VERSION)
-DOCKER_TERRAFORM_CHECKOV_VERSION = 2.0.170
+DOCKER_TERRAFORM_CHECKOV_VERSION = 2.0.1178
 DOCKER_TERRAFORM_COMPLIANCE_VERSION = 1.3.14
-DOCKER_TERRAFORM_TFSEC_VERSION = v0.39.42
+DOCKER_TERRAFORM_TFSEC_VERSION = v1.13.2-amd64
 DOCKER_TERRAFORM_VERSION = $(TERRAFORM_VERSION)
 DOCKER_WIREMOCK_VERSION = $(WIREMOCK_VERSION)-alpine
 
@@ -79,6 +79,9 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_DIR)/$(NAME)
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
 	# Dockerfile
@@ -243,6 +246,7 @@ docker-create-dockerfile: ### Create effective Dockerfile - mandatory: NAME; op
 		s#FROM postman/newman:latest#FROM postman/newman:$(DOCKER_POSTMAN_NEWMAN_VERSION)#g; \
 		s#FROM python:latest#FROM python:$(DOCKER_PYTHON_VERSION)#g; \
 		s#FROM rodolpheche/wiremock:latest#FROM rodolpheche/wiremock:$(DOCKER_WIREMOCK_VERSION)#g; \
+		s#CMD_TO_RPLACE#$(CMD)#g; \
 	" Dockerfile.effective
 	cd $$dir
 
@@ -624,7 +628,7 @@ docker-run-terraform-tfsec: ### Run terraform tfsec container - optional: DIR,AR
 		$$image \
 			.
 
-docker-run-terraform-checkov: ### Run terraform checkov container - optional: DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]; SEE: https://github.com/bridgecrewio/checkov
+docker-run-checkov: ### Run checkov container - optional: DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]; SEE: https://github.com/bridgecrewio/checkov
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo bridgecrew/checkov:$(DOCKER_TERRAFORM_CHECKOV_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tfsec-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
@@ -641,7 +645,7 @@ docker-run-terraform-checkov: ### Run terraform checkov container - optional: DI
 		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
 		$(ARGS) \
 		$$image \
-			--directory /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g")
+			--directory /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") $(CHECKOV_OPTS)
 
 docker-run-terraform-compliance: ### Run terraform compliance container - mandatory: CMD=[-p file -f repo]; optional: DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]; SEE: https://github.com/terraform-compliance/cli
 	make docker-config > /dev/null 2>&1
@@ -797,6 +801,8 @@ _docker-get-dir:
 		echo $(DOCKER_CUSTOM_DIR)/$(NAME)
 	elif [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ]; then
 		echo $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ ! -z $(GENERIC_IMAGE_NAME) ] ; then
+		echo $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 	else
 		echo $(DOCKER_DIR)/$(NAME)
 	fi
@@ -822,14 +828,14 @@ _docker-get-login-password:
 
 _docker-get-docker-compose-yml:
 	yml=$(or $(YML), $(DOCKER_COMPOSE_YML))
-	# if [ "$(BUILD_ID)" != 0 ]; then
-	# 	make -s docker-run-tools ARGS="--env BUILD_ID=$(BUILD_ID)" CMD=" \
-	# 		$(BIN_DIR_REL)/docker-compose-processor.py \
-	# 			$$(echo $$yml | sed 's;//;/;g' | sed "s;$(PROJECT_DIR);;g") \
-	# 			$(TMP_DIR_REL)/docker-compose-$(BUILD_ID).yml \
-	# 	"
-	# 	yml=$(TMP_DIR)/docker-compose-$(BUILD_ID).yml
-	# fi
+	if [ "$(BUILD_ID)" != 0 ]; then
+		make -s docker-run-tools ARGS="--env BUILD_ID=$(BUILD_ID)" CMD=" \
+			$(BIN_DIR_REL)/docker-compose-processor.py \
+				$$(echo $$yml | sed 's;//;/;g' | sed "s;$(PROJECT_DIR);;g") \
+				$(TMP_DIR_REL)/docker-compose-$(BUILD_ID).yml \
+		"
+		yml=$(TMP_DIR)/docker-compose-$(BUILD_ID).yml
+	fi
 	echo $$yml
 
 _docker-is-lib-image:
@@ -846,13 +852,13 @@ docker-image-get-digest: ### Get image digest by matching tag pattern - mandato
 		REPO=$$(make _docker-get-reg)/$(NAME) \
 		TAG=$(or $(VERSION), $(TAG))
 
-docker-image-find-and-version-as: ### Find image based on git commit hash and tag it - mandatory: VERSION|TAG=[new version/tag],NAME=[image name]; optional: COMMIT=[git commit hash, defaults to HEAD]
-	commit=$(or $(COMMIT), master)
+docker-image-find-and-version-as: ### Find image based on git commit hash and tag it - mandatory: VERSION|TAG=[new version/tag],NAME=[image name]; optional: COMMIT=[git commit hash, defaults to main]
+	commit=$(or $(COMMIT), $$(make git-branch-get-main-name))
 	hash=$$(make git-commit-get-hash COMMIT=$$commit)
 	digest=$$(make docker-image-get-digest NAME=$(NAME) TAG=$$hash)
 	make docker-pull NAME=$(NAME) DIGEST=$$digest
 	make docker-tag NAME=$(NAME) DIGEST=$$digest TAG=$(or $(VERSION), $(TAG))
-	make docker-push-for-production NAME=$(NAME) TAG=$(or $(VERSION), $(TAG))
+	make docker-push NAME=$(NAME) TAG=$(or $(VERSION), $(TAG))
 
 docker-repo-list-tags: ### List repository tags - mandatory: REPO=[repository name]
 	(

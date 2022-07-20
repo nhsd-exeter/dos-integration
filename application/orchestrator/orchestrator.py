@@ -13,7 +13,6 @@ from time import strftime, gmtime, time, sleep
 
 logger = Logger()
 tracer = Tracer()
-
 QUEUE_URL = getenv("CR_QUEUE_URL")
 
 

@@ -14,7 +14,7 @@ from common.constants import (
 )
 from common.opening_times import OpenPeriod
 from common.tests.conftest import dummy_dos_service
-from ..nhs import NHSEntity
+from common.nhs import NHSEntity
 from ..reporting import (
     log_invalid_open_times,
     log_unmatched_service_types,
@@ -101,8 +101,10 @@ def test_log_unmatched_nhsuk_service(mock_logger):
 @patch.object(Logger, "warning")
 def test_log_invalid_nhsuk_postcode(mock_logger):
     # Arrange
+    county = "county"
+    city = "city"
     nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": city, "County": county}
     )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
@@ -129,9 +131,9 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
             "nhsuk_address1": nhs_entity.address_lines[0],
             "nhsuk_address2": nhs_entity.address_lines[1],
             "nhsuk_address3": nhs_entity.address_lines[2],
-            "nhsuk_city": nhs_entity.city,
+            "nhsuk_city": city,
             "nhsuk_postcode": nhs_entity.postcode,
-            "nhsuk_county": nhs_entity.county,
+            "nhsuk_county": county,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
             "dos_service_type_name": dos_service.servicename,

@@ -3,12 +3,9 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      docker: 19
     commands:
       - wget https://github.com/cli/cli/releases/download/v2.6.0/gh_2.6.0_linux_amd64.rpm
       - yum localinstall -y gh_2.6.0_linux_amd64.rpm
-      - gh version
   pre_build:
     commands:
       - make wait-for-codebuild-to-finish PROJECT_NAME=$SERVERLESS_BUILD_PROJECT_NAME
@@ -29,10 +26,13 @@ phases:
       - echo $PR_NUMBER
       - export ENVIRONMENT=$(make -s get-environment-from-pr PR_NUMBER=$PR_NUMBER)
       - echo $ENVIRONMENT
-      - export ENVIRONMENT_DEPLOYED=$(make -s is-environment-deployed ENVIRONMENT=$ENVIRONMENT)
-      - echo $ENVIRONMENT_DEPLOYED
-      - if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
-          make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT ;
+      - |
+        if [[ "$ENVIRONMENT" =~ .*"di-".* ]]; then
+          export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
+          echo $ENVIRONMENT_DEPLOYED
+          if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+              make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT OPTS="-parallelism=30";
+          fi
         fi
     finally:
       - |

@@ -1,14 +1,14 @@
 name: "Check code format and quality"
 on:
   push:
-    branches: [master]
+    branches: [develop, main]
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, ready_for_review, synchronize, reopened]
 jobs:
   check-code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Check text files format
@@ -17,22 +17,24 @@ jobs:
       - name: Check Python files format
         run: |
           make python-linting
-      - name: Check Terraform files format
+      - name: Python Dead Code Check
         run: |
-          build/automation/etc/githooks/scripts/terraform-format-pre-commit.sh
+          make tester-build python-dead-code-scanning
       - name: Create coverage report
         run: |
-          make tester-build coverage-report
+          make coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
         # SEE: https://github.com/SonarSource/sonarcloud-github-action
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: ./application
+          projectBaseDir: .
           args: >
+            -Dsonar.sources=application,deployment,infrastructure
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/scripts
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9
+            -Dsonar.exclusions=application/**/tests/**
