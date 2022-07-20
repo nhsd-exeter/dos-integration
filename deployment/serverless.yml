@@ -65,6 +65,7 @@ custom:
 
 plugins:
   - serverless-vpc-discovery
+
 functions:
   orchestrator:
     image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
@@ -78,8 +79,6 @@ functions:
     reservedConcurrency: 1 # ensure only one orchestrator running at a time
     events:
       - schedule: rate(1 minute)
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       RUN_FOR: 280
       SLEEP_FOR_WHEN_OPEN: 10
@@ -98,8 +97,6 @@ functions:
     timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
     maximumRetryAttempts: 0
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       DB_SERVER: ${env:DB_SERVER}
       DB_PORT: ${env:DB_PORT}
@@ -119,8 +116,6 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_fifo_dlq_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
@@ -133,8 +128,6 @@ functions:
     memorySize: 512
     timeout: 20
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       DOS_API_GATEWAY_SECRETS: ${env:DOS_API_GATEWAY_SECRETS}
       DOS_API_GATEWAY_USERNAME_KEY: ${env:DOS_API_GATEWAY_USERNAME_KEY}
@@ -155,8 +148,6 @@ functions:
     memorySize: 128
     timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
       SLACK_ALERT_CHANNEL: ${env:SLACK_ALERT_CHANNEL}
@@ -172,8 +163,6 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_cr_fifo_dlq_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     maximumRetryAttempts: 0
 
   event-replay:
@@ -184,8 +173,6 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_replay_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       FIFO_SQS_NAME: ${env:TF_VAR_fifo_queue_name}
@@ -199,8 +186,7 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test_db_checker_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+
     environment:
       DB_SERVER: ${env:DB_SERVER}
       DB_PORT: ${env:DB_PORT}
