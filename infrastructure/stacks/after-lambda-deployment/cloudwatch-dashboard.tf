@@ -1,97 +1,4 @@
-resource "aws_cloudwatch_query_definition" "errors" {
-  name = "${var.project_id}/${var.environment}/errors"
-
-  log_group_names = [
-    "/aws/lambda/${var.event_processor_lambda_name}",
-    "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.event_replay_lambda_name}"
-  ]
-
-  query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
-| parse response_text '"detail":"*"' as dos_error
-| filter level == 'ERROR'
-| sort @timestamp
-EOF
-}
-
-resource "aws_cloudwatch_query_definition" "by_correlation_id" {
-  name = "${var.project_id}/${var.environment}/by-correlation-id"
-
-  log_group_names = [
-    "/aws/lambda/${var.event_processor_lambda_name}",
-    "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.event_replay_lambda_name}"
-  ]
-
-  query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
-| filter correlation_id == 'REPLACE'
-| sort @timestamp
-EOF
-}
-
-resource "aws_cloudwatch_query_definition" "by_correlation_id_simple" {
-  name = "${var.project_id}/${var.environment}/by-correlation-id-simple"
-
-  log_group_names = [
-    "/aws/lambda/${var.event_processor_lambda_name}",
-    "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.event_replay_lambda_name}"
-  ]
-
-  query_string = <<EOF
-fields @timestamp, message
-| filter correlation_id == 'REPLACE'
-| sort @timestamp
-EOF
-}
-
-
-resource "aws_cloudwatch_query_definition" "by_invalid_postcode" {
-  name = "${var.project_id}/${var.environment}/by-invalid-postcode"
-
-  log_group_names = [
-    "/aws/lambda/${var.event_processor_lambda_name}",
-    "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.event_replay_lambda_name}"
-  ]
-
-  query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
-| filter report_key == 'INVALID_POSTCODE'
-| sort @timestamp
-EOF
-}
-
-resource "aws_cloudwatch_query_definition" "by_invalid_opening_times" {
-  name = "${var.project_id}/${var.environment}/by-invalid-opening-times"
-
-  log_group_names = [
-    "/aws/lambda/${var.event_processor_lambda_name}",
-    "/aws/lambda/${var.event_sender_lambda_name}",
-    "/aws/lambda/${var.cr_fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.fifo_dlq_handler_lambda_name}",
-    "/aws/lambda/${var.event_replay_lambda_name}"
-  ]
-
-  query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
-| filter report_key == 'INVALID_OPEN_TIMES'
-| sort @timestamp
-EOF
-}
-
 resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
-
   dashboard_name = var.cloudwatch_monitoring_dashboard_name
   dashboard_body = <<EOF
 {
@@ -136,8 +43,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         {
             "height": 6,
             "width": 6,
-            "y": 18,
-            "x": 12,
+            "y": 12,
+            "x": 18,
             "type": "metric",
             "properties": {
                 "view": "timeSeries",
@@ -183,7 +90,6 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "view": "timeSeries",
                 "stacked": false,
-
                 "metrics": [
                     [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.fifo_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
@@ -193,7 +99,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stat": "Sum",
                 "period": 60,
                 "region": "${var.aws_region}",
-                "title": "CE Queue"
+                "title": "Change Event Queue"
             }
         },
         {
@@ -213,7 +119,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "region": "${var.aws_region}",
                 "period": 60,
                 "stat": "Minimum",
-                "title": "Max DB Connections"
+                "title": "DI DB Replica Connections"
             }
         },
         {
@@ -230,7 +136,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "period": 60,
-                "stat": "Maximum"
+                "stat": "Maximum",
+                "title": "DI DB Replica CPU Utilization"
             }
         },
         {
@@ -262,7 +169,6 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "metrics": [
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
                     [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
-
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -281,7 +187,6 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "view": "timeSeries",
                 "stacked": false,
-
                 "metrics": [
                     [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
@@ -291,7 +196,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stat": "Sum",
                 "period": 60,
                 "region": "${var.aws_region}",
-                "title": "CR Queue"
+                "title": "Change Request Queue"
             }
         },
         {
@@ -310,7 +215,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "region": "${var.aws_region}",
                 "stat": "Sum",
                 "period": 60,
-                "title": "DLQ failures"
+                "title": "Dead Letter Queue messages"
             }
         },
         {
@@ -321,31 +226,68 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ]
-                ],
-                "view": "timeSeries",
-                "stacked": false,
-                "region": "${var.aws_region}",
-                "period": 60,
-                "stat": "Sum"
-            }
-        },
-        {
-            "type": "metric",
-            "x": 18,
-            "y": 12,
-            "width": 6,
-            "height": 6,
-            "properties": {
-                "metrics": [
+                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ],
                     [ "UEC-DOS-INT", "DoSApiUnavailable", "ENV", "${var.environment}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "period": 300,
-                "stat": "Average"
+                "period": 60,
+                "stat": "Sum",
+                "title": "DoS API failures / unavailable"
             }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 18,
+            "width": 6,
+            "height": 6,
+            "properties": {
+              "sparkline": true,
+              "period": 60,
+              "metrics": [
+                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-event-processor", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
+                  [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
+                  [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
+              ],
+              "region": "${var.aws_region}",
+              "title": "Event Processor Error count and success rate (%)",
+              "yAxis": {
+                  "right": {
+                      "max": 100
+                  }
+              },
+              "view": "timeSeries",
+              "stacked": true,
+              "setPeriodToTimeRange": true
+              }
+        },
+        {
+            "type": "metric",
+            "x": 18,
+            "y": 18,
+            "width": 6,
+            "height": 6,
+            "properties": {
+              "sparkline": true,
+              "period": 60,
+              "metrics": [
+                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-event-sender", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
+                  [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
+                  [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
+              ],
+              "region": "${var.aws_region}",
+              "title": "Event Sender Error count and success rate (%)",
+              "yAxis": {
+                  "right": {
+                      "max": 100
+                  }
+              },
+              "view": "timeSeries",
+              "stacked": true,
+              "setPeriodToTimeRange": true
+              }
         }
     ]
 }
