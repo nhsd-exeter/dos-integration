@@ -41,4 +41,22 @@ data "aws_iam_policy_document" "kms_policy" {
     ]
     not_resources = []
   }
+  statement {
+    sid    = null
+    effect = "Allow"
+    principals {
+      identifiers = [
+        "cloudwatch.amazonaws.com"
+      ]
+      type = "Service"
+    }
+    actions = [
+      "kms:*"
+    ]
+    not_actions = []
+    resources = [
+      "*"
+    ]
+    not_resources = []
+  }
 }
