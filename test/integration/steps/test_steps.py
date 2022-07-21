@@ -45,6 +45,10 @@ from .utilities.utils import (
     re_process_payload,
     remove_opening_days,
     time_to_sec,
+    slack_retry,
+    post_cr_sqs,
+    post_ce_sqs,
+    post_cr_fifo,
 )
 
 scenarios(
@@ -118,6 +122,19 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
+@given(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+def post_an_sqs_message(queue_type: str, context: Context):
+    match queue_type:
+        case "ce":
+            post_ce_sqs(context)
+        case "cr":
+            post_cr_sqs()
+        case "404":
+            post_cr_fifo()
+        case _:
+            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+
+
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")
 def a_specified_opening_time_change_event_is_valid(context: Context):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
@@ -174,7 +191,7 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
         "AdditionalOpeningDate": selected_date,
         "IsOpen": False,
     }
-    context.change_event.specified_opening_times.append(additional_date)
+    context.change_event.specified_opening_times.insert(0, additional_date)
     return context
 
 
@@ -897,3 +914,11 @@ def generic_processor_negative_check_function(context: Context, processor, field
     logs_found = negative_log_check(query, processor, context.start_time)
 
     assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parse('the Slack channel shows an alert saying "{message}"'))
+def slack_message_check(message):
+    slack_entries = slack_retry(message)
+    current_environment = getenv("ENVIRONMENT")
+    assert_string = f"{current_environment} | {message}"
+    assert assert_string in slack_entries

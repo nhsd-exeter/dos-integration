@@ -61,6 +61,7 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event with the Weekday NOT present in the Opening Times data
     When the Changed Event is sent for processing with "valid" api key
     Then the OpeningTimes exception is reported to cloudwatch
+    And the Slack channel shows an alert saying "Invalid Opening Times"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S009. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional

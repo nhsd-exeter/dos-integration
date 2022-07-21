@@ -5,3 +5,4 @@ Feature: F003. Endpoint security and reporting
     Given a "pharmacy" Changed Event is aligned with Dos
     When the Changed Event is sent for processing with "invalid" api key
     Then the change request has status code "403"
+    And the Slack channel shows an alert saying "DI Endpoint Errors"
