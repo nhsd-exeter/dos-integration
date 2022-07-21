@@ -14,6 +14,8 @@ phases:
       - make docker-pull NAME=serverless VERSION=latest
   build:
     commands:
+    ################################################################################
+    # Delete the release environments
       - chown -R 999:999 $CODEBUILD_SRC_DIR
       - echo $CODEBUILD_WEBHOOK_TRIGGER
       - export ENVIRONMENT=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | sed -e "s|refs/heads/release/||" | sed -e "s|\.|-|g")
@@ -27,6 +29,7 @@ phases:
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
           make terraform-clean
           make undeploy PROFILE=test ENVIRONMENT=$TEST_ENV
+          make terraform-destroy-auto-approve STACKS=api-key PROFILE=test ENVIRONMENT=$TEST_ENV
           unset ENVIRONMENT_DEPLOYED
         fi
       - export PERF_ENV=$(echo $ENVIRONMENT-perf)
@@ -37,6 +40,7 @@ phases:
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
           make terraform-clean
           make undeploy PROFILE=perf ENVIRONMENT=$PERF_ENV
+          make terraform-destroy-auto-approve STACKS=api-key PROFILE=perf ENVIRONMENT=$PERF_ENV
           unset ENVIRONMENT_DEPLOYED
         fi
       - unset AWS_ACCESS_KEY_ID
@@ -54,9 +58,13 @@ phases:
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
             make terraform-clean
             make undeploy PROFILE=demo ENVIRONMENT=$DEMO_ENV
+            make terraform-destroy-auto-approve STACKS=api-key PROFILE=demo ENVIRONMENT=$DEMO_ENV
+            unset ENVIRONMENT_DEPLOYED
         fi
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
+      ################################################################################
+      # Delete the release pipeline
       - make terraform-clean
       - make terraform-destroy-auto-approve PROFILE=tools ENVIRONMENT=$ENVIRONMENT STACKS=release-pipeline,perf-test-tools TF_VAR_release_pipeline_branch=$RELEASE_BRANCH TF_VAR_from_release_branch=true
