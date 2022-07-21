@@ -15,6 +15,6 @@ phases:
     commands:
       - chown -R 999:999 $CODEBUILD_SRC_DIR
       - echo $CODEBUILD_WEBHOOK_TRIGGER
-      - export BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_BASE_REF | sed -e "s|refs/heads/|")
+      - export BRANCH_NAME=$(echo $CODEBUILD_WEBHOOK_BASE_REF | sed -e "s|refs/heads/||")
       - export TARGET_VERSION=$(git rev-parse origin/$BRANCH_NAME)
       - make re-tag-images-for-deployment SOURCE=$CODEBUILD_RESOLVED_SOURCE_VERSION TARGET=$TARGET_VERSION
