@@ -46,6 +46,10 @@ data "template_file" "delete_release_environment_and_pipeline_on_pr_merged_build
   template = file("delete-release-environment-and-pipeline-on-pr-merged-buildspec.yml")
 }
 
+data "template_file" "tag_release_images_on_branch_delete_buildspec" {
+  template = file("tag-release-images-on-branch-delete-buildspec.yml")
+}
+
 data "template_file" "demo_deploy_buildspec" {
   template = file("demo-deploy-buildspec.yml")
 }
