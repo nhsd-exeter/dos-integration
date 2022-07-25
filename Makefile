@@ -369,6 +369,13 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
 	fi
 
+re-tag-images-for-deployment: # Re-tag images for deployment
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST_WITHOUT_MOCKS) | tr "," "\n"); do
+		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
+		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)
+		make docker-push NAME=$$IMAGE_NAME VERSION=$(TARGET)
+	done
+
 get-environment-from-pr:
 	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DI-(?<x>.[0-9]*).*"; "di-\(.x)") ')
 	echo $$ENVIRONMENT
