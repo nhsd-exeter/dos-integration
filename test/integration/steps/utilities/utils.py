@@ -441,8 +441,8 @@ def remove_opening_days(opening_times, day) -> dict:
 def slack_retry(message) -> str:
     counter = 0
     slack_channel, slack_oauth = slack_secrets()
-    while counter < 10:
-        sleep(20)
+    while counter < 6:
+        sleep(60)
         responseVal = check_slack(slack_channel, slack_oauth)
         if message in responseVal:
             return responseVal
