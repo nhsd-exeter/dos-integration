@@ -296,6 +296,7 @@ def compare_nhs_uk_and_dos_data(
 
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
+        logger.debug("Opening times are valid")
         for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
             if changes_to_dos.check_for_standard_opening_times_day_changes(weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
@@ -314,4 +315,12 @@ def compare_nhs_uk_and_dos_data(
                 current_opening_times=changes_to_dos.current_specified_opening_times,
                 new_opening_times=changes_to_dos.new_specified_opening_times,
             )
+    else:
+        logger.info(
+            "Opening times are not valid",
+            extra={
+                "nhs_uk_standard_opening_times": changes_to_dos.nhs_entity.standard_opening_times,
+                "nhs_uk_specified_opening_times": changes_to_dos.nhs_entity.specified_opening_times,
+            },
+        )
     return changes_to_dos

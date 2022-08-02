@@ -195,25 +195,25 @@ def save_specified_opening_times_into_db(
 
     if specified_opening_times_changes:
         logger.debug(f"Deleting all specified opening times for service id {service_id}")
+        # Cascade delete the standard opening times in both
+        # servicedayopenings table and servicedayopeningtimes table
         query_dos_db(
             connection=connection,
             query=(f"""DELETE FROM servicespecifiedopeningdates WHERE serviceid='{service_id}' """),
         ).close()
         for specified_opening_times_day in specified_opening_times_changes:
-            # Cascade delete the standard opening times in both
-            # servicedayopenings table and servicedayopeningtimes table
+            logger.debug(f"Saving standard opening times for dayid: {specified_opening_times_day}")
+            cursor = query_dos_db(
+                connection=connection,
+                query=(
+                    f"""INSERT INTO servicespecifiedopeningdates (date,serviceid) """
+                    f"""VALUES ('{specified_opening_times_day.date}','{service_id}') RETURNING id"""
+                ),
+            )
+            # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
+            service_specified_opening_date_id = cursor.fetchone()[0]
+            cursor.close()
             if specified_opening_times_day.is_open:
-                logger.debug(f"Saving standard opening times for dayid: {specified_opening_times_day}")
-                cursor = query_dos_db(
-                    connection=connection,
-                    query=(
-                        f"""INSERT INTO servicespecifiedopeningdates (date,serviceid) """
-                        f"""VALUES ('{specified_opening_times_day.date}','{service_id}') RETURNING id"""
-                    ),
-                )
-                # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
-                service_specified_opening_date_id = cursor.fetchone()[0]
-                cursor.close()
                 # If the day is open, save the potentially mutiple opening times
                 open_period: OpenPeriod  # Type hint for the for loop
                 for open_period in specified_opening_times_day.open_periods:
