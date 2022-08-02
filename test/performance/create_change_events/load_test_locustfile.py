@@ -1,7 +1,7 @@
 from typing import Any, Dict, Union
 
-from locust import FastHttpUser, task, constant_pacing
-from utilities import setup_change_event_request, ODSCODES, setup_headers, get_api_key
+from locust import constant_pacing, FastHttpUser, task
+from utilities import get_api_key, ODSCODES, setup_change_event_request, setup_headers
 
 
 class AllChangesChangeEvent(FastHttpUser):

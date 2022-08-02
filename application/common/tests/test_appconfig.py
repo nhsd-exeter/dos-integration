@@ -11,7 +11,7 @@ def test_app_config(mock_app_config_store):
     # Arrange
     environment = "unittest"
     environ["ENV"] = environment
-    feature_flags_name = "event-processor"
+    feature_flags_name = "service-matcher"
     # Act
     AppConfig(feature_flags_name)
     # Assert
@@ -27,7 +27,7 @@ def test_app_config_get_raw_configuration(mock_app_config_store):
     # Arrange
     environment = "unittest"
     environ["ENV"] = environment
-    feature_flags_name = "event-processor"
+    feature_flags_name = "service-matcher"
     # Act
     response = AppConfig(feature_flags_name).get_raw_configuration()
     # Assert
@@ -42,7 +42,7 @@ def test_app_config_feature_flags(mock_app_config_store, mock_feature_flags):
     # Arrange
     environment = "unittest"
     environ["ENV"] = environment
-    feature_flags_name = "event-processor"
+    feature_flags_name = "service-matcher"
     # Act
     AppConfig(feature_flags_name).get_feature_flags()
     # Assert

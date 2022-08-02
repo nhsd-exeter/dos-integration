@@ -1,8 +1,8 @@
-from json import loads, dumps
+from json import dumps, loads
 from typing import Any, Dict, Union
-from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
+from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 logger = Logger()
 
@@ -21,8 +21,8 @@ def extract_body(body: str) -> Dict[str, Any]:
     """
     try:
         body = loads(body)
-    except Exception as e:
-        raise Exception("Change Event unable to be extracted") from e
+    except ValueError as e:
+        raise ValueError("Change Event unable to be extracted") from e
     return body
 
 
@@ -61,14 +61,14 @@ def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
 
 def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, msg_limit: int = 10000):
     """Removing given keys from the dictionary if the dictonary size is morethan message limit
-        Args:
-            event Dict[str, Any]: Message body as a dictionary
-            keys list: keys to be removed
-            msg_limit int: message limit in char length
-        Returns:
-            Dict[str, Any]: Message body as a dictionary
-        """
-    msg_length = len(dumps(event).encode('utf-8'))
+    Args:
+        event Dict[str, Any]: Message body as a dictionary
+        keys list: keys to be removed
+        msg_limit int: message limit in char length
+    Returns:
+        Dict[str, Any]: Message body as a dictionary
+    """
+    msg_length = len(dumps(event).encode("utf-8"))
     if msg_length > msg_limit:
         return {k: v for k, v in event.items() if k not in keys}
     return event

@@ -64,7 +64,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.event_processor_lambda_name}" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_matcher_lambda_name}" ],
                     [ ".", "Errors", ".", ".", { "stat": "Sum" } ],
                     [ ".", "Invocations", ".", "." ],
                     [ ".", "Duration", ".", "." ],
@@ -76,7 +76,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "title": "Event Processor",
+                "title": "Service Matcher",
                 "period": 60,
                 "stat": "Average"
             }
@@ -91,7 +91,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.fifo_queue_name}" ],
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.change_event_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
@@ -150,12 +150,12 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.event_sender_lambda_name}" ],
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_sync_lambda_name}" ],
                     [ ".", "Duration", ".", "." ],
                     [ ".", "Errors", ".", "." ]
                 ],
                 "region": "${var.aws_region}",
-                "title": "Event Sender",
+                "title": "Service Sync",
                 "period": 60
             }
         },
@@ -168,7 +168,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "properties": {
                 "metrics": [
                     [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.update_request_queue_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -188,7 +188,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.cr_fifo_queue_name}" ],
+                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.update_request_queue_name}" ],
                     [ ".", "NumberOfMessagesReceived", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesVisible", ".", "." ],
                     [ ".", "ApproximateNumberOfMessagesNotVisible", ".", "." ]
@@ -207,8 +207,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.cr_dead_letter_queue_from_fifo_queue_name}", { "label": "CR FIFO Message Count" } ],
-                    [ "...", "${var.dead_letter_queue_from_fifo_queue_name}", { "label": "CE FIFO Message Count" } ]
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.update_request_dlq}", { "label": "CR FIFO Message Count" } ],
+                    [ "...", "${var.change_event_dlq}", { "label": "CE FIFO Message Count" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -247,12 +247,12 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
               "sparkline": true,
               "period": 60,
               "metrics": [
-                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-event-processor", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
+                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-service-matcher", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
                   [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
                   [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
               ],
               "region": "${var.aws_region}",
-              "title": "Event Processor Error count and success rate (%)",
+              "title": "Service Matcher Error count and success rate (%)",
               "yAxis": {
                   "right": {
                       "max": 100
@@ -273,12 +273,12 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
               "sparkline": true,
               "period": 60,
               "metrics": [
-                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-event-sender", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
+                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-service-sync", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
                   [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
                   [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
               ],
               "region": "${var.aws_region}",
-              "title": "Event Sender Error count and success rate (%)",
+              "title": "Service Sync Error count and success rate (%)",
               "yAxis": {
                   "right": {
                       "max": 100

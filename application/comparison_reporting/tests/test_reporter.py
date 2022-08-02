@@ -2,14 +2,14 @@ from datetime import date
 from unittest.mock import patch
 
 import responses
+from pandas import DataFrame
+from pandas.testing import assert_frame_equal
+
+from ..reporter import download_csv_as_dicts, Reporter
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from common.tests.conftest import dummy_dos_service
-from pandas import DataFrame
-from pandas.testing import assert_frame_equal
-
-from ..reporter import Reporter, download_csv_as_dicts
 
 PHARMACY_TYPE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 DENTIST_TYPE_ID = DENTIST_SERVICE_TYPE_IDS[0]

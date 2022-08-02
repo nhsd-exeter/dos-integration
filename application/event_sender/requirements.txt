@@ -1,3 +1,0 @@
-aws-embedded-metrics
-aws-lambda-powertools
-requests

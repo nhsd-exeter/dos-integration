@@ -10,23 +10,26 @@ setup: project-config # Set up project
 
 build: # Build lambdas
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
-		make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
 	done
 
 build-lambda: ### Build lambda docker image - mandatory: NAME
 	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
 	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
-	cd $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME
+	cd $(APPLICATION_DIR)
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
-		--exclude=tests *.py ../common/*.py > /dev/null 2>&1
+		--exclude=tests $$UNDERSCORE_LAMBDA_NAME common/*.py __init__.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
+build-and-push: # Build lambda docker images and pushes them to ECR
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+		make -s docker-push NAME=$$IMAGE_NAME
+	done
+
 deploy: # Deploys whole project - mandatory: PROFILE
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make terraform-apply-auto-approve STACKS=dos-api-gateway-mock
-	fi
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
 	make serverless-deploy
@@ -34,28 +37,26 @@ deploy: # Deploys whole project - mandatory: PROFILE
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
-	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any"
+	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any" DB_READ_ONLY_USER_NAME="any" DB_READ_AND_WRITE_USER_NAME="any" DB_REPLICA_SERVER="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
-	if [ "$(PROFILE)" == "task" ] || [ "$(PROFILE)" == "dev" ] || [ "$(PROFILE)" == "perf" ]; then
-		make terraform-destroy-auto-approve STACKS=dos-api-gateway-mock
-	fi
 
 build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
-	make build VERSION=$(BUILD_TAG)
-	make push-images VERSION=$(BUILD_TAG)
+	make build-and-push VERSION=$(BUILD_TAG)
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
-	echo "export DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
+	echo "export DB_REPLICA_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_REPLICA_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
+	echo "export DB_READ_AND_WRITE_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
+	echo "export DB_READ_ONLY_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_READ_ONLY_USER_NAME_SECRET_NAME) KEY=$(DB_READ_ONLY_USER_NAME_SECRET_KEY))"
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
 
 unit-test-local:
 	pyenv local .venv
-	pip install -r application/requirements-dev.txt -r application/event_processor/requirements.txt -r application/event_replay/requirements.txt -r application/event_sender/requirements.txt -r application/fifo_dlq_handler/requirements.txt
+	pip install -r application/requirements-dev.txt -r application/service_matcher/requirements.txt -r application/event_replay/requirements.txt -r application/service_sync/requirements.txt -r application/change_event_dlq_handler/requirements.txt
 	cd application
 	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
 
@@ -85,44 +86,20 @@ get-unit-test-path:
 
 UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
-		--volume $(APPLICATION_DIR)/authoriser:/tmp/.packages/authoriser \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
 		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
-		--volume $(APPLICATION_DIR)/dos_api_gateway:/tmp/.packages/dos_api_gateway \
-		--volume $(APPLICATION_DIR)/event_processor:/tmp/.packages/event_processor \
-		--volume $(APPLICATION_DIR)/event_sender:/tmp/.packages/event_sender \
-		--volume $(APPLICATION_DIR)/fifo_dlq_handler:/tmp/.packages/fifo_dlq_handler \
-		--volume $(APPLICATION_DIR)/cr_fifo_dlq_handler:/tmp/.packages/cr_fifo_dlq_handler \
+		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
+		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
+		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
+		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
-		--volume $(APPLICATION_DIR)/test_db_checker_handler:/tmp/.packages/test_db_checker_handler \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
-integration-test-local:
-	cd test/integration
-	RUN_ID=$$RANDOM
-	echo RUN_ID=$$RUN_ID
-	API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-	NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-	DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-	DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-	DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-	DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-	URL=https://$(DOS_INTEGRATION_URL) \
-	EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-	EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-	TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
-	EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-	DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-	DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
-	KEYALIAS=${TF_VAR_signing_key_alias} \
-	RUN_ID=$$RUN_ID \
-	pytest steps -k $(TAGS) -vv --gherkin-terminal-reporter -p no:sugar -n 8 --cucumberjson=./testresults.json
-
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
-	--configuration event-processor --client-id test-id test_tmp.txt
+	--configuration service-matcher --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
 		echo "PHA"
@@ -136,7 +113,7 @@ integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PRO
 
 integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
-	--configuration event-processor --client-id test-id test_tmp.txt
+	--configuration service-matcher --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
 		echo "PHA"
@@ -163,14 +140,14 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
 		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
 		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e EVENT_PROCESSOR=$(TF_VAR_event_processor_lambda_name) \
-		-e EVENT_SENDER=$(TF_VAR_event_sender_lambda_name) \
-		-e TEST_DB_CHECKER_FUNCTION_NAME=$(TF_VAR_test_db_checker_lambda_name) \
+		-e SERVICE_MATCHER=$(TF_VAR_service_matcher_lambda_name) \
+		-e SERVICE_SYNC=$(TF_VAR_service_sync_lambda_name) \
+		-e dos_db_handler_FUNCTION_NAME=$(TF_VAR_dos_db_handler_lambda_name) \
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
 		-e RUN_ID=$$RUN_ID \
-		-e CR_FIFO_DLQ=$(TF_VAR_cr_fifo_dlq_handler_lambda_name) \
+		-e CR_FIFO_DLQ=$(TF_VAR_dos_db_update_dlq_handler_lambda_name) \
 		"
 
 create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
@@ -200,10 +177,10 @@ clean: # Runs whole project clean
 	rm -rf test/integration/replay/.*.txt
 
 # ==============================================================================
-# Event Sender
+# Service Sync
 
-event-sender-build-and-deploy: ### Build and deploy event sender lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=event-sender
+service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=service-sync
 
 # ==============================================================================
 # Slack Messenger
@@ -212,22 +189,22 @@ slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda do
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
 
 # ==============================================================================
-# Event Processor
+# Service Matcher
 
-event-processor-build-and-deploy: ### Build and deploy event processor lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=event-processor
-
-# ==============================================================================
-# First In First Out Dead Letter Queue Handler (fifo-dlq-handler)
-
-fifo-dlq-handler-build-and-deploy: ### Build and deploy fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=fifo-dlq-handler
+service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
 
 # ==============================================================================
-# CR Fifo Dead Letter Queue Handler (cr-fifo-dlq-handler)
+# Change Event Dead Letter Queue Handler (change-event-dlq-handler)
 
-cr-fifo-dlq-handler-build-and-deploy: ### Build and deploy cr fifo dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=cr-fifo-dlq-handler
+change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
+
+# ==============================================================================
+# DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler) Nonprod only
+
+dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
 
 # ==============================================================================
 # Event Replay lambda (event-replay)
@@ -236,29 +213,16 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 	make build-and-deploy-single-function FUNCTION_NAME=event-replay
 
 # ==============================================================================
-# Test DB Checker Handler (test-db-checker-handler)
+# Test DB Checker Handler (dos-db-handler)
 
-test-db-checker-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=test-db-checker-handler
+dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
 
 # ==============================================================================
 # Orchestrator
 
 orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
-
-# ==============================================================================
-# DoS API Gateway Mock lambda
-
-mock-dos-api-gateway-deployment:
-	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$(BUILD_TAG)
-	make terraform-apply-auto-approve STACKS=dos-api-gateway-mock VERSION=$(BUILD_TAG)
-
-build-and-push-mock-dos-api-gateway-docker-images:
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=authoriser
-	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=dos-api-gateway
-	make docker-push NAME=authoriser
-	make docker-push NAME=dos-api-gateway
 
 # ==============================================================================
 # Deployments
@@ -370,7 +334,7 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 	fi
 
 re-tag-images-for-deployment: # Re-tag images for deployment
-	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST_WITHOUT_MOCKS) | tr "," "\n"); do
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_PROD_LIST) | tr "," "\n"); do
 		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
 		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)
 		make docker-push NAME=$$IMAGE_NAME VERSION=$(TARGET)
@@ -392,7 +356,7 @@ slack-codebuild-notification: ### Send codebuild pipeline notification - mandato
 		BUILD_URL=$$(echo https://$(AWS_REGION).console.aws.amazon.com/codesuite/codebuild/$(AWS_ACCOUNT_ID_MGMT)/projects/$(CODEBUILD_PROJECT_NAME)/build/$(CODEBUILD_BUILD_ID)/log?region=$(AWS_REGION)) \
 		SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))
 
-aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g. event-sender,slack-messenger]
+aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g. service-sync,slack-messenger]
 	export THIS_YEAR=$$(date +%Y)
 	export LAST_YEAR=$$(date -d "1 year ago" +%Y)
 	DELETE_IMAGES_OLDER_THAN=$$(date +%s --date='1 month ago')
@@ -437,7 +401,7 @@ batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" se
 
 tester-build: ### Build tester docker image
 	cat $(APPLICATION_DIR)/*/requirements.txt $(APPLICATION_DIR)/requirements-dev.txt | sort --unique > $(DOCKER_DIR)/tester/assets/requirements.txt
-	make docker-image NAME=tester
+	make -s docker-image NAME=tester
 
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
@@ -486,10 +450,10 @@ performance-test-data-collection: # Runs data collection for performance tests -
 		ARGS="\
 			-e START_TIME=$(START_TIME) \
 			-e END_TIME=$(END_TIME) \
-			-e FIFO_QUEUE_NAME=$(TF_VAR_fifo_queue_name) \
-			-e FIFO_DLQ_NAME=$(TF_VAR_dead_letter_queue_from_fifo_queue_name) \
-			-e EVENT_SENDER_NAME=$(TF_VAR_event_sender_lambda_name) \
-			-e EVENT_PROCESSOR_NAME=$(TF_VAR_event_processor_lambda_name) \
+			-e CHANGE_EVENT_QUEUE_NAME=$(TF_VAR_change_event_queue_name) \
+			-e CHANGE_EVENT_DLQ_NAME=$(TF_VAR_change_event_dlq) \
+			-e SERVICE_SYNC_NAME=$(TF_VAR_service_sync_lambda_name) \
+			-e SERVICE_MATCHER_NAME=$(TF_VAR_service_matcher_lambda_name) \
 			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
 			"
 
@@ -511,7 +475,7 @@ performance-test-clean: # Clean up performance test results
 stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make stress-test START_TIME=$$START_TIME PIPELINE=true
 	sleep 4.5h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
@@ -523,7 +487,7 @@ stress-test-in-pipeline: # An all in one stress test make target
 load-test-in-pipeline: # An all in one load test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_event_processor_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
+	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
 	make load-test START_TIME=$$START_TIME
 	sleep 10m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
@@ -534,37 +498,6 @@ load-test-in-pipeline: # An all in one load test make target
 
 send-performance-dashboard-slack-message:
 	make slack-codebuild-notification PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PIPELINE_NAME="$(PERF_TEST_TITLE) Tests Codebuild Stage" CODEBUILD_PROJECT_NAME=$(CB_PROJECT_NAME) CODEBUILD_BUILD_ID=$(CODEBUILD_BUILD_ID) SLACK_MESSAGE="Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)"
-
-update-perf-environment-to-use-mock-api: # Updates the performance environment to connect to mock DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
-	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
-	eval "$$(make -s populate-deployment-variables PROFILE=perf)"
-	make serverless-deploy PROFILE=perf VERSION=$$IMAGE_TAG
-
-update-perf-environment-to-use-real-api: # Updates the performance environment to connect to real DoS API - mandatory: ENVIRONMENT=[perf|release number-perf e.g. 1-0-0-perf]
-	IMAGE_TAG=$$(aws lambda get-function --function-name $(PROJECT_ID)-$(ENVIRONMENT)-event-processor | jq --raw-output ".Configuration.Environment.Variables.IMAGE_VERSION")
-	eval "$$(make -s populate-deployment-variables PROFILE=perf-to-dos)"
-	make serverless-deploy PROFILE=perf-to-dos VERSION=$$IMAGE_TAG
-
-# -----------------------------
-# Chaos Testing
-
-setup-no-dos-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to be unavailable) - mandatory: PROFILE; optional: ENVIRONMENT
-	make terraform-destroy-auto-approve STACKS="dos-api-gateway-mock" OPTS="-target aws_route53_record.uec_dos_integration_api_endpoint"
-
-restore-from-no-dos-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
-	VERSION=$$(echo $(BUILD_TAG))
-	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
-	make mock-dos-api-gateway-deployment VERSION=$$VERSION
-
-setup-circuit-breaker-chaos-test: # Setup chaos test environment (Sets DoS API Gateway mock to return 500 errors) - mandatory: PROFILE; optional: ENVIRONMENT
-	VERSION=$$(echo $(BUILD_TAG))
-	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
-	make mock-dos-api-gateway-deployment VERSION=$$VERSION TF_VAR_chaos_mode="true"
-
-restore-from-circuit-breaker-chaos-test: # Restore from chaos test environment - mandatory: PROFILE; optional: ENVIRONMENT
-	VERSION=$$(echo $(BUILD_TAG))
-	make build-and-push-mock-dos-api-gateway-docker-images VERSION=$$VERSION
-	make mock-dos-api-gateway-deployment VERSION=$$VERSION
 
 # -----------------------------
 # Other
@@ -612,7 +545,15 @@ python-linting:
 	make python-code-check FILES=application
 	make python-code-check FILES=test
 
-python-dead-code-scanning:
+python-code-checks:
+	make python-check-dead-code
+	make python-check-imports
+	make python-code-check FILES=application
+	make python-code-check FILES=test
+	make unit-test
+	echo "Python code checks completed"
+
+python-check-dead-code:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		DIR=$(APPLICATION_DIR) \
@@ -622,16 +563,31 @@ python-format:
 	make python-code-format FILES=application
 	make python-code-format FILES=test
 
+python-check-imports:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		CMD="python -m isort . -l=120 --check-only --profile=black \
+			--force-alphabetical-sort-within-sections --known-local-folder=common \
+			"
+
+python-fix-imports:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
+			--known-local-folder=common \
+			"
+
 create-ecr-repositories:
-	make docker-create-repository NAME=event-processor
-	make docker-create-repository NAME=event-sender
-	make docker-create-repository NAME=fifo-dlq-handler
-	make docker-create-repository NAME=cr-fifo-dlq-handler
-	make docker-create-repository NAME=orchestrator
+	make docker-create-repository NAME=change-event-dlq-handler
+	make docker-create-repository NAME=dos-db-handler
+	make docker-create-repository NAME=dos-db-update-dlq-handler
 	make docker-create-repository NAME=event-replay
+	make docker-create-repository NAME=orchestrator
+	make docker-create-repository NAME=service-matcher
+	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger
-	make docker-create-repository NAME=test-db-checker-handler
 	make docker-create-repository NAME=tester
+	make docker-create-repository NAME=serverless
 
 terraform-security:
 	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"

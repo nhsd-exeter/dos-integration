@@ -7,7 +7,7 @@ Feature: F006. Opening times
     Then the Change Request is accepted by Dos
     And the Change Request with changed specified date and time is captured by Dos
 
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

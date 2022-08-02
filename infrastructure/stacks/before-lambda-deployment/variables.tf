@@ -74,11 +74,15 @@ variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
 }
 
+variable "dos_db_replica_name" {
+  description = "Name of db dos read replica instance to connect to"
+}
+
 # ############################
 # # IAM
 # ############################
 
-variable "event_processor_role_name" {
+variable "service_matcher_role_name" {
   description = "Role name for event processor lambda"
 }
 
@@ -87,15 +91,15 @@ variable "orchestrator_role_name" {
 }
 
 
-variable "event_sender_role_name" {
+variable "service_sync_role_name" {
   description = "Role name for event sender lambda"
 }
 
-variable "fifo_dlq_handler_role_name" {
+variable "change_event_dlq_handler_role_name" {
   description = "Role name for fifo dlq handler lambda"
 }
 
-variable "cr_fifo_dlq_handler_role_name" {
+variable "dos_db_update_dlq_handler_role_name" {
   description = "Role name for cr_fifo dlq handler lambda"
 }
 
@@ -107,7 +111,7 @@ variable "event_replay_role_name" {
   description = "Role name for event replay lambda"
 }
 
-variable "test_db_checker_handler_role_name" {
+variable "dos_db_handler_role_name" {
   description = "Role name for test db checker handler lambda"
 }
 
@@ -122,18 +126,18 @@ variable "change_events_table_name" {
 ############
 # SQS
 ############
-variable "fifo_queue_name" {
+variable "change_event_queue_name" {
   description = ""
 }
-variable "cr_fifo_queue_name" {
-  description = ""
-}
-
-variable "dead_letter_queue_from_fifo_queue_name" {
+variable "update_request_queue_name" {
   description = ""
 }
 
-variable "cr_dead_letter_queue_from_fifo_queue_name" {
+variable "change_event_dlq" {
+  description = ""
+}
+
+variable "update_request_dlq" {
   description = ""
 }
 

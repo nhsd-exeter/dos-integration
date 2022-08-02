@@ -1,15 +1,16 @@
 import json
+from dataclasses import dataclass
 from os import environ
 from random import choices, randint, uniform
 
 from boto3 import client
 from moto import mock_dynamodb
 from pytest import fixture
-from dataclasses import dataclass
+
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
+STD_EVENT_PATH = "application/service_matcher/tests/STANDARD_EVENT.json"
 
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
@@ -135,9 +136,9 @@ def dead_letter_message():
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "event-processor"
+        function_name: str = "service-matcher"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:service-matcher"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

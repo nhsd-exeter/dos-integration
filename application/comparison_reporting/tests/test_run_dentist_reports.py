@@ -1,8 +1,8 @@
-from unittest.mock import patch
 from datetime import date
+from unittest.mock import patch
 
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from ..run_dentist_reports import get_dentists
+from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 OP = OpenPeriod.from_string
 FILE_PATH = "application.comparison_reporting.run_dentist_reports"

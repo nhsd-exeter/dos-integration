@@ -1,9 +1,10 @@
 from datetime import datetime
+from json import dumps
 from os import getenv as get_env
 from sqlite3 import Timestamp
 from time import sleep
+
 from boto3 import client
-from json import dumps
 
 LAMBDA_CLIENT_LOGS = client("logs")
 EVENT_PROCESSOR = get_env("EVENT_PROCESSOR")

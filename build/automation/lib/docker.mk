@@ -246,7 +246,6 @@ docker-create-dockerfile: ### Create effective Dockerfile - mandatory: NAME; op
 		s#FROM postman/newman:latest#FROM postman/newman:$(DOCKER_POSTMAN_NEWMAN_VERSION)#g; \
 		s#FROM python:latest#FROM python:$(DOCKER_PYTHON_VERSION)#g; \
 		s#FROM rodolpheche/wiremock:latest#FROM rodolpheche/wiremock:$(DOCKER_WIREMOCK_VERSION)#g; \
-		s#CMD_TO_RPLACE#$(CMD)#g; \
 	" Dockerfile.effective
 	cd $$dir
 

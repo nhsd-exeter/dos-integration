@@ -11,16 +11,22 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+      - name: Tester Build
+        run: |
+          make tester-build
       - name: Check text files format
         run: |
           build/automation/etc/githooks/scripts/editorconfig-pre-commit.sh
-      - name: Check Python files format
+      - name: Check Python Formatting
         run: |
           make python-linting
-      - name: Python Dead Code Check
+      - name: Check Python Imports
         run: |
-          make tester-build python-dead-code-scanning
-      - name: Create coverage report
+          make python-check-imports
+      - name: Check for Python Dead Code
+        run: |
+          make python-check-dead-code
+      - name: Check Python Unit Test Coverage
         run: |
           make coverage-report
       - uses: sonarsource/sonarcloud-github-action@master
@@ -31,10 +37,10 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.sources=application,deployment,infrastructure
+            -Dsonar.sources=application,deployment,infrastructure,scripts,test
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/scripts
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/dos_db_handler/**,test/**,scripts/**
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.9
             -Dsonar.exclusions=application/**/tests/**

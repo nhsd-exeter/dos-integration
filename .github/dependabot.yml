@@ -71,12 +71,6 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/dos-api-gateway-mock"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/perf-test-tools"
     schedule:
       interval: "monthly"

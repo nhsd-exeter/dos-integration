@@ -1,11 +1,12 @@
-from pytest import fixture, raises
-from os import environ
-from json import dumps, loads
 from decimal import Decimal
-from boto3.dynamodb.types import TypeDeserializer
+from json import dumps, loads
+from os import environ
 from time import time
-from aws_lambda_powertools import Logger
 from unittest.mock import patch
+
+from aws_lambda_powertools.logging import Logger
+from boto3.dynamodb.types import TypeDeserializer
+from pytest import fixture, raises
 
 
 @fixture
@@ -45,7 +46,7 @@ def test_get_circuit_is_open_none(dynamodb_table_create, dynamodb_client):
 
 
 def test_put_and_get_circuit_is_open(dynamodb_table_create, dynamodb_client):
-    from ..dynamodb import put_circuit_is_open, get_circuit_is_open
+    from ..dynamodb import get_circuit_is_open, put_circuit_is_open
 
     put_circuit_is_open("TESTCIRCUIT", True)
     is_open = get_circuit_is_open("TESTCIRCUIT")
@@ -77,6 +78,7 @@ def test_get_circuit_exception(dynamodb_table_create, dynamodb_client):
 
 def test_add_change_request_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):
     from ..dynamodb import add_change_request_to_dynamodb, dict_hash, TTL
+
     # Arrange
     event_received_time = int(time())
     # Act

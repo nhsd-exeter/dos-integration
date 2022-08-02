@@ -1,15 +1,17 @@
+from datetime import datetime, timedelta
 from json import loads
 from os import environ
 from typing import Any, Dict, TypedDict
-from requests import post
 from urllib.parse import quote
-from datetime import datetime, timedelta
-from aws_lambda_powertools import Logger, Tracer
-from aws_lambda_powertools.utilities.data_classes import SNSEvent, event_source
+
+from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.tracing import Tracer
+from aws_lambda_powertools.utilities.data_classes import event_source, SNSEvent
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
+from requests import post
+
 from common.constants import METRIC_REPORT_KEY_MAP
 from common.middlewares import unhandled_exception_logging
-
 
 logger = Logger()
 tracer = Tracer()
@@ -32,10 +34,10 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
     trigger = message["Trigger"]
     project_id = f"{namespace}-{env}"
     log_groups = [
-        f"{project_id}-event-processor",
-        f"{project_id}-event-sender",
-        f"{project_id}-cr-fifo-dlq-handler",
-        f"{project_id}-fifo-dlq-handler",
+        f"{project_id}-service-matcher",
+        f"{project_id}-service-sync",
+        f"{project_id}-dos-db-update-dlq-handler",
+        f"{project_id}-change-event-dlq-handler",
     ]
     filters = {"report_key": METRIC_REPORT_KEY_MAP.get(metric_name, "")}
 

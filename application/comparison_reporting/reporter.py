@@ -1,15 +1,15 @@
-from os import path
-from io import StringIO
-from typing import List
 import csv
-from pandas import DataFrame
 import pathlib
+from io import StringIO
+from os import path
+from typing import List
+
 import requests
+from aws_lambda_powertools.logging import Logger
+from pandas import DataFrame
 
-from aws_lambda_powertools import Logger
-
-from common.nhs import NHSEntity, match_nhs_entities_to_services
 from common.dos import DoSService, get_all_valid_dos_postcodes
+from common.nhs import match_nhs_entities_to_services, NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
 from common.tests.conftest import blank_dos_service
 

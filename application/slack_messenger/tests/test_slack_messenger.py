@@ -4,7 +4,6 @@ from os import environ
 from unittest.mock import patch
 
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
-from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
 from pytest import fixture, mark, raises
 
 from application.slack_messenger.slack_messenger import (
@@ -13,6 +12,8 @@ from application.slack_messenger.slack_messenger import (
     lambda_handler,
     send_msg_slack,
 )
+
+from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
@@ -202,12 +203,12 @@ def test_generate_cloudwatch_url():
     region = "eu-west-2"
     metric_name = "InvalidPostcode"
     report_key = METRIC_REPORT_KEY_MAP.get(metric_name, "")
-    log_groups = [f"{project_id}-event-processor"]
+    log_groups = [f"{project_id}-service-matcher"]
     filters = {"report_key": report_key}
     expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
     # Act
     url = generate_aws_cloudwatch_log_insights_url(region, log_groups, filters, 10)
     # Assert
     assert report_key == INVALID_POSTCODE_REPORT_ID
-    assert log_groups == ["test-service-name-event-processor"]
+    assert log_groups == ["test-service-name-service-matcher"]
     assert url.startswith(expected_url)

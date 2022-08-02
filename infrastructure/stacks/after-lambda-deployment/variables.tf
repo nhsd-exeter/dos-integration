@@ -49,7 +49,6 @@ variable "environment" {
 # ############################
 # # Common
 # ############################
-
 variable "route53_terraform_state_key" {
   description = "terraform state key"
 }
@@ -95,24 +94,23 @@ variable "sns_topic_app_alerts_for_slack" {
 # ############################
 # SQS FIFO QUEUE
 # ############################
-
-variable "fifo_queue_name" {
-  description = "FIFO queue name feed by API Gateway"
+variable "change_event_queue_name" {
+  description = ""
 }
 
-variable "cr_fifo_queue_name" {
-  description = "FIFO queue name fed by event processor"
+variable "update_request_queue_name" {
+  description = ""
 }
 
 # ############################
 # SQS DEAD LETTER QUEUE
 # ############################
 
-variable "dead_letter_queue_from_fifo_queue_name" {
+variable "change_event_dlq" {
   description = ""
 }
 
-variable "cr_dead_letter_queue_from_fifo_queue_name" {
+variable "update_request_dlq" {
   description = ""
 }
 
@@ -156,11 +154,11 @@ variable "signing_key_alias" {
 # # FIREHOSE
 # ##############
 
-variable "event_processor_subscription_filter_name" {
+variable "service_matcher_subscription_filter_name" {
   description = "Log filter name for event processor lambda"
 }
 
-variable "event_sender_subscription_filter_name" {
+variable "service_sync_subscription_filter_name" {
   description = "Log filter name for event sender lambda"
 }
 
@@ -169,15 +167,11 @@ variable "change_event_gateway_subscription_filter_name" {
 }
 
 
-variable "change_request_gateway_subscription_filter_name" {
-  description = "Log filter name for change event api gateway logs"
-}
-
-variable "fifo_dlq_handler_subscription_filter_name" {
+variable "change_event_dlq_handler_subscription_filter_name" {
   description = "Log filter name for fifo dlq lambda"
 }
 
-variable "cr_fifo_dlq_handler_subscription_filter_name" {
+variable "dos_db_update_dlq_handler_subscription_filter_name" {
   description = "Log filter name for cr_fifo dlq handler lambda"
 }
 
@@ -201,19 +195,19 @@ variable "firehose_role" {
 # # LAMBDA
 # ##############
 
-variable "event_processor_lambda_name" {
+variable "service_matcher_lambda_name" {
   description = "Name of event processor lambda"
 }
 
-variable "event_sender_lambda_name" {
+variable "service_sync_lambda_name" {
   description = "Name of event sender lambda"
 }
 
-variable "fifo_dlq_handler_lambda_name" {
+variable "change_event_dlq_handler_lambda_name" {
   description = "Name of fifo dlq handler lambda"
 }
 
-variable "cr_fifo_dlq_handler_lambda_name" {
+variable "dos_db_update_dlq_handler_lambda_name" {
   description = "Name of cr_fifo dlq handler lambda"
 }
 

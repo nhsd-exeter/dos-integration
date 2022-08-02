@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 from json import dumps
 from os import environ
+from unittest.mock import Mock, patch
 
-from pytest import fixture, approx
-from application.common.types import ChangeMetadata, ChangeRequestQueueItem
+from pytest import approx, fixture
+
 from application.orchestrator.orchestrator import invoke_lambda, lambda_handler
 
-from unittest.mock import Mock, patch
+from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
 
 FILE_PATH = "application.orchestrator.orchestrator"
 
@@ -15,9 +16,9 @@ FILE_PATH = "application.orchestrator.orchestrator"
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "cr-fifo-dlq-handler"
+        function_name: str = "dos-db-update-dlq-handler"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:cr-fifo-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:dos-db-update-dlq-handler"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
@@ -57,7 +58,7 @@ EXAMPLE_ATTRIBUTES = {
     "message_group_id": {"StringValue": "dummy_message_group_id"},
 }
 
-EXPECTED_METADATA: ChangeMetadata = {
+EXPECTED_METADATA: UpdateRequestMetadata = {
     "dynamo_record_id": "d1",
     "correlation_id": "c1",
     "message_received": "1645527100000",
@@ -88,9 +89,9 @@ EXAMPLE_MESSAGE_3 = {
     "changes": [],
 }
 
-EXPECTED_HEALTH_CHECK: ChangeRequestQueueItem = {
+EXPECTED_HEALTH_CHECK: UpdateRequestQueueItem = {
     "is_health_check": True,
-    "change_request": {},
+    "update_request": None,
     "recipient_id": None,
     "metadata": None,
 }

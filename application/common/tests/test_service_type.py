@@ -1,11 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from common.change_event_exceptions import ValidationException
 from pytest import raises
 
 from ..constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, SERVICE_TYPES, VALID_SERVICE_TYPES_KEY
 from ..service_type import get_valid_service_types, validate_organisation_keys, validate_organisation_type_id
+from common.errors import ValidationException
 
 FILE_PATH = "application.common.service_type"
 

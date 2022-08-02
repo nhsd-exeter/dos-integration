@@ -2,18 +2,16 @@
 make_whitelist = true
 paths=["."]
 exclude = [
-  "authoriser/tests",
+  "change_event_dlq_handler/tests",
   "common/tests",
   "comparison_reporting/tests",
-  "cr_fifo_dlq_handler/tests",
-  "dos_api_gateway/tests",
-  "event_processor/tests",
+  "dos_db_handler/tests",
+  "dos_db_update_dlq_handler/tests",
   "event_replay/tests",
-  "event_sender/tests",
-  "fifo_dlq_handler/tests",
   "orchestrator/tests",
-  "slack_messenger/tests",
-  "test_db_checker_handler/tests"
+  "service_matcher/tests",
+  "service_sync/tests",
+  "slack_messenger/tests"
   ]
 sort_by_size = true
 ignore_names = [
@@ -21,5 +19,7 @@ ignore_names = [
   "*db_connection",
   "field_names",
   "recipient_id",
-  "encoding"
+  "encoding",
+  "metadata",
+  "put_circuit_is_open"
   ]

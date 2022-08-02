@@ -13,7 +13,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the Event "processor" shows field "message" with message "No changes identified"
 
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
     Given a Changed Event with changed "<field>" is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -53,8 +53,8 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Examples:
       | field             | value        |
       | phone_no          | None         |
-      | phone_no | ''   |
-      | website  | None |
+      | phone_no          | ''           |
+      | website           | None         |
       | website           | ''           |
       | organisation_name | New Pharmacy |
 
@@ -65,7 +65,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the Changed Event is stored in dynamo db
     And the Event "processor" shows field "message" with message "Added record to dynamodb"
 
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001S008 Changed Event with URL variations is formatted and accepted by Dos
     Given a Changed Event with changed "<url>" variations is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -81,7 +81,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | https://Www.testpharmacy.co.uk                   | https://www.testpharmacy.co.uk                   |
       | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test |
 
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001S009 Changed Event with address line variations is title cased and accepted by Dos
     Given a Changed Event with "<address>" is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -94,4 +94,4 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | new test street     | New Test Street     |
       | Tester's new street | Testers New Street  |
       | new & test avenue   | New and Test Avenue |
-      | 49a test avenue | 49A Test Avenue |
+      | 49a test avenue     | 49A Test Avenue     |

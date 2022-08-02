@@ -3,18 +3,18 @@ from datetime import datetime
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
-from random import sample, randrange, randint
-from time import sleep, time_ns, time
-from typing import Any, Dict
-from .context import Context
+from random import randint, randrange, sample
+from time import sleep, time, time_ns
+from typing import Any, Dict, Tuple
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
-from requests import Response, post, get
+from requests import get, post, Response
 
 from .aws import get_secret
 from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
+from .context import Context
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -139,7 +139,7 @@ def generate_random_int(start_number: int = 1, stop_number: int = 1000) -> str:
 
 
 def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     return data
@@ -147,7 +147,7 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
 
 def get_pharmacy_odscode() -> str:
     lambda_payload = {"type": "get_single_service_pharmacy_odscode"}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     odscode = sample(tuple(data), 1)[0][0]
@@ -157,7 +157,7 @@ def get_pharmacy_odscode() -> str:
 def get_single_service_pharmacy() -> str:
     ods_code = get_pharmacy_odscode()
     lambda_payload = {"type": "get_services_count", "odscode": ods_code}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))[0][0]
     if data != 1:
         ods_code = get_single_service_pharmacy()
@@ -166,7 +166,7 @@ def get_single_service_pharmacy() -> str:
 
 def get_changes(correlation_id: str) -> list:
     lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
@@ -185,7 +185,7 @@ def confirm_changes(correlation_id: str) -> list:
 
 def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
     lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
@@ -210,7 +210,7 @@ def get_service_id(correlation_id: str) -> list:
     data_status = False
     while data_status is False:
         lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
-        response = invoke_test_db_checker_handler_lambda(lambda_payload)
+        response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
         if data != []:
@@ -228,7 +228,7 @@ def get_service_type_from_cr(correlation_id: str) -> list:
     data_status = False
     while data_status is False:
         lambda_payload = {"type": "get_service_type_from_cr", "get_service_id": get_service_id(correlation_id)}
-        response = invoke_test_db_checker_handler_lambda(lambda_payload)
+        response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
         if data != []:
@@ -253,14 +253,14 @@ def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Di
         "odscode": odscode,
         "organisation_type_id": organisation_type_id,
     }
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
 
 def get_change_event_standard_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     return data
@@ -268,7 +268,7 @@ def get_change_event_standard_opening_times(service_id: str) -> Any:
 
 def get_change_event_specified_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     return data
@@ -276,20 +276,20 @@ def get_change_event_specified_opening_times(service_id: str) -> Any:
 
 def get_odscode_with_contact_data() -> str:
     lambda_payload = {"type": "get_pharmacy_odscodes_with_contacts"}
-    response = invoke_test_db_checker_handler_lambda(lambda_payload)
+    response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
     odscode = sample(data, 1)[0][0]
     return odscode
 
 
-def invoke_test_db_checker_handler_lambda(lambda_payload: dict) -> Any:
+def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     response_status = False
     response = None
     retries = 0
     while response_status is False:
         response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-            FunctionName=getenv("TEST_DB_CHECKER_FUNCTION_NAME"),
+            FunctionName=getenv("dos_db_handler_FUNCTION_NAME"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
@@ -439,21 +439,18 @@ def remove_opening_days(opening_times, day) -> dict:
 
 
 def slack_retry(message) -> str:
-    counter = 0
     slack_channel, slack_oauth = slack_secrets()
-    while counter < 6:
+    for _ in range(6):
         sleep(60)
-        responseVal = check_slack(slack_channel, slack_oauth)
-        if message in responseVal:
-            return responseVal
-        counter += 1
+        response_value = check_slack(slack_channel, slack_oauth)
+        if message in response_value:
+            return response_value
     raise ValueError("Slack alert message not found")
 
 
-def slack_secrets():
-    slack_channel = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_CHANNEL"]
-    slack_oauth = loads(get_secret("uec-dos-int-dev/deployment"))["SLACK_OAUTH"]
-    return slack_channel, slack_oauth
+def slack_secrets() -> Tuple[str, str]:
+    slack_secrets = loads(get_secret("uec-dos-int-dev/deployment"))
+    return slack_secrets["SLACK_CHANNEL"], slack_secrets["SLACK_OAUTH"]
 
 
 def check_slack(channel, token) -> str:
