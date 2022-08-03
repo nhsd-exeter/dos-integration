@@ -79,9 +79,12 @@ class ServiceHistoriesChange:
         Returns:
             Dict[str, Any]: Change to be added to the servicehistories table
         """
-        return {
+        change = {
             "changetype": self.change_action,
             "data": self.data,
             "area": self.area,
             "previous": self.previous_value,
         }
+        if self.change_action == "add":
+            del change["previous"]
+        return change

@@ -175,7 +175,7 @@ def test_service_histories_add_standard_opening_times_change_no_change(mock_serv
 
 @patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_service_histories_add_specified_opening_times_change(
+def test_service_histories_add_specified_opening_times_change_modify(
     mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
 ):
     # Arrange
@@ -208,6 +208,74 @@ def test_service_histories_add_specified_opening_times_change(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
         previous_value=formatted_current_opening_times,
         data={"remove": formatted_current_opening_times, "add": formatted_new_opening_times},
+    )
+
+
+@patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
+def test_service_histories_add_specified_opening_times_change_add(
+    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+):
+    # Arrange
+    service_history = ServiceHistories(service_id=SERVICE_ID)
+    service_history.add_change = mock_add_change = MagicMock()
+    current_opening_times = MagicMock()
+    new_opening_times = MagicMock()
+    formatted_new_opening_times = [
+        "2030-12-28-closed",
+        "2030-12-29-1000-2000",
+        "2030-12-29-3000-4000",
+    ]
+    mock_get_formatted_specified_opening_times.side_effect = [
+        [],
+        formatted_new_opening_times,
+    ]
+    mock_service_histories_change.return_value = mock_service_histories_change_variable = MagicMock()
+    # Act
+    service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
+    # Assert
+    mock_add_change.assert_called_once_with(
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+    )
+    mock_service_histories_change.assert_called_once_with(
+        change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        previous_value=[],
+        data={"add": formatted_new_opening_times},
+    )
+
+
+@patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
+def test_service_histories_add_specified_opening_times_change_remove(
+    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+):
+    # Arrange
+    service_history = ServiceHistories(service_id=SERVICE_ID)
+    service_history.add_change = mock_add_change = MagicMock()
+    current_opening_times = MagicMock()
+    formatted_current_opening_times = [
+        "2030-12-30-closed",
+        "2030-12-31-1000-2000",
+        "2030-12-31-3000-4000",
+    ]
+    new_opening_times = MagicMock()
+    mock_get_formatted_specified_opening_times.side_effect = [
+        formatted_current_opening_times,
+        [],
+    ]
+    mock_service_histories_change.return_value = mock_service_histories_change_variable = MagicMock()
+    # Act
+    service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
+    # Assert
+    mock_add_change.assert_called_once_with(
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+    )
+    mock_service_histories_change.assert_called_once_with(
+        change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        previous_value=formatted_current_opening_times,
+        data={
+            "remove": formatted_current_opening_times,
+        },
     )
 
 

@@ -118,10 +118,17 @@ class ServiceHistories:
         current_specified_opening_times = self.get_formatted_specified_opening_times(current_opening_times)
         new_specified_opening_times = self.get_formatted_specified_opening_times(new_opening_times)
         data = {}
-        if current_specified_opening_times != []:
+        if current_specified_opening_times != [] and new_specified_opening_times != []:
+            # Data item modified
             data["remove"] = current_specified_opening_times
-        if new_specified_opening_times != []:
             data["add"] = new_specified_opening_times
+        elif current_specified_opening_times != []:
+            # Data item removed
+            data["remove"] = current_specified_opening_times
+        elif new_specified_opening_times != []:
+            # Data item added
+            data["add"] = new_specified_opening_times
+
         # Add the change to the service history
         self.add_change(
             dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,

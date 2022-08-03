@@ -81,7 +81,8 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
             is_specified_opening_times_changes: bool = save_specified_opening_times_into_db(
                 connection=connection,
                 service_id=service_id,
-                specified_opening_times_changes=changes_to_dos.specified_opening_times_changes,
+                is_changes=changes_to_dos.specified_opening_times_changes,
+                specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
             )
             # If there are any changes, update the service history and commit the changes to the database
             if any([is_demographic_changes, is_standard_opening_times_changes, is_specified_opening_times_changes]):
@@ -180,20 +181,24 @@ def save_standard_opening_times_into_db(
 
 
 def save_specified_opening_times_into_db(
-    connection: connection, service_id: int, specified_opening_times_changes: List[SpecifiedOpeningTime]
+    connection: connection,
+    service_id: int,
+    is_changes: bool,
+    specified_opening_times_changes: List[SpecifiedOpeningTime],
 ) -> bool:
     """Saves the specified opening times changes to the DoS database
 
     Args:
         connection (connection): Connection to the DoS database
         service_id (int): Id of the service to update
+        is_changes (bool): True if changes should be made to the database, False if no changes need to be made
         specified_opening_times_changes (List[SpecifiedOpeningTime]): Changes to the specified opening times
 
     Returns:
         bool: True if changes were made to the database, False if no changes were made
     """
 
-    if specified_opening_times_changes:
+    if is_changes:
         logger.debug(f"Deleting all specified opening times for service id {service_id}")
         # Cascade delete the standard opening times in both
         # servicedayopenings table and servicedayopeningtimes table

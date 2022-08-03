@@ -21,7 +21,7 @@ def test_changes_to_dos():
     assert service_histories == changes_to_dos.service_histories
     assert {} == changes_to_dos.demographic_changes
     assert {} == changes_to_dos.standard_opening_times_changes
-    assert None is changes_to_dos.specified_opening_times_changes
+    assert False is changes_to_dos.specified_opening_times_changes
     assert None is changes_to_dos.new_address
     assert None is changes_to_dos.new_postcode
     assert None is changes_to_dos.new_public_phone

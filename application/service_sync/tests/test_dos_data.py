@@ -107,7 +107,8 @@ def test_update_dos_data(
     mock_save_specified_opening_times_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        specified_opening_times_changes=change_to_dos.specified_opening_times_changes,
+        is_changes=change_to_dos.specified_opening_times_changes,
+        specified_opening_times_changes=change_to_dos.new_specified_opening_times,
     )
     service_histories.save_service_histories.assert_called_once_with(connection=mock_connect_to_dos_db().__enter__())
     mock_connect_to_dos_db.return_value.__enter__.return_value.commit.assert_called_once()
@@ -174,6 +175,6 @@ def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock):
     open_period_list = [OpenPeriod(time(1, 0, 0), time(2, 0, 0))]
     specified_opening_time_list = [SpecifiedOpeningTime(open_period_list, date(2022, 12, 24), True)]
     # Act
-    response = save_specified_opening_times_into_db(mock_connection, service_id, specified_opening_time_list)
+    response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
     # Assert
     assert True is response

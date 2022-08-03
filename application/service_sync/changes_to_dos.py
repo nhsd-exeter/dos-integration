@@ -41,7 +41,7 @@ class ChangesToDoS:
     # Varible to know if fields need to be changed
     demographic_changes: Dict[Optional[str], Any] = field(default_factory=dict)
     standard_opening_times_changes: Dict[Optional[int], Any] = field(default_factory=dict)
-    specified_opening_times_changes: Optional[list[SpecifiedOpeningTime]] = None
+    specified_opening_times_changes: bool = False
 
     # New value to be saved to the database
     new_address: Optional[str] = None
@@ -112,13 +112,10 @@ class ChangesToDoS:
                 "Removing Specified opening times that occur in the past",
                 extra={"all_nhs": nhs_spec_open_dates, "future_nhs": future_nhs_spec_open_dates},
             )
-        if opening_times_equal := SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, future_nhs_spec_open_dates):
-            logger.info(
-                "Specified opening times are equal, so no change",
-                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates, "compared": opening_times_equal},
-            )
-            return False
-        else:
+        equal_specified_opening_times = SpecifiedOpeningTime.equal_lists(
+            dos_spec_open_dates, future_nhs_spec_open_dates
+        )
+        if not equal_specified_opening_times or len(nhs_spec_open_dates) != len(future_nhs_spec_open_dates):
             logger.info(
                 "Specified opening times not equal",
                 extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
@@ -126,6 +123,12 @@ class ChangesToDoS:
             self.current_specified_opening_times = dos_spec_open_dates
             self.new_specified_opening_times = future_nhs_spec_open_dates
             return True
+        else:
+            logger.info(
+                "Specified opening times are equal, so no change",
+                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+            )
+            return False
 
     def check_for_address_and_postcode_for_changes(self) -> Tuple[bool, bool]:
         """Check if address and postcode have changed between dos_service and nhs_entity,
@@ -310,7 +313,7 @@ def compare_nhs_uk_and_dos_data(
                 )
 
         if changes_to_dos.check_for_specified_opening_times_changes():
-            changes_to_dos.specified_opening_times_changes = changes_to_dos.new_specified_opening_times
+            changes_to_dos.specified_opening_times_changes = True
             changes_to_dos.service_histories.add_specified_opening_times_change(
                 current_opening_times=changes_to_dos.current_specified_opening_times,
                 new_opening_times=changes_to_dos.new_specified_opening_times,

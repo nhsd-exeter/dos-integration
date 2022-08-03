@@ -131,3 +131,20 @@ def test_service_histories_change_get_change(mock_get_demographics_change_action
         "area": DOS_DEMOGRAPHICS_CHANGE_TYPE,
         "previous": PREVIOUS_VALUE,
     } == response
+
+
+@patch(f"{FILE_PATH}.ServiceHistoriesChange.get_demographics_change_action")
+def test_service_histories_change_get_change_add(mock_get_demographics_change_action):
+    # Arrange
+    mock_get_demographics_change_action.return_value = change_action = "add"
+    service_histories_change = ServiceHistoriesChange(
+        data=DATA, previous_value=PREVIOUS_VALUE, change_key=DOS_WEBSITE_CHANGE_KEY
+    )
+    # Act
+    response = service_histories_change.get_change()
+    # Assert
+    assert {
+        "changetype": change_action,
+        "data": DATA,
+        "area": DOS_DEMOGRAPHICS_CHANGE_TYPE,
+    } == response
