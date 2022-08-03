@@ -24,12 +24,10 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
 
 def put_circuit_is_open(circuit: str, is_open: bool) -> None:
     """Set the circuit open status for a given circuit
+
     Args:
         circuit (str): Name of the circuit
         is_open (bool): boolean as to whether the circuit is open (broken) or closed
-
-    Returns:
-        None
     """
     dynamo_record = {
         "Id": circuit,

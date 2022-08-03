@@ -1,6 +1,8 @@
 from json import dumps, loads
+from os import environ
 from typing import Any, Dict, Union
 
+from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
@@ -72,3 +74,13 @@ def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, 
     if msg_length > msg_limit:
         return {k: v for k, v in event.items() if k not in keys}
     return event
+
+
+@metric_scope
+def add_metric(metric_name: str, metrics) -> None:  # type: ignore
+    """Adds a failure metric to the custom metrics collection"""
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "INFO")
+    metrics.put_metric(metric_name, 1, "Count")
+    metrics.put_metric("UpdateRequestFailed", 1, "Count")
+    metrics.set_dimensions({"ENV": environ["ENV"]})

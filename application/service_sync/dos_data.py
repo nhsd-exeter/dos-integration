@@ -1,3 +1,4 @@
+from os import environ
 from typing import Dict, List, Tuple
 
 from aws_lambda_powertools.logging import Logger
@@ -9,9 +10,25 @@ from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from common.dos import DoSService, get_specified_opening_times_from_db, get_standard_opening_times_from_db
 from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
+from common.dynamodb import put_circuit_is_open
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from common.utilities import add_metric
 
 logger = Logger(child=True)
+
+
+def run_db_health_check():
+    """Runs a health check to ensure the db is running"""
+    with connect_to_dos_db() as connection:
+        cursor = query_dos_db(connection=connection, query="SELECT * FROM services LIMIT 1")
+        rows: List[DictCursor] = cursor.fetchall()
+        if len(rows) > 0:
+            # DB is running so close circuit
+            put_circuit_is_open(environ["CIRCUIT"], False)
+            add_metric("DoSDBHealthCheckSuccess")
+        else:
+            # Else DB is not running so circuit remains open
+            add_metric("DoSDBHealthCheckFailure")
 
 
 def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHistories]:

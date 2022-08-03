@@ -58,7 +58,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         else:
             logger.info(f"Received {len(messages)} messages from SQS")
 
-            # TODO: Need to figure out circuit breaker bits
             for message in messages:
                 it_start = time()
                 logger.info("Processing SQS message", extra={"sqs_message": message})

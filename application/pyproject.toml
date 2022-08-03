@@ -25,5 +25,4 @@ ignore_names = [
   "recipient_id",
   "encoding",
   "metadata",
-  "put_circuit_is_open"
   ]
