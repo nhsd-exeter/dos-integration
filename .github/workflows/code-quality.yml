@@ -17,15 +17,6 @@ jobs:
       - name: Check text files format
         run: |
           build/automation/etc/githooks/scripts/editorconfig-pre-commit.sh
-      - name: Check Python Formatting
-        run: |
-          make python-linting
-      - name: Check Python Imports
-        run: |
-          make python-check-imports
-      - name: Check for Python Dead Code
-        run: |
-          make python-check-dead-code
       - name: Check Python Unit Test Coverage
         run: |
           make coverage-report

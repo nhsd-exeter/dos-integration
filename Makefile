@@ -577,6 +577,13 @@ python-fix-imports:
 			--known-local-folder=common \
 			"
 
+python-check-security:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
+		CMD="python -m bandit -r . -c pyproject.toml"
+
+
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler
 	make docker-create-repository NAME=dos-db-handler

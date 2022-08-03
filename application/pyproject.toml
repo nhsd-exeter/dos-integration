@@ -1,3 +1,7 @@
+[tool.bandit]
+exclude_dirs = ["/tests","dos_db_handler"]
+skips = ["B101"]
+
 [tool.vulture]
 make_whitelist = true
 paths=["."]

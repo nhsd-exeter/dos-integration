@@ -42,7 +42,10 @@ class ServiceHistories:
         """
         cursor = connection.cursor(cursor_factory=DictCursor)
         # Get the history json from the database for the service
-        cursor.execute(f"Select history from servicehistories where serviceid = '{self.service_id}'")
+        cursor.execute(
+            query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
+            vars={"SERVICE_ID": self.service_id},
+        )
         results: List[Any] = cursor.fetchall()
         if results != []:
             # Change History exists in the database
@@ -175,9 +178,10 @@ class ServiceHistories:
         cursor = query_dos_db(
             connection=connection,
             query=(
-                f"""UPDATE services SET modifiedby='DOS_INTEGRATION', """
-                f"""modifiedtime='{current_date_time}' WHERE id = '{self.service_id}';"""
+                """UPDATE services SET modifiedby='DOS_INTEGRATION', """
+                """modifiedtime=%(CURRENT_DATE_TIME)s WHERE id = %(SERVICE_ID)s;"""
             ),
+            vars={"CURRENT_DATE_TIME": current_date_time, "SERVICE_ID": self.service_id},
         )
         cursor.close()
         if self.history_already_exists:
@@ -185,9 +189,9 @@ class ServiceHistories:
             cursor = query_dos_db(
                 connection=connection,
                 query=(
-                    f"""UPDATE servicehistories SET history = {Json(self.service_history)} """
-                    f"""WHERE serviceid = '{self.service_id}';"""
+                    """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
+                vars={"SERVICE_HISTORY": Json(self.service_history), "SERVICE_ID": self.service_id},
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
             cursor.close()
@@ -197,8 +201,9 @@ class ServiceHistories:
                 connection=connection,
                 query=(
                     """INSERT INTO servicehistories (serviceid, history) """
-                    f"""VALUES ('{self.service_id}', {Json(self.service_history)});"""
+                    """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
+                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": Json(self.service_history)},
             )
             cursor.close()
             logger.warning(f"Service history created in the database for serviceid {self.service_id}")

@@ -93,7 +93,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         conditions = "odscode = %(ODS)s"
         named_args = {"ODS": f"{odscode}%"}
 
-    sql_query = (
+    sql_query = (  # nosec - Safe as conditional is configurable but variables is inputed to psycopg2 as variables
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
         "statusid, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
@@ -154,8 +154,9 @@ def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
 
 
 def get_services_from_db(typeids: Iterable) -> List[DoSService]:
+    """VUNERABLE TO SQL INJECTION: DO NOT USE IN LAMBDA"""
     # Find base services
-    sql_query = (
+    sql_query = (  # nosec - Not for use within lambda
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "
         "statusid, publicphone, publicname, st.name servicename "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
@@ -169,7 +170,7 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         service_id_strings = set(str(s.id) for s in services)
 
         # Collect and apply all std open times to services
-        sql_query = (
+        sql_query = (  # nosec - Not for use within lambda
             "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
             "FROM servicedayopenings sdo "
             "INNER JOIN servicedayopeningtimes sdot "
@@ -185,7 +186,7 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         cursor.close()
 
         # Collect and apply all spec open times to services
-        sql_query = (
+        sql_query = (  # nosec - Not for use within lambda
             "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
             "FROM servicespecifiedopeningdates ssod "
             "INNER JOIN servicespecifiedopeningtimes ssot "
