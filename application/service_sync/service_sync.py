@@ -1,6 +1,8 @@
 from os import environ
+from time import time_ns
 from typing import Any, Dict
 
+from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -10,7 +12,7 @@ from .changes_to_dos import compare_nhs_uk_and_dos_data
 from .dos_data import get_dos_service_and_history, update_dos_data
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
-from common.types import UpdateRequestQueueItem
+from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
 
 tracer = Tracer()
 logger = Logger()
@@ -46,7 +48,7 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Dic
     # Delete the message from the queue
     remove_sqs_message_from_queue(event=event)
     # Log custom metrics
-    # add_success_metric(event=event)  # type: ignore
+    add_success_metric(event=event)  # type: ignore
     return {"message": "The change event has been processed successfully"}
 
 
@@ -69,19 +71,19 @@ def remove_sqs_message_from_queue(event: UpdateRequestQueueItem) -> None:
     logger.info("Removed SQS message from queue", extra={"receipt_handle": event["recipient_id"]})
 
 
-# @metric_scope
-# def add_success_metric(event: UpdateRequestQueueItem, metrics) -> None:  # type: ignore
-#     """Adds a success metric to the custom metrics collection
+@metric_scope
+def add_success_metric(event: UpdateRequestQueueItem, metrics) -> None:  # type: ignore
+    """Adds a success metric to the custom metrics collection
 
-#     Args:
-#         event (UpdateRequestQueueItem): Lambda function invocation event
-#     """
-#     after = time_ns() // 1000000
-#     metadata: UpdateRequestMetadata = event["metadata"]
-#     message_received = metadata["message_received"]
-#     diff = after - message_received
-#     metrics.set_namespace("UEC-DOS-INT")
-#     metrics.set_property("level", "INFO")
-#     metrics.set_property("message", f"Recording change request latency of {diff}")
-#     metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
-#     metrics.set_dimensions({"ENV": environ["ENV"]})
+    Args:
+        event (UpdateRequestQueueItem): Lambda function invocation event
+    """
+    after = time_ns() // 1000000
+    metadata: UpdateRequestMetadata = event["metadata"]
+    message_received = metadata["message_received"]
+    diff = after - message_received
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "INFO")
+    metrics.set_property("message", f"Recording change request latency of {diff}")
+    metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
+    metrics.set_dimensions({"ENV": environ["ENV"]})
