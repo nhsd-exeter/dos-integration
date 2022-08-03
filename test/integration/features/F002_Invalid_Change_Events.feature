@@ -1,6 +1,6 @@
 Feature: F002. Invalid change event Exception handling
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @dev @pharmacy_cloudwatch_queries @kit
   Scenario: F002S001. Unmatched DOS services exception is logged
     Given a "pharmacy" Changed Event is aligned with Dos
     And the field "ODSCode" is set to "F8KE1"

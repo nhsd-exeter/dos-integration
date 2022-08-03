@@ -136,6 +136,7 @@ class ChangeEventBuilder:
         change_event.website = demographics_data["web"]
         change_event.phone = demographics_data["publicphone"]
         change_event = self.set_same_as_dos_address(change_event, demographics_data["address"])
+        #This
         standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
         change_event.standard_opening_times = []
         change_event.specified_opening_times = []
@@ -236,9 +237,11 @@ def build_same_as_dos_change_event(service_type: str) -> ChangeEvent:
             case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
                 ods_code = random_dentist_odscode()
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+                #Goes here and returns valid value
                 ods_code = get_single_service_pharmacy()
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
+        #This one leads to failure
         change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
         if valid_change_event(change_event):
             break

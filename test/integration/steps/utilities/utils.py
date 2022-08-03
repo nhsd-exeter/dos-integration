@@ -155,10 +155,12 @@ def get_pharmacy_odscode() -> str:
 
 
 def get_single_service_pharmacy() -> str:
+    #Runs this
     ods_code = get_pharmacy_odscode()
     lambda_payload = {"type": "get_services_count", "odscode": ods_code}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))[0][0]
+    #Should this not be a while loop with a counter
     if data != 1:
         ods_code = get_single_service_pharmacy()
     return ods_code
@@ -259,6 +261,7 @@ def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Di
 
 
 def get_change_event_standard_opening_times(service_id: str) -> Any:
+    #This causes the failure
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
@@ -288,16 +291,20 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     response = None
     retries = 0
     while response_status is False:
+        print(getenv("DOS_DB_HANDLER"))
         response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-            FunctionName=getenv("dos_db_handler_FUNCTION_NAME"),
+            FunctionName=getenv("DOS_DB_HANDLER"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
+        #Call out to the lambda for request response with a valid service id
         response_payload = response["Payload"].read().decode("utf-8")
-        if "errorMessage" not in response_payload:
-            return response_payload
+        #if "errorMessage" not in response_payload:
+        return response_payload
 
-        if retries > 18:
+        if retries > 2:
+            #This is the error that shows up
+            #Error in this payload: {'type': 'change_event_standard_opening_times', 'service_id': 39478}
             print(f"Error in this payload: {lambda_payload}")
             raise ValueError(f"Unable to run test db checker lambda successfully after {retries} retries")
         retries += 1

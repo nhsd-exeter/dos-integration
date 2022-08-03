@@ -130,7 +130,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 300" \
+	CMD="pytest steps -k $(TAGS) -vvvv -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -142,7 +142,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e SERVICE_MATCHER=$(TF_VAR_service_matcher_lambda_name) \
 		-e SERVICE_SYNC=$(TF_VAR_service_sync_lambda_name) \
-		-e dos_db_handler_FUNCTION_NAME=$(TF_VAR_dos_db_handler_lambda_name) \
+		-e DOS_DB_HANDLER=$(TF_VAR_dos_db_handler_lambda_name) \
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \

@@ -123,11 +123,14 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError(f"No matching services for odscode {odscode}")
         query_results = query_results[0]
         result = dict(zip(db_columns, query_results))
+    # This is the one being called
     elif request["type"] == "change_event_standard_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service_id")
         standard_opening_times = get_standard_opening_times_from_db(service_id)
+        raise ValueError(standard_opening_times.export_cr_format())
+        # This bit here errors because of the function
         result = standard_opening_times.export_cr_format()
     elif request["type"] == "change_event_specified_opening_times":
         service_id = request.get("service_id")

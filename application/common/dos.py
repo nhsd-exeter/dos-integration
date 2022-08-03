@@ -232,7 +232,7 @@ def get_standard_opening_times_from_db(connection: connection, service_id: int) 
     function will still return a blank StandardOpeningTime with no opening periods."""
 
     logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
-
+    #This query works fine when run in dbeaver
     sql_command = (
         "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
         "FROM servicedayopenings sdo "
@@ -289,6 +289,7 @@ def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
     note: The rows must be for the same service
     """
     standard_opening_times = StandardOpeningTimes()
+    #This all makes sense
     for row in db_rows:
         weekday = row["name"].lower()
         start = row["starttime"]

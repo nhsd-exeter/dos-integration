@@ -159,6 +159,7 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
 @given(parse('a "{org_type}" Changed Event is aligned with Dos'), target_fixture="context")
 def dos_event_from_scratch(org_type: str, context: Context):
     if org_type.lower() in ["pharmacy", "dentist"]:
+        #Calls this
         context.change_event = build_same_as_dos_change_event(org_type)
         return context
     else:
