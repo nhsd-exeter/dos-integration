@@ -14,7 +14,6 @@ from common.dos import (
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.middlewares import unhandled_exception_logging
 from common.service_type import get_valid_service_types
-from psycopg2.sql import Identifier
 
 tracer = Tracer()
 logger = Logger()
@@ -145,8 +144,16 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         if service_id is None or field is None:
             raise ValueError("Missing data in get_service_table_field request")
         result = run_query(
-            query="SELECT %(FIELD)s FROM services WHERE id = %(SERVICE_ID)s",
-            query_vars={"FIELD": Identifier(field), "SERVICE_ID": service_id},
+            query=f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s",
+            query_vars={"SERVICE_ID": service_id},
+        )
+    elif request["type"] == "get_service_history":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing data in get_service_history request")
+        result = run_query(
+            query="SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s",
+            query_vars={"SERVICE_ID": service_id},
         )
     else:
         raise ValueError("Unsupported request")

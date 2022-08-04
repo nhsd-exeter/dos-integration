@@ -1,12 +1,12 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @broken @pharmacy_smoke_test @pharmacy_no_log_searches @wip
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches @wip
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
-  # And the Last Updated Date is updated within the DoS DB
+    And the service history is updated with the "Postcode"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S002. A Changed event with aligned data does not save an update to DoS
@@ -14,12 +14,12 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "No changes to save"
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @broken @pharmacy_no_log_searches @wip2
   Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
     Given a Changed Event with changed "<field>" is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the Change Request with changed "<field>" is captured by Dos
+    Then the "<field>" is updated within the DoS DB
+    And the service history is updated with the "<field>"
 
     Examples:
       | field    |
@@ -27,12 +27,12 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | website  |
       | address  |
 
-  @complete @broken @dentist_no_log_searches @dentist_smoke_test
-  Scenario: F001S004. A valid Dentist change event is processed into DOS
-    Given a "dentist" Changed Event is aligned with DoS
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the Dentist changes with service type id is captured by Dos
+  # @complete @broken @dentist_no_log_searches @dentist_smoke_test
+  # Scenario: F001S004. A valid Dentist change event is processed into DOS
+  #   Given a "dentist" Changed Event is aligned with DoS
+  #   When the Changed Event is sent for processing with "valid" api key
+  #   Then the Change Request is accepted by Dos
+  #   And the Dentist changes with service type id is captured by Dos
 
   @complete @broken @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario Outline: F001S005. A valid change with field removal is processed by dos

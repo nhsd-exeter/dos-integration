@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict, Tuple
+from typing import Tuple
 from uuid import uuid4
 
 from dateutil.relativedelta import relativedelta

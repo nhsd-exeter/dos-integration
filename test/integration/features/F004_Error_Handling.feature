@@ -78,18 +78,18 @@ Feature: F004. Error Handling
       | dentist  |
 
 
-  @complete @broken @dev @dentist_cloudwatch_queries
-  Scenario Outline: F004S010. A Changed Event with Dentist org type is accepted
-    Given a "dentist" Changed Event is aligned with DoS
-    When the Changed Event is sent for processing with "valid" api key
-    Then the processed Changed Request is sent to Dos
+  # @complete @broken @dev @dentist_cloudwatch_queries
+  # Scenario Outline: F004S010. A Changed Event with Dentist org type is accepted
+  #   Given a "dentist" Changed Event is aligned with DoS
+  #   When the Changed Event is sent for processing with "valid" api key
+  #   Then the processed Changed Request is sent to Dos
 
 
-  @dev @dentist_cloudwatch_queries
-  Scenario Outline: F004S011. Exception is raised when unaccepted Pharmacy org type CE is processed
-    Given a "pharmacy" Changed Event is aligned with DoS
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "message" with message "Validation Error"
+  # @dev @dentist_cloudwatch_queries
+  # Scenario Outline: F004S011. Exception is raised when unaccepted Pharmacy org type CE is processed
+  #   Given a "pharmacy" Changed Event is aligned with DoS
+  #   When the Changed Event is sent for processing with "valid" api key
+  #   Then the Event "processor" shows field "message" with message "Validation Error"
 
 
   @complete @broken @dev @pharmacy_cloudwatch_queries

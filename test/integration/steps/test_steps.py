@@ -20,7 +20,7 @@ from .utilities.change_event_builder import (
     valid_change_event,
 )
 from .utilities.context import Context
-from .utilities.dos_data import get_service_table_field_name
+from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
     check_contact_delete_in_dos,
     check_received_data_in_dos,
@@ -36,6 +36,7 @@ from .utilities.utils import (
     get_changes,
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
+    get_previous_data,
     get_service_id,
     get_service_table_field,
     get_service_type_data,
@@ -52,6 +53,7 @@ from .utilities.utils import (
     slack_retry,
     time_to_sec,
     wait_for_service_update,
+    check_service_history,
 )
 
 scenarios(
@@ -624,13 +626,23 @@ def check_the_service_table_field_has_updated(context: Context, plain_english_se
     """TODO"""
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
-    print(f"service_id: {context.service_id}, field_name: {field_name}")
-    response = get_service_table_field(service_id=context.service_id, field_name=field_name)
-    print(response)
-    raise NotImplementedError("Not implemented yet")
-    # assert (
-    #     check_received_data_in_dos(context.correlation_id, cms, changed_data) is True
-    # ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    assert field_data == get_previous_data(context, field_name), (
+        f"ERROR!!.. Expected {plain_english_service_table_field} not found in Dos DB., "
+        f"expected: {get_previous_data(context.service_id, field_name)}, found: {field_data}"
+    )
+    return context
+
+
+@then(parse('the service history is updated with the "{plain_english_service_table_field}"'))
+def check_the_service_history_has_updated(context: Context, plain_english_service_table_field: str):
+    """TODO"""
+    check_service_history(
+        service_id=context.service_id,
+        plain_english_field_name=plain_english_service_table_field,
+        expected_data=get_previous_data(context, plain_english_service_table_field),
+    )
+    return context
 
 
 @then(parse("the Last Updated Date is updated within the DoS DB"))
@@ -650,10 +662,10 @@ def check_the_last_updated_date_has_updated(context: Context, service_table_fiel
             cms = "cmspostcode"
             changed_data = context.change_event.postcode
         case _:
-            raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+            raise ValueError(f"Error!.. Input parameter '{service_table_field}' not compatible")
     assert (
         check_received_data_in_dos(context.correlation_id, cms, changed_data) is True
-    ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+    ), f"ERROR!.. Dos not updated with {service_table_field} change: {changed_data}"
 
 
 @then(parse('the Changed Event with changed "{field}" is not captured by Dos'))
@@ -917,7 +929,7 @@ def generic_lambda_log_negative_check_function(context: Context, lambda_name: st
     find_request_id_query = (
         "fields function_request_id | sort @timestamp asc" f' | filter correlation_id="{context.correlation_id}"'
     )
-    find_request_id = loads(get_logs(find_request_id_query, processor, context.start_time))
+    find_request_id = loads(get_logs(find_request_id_query, lambda_name, context.start_time))
 
     request_id = ""
     for x in find_request_id["results"][0]:

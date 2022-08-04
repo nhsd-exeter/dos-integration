@@ -1,5 +1,5 @@
 from ast import literal_eval
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
@@ -15,6 +15,8 @@ from .aws import get_secret
 from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
 from .context import Context
+from pytz import UTC
+from .translation import get_service_history_data_key
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -317,14 +319,57 @@ def get_service_table_field(service_id: str, field_name: str) -> Any:
 
 def wait_for_service_update(service_id: str) -> Any:
     """Wait for the service to be updated by checking modifiedtime"""
-    for _ in range(6):
+    for _ in range(12):
         sleep(10)
-        data = get_service_table_field(service_id, "modifiedtime")
-        print(f"Waiting for service update: {data}")
-        raise NotImplementedError("This is not implemented yet")
+        updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
+        updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+        updated_date_time = updated_date_time.replace(tzinfo=UTC)
+        two_mins_ago = datetime.now() - timedelta(minutes=2)
+        two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+        if updated_date_time > two_mins_ago:
+            break
     else:
         raise ValueError(f"Service not updated, service_id: {service_id}")
-    return data
+
+
+def get_previous_data(context: Context, changed_data_name: str) -> str:
+    """Get the previous data from the context"""
+    match changed_data_name.lower():
+        case "phone_no":
+            changed_data = context.change_event.phone
+        case "website":
+            changed_data = context.change_event.website
+        case "address":
+            changed_data = context.change_event.address_line_1.title()
+        case "postcode":
+            changed_data = context.change_event.postcode
+        case _:
+            raise ValueError(f"Error!.. Input parameter '{changed_data_name}' not compatible")
+    return changed_data
+
+
+def check_service_history(service_id: str, plain_english_field_name: str, expected_data: str) -> None:
+    """Check the service history for the expected data and previous data is removed"""
+    service_history = get_service_history(service_id)
+    first_key_in_service_history = list(service_history.keys())[0]
+    changes = service_history[first_key_in_service_history]["new"]
+    change_key = get_service_history_data_key(plain_english_field_name)
+    if change_key not in changes:
+        raise ValueError(f"DoS Change key '{change_key}' not found in latest service history entry")
+    else:
+        assert (
+            changes[change_key]["data"] == expected_data
+        ), f"Expected data: {expected_data}, Actual data: {changes[change_key]}"
+        # (
+        #     changes[change_key]["previous"] == previous_data
+        # ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
+
+
+def get_service_history(service_id: str) -> Dict[str, Any]:
+    lambda_payload = {"type": "get_service_history", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return loads(data[0][0])
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
