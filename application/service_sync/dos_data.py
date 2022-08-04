@@ -89,6 +89,8 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 service_histories.save_service_histories(connection=connection)
                 connection.commit()
                 logger.info(f"Updates successfully committed to the DoS database for service id {service_id}")
+            else:
+                logger.info(f"No changes to save for service id {service_id}")
     finally:
         # Close the connection even if an error occurs
         if connection:

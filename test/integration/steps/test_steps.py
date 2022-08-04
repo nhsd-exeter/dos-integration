@@ -20,6 +20,7 @@ from .utilities.change_event_builder import (
     valid_change_event,
 )
 from .utilities.context import Context
+from .utilities.dos_data import get_service_table_field_name
 from .utilities.utils import (
     check_contact_delete_in_dos,
     check_received_data_in_dos,
@@ -36,6 +37,7 @@ from .utilities.utils import (
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
     get_service_id,
+    get_service_table_field,
     get_service_type_data,
     get_service_type_from_cr,
     get_stored_events_from_dynamo_db,
@@ -49,6 +51,7 @@ from .utilities.utils import (
     remove_opening_days,
     slack_retry,
     time_to_sec,
+    wait_for_service_update,
 )
 
 scenarios(
@@ -156,11 +159,10 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
     return context
 
 
-@given(parse('a "{org_type}" Changed Event is aligned with Dos'), target_fixture="context")
+@given(parse('a "{org_type}" Changed Event is aligned with DoS'), target_fixture="context")
 def dos_event_from_scratch(org_type: str, context: Context):
     if org_type.lower() in ["pharmacy", "dentist"]:
-        #Calls this
-        context.change_event = build_same_as_dos_change_event(org_type)
+        context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
         return context
     else:
         raise ValueError(f"Invalid event type '{org_type}' provided")
@@ -560,12 +562,13 @@ def the_changed_event_is_not_processed(context: Context):
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
-@then("the Change Request is accepted by Dos")
-def the_changed_request_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    response = confirm_changes(context.correlation_id)
-    assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
-    return context
+# @then("Changes are saved into DoS DB")
+# def changes_are_saved_into_dos_db(context: Context):
+#     """assert dos API response and validate processed record in Dos CR Queue database"""
+#     assert_service_updated(context.service_id)
+#     response = confirm_changes(context.correlation_id)
+#     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+#     return context
 
 
 @then(parse('the Change Request is accepted by Dos with "{contact}" deleted'))
@@ -616,10 +619,24 @@ def change_is_included_in_service_sync(context: Context):
     assert logs != [], "ERROR!!.. Expected Change not found in logs."
 
 
-@then(parse('the Change Request with changed "{contact}" is captured by Dos'))
-def the_changed_contact_is_accepted_by_dos(context: Context, contact):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    match contact.lower():
+@then(parse('the "{plain_english_service_table_field}" is updated within the DoS DB'))
+def check_the_service_table_field_has_updated(context: Context, plain_english_service_table_field: str):
+    """TODO"""
+    wait_for_service_update(context.service_id)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    print(f"service_id: {context.service_id}, field_name: {field_name}")
+    response = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    print(response)
+    raise NotImplementedError("Not implemented yet")
+    # assert (
+    #     check_received_data_in_dos(context.correlation_id, cms, changed_data) is True
+    # ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+
+
+@then(parse("the Last Updated Date is updated within the DoS DB"))
+def check_the_last_updated_date_has_updated(context: Context, service_table_field: str):
+    """TODO"""
+    match service_table_field.lower():
         case "phone_no":
             cms = "cmstelephoneno"
             changed_data = context.change_event.phone
@@ -629,6 +646,9 @@ def the_changed_contact_is_accepted_by_dos(context: Context, contact):
         case "address":
             cms = "postaladdress"
             changed_data = context.change_event.address_line_1.title()
+        case "postcode":
+            cms = "cmspostcode"
+            changed_data = context.change_event.postcode
         case _:
             raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
     assert (
@@ -880,20 +900,20 @@ def check_logs_for_correct_sent_cr(context: Context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
-def generic_processor_check_function(context: Context, processor, field, message):
+@then(parse('the "{lambda_name}" lambda shows field "{field}" with message "{message}"'))
+def generic_lambda_log_check_function(context: Context, lambda_name: str, field, message):
     if "/" in context.correlation_id:
         context.correlation_id = context.correlation_id.replace("/", r"\/")
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
     )
-    logs = get_logs(query, processor, context.start_time)
+    logs = get_logs(query, lambda_name, context.start_time)
     assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
 
 
-@then(parse('the Event "{processor}" does not show "{field}" with message "{message}"'))
-def generic_processor_negative_check_function(context: Context, processor, field, message):
+@then(parse('the "{lambda_name}" lambda does not show field "{field}" with message "{message}"'))
+def generic_lambda_log_negative_check_function(context: Context, lambda_name: str, field, message):
     find_request_id_query = (
         "fields function_request_id | sort @timestamp asc" f' | filter correlation_id="{context.correlation_id}"'
     )
@@ -906,13 +926,13 @@ def generic_processor_negative_check_function(context: Context, processor, field
 
     finished_check = f'fields @message | filter @requestId == "{request_id}" | filter @type == "END"'
 
-    get_logs(finished_check, processor, context.start_time, 2)
+    get_logs(finished_check, lambda_name, context.start_time, 2)
 
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
     )
-    logs_found = negative_log_check(query, processor, context.start_time)
+    logs_found = negative_log_check(query, lambda_name, context.start_time)
 
     assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
 

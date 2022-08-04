@@ -28,3 +28,9 @@ class ServiceTypeAliases:
 
 DENTIST_SERVICE_TYPE_ALIAS = ServiceTypeAliases.DENTIST_TYPE_ALIAS
 PHARMACY_SERVICE_TYPE_ALIAS = ServiceTypeAliases.PHARMACY_TYPE_ALIAS
+
+# DoS Service Table Field Names
+DOS_POSTCODE_FIELD_NAME = "postcode"
+DOS_PUBLIC_PHONE_FIELD_NAME = "publicphone"
+DOS_WEB_FIELD_NAME = "web"
+DOS_ADDRESS_FIELD_NAME = "address"

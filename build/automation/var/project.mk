@@ -37,8 +37,6 @@ TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
-SERVICE_MATCHER_LOG_GROUP := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-service-matcher
-SERVICE_SYNC_LOG_GROUP := /aws/lambda/$(PROJECT_ID)-$(ENVIRONMENT)-service-sync
 
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key

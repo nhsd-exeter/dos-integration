@@ -14,6 +14,7 @@ from common.dos import (
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.middlewares import unhandled_exception_logging
 from common.service_type import get_valid_service_types
+from psycopg2.sql import Identifier
 
 tracer = Tracer()
 logger = Logger()
@@ -128,16 +129,25 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service_id")
-        standard_opening_times = get_standard_opening_times_from_db(service_id)
-        raise ValueError(standard_opening_times.export_cr_format())
-        # This bit here errors because of the function
-        result = standard_opening_times.export_cr_format()
+        with connect_to_dos_db() as connection:
+            standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
+            result = standard_opening_times.export_test_format()
     elif request["type"] == "change_event_specified_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service_id")
-        specified_opening_times = get_specified_opening_times_from_db(service_id)
-        result = SpecifiedOpeningTime.export_cr_format_list(specified_opening_times)
+        with connect_to_dos_db() as connection:
+            specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
+            result = SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
+    elif request["type"] == "get_service_table_field":
+        service_id = request.get("service_id")
+        field = request.get("field")
+        if service_id is None or field is None:
+            raise ValueError("Missing data in get_service_table_field request")
+        result = run_query(
+            query="SELECT %(FIELD)s FROM services WHERE id = %(SERVICE_ID)s",
+            query_vars={"FIELD": Identifier(field), "SERVICE_ID": service_id},
+        )
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)

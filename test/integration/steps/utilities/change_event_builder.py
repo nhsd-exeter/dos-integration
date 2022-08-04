@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict
+from typing import Dict, Tuple
 from uuid import uuid4
 
 from dateutil.relativedelta import relativedelta
@@ -116,7 +116,7 @@ class ChangeEventBuilder:
         )
         return self._change_event
 
-    def build_same_as_dos_change_event_by_ods(self, ods_code: str) -> ChangeEvent:
+    def build_same_as_dos_change_event_by_ods(self, ods_code: str) -> Tuple[ChangeEvent, str]:
         change_event: ChangeEvent = ChangeEvent()
         match self.service_type.upper():
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
@@ -131,12 +131,13 @@ class ChangeEventBuilder:
                 change_event.organisation_sub_type = DENTIST_SUB_TYPE
             case _:
                 raise ValueError(f"Service type {self.service_type} does not exist")
+        service_id = demographics_data["id"]
         change_event.organisation_name = demographics_data["publicname"]
         change_event.postcode = demographics_data["postcode"]
         change_event.website = demographics_data["web"]
         change_event.phone = demographics_data["publicphone"]
         change_event = self.set_same_as_dos_address(change_event, demographics_data["address"])
-        #This
+        # This
         standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
         change_event.standard_opening_times = []
         change_event.specified_opening_times = []
@@ -164,7 +165,7 @@ class ChangeEventBuilder:
                         "IsOpen": True,
                     }
                 )
-        return change_event
+        return change_event, service_id
 
     def make_change_event_unique(self):
         self._change_event.unique_key = str(uuid4())
@@ -231,21 +232,21 @@ def valid_change_event(change_event: ChangeEvent) -> bool:
     return True
 
 
-def build_same_as_dos_change_event(service_type: str) -> ChangeEvent:
+def build_same_as_dos_change_event(service_type: str) -> Tuple[ChangeEvent, str]:
     while True:
         match service_type.upper():
             case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
                 ods_code = random_dentist_odscode()
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-                #Goes here and returns valid value
+                # Goes here and returns valid value
                 ods_code = get_single_service_pharmacy()
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
-        #This one leads to failure
-        change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
+        # This one leads to failure
+        change_event, service_id = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
         if valid_change_event(change_event):
             break
-    return change_event
+    return change_event, service_id
 
 
 def set_opening_times_change_event(service_type: str) -> ChangeEvent:
