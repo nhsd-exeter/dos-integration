@@ -114,7 +114,7 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
             connection=connection,
             query=(
                 """UPDATE services SET """
-                f"""{", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items())} """
+                f"""{", ".join(f"{key} = '{value if value is not None else ''}'" for key, value in demographics_changes.items())} """  # noqa: E501
                 f"""WHERE id = {service_id};"""
             ),
         )
