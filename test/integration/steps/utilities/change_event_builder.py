@@ -1,5 +1,5 @@
-import re
 from datetime import datetime
+from re import fullmatch, sub
 from typing import Tuple
 from uuid import uuid4
 
@@ -203,6 +203,12 @@ class ChangeEventBuilder:
         return organisation_sub_type
 
     def set_same_as_dos_address(self, change_event: ChangeEvent, address: str) -> ChangeEvent:
+        def format_address(address: str) -> str:
+            address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
+            address = address.replace("'", "")
+            address = address.replace("&", "and")
+            return address
+
         address_parts = address.split("$", 4)
         if len(address_parts) < 5:
             number_of_unused_address_parts = 5 - len(address_parts)
@@ -210,11 +216,11 @@ class ChangeEventBuilder:
                 address_parts.append(None)
 
         change_event.build_address_lines(
-            address_line_1=address_parts[0],
-            address_line_2=address_parts[1],
-            address_line_3=address_parts[2],
-            city=address_parts[3],
-            county=address_parts[4],
+            address_line_1=format_address(address_parts[0]) if address_parts[0] else None,
+            address_line_2=format_address(address_parts[1]) if address_parts[1] else None,
+            address_line_3=format_address(address_parts[2]) if address_parts[2] else None,
+            city=format_address(address_parts[3]) if address_parts[3] else None,
+            county=format_address(address_parts[4]) if address_parts[4] else None,
         )
         return change_event
 
@@ -222,12 +228,12 @@ class ChangeEventBuilder:
 def valid_change_event(change_event: ChangeEvent) -> bool:
     """This function checks if the data stored in DoS would pass the change request
     validation within DoS API Gateway"""
-    if change_event.website is not None and not re.fullmatch(
+    if change_event.website is not None and not fullmatch(
         r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
         change_event.website,
     ):
         return False
-    if change_event.phone is not None and not re.fullmatch(r"[+0][0-9 ()]{9,}", change_event.phone):
+    if change_event.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", change_event.phone):
         return False
     return True
 

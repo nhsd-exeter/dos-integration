@@ -4,18 +4,19 @@ from decimal import Decimal
 from json import dumps, loads
 from os import getenv
 from random import randint, randrange, sample
+from re import sub
 from time import sleep, time, time_ns
 from typing import Any, Dict, Tuple
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
+from pytz import UTC
 from requests import get, post, Response
 
-from .aws import get_secret
 from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
 from .context import Context
-from pytz import UTC
+from .secrets_manager import get_secret
 from .translation import get_service_history_data_key
 
 URL = getenv("URL")
@@ -332,15 +333,15 @@ def wait_for_service_update(service_id: str) -> Any:
         raise ValueError(f"Service not updated, service_id: {service_id}")
 
 
-def get_previous_data(context: Context, changed_data_name: str) -> str:
+def get_expected_data(context: Context, changed_data_name: str) -> Any:
     """Get the previous data from the context"""
     match changed_data_name.lower():
-        case "phone_no":
+        case "phone_no" | "phone" | "public_phone" | "publicphone":
             changed_data = context.change_event.phone
-        case "website":
+        case "website" | "web":
             changed_data = context.change_event.website
         case "address":
-            changed_data = context.change_event.address_line_1.title()
+            changed_data = get_address_string(context.change_event)
         case "postcode":
             changed_data = context.change_event.postcode
         case _:
@@ -348,7 +349,28 @@ def get_previous_data(context: Context, changed_data_name: str) -> str:
     return changed_data
 
 
-def check_service_history(service_id: str, plain_english_field_name: str, expected_data: str) -> None:
+def get_address_string(change_event: ChangeEvent) -> str:
+    address_lines = [
+        line
+        for line in [
+            change_event.address_line_1,
+            change_event.address_line_2,
+            change_event.address_line_3,
+            change_event.city,
+            change_event.county,
+        ]
+        if isinstance(line, str) and line.strip() != ""
+    ]
+    address = "$".join(address_lines)
+    address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
+    address = address.replace("'", "")
+    address = address.replace("&", "and")
+    return address
+
+
+def check_service_history(
+    service_id: str, plain_english_field_name: str, expected_data: Any, previous_data: Any
+) -> None:
     """Check the service history for the expected data and previous data is removed"""
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
@@ -356,13 +378,26 @@ def check_service_history(service_id: str, plain_english_field_name: str, expect
     change_key = get_service_history_data_key(plain_english_field_name)
     if change_key not in changes:
         raise ValueError(f"DoS Change key '{change_key}' not found in latest service history entry")
-    else:
-        assert (
-            changes[change_key]["data"] == expected_data
-        ), f"Expected data: {expected_data}, Actual data: {changes[change_key]}"
-        # (
-        #     changes[change_key]["previous"] == previous_data
-        # ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
+
+    # Assert new data is correct
+
+    assert (
+        expected_data == changes[change_key]["data"]
+    ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa
+
+    # Assert previous data is correct
+    if "previous" in changes[change_key]:
+        if previous_data not in ["unknown", ""]:
+            (
+                changes[change_key]["previous"] == str(previous_data),
+                f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}",
+            )
+        elif previous_data == "":
+            assert (
+                changes[change_key]["previous"] is None
+            ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
+        else:
+            raise ValueError(f"Input parameter '{previous_data}' not compatible")
 
 
 def get_service_history(service_id: str) -> Dict[str, Any]:

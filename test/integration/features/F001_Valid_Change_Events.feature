@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches @wip
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "CT1 1AA"
@@ -8,15 +8,16 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "Postcode" is updated within the DoS DB
     And the service history is updated with the "Postcode"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @dev @pharmacy_cloudwatch_queries @broken
   Scenario: F001S002. A Changed event with aligned data does not save an update to DoS
     Given a "pharmacy" Changed Event is aligned with DoS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "No changes to save"
 
-  @complete @broken @pharmacy_no_log_searches @wip2
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
-    Given a Changed Event with changed "<field>" is valid
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the "<field>" is changed and is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the "<field>" is updated within the DoS DB
     And the service history is updated with the "<field>"
@@ -34,11 +35,12 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   #   Then the Change Request is accepted by Dos
   #   And the Dentist changes with service type id is captured by Dos
 
-  @complete @broken @pharmacy_smoke_test @pharmacy_no_log_searches
-  Scenario Outline: F001S005. A valid change with field removal is processed by dos
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  Scenario Outline: F001S005. A valid CE without a contact field
     Given a Changed Event to unset "<field>"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by DoS with "<field>" deleted
+    Then the "<field>" is updated within the DoS DB
+    And the service history is updated with the "<field>"
 
     Examples:
       | field   |
@@ -46,18 +48,17 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | phone   |
 
   @complete @broken @pharmacy_no_log_searches
-  Scenario Outline: F001S006. No CR created when CE phone website value is null and public name value set
+  Scenario Outline: F001S006. No value means that the field is unset in DoS
     Given a Changed Event with a "<value>" value for "<field>"
     When the Changed Event is sent for processing with "valid" api key
     Then the Changed Event with changed "<field>" is not captured by Dos
 
     Examples:
-      | field             | value        |
-      | phone_no          | None         |
-      | phone_no          | ''           |
-      | website           | None         |
-      | website           | ''           |
-      | organisation_name | New Pharmacy |
+      | field    | value |
+      | phone_no | None  |
+      | phone_no | ''    |
+      | website  | None  |
+      | website  | ''    |
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001S007. A duplicate sequence number is allowed

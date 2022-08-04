@@ -1,21 +1,21 @@
 from .constants import (
     DOS_ADDRESS_FIELD_NAME,
-    DOS_POSTCODE_FIELD_NAME,
-    DOS_PUBLIC_PHONE_FIELD_NAME,
-    DOS_WEB_FIELD_NAME,
-    DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY,
-    DOS_WEB_SERVICE_HISTORY_KEY,
     DOS_ADDRESS_SERVICE_HISTORY_KEY,
+    DOS_POSTCODE_FIELD_NAME,
     DOS_POSTCODE_SERVICE_HISTORY_KEY,
+    DOS_PUBLIC_PHONE_FIELD_NAME,
+    DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY,
+    DOS_WEB_FIELD_NAME,
+    DOS_WEB_SERVICE_HISTORY_KEY,
 )
 
 
 def get_service_table_field_name(plain_english_field_name: str) -> str:
     """Convert a plain English field name to the name of the field in the services table"""
     match plain_english_field_name.lower():
-        case "phone_no":
+        case "phone_no" | "phone" | "public_phone" | "publicphone":
             field_name = DOS_PUBLIC_PHONE_FIELD_NAME
-        case "website":
+        case "website" | "web":
             field_name = DOS_WEB_FIELD_NAME
         case "address":
             field_name = DOS_ADDRESS_FIELD_NAME
@@ -29,9 +29,9 @@ def get_service_table_field_name(plain_english_field_name: str) -> str:
 def get_service_history_data_key(plain_english_field_name: str) -> str:
     """Convert a plain English field name to the name of the field in the services table"""
     match plain_english_field_name.lower():
-        case "phone_no":
+        case "phone_no" | "phone" | "public_phone" | "publicphone":
             field_name = DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY
-        case "website":
+        case "website" | "web":
             field_name = DOS_WEB_SERVICE_HISTORY_KEY
         case "address":
             field_name = DOS_ADDRESS_SERVICE_HISTORY_KEY

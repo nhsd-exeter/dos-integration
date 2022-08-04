@@ -12,18 +12,19 @@ from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
-from .utilities.aws import get_logs, negative_log_check
 from .utilities.change_event_builder import (
     build_same_as_dos_change_event,
     ChangeEventBuilder,
     set_opening_times_change_event,
     valid_change_event,
 )
+from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
     check_contact_delete_in_dos,
     check_received_data_in_dos,
+    check_service_history,
     check_specified_received_opening_times_date_in_dos,
     check_specified_received_opening_times_time_in_dos,
     check_standard_received_opening_times_time_in_dos,
@@ -31,12 +32,13 @@ from .utilities.utils import (
     confirm_changes,
     generate_correlation_id,
     generate_random_int,
+    get_address_string,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_changes,
+    get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
-    get_previous_data,
     get_service_id,
     get_service_table_field,
     get_service_type_data,
@@ -53,7 +55,6 @@ from .utilities.utils import (
     slack_retry,
     time_to_sec,
     wait_for_service_update,
-    check_service_history,
 )
 
 scenarios(
@@ -67,21 +68,22 @@ scenarios(
 FAKER = Faker("en_GB")
 
 
-@given(parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
+@given(parse('the "{contact}" is changed and is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact: str, context: Context):
-    context.change_event = ChangeEventBuilder("pharmacy").build_change_event_from_default()
     validated = False
-    while validated is False:
+    while not validated:
         match contact.lower():
             case "website":
+                context.previous_value = context.change_event.website
                 context.change_event.website = FAKER.domain_word() + ".nhs.uk"
             case "phone_no":
+                context.previous_value = context.change_event.phone
                 context.change_event.phone = FAKER.phone_number()
             case "address":
+                context.previous_value = get_address_string(context.change_event)
                 context.change_event.address_line_1 = FAKER.street_name()
             case _:
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
-
         validated = valid_change_event(context.change_event)
     return context
 
@@ -98,7 +100,7 @@ def a_valid_changed_event_with_empty_contact(value, field, context: Context):
             case _:
                 return value
 
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     context.change_event.organisation_name = f"Test Service {get_value_from_data()}"
     context.change_event.website = None
     context.change_event.phone = None
@@ -163,25 +165,31 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
 
 @given(parse('a "{org_type}" Changed Event is aligned with DoS'), target_fixture="context")
 def dos_event_from_scratch(org_type: str, context: Context):
-    if org_type.lower() in ["pharmacy", "dentist"]:
-        context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
-        return context
-    else:
+    if org_type.lower() not in {"pharmacy", "dentist"}:
         raise ValueError(f"Invalid event type '{org_type}' provided")
+    context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    return context
 
 
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")
 def a_change_event_is_valid_with_contact_set(contact: str, context: Context):
-    context.change_event = ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
-        get_odscode_with_contact_data()
-    )
-    match contact.lower():
-        case "website":
-            context.change_event.website = None
-        case "phone":
-            context.change_event.phone = None
-        case _:
-            raise ValueError(f"Invalid contact '{contact}' provided")
+    for _ in range(5):
+        context.change_event, context.service_id = ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
+            get_odscode_with_contact_data()
+        )
+        match contact.lower():
+            case "website":
+                if context.change_event.website is None or context.change_event.website == "":
+                    continue
+                context.previous_value = context.change_event.website
+                context.change_event.website = None
+            case "phone":
+                if context.change_event.phone is None or context.change_event.phone == "":
+                    continue
+                context.previous_value = context.change_event.phone
+                context.change_event.phone = None
+            case _:
+                raise ValueError(f"Invalid contact '{contact}' provided")
     return context
 
 
@@ -204,12 +212,16 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
 def generic_event_config(context: Context, field: str, value: str):
     match field.lower():
         case "website":
+            context.previous_value = context.change_event.website
             context.change_event.website = value
         case "phone":
+            context.previous_value = context.change_event.phone
             context.change_event.phone = value
         case "odscode":
+            context.previous_value = context.change_event.odscode
             context.change_event.odscode = value
         case "postcode":
+            context.previous_value = context.change_event.postcode
             context.change_event.postcode = value
         case "organisationstatus":
             context.change_event.organisation_status = value
@@ -627,9 +639,11 @@ def check_the_service_table_field_has_updated(context: Context, plain_english_se
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
-    assert field_data == get_previous_data(context, field_name), (
+    expected_value = get_expected_data(context, plain_english_service_table_field)
+    expected_value = expected_value if expected_value is not None else ""
+    assert field_data == expected_value, (
         f"ERROR!!.. Expected {plain_english_service_table_field} not found in Dos DB., "
-        f"expected: {get_previous_data(context.service_id, field_name)}, found: {field_data}"
+        f"expected: {expected_value}, found: {field_data}"
     )
     return context
 
@@ -637,10 +651,12 @@ def check_the_service_table_field_has_updated(context: Context, plain_english_se
 @then(parse('the service history is updated with the "{plain_english_service_table_field}"'))
 def check_the_service_history_has_updated(context: Context, plain_english_service_table_field: str):
     """TODO"""
+    expected_data = get_expected_data(context, plain_english_service_table_field)
     check_service_history(
         service_id=context.service_id,
         plain_english_field_name=plain_english_service_table_field,
-        expected_data=get_previous_data(context, plain_english_service_table_field),
+        expected_data=expected_data,
+        previous_data=context.previous_value,
     )
     return context
 
@@ -657,7 +673,7 @@ def check_the_last_updated_date_has_updated(context: Context, service_table_fiel
             changed_data = context.change_event.website
         case "address":
             cms = "postaladdress"
-            changed_data = context.change_event.address_line_1.title()
+            changed_data = str(context.change_event.address_line_1).title()
         case "postcode":
             cms = "cmspostcode"
             changed_data = context.change_event.postcode

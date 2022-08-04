@@ -56,9 +56,3 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
 
 def get_log_group_name(lambda_name: str) -> str:
     return f'/aws/lambda/uec-dos-int-{getenv("ENVIRONMENT")}-{lambda_name}'
-
-
-def get_secret(secret_name: str) -> str:
-    secrets_manager = client(service_name="secretsmanager")
-    get_secret_value_response = secrets_manager.get_secret_value(SecretId=secret_name)
-    return get_secret_value_response["SecretString"]
