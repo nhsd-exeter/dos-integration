@@ -1,11 +1,10 @@
 Feature: F006. Opening times
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @broken @pharmacy_no_log_searches @wip
   Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the Change Request with changed specified date and time is captured by Dos
+    Then the Change Request with changed specified date and time is captured by Dos
 
   @complete @broken @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
@@ -84,7 +83,7 @@ Feature: F006. Opening times
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has equal "<opening_type>" values
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
+    Then the attributes for invalid opening times report is identified in the logs
 
     Examples:
       | opening_type |

@@ -43,7 +43,7 @@ from .utilities.utils import (
     get_service_type_data,
     get_service_type_from_cr,
     get_stored_events_from_dynamo_db,
-    post_ce_sqs,
+    post_to_change_event_dlq,
     post_cr_fifo,
     post_cr_sqs,
     process_change_request_payload,
@@ -127,14 +127,16 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
-@given(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
 def post_an_sqs_message(queue_type: str, context: Context):
-    match queue_type:
-        case "ce":
-            post_ce_sqs(context)
-        case "cr":
+    match queue_type.lower():
+        case "change event dlq":
+            post_to_change_event_dlq(context)
+        case "update request":
+            # To be renamed
             post_cr_sqs()
-        case "404":
+        case "update request dlq":
+            # To be renamed
             post_cr_fifo()
         case _:
             raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
@@ -613,18 +615,6 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
     ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data, expected: {expected_data}, actual: {field_data}"  # noqa: E501
 
 
-@then(parse("the Change is included in the Change request"))
-def change_is_included_in_service_sync(context: Context):
-    if "/" in context.correlation_id:
-        context.correlation_id = context.correlation_id.replace("/", r"\/")
-    query = (
-        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        '| filter message like "Successfully send change request to DoS"'
-    )
-    logs = get_logs(query, "sender", context.start_time)
-    assert logs != [], "ERROR!!.. Expected Change not found in logs."
-
-
 @then(parse('the "{plain_english_service_table_field}" is updated within the DoS DB'))
 def check_the_service_table_field_has_updated(context: Context, plain_english_service_table_field: str):
     """TODO"""
@@ -699,6 +689,7 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
 @then("the Change Request with changed specified date and time is captured by Dos")
 def the_changed_opening_time_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
+    wait_for_service_update(context.service_id)
     open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
     closing_time = time_to_sec(context.change_event.specified_opening_times[-1]["ClosingTime"])
     changed_time = f"{open_time}-{closing_time}"

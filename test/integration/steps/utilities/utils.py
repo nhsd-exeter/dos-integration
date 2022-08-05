@@ -596,24 +596,26 @@ def check_slack(channel, token) -> str:
     return output.text
 
 
-def get_sqs_queue(queue_type) -> str:
+def get_sqs_queue_name(queue_type: str) -> str:
     response = ""
     current_environment = getenv("ENVIRONMENT")
-    match queue_type:
-        case "ce":
+    match queue_type.lower():
+        case "change event dlq":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-change-event-dead-letter-queue.fifo",
             )
         case "cr":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-cr-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-update-request-dead-letter-queue.fifo",
             )
         case "404":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-cr-fifo-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-update-request-queue.fifo",
             )
         case _:
             raise ValueError("Invalid SQS queue type specified")
+    print(response)
+    raise NotImplementedError("Not implemented")
 
     return response["QueueUrl"]
 
@@ -646,7 +648,7 @@ def generate_sqs_body(website) -> dict:
 
 
 def post_cr_sqs():
-    queue_url = get_sqs_queue("cr")
+    queue_url = get_sqs_queue_name("cr")
     sqs_body = generate_sqs_body("https://www.test.com")
 
     SQS_CLIENT.send_message(
@@ -660,7 +662,7 @@ def post_cr_sqs():
 
 
 def post_cr_fifo():
-    queue_url = get_sqs_queue("404")
+    queue_url = get_sqs_queue_name("404")
     sqs_body = generate_sqs_body("abc@def.com")
 
     SQS_CLIENT.send_message(
@@ -673,8 +675,8 @@ def post_cr_fifo():
     return True
 
 
-def post_ce_sqs(context: Context):
-    queue_url = get_sqs_queue("ce")
+def post_to_change_event_dlq(context: Context):
+    queue_url = get_sqs_queue_name("change event dlq")
     sqs_body = context.change_event.get_change_event()
 
     SQS_CLIENT.send_message(
