@@ -44,7 +44,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "BT4 2HU"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "report_key" with message "INVALID_POSTCODE"
+    Then the "service-matcher" lambda shows field "report_key" with message "INVALID_POSTCODE"
 
   @complete @broken @dev @pharmacy_cloudwatch_queries
   Scenario: F002S007. Address changes are discarded when postcode is invalid
@@ -107,7 +107,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has overlapping opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
+    Then the "service-matcher" lambda shows field "report_key" with message "INVALID_OPEN_TIMES"
 
 
   @complete @broken @dev @pharmacy_cloudwatch_queries
@@ -115,7 +115,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
+    Then the "service-matcher" lambda shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
 
 
   @complete @broken @dev @pharmacy_cloudwatch_queries
@@ -123,7 +123,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
+    Then the "service-sync" lambda shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
 
 
   # @complete @broken @dentist_cloudwatch_queries

@@ -264,7 +264,6 @@ def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Di
 
 
 def get_change_event_standard_opening_times(service_id: str) -> Any:
-    # This causes the failure
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)

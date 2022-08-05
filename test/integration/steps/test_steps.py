@@ -115,8 +115,6 @@ def a_valid_changed_event_with_empty_contact(value, field, context: Context):
             context.change_event.website = get_value_from_data()
         case "phone_no":
             context.change_event.phone = get_value_from_data()
-        case "organisation_name":
-            context.change_event.organisation_name = get_value_from_data()
         case _:
             raise ValueError(f"ERROR!.. Input parameter '{field}' not compatible")
     context.correlation_id = None
@@ -386,7 +384,7 @@ def change_event_same_dual(context: Context, opening_type):
 # Check that the requested ODS code exists in ddb, and create an entry if not
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb(context: Context):
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     odscode = context.change_event.odscode
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
@@ -397,7 +395,7 @@ def current_ods_exists_in_ddb(context: Context):
 
 @given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
 def a_changed_url_event_is_valid(url: str, context: Context):
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     context.change_event.website = url
     context.change_event.postcode = "NG5 2JJ"
     return context
@@ -405,8 +403,12 @@ def a_changed_url_event_is_valid(url: str, context: Context):
 
 @given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
 def a_changed_address_event_is_valid(address: str, context: Context):
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     context.change_event.address_line_1 = address
+    context.change_event.address_line_2 = None
+    context.change_event.address_line_3 = None
+    context.change_event.city = None
+    context.change_event.county = None
     return context
 
 
@@ -602,23 +604,15 @@ def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context,
     return context
 
 
-@then(parse('the Change Request with formatted "{expected_url}" is captured by Dos'))
-def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    cms = "cmsurl"
-    correlation_id = context.correlation_id.replace("/", r"\/")
+@then(parse('DoS has "{expected_data}" in the "{plain_english_service_table_field}" field'))
+def expected_data_is_within_dos(context: Context, expected_data: str, plain_english_service_table_field: str):
+    """Assert DoS demographics data is updated"""
+    wait_for_service_update(context.service_id)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
     assert (
-        check_received_data_in_dos(correlation_id, cms, expected_url) is True
-    ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
-
-
-@then(parse('the Change Request with title cased "{expected_address}" is captured by Dos'))
-def the_changed_title_case_address_is_accepted_by_dos(context, expected_address):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    cms = "postaladdress"
-    assert (
-        check_received_data_in_dos(context.correlation_id, cms, expected_address) is True
-    ), f"ERROR!.. Dos not updated with web address change: {expected_address}"
+        field_data == expected_data
+    ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data, expected: {expected_data}, actual: {field_data}"  # noqa: E501
 
 
 @then(parse("the Change is included in the Change request"))
