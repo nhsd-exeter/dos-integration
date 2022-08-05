@@ -519,6 +519,23 @@ def random_pharmacy_odscode() -> str:
     return odscode
 
 
+def generate_untaken_ods() -> str:
+    success = False
+    while success is False:
+        odscode = str(randint(10000, 99999))
+        if check_ods_list(odscode) is True:
+            return odscode
+
+
+def check_ods_list(odscode: str) -> str:
+    lambda_payload = {"type": "get_taken_odscodes"}
+    ods_list = get_odscodes_list(lambda_payload)
+    if odscode not in ods_list:
+        return True
+    else:
+        return False
+
+
 def random_dentist_odscode() -> str:
     global DENTIST_ODS_CODE_LIST
     if DENTIST_ODS_CODE_LIST is None:

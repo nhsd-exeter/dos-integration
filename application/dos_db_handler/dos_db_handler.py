@@ -38,6 +38,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
         )
         result = run_query(query, None)
+    elif request["type"] == "get_taken_odscodes":
+        query = "SELECT LEFT(odscode, 5) FROM services"
+        result = run_query(query, None)
     elif request["type"] == "get_pharmacy_odscodes_with_contacts":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
