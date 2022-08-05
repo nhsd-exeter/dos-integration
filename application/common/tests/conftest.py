@@ -23,8 +23,8 @@ def dummy_dos_service(**kwargs) -> DoSService:
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[col] = random_str
     dos_service = DoSService(test_data)
-    dos_service._standard_opening_times = StandardOpeningTimes()
-    dos_service._specified_opening_times = []
+    dos_service.standard_opening_times = StandardOpeningTimes()
+    dos_service.specified_opening_times = []
 
     for name, value in kwargs.items():
         if value is not None:
