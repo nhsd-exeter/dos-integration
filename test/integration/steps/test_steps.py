@@ -35,7 +35,6 @@ from .utilities.utils import (
     get_address_string,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
-    get_changes,
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
@@ -55,6 +54,7 @@ from .utilities.utils import (
     slack_retry,
     time_to_sec,
     wait_for_service_update,
+    service_not_updated,
 )
 
 scenarios(
@@ -221,6 +221,15 @@ def generic_event_config(context: Context, field: str, value: str):
         case "postcode":
             context.previous_value = context.change_event.postcode
             context.change_event.postcode = value
+        case "address":
+            context.previous_value = get_address_string(context.change_event)
+            context.change_event.address_line_1 = value
+            context.change_event.address_line_2 = None
+            context.change_event.address_line_3 = None
+            context.change_event.city = None
+            context.change_event.county = None
+        case "organisationname":
+            context.change_event.organisation_name = value
         case "organisationstatus":
             context.change_event.organisation_status = value
         case "organisationtypeid":
@@ -519,17 +528,6 @@ def stored_dynamo_db_events_are_pulled(context: Context):
     return context
 
 
-@then("the exception is reported to cloudwatch", target_fixture="context")
-def service_exception(context: Context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        ' | filter level="ERROR"'
-    )
-    logs = get_logs(query, "processor", context.start_time)
-    assert logs != [], "ERROR!!.. Expected exception not logged."
-    return context
-
-
 @then("the OpeningTimes exception is reported to cloudwatch")
 def openingtimes_service_exception(context: Context):
     query = (
@@ -540,14 +538,14 @@ def openingtimes_service_exception(context: Context):
     assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not captured."
 
 
-@then(parse("the {address} from the changes is not included in the change request"))
-def address_change_is_discarded_in_service_sync(context: Context, address: str):
-    query = (
-        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        '| filter message like "Attempting to send change request to DoS"'
-    )
-    logs = get_logs(query, "sender", context.start_time)
-    assert f"{address}" not in logs, "ERROR!!.. Unexpected Address change found in logs."
+@then(parse('the "{plain_english_service_table_field}" has not been changed in DoS'))
+def field_is_not_updated_in_dos(context: Context, plain_english_service_table_field: str):
+    sleep(120)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    assert (
+        field_data == context.previous_value
+    ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data - It has changed from expected value, expected: {context.previous_value}, actual: {field_data}"  # noqa: E501
 
 
 @then("the processed Changed Request is sent to Dos", target_fixture="context")
@@ -729,10 +727,9 @@ def the_changed_opening_standard_time_is_accepted_by_dos(context: Context):
     ), f"ERROR!.. Dos not updated with change: {changed_time}"
 
 
-@then("the Changed Event is not sent to Dos")
+@then("the DoS Service is not updated")
 def the_changed_event_is_not_sent_to_dos(context: Context):
-    response = get_changes(context.correlation_id)
-    assert response == [], "ERROR!!.. Event data found in Dos."
+    service_not_updated(context.service_id)
 
 
 @then(parse('the change request has status code "{status}"'))
@@ -749,7 +746,7 @@ def invalid_opening_times_exception(context: Context):
         f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         '| filter report_key="INVALID_OPEN_TIMES"'
     )
-    logs = get_logs(query, "processor", context.start_time)
+    logs = get_logs(query, "service-matcher", context.start_time)
     for item in [
         "nhsuk_odscode",
         "nhsuk_organisation_name",
@@ -763,19 +760,28 @@ def invalid_opening_times_exception(context: Context):
 @then("the date for the specified opening time returns an empty list")
 def specified_opening_date_closed(context: Context):
     closed_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
-    date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
+    date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%d-%m-%Y")
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-    logs = get_logs(query, "sender", context.start_time)
-    assert f'\\"{date_obj}\\":[]' in logs, f"Expected closed date '{closed_date}' not captured"
+    logs = get_logs(query, "service-sync", context.start_time)
+    assert (
+        f"Saving specfied opening times for: CLOSED on {date_obj} []" in logs
+    ), f"Expected closed date '{closed_date}' not captured"
     return context
 
 
 @then("the day for the standard opening time returns an empty list")
 def standard_opening_day_closed(context: Context):
-    closed_day = context.change_event.standard_opening_times[-1]["Weekday"]
+    days = {"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+    closed_day: str = context.change_event.standard_opening_times[-1]["Weekday"]
+    closed_day_id = days[closed_day.lower()]
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-    logs = get_logs(query, "sender", context.start_time)
-    assert f'\\"{closed_day}\\":[]' in logs, f"Expected closed day '{closed_day}' not captured"
+    logs = get_logs(query, "service-sync", context.start_time)
+    assert (
+        f"Deleting standard opening times for dayid: {closed_day_id}" in logs
+    ), f"Expected closed day '{closed_day}' not captured"
+    assert (
+        f"Saving standard opening times period for dayid: {closed_day_id}" not in logs
+    ), f"Expected closed day '{closed_day}' not captured"
     return context
 
 

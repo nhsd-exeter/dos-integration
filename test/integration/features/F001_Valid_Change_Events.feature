@@ -84,7 +84,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | https://Www.testpharmacy.co.uk                   | https://www.testpharmacy.co.uk                   | website |
       | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test | website |
 
-  @complete @broken @pharmacy_no_log_searches @wip
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001S009 Changed Event with address line variations is title cased and accepted by Dos
     Given a Changed Event with "<address>" is valid
     When the Changed Event is sent for processing with "valid" api key

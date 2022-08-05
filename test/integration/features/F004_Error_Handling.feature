@@ -18,13 +18,15 @@ Feature: F004. Error Handling
     Then the Event "cr_dlq" shows field "error_msg" with message "Message Abandoned"
     And the Changed Event is stored in dynamo db
 
-  @complete @broken @dev @pharmacy_cloudwatch_queries
+  # Refactor to read from DB
+  @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S003. A Changed Event where Specified opening date is set as closed is captured
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the date for the specified opening time returns an empty list
 
-  @complete @broken @dev @pharmacy_cloudwatch_queries
+  # Refactor to read from DB
+  @complete @broken @dev @pharmacy_cloudwatch_queries @wip
   Scenario: F004S004. A Changed Event where Standard opening day is set as closed is captured
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -91,13 +93,6 @@ Feature: F004. Error Handling
   #   When the Changed Event is sent for processing with "valid" api key
   #   Then the Event "processor" shows field "message" with message "Validation Error"
 
-
-  @complete @broken @dev @pharmacy_cloudwatch_queries
-  Scenario Outline: F004S012. A Changed Event with Pharmacy org type is accepted
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "Postcode" is set to "CT1 1AA"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the processed Changed Request is sent to Dos
 
 
   @dev @pharmacy_cloudwatch_queries

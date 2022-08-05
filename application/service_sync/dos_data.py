@@ -209,7 +209,7 @@ def save_specified_opening_times_into_db(
             query=(f"""DELETE FROM servicespecifiedopeningdates WHERE serviceid='{service_id}' """),
         ).close()
         for specified_opening_times_day in specified_opening_times_changes:
-            logger.debug(f"Saving standard opening times for dayid: {specified_opening_times_day}")
+            logger.debug(f"Saving specfied opening times for: {specified_opening_times_day}")
             cursor = query_dos_db(
                 connection=connection,
                 query=(

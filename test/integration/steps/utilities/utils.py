@@ -332,6 +332,19 @@ def wait_for_service_update(service_id: str) -> Any:
         raise ValueError(f"Service not updated, service_id: {service_id}")
 
 
+def service_not_updated(service_id: str):
+    """Assert Service not updated in last 2 mins"""
+    sleep(60)
+    two_mins_ago = datetime.now() - timedelta(minutes=2)
+    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+    updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
+    updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+    updated_date_time = updated_date_time.replace(tzinfo=UTC)
+    two_mins_ago = datetime.now() - timedelta(minutes=2)
+    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+    assert updated_date_time < two_mins_ago, f"Service updated unexpectantly, service_id: {service_id}"
+
+
 def get_expected_data(context: Context, changed_data_name: str) -> Any:
     """Get the previous data from the context"""
     match changed_data_name.lower():
