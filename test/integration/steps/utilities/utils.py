@@ -209,42 +209,20 @@ def confirm_approver_status(
     return data
 
 
-def get_service_id(correlation_id: str) -> list:
-    retries = 0
+def get_service_id(odscode: str) -> str:
     data = []
-    data_status = False
-    while data_status is False:
-        lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
+    for _ in range(16):
+        lambda_payload = {"type": "get_service_id", "odscode": odscode}
         response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
         if data != []:
-            return data[0][0]
-
-        if retries > 16:
-            raise ValueError("Error!.. Service Id not found")
-        retries += 1
+            break
         sleep(30)
+    else:
+        raise ValueError("Error!.. Service Id not found")
 
-
-def get_service_type_from_cr(correlation_id: str) -> list:
-    retries = 0
-    data = []
-    data_status = False
-    while data_status is False:
-        lambda_payload = {"type": "get_service_type_from_cr", "get_service_id": get_service_id(correlation_id)}
-        response = invoke_dos_db_handler_lambda(lambda_payload)
-        data = loads(response)
-        data = literal_eval(data)
-        if data != []:
-            print(f"Number of service_type retries: {retries}")
-            print(data)
-            return data[0][0]
-
-        if retries > 8:
-            raise ValueError("Error!.. Service type not found")
-        retries += 1
-        sleep(5)
+    return data[0][0]
 
 
 def get_service_type_data(organisation_type_id: str) -> list[int]:
@@ -430,18 +408,11 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
     return False
 
 
-def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
-    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    expected_date = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
-    for db_row in response:
-        change_row = dict(loads(db_row[0])["new"])
-        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
-            for date in change_row[search_key]["data"]["add"]:
-                if expected_date in date:
-                    return True
-    raise ValueError(f'Specified date change "{search_param}" not found in Dos changes..')
+def get_specified_opening_times(service_id: str):
+    lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return loads(data[0][0])
 
 
 def check_contact_delete_in_dos(corr_id: str, search_key: str):
@@ -459,20 +430,6 @@ def check_contact_delete_in_dos(corr_id: str, search_key: str):
         return True
     else:
         raise ValueError("Expected a 'delete' on the website but didn't find one")
-
-
-def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
-    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    for db_row in response:
-        change_row = dict(loads(db_row[0])["new"])
-        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
-            time_periods = change_row[search_key]["data"]["add"]
-            for time_period in time_periods:
-                if search_param in time_period:
-                    return True
-    raise ValueError("Specified Opening-time time change not found in Dos changes..")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):

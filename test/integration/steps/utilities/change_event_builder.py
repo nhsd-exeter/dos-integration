@@ -132,12 +132,13 @@ class ChangeEventBuilder:
             case _:
                 raise ValueError(f"Service type {self.service_type} does not exist")
         service_id = demographics_data["id"]
-        change_event.organisation_name = demographics_data["publicname"]
+        change_event.organisation_name = (
+            demographics_data["publicname"] if demographics_data["publicname"] else demographics_data["name"]
+        )
         change_event.postcode = demographics_data["postcode"]
         change_event.website = demographics_data["web"]
         change_event.phone = demographics_data["publicphone"]
         change_event = self.set_same_as_dos_address(change_event, demographics_data["address"])
-        # This
         standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
         change_event.standard_opening_times = []
         change_event.specified_opening_times = []

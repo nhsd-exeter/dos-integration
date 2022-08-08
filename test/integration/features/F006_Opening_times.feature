@@ -1,68 +1,64 @@
 Feature: F006. Opening times
 
-  @complete @broken @pharmacy_no_log_searches @wip
-  Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by Dos
+  @complete @pharmacy_no_log_searches
+  Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by DoS
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request with changed specified date and time is captured by Dos
+    Then the DoS service has been updated with the specified date and time is captured by DoS
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the Change Request with changed standard day time is captured by Dos
+    Then the DoS service has been updated with the standard days and times is captured by DoS
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S003. Pharmacy with one break in opening times
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has one break in opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the opening times changes are confirmed valid
+    Then opening times with a break are updated in DoS
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S004. Pharmacy with two breaks in opening times
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has two breaks in opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the opening times changes are confirmed valid
+    Then opening times with two breaks are updated in DoS
 
-  @complete @broken @pharmacy_no_log_searches
+  # Refactor to read values from DB to confirm change
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F006S005. Pharmacy with one off opening date set to closed
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event contains a specified opening date that is "Closed"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the opening times changes are confirmed valid
+    Then the "service-sync" lambda does not show "report_key" with message "INVALID_OPEN_TIMES"
 
-  @complete @broken @pharmacy_no_log_searches
+  # Refactor to read values from DB to confirm change
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F006S006. A Pharmacy with one off opening date set to open
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event contains a specified opening date that is "Open"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the opening times changes are confirmed valid
+    Then the "service-sync" lambda does not show "report_key" with message "INVALID_OPEN_TIMES"
 
-  @complete @broken @pharmacy_no_log_searches
+  # Refactor to read values from DB to confirm change
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F006S007. Close pharmacy on bank holiday
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event closes the pharmacy on a bank holiday
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request is accepted by Dos
-    And the opening times changes are confirmed valid
+    Then the "service-sync" lambda does not show "report_key" with message "INVALID_OPEN_TIMES"
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
-    Then the Change Request with changed specified date and time is captured by Dos
+    Then DoS is updated with the new specified opening times
     And the Changed Event is replayed with the specified opening date deleted
-    And the deleted specified date is confirmed removed from Dos
+    And the deleted specified date is confirmed removed from DoS
 
-
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S009. A recently closed pharmacy on a standard day can be opened
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -78,7 +74,7 @@ Feature: F006. Opening times
     And the Changed Event is replayed with the pharmacy now "closed"
     And the pharmacy is confirmed "closed" for the standard day in Dos
 
-  @complete @broken @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F006S011. Same dual general opening times
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has equal "<opening_type>" values

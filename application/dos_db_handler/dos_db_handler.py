@@ -76,17 +76,15 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
         query = f"SELECT value from changes where externalref = '{cid}'"
         result = run_query(query, None)
-    elif request["type"] == "get_service_type_from_cr":
-        sid = request.get("get_service_id")
-        if sid is None:
-            raise ValueError("Missing correlation id")
-        query = f"SELECT typeid from services where id = '{sid}'"
-        result = run_query(query, None)
     elif request["type"] == "get_service_id":
-        cid = request.get("correlation_id")
-        if cid is None:
+        odscode = request.get("odscode")
+        if odscode is None:
             raise ValueError("Missing correlation id")
-        query = f"SELECT serviceid from changes where externalref = '{cid}'"
+        type_id_query = get_valid_service_types_equals_string("PHA")
+        query = (
+            f"SELECT id FROM services WHERE typeid {type_id_query} "
+            f"AND statusid = {VALID_STATUS_ID} AND odscode like '{odscode}%' LIMIT 1"
+        )
         result = run_query(query, None)
     elif request["type"] == "get_approver_status":
         cid = request.get("correlation_id")

@@ -10,14 +10,6 @@ Feature: F004. Error Handling
     Then the Event "cr_dlq" shows field "error_msg_http_code" with message "400"
     And the Changed Event is stored in dynamo db
 
-  @dev
-  Scenario: F004S002. A CR with invalid Correlation ID gets rejected by api gateway mock and is NOT sent to DOS
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the correlation-id is "Bad Request"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "cr_dlq" shows field "error_msg" with message "Message Abandoned"
-    And the Changed Event is stored in dynamo db
-
   # Refactor to read from DB
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S003. A Changed Event where Specified opening date is set as closed is captured
