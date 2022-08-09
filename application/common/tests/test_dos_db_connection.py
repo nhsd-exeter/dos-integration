@@ -101,7 +101,7 @@ def test_connection_to_db(mock_connect):
         dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD,
-        connect_timeout=30,
+        connect_timeout=5,
         options=f"-c search_path=dbo,{DB_SCHEMA}",
         application_name="DOS INTEGRATION <psycopg2>",
     )

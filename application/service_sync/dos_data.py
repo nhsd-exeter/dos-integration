@@ -1,3 +1,4 @@
+from os import environ
 from typing import Dict, List, Tuple
 
 from aws_lambda_powertools.logging import Logger
@@ -8,10 +9,34 @@ from psycopg2.sql import SQL
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from common.dos import DoSService, get_specified_opening_times_from_db, get_standard_opening_times_from_db
-from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
+from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dynamodb import put_circuit_is_open
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from common.utilities import add_metric
 
 logger = Logger(child=True)
+
+
+def run_db_health_check() -> None:
+    """Runs a health check to ensure the db is running"""
+    try:
+        logger.info("Running health check")
+        with connect_to_dos_db() as connection:
+            cursor = query_dos_db(connection=connection, query="SELECT * FROM services LIMIT 1")
+            rows: List[DictCursor] = cursor.fetchall()
+            if len(rows) > 0:
+                # DB is running so close circuit
+                put_circuit_is_open(environ["CIRCUIT"], False)
+                logger.info("Health check successful")
+                add_metric("ServiceSyncHealthCheckSuccess")
+            else:
+                # Else DB is not running so circuit remains open
+                logger.error("Health check failed - No services found in database")
+                add_metric("ServiceSyncHealthCheckFailure")
+    except Exception:
+        # If an error occurs, circuit remains open
+        logger.exception("Health check failed")
+        add_metric("ServiceSyncHealthCheckFailure")
 
 
 def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHistories]:
@@ -30,8 +55,8 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
         "WHERE s.id = %(SERVICE_ID)s"
     )
     query_vars = {"SERVICE_ID": service_id}
-    # Connect to the DoS database replica (Read only)
-    with connect_to_dos_db_replica() as connection:
+    # Connect to the DoS database
+    with connect_to_dos_db() as connection:
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
         rows: List[DictCursor] = cursor.fetchall()

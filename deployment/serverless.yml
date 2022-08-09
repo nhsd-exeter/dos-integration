@@ -97,7 +97,7 @@ functions:
       - schedule: rate(1 minute)
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CIRCUIT: DOS_API_GATEWAY
+      CIRCUIT: DOS_DATABASE
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
       EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-service-sync
@@ -147,7 +147,6 @@ functions:
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       CIRCUIT: DOS_DATABASE
-      CR_DLQ_URL: ${env:update_request_dlq_url}
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}

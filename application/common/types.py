@@ -1,4 +1,4 @@
-from typing import Any, Dict, TypedDict
+from typing import Any, Dict, Optional, TypedDict
 
 
 class UpdateRequest(TypedDict):
@@ -16,6 +16,7 @@ class UpdateRequestMetadata(TypedDict):
 
 
 class UpdateRequestQueueItem(TypedDict):
-    update_request: UpdateRequest
-    recipient_id: str
-    metadata: UpdateRequestMetadata
+    update_request: Optional[UpdateRequest]
+    recipient_id: Optional[str]
+    metadata: Optional[UpdateRequestMetadata]
+    is_health_check: bool

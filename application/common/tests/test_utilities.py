@@ -1,4 +1,5 @@
 from json import loads
+from os import environ
 
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from pytest import mark, raises
@@ -10,6 +11,7 @@ from ..utilities import (
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
     remove_given_keys_from_dict_by_msg_limit,
+    add_metric,
 )
 
 
@@ -104,17 +106,32 @@ def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
 
 
-@mark.parametrize("input_dict,keys_tobe_removed,msg_limit,expected", [
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, [""], 20, {"Name": "John", "Address": ["2", "4"], "Age": 34}),
-    ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34})
-    ])
+@mark.parametrize(
+    "input_dict,keys_tobe_removed,msg_limit,expected",
+    [
+        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
+        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
+        (
+            {"Name": "John", "Address": ["2", "4"], "Age": 34},
+            [""],
+            20,
+            {"Name": "John", "Address": ["2", "4"], "Age": 34},
+        ),
+        ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34}),
+    ],
+)
 def test_remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit, expected):
     event = remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit)
-    assert (
-        event == expected
-    ), f"Change event should be {expected} but is {event}"
+    assert event == expected, f"Change event should be {expected} but is {event}"
+
+
+def test_add_metric():
+    # Arrange
+    environ["ENV"] = "test"
+    # Act
+    add_metric("test_metric")
+    # Cleanup
+    del environ["ENV"]
 
 
 SQS_EVENT = {

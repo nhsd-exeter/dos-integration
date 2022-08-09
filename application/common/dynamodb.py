@@ -5,13 +5,13 @@ from os import environ
 from time import time
 from typing import Any, Dict, Union
 
-import boto3
+from boto3 import client
 from aws_lambda_powertools.logging.logger import Logger
 from boto3.dynamodb.types import TypeSerializer
 
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
-dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
+dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -24,12 +24,10 @@ def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
 
 def put_circuit_is_open(circuit: str, is_open: bool) -> None:
     """Set the circuit open status for a given circuit
+
     Args:
         circuit (str): Name of the circuit
-        is_open (bool): boolean as to whether the circuit is open (broken) or closed
-
-    Returns:
-        None
+        is_open (bool): boolean as to whether the circuit is open/True (broken) or closed/False (ok)
     """
     dynamo_record = {
         "Id": circuit,
@@ -66,7 +64,7 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         )
         item = respone.get("Item")
         logger.debug(f"Circuit '{circuit}' is_open resp={item}")
-        return None if item is None else int(item["IsOpen"]["BOOL"])
+        return None if item is None else bool(item["IsOpen"]["BOOL"])
 
     except Exception as err:
         raise Exception(f"Unable to get circuit status for '{circuit}'.") from err

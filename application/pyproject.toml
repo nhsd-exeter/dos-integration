@@ -20,10 +20,9 @@ exclude = [
 sort_by_size = true
 ignore_names = [
   "lambda_handler",
-  "*db_connection",
   "field_names",
   "recipient_id",
   "encoding",
   "metadata",
-  "put_circuit_is_open"
+  "is_health_check",
   ]

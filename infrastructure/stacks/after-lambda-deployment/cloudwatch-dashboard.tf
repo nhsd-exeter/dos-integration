@@ -24,7 +24,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
             "height": 6,
-            "width": 6,
+            "width": 4,
             "y": 0,
             "x": 12,
             "type": "metric",
@@ -42,21 +42,24 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
             "type": "metric",
-            "x": 18,
+            "x": 16,
             "y": 0,
-            "width": 6,
+            "width": 8,
             "height": 6,
             "properties": {
+                "sparkline": true,
+                "view": "singleValue",
                 "metrics": [
-                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "DoSApiUnavailable", "ENV", "${var.environment}" ]
+                    [ "UEC-DOS-INT", "UpdateRequestFailed", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "UpdateRequestSuccess", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckSuccess", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckFailure", "ENV", "${var.environment}" ]
                 ],
-                "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "period": 60,
+                "period": 3600,
                 "stat": "Sum",
-                "title": "DoS API failures / unavailable (remove when DB failures are created)"
+                "title": "Service Sync Responses in the last hour"
             }
         },
         {
