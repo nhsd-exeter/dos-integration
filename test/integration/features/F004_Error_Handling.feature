@@ -50,28 +50,28 @@ Feature: F004. Error Handling
       | 1     |
       | -1234 |
 
-  @pharmacy_dentist_off_smoke_test @broken
-  Scenario Outline: F004S008. Dentist and Pharmacy org types not accepted
-    Given a "<org_type>" Changed Event is aligned with DoS
-    When the Changed Event is sent for processing with "valid" api key
-    Then the Event "processor" shows field "message" with message "Validation Error"
+  # @pharmacy_dentist_off_smoke_test @broken
+  # Scenario Outline: F004S008. Dentist and Pharmacy org types not accepted
+  #   Given a "<org_type>" Changed Event is aligned with DoS
+  #   When the Changed Event is sent for processing with "valid" api key
+  #   Then the Event "processor" shows field "message" with message "Validation Error"
 
-    Examples: Organisation types
-      | org_type |
-      | dentist  |
-      | pharmacy |
+  #   Examples: Organisation types
+  #     | org_type |
+  #     | dentist  |
+  #     | pharmacy |
 
 
-  @complete @broken @pharmacy_dentist_smoke_test
-  Scenario Outline: F004S09. Dentist and Pharmacy org types accepted
-    Given a "<org_type>" Changed Event is aligned with DoS
-    When the Changed Event is sent for processing with "valid" api key
-    Then the processed Changed Request is sent to Dos
+  # @complete @broken @pharmacy_dentist_smoke_test
+  # Scenario Outline: F004S09. Dentist and Pharmacy org types accepted
+  #   Given a "<org_type>" Changed Event is aligned with DoS
+  #   When the Changed Event is sent for processing with "valid" api key
+  #   Then the processed Changed Request is sent to Dos
 
-    Examples: Organisation types
-      | org_type |
-      | pharmacy |
-      | dentist  |
+  #   Examples: Organisation types
+  #     | org_type |
+  #     | pharmacy |
+  #     | dentist  |
 
 
   # @complete @broken @dev @dentist_cloudwatch_queries

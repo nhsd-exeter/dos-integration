@@ -66,7 +66,7 @@ Feature: F006. Opening times
     And the Changed Event is replayed with the pharmacy now "open"
     And the pharmacy is confirmed "open" for the standard day in Dos
 
-  @complete @broken @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F006S010. A recently opened pharmacy on a standard day can be closed
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
