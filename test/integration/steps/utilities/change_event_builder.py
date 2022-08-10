@@ -104,14 +104,6 @@ class ChangeEventBuilder:
                     "AdditionalOpeningDate": "Dec 24 2022",
                     "IsOpen": True,
                 },
-                {
-                    "Weekday": "",
-                    "OpeningTime": "10:00",
-                    "ClosingTime": "17:00",
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": "Dec 25 2022",
-                    "IsOpen": True,
-                },
             ],
         )
         return self._change_event
@@ -268,6 +260,18 @@ def set_opening_times_change_event(service_type: str) -> ChangeEvent:
             "OffsetClosingTime": 0,
             "OpeningTimeType": "General",
             "AdditionalOpeningDate": "",
+            "IsOpen": False,
+        }
+    )
+    change_event.specified_opening_times.append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
             "IsOpen": False,
         }
     )
