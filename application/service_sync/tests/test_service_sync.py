@@ -6,7 +6,7 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from pytest import fixture
 
-from ..service_sync import lambda_handler, remove_sqs_message_from_queue, set_up_logging
+from ..service_sync import add_success_metric, lambda_handler, remove_sqs_message_from_queue, set_up_logging
 from common.types import UpdateRequest, UpdateRequestMetadata, UpdateRequestQueueItem
 
 FILE_PATH = "application.service_sync.service_sync"
@@ -40,6 +40,7 @@ def lambda_context():
     return LambdaContext()
 
 
+@patch(f"{FILE_PATH}.add_success_metric")
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
 @patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
@@ -53,6 +54,7 @@ def test_lambda_handler(
     mock_compare_nhs_uk_and_dos_data: MagicMock,
     mock_update_dos_data: MagicMock,
     mock_remove_sqs_message_from_queue: MagicMock,
+    mock_add_success_metric: MagicMock,
     lambda_context: LambdaContext,
 ):
     # Arrange
@@ -77,6 +79,7 @@ def test_lambda_handler(
         service_histories=mock_compare_nhs_uk_and_dos_data().service_histories,
     )
     mock_remove_sqs_message_from_queue.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
+    mock_add_success_metric.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
 
 
 @patch.object(Logger, "append_keys")
@@ -106,14 +109,10 @@ def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info:
     del environ["UPDATE_REQUEST_QUEUE_URL"]
 
 
-# @patch(f"{FILE_PATH}.metric_scope")
-# def test_add_success_metric(mock_metric_scope: MagicMock):
-#     # Arrange
-#     environ["ENV"] = "environment"
-#     # Act
-#     add_success_metric(UPDATE_REQUEST_QUEUE_ITEM)
-#     # Assert
-#     print(mock_metric_scope.return_value.call_args_list)
-#     raise Exception(mock_metric_scope.return_value.__enter__.return_value.call_args_list)
-#     # Cleanup
-#     del environ["ENV"]
+def test_add_success_metric():
+    # Arrange
+    environ["ENV"] = "environment"
+    # Act
+    add_success_metric(UPDATE_REQUEST_QUEUE_ITEM)
+    # Cleanup
+    del environ["ENV"]

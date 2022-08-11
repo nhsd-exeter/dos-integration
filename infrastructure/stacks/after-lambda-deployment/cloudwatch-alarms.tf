@@ -53,9 +53,9 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_al
   treat_missing_data        = "notBreaching"
 }
 
-resource "aws_cloudwatch_metric_alarm" "change_request_to_dos_latency_alert" {
+resource "aws_cloudwatch_metric_alarm" "message_latency_alert" {
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
-  alarm_description         = "Alert for when the Latency for changes request to DoS exceed a given threshold"
+  alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
   alarm_name                = "${var.project_id} | ${var.environment} | Message Latency"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "2"
@@ -71,7 +71,7 @@ resource "aws_cloudwatch_metric_alarm" "change_request_to_dos_latency_alert" {
 
 resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dlq_alert" {
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
-  alarm_description         = "Alert for when the Change Event SQS DQL recieves messages"
+  alarm_description         = "Alert for when the Change Event DQL has recieved messages"
   alarm_name                = "${var.project_id} | ${var.environment} | Change Events DLQ'd"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
@@ -85,10 +85,10 @@ resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dlq_alert" {
   threshold                 = "0"
 }
 
-resource "aws_cloudwatch_metric_alarm" "change_request_sqs_dlq_alert" {
+resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
-  alarm_description         = "Alert for when the Change Request SQS DQL recieves messages"
-  alarm_name                = "${var.project_id} | ${var.environment} | Change Requests DLQ'd"
+  alarm_description         = "Alert for when the Update Request DQL has recieved messages"
+  alarm_name                = "${var.project_id} | ${var.environment} | Update Requests DLQ'd"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { QueueName = var.update_request_dlq }
@@ -99,4 +99,135 @@ resource "aws_cloudwatch_metric_alarm" "change_request_sqs_dlq_alert" {
   period                    = "60"
   statistic                 = "Sum"
   threshold                 = "0"
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_db_db_connections_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DoS DB has too many connections"
+  alarm_name                = "${var.project_id} | ${var.environment} | High DB Connections"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { DBInstanceIdentifier = var.dos_db_name }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DatabaseConnections"
+  namespace                 = "AWS/RDS"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "250"
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_db_replica_db_connections_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DoS DI Replica DB has too many connections"
+  alarm_name                = "${var.project_id} | ${var.environment} | High DB Replica Connections"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { DBInstanceIdentifier = var.dos_db_replica_name }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DatabaseConnections"
+  namespace                 = "AWS/RDS"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "250"
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DoS DB has too high CPU Utilisation"
+  alarm_name                = "${var.project_id} | ${var.environment} | High DB CPU Utilisation"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { DBInstanceIdentifier = var.dos_db_name }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/RDS"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "70"
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_db_replica_cpu_utilisation_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DoS DI Replica DB has too high CPU Utilisation"
+  alarm_name                = "${var.project_id} | ${var.environment} | High DB Replica CPU Utilisation"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { DBInstanceIdentifier = var.dos_db_replica_name }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/RDS"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "70"
+}
+
+
+# resource "aws_cloudwatch_metric_alarm" "dos_db_replica_lag_alert" {
+#   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+#   alarm_description         = "Alert when the DoS DI Replica DB has too lag from the primary DoS DB"
+#   alarm_name                = "${var.project_id} | ${var.environment} | Replica Lag Very High"
+#   comparison_operator       = "GreaterThanThreshold"
+#   datapoints_to_alarm       = "1"
+#   dimensions                = { DBInstanceIdentifier = var.dos_db_replica_name }
+#   evaluation_periods        = "1"
+#   insufficient_data_actions = []
+#   metric_name               = "ReplicaLag"
+#   namespace                 = "AWS/RDS"
+#   period                    = "60"
+#   statistic                 = "Average"
+#   threshold                 = "300"
+# }
+
+
+resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DI has recieved a high number of change events"
+  alarm_name                = "${var.project_id} | ${var.environment} | High Number of Change Events received"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "ChangeEventReceived"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "300"
+  statistic                 = "Sum"
+  threshold                 = "800"
+  treat_missing_data        = "notBreaching"
+}
+
+resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_waiting_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert for when DI is waiting to process change events in service matcher"
+  alarm_name                = "${var.project_id} | ${var.environment} | Change Events Waiting"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "2"
+  dimensions                = { ENV = var.change_event_queue_name }
+  evaluation_periods        = "3"
+  insufficient_data_actions = []
+  metric_name               = "ApproximateNumberOfMessagesDelayed"
+  namespace                 = "AWS/SQS"
+  period                    = "300"
+  statistic                 = "Average"
+  threshold                 = "60000" # 60 Seconds
+}
+
+resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert for when DI is waiting to process update requests in service sync"
+  alarm_name                = "${var.project_id} | ${var.environment} | Update Requests Waiting"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "2"
+  dimensions                = { ENV = var.update_request_queue_name }
+  evaluation_periods        = "3"
+  insufficient_data_actions = []
+  metric_name               = "ApproximateNumberOfMessagesDelayed"
+  namespace                 = "AWS/SQS"
+  period                    = "600"
+  statistic                 = "Average"
+  threshold                 = "30000" # 30 Seconds
 }

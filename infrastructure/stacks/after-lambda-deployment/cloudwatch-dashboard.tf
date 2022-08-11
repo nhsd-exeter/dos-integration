@@ -41,44 +41,22 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             }
         },
         {
-            "height": 6,
-            "width": 6,
-            "y": 12,
+            "type": "metric",
             "x": 18,
-            "type": "metric",
-            "properties": {
-                "view": "timeSeries",
-                "stacked": false,
-                "metrics": [
-                    [ "UEC-DOS-INT", "DosApiLatency","ENV", "${var.environment}" ]
-                ],
-                "period": 60,
-                "region": "${var.aws_region}"
-            }
-        },
-        {
-            "height": 6,
+            "y": 0,
             "width": 6,
-            "y": 18,
-            "x": 0,
-            "type": "metric",
+            "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_matcher_lambda_name}" ],
-                    [ ".", "Errors", ".", ".", { "stat": "Sum" } ],
-                    [ ".", "Invocations", ".", "." ],
-                    [ ".", "Duration", ".", "." ],
-                    [ ".", "Throttles", ".", ".", { "stat": "Sum" } ],
-                    [ ".", "Duration", ".", ".", { "stat": "Minimum" } ],
-                    [ "...", { "stat": "Maximum" } ],
-                    [ "...", { "stat": "TM(10%:90%)" } ]
+                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "DoSApiUnavailable", "ENV", "${var.environment}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
-                "title": "Service Matcher",
                 "period": 60,
-                "stat": "Average"
+                "stat": "Sum",
+                "title": "DoS API failures / unavailable (remove when DB failures are created)"
             }
         },
         {
@@ -103,82 +81,6 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             }
         },
         {
-            "height": 6,
-            "width": 6,
-            "y": 12,
-            "x": 6,
-            "type": "metric",
-            "properties": {
-                "metrics": [
-                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.dos_db_name}", { "stat": "Maximum" } ],
-                    [ "..." ],
-                    [ "...", { "stat": "Average" } ]
-                ],
-                "view": "timeSeries",
-                "stacked": false,
-                "region": "${var.aws_region}",
-                "period": 60,
-                "stat": "Minimum",
-                "title": "DI DB Replica Connections"
-            }
-        },
-        {
-            "height": 6,
-            "width": 6,
-            "y": 12,
-            "x": 12,
-            "type": "metric",
-            "properties": {
-                "metrics": [
-                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.dos_db_name}" ]
-                ],
-                "view": "timeSeries",
-                "stacked": false,
-                "region": "${var.aws_region}",
-                "period": 60,
-                "stat": "Maximum",
-                "title": "DI DB Replica CPU Utilization"
-            }
-        },
-        {
-            "height": 6,
-            "width": 6,
-            "y": 18,
-            "x": 6,
-            "type": "metric",
-            "properties": {
-                "view": "timeSeries",
-                "stacked": false,
-                "metrics": [
-                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_sync_lambda_name}" ],
-                    [ ".", "Duration", ".", "." ],
-                    [ ".", "Errors", ".", "." ]
-                ],
-                "region": "${var.aws_region}",
-                "title": "Service Sync",
-                "period": 60
-            }
-        },
-        {
-            "type": "metric",
-            "height": 6,
-            "width": 6,
-            "y": 12,
-            "x": 0,
-            "properties": {
-                "metrics": [
-                    [ "AWS/ApiGateway", "Count", "ApiName", "${var.di_endpoint_api_gateway_name}", { "label": "NHSUK Change Event", "region": "${var.aws_region}" } ],
-                    [ "AWS/SQS", "NumberOfMessagesSent", "QueueName", "${var.update_request_queue_name}", { "label": "Change Request", "region": "${var.aws_region}" } ]
-                ],
-                "view": "timeSeries",
-                "stacked": false,
-                "region": "${var.aws_region}",
-                "period": 60,
-                "stat": "Sum",
-                "title": "Message Count"
-            }
-        },
-        {
             "type": "metric",
             "x": 9,
             "y": 6,
@@ -196,26 +98,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "stat": "Sum",
                 "period": 60,
                 "region": "${var.aws_region}",
-                "title": "Change Request Queue"
-            }
-        },
-        {
-            "type": "metric",
-            "x": 18,
-            "y": 0,
-            "width": 6,
-            "height": 6,
-            "properties": {
-                "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.update_request_dlq}", { "label": "CR FIFO Message Count" } ],
-                    [ "...", "${var.change_event_dlq}", { "label": "CE FIFO Message Count" } ]
-                ],
-                "view": "timeSeries",
-                "stacked": false,
-                "region": "${var.aws_region}",
-                "stat": "Sum",
-                "period": 60,
-                "title": "Dead Letter Queue messages"
+                "title": "Update Request Queue"
             }
         },
         {
@@ -226,68 +109,113 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "UEC-DOS-INT", "DoSApiFail", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "DoSApiUnavailable", "ENV", "${var.environment}" ]
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.update_request_dlq}", { "label": "UR DLQ Message Count" } ],
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.change_event_dlq}", { "label": "CE DLQ Message Count" } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "stat": "Sum",
+                "period": 60,
+                "title": "Dead Letter Queue messages"
+            }
+        },
+        {
+            "height": 6,
+            "width": 4,
+            "y": 12,
+            "x": 0,
+            "type": "metric",
+            "properties": {
+                "metrics": [
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.dos_db_name}", { "stat": "Maximum" } ],
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${var.dos_db_replica_name}", { "stat": "Maximum" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "period": 60,
-                "stat": "Sum",
-                "title": "DoS API failures / unavailable"
+                "stat": "Minimum",
+                "title": "DB Connections"
             }
         },
         {
-            "type": "metric",
-            "x": 12,
-            "y": 18,
-            "width": 6,
             "height": 6,
+            "width": 4,
+            "y": 12,
+            "x": 4,
+            "type": "metric",
             "properties": {
-              "sparkline": true,
-              "period": 60,
-              "metrics": [
-                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-service-matcher", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
-                  [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
-                  [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
-              ],
-              "region": "${var.aws_region}",
-              "title": "Service Matcher Error count and success rate (%)",
-              "yAxis": {
-                  "right": {
-                      "max": 100
-                  }
-              },
-              "view": "timeSeries",
-              "stacked": true,
-              "setPeriodToTimeRange": true
-              }
+                "metrics": [
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.dos_db_name}" ],
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${var.dos_db_replica_name}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${var.aws_region}",
+                "period": 60,
+                "stat": "Maximum",
+                "title": "DB CPU Utilization"
+            }
         },
         {
-            "type": "metric",
-            "x": 18,
-            "y": 18,
-            "width": 6,
             "height": 6,
+            "width": 4,
+            "y": 12,
+            "x": 8,
+            "type": "metric",
             "properties": {
-              "sparkline": true,
-              "period": 60,
-              "metrics": [
-                  [ "AWS/Lambda", "Errors", "FunctionName", "uec-dos-int-${var.environment}-service-sync", { "id": "errors", "stat": "Sum", "color": "#d13212" } ],
-                  [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum", "visible": false } ],
-                  [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}" } ]
-              ],
-              "region": "${var.aws_region}",
-              "title": "Service Sync Error count and success rate (%)",
-              "yAxis": {
-                  "right": {
-                      "max": 100
-                  }
-              },
-              "view": "timeSeries",
-              "stacked": true,
-              "setPeriodToTimeRange": true
-              }
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", "uec-core-dos-regression-db-12-replica-di" ]
+                ],
+                "region": "eu-west-2"
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 12,
+            "x": 12,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_matcher_lambda_name}" ],
+                    [ ".", "Duration", ".", "." ],
+                    [ ".", "Errors", ".", ".", { "visible": false } ],
+                    [ "...", { "id": "errors", "stat": "Sum", "color": "#d62728" } ],
+                    [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum" } ],
+                    [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}", "color": "#2ca02c" } ]
+                ],
+                "region": "${var.aws_region}",
+                "title": "Service Matcher",
+                "period": 60
+            }
+        },
+        {
+            "height": 6,
+            "width": 6,
+            "y": 12,
+            "x": 18,
+            "type": "metric",
+            "properties": {
+                "view": "timeSeries",
+                "stacked": false,
+                "metrics": [
+                    [ "AWS/Lambda", "ConcurrentExecutions", "FunctionName", "${var.service_sync_lambda_name}" ],
+                    [ ".", "Duration", ".", "." ],
+                    [ ".", "Errors", ".", ".", { "visible": false } ],
+                    [ "...", { "id": "errors", "stat": "Sum", "color": "#d62728" } ],
+                    [ ".", "Invocations", ".", ".", { "id": "invocations", "stat": "Sum" } ],
+                    [ { "expression": "100 - 100 * errors / MAX([errors, invocations])", "label": "Success rate (%)", "id": "availability", "yAxis": "right", "region": "${var.aws_region}", "color": "#2ca02c" } ]
+                ],
+                "region": "${var.aws_region}",
+                "title": "Service Sync",
+                "period": 60
+            }
         }
     ]
 }
