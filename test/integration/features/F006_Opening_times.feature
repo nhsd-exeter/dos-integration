@@ -91,9 +91,9 @@ Feature: F006. Opening times
       | General      |
       | Additional   |
 
-  @complete @pharmacy_no_log_searches @wip
+@complete @pharmacy_no_log_searches
   Scenario: F006S012. Confirm changed different specified opening time for same day is captured in Dos
     Given a specified multiple opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the processed Changed Event is replayed with a specified opening time changed
-    And the Change Request with changed specified time is captured by Dos
+    And the Changed Request with changed specified time is captured by Dos

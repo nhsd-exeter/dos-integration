@@ -7,6 +7,7 @@ from json import loads
 from os import getenv
 from random import randint
 from time import sleep
+from dateutil.relativedelta import relativedelta
 
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
@@ -131,6 +132,19 @@ def a_specified_opening_time_change_event_is_valid(context: Context):
 @given("a specified multiple opening time Changed Event is valid", target_fixture="context")
 def a_specified_multiple_opening_time_change_event_is_valid(context: Context):
     context.change_event = set_opening_times_change_event("pharmacy")
+    date = dt.today() + relativedelta(months=1)
+    context.change_event.specified_opening_times.append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
+            "IsOpen": False,
+        }
+    )
     context.change_event.specified_opening_times[-2]["OpeningTime"] = "09:00"
     context.change_event.specified_opening_times[-2]["ClosingTime"] = "14:00"
     context.change_event.specified_opening_times[-1]["OpeningTime"] = "15:00"
@@ -634,7 +648,7 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
     ), f"ERROR!.. Dos incorrectly updated with {field} change: {changed_data}"
 
 
-@then("the Change Request with changed specified date and time is captured by Dos")
+@then("the Changed Request with changed specified date and time is captured by Dos")
 def the_changed_opening_date_time_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
@@ -811,7 +825,7 @@ def change_aligned_event_is_replayed(context: Context):
     return context
 
 
-@then("the Change Request with changed specified time is captured by Dos")
+@then("the Changed Request with changed specified time is captured by Dos")
 def the_changed_opening_time_is_captured_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     service_id = get_service_id(context.correlation_id)
