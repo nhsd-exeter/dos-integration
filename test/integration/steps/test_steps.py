@@ -7,6 +7,7 @@ from json import loads
 from os import getenv
 from random import randint
 from time import sleep
+from dateutil.relativedelta import relativedelta
 
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
@@ -124,6 +125,31 @@ def a_specified_opening_time_change_event_is_valid(context: Context):
     context.change_event = set_opening_times_change_event("pharmacy")
     context.change_event.specified_opening_times[-1]["OpeningTime"] = "00:01"
     context.change_event.specified_opening_times[-1]["ClosingTime"] = closing_time
+    context.change_event.specified_opening_times[-1]["IsOpen"] = True
+    return context
+
+
+@given("a specified multiple opening time Changed Event is valid", target_fixture="context")
+def a_specified_multiple_opening_time_change_event_is_valid(context: Context):
+    context.change_event = set_opening_times_change_event("pharmacy")
+    date = dt.today() + relativedelta(months=1)
+    context.change_event.specified_opening_times.append(
+        {
+            "Weekday": "",
+            "OpeningTime": "",
+            "ClosingTime": "",
+            "OffsetOpeningTime": 0,
+            "OffsetClosingTime": 0,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
+            "IsOpen": False,
+        }
+    )
+    context.change_event.specified_opening_times[-2]["OpeningTime"] = "09:00"
+    context.change_event.specified_opening_times[-2]["ClosingTime"] = "14:00"
+    context.change_event.specified_opening_times[-1]["OpeningTime"] = "15:00"
+    context.change_event.specified_opening_times[-1]["ClosingTime"] = "20:00"
+    context.change_event.specified_opening_times[-2]["IsOpen"] = True
     context.change_event.specified_opening_times[-1]["IsOpen"] = True
     return context
 
@@ -623,7 +649,7 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
 
 
 @then("the Changed Request with changed specified date and time is captured by Dos")
-def the_changed_opening_time_is_accepted_by_dos(context: Context):
+def the_changed_opening_date_time_is_accepted_by_dos(context: Context):
     """assert dos API response and validate processed record in Dos CR Queue database"""
     open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
     closing_time = time_to_sec(context.change_event.specified_opening_times[-1]["ClosingTime"])
@@ -785,6 +811,34 @@ def specified_date_is_removed_from_dos(context: Context):
     assert removed_date not in str(
         specified_opening_times_from_db
     ), f"Error!.. Removed specified date: {removed_date} still exists in Dos"
+
+
+@then("the processed Changed Event is replayed with a specified opening time changed")
+def change_aligned_event_is_replayed(context: Context):
+    service_id = get_service_id(context.correlation_id)
+    approver_status = confirm_approver_status(context.correlation_id)
+    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
+    context.change_event.specified_opening_times[-1]["OpeningTime"] = "15:01"
+    context.change_event.specified_opening_times[-1]["ClosingTime"] = "20:00"
+    context.correlation_id = f"replayed-{context.correlation_id}"
+    context.response = process_payload(context.change_event, True, context.correlation_id)
+    return context
+
+
+@then("the Changed Request with changed specified time is captured by Dos")
+def the_changed_opening_time_is_captured_by_dos(context: Context):
+    """assert dos API response and validate processed record in Dos CR Queue database"""
+    service_id = get_service_id(context.correlation_id)
+    approver_status = confirm_approver_status(context.correlation_id)
+    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
+    open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
+    closing_time = time_to_sec(context.change_event.specified_opening_times[-1]["ClosingTime"])
+    changed_time = f"{open_time}-{closing_time}"
+    cms = "cmsopentimespecified"
+    assert (
+        check_specified_received_opening_times_time_in_dos(context.correlation_id, cms, changed_time) is True
+    ), f"ERROR!.. Dos not updated with change: {changed_time}"
+    return context
 
 
 @then(parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
