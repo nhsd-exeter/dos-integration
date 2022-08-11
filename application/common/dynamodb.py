@@ -1,12 +1,13 @@
-import boto3
-from json import dumps, loads
 import hashlib
 from decimal import Decimal
-from typing import Any, Dict, Union
-from boto3.dynamodb.types import TypeSerializer
-from time import time
+from json import dumps, loads
 from os import environ
+from time import time
+from typing import Any, Dict, Union
+
+import boto3
 from aws_lambda_powertools.logging.logger import Logger
+from boto3.dynamodb.types import TypeSerializer
 
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)

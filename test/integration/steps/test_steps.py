@@ -14,8 +14,8 @@ from pytest_bdd.parsers import parse
 
 from .utilities.aws import get_logs, negative_log_check
 from .utilities.change_event_builder import (
-    ChangeEventBuilder,
     build_same_as_dos_change_event,
+    ChangeEventBuilder,
     set_opening_times_change_event,
     valid_change_event,
 )
@@ -39,16 +39,16 @@ from .utilities.utils import (
     get_service_type_data,
     get_service_type_from_cr,
     get_stored_events_from_dynamo_db,
+    post_ce_sqs,
+    post_cr_fifo,
+    post_cr_sqs,
     process_change_request_payload,
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
     remove_opening_days,
-    time_to_sec,
     slack_retry,
-    post_cr_sqs,
-    post_ce_sqs,
-    post_cr_fifo,
+    time_to_sec,
 )
 
 scenarios(
@@ -522,7 +522,7 @@ def openingtimes_service_exception(context: Context):
 
 
 @then(parse("the {address} from the changes is not included in the change request"))
-def address_change_is_discarded_in_event_sender(context: Context, address: str):
+def address_change_is_discarded_in_service_sync(context: Context, address: str):
     query = (
         f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         '| filter message like "Attempting to send change request to DoS"'
@@ -604,7 +604,7 @@ def the_changed_title_case_address_is_accepted_by_dos(context, expected_address)
 
 
 @then(parse("the Change is included in the Change request"))
-def change_is_included_in_event_sender(context: Context):
+def change_is_included_in_service_sync(context: Context):
     if "/" in context.correlation_id:
         context.correlation_id = context.correlation_id.replace("/", r"\/")
     query = (
@@ -869,7 +869,7 @@ def check_logs_for_dentist_match(context: Context, odscode):
     assert odscode in logs, "ERROR!!.. error processor does not have correct ods."
 
 
-@then(parse('the Event Sender sends the ods "{odscode}"'))
+@then(parse('the Service Sync sends the ods "{odscode}"'))
 def check_logs_for_correct_sent_cr(context: Context, odscode):
     query = (
         f'fields message, ods_code | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'

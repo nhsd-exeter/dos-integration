@@ -3,10 +3,10 @@ resource "aws_appconfig_application" "di_lambdas" {
   description = "Example AppConfig Application"
 }
 
-resource "aws_appconfig_configuration_profile" "event_processor" {
+resource "aws_appconfig_configuration_profile" "service_matcher" {
   application_id = aws_appconfig_application.di_lambdas.id
-  name           = "event-processor"
-  description    = "AppConfig Configuration Profile for Event Processor"
+  name           = "service-matcher"
+  description    = "AppConfig Configuration Profile for Service Matcher"
   location_uri   = "hosted"
   type           = "AWS.Freeform"
 }
@@ -17,10 +17,10 @@ resource "aws_appconfig_environment" "lambdas_environment" {
   application_id = aws_appconfig_application.di_lambdas.id
 }
 
-resource "aws_appconfig_hosted_configuration_version" "event_processor_version" {
+resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" {
   application_id           = aws_appconfig_application.di_lambdas.id
-  configuration_profile_id = aws_appconfig_configuration_profile.event_processor.configuration_profile_id
-  description              = "AppConfig Hosted Configuration Version for Event Processor"
+  configuration_profile_id = aws_appconfig_configuration_profile.service_matcher.configuration_profile_id
+  description              = "AppConfig Hosted Configuration Version for Service Matcher"
   content_type             = "application/json"
 
   content = jsonencode({
@@ -45,9 +45,9 @@ resource "aws_appconfig_hosted_configuration_version" "event_processor_version" 
 
 resource "aws_appconfig_deployment" "deployment" {
   application_id           = aws_appconfig_application.di_lambdas.id
-  configuration_profile_id = aws_appconfig_configuration_profile.event_processor.configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.event_processor_version.version_number
+  configuration_profile_id = aws_appconfig_configuration_profile.service_matcher.configuration_profile_id
+  configuration_version    = aws_appconfig_hosted_configuration_version.service_matcher_version.version_number
   deployment_strategy_id   = "AppConfig.AllAtOnce"
-  description              = "AppConfig Deployment for Event Processor"
+  description              = "AppConfig Deployment for Service Matcher"
   environment_id           = aws_appconfig_environment.lambdas_environment.environment_id
 }

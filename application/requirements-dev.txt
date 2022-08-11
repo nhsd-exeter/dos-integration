@@ -2,6 +2,7 @@ Faker
 aws-lambda-context
 boto3
 coverage
+isort
 locust
 moto
 mutmut

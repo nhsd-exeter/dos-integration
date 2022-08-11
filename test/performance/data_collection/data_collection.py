@@ -36,18 +36,6 @@ def data_collection():
         file_name=f"{now}_queue_to_processor_latency.csv",
     )
     get_metric_data_to_csv(
-        namespace="UEC-DOS-INT",
-        metric_name="DosApiLatency",
-        dimensions=CUSTOM_DIMENSIONS,
-        file_name=f"{now}_dos_api_latency.csv",
-    )
-    get_metric_data_to_csv(
-        namespace="UEC-DOS-INT",
-        metric_name="DoSApiFail",
-        dimensions=CUSTOM_DIMENSIONS,
-        file_name=f"{now}_dos_api_fail.csv",
-    )
-    get_metric_data_to_csv(
         namespace="AWS/Lambda",
         metric_name="ConcurrentExecutions",
         dimensions=[

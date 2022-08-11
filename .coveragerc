@@ -4,4 +4,5 @@ omit =
   **/__init__.py
   tests/*
   **/tests/*
+  application/dos_db_handler/*.py
 branch = True

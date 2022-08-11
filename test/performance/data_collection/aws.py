@@ -1,7 +1,8 @@
 from datetime import datetime
 from os import getenv
-from pandas import DataFrame
+
 from boto3 import client
+from pandas import DataFrame
 
 
 def get_queue_details_to_csv(queue_name: str, file_name: str) -> None:

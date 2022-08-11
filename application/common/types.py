@@ -1,7 +1,12 @@
-from typing import TypedDict, Dict
+from typing import Any, Dict, TypedDict
 
 
-class ChangeMetadata(TypedDict):
+class UpdateRequest(TypedDict):
+    change_event: Dict[str, Any]
+    service_id: str
+
+
+class UpdateRequestMetadata(TypedDict):
     dynamo_record_id: str
     correlation_id: str
     message_received: int
@@ -10,8 +15,7 @@ class ChangeMetadata(TypedDict):
     message_group_id: str
 
 
-class ChangeRequestQueueItem(TypedDict):
-    is_health_check: bool
-    change_request: Dict  # could change this to Change Request potentially
+class UpdateRequestQueueItem(TypedDict):
+    update_request: UpdateRequest
     recipient_id: str
-    metadata: ChangeMetadata
+    metadata: UpdateRequestMetadata

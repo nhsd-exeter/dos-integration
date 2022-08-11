@@ -1,14 +1,14 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import List, Union, Dict
-from collections import defaultdict
+from typing import Dict, List, Optional
 
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
 
-from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from common.dos import DoSService
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
+from common.dos import DoSService
+from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes, WEEKDAYS
 
 logger = Logger(child=True)
 
@@ -32,8 +32,8 @@ class NHSEntity:
     postcode: str
     website: str
     phone: str
-    standard_opening_times: Union[StandardOpeningTimes, None]
-    specified_opening_times: Union[List[SpecifiedOpeningTime], None]
+    standard_opening_times: Optional[StandardOpeningTimes]
+    specified_opening_times: Optional[List[SpecifiedOpeningTime]]
     CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
 
     def __init__(self, entity_data: dict):
@@ -65,7 +65,7 @@ class NHSEntity:
     def normal_postcode(self):
         return self.postcode.replace(" ", "").upper()
 
-    def extract_contact(self, contact_type: str) -> Union[str, None]:
+    def extract_contact(self, contact_type: str) -> Optional[str]:
         """Returns the nested contact value within the input payload"""
         for item in self.entity_data.get("Contacts", []):
             if (

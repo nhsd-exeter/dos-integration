@@ -1,11 +1,10 @@
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
 
-from common.change_event_exceptions import ValidationException
-
+from common.errors import ValidationException
 
 logger = Logger(child=True)
 

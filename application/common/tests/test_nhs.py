@@ -1,8 +1,9 @@
-import pytest
-from datetime import time, date
+from datetime import date, time
 
-from .conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from ..nhs import NHSEntity, is_std_opening_json, is_spec_opening_json, match_nhs_entities_to_services
+import pytest
+
+from ..nhs import is_spec_opening_json, is_std_opening_json, match_nhs_entities_to_services, NHSEntity
+from .conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 

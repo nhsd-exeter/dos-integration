@@ -11,6 +11,10 @@ data "aws_db_instance" "dos_db" {
   db_instance_identifier = var.dos_db_name
 }
 
+data "aws_db_instance" "dos_db_replica" {
+  db_instance_identifier = var.dos_db_replica_name
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}

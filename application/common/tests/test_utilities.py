@@ -1,8 +1,8 @@
 from json import loads
 
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
+from pytest import mark, raises
 
-from pytest import raises, mark
 from ..utilities import (
     extract_body,
     get_sequence_number,

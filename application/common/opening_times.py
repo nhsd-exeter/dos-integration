@@ -1,21 +1,21 @@
 from dataclasses import dataclass
-from datetime import date, time, datetime
-from typing import Any, Dict, List, Union
+from datetime import date, datetime, time
+from typing import Any, List, Optional
 
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
 
 logger = Logger(child=True)
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-CHANGE_REQUEST_DATE_FORMAT = "%Y-%m-%d"
-CHANGE_REQUEST_TIME_FORMAT = "%H:%M"
+DAY_IDS = (1, 2, 3, 4, 5, 6, 7)
+DOS_DATE_FORMAT = "%Y-%m-%d"
+DOS_TIME_FORMAT = "%H:%M"
 
 
-@dataclass(repr=True, unsafe_hash=True)
+@dataclass(unsafe_hash=True, init=True)
 class OpenPeriod:
-    def __init__(self, start: time, end: time):
-        assert isinstance(start, time) and isinstance(end, time)
-        self.start = start
-        self.end = end
+
+    start: time
+    end: time
 
     def start_string(self) -> str:
         return self.start.strftime("%H:%M:%S")
@@ -25,6 +25,9 @@ class OpenPeriod:
 
     def __str__(self):
         return f"{self.start_string()}-{self.end_string()}"
+
+    def __repr__(self):
+        return f"OpenPeriod({self})"
 
     def __eq__(self, other: Any):
         return isinstance(other, OpenPeriod) and self.start == other.start and self.end == other.end
@@ -47,12 +50,17 @@ class OpenPeriod:
         assert other.start_before_end()
         return self.start <= other.end and other.start <= self.end
 
-    def export_cr_format(self) -> Union[Dict[str, str], None]:
-        """Exports open period into a DoS change request accepted format"""
-        return {
-            "start_time": self.start.strftime(CHANGE_REQUEST_TIME_FORMAT),
-            "end_time": self.end.strftime(CHANGE_REQUEST_TIME_FORMAT),
-        }
+    def export_db_string_format(self) -> str:
+        """Exports open period into a DoS db accepted format for previous value in the service history entry"""
+        return f"{self.start.strftime(DOS_TIME_FORMAT)}-{self.end.strftime(DOS_TIME_FORMAT)}"
+
+    def export_time_in_seconds(self) -> str:
+        """Exports open period into a DoS DB accepted format for service history"""
+        return f"{self._seconds_since_midnight(self.start)}-{self._seconds_since_midnight(self.end)}"
+
+    def _seconds_since_midnight(self, time: time) -> int:
+        """Returns the number of seconds since midnight for the given time"""
+        return time.hour * 60 * 60 + time.minute * 60 + time.second
 
     @staticmethod
     def any_overlaps(open_periods: List["OpenPeriod"]) -> bool:
@@ -78,10 +86,7 @@ class OpenPeriod:
     @staticmethod
     def all_start_before_end(open_periods: List["OpenPeriod"]) -> bool:
         """Returns whether all OpenPeriod object in list start before they ends"""
-        for op in open_periods:
-            if not op.start_before_end():
-                return False
-        return True
+        return all(op.start_before_end() for op in open_periods)
 
     @staticmethod
     def equal_lists(a: List["OpenPeriod"], b: List["OpenPeriod"]) -> bool:
@@ -89,7 +94,7 @@ class OpenPeriod:
         return sorted(a) == sorted(b)
 
     @staticmethod
-    def from_string(open_period_string: str) -> Union["OpenPeriod", None]:
+    def from_string(open_period_string: str) -> Optional["OpenPeriod"]:
         """Builds an OpenPeriod object from a string like 12:00-13:00 or 12:00:00-13:00:00"""
         try:
             startime_str, endtime_str = open_period_string.split("-")
@@ -98,7 +103,7 @@ class OpenPeriod:
             return None
 
     @staticmethod
-    def from_string_times(opening_time_str: str, closing_time_str: str) -> Union["OpenPeriod", None]:
+    def from_string_times(opening_time_str: str, closing_time_str: str) -> Optional["OpenPeriod"]:
         """Builds an OpenPeriod object from string time arguments"""
         open_time = string_to_time(opening_time_str)
         close_time = string_to_time(closing_time_str)
@@ -131,9 +136,7 @@ class SpecifiedOpeningTime:
         return f"{self.open_string()} on {self.date_string()} {self.open_periods_string()}"
 
     def open_string(self):
-        if self.is_open:
-            return "OPEN"
-        return "CLOSED"
+        return "OPEN" if self.is_open else "CLOSED"
 
     def __eq__(self, other):
         return (
@@ -143,12 +146,13 @@ class SpecifiedOpeningTime:
             and OpenPeriod.equal_lists(self.open_periods, other.open_periods)
         )
 
-    def export_cr_format(self) -> dict:
+    def export_service_history_format(self) -> List[str]:
         """Exports Specified opening time into a DoS change request accepted format"""
-        exp_open_periods = [op.export_cr_format() for op in sorted(self.open_periods)]
-        date_str = self.date.strftime(CHANGE_REQUEST_DATE_FORMAT)
-        change = {date_str: exp_open_periods}
-        return change
+        exp_open_periods = [op.export_time_in_seconds() for op in sorted(self.open_periods)]
+        date_str = self.date.strftime(DOS_DATE_FORMAT)
+        if not self.is_open:
+            return [f"{date_str}-closed"]
+        return [f"{date_str}-{period}" for period in exp_open_periods]
 
     def contradiction(self) -> bool:
         """Returns whether the open flag contradicts the number of open periods present."""
@@ -163,15 +167,6 @@ class SpecifiedOpeningTime:
     def is_valid(self) -> bool:
         """Validates no overlaps, 'starts before ends' and contradictions."""
         return self.all_start_before_end() and (not self.any_overlaps()) and (not self.contradiction())
-
-    @staticmethod
-    def export_cr_format_list(spec_opening_dates: List["SpecifiedOpeningTime"]) -> dict:
-        """Runs the export_cr_format on a list of SpecifiedOpeningTime objects and combines the results"""
-        opening_dates_cr_format = {}
-        for spec_open_date in spec_opening_dates:
-            spec_open_date_payload = spec_open_date.export_cr_format()
-            opening_dates_cr_format.update(spec_open_date_payload)
-        return opening_dates_cr_format
 
     @staticmethod
     def equal_lists(a: List["SpecifiedOpeningTime"], b: List["SpecifiedOpeningTime"]) -> bool:
@@ -203,7 +198,6 @@ class SpecifiedOpeningTime:
         return future_dates
 
 
-@dataclass(unsafe_hash=True)
 class StandardOpeningTimes:
     """Represents the standard openings times for a week. Structured as a set of OpenPeriods per day
 
@@ -311,13 +305,19 @@ class StandardOpeningTimes:
     def is_valid(self) -> bool:
         return self.all_start_before_end() and not self.any_overlaps() and not self.any_contradictions()
 
-    def export_cr_format(self) -> Dict[str, List[Dict[str, str]]]:
-        """Exports standard opening times into a DoS change request accepted format"""
-        change = {}
-        for weekday in WEEKDAYS:
-            open_periods = sorted(getattr(self, weekday))
-            change[weekday.capitalize()] = [op.export_cr_format() for op in open_periods]
-        return change
+    def export_opening_times_for_day(self, weekday: str) -> list[str]:
+        """Exports standard opening times into DoS format for a specific day in the week"""
+        open_periods = sorted(getattr(self, weekday))
+        return [open_period.export_db_string_format() for open_period in open_periods]
+
+    def export_opening_times_in_seconds_for_day(self, weekday: str) -> list[str]:
+        """Exports standard opening times into time in seconds format for a specific day in the week"""
+        open_periods = sorted(getattr(self, weekday))
+        return [open_period.export_time_in_seconds() for open_period in open_periods]
+
+
+def opening_period_times_from_list(open_periods: List[OpenPeriod]) -> str:
+    return ", ".join([open_period.export_db_string_format() for open_period in open_periods])
 
 
 def string_to_time(time_str: str) -> time:

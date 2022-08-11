@@ -1,5 +1,5 @@
-resource "aws_iam_role" "event_processor_role" {
-  name               = var.event_processor_role_name
+resource "aws_iam_role" "service_matcher_role" {
+  name               = var.service_matcher_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -19,9 +19,9 @@ resource "aws_iam_role" "event_processor_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "event_processor_policy" {
-  name   = "event_processor_policy"
-  role   = aws_iam_role.event_processor_role.id
+resource "aws_iam_role_policy" "service_matcher_policy" {
+  name   = "service_matcher_policy"
+  role   = aws_iam_role.service_matcher_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -62,7 +62,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "event_processor_policy" {
         "sqs:SendMessage",
         "sqs:SendMessageBatch"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -107,8 +107,8 @@ resource "aws_iam_role_policy" "event_processor_policy" {
 EOF
 }
 
-resource "aws_iam_role" "event_sender_role" {
-  name               = var.event_sender_role_name
+resource "aws_iam_role" "service_sync_role" {
+  name               = var.service_sync_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -128,9 +128,9 @@ resource "aws_iam_role" "event_sender_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "event_sender_policy" {
-  name   = "event_sender_policy"
-  role   = aws_iam_role.event_sender_role.id
+resource "aws_iam_role_policy" "service_sync_policy" {
+  name   = "service_sync_policy"
+  role   = aws_iam_role.service_sync_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -152,7 +152,7 @@ resource "aws_iam_role_policy" "event_sender_policy" {
     {
       "Effect": "Allow",
       "Action": "sqs:SendMessage",
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_dlq}"
     },
     {
       "Effect": "Allow",
@@ -160,7 +160,7 @@ resource "aws_iam_role_policy" "event_sender_policy" {
         "sqs:DeleteMessage",
         "sqs:DeleteMessageBatch"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -206,8 +206,8 @@ resource "aws_iam_role_policy" "event_sender_policy" {
 EOF
 }
 
-resource "aws_iam_role" "fifo_dlq_handler_role" {
-  name               = var.fifo_dlq_handler_role_name
+resource "aws_iam_role" "change_event_dlq_handler_role" {
+  name               = var.change_event_dlq_handler_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -227,9 +227,9 @@ resource "aws_iam_role" "fifo_dlq_handler_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
-  name   = "fifo_dlq_handler_policy"
-  role   = aws_iam_role.fifo_dlq_handler_role.id
+resource "aws_iam_role_policy" "change_event_dlq_handler_policy" {
+  name   = "change_event_dlq_handler_policy"
+  role   = aws_iam_role.change_event_dlq_handler_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -267,7 +267,7 @@ resource "aws_iam_role_policy" "fifo_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.dead_letter_queue_from_fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}"
     },
     {
       "Effect": "Allow",
@@ -295,8 +295,8 @@ EOF
 }
 
 
-resource "aws_iam_role" "cr_fifo_dlq_handler_role" {
-  name               = var.cr_fifo_dlq_handler_role_name
+resource "aws_iam_role" "dos_db_update_dlq_handler_role" {
+  name               = var.dos_db_update_dlq_handler_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -316,9 +316,9 @@ resource "aws_iam_role" "cr_fifo_dlq_handler_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "cr_fifo_dlq_handler_policy" {
-  name   = "cr_fifo_dlq_handler_policy"
-  role   = aws_iam_role.cr_fifo_dlq_handler_role.id
+resource "aws_iam_role_policy" "dos_db_update_dlq_handler_policy" {
+  name   = "dos_db_update_dlq_handler_policy"
+  role   = aws_iam_role.dos_db_update_dlq_handler_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -356,7 +356,7 @@ resource "aws_iam_role_policy" "cr_fifo_dlq_handler_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.cr_dead_letter_queue_from_fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_dlq}"
     }
   ]
 }
@@ -425,7 +425,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "sqs:SendMessage",
         "sqs:GetQueueUrl"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -446,8 +446,8 @@ resource "aws_iam_role_policy" "event_replay_policy" {
 EOF
 }
 
-resource "aws_iam_role" "test_db_checker_handler_role" {
-  name               = var.test_db_checker_handler_role_name
+resource "aws_iam_role" "dos_db_handler_role" {
+  name               = var.dos_db_handler_role_name
   path               = "/"
   description        = ""
   assume_role_policy = <<EOF
@@ -467,9 +467,9 @@ resource "aws_iam_role" "test_db_checker_handler_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "test_db_checker_handler_policy" {
-  name   = "test_db_checker_handler_policy"
-  role   = aws_iam_role.test_db_checker_handler_role.id
+resource "aws_iam_role_policy" "dos_db_handler_policy" {
+  name   = "dos_db_handler_policy"
+  role   = aws_iam_role.dos_db_handler_role.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -536,7 +536,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
       "Action": [
         "lambda:InvokeFunction"
       ],
-      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-event-sender"
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-service-sync"
     },
     {
       "Effect": "Allow",
@@ -564,7 +564,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -575,15 +575,6 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
         "kms:Decrypt"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*"
     },
     {
       "Effect": "Allow",
@@ -659,15 +650,6 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
         "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.fifo_queue_name}"
     },
     {
       "Effect": "Allow",
