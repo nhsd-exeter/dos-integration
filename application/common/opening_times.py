@@ -345,10 +345,6 @@ class StandardOpeningTimes:
             change[weekday.capitalize()] = [op.export_test_format() for op in open_periods]
         return change
 
-    def export_opening_times_in_seconds_for_day(self, weekday: str) -> list[str]:
-        """Exports standard opening times into time in seconds format for a specific day in the week"""
-        open_periods = sorted(getattr(self, weekday))
-        return [open_period.export_time_in_seconds() for open_period in open_periods]
 
 def opening_period_times_from_list(open_periods: List[OpenPeriod]) -> str:
     return ", ".join([open_period.export_db_string_format() for open_period in open_periods])
