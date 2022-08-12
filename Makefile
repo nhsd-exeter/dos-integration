@@ -583,7 +583,6 @@ python-check-security:
 		DIR=$(APPLICATION_DIR) \
 		CMD="python -m bandit -r . -c pyproject.toml"
 
-
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler
 	make docker-create-repository NAME=dos-db-handler

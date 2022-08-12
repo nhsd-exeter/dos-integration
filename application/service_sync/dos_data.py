@@ -114,7 +114,11 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
         # Update the service demographics
         logger.debug(f"Demographics changes found for service id {service_id}")
         query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(
-            SQL(", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items()))
+            SQL(
+                ", ".join(
+                    f"""{key} = '{value if value is not None else ""}'""" for key, value in demographics_changes.items()
+                )
+            )
         )
         query_str = query.as_string(connection)
 
