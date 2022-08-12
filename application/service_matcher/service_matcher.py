@@ -59,6 +59,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     record = next(event.records)
     change_event = extract_body(record.body)
     ods_code = change_event.get("ODSCode")
+    add_change_event_received_metric(ods_code=ods_code)
     logger.append_keys(ods_code=ods_code)
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
@@ -215,3 +216,17 @@ def send_update_requests(
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
         logger.info("Response received", extra={"response": response})
         logger.info(f"Sent off update request for id={service_id}")
+
+
+@metric_scope
+def add_change_event_received_metric(ods_code: str, metrics) -> None:  # type: ignore
+    """Adds a success metric to the custom metrics collection
+
+    Args:
+        event (UpdateRequestQueueItem): Lambda function invocation event
+    """
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("level", "INFO")
+    metrics.set_property("message", f"Change Event Received for ODSCode: {ods_code}")
+    metrics.put_metric("ChangeEventReceived", 1, "Count")
+    metrics.set_dimensions({"ENV": environ["ENV"]})

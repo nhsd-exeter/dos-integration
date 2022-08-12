@@ -536,13 +536,6 @@ def test_specified_opening_time_export_test_format(expected: dict, actual: Speci
     assert test_format == expected, f"expected {expected} SpecifiedOpeningTime change req format but got {test_format}"
 
 
-def test_specified_opening_time_export_test_format_list():
-    expected = {"2021-03-02": [{"start_time": "09:00", "end_time": "18:00"}]}
-    actual = SpecifiedOpeningTime([OpenPeriod(time(9, 0, 0), time(18, 0, 0))], date(2021, 3, 2))
-    test_format = actual.export_test_format_list([actual])
-    assert expected == test_format, f"expected {expected} SpecifiedOpeningTime change req format but got {test_format}"
-
-
 def test_stdopeningtimes_eq_len():
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))

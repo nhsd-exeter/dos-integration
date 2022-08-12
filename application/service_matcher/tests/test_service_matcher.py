@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from json import dumps
 from os import environ
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
@@ -135,7 +135,7 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_not_called()
-    mock_set_dimension.assert_called_once_with({"ENV": "test"})
+    mock_set_dimension.assert_has_calls([call({"ENV": "test"}), call({"ENV": "test"})])
 
     mock_put_metric.assert_called_with("QueueToProcessorLatency", 3000, "Milliseconds")
     # Clean up
