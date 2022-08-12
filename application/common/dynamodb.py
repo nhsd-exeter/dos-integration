@@ -16,7 +16,7 @@ dynamodb = boto3.client("dynamodb", region_name=environ["AWS_REGION"])
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     """MD5 hash of a dictionary."""
-    change_event_hash = hashlib.md5()
+    change_event_hash = hashlib.new("md5", usedforsecurity=False)
     encoded = dumps([change_event, sequence_number], sort_keys=True).encode()
     change_event_hash.update(encoded)
     return change_event_hash.hexdigest()

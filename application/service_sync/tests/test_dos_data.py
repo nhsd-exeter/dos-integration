@@ -167,11 +167,8 @@ def test_save_demographics_into_db(mock_query_dos_db: MagicMock):
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
-        query=(
-            """UPDATE services SET """
-            f"""{", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items())} """
-            f"""WHERE id = {service_id};"""
-        ),
+        query="UPDATE services SET test = 'test' WHERE id = %(SERVICE_ID)s;",
+        vars={"SERVICE_ID": service_id},
     )
 
 

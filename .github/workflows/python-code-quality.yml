@@ -1,0 +1,28 @@
+name: "Check Python code format and quality"
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    types: [opened, ready_for_review, synchronize, reopened]
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Tester Build
+        run: |
+          make tester-build
+      - name: Check Python Formatting
+        run: |
+          make python-linting
+      - name: Check Python Imports
+        run: |
+          make python-check-imports
+      - name: Check for Python Dead Code
+        run: |
+          make python-check-dead-code
+      - name: Check Python Security
+        run: |
+          make python-check-security

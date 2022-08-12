@@ -130,7 +130,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 300" \
+	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 60" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -576,6 +576,13 @@ python-fix-imports:
 		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
 			--known-local-folder=common \
 			"
+
+python-check-security:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
+		CMD="python -m bandit -r . -c pyproject.toml"
+
 
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler

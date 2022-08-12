@@ -44,7 +44,7 @@ def test_service_histories_get_service_history_from_db_rows_returned():
     assert service_history_data == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(cursor_factory=DictCursor)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        f"Select history from servicehistories where serviceid = '{SERVICE_ID}'"
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", vars={"SERVICE_ID": SERVICE_ID}
     )
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
@@ -61,8 +61,9 @@ def test_service_histories_get_service_history_from_db_no_rows_returned():
     assert {} == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(cursor_factory=DictCursor)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        f"Select history from servicehistories where serviceid = '{SERVICE_ID}'"
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", vars={"SERVICE_ID": SERVICE_ID}
     )
+
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
 
