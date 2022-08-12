@@ -115,6 +115,46 @@ def test_update_dos_data(
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
+@patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
+@patch(f"{FILE_PATH}.save_demographics_into_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db")
+def test_update_dos_data_no_changes(
+    mock_connect_to_dos_db: MagicMock,
+    mock_save_demographics_into_db: MagicMock,
+    mock_save_standard_opening_times_into_db: MagicMock,
+    mock_save_specified_opening_times_into_db: MagicMock,
+):
+    # Arrange
+    change_to_dos = MagicMock()
+    service_histories = MagicMock()
+    service_id = 1
+    mock_save_demographics_into_db.return_value = False
+    mock_save_standard_opening_times_into_db.return_value = False
+    mock_save_specified_opening_times_into_db.return_value = False
+    # Act
+    update_dos_data(change_to_dos, service_id, service_histories)
+    # Assert
+    mock_save_demographics_into_db.assert_called_once_with(
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
+        demographics_changes=change_to_dos.demographic_changes,
+    )
+    mock_save_standard_opening_times_into_db.assert_called_once_with(
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
+        standard_opening_times_changes=change_to_dos.standard_opening_times_changes,
+    )
+    mock_save_specified_opening_times_into_db.assert_called_once_with(
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
+        is_changes=change_to_dos.specified_opening_times_changes,
+        specified_opening_times_changes=change_to_dos.new_specified_opening_times,
+    )
+    service_histories.save_service_histories.assert_not_called()
+    mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
+
+
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_demographics_into_db(mock_query_dos_db: MagicMock):
     # Arrange
