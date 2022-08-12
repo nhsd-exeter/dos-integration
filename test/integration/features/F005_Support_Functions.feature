@@ -15,19 +15,18 @@ Feature: F005. Support Functions
     Then the Slack channel shows an alert saying "Invalid Postcode"
 
 #Tests to be enabled in DI-533
-# @complete @broken @pharmacy_no_log_searches @wip
-# Scenario: F005S003 SQS Message for CE
-#   Given a "pharmacy" Changed Event is aligned with DoS
-#   When a "change event dlq" SQS message is added to the queue
-#   Then the Slack channel shows an alert saying "Change Events DLQ"
+@complete @broken @pharmacy_no_log_searches
+Scenario: F005S003 SQS Message for CE
+  Given a "pharmacy" Changed Event is aligned with DoS
+  When a "change event dlq" SQS message is added to the queue
+  Then the Slack channel shows an alert saying "Change Events DLQ"
 
-# @complete @broken @pharmacy_no_log_searches
-# Scenario: F005S004 SQS Message for CR
-#   Given a "cr" SQS message is added to the queue
-#   Then the Slack channel shows an alert saying "Change Requests DLQ"
+@complete @broken @pharmacy_no_log_searches
+Scenario: F005S004 SQS Message for CR
+  When a "update request dlq" SQS message is added to the queue
+  Then the Slack channel shows an alert saying "Update Requests DLQ"
 
-# @complete @broken @pharmacy_no_log_searches
-# Scenario: F005S005 SQS Message for DOS 404
-#   Given a "404" SQS message is added to the queue
-#   Then the Slack channel shows an alert saying "Change Requests DLQ"
-#   And the Slack channel shows an alert saying "DI Endpoint Errors"
+@complete @broken @pharmacy_no_log_searches
+Scenario: F005S005 SQS Message for DOS 404
+  When a "update request failure" SQS message is added to the queue
+  Then the Slack channel shows an alert saying "Update Requests DLQ"

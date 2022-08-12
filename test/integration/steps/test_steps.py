@@ -37,9 +37,9 @@ from .utilities.utils import (
     get_service_id,
     get_service_table_field,
     get_stored_events_from_dynamo_db,
-    post_cr_fifo,
-    post_cr_sqs,
     post_to_change_event_dlq,
+    post_ur_fifo,
+    post_ur_sqs,
     process_change_request_payload,
     process_payload,
     process_payload_with_sequence,
@@ -125,12 +125,10 @@ def post_an_sqs_message(queue_type: str, context: Context):
     match queue_type.lower():
         case "change event dlq":
             post_to_change_event_dlq(context)
-        case "update request":
-            # To be renamed
-            post_cr_sqs()
         case "update request dlq":
-            # To be renamed
-            post_cr_fifo()
+            post_ur_sqs()
+        case "update request failure":
+            post_ur_fifo()
         case _:
             raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
 
@@ -385,7 +383,6 @@ def change_event_same_dual(context: Context, opening_type):
     return context
 
 
-# Check that the requested ODS code exists in ddb, and create an entry if not
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb(context: Context):
     context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")

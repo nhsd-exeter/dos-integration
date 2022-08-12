@@ -158,12 +158,10 @@ def get_pharmacy_odscode() -> str:
 
 
 def get_single_service_pharmacy() -> str:
-    # Runs this
     ods_code = get_pharmacy_odscode()
     lambda_payload = {"type": "get_services_count", "odscode": ods_code}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))[0][0]
-    # Should this not be a while loop with a counter
     if data != 1:
         ods_code = get_single_service_pharmacy()
     return ods_code
@@ -276,13 +274,11 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
-        # Call out to the lambda for request response with a valid service id
         response_payload = response["Payload"].read().decode("utf-8")
         if "errorMessage" not in response_payload:
             return response_payload
 
         if retries > 6:
-            print(f"Error in this payload: {lambda_payload}")
             raise ValueError(f"Unable to run test db checker lambda successfully after {retries} retries")
         retries += 1
         sleep(10)
@@ -369,13 +365,10 @@ def check_service_history(
     if change_key not in changes:
         raise ValueError(f"DoS Change key '{change_key}' not found in latest service history entry")
 
-    # Assert new data is correct
-
     assert (
         expected_data == changes[change_key]["data"]
     ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa
 
-    # Assert previous data is correct
     if "previous" in changes[change_key]:
         if previous_data not in ["unknown", ""]:
             (
@@ -557,22 +550,21 @@ def get_sqs_queue_name(queue_type: str) -> str:
     response = ""
     current_environment = getenv("ENVIRONMENT")
     match queue_type.lower():
-        case "change event dlq":
+        case "changeevent":
             response = SQS_CLIENT.get_queue_url(
                 QueueName=f"uec-dos-int-{current_environment}-change-event-dead-letter-queue.fifo",
             )
-        case "cr":
+        case "updaterequest":
             response = SQS_CLIENT.get_queue_url(
                 QueueName=f"uec-dos-int-{current_environment}-update-request-dead-letter-queue.fifo",
             )
-        case "404":
+        case "updaterequestfail":
             response = SQS_CLIENT.get_queue_url(
                 QueueName=f"uec-dos-int-{current_environment}-update-request-queue.fifo",
             )
         case _:
             raise ValueError("Invalid SQS queue type specified")
     print(response)
-    raise NotImplementedError("Not implemented")
 
     return response["QueueUrl"]
 
@@ -604,8 +596,8 @@ def generate_sqs_body(website) -> dict:
     return sqs_body
 
 
-def post_cr_sqs():
-    queue_url = get_sqs_queue_name("cr")
+def post_ur_sqs():
+    queue_url = get_sqs_queue_name("updaterequest")
     sqs_body = generate_sqs_body("https://www.test.com")
 
     SQS_CLIENT.send_message(
@@ -618,8 +610,8 @@ def post_cr_sqs():
     return True
 
 
-def post_cr_fifo():
-    queue_url = get_sqs_queue_name("404")
+def post_ur_fifo():
+    queue_url = get_sqs_queue_name("updaterequestfail")
     sqs_body = generate_sqs_body("abc@def.com")
 
     SQS_CLIENT.send_message(
@@ -633,7 +625,7 @@ def post_cr_fifo():
 
 
 def post_to_change_event_dlq(context: Context):
-    queue_url = get_sqs_queue_name("change event dlq")
+    queue_url = get_sqs_queue_name("changeevent")
     sqs_body = context.change_event.get_change_event()
 
     SQS_CLIENT.send_message(
