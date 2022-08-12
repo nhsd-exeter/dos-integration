@@ -170,7 +170,7 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         service_id_strings = set(str(s.id) for s in services)
 
         # Collect and apply all std open times to services
-        sql_query = (
+        sql_query = (  # nosec - Not for use within lambda
             "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
             "FROM servicedayopenings sdo "
             "INNER JOIN servicedayopeningtimes sdot "
@@ -186,7 +186,7 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         cursor.close()
 
         # Collect and apply all spec open times to services
-        sql_query = (
+        sql_query = (  # nosec - Not for use within lambda
             "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
             "FROM servicespecifiedopeningdates ssod "
             "INNER JOIN servicespecifiedopeningtimes ssot "
