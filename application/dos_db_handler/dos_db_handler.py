@@ -25,6 +25,9 @@ logger = Logger()
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """Entrypoint handler for the lambda
 
+    WARNING: This lambda is for TESTING PURPOSES ONLY.
+    It is not intended to be used in production.
+
     Args:
         event (Dict[str, Any]): Lambda function invocation event
         context (LambdaContext): Lambda function context object
