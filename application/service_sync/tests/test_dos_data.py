@@ -215,3 +215,16 @@ def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock):
     response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
     # Assert
     assert True is response
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMock):
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    open_period_list = [OpenPeriod(time(1, 0, 0), time(2, 0, 0))]
+    specified_opening_time_list = [SpecifiedOpeningTime(open_period_list, date(2022, 12, 24), False)]
+    # Act
+    response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
+    # Assert
+    assert True is response
