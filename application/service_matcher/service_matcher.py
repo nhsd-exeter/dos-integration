@@ -166,7 +166,7 @@ def get_matching_services(nhs_entity: NHSEntity) -> List[DoSService]:
 def send_update_requests(
     update_requests: List[Dict[str, Any]], message_received: int, record_id: str, sequence_number: int
 ) -> None:
-    """Sends change request payload off to next part of workflow"""
+    """Sends update request payload off to next part of workflow"""
     sqs = client("sqs")
     messages = []
     for update_request in update_requests:
@@ -178,7 +178,7 @@ def send_update_requests(
         message_group_id = str(service_id)
         entry_id = f"{service_id}-{sequence_number}"
         logger.debug(
-            "CR to send",
+            "Update request to send",
             extra={
                 "update_request": update_request,
                 "entry_id": entry_id,

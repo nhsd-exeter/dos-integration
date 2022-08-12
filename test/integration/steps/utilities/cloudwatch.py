@@ -1,24 +1,18 @@
 from datetime import datetime
 from json import dumps
-from os import getenv as get_env
+from os import getenv
 from sqlite3 import Timestamp
 from time import sleep
 
 from boto3 import client
 
 LAMBDA_CLIENT_LOGS = client("logs")
-EVENT_PROCESSOR = get_env("EVENT_PROCESSOR")
-EVENT_SENDER = get_env("EVENT_SENDER")
-CR_FIFO_DLQ = get_env("CR_FIFO_DLQ")
-LOG_GROUP_NAME_EVENT_PROCESSOR = f"/aws/lambda/{EVENT_PROCESSOR}"
-LOG_GROUP_NAME_EVENT_SENDER = f"/aws/lambda/{EVENT_SENDER}"
-LOG_GROUP_NAME_CR_FIFO_DLQ = f"/aws/lambda/{CR_FIFO_DLQ}"
 
 
 def get_logs(
-    query: str, event_lambda: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20
+    query: str, lambda_name: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20
 ) -> str:
-    log_group_name = get_log_group_name(event_lambda)
+    log_group_name = get_log_group_name(lambda_name)
     logs_found = False
     counter = 0
     while logs_found is False:
@@ -60,20 +54,5 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
         raise ValueError("Matching logs have been found")
 
 
-def get_log_group_name(event_lambda: str) -> str:
-    log_groups = {
-        "processor": LOG_GROUP_NAME_EVENT_PROCESSOR,
-        "sender": LOG_GROUP_NAME_EVENT_SENDER,
-        "cr_dlq": LOG_GROUP_NAME_CR_FIFO_DLQ,
-    }
-    if event_lambda == "processor" or "sender" or "cr_dlq":
-        log_group_name = log_groups[event_lambda]
-    else:
-        raise ValueError("Error.. log group name not correctly specified")
-    return log_group_name
-
-
-def get_secret(secret_name: str) -> str:
-    secrets_manager = client(service_name="secretsmanager")
-    get_secret_value_response = secrets_manager.get_secret_value(SecretId=secret_name)
-    return get_secret_value_response["SecretString"]
+def get_log_group_name(lambda_name: str) -> str:
+    return f'/aws/lambda/uec-dos-int-{getenv("ENVIRONMENT")}-{lambda_name}'

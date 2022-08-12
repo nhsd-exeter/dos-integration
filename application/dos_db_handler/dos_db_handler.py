@@ -38,6 +38,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
         )
         result = run_query(query, None)
+    elif request["type"] == "get_taken_odscodes":
+        query = "SELECT LEFT(odscode, 5) FROM services"
+        result = run_query(query, None)
     elif request["type"] == "get_pharmacy_odscodes_with_contacts":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
@@ -73,17 +76,15 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
         query = f"SELECT value from changes where externalref = '{cid}'"
         result = run_query(query, None)
-    elif request["type"] == "get_service_type_from_cr":
-        sid = request.get("get_service_id")
-        if sid is None:
-            raise ValueError("Missing correlation id")
-        query = f"SELECT typeid from services where id = '{sid}'"
-        result = run_query(query, None)
     elif request["type"] == "get_service_id":
-        cid = request.get("correlation_id")
-        if cid is None:
+        odscode = request.get("odscode")
+        if odscode is None:
             raise ValueError("Missing correlation id")
-        query = f"SELECT serviceid from changes where externalref = '{cid}'"
+        type_id_query = get_valid_service_types_equals_string("PHA")
+        query = (
+            f"SELECT id FROM services WHERE typeid {type_id_query} "
+            f"AND statusid = {VALID_STATUS_ID} AND odscode like '{odscode}%' LIMIT 1"
+        )
         result = run_query(query, None)
     elif request["type"] == "get_approver_status":
         cid = request.get("correlation_id")
@@ -123,18 +124,38 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError(f"No matching services for odscode {odscode}")
         query_results = query_results[0]
         result = dict(zip(db_columns, query_results))
+    # This is the one being called
     elif request["type"] == "change_event_standard_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service_id")
-        standard_opening_times = get_standard_opening_times_from_db(service_id)
-        result = standard_opening_times.export_cr_format()
+        with connect_to_dos_db() as connection:
+            standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
+            result = standard_opening_times.export_test_format()
     elif request["type"] == "change_event_specified_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service_id")
-        specified_opening_times = get_specified_opening_times_from_db(service_id)
-        result = SpecifiedOpeningTime.export_cr_format_list(specified_opening_times)
+        with connect_to_dos_db() as connection:
+            specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
+            result = SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
+    elif request["type"] == "get_service_table_field":
+        service_id = request.get("service_id")
+        field = request.get("field")
+        if service_id is None or field is None:
+            raise ValueError("Missing data in get_service_table_field request")
+        result = run_query(
+            query=f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s",
+            query_vars={"SERVICE_ID": service_id},
+        )
+    elif request["type"] == "get_service_history":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing data in get_service_history request")
+        result = run_query(
+            query="SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s",
+            query_vars={"SERVICE_ID": service_id},
+        )
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)

@@ -1,20 +1,23 @@
 from ast import literal_eval
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from json import dumps, loads
 from os import getenv
 from random import randint, randrange, sample
+from re import sub
 from time import sleep, time, time_ns
 from typing import Any, Dict, Tuple
 
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
+from pytz import UTC
 from requests import get, post, Response
 
-from .aws import get_secret
 from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
 from .context import Context
+from .secrets_manager import get_secret
+from .translation import get_service_history_data_key
 
 URL = getenv("URL")
 CR_URL = getenv("CR_URL")
@@ -155,10 +158,12 @@ def get_pharmacy_odscode() -> str:
 
 
 def get_single_service_pharmacy() -> str:
+    # Runs this
     ods_code = get_pharmacy_odscode()
     lambda_payload = {"type": "get_services_count", "odscode": ods_code}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))[0][0]
+    # Should this not be a while loop with a counter
     if data != 1:
         ods_code = get_single_service_pharmacy()
     return ods_code
@@ -204,42 +209,20 @@ def confirm_approver_status(
     return data
 
 
-def get_service_id(correlation_id: str) -> list:
-    retries = 0
+def get_service_id(odscode: str) -> str:
     data = []
-    data_status = False
-    while data_status is False:
-        lambda_payload = {"type": "get_service_id", "correlation_id": correlation_id}
+    for _ in range(16):
+        lambda_payload = {"type": "get_service_id", "odscode": odscode}
         response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
         if data != []:
-            return data[0][0]
-
-        if retries > 16:
-            raise ValueError("Error!.. Service Id not found")
-        retries += 1
+            break
         sleep(30)
+    else:
+        raise ValueError("Error!.. Service Id not found")
 
-
-def get_service_type_from_cr(correlation_id: str) -> list:
-    retries = 0
-    data = []
-    data_status = False
-    while data_status is False:
-        lambda_payload = {"type": "get_service_type_from_cr", "get_service_id": get_service_id(correlation_id)}
-        response = invoke_dos_db_handler_lambda(lambda_payload)
-        data = loads(response)
-        data = literal_eval(data)
-        if data != []:
-            print(f"Number of service_type retries: {retries}")
-            print(data)
-            return data[0][0]
-
-        if retries > 8:
-            raise ValueError("Error!.. Service type not found")
-        retries += 1
-        sleep(5)
+    return data[0][0]
 
 
 def get_service_type_data(organisation_type_id: str) -> list[int]:
@@ -289,19 +272,129 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     retries = 0
     while response_status is False:
         response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-            FunctionName=getenv("dos_db_handler_FUNCTION_NAME"),
+            FunctionName=getenv("DOS_DB_HANDLER"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
+        # Call out to the lambda for request response with a valid service id
         response_payload = response["Payload"].read().decode("utf-8")
         if "errorMessage" not in response_payload:
             return response_payload
 
-        if retries > 18:
+        if retries > 6:
             print(f"Error in this payload: {lambda_payload}")
             raise ValueError(f"Unable to run test db checker lambda successfully after {retries} retries")
         retries += 1
         sleep(10)
+
+
+def get_service_table_field(service_id: str, field_name: str) -> Any:
+    lambda_payload = {"type": "get_service_table_field", "service_id": service_id, "field": field_name}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return data[0][0]
+
+
+def wait_for_service_update(service_id: str) -> Any:
+    """Wait for the service to be updated by checking modifiedtime"""
+    for _ in range(12):
+        sleep(10)
+        updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
+        updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+        updated_date_time = updated_date_time.replace(tzinfo=UTC)
+        two_mins_ago = datetime.now() - timedelta(minutes=2)
+        two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+        if updated_date_time > two_mins_ago:
+            break
+    else:
+        raise ValueError(f"Service not updated, service_id: {service_id}")
+
+
+def service_not_updated(service_id: str):
+    """Assert Service not updated in last 2 mins"""
+    sleep(60)
+    two_mins_ago = datetime.now() - timedelta(minutes=2)
+    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+    updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
+    updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+    updated_date_time = updated_date_time.replace(tzinfo=UTC)
+    two_mins_ago = datetime.now() - timedelta(minutes=2)
+    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+    assert updated_date_time < two_mins_ago, f"Service updated unexpectantly, service_id: {service_id}"
+
+
+def get_expected_data(context: Context, changed_data_name: str) -> Any:
+    """Get the previous data from the context"""
+    match changed_data_name.lower():
+        case "phone_no" | "phone" | "public_phone" | "publicphone":
+            changed_data = context.change_event.phone
+        case "website" | "web":
+            changed_data = context.change_event.website
+        case "address":
+            changed_data = get_address_string(context.change_event)
+        case "postcode":
+            changed_data = context.change_event.postcode
+        case _:
+            raise ValueError(f"Error!.. Input parameter '{changed_data_name}' not compatible")
+    return changed_data
+
+
+def get_address_string(change_event: ChangeEvent) -> str:
+    address_lines = [
+        line
+        for line in [
+            change_event.address_line_1,
+            change_event.address_line_2,
+            change_event.address_line_3,
+            change_event.city,
+            change_event.county,
+        ]
+        if isinstance(line, str) and line.strip() != ""
+    ]
+    address = "$".join(address_lines)
+    address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
+    address = address.replace("'", "")
+    address = address.replace("&", "and")
+    return address
+
+
+def check_service_history(
+    service_id: str, plain_english_field_name: str, expected_data: Any, previous_data: Any
+) -> None:
+    """Check the service history for the expected data and previous data is removed"""
+    service_history = get_service_history(service_id)
+    first_key_in_service_history = list(service_history.keys())[0]
+    changes = service_history[first_key_in_service_history]["new"]
+    change_key = get_service_history_data_key(plain_english_field_name)
+    if change_key not in changes:
+        raise ValueError(f"DoS Change key '{change_key}' not found in latest service history entry")
+
+    # Assert new data is correct
+
+    assert (
+        expected_data == changes[change_key]["data"]
+    ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa
+
+    # Assert previous data is correct
+    if "previous" in changes[change_key]:
+        if previous_data not in ["unknown", ""]:
+            (
+                changes[change_key]["previous"] == str(previous_data),
+                f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}",
+            )
+        elif previous_data == "":
+            assert (
+                changes[change_key]["previous"] is None
+            ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
+        else:
+            raise ValueError(f"Input parameter '{previous_data}' not compatible")
+
+
+def get_service_history(service_id: str) -> Dict[str, Any]:
+    lambda_payload = {"type": "get_service_history", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return loads(data[0][0])
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
@@ -315,18 +408,11 @@ def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str)
     return False
 
 
-def check_specified_received_opening_times_date_in_dos(corr_id: str, search_key: str, search_param: str):
-    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    expected_date = datetime.strptime(search_param, "%b %d %Y").strftime("%d-%m-%Y")
-    for db_row in response:
-        change_row = dict(loads(db_row[0])["new"])
-        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
-            for date in change_row[search_key]["data"]["add"]:
-                if expected_date in date:
-                    return True
-    raise ValueError(f'Specified date change "{search_param}" not found in Dos changes..')
+def get_specified_opening_times(service_id: str):
+    lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return loads(data[0][0])
 
 
 def check_contact_delete_in_dos(corr_id: str, search_key: str):
@@ -344,20 +430,6 @@ def check_contact_delete_in_dos(corr_id: str, search_key: str):
         return True
     else:
         raise ValueError("Expected a 'delete' on the website but didn't find one")
-
-
-def check_specified_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
-    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    for db_row in response:
-        change_row = dict(loads(db_row[0])["new"])
-        if search_key in change_row and change_row[search_key]["changetype"] != "delete":
-            time_periods = change_row[search_key]["data"]["add"]
-            for time_period in time_periods:
-                if search_param in time_period:
-                    return True
-    raise ValueError("Specified Opening-time time change not found in Dos changes..")
 
 
 def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
@@ -417,6 +489,23 @@ def random_pharmacy_odscode() -> str:
     return odscode
 
 
+def generate_untaken_ods() -> str:
+    success = False
+    while success is False:
+        odscode = str(randint(10000, 99999))
+        if check_ods_list(odscode) is True:
+            return odscode
+
+
+def check_ods_list(odscode: str) -> str:
+    lambda_payload = {"type": "get_taken_odscodes"}
+    ods_list = get_odscodes_list(lambda_payload)
+    if odscode not in ods_list:
+        return True
+    else:
+        return False
+
+
 def random_dentist_odscode() -> str:
     global DENTIST_ODS_CODE_LIST
     if DENTIST_ODS_CODE_LIST is None:
@@ -464,24 +553,26 @@ def check_slack(channel, token) -> str:
     return output.text
 
 
-def get_sqs_queue(queue_type) -> str:
+def get_sqs_queue_name(queue_type: str) -> str:
     response = ""
     current_environment = getenv("ENVIRONMENT")
-    match queue_type:
-        case "ce":
+    match queue_type.lower():
+        case "change event dlq":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-change-event-dead-letter-queue.fifo",
             )
         case "cr":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-cr-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-update-request-dead-letter-queue.fifo",
             )
         case "404":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-cr-fifo-queue.fifo",
+                QueueName=f"uec-dos-int-{current_environment}-update-request-queue.fifo",
             )
         case _:
             raise ValueError("Invalid SQS queue type specified")
+    print(response)
+    raise NotImplementedError("Not implemented")
 
     return response["QueueUrl"]
 
@@ -514,7 +605,7 @@ def generate_sqs_body(website) -> dict:
 
 
 def post_cr_sqs():
-    queue_url = get_sqs_queue("cr")
+    queue_url = get_sqs_queue_name("cr")
     sqs_body = generate_sqs_body("https://www.test.com")
 
     SQS_CLIENT.send_message(
@@ -528,7 +619,7 @@ def post_cr_sqs():
 
 
 def post_cr_fifo():
-    queue_url = get_sqs_queue("404")
+    queue_url = get_sqs_queue_name("404")
     sqs_body = generate_sqs_body("abc@def.com")
 
     SQS_CLIENT.send_message(
@@ -541,8 +632,8 @@ def post_cr_fifo():
     return True
 
 
-def post_ce_sqs(context: Context):
-    queue_url = get_sqs_queue("ce")
+def post_to_change_event_dlq(context: Context):
+    queue_url = get_sqs_queue_name("change event dlq")
     sqs_body = context.change_event.get_change_event()
 
     SQS_CLIENT.send_message(

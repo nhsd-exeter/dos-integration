@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime, time
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from aws_lambda_powertools.logging import Logger
 
@@ -112,6 +112,13 @@ class OpenPeriod:
 
         return OpenPeriod(open_time, close_time)
 
+    def export_test_format(self) -> Dict[str, str]:
+        """Exports open period for use in the DoS DB Hander"""
+        return {
+            "start_time": self.start.strftime(DOS_TIME_FORMAT),
+            "end_time": self.end.strftime(DOS_TIME_FORMAT),
+        }
+
 
 class SpecifiedOpeningTime:
     def __init__(self, open_periods: List[OpenPeriod], specified_date: date, is_open: bool = True):
@@ -196,6 +203,21 @@ class SpecifiedOpeningTime:
             if item.date >= date_now:
                 future_dates.append(item)
         return future_dates
+
+    def export_test_format(self) -> dict:
+        """Exports Specified opening time into a test format that can be used in the tests"""
+        exp_open_periods = [op.export_test_format() for op in sorted(self.open_periods)]
+        date_str = self.date.strftime(DOS_DATE_FORMAT)
+        return {date_str: exp_open_periods}
+
+    @staticmethod
+    def export_test_format_list(spec_opening_dates: List["SpecifiedOpeningTime"]) -> dict:
+        """Runs the export_test_format on a list of SpecifiedOpeningTime objects and combines the results"""
+        opening_dates_cr_format = {}
+        for spec_open_date in spec_opening_dates:
+            spec_open_date_payload = spec_open_date.export_test_format()
+            opening_dates_cr_format.update(spec_open_date_payload)
+        return opening_dates_cr_format
 
 
 class StandardOpeningTimes:
@@ -314,6 +336,14 @@ class StandardOpeningTimes:
         """Exports standard opening times into time in seconds format for a specific day in the week"""
         open_periods = sorted(getattr(self, weekday))
         return [open_period.export_time_in_seconds() for open_period in open_periods]
+
+    def export_test_format(self) -> Dict[str, List[Dict[str, str]]]:
+        """Exports standard opening times into a test format"""
+        change = {}
+        for weekday in WEEKDAYS:
+            open_periods = sorted(getattr(self, weekday))
+            change[weekday.capitalize()] = [op.export_test_format() for op in open_periods]
+        return change
 
 
 def opening_period_times_from_list(open_periods: List[OpenPeriod]) -> str:

@@ -89,6 +89,8 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 service_histories.save_service_histories(connection=connection)
                 connection.commit()
                 logger.info(f"Updates successfully committed to the DoS database for service id {service_id}")
+            else:
+                logger.info(f"No changes to save for service id {service_id}")
     finally:
         # Close the connection even if an error occurs
         if connection:
@@ -207,7 +209,7 @@ def save_specified_opening_times_into_db(
             query=(f"""DELETE FROM servicespecifiedopeningdates WHERE serviceid='{service_id}' """),
         ).close()
         for specified_opening_times_day in specified_opening_times_changes:
-            logger.debug(f"Saving standard opening times for dayid: {specified_opening_times_day}")
+            logger.debug(f"Saving specfied opening times for: {specified_opening_times_day}")
             cursor = query_dos_db(
                 connection=connection,
                 query=(

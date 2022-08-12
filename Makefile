@@ -98,7 +98,7 @@ UNIT_TEST_ARGS=" \
 		"
 
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
+	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
 	--configuration service-matcher --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
@@ -112,7 +112,7 @@ integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PRO
 	make integration-test TAGS=$$NO_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-test-lambda-app-config --environment test \
+	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
 	--configuration service-matcher --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
@@ -142,7 +142,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e URL=https://$(DOS_INTEGRATION_URL) \
 		-e SERVICE_MATCHER=$(TF_VAR_service_matcher_lambda_name) \
 		-e SERVICE_SYNC=$(TF_VAR_service_sync_lambda_name) \
-		-e dos_db_handler_FUNCTION_NAME=$(TF_VAR_dos_db_handler_lambda_name) \
+		-e DOS_DB_HANDLER=$(TF_VAR_dos_db_handler_lambda_name) \
 		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
 		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
 		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \

@@ -232,7 +232,6 @@ def get_standard_opening_times_from_db(connection: connection, service_id: int) 
     function will still return a blank StandardOpeningTime with no opening periods."""
 
     logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
-
     sql_command = (
         "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
         "FROM servicedayopenings sdo "
