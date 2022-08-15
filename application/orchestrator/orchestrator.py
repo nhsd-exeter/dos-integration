@@ -36,7 +36,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     loop = 0
     TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
     while time() < start + int(environ["RUN_FOR"]):
-        if get_circuit_is_open(environ["CIRCUIT"]) is True:
+        if get_circuit_is_open(environ["CIRCUIT"]):
             # Wait then continue
             sleep(int(environ["SLEEP_FOR_WHEN_OPEN"]))
             update_request_queue_item = UpdateRequestQueueItem(
@@ -58,7 +58,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         else:
             logger.info(f"Received {len(messages)} messages from SQS")
 
-            # TODO: Need to figure out circuit breaker bits
             for message in messages:
                 it_start = time()
                 logger.info("Processing SQS message", extra={"sqs_message": message})
@@ -89,7 +88,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                     recipient_id=message["ReceiptHandle"],
                     metadata=update_request_metadata,
                 )
-                # TODO: What happens when this fails?
                 logger.info("Sending request to event sender", extra={"request": update_request_queue_item})
                 invoke_lambda(lambda_client, update_request_queue_item)
                 it_end = time()

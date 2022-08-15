@@ -231,3 +231,19 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
   statistic                 = "Average"
   threshold                 = "30000" # 30 Seconds
 }
+
+resource "aws_cloudwatch_metric_alarm" "health_check_failures_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert when the DoS DB or Replica is likely down or unaccessible and found by too many health check failures"
+  alarm_name                = "${var.project_id} | ${var.environment} | High Health Check Failures"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "ServiceSyncHealthCheckFailure"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "120" # 2 minutes
+  statistic                 = "Sum"
+  threshold                 = "2"
+}

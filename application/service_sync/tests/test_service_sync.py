@@ -25,6 +25,7 @@ UPDATE_REQUEST_QUEUE_ITEM = UpdateRequestQueueItem(
         message_deduplication_id="message_deduplication_id",
         message_received=123456789,
     ),
+    is_health_check=False,
 )
 
 
@@ -40,6 +41,7 @@ def lambda_context():
     return LambdaContext()
 
 
+@patch(f"{FILE_PATH}.run_db_health_check")
 @patch(f"{FILE_PATH}.add_success_metric")
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
@@ -47,7 +49,7 @@ def lambda_context():
 @patch(f"{FILE_PATH}.get_dos_service_and_history")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.set_up_logging")
-def test_lambda_handler(
+def test_lambda_handler_healthcheck(
     mock_set_up_logging: MagicMock,
     mock_nhs_entity: MagicMock,
     mock_get_dos_service_and_history: MagicMock,
@@ -55,18 +57,59 @@ def test_lambda_handler(
     mock_update_dos_data: MagicMock,
     mock_remove_sqs_message_from_queue: MagicMock,
     mock_add_success_metric: MagicMock,
+    mock_run_db_health_check: MagicMock,
     lambda_context: LambdaContext,
 ):
     # Arrange
+    environ["ENV"] = "environment"
+    update_request = UPDATE_REQUEST_QUEUE_ITEM.copy()
+    update_request["is_health_check"] = True
+    # Act
+    lambda_handler(event=update_request, context=lambda_context)
+    # Assert
+    mock_set_up_logging.assert_not_called()
+    mock_nhs_entity.assert_not_called()
+    mock_get_dos_service_and_history.assert_not_called()
+    mock_compare_nhs_uk_and_dos_data.assert_not_called()
+    mock_update_dos_data.assert_not_called()
+    mock_remove_sqs_message_from_queue.assert_not_called()
+    mock_add_success_metric.assert_not_called()
+    mock_run_db_health_check.assert_called_once_with()
+    # Cleanup
+    del environ["ENV"]
+
+
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.run_db_health_check")
+@patch(f"{FILE_PATH}.add_success_metric")
+@patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
+@patch(f"{FILE_PATH}.update_dos_data")
+@patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
+@patch(f"{FILE_PATH}.get_dos_service_and_history")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.set_up_logging")
+def test_lambda_handler_no_healthcheck(
+    mock_set_up_logging: MagicMock,
+    mock_nhs_entity: MagicMock,
+    mock_get_dos_service_and_history: MagicMock,
+    mock_compare_nhs_uk_and_dos_data: MagicMock,
+    mock_update_dos_data: MagicMock,
+    mock_remove_sqs_message_from_queue: MagicMock,
+    mock_add_success_metric: MagicMock,
+    mock_run_db_health_check: MagicMock,
+    mock_add_metric: MagicMock,
+    lambda_context: LambdaContext,
+):
+    # Arrange
+    environ["ENV"] = "environment"
     dos_service = MagicMock()
     service_histories = MagicMock()
     nhs_entity = MagicMock()
     mock_nhs_entity.return_value = nhs_entity
     mock_get_dos_service_and_history.return_value = dos_service, service_histories
     # Act
-    response = lambda_handler(event=UPDATE_REQUEST_QUEUE_ITEM, context=lambda_context)
+    lambda_handler(event=UPDATE_REQUEST_QUEUE_ITEM, context=lambda_context)
     # Assert
-    assert {"message": "The change event has been processed successfully"} == response
     mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
     mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
     mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
@@ -80,6 +123,60 @@ def test_lambda_handler(
     )
     mock_remove_sqs_message_from_queue.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
     mock_add_success_metric.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
+    mock_run_db_health_check.assert_not_called()
+    mock_add_metric.assert_called_once_with("UpdateRequestSuccess")
+    # Cleanup
+    del environ["ENV"]
+
+
+@patch.object(Logger, "exception")
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.put_circuit_is_open")
+@patch(f"{FILE_PATH}.run_db_health_check")
+@patch(f"{FILE_PATH}.add_success_metric")
+@patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
+@patch(f"{FILE_PATH}.update_dos_data")
+@patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
+@patch(f"{FILE_PATH}.get_dos_service_and_history")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.set_up_logging")
+def test_lambda_handler_no_healthcheck_exception(
+    mock_set_up_logging: MagicMock,
+    mock_nhs_entity: MagicMock,
+    mock_get_dos_service_and_history: MagicMock,
+    mock_compare_nhs_uk_and_dos_data: MagicMock,
+    mock_update_dos_data: MagicMock,
+    mock_remove_sqs_message_from_queue: MagicMock,
+    mock_add_success_metric: MagicMock,
+    mock_run_db_health_check: MagicMock,
+    mock_put_circuit_is_open: MagicMock,
+    mock_add_metric: MagicMock,
+    mock_logger_exception: MagicMock,
+    lambda_context: LambdaContext,
+):
+    # Arrange
+    environ["ENV"] = "environment"
+    environ["CIRCUIT"] = circuit = "environment"
+    nhs_entity = MagicMock()
+    mock_nhs_entity.return_value = nhs_entity
+    mock_get_dos_service_and_history.side_effect = Exception("Error")
+    # Act
+    lambda_handler(event=UPDATE_REQUEST_QUEUE_ITEM, context=lambda_context)
+    # Assert
+    mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
+    mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
+    mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
+    mock_compare_nhs_uk_and_dos_data.assert_not_called()
+    mock_update_dos_data.assert_not_called()
+    mock_remove_sqs_message_from_queue.assert_not_called()
+    mock_add_success_metric.assert_not_called()
+    mock_run_db_health_check.assert_not_called()
+    mock_put_circuit_is_open.assert_called_once_with(circuit, True)
+    mock_add_metric.assert_called_once_with("UpdateRequestFailed")
+    mock_logger_exception.assert_called_once_with("Error processing change event")
+    # Cleanup
+    del environ["ENV"]
+    del environ["CIRCUIT"]
 
 
 @patch.object(Logger, "append_keys")

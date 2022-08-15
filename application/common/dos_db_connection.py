@@ -84,7 +84,7 @@ def connection_to_db(
         dbname=db_name,
         user=db_user,
         password=db_password,
-        connect_timeout=30,
+        connect_timeout=5,
         options=f"-c search_path=dbo,{db_schema}",
         application_name="DOS INTEGRATION <psycopg2>",
     )
