@@ -167,11 +167,8 @@ def test_save_demographics_into_db(mock_query_dos_db: MagicMock):
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
-        query=(
-            """UPDATE services SET """
-            f"""{", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items())} """
-            f"""WHERE id = {service_id};"""
-        ),
+        query="UPDATE services SET test = 'test' WHERE id = %(SERVICE_ID)s;",
+        vars={"SERVICE_ID": service_id},
     )
 
 
@@ -214,6 +211,19 @@ def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock):
     service_id = 1
     open_period_list = [OpenPeriod(time(1, 0, 0), time(2, 0, 0))]
     specified_opening_time_list = [SpecifiedOpeningTime(open_period_list, date(2022, 12, 24), True)]
+    # Act
+    response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
+    # Assert
+    assert True is response
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMock):
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    open_period_list = [OpenPeriod(time(1, 0, 0), time(2, 0, 0))]
+    specified_opening_time_list = [SpecifiedOpeningTime(open_period_list, date(2022, 12, 24), False)]
     # Act
     response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
     # Assert

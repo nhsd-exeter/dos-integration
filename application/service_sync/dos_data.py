@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
+from psycopg2.sql import SQL
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
@@ -26,13 +27,13 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname,"
         "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        f"WHERE s.id = {service_id}"
+        "WHERE s.id = %(SERVICE_ID)s"
     )
-
+    query_vars = {"SERVICE_ID": service_id}
     # Connect to the DoS database replica (Read only)
     with connect_to_dos_db_replica() as connection:
         # Query the DoS database for the service
-        cursor = query_dos_db(connection=connection, query=sql_query)
+        cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
         rows: List[DictCursor] = cursor.fetchall()
         if len(rows) == 1:
             # Select first row (service) and create DoSService object
@@ -112,13 +113,19 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
     if demographics_changes:
         # Update the service demographics
         logger.debug(f"Demographics changes found for service id {service_id}")
+        query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(
+            SQL(
+                ", ".join(
+                    f"""{key} = '{value if value is not None else ""}'""" for key, value in demographics_changes.items()
+                )
+            )
+        )
+        query_str = query.as_string(connection)
+
         cursor = query_dos_db(
             connection=connection,
-            query=(
-                """UPDATE services SET """
-                f"""{", ".join(f"{key} = '{value if value is not None else ''}'" for key, value in demographics_changes.items())} """  # noqa: E501
-                f"""WHERE id = {service_id};"""
-            ),
+            query=query_str,
+            vars={"SERVICE_ID": service_id},
         )
         cursor.close()
         return True
@@ -147,18 +154,21 @@ def save_standard_opening_times_into_db(
             logger.debug(f"Deleting standard opening times for dayid: {dayid}")
             # Cascade delete the standard opening times in both
             # servicedayopenings table and servicedayopeningtimes table
-            query_dos_db(
+            cursor = query_dos_db(
                 connection=connection,
-                query=f"""DELETE FROM servicedayopenings WHERE serviceid='{service_id}' AND dayid='{dayid}'""",
-            ).close()
+                query="""DELETE FROM servicedayopenings WHERE serviceid=%(SERVICE_ID)s AND dayid=%(DAY_ID)s""",
+                vars={"SERVICE_ID": service_id, "DAY_ID": dayid},
+            )
+            cursor.close()
             if opening_periods != []:
                 logger.debug(f"Saving standard opening times for dayid: {dayid}")
                 cursor = query_dos_db(
                     connection=connection,
                     query=(
                         """INSERT INTO servicedayopenings (serviceid, dayid) """
-                        f"""VALUES ({service_id}, {dayid}) RETURNING id"""
+                        """VALUES (%(SERVICE_ID)s, %(DAY_ID)s) RETURNING id"""
                     ),
+                    vars={"SERVICE_ID": service_id, "DAY_ID": dayid},
                 )
                 # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
                 service_day_opening_id = cursor.fetchone()[0]
@@ -167,13 +177,19 @@ def save_standard_opening_times_into_db(
                 open_period: OpenPeriod  # Type hint for the for loop
                 for open_period in opening_periods:
                     logger.debug(f"Saving standard opening times period for dayid: {dayid}, period: {open_period}")
-                    query_dos_db(
+                    cursor = query_dos_db(
                         connection=connection,
                         query=(
                             """INSERT INTO servicedayopeningtimes (servicedayopeningid, starttime, endtime) """
-                            f"""VALUES ('{service_day_opening_id}', '{open_period.start}', '{open_period.end}')"""
+                            """VALUES (%(SERVICE_DAY_OPENING_ID)s, %(OPEN_PERIOD_START)s, %(OPEN_PERIOD_END)s);"""
                         ),
-                    ).close()
+                        vars={
+                            "SERVICE_DAY_OPENING_ID": service_day_opening_id,
+                            "OPEN_PERIOD_START": open_period.start,
+                            "OPEN_PERIOD_END": open_period.end,
+                        },
+                    )
+                    cursor.close()
             else:
                 logger.debug(f"No standard opening times to add for {dayid}")
         return True
@@ -204,18 +220,21 @@ def save_specified_opening_times_into_db(
         logger.debug(f"Deleting all specified opening times for service id {service_id}")
         # Cascade delete the standard opening times in both
         # servicedayopenings table and servicedayopeningtimes table
-        query_dos_db(
+        cursor = query_dos_db(
             connection=connection,
-            query=(f"""DELETE FROM servicespecifiedopeningdates WHERE serviceid='{service_id}' """),
-        ).close()
+            query=("""DELETE FROM servicespecifiedopeningdates WHERE serviceid=%(SERVICE_ID)s """),
+            vars={"SERVICE_ID": service_id},
+        )
+        cursor.close()
         for specified_opening_times_day in specified_opening_times_changes:
             logger.debug(f"Saving specfied opening times for: {specified_opening_times_day}")
             cursor = query_dos_db(
                 connection=connection,
                 query=(
-                    f"""INSERT INTO servicespecifiedopeningdates (date,serviceid) """
-                    f"""VALUES ('{specified_opening_times_day.date}','{service_id}') RETURNING id"""
+                    """INSERT INTO servicespecifiedopeningdates (date,serviceid) """
+                    """VALUES (%(SPECIFIED_OPENING_TIMES_DATE)s,%(SERVICE_ID)s) RETURNING id;"""
                 ),
+                vars={"SPECIFIED_OPENING_TIMES_DATE": specified_opening_times_day.date, "SERVICE_ID": service_id},
             )
             # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
             service_specified_opening_date_id = cursor.fetchone()[0]
@@ -230,26 +249,38 @@ def save_specified_opening_times_into_db(
                             f"{specified_opening_times_day.date}, period: {open_period}"
                         )
                     )
-                    query_dos_db(
+                    cursor = query_dos_db(
                         connection=connection,
                         query=(
                             """INSERT INTO servicespecifiedopeningtimes """
                             """(starttime, endtime, isclosed, servicespecifiedopeningdateid) """
-                            f"""VALUES ('{open_period.start}', '{open_period.end}',"""
-                            f"""'{not specified_opening_times_day.is_open}',{service_specified_opening_date_id})"""
+                            """VALUES (%(OPEN_PERIOD_START)s, %(OPEN_PERIOD_END)s,"""
+                            """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s);"""
                         ),
-                    ).close()
+                        vars={
+                            "OPEN_PERIOD_START": open_period.start,
+                            "OPEN_PERIOD_END": open_period.end,
+                            "IS_CLOSED": not specified_opening_times_day.is_open,
+                            "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
+                        },
+                    )
+                    cursor.close()
             else:
                 # If the day is closed, save the single closed all day times
-                query_dos_db(
+                cursor = query_dos_db(
                     connection=connection,
                     query=(
                         """INSERT INTO servicespecifiedopeningtimes """
                         """(starttime, endtime, isclosed, servicespecifiedopeningdateid) """
                         """VALUES ('00:00:00', '00:00:00',"""
-                        f"""'{not specified_opening_times_day.is_open}',{service_specified_opening_date_id})"""
+                        """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s);"""
                     ),
-                ).close()
+                    vars={
+                        "IS_CLOSED": not specified_opening_times_day.is_open,
+                        "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
+                    },
+                )
+                cursor.close()
 
         return True
     else:

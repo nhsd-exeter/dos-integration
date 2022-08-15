@@ -143,7 +143,7 @@ resource "aws_codebuild_project" "di_deploy" {
   name           = "${var.project_id}-${var.environment}-deploy-stage"
   description    = "Deploy to the environment expects ENVIRONMENT variable passed in"
   build_timeout  = "10"
-  queued_timeout = "30"
+  queued_timeout = "60"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
