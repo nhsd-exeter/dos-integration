@@ -1,17 +1,18 @@
 from datetime import date, time
 from os import environ
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, MagicMock, patch
+
 from aws_lambda_powertools.logging import Logger
 from pytest import raises
 
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from application.service_sync.dos_data import (
     get_dos_service_and_history,
+    run_db_health_check,
     save_demographics_into_db,
     save_specified_opening_times_into_db,
     save_standard_opening_times_into_db,
     update_dos_data,
-    run_db_health_check,
 )
 
 FILE_PATH = "application.service_sync.dos_data"
@@ -21,9 +22,11 @@ FILE_PATH = "application.service_sync.dos_data"
 @patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.query_dos_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.connect_to_dos_db")
 def test_run_db_health_check_success(
     mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_dos_db_replica: MagicMock,
     query_dos_db: MagicMock,
     mock_logger: MagicMock,
     mock_put_circuit_is_open: MagicMock,
@@ -35,8 +38,11 @@ def test_run_db_health_check_success(
     # Act
     run_db_health_check()
     # Assert
-    mock_logger.assert_has_calls([call("Running health check"), call("Health check successful")])
+    mock_logger.assert_has_calls(
+        [call("Running health check"), call("DoS database is running"), call("DoS database replica is running")]
+    )
     mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_dos_db_replica.assert_called_once()
     mock_put_circuit_is_open.assert_called_once_with(circuit, False)
     mock_add_metric.assert_called_once_with("ServiceSyncHealthCheckSuccess")
     # Cleanup
@@ -47,9 +53,11 @@ def test_run_db_health_check_success(
 @patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(Logger, "error")
 @patch(f"{FILE_PATH}.query_dos_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_run_db_health_check_failure(
+def test_run_db_health_check_db_failure(
     mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_dos_db_replica: MagicMock,
     query_dos_db: MagicMock,
     mock_logger: MagicMock,
     mock_put_circuit_is_open: MagicMock,
@@ -60,8 +68,35 @@ def test_run_db_health_check_failure(
     # Act
     run_db_health_check()
     # Assert
-    mock_logger.assert_has_calls([call("Health check failed - No services found in database")])
+    mock_logger.assert_has_calls([call("Health check failed - No services found in DoS DB")])
     mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_dos_db_replica.assert_not_called()
+    mock_put_circuit_is_open.assert_not_called()
+    mock_add_metric.assert_called_once_with("ServiceSyncHealthCheckFailure")
+
+
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.put_circuit_is_open")
+@patch.object(Logger, "error")
+@patch(f"{FILE_PATH}.query_dos_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_dos_db")
+def test_run_db_health_check_db_replica_failure(
+    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_dos_db_replica: MagicMock,
+    query_dos_db: MagicMock,
+    mock_logger: MagicMock,
+    mock_put_circuit_is_open: MagicMock,
+    mock_add_metric: MagicMock,
+):
+    # Arrange
+    query_dos_db.return_value.fetchall.side_effect = ["test", []]
+    # Act
+    run_db_health_check()
+    # Assert
+    mock_logger.assert_has_calls([call("Health check failed - No services found in DoS DB Replica")])
+    mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_dos_db_replica.assert_called_once()
     mock_put_circuit_is_open.assert_not_called()
     mock_add_metric.assert_called_once_with("ServiceSyncHealthCheckFailure")
 

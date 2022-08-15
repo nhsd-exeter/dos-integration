@@ -5,8 +5,8 @@ from os import environ
 from time import time
 from typing import Any, Dict, Union
 
-from boto3 import client
 from aws_lambda_powertools.logging.logger import Logger
+from boto3 import client
 from boto3.dynamodb.types import TypeSerializer
 
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds

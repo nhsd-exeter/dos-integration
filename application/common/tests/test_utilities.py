@@ -5,13 +5,13 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from pytest import mark, raises
 
 from ..utilities import (
+    add_metric,
     extract_body,
     get_sequence_number,
     get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
     remove_given_keys_from_dict_by_msg_limit,
-    add_metric,
 )
 
 
