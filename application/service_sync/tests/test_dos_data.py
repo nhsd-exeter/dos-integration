@@ -104,22 +104,23 @@ def test_run_db_health_check_db_replica_failure(
 @patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.put_circuit_is_open")
 @patch.object(Logger, "exception")
-@patch(f"{FILE_PATH}.query_dos_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.connect_to_dos_db")
 def test_run_db_health_check_exception(
     mock_connect_to_dos_db: MagicMock,
-    query_dos_db: MagicMock,
+    mock_connect_to_dos_db_replica: MagicMock,
     mock_logger: MagicMock,
     mock_put_circuit_is_open: MagicMock,
     mock_add_metric: MagicMock,
 ):
     # Arrange
-    query_dos_db.side_effect = Exception("test")
+    mock_connect_to_dos_db.side_effect = Exception("test")
     # Act
     run_db_health_check()
     # Assert
     mock_logger.assert_has_calls([call("Health check failed")])
     mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_dos_db_replica.assert_not_called()
     mock_put_circuit_is_open.assert_not_called()
     mock_add_metric.assert_called_once_with("ServiceSyncHealthCheckFailure")
 
