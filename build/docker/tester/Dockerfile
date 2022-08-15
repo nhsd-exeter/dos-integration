@@ -1,4 +1,4 @@
-FROM python:3.10.5
+FROM python:3.10.6
 # Update Pip
 RUN python -m pip install --upgrade pip
 # Copy Python requirements
