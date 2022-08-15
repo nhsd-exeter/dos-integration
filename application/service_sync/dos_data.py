@@ -276,7 +276,7 @@ def save_specified_opening_times_into_db(
                         """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s);"""
                     ),
                     vars={
-                        "IS_CLOSED": {not specified_opening_times_day.is_open},
+                        "IS_CLOSED": not specified_opening_times_day.is_open,
                         "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
                     },
                 )
