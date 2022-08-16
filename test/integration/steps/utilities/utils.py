@@ -386,8 +386,7 @@ def check_service_history(
 def service_history_negative_check(service_id: str):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    currenttime = str(time() - 600)
-    if first_key_in_service_history <= currenttime:
+    if check_recent_event(first_key_in_service_history):
         return "Not Updated"
     else:
         return "Updated"
@@ -396,16 +395,22 @@ def service_history_negative_check(service_id: str):
 def check_service_history_change_type(service_id: str, change_type: str):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    current = str(time() - 600)
     change_status = service_history[first_key_in_service_history]["new"]
     [list(service_history[first_key_in_service_history]["new"].keys())[0]]
-    if first_key_in_service_history <= current:
+    if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
         else:
             return "Change type does not match"
     else:
         return "No changes have been made"
+
+
+def check_recent_event(event_time: str, time_difference=600) -> bool:
+    if str(time() - time_difference) <= event_time:
+        return True
+    else:
+        return False
 
 
 def get_service_history(service_id: str) -> Dict[str, Any]:
