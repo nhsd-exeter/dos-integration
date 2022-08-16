@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches @kit
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "CT1 1AA"

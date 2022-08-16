@@ -385,18 +385,23 @@ def check_service_history(
 
 def service_history_negative_check(service_id: str):
     service_history = get_service_history(service_id)
-    first_key_in_service_history = list(service_history.keys())[0]
-    if check_recent_event(first_key_in_service_history):
+    if service_history == []:
         return "Not Updated"
     else:
-        return "Updated"
+        first_key_in_service_history = list(service_history.keys())[0]
+        if check_recent_event(first_key_in_service_history):
+            return "Not Updated"
+        else:
+            return "Updated"
 
 
 def check_service_history_change_type(service_id: str, change_type: str):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    change_status = service_history[first_key_in_service_history]["new"]
-    [list(service_history[first_key_in_service_history]["new"].keys())[0]]
+    change_status = (
+        service_history[first_key_in_service_history]["new"][list(service_history[first_key_in_service_history]
+        ["new"].keys())[0]]["changetype"]
+        )
     if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
@@ -417,7 +422,10 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
     lambda_payload = {"type": "get_service_history", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return loads(data[0][0])
+    if data != []:
+        return loads(data[0][0])
+    else:
+        return []
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
