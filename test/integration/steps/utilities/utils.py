@@ -383,6 +383,31 @@ def check_service_history(
             raise ValueError(f"Input parameter '{previous_data}' not compatible")
 
 
+def service_history_negative_check(service_id: str):
+    service_history = get_service_history(service_id)
+    first_key_in_service_history = list(service_history.keys())[0]
+    currenttime = str(time() - 600)
+    if first_key_in_service_history <= currenttime:
+        return "Not Updated"
+    else:
+        return "Updated"
+
+
+def check_service_history_change_type(service_id: str, change_type: str):
+    service_history = get_service_history(service_id)
+    first_key_in_service_history = list(service_history.keys())[0]
+    current = str(time() - 600)
+    change_status = service_history[first_key_in_service_history]["new"]
+    [list(service_history[first_key_in_service_history]["new"].keys())[0]]
+    if first_key_in_service_history <= current:
+        if change_status == change_type:
+            return "Change type matches"
+        else:
+            return "Change type does not match"
+    else:
+        return "No changes have been made"
+
+
 def get_service_history(service_id: str) -> Dict[str, Any]:
     lambda_payload = {"type": "get_service_history", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)

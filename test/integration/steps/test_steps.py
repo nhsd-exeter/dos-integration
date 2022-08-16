@@ -24,6 +24,7 @@ from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
     check_received_data_in_dos,
     check_service_history,
+    check_service_history_change_type,
     confirm_approver_status,
     confirm_changes,
     generate_correlation_id,
@@ -47,6 +48,7 @@ from .utilities.utils import (
     remove_opening_days,
     service_not_updated,
     slack_retry,
+    service_history_negative_check,
     wait_for_service_update,
 )
 
@@ -613,6 +615,22 @@ def check_the_service_history_has_updated(context: Context, plain_english_servic
         expected_data=expected_data,
         previous_data=context.previous_value,
     )
+    return context
+
+
+@then(parse("the service history is not updated"))
+def check_service_history_not_updated(
+    context: Context,
+):
+    service_history_status = service_history_negative_check(context.service_id)
+    assert service_history_status == "Not Updated", "ERROR: Service history was unexpectedly updated"
+    return context
+
+
+@then(parse('the service history shows change type is "{change_type}"'))
+def check_service_history_for_change_type(context: Context, change_type: str):
+    change_status = check_service_history_change_type(context.service_id, change_type)
+    assert change_status == "Change type matches", f"ERROR: Expected {change_type} but {change_status}"
     return context
 
 

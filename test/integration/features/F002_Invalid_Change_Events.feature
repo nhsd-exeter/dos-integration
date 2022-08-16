@@ -8,12 +8,13 @@ Feature: F002. Invalid change event Exception handling
     Then the "service-matcher" lambda shows field "message" with message "Found 0 services in DB"
     And the "service-matcher" lambda shows field "message" with message "No matching DOS services"
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @dev @pharmacy_cloudwatch_queries @kit
   Scenario: F002S002. Changed Event with Hidden Organisation status is reported
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "NHS Service marked as closed or hidden"
+    And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S003. Changed Event with Closed Organisation status is not processed
