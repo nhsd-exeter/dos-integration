@@ -10,12 +10,11 @@ CHANGE_REQUEST_DATE_FORMAT = "%Y-%m-%d"
 CHANGE_REQUEST_TIME_FORMAT = "%H:%M"
 
 
-@dataclass(repr=True, unsafe_hash=True)
+@dataclass(unsafe_hash=True, init=True)
 class OpenPeriod:
-    def __init__(self, start: time, end: time):
-        assert isinstance(start, time) and isinstance(end, time)
-        self.start = start
-        self.end = end
+
+    start: time
+    end: time
 
     def start_string(self) -> str:
         return self.start.strftime("%H:%M:%S")
@@ -25,6 +24,9 @@ class OpenPeriod:
 
     def __str__(self):
         return f"{self.start_string()}-{self.end_string()}"
+
+    def __repr__(self):
+        return f"OpenPeriod({self})"
 
     def __eq__(self, other: Any):
         return isinstance(other, OpenPeriod) and self.start == other.start and self.end == other.end
@@ -203,7 +205,6 @@ class SpecifiedOpeningTime:
         return future_dates
 
 
-@dataclass(unsafe_hash=True)
 class StandardOpeningTimes:
     """Represents the standard openings times for a week. Structured as a set of OpenPeriods per day
 
