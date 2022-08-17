@@ -22,6 +22,7 @@ Feature: F002. Invalid change event Exception handling
     And the field "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "HIDDEN_OR_CLOSED"
+    And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
@@ -29,6 +30,7 @@ Feature: F002. Invalid change event Exception handling
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
+    And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S005. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
@@ -72,6 +74,7 @@ Feature: F002. Invalid change event Exception handling
     When the OpeningTimes Opening and Closing Times data are not defined
     And the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S011. IsOpen is false AND Times NOT blank
@@ -107,6 +110,7 @@ Feature: F002. Invalid change event Exception handling
     And the field "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
+    And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
