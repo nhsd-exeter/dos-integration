@@ -46,9 +46,9 @@ from .utilities.utils import (
     process_payload_with_sequence,
     re_process_payload,
     remove_opening_days,
+    service_history_negative_check,
     service_not_updated,
     slack_retry,
-    service_history_negative_check,
     wait_for_service_update,
 )
 

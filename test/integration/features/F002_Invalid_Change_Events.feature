@@ -8,7 +8,7 @@ Feature: F002. Invalid change event Exception handling
     Then the "service-matcher" lambda shows field "message" with message "Found 0 services in DB"
     And the "service-matcher" lambda shows field "message" with message "No matching DOS services"
 
-  @complete @dev @pharmacy_cloudwatch_queries @kit
+  @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S002. Changed Event with Hidden Organisation status is reported
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "OrganisationStatus" is set to "Hidden"
