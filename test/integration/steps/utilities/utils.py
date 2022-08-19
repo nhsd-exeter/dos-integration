@@ -404,6 +404,8 @@ def check_service_history_change_type(service_id: str, change_type: str):
     if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
+        elif change_type == "modify" and change_status == "add":
+            return "Change type matches"
         else:
             return "Change type does not match"
     else:
@@ -424,7 +426,7 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
     if data != []:
         return loads(data[0][0])
     else:
-        return loads(data)
+        return data
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
