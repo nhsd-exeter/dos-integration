@@ -398,9 +398,9 @@ def service_history_negative_check(service_id: str):
 def check_service_history_change_type(service_id: str, change_type: str):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    change_status = (service_history[first_key_in_service_history]["new"][
+    change_status = service_history[first_key_in_service_history]["new"][
         list(service_history[first_key_in_service_history]["new"].keys())[0]
-        ]["changetype"])
+    ]["changetype"]
     if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
@@ -424,7 +424,7 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
     if data != []:
         return loads(data[0][0])
     else:
-        return []
+        return loads(data)
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
