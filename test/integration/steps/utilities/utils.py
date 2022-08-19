@@ -405,7 +405,10 @@ def check_service_history_change_type(service_id: str, change_type: str):
         if change_status == change_type:
             return "Change type matches"
         elif change_type == "modify" and change_status == "add":
-            return "Change type matches"
+            if len(list(service_history.keys())) <= 1:
+                return "Change type matches"
+            else:
+                return "Change type does not match"
         else:
             return "Change type does not match"
     else:
