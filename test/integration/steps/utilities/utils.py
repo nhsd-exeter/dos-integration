@@ -383,11 +383,53 @@ def check_service_history(
             raise ValueError(f"Input parameter '{previous_data}' not compatible")
 
 
+def service_history_negative_check(service_id: str):
+    service_history = get_service_history(service_id)
+    if service_history == []:
+        return "Not Updated"
+    else:
+        first_key_in_service_history = list(service_history.keys())[0]
+        if check_recent_event(first_key_in_service_history):
+            return "Not Updated"
+        else:
+            return "Updated"
+
+
+def check_service_history_change_type(service_id: str, change_type: str):
+    service_history = get_service_history(service_id)
+    first_key_in_service_history = list(service_history.keys())[0]
+    change_status = service_history[first_key_in_service_history]["new"][
+        list(service_history[first_key_in_service_history]["new"].keys())[0]
+    ]["changetype"]
+    if check_recent_event(first_key_in_service_history):
+        if change_status == change_type:
+            return "Change type matches"
+        elif change_type == "modify" and change_status == "add":
+            if len(list(service_history.keys())) <= 1:
+                return "Change type matches"
+            else:
+                return "Change type does not match"
+        else:
+            return "Change type does not match"
+    else:
+        return "No changes have been made"
+
+
+def check_recent_event(event_time: str, time_difference=600) -> bool:
+    if str(time() - time_difference) <= event_time:
+        return True
+    else:
+        return False
+
+
 def get_service_history(service_id: str) -> Dict[str, Any]:
     lambda_payload = {"type": "get_service_history", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return loads(data[0][0])
+    if data != []:
+        return loads(data[0][0])
+    else:
+        return data
 
 
 def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:

@@ -7,12 +7,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
     And the service history is updated with the "Postcode"
+    And the service history shows change type is "modify"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001S002. A Changed event with aligned data does not save an update to DoS
     Given a "pharmacy" Changed Event is aligned with DoS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "No changes to save"
+    And the service history is not updated
 
   @complete @pharmacy_no_log_searches
   Scenario Outline: F001S003. A valid change event with changed field is processed and captured by DOS
@@ -21,6 +23,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "<field>" is updated within the DoS DB
     And the service history is updated with the "<field>"
+    And the service history shows change type is "modify"
 
     Examples:
       | field    |
