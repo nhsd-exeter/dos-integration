@@ -25,6 +25,7 @@ from .utilities.utils import (
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
+    check_service_history_specified,
     confirm_approver_status,
     confirm_changes,
     convert_specified_opening,

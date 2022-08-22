@@ -87,3 +87,10 @@ Feature: F006. Opening times
       | opening_type |
       | General      |
       | Additional   |
+
+  @kit
+  Scenario: F006S012. Testing of the specified opening times checks
+    Given a "pharmacy" Changed Event is aligned with DoS
+    Given the Changed Event contains a specified opening date that is "open"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the service history is updated with the specified opening times
