@@ -421,13 +421,10 @@ def check_service_history_specified(service_id: str):
     return specified_open_times
 
 
-def convert_specified_opening(specified_date):
+def convert_specified_opening(specified_date, closed_status=False):
     # {'OpeningTime': '09:00', 'ClosingTime': '17:00', 'OpeningTimeType': 'Additional',
     #  'AdditionalOpeningDate': 'Dec 25 2025', 'IsOpen': True}
     # ['2025-12-15-32400-61200']
-    return_array = []
-    opening_time = time_to_seconds(specified_date["OpeningTime"])
-    closing_time = time_to_seconds(specified_date["ClosingTime"])
     months = {
         "Jan": "01",
         "Feb": "02",
@@ -444,8 +441,13 @@ def convert_specified_opening(specified_date):
     }
     split_date = specified_date["AdditionalOpeningDate"].split(" ")
     selected_month = months[split_date[0]]
-    return_array.insert(0, f"{split_date[2]}-{selected_month}-{split_date[1]}-{opening_time}-{closing_time}")
-    return return_array
+    if closed_status is False:
+        opening_time = time_to_seconds(specified_date["OpeningTime"])
+        closing_time = time_to_seconds(specified_date["ClosingTime"])
+        return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-{opening_time}-{closing_time}"
+    else:
+        return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-closed"
+    return return_string
 
 
 def time_to_seconds(time: str):
