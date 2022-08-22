@@ -1,6 +1,6 @@
 Feature: F006. Opening times
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @kit
   Scenario: F006S001. Confirm actual opening times change for specified date and time is captured by DoS
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -51,7 +51,7 @@ Feature: F006. Opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda does not show "report_key" with message "INVALID_OPEN_TIMES"
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @kit
   Scenario: F006S008. Confirm recently added specified opening date can be removed from Dos
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -87,10 +87,3 @@ Feature: F006. Opening times
       | opening_type |
       | General      |
       | Additional   |
-
-  @kit
-  Scenario: F006S012. Testing of the specified opening times checks
-    Given a "pharmacy" Changed Event is aligned with DoS
-    Given the Changed Event contains a specified opening date that is "open"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the service history is updated with the specified opening times
