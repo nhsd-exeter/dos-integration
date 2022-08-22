@@ -25,8 +25,10 @@ from .utilities.utils import (
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
+    check_service_history_specified,
     confirm_approver_status,
     confirm_changes,
+    convert_specified_opening,
     generate_correlation_id,
     generate_random_int,
     get_address_string,
@@ -615,6 +617,16 @@ def check_the_service_history_has_updated(context: Context, plain_english_servic
         expected_data=expected_data,
         previous_data=context.previous_value,
     )
+    return context
+
+
+@then(parse("the service history is updated with the specified opening times"))
+def check_service_history_specified_times(context: Context):
+    openingtimes = context.change_event.specified_opening_times[-1]
+    dos_times = check_service_history_specified(context.service_id)
+    changed_dates = dos_times["data"]["add"]
+    expected_dates = convert_specified_opening(openingtimes)
+    assert changed_dates == expected_dates, f"{expected_dates}"
     return context
 
 

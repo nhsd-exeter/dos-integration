@@ -415,6 +415,46 @@ def check_service_history_change_type(service_id: str, change_type: str):
         return "No changes have been made"
 
 
+def check_service_history_specified(service_id: str):
+    service_history = get_service_history(service_id)
+    specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
+    return specified_open_times
+
+
+def convert_specified_opening(specified_date):
+    # {'OpeningTime': '09:00', 'ClosingTime': '17:00', 'OpeningTimeType': 'Additional',
+    #  'AdditionalOpeningDate': 'Dec 25 2025', 'IsOpen': True}
+    # ['2025-12-15-32400-61200']
+    return_array = []
+    opening_time = time_to_seconds(specified_date["OpeningTime"])
+    closing_time = time_to_seconds(specified_date["ClosingTime"])
+    months = {
+        "Jan": "01",
+        "Feb": "02",
+        "Mar": "03",
+        "Apr": "04",
+        "May": "05",
+        "Jun": "06",
+        "Jul": "07",
+        "Aug": "08",
+        "Sep": "09",
+        "Oct": "10",
+        "Nov": "11",
+        "Dec": "12",
+    }
+    split_date = specified_date["AdditionalOpeningDate"].split(" ")
+    selected_month = months[split_date[0]]
+    return_array.insert(0, f"{split_date[2]}-{selected_month}-{split_date[1]}-{opening_time}-{closing_time}")
+    return return_array
+
+
+def time_to_seconds(time: str):
+    times = time.split(":")
+    hour_seconds = int(times[0]) * 3600
+    minutes_seconds = int(times[1]) * 60
+    return str(hour_seconds + minutes_seconds)
+
+
 def check_recent_event(event_time: str, time_difference=600) -> bool:
     if str(time() - time_difference) <= event_time:
         return True
@@ -423,9 +463,14 @@ def check_recent_event(event_time: str, time_difference=600) -> bool:
 
 
 def get_service_history(service_id: str) -> Dict[str, Any]:
-    lambda_payload = {"type": "get_service_history", "service_id": service_id}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
+    data = []
+    retrycounter = 0
+    while data == [] and retrycounter < 5:
+        lambda_payload = {"type": "get_service_history", "service_id": service_id}
+        response = invoke_dos_db_handler_lambda(lambda_payload)
+        data = loads(loads(response))
+        retrycounter += 1
+        sleep(5)
     if data != []:
         return loads(data[0][0])
     else:
