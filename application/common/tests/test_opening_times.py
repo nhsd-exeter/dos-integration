@@ -502,6 +502,26 @@ def test_specifiedopentime_export_service_history_format_closed():
     assert ["2021-12-24-closed"] == result
 
 
+def test_specifiedopentime_export_dos_log_format_open():
+    # Arrange
+    specified_opening_time = SpecifiedOpeningTime(
+        [OpenPeriod(time(9, 0, 0), time(11, 0, 0))], date(2021, 12, 24), is_open=True
+    )
+    # Act
+    result = specified_opening_time.export_dos_log_format()
+    # Assert
+    assert ["2021-12-24-09:00-11:00"] == result
+
+
+def test_specifiedopentime_export_dos_log_format_closed():
+    # Arrange
+    specified_opening_time = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
+    # Act
+    result = specified_opening_time.export_dos_log_format()
+    # Assert
+    assert ["2021-12-24-closed"] == result
+
+
 @pytest.mark.parametrize(
     "expected, actual",
     [
@@ -697,4 +717,4 @@ def test_opening_period_times_from_list():
     # Act
     response = opening_period_times_from_list(times)
     # Assert
-    assert '08:00-09:00, 09:00-10:00' == response
+    assert "08:00-09:00, 09:00-10:00" == response
