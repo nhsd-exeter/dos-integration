@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
+from .dos_logger import DoSLogger
 from .format import format_address, format_website
 from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
@@ -37,7 +38,7 @@ class ChangesToDoS:
     dos_service: DoSService
     nhs_entity: NHSEntity
     service_histories: ServiceHistories
-
+    dos_logger: DoSLogger
     # Varible to know if fields need to be changed
     demographic_changes: Dict[Optional[str], Any] = field(default_factory=dict)
     standard_opening_times_changes: Dict[Optional[int], Any] = field(default_factory=dict)
@@ -245,20 +246,35 @@ def compare_nhs_uk_and_dos_data(
     Returns:
         ChangesToDoS: ChangesToDoS class with all the flags if changes need to be made and the changes to make
     """
+    dos_logger = DoSLogger(
+        correlation_id=logger.get_correlation_id(),
+        service_uid=str(dos_service.uid),
+        service_name=dos_service.name,
+        type_id=str(dos_service.typeid),
+    )
     # Set up the holder class
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
 
     # Compare and validate website
     if changes_to_dos.check_website_for_change():
         # Website has changed, is valid, so add to changes
         changes_to_dos.demographic_changes["web"] = changes_to_dos.new_website
+        service_history_change = ServiceHistoriesChange(
+            data=changes_to_dos.new_website,
+            previous_value=changes_to_dos.current_website,
+            change_key=DOS_WEBSITE_CHANGE_KEY,
+        )
         changes_to_dos.service_histories.add_change(
             dos_change_key=DOS_WEBSITE_CHANGE_KEY,
-            change=ServiceHistoriesChange(
-                data=changes_to_dos.new_website,
-                previous_value=changes_to_dos.current_website,
-                change_key=DOS_WEBSITE_CHANGE_KEY,
-            ),
+            change=service_history_change,
+        )
+        dos_logger.log_demographics_service_update(
+            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+            action=service_history_change.change_action,
+            previous_value=changes_to_dos.current_website,
+            new_value=changes_to_dos.new_website,
         )
 
     # Compare public phone
@@ -273,6 +289,12 @@ def compare_nhs_uk_and_dos_data(
                 change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
             ),
         )
+        dos_logger.log_demographics_service_update(
+            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+            action=service_history_change.change_action,
+            previous_value=changes_to_dos.current_public_phone,
+            new_value=changes_to_dos.new_public_phone,
+        )
 
     # Compare and validate address & postcode
     address_change, postcode_change = changes_to_dos.check_for_address_and_postcode_for_changes()
@@ -286,6 +308,12 @@ def compare_nhs_uk_and_dos_data(
                 change_key=DOS_ADDRESS_CHANGE_KEY,
             ),
         )
+        dos_logger.log_demographics_service_update(
+            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+            action=service_history_change.change_action,
+            previous_value=changes_to_dos.current_address,
+            new_value=changes_to_dos.new_address,
+        )
     if postcode_change:
         changes_to_dos.demographic_changes["postcode"] = changes_to_dos.new_postcode
         changes_to_dos.service_histories.add_change(
@@ -295,6 +323,12 @@ def compare_nhs_uk_and_dos_data(
                 previous_value=changes_to_dos.current_postcode,
                 change_key=DOS_POSTCODE_CHANGE_KEY,
             ),
+        )
+        dos_logger.log_demographics_service_update(
+            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+            action=service_history_change.change_action,
+            previous_value=changes_to_dos.current_postcode,
+            new_value=changes_to_dos.new_postcode,
         )
 
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
