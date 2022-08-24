@@ -2,7 +2,7 @@ from datetime import date, datetime, time, timedelta
 
 import pytest
 
-from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes, opening_period_times_from_list
+from ..opening_times import opening_period_times_from_list, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 OP = OpenPeriod.from_string
 
