@@ -1,7 +1,7 @@
 from logging import INFO
 from os import environ
 
-from pytest import CaptureFixture, mark, fixture
+from pytest import CaptureFixture, fixture, mark
 
 from application.service_sync.dos_logger import DoSLogger
 
