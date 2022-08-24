@@ -238,12 +238,12 @@ def test_changes_to_dos_check_public_phone_for_change_no_change():
     nhs_entity = MagicMock()
     service_histories = MagicMock()
     dos_service.publicphone = "0123456789"
-    nhs_entity.publicphone = "0123456789"
+    nhs_entity.phone = "0123456789"
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     # Act
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
-    assert True is response
+    assert False is response
 
 
 @patch(f"{FILE_PATH}.validate_opening_times")
@@ -287,6 +287,34 @@ def test_compare_nhs_uk_and_dos_data_no_changes(mock_changes_to_dos: MagicMock, 
     mock_changes_to_dos.return_value.check_for_address_and_postcode_for_changes.assert_called_once_with()
     mock_changes_to_dos.return_value.check_for_standard_opening_times_day_changes.assert_not_called()
     mock_changes_to_dos.return_value.check_for_specified_opening_times_changes.assert_not_called()
+    mock_validate_opening_times.assert_called_once_with(
+        dos_service=mock_changes_to_dos.return_value.dos_service, nhs_entity=mock_changes_to_dos.return_value.nhs_entity
+    )
+
+
+@patch(f"{FILE_PATH}.validate_opening_times")
+@patch(f"{FILE_PATH}.ChangesToDoS")
+def test_compare_nhs_uk_and_dos_data_valid_opening_times_no_changes(
+    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    mock_changes_to_dos.return_value.check_for_address_and_postcode_for_changes.return_value = (False, False)
+    mock_changes_to_dos.return_value.check_website_for_change.return_value = False
+    mock_changes_to_dos.return_value.check_public_phone_for_change.return_value = False
+    mock_validate_opening_times.return_value = True
+    mock_changes_to_dos.return_value.check_for_standard_opening_times_day_changes.return_value = False
+    mock_changes_to_dos.return_value.check_for_specified_opening_times_changes.return_value = False
+    # Act
+    compare_nhs_uk_and_dos_data(dos_service, nhs_entity, service_histories)
+    # Assert
+    mock_changes_to_dos.return_value.check_website_for_change.assert_called_once_with()
+    mock_changes_to_dos.return_value.check_public_phone_for_change.assert_called_once_with()
+    mock_changes_to_dos.return_value.check_for_address_and_postcode_for_changes.assert_called_once_with()
+    assert 7 == mock_changes_to_dos.return_value.check_for_standard_opening_times_day_changes.call_count
+    mock_changes_to_dos.return_value.check_for_specified_opening_times_changes.assert_called_once_with()
     mock_validate_opening_times.assert_called_once_with(
         dos_service=mock_changes_to_dos.return_value.dos_service, nhs_entity=mock_changes_to_dos.return_value.nhs_entity
     )
