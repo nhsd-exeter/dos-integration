@@ -28,7 +28,7 @@ def test_extract_body():
 
 def test_extract_body_exception():
     # Arrange
-    expected_change_event = {"test": "test"}
+    expected_change_event = "test"
     # Act & Assert
     with raises(Exception):
         extract_body(expected_change_event)

@@ -2,9 +2,19 @@ from datetime import date, datetime, time, timedelta
 
 import pytest
 
-from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from ..opening_times import opening_period_times_from_list, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 OP = OpenPeriod.from_string
+
+
+def test_open_period_repr(capsys):
+    # Arrange
+    open_period = OpenPeriod(time(8, 0), time(12, 0))
+    # Act
+    print(open_period)
+    # Assert
+    captured = capsys.readouterr()
+    assert captured.out == "08:00:00-12:00:00\n"
 
 
 @pytest.mark.parametrize(
@@ -679,3 +689,12 @@ def test_standard_opening_times_export_test_format():
         getattr(std_opening_times, day.lower()).append(OpenPeriod(time(16, 0, 0), time(20, 0, 0)))
         expected[day].append({"start_time": "16:00", "end_time": "20:00"})
     assert std_opening_times.export_test_format() == expected
+
+
+def test_opening_period_times_from_list():
+    # Arrange
+    times = [OpenPeriod(time(8, 0, 0), time(9, 0, 0)), OpenPeriod(time(9, 0, 0), time(10, 0, 0))]
+    # Act
+    response = opening_period_times_from_list(times)
+    # Assert
+    assert '08:00-09:00, 09:00-10:00' == response
