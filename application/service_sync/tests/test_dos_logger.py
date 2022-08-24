@@ -1,21 +1,22 @@
 from logging import INFO
 from os import environ
 
-from pytest import CaptureFixture
+from pytest import CaptureFixture, mark, fixture
 
 from application.service_sync.dos_logger import DoSLogger
 
+CORRELATION_ID = "12346"
+SERVICE_UID = "12345"
+SERVICE_NAME = "Test Service"
+TYPE_ID = "1"
 
-def test_dos_logger():
-    # Arrange
-    correlation_id = "12345"
-    service_uid = "12345"
-    service_name = "Test Service"
-    type_id = "1"
-    # Act
-    dos_logger = DoSLogger(
-        correlation_id=correlation_id, service_uid=service_uid, service_name=service_name, type_id=type_id
-    )
+
+@fixture
+def dos_logger():
+    yield DoSLogger(correlation_id=CORRELATION_ID, service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID)
+
+
+def test_dos_logger(dos_logger: DoSLogger):
     # Assert
     assert dos_logger.logger.name == "dos_logger"
     assert dos_logger.logger.level == INFO
@@ -25,26 +26,78 @@ def test_dos_logger():
         "|%(data_changes)s|message=%(message)s|correlationId=%(correlation_id)s|elapsedTime=%(null_value)s"
         "|execution_time=%(null_value)s"
     )
-    assert dos_logger.correlation_id == correlation_id
-    assert dos_logger.service_uid == service_uid
-    assert dos_logger.service_name == service_name
-    assert dos_logger.type_id == type_id
+    assert dos_logger.correlation_id == CORRELATION_ID
+    assert dos_logger.service_uid == SERVICE_UID
+    assert dos_logger.service_name == SERVICE_NAME
+    assert dos_logger.type_id == TYPE_ID
 
 
-# TODO: Parameterise the tests for the log_service_update to take in different types
+def test_dos_logger_get_action_name_remove(dos_logger: DoSLogger):
+    # Act
+    action = dos_logger.get_action_name("remove")
+    # Assert
+    assert action == "delete"
+
+
+@mark.parametrize("expected_action", ["update", "add", "delete", "other"])
+def test_dos_logger_get_action_name_other(expected_action: str, dos_logger: DoSLogger):
+    # Act
+    action = dos_logger.get_action_name(expected_action)
+    # Assert
+    assert expected_action == action
+
+
+def test_dos_logger_get_opening_times_change_modify(dos_logger: DoSLogger):
+    # Arrange
+    previous_value = "Test123"
+    new_value = "321Test"
+    data_field_modified = "test_field"
+    # Act
+    response = dos_logger.get_opening_times_change(
+        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+    )
+    assert (
+        f"{data_field_modified}_existing={previous_value}|"
+        f"{data_field_modified}_update=remove={previous_value}add={new_value}"
+    ) == response
+
+
+def test_dos_logger_get_opening_times_change_remove(dos_logger: DoSLogger):
+    # Arrange
+    previous_value = "Test123"
+    new_value = ""
+    data_field_modified = "test_field"
+    # Act
+    response = dos_logger.get_opening_times_change(
+        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+    )
+    assert (
+        f"{data_field_modified}_existing={previous_value}|{data_field_modified}_update=remove={previous_value}"
+        == response
+    )
+
+
+def test_dos_logger_get_opening_times_change_add(dos_logger: DoSLogger):
+    # Arrange
+    previous_value = ""
+    new_value = "321Test"
+    data_field_modified = "test_field"
+    # Act
+    response = dos_logger.get_opening_times_change(
+        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+    )
+    assert f"{data_field_modified}_existing={previous_value}|{data_field_modified}_update=add={new_value}" == response
+
+
 def test_dos_logger_log_service_update(capsys: CaptureFixture):
     # Arrange
-    correlation_id = "123456"
-    service_uid = "12345"
-    service_name = "Test Service"
-    type_id = "1"
+    dos_logger = DoSLogger(
+        correlation_id=CORRELATION_ID, service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID
+    )
     data_field_modified = "test_field"
     action = "update"
     previous_value = "test_value"
     new_value = "new_test_value"
-    dos_logger = DoSLogger(
-        correlation_id=correlation_id, service_uid=service_uid, service_name=service_name, type_id=type_id
-    )
     environ["ENV"] = environment = "test"
     # Act
     dos_logger.log_service_update(
@@ -53,9 +106,9 @@ def test_dos_logger_log_service_update(capsys: CaptureFixture):
     # Assert
     captured = capsys.readouterr()
     assert (
-        f"|INFO|DOS_INTEGRATION_{environment.upper()}|NULL|DOS_INTEGRATION|NULL|{service_uid}|{service_name}|{type_id}|"
+        f"|INFO|DOS_INTEGRATION_{environment.upper()}|NULL|DOS_INTEGRATION|NULL|{SERVICE_UID}|{SERVICE_NAME}|{TYPE_ID}|"
         f'{data_field_modified}|{action}|"{previous_value}"|"{new_value}"|message=ServiceUpdate|'
-        f"correlationId={correlation_id}|elapsedTime=NULL|execution_time=NULL"
+        f"correlationId={CORRELATION_ID}|elapsedTime=NULL|execution_time=NULL"
     ) in captured.err
     # Cleanup
     del environ["ENV"]

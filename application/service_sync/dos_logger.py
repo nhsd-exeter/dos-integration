@@ -50,11 +50,18 @@ class DoSLogger:
         """
         return "delete" if action == "remove" else action
 
-    def get_opening_times_change(self, data_field_modified: str, previous_value: str, new_value: str) -> str:
+    def get_opening_times_change(
+        self, data_field_modified: str, previous_value: Optional[str], new_value: Optional[str]
+    ) -> str:
         existing_value = f"{data_field_modified}_existing={previous_value}"
-        if previous_value is not None:
+        if previous_value != "" and new_value != "":
+            # Modify
             updated_value = f"{data_field_modified}_update=remove={previous_value}add={new_value}"
+        elif new_value == "":
+            # Remove
+            updated_value = f"{data_field_modified}_update=remove={previous_value}"
         else:
+            # Add
             updated_value = f"{data_field_modified}_update=add={new_value}"
         return f"{existing_value}|{updated_value}"
 
@@ -72,8 +79,8 @@ class DoSLogger:
         """
         environment = getenv("ENV", "UNKNOWN").upper()
         # Handle the case where the values could be None
-        previous_value = "" if previous_value == "None" else f'"{previous_value}"'
-        new_value = "" if new_value == "None" else f'"{new_value}"'
+        previous_value = "" if previous_value == "None" or previous_value == "" else f'"{previous_value}"'
+        new_value = "" if new_value == "None" or previous_value == "" else f'"{new_value}"'
         # Log the message with all the extra fields set
         self.logger.info(
             msg="ServiceUpdate",
