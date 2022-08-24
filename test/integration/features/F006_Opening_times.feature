@@ -60,7 +60,7 @@ Feature: F006. Opening times
     And the deleted specified date is confirmed removed from DoS
     And the service history is updated with the "removed" specified opening times
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @kit
   Scenario: F006S009. A recently closed pharmacy on a standard day can be opened
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key

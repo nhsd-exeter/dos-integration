@@ -26,9 +26,11 @@ from .utilities.utils import (
     check_service_history,
     check_service_history_change_type,
     check_service_history_specified,
+    check_service_history_standard,
     confirm_approver_status,
     confirm_changes,
     convert_specified_opening,
+    convert_standard_opening,
     generate_correlation_id,
     generate_random_int,
     get_address_string,
@@ -643,6 +645,35 @@ def check_service_history_specified_times(context: Context, added_or_removed):
     else:
         expected_dates = convert_specified_opening(openingtimes)
     assert expected_dates in changed_dates, f"{expected_dates}"
+    return context
+
+
+@then(parse('the service history is updated with the "{added_or_removed}" standard opening times'))
+def check_service_history_standard_times(context: Context, added_or_removed):
+    match added_or_removed:
+        case "added":
+            change_type = "add"
+        case "removed":
+            change_type = "remove"
+        case _:
+            raise ValueError("Invalid change type has been provided")
+    if change_type == "add":
+        openingtimes = context.change_event.standard_opening_times[-1]
+    # dos_times contains only changed dates
+    # format [{"cmsopentimemonday": {"changetype": "add","data": {"add": ["60-48240"]},"area": "demographic"}}]
+    dos_times = check_service_history_standard(context.service_id)
+    # expected_dates will contain all days
+    # format [{"name": "cmsopentimemonday", "times": "15000-22000"}]
+    expected_dates = convert_standard_opening(openingtimes)
+    # loop through the expected dates to match them to their expected times
+    # for each entry in the dos_times
+    for entry in dos_times:
+        if list(entry.keys())[0] in expected_dates:
+            # to do
+            return expected_dates
+    # check the key value
+    # find it in the expected days list
+    # compare the added times
     return context
 
 

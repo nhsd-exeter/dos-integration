@@ -422,6 +422,17 @@ def get_service_history_specified_opening_times(service_id: str) -> dict:
     return specified_open_times
 
 
+def check_service_history_standard(service_id: str):
+    service_history = get_service_history(service_id)
+    standard_history = []
+    # get the specified days that have been changed
+    for entry in service_history[list(service_history.keys())[0]]["new"]:
+        currententry = list(entry.keys())[0]
+        if currententry[-3:] == "day":
+            standard_history.append(entry)
+    return standard_history
+
+
 def convert_specified_opening(specified_date, closed_status=False) -> str:
     """Converts opening times from CE format to DOS format
 
@@ -454,6 +465,22 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
     else:
         return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-closed"
     return return_string
+
+
+def convert_standard_opening(standard_times):
+    # {"Weekday": "Monday","OpeningTime": "07:30","ClosingTime": "23:00",
+    # "OpeningTimeType": "General","IsOpen": True,}
+    # "add": ["27000-82800"]
+    return_array = []
+    for entry in standard_times:
+        current_day = entry["Weekday"].lower()
+        if entry["IsOpen"] is True:
+            opening_time = time_to_seconds(entry["OpeningTime"])
+            closing_time = time_to_seconds(entry["ClosingTime"])
+            return_array.append({"name": f"cmsopentime{current_day}", "times": f"{opening_time}-{closing_time}"})
+        else:
+            return_array.append({"name": f"cmsopentime{current_day}", "times": "closed"})
+    return return_array
 
 
 def time_to_seconds(time: str):
