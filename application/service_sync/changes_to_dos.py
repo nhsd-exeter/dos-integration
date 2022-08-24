@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
@@ -48,14 +48,14 @@ class ChangesToDoS:
     new_address: Optional[str] = None
     new_postcode: Optional[str] = None
     new_public_phone: Optional[str] = None
-    new_specified_opening_times: Optional[Any] = None
+    new_specified_opening_times: Optional[List[SpecifiedOpeningTime]] = None
     new_website: Optional[str] = None
 
     # Existing DoS data for use building service history
     current_address: Optional[str] = None
     current_postcode: Optional[str] = None
     current_public_phone: Optional[str] = None
-    current_specified_opening_times: Optional[Any] = None
+    current_specified_opening_times: Optional[List[SpecifiedOpeningTime]] = None
     current_website: Optional[str] = None
 
     # Each day that has changed will have a current and new value in the format below
@@ -270,7 +270,7 @@ def compare_nhs_uk_and_dos_data(
             dos_change_key=DOS_WEBSITE_CHANGE_KEY,
             change=service_history_change,
         )
-        dos_logger.log_demographics_service_update(
+        dos_logger.log_service_update(
             data_field_modified=DOS_WEBSITE_CHANGE_KEY,
             action=service_history_change.change_action,
             previous_value=changes_to_dos.current_website,
@@ -289,8 +289,8 @@ def compare_nhs_uk_and_dos_data(
                 change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
             ),
         )
-        dos_logger.log_demographics_service_update(
-            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+        dos_logger.log_service_update(
+            data_field_modified=DOS_PUBLIC_PHONE_CHANGE_KEY,
             action=service_history_change.change_action,
             previous_value=changes_to_dos.current_public_phone,
             new_value=changes_to_dos.new_public_phone,
@@ -308,8 +308,8 @@ def compare_nhs_uk_and_dos_data(
                 change_key=DOS_ADDRESS_CHANGE_KEY,
             ),
         )
-        dos_logger.log_demographics_service_update(
-            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+        dos_logger.log_service_update(
+            data_field_modified=DOS_ADDRESS_CHANGE_KEY,
             action=service_history_change.change_action,
             previous_value=changes_to_dos.current_address,
             new_value=changes_to_dos.new_address,
@@ -324,8 +324,8 @@ def compare_nhs_uk_and_dos_data(
                 change_key=DOS_POSTCODE_CHANGE_KEY,
             ),
         )
-        dos_logger.log_demographics_service_update(
-            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
+        dos_logger.log_service_update(
+            data_field_modified=DOS_POSTCODE_CHANGE_KEY,
             action=service_history_change.change_action,
             previous_value=changes_to_dos.current_postcode,
             new_value=changes_to_dos.new_postcode,
@@ -339,18 +339,30 @@ def compare_nhs_uk_and_dos_data(
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
                     changes_to_dos, f"new_{weekday}_opening_times"
                 )
-                changes_to_dos.service_histories.add_standard_opening_times_change(
+                change = changes_to_dos.service_histories.add_standard_opening_times_change(
                     current_opening_times=changes_to_dos.dos_service.standard_opening_times,
                     new_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
                     dos_weekday_change_key=dos_weekday_key,
                     weekday=weekday,
                 )
+                dos_logger.log_standard_opening_times_service_update_for_weekday(
+                    data_field_modified=dos_weekday_key,
+                    action=change.change_action,
+                    previous_value=changes_to_dos.dos_service.standard_opening_times,
+                    new_value=changes_to_dos.nhs_entity.standard_opening_times,
+                    weekday=weekday,
+                )
 
         if changes_to_dos.check_for_specified_opening_times_changes():
             changes_to_dos.specified_opening_times_changes = True
-            changes_to_dos.service_histories.add_specified_opening_times_change(
+            change = changes_to_dos.service_histories.add_specified_opening_times_change(
                 current_opening_times=changes_to_dos.current_specified_opening_times,
                 new_opening_times=changes_to_dos.new_specified_opening_times,
+            )
+            dos_logger.log_specified_opening_times_service_update(
+                action=change.change_action,
+                previous_value=changes_to_dos.current_specified_opening_times,
+                new_value=changes_to_dos.new_specified_opening_times,
             )
     else:
         logger.info(

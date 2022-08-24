@@ -10,6 +10,13 @@ logger = Logger()
 
 
 def is_val_none_or_empty(val: Any) -> bool:
+    """Checks if the value is None or empty
+    Args:
+        val Any: Value to be checked
+
+    Returns:
+        bool: True if the value is None or empty, False otherwise
+    """
     return not (val and not val.isspace())
 
 

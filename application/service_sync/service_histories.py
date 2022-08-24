@@ -77,7 +77,7 @@ class ServiceHistories:
         new_opening_times: StandardOpeningTimes,
         weekday: str,
         dos_weekday_change_key: str,
-    ) -> None:
+    ) -> ServiceHistoriesChange:
         """Adds a standard opening times change to the updated service_histories json
 
         Args:
@@ -85,6 +85,9 @@ class ServiceHistories:
             new_opening_times (StandardOpeningTimes): The new standard opening times
             weekday (str): The weekday for the change
             dos_weekday_change_key (str): The dos_weekday_change_key for the change
+
+        Returns:
+            ServiceHistoriesChange: The change that was added to the service history
         """
         data = {}
         # Get the opening times in the format that is expected by the DoS Service History API
@@ -97,25 +100,27 @@ class ServiceHistories:
         if new_opening_times_in_seconds != []:
             data["add"] = new_opening_times_in_seconds
         # Add the change to the service history
-        self.add_change(
-            dos_change_key=dos_weekday_change_key,
-            change=ServiceHistoriesChange(
-                change_key=dos_weekday_change_key,
-                previous_value=current_opening_times.export_opening_times_for_day(weekday),
-                data=data,
-            ),
+        change = ServiceHistoriesChange(
+            change_key=dos_weekday_change_key,
+            previous_value=current_opening_times.export_opening_times_for_day(weekday),
+            data=data,
         )
+        self.add_change(dos_change_key=dos_weekday_change_key, change=change)
+        return change
 
     def add_specified_opening_times_change(
         self,
         current_opening_times: List[SpecifiedOpeningTime],
         new_opening_times: List[SpecifiedOpeningTime],
-    ) -> None:
+    ) -> ServiceHistoriesChange:
         """Adds a change to the updated service_histories json
 
         Args:
             current_opening_times (List[SpecifiedOpeningTime]): The current specified opening times
             new_opening_times (List[SpecifiedOpeningTime]): The new specified opening times
+
+        Returns:
+            ServiceHistoriesChange: The change that was added to the service history
         """
         # Get the opening times in the format that is expected by the DoS Service History Table
         current_specified_opening_times = self.get_formatted_specified_opening_times(current_opening_times)
@@ -132,15 +137,17 @@ class ServiceHistories:
             # Data item added
             data["add"] = new_specified_opening_times
 
+        change = ServiceHistoriesChange(
+            change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+            previous_value=current_specified_opening_times,
+            data=data,
+        )
         # Add the change to the service history
         self.add_change(
             dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
-            change=ServiceHistoriesChange(
-                change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
-                previous_value=current_specified_opening_times,
-                data=data,
-            ),
+            change=change,
         )
+        return change
 
     def get_formatted_specified_opening_times(self, opening_times: List[SpecifiedOpeningTime]) -> list[str]:
         """Returns the specified opening times in the format that is expected by the DoS Service History

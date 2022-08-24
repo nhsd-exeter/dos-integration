@@ -273,9 +273,12 @@ def test_changes_to_dos_check_public_phone_for_change_no_change():
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     dos_service.publicphone = "0123456789"
     nhs_entity.phone = "0123456789"
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
@@ -311,7 +314,9 @@ def test_compare_nhs_uk_and_dos_data(
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 @patch(f"{FILE_PATH}.validate_opening_times")
 @patch(f"{FILE_PATH}.ChangesToDoS")
-def test_compare_nhs_uk_and_dos_data_no_changes(mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock):
+def test_compare_nhs_uk_and_dos_data_no_changes(
+    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock, mock_service_histories_change: MagicMock
+):
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -361,6 +366,7 @@ def test_compare_nhs_uk_and_dos_data_valid_opening_times_no_changes(
     )
 
 
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
 @patch(f"{FILE_PATH}.validate_opening_times")
 @patch(f"{FILE_PATH}.ChangesToDoS")
 def test_compare_nhs_uk_and_dos_data_invalid_opening_times(
