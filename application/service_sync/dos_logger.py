@@ -13,10 +13,10 @@ class DoSLogger:
     NULL_VALUE: str = "NULL"
     # Format of the log message, will fail if logged to without the extra fields set
     format = (
-        "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(null_value)s|DOS_INTEGRATION|"
+        "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(correlation_id)s|DOS_INTEGRATION|"
         "%(null_value)s|%(service_uid)s|%(service_name)s|%(type_id)s|%(data_field_modified)s|%(action)s|"
-        "%(data_changes)s|message=%(message)s|correlationId=%(correlation_id)s|elapsedTime=%(null_value)s|"
-        "execution_time=%(null_value)s"
+        "%(data_changes)s|%(null_value)s|message=%(message)s|correlationId=%(correlation_id)s|"
+        "elapsedTime=%(null_value)s|execution_time=%(null_value)s"
     )
     logger: Logger
 
@@ -65,7 +65,6 @@ class DoSLogger:
             updated_value = f"{data_field_modified}_update=add={new_value}"
         return f"{existing_value}|{updated_value}"
 
-    # TODO: Work out why "none" is being passed in for none values
     def log_service_update(
         self, data_field_modified: str, action: str, previous_value: Optional[str], new_value: Optional[str]
     ) -> None:
@@ -83,7 +82,7 @@ class DoSLogger:
         new_value = "" if new_value == "None" or previous_value == "" else f'"{new_value}"'
         # Log the message with all the extra fields set
         self.logger.info(
-            msg="ServiceUpdate",
+            msg="UpdateService",
             extra={
                 "action": self.get_action_name(action),
                 "correlation_id": self.correlation_id,
