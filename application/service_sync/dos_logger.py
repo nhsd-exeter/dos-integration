@@ -78,8 +78,8 @@ class DoSLogger:
         """
         environment = getenv("ENV", "UNKNOWN").upper()
         # Handle the case where the values could be None
-        previous_value = "" if previous_value == "None" or previous_value == "" else f'"{previous_value}"'
-        new_value = "" if new_value == "None" or previous_value == "" else f'"{new_value}"'
+        previous_value = "" if previous_value in ["None", "", None] else f'"{previous_value}"'
+        new_value = "" if new_value in ["None", "", None] else f'"{new_value}"'
         # Log the message with all the extra fields set
         self.logger.info(
             msg="UpdateService",
