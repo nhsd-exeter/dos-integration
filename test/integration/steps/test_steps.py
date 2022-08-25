@@ -25,7 +25,6 @@ from .utilities.utils import (
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
-    check_service_history_specified,
     confirm_approver_status,
     confirm_changes,
     convert_specified_opening,
@@ -37,6 +36,7 @@ from .utilities.utils import (
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
+    get_service_history_specified_opening_times,
     get_service_id,
     get_service_table_field,
     get_stored_events_from_dynamo_db,
@@ -635,7 +635,7 @@ def check_service_history_specified_times(context: Context, added_or_removed):
         openingtimes = context.change_event.specified_opening_times[-1]
     if change_type == "remove":
         openingtimes = context.other
-    dos_times = check_service_history_specified(context.service_id)
+    dos_times = get_service_history_specified_opening_times(context.service_id)
     changed_dates = dos_times["data"][change_type]
     if added_or_removed == "closed":
         expected_dates = convert_specified_opening(openingtimes, True)

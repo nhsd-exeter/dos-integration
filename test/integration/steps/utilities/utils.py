@@ -415,7 +415,7 @@ def check_service_history_change_type(service_id: str, change_type: str):
         return "No changes have been made"
 
 
-def check_service_history_specified(service_id: str) -> dict:
+def get_service_history_specified_opening_times(service_id: str) -> dict:
     # This function grabs the latest cmsopentimespecified object for a service id and returns it
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
