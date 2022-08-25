@@ -5,6 +5,7 @@ Feature: F006. Opening times
     Given an opened specified opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
+    And the service history is updated with the "added" specified opening times
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
@@ -57,6 +58,7 @@ Feature: F006. Opening times
     Then DoS is updated with the new specified opening times
     And the Changed Event is replayed with the specified opening date deleted
     And the deleted specified date is confirmed removed from DoS
+    And the service history is updated with the "removed" specified opening times
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S009. A recently closed pharmacy on a standard day can be opened

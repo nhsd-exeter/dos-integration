@@ -27,6 +27,7 @@ from .utilities.utils import (
     check_service_history_change_type,
     confirm_approver_status,
     confirm_changes,
+    convert_specified_opening,
     generate_correlation_id,
     generate_random_int,
     get_address_string,
@@ -35,6 +36,7 @@ from .utilities.utils import (
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
+    get_service_history_specified_opening_times,
     get_service_id,
     get_service_table_field,
     get_stored_events_from_dynamo_db,
@@ -618,6 +620,31 @@ def check_the_service_history_has_updated(context: Context, plain_english_servic
     return context
 
 
+@then(parse('the service history is updated with the "{added_or_removed}" specified opening times'))
+def check_service_history_specified_times(context: Context, added_or_removed):
+    match added_or_removed:
+        case "added":
+            change_type = "add"
+        case "removed":
+            change_type = "remove"
+        case "closed":
+            change_type = "add"
+        case _:
+            raise ValueError("Invalid change type has been provided")
+    if change_type == "add":
+        openingtimes = context.change_event.specified_opening_times[-1]
+    if change_type == "remove":
+        openingtimes = context.other
+    dos_times = get_service_history_specified_opening_times(context.service_id)
+    changed_dates = dos_times["data"][change_type]
+    if added_or_removed == "closed":
+        expected_dates = convert_specified_opening(openingtimes, True)
+    else:
+        expected_dates = convert_specified_opening(openingtimes)
+    assert expected_dates in changed_dates, f"{expected_dates}"
+    return context
+
+
 @then(parse("the service history is not updated"))
 def check_service_history_not_updated(
     context: Context,
@@ -861,10 +888,12 @@ def the_changed_opening_time_is_accepted_by_dos(context: Context):
 def change_event_is_replayed(context: Context):
     sleep(60)
     target_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
+    del_opening = context.change_event.specified_opening_times[-1]["OpeningTime"]
+    del_closing = context.change_event.specified_opening_times[-1]["ClosingTime"]
     context.change_event.specified_opening_times = []
     context.correlation_id = f"{context.correlation_id}-replay"
     context.response = process_payload(context.change_event, True, context.correlation_id)
-    context.other = {"deleted_date": target_date}
+    context.other = {"AdditionalOpeningDate": target_date, "OpeningTime": del_opening, "ClosingTime": del_closing}
     return context
 
 
@@ -873,7 +902,7 @@ def specified_date_is_removed_from_dos(context: Context):
     context.service_id = get_service_id(context.change_event.odscode)
     wait_for_service_update(context.service_id)
     current_specified_openings = get_change_event_specified_opening_times(context.service_id)
-    expected_opening_date = dt.strptime(context.other["deleted_date"], "%b %d %Y").strftime("%Y-%m-%d")
+    expected_opening_date = dt.strptime(context.other["AdditionalOpeningDate"], "%b %d %Y").strftime("%Y-%m-%d")
     assert (
         expected_opening_date not in current_specified_openings
     ), f"Specified date {expected_opening_date} not removed from DoS"
