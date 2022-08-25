@@ -416,16 +416,22 @@ def check_service_history_change_type(service_id: str, change_type: str):
 
 
 def check_service_history_specified(service_id: str) -> dict:
-    #This function grabs the latest cmsopentimespecified object for a service id and returns it
+    # This function grabs the latest cmsopentimespecified object for a service id and returns it
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
     return specified_open_times
 
 
 def convert_specified_opening(specified_date, closed_status=False) -> str:
-    #Input standard specified opening times from Change Event
-    #Convert and output in the format:
-    #"dd-mm-yyyy-06000-12000"
+    """Converts opening times from CE format to DOS format
+
+    Args:
+        Specified opening dates from change event
+        Closed Status since output string changes if closed
+    Returns:
+        Converted opening dates/times in dos string format
+        "dd-mm-yyyy-06000-12000"
+    """
     months = {
         "Jan": "01",
         "Feb": "02",
