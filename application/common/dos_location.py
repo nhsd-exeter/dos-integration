@@ -9,6 +9,7 @@ class DoSLocation:
     postcode: str
     easting: int
     northing: int
+    postaltown: str
     latitude: float
     longitude: float
 

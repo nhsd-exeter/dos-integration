@@ -2,14 +2,11 @@ from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from ..dos import (
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
     db_rows_to_std_open_times,
     db_rows_to_std_open_times_map,
-    DoSLocation,
     DoSService,
     get_all_valid_dos_postcodes,
     get_dos_locations,
@@ -19,7 +16,7 @@ from ..dos import (
     get_standard_opening_times_from_db,
 )
 from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from .conftest import dummy_dos_location, dummy_dos_service
+from .conftest import dummy_dos_service
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 OP = OpenPeriod.from_string
@@ -384,49 +381,6 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
     )
 
 
-@pytest.mark.parametrize(
-    "dos_location, expected_result",
-    [
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=None, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=1, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=None, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=1.1), True),
-    ],
-)
-def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
-    actual_result = dos_location.is_valid()
-    assert (
-        actual_result is expected_result
-    ), f"is_valued check on {dos_location} was found to be {actual_result}, it should be {expected_result}."
-
-
-@pytest.mark.parametrize(
-    "input_postcode, expected_result",
-    [
-        ("TE57ER", "TE57ER"),
-        ("TE5 7ER", "TE57ER"),
-        ("T E57ER", "TE57ER"),
-        ("T E57E R", "TE57ER"),
-        ("T E 5 7 E R", "TE57ER"),
-        ("TE57ER  ", "TE57ER"),
-        ("   TE57ER", "TE57ER"),
-        ("te5 7er", "TE57ER"),
-        ("te5  7 e   r", "TE57ER"),
-    ],
-)
-def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
-    dos_location = dummy_dos_location()
-    dos_location.postcode = input_postcode
-    actual_output = dos_location.normal_postcode()
-    assert (
-        actual_output == expected_result
-    ), f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'."
-
-
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
@@ -435,7 +389,17 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
     mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     postcode = "BA2 7AF"
-    db_return = [{"id": 111, "postcode": postcode, "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}]
+    db_return = [
+        {
+            "id": 111,
+            "postcode": postcode,
+            "easting": 2,
+            "northing": 3,
+            "postaltown": "town",
+            "latitude": 4.0,
+            "longitude": 2.0,
+        }
+    ]
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
     # Act
@@ -455,7 +419,7 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
 
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
-        query="SELECT id, postcode, easting, northing, latitude, longitude "
+        query="SELECT id, postcode, easting, northing, postaltown, latitude, longitude "
         "FROM locations WHERE postcode IN %(pc_variations)s",
         vars={"pc_variations": tuple(postcode_variations)},
     )
