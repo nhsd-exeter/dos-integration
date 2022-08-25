@@ -415,16 +415,17 @@ def check_service_history_change_type(service_id: str, change_type: str):
         return "No changes have been made"
 
 
-def check_service_history_specified(service_id: str):
+def check_service_history_specified(service_id: str) -> dict:
+    #This function grabs the latest cmsopentimespecified object for a service id and returns it
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
     return specified_open_times
 
 
-def convert_specified_opening(specified_date, closed_status=False):
-    # {'OpeningTime': '09:00', 'ClosingTime': '17:00', 'OpeningTimeType': 'Additional',
-    #  'AdditionalOpeningDate': 'Dec 25 2025', 'IsOpen': True}
-    # ['2025-12-15-32400-61200']
+def convert_specified_opening(specified_date, closed_status=False) -> str:
+    #Input standard specified opening times from Change Event
+    #Convert and output in the format:
+    #"dd-mm-yyyy-06000-12000"
     months = {
         "Jan": "01",
         "Feb": "02",
