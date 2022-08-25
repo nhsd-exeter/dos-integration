@@ -426,11 +426,10 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
     """Converts opening times from CE format to DOS format
 
     Args:
-        Specified opening dates from change event
-        Closed Status since output string changes if closed
+        specified_date (dict): Specified opening dates from change event
+        closed_status (bool): Closed Status since output string changes if closed
     Returns:
-        Converted opening dates/times in dos string format
-        "dd-mm-yyyy-06000-12000"
+        return_string (str): Converted opening dates/times in dos string format "dd-mm-yyyy-06000-12000"
     """
     months = {
         "Jan": "01",
