@@ -52,7 +52,17 @@ class DoSLogger:
 
     def get_opening_times_change(
         self, data_field_modified: str, previous_value: Optional[str], new_value: Optional[str]
-    ) -> str:
+    ) -> tuple[str, str]:
+        """Get the opening times change in the format required for the log message
+
+        Args:
+            data_field_modified (str): The dos change name for field that was modified e.g cmsopentimemonday
+            previous_value (Optional[str]): The previous value of the field
+            new_value (Optional[str]): The new value of the field
+
+        Returns:
+            tuple[str, str]: The formatted previous and new values
+        """
         existing_value = f"{data_field_modified}_existing={previous_value}"
         if previous_value != "" and new_value != "":
             # Modify
@@ -63,7 +73,7 @@ class DoSLogger:
         else:
             # Add
             updated_value = f"{data_field_modified}_update=add={new_value}"
-        return f"{existing_value}|{updated_value}"
+        return existing_value, updated_value
 
     def log_service_update(
         self, data_field_modified: str, action: str, previous_value: Optional[str], new_value: Optional[str]
@@ -123,12 +133,12 @@ class DoSLogger:
             if not isinstance(new_value, str)
             else new_value  # type: ignore
         )
-        updated_value = self.get_opening_times_change(data_field_modified, previous_value, new_value)
+        existing_value, updated_value = self.get_opening_times_change(data_field_modified, previous_value, new_value)
 
         self.log_service_update(
             data_field_modified=data_field_modified,
             action=action,
-            previous_value=previous_value,
+            previous_value=existing_value,
             new_value=updated_value,
         )
 
@@ -162,11 +172,13 @@ class DoSLogger:
 
         previous_value = get_and_format_specified_opening_times(previous_value)
         new_value = get_and_format_specified_opening_times(new_value)
-        updated_value = self.get_opening_times_change(DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, previous_value, new_value)
+        existing_value, updated_value = self.get_opening_times_change(
+            DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, previous_value, new_value
+        )
 
         self.log_service_update(
             data_field_modified=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
             action=action,
-            previous_value=previous_value,
+            previous_value=existing_value,
             new_value=updated_value,
         )

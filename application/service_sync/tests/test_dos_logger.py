@@ -57,8 +57,8 @@ def test_dos_logger_get_opening_times_change_modify(dos_logger: DoSLogger):
         data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
     )
     assert (
-        f"{data_field_modified}_existing={previous_value}|"
-        f"{data_field_modified}_update=remove={previous_value}add={new_value}"
+        f"{data_field_modified}_existing={previous_value}",
+        f"{data_field_modified}_update=remove={previous_value}add={new_value}",
     ) == response
 
 
@@ -72,9 +72,9 @@ def test_dos_logger_get_opening_times_change_remove(dos_logger: DoSLogger):
         data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
     )
     assert (
-        f"{data_field_modified}_existing={previous_value}|{data_field_modified}_update=remove={previous_value}"
-        == response
-    )
+        f"{data_field_modified}_existing={previous_value}",
+        f"{data_field_modified}_update=remove={previous_value}",
+    ) == response
 
 
 def test_dos_logger_get_opening_times_change_add(dos_logger: DoSLogger):
@@ -86,7 +86,10 @@ def test_dos_logger_get_opening_times_change_add(dos_logger: DoSLogger):
     response = dos_logger.get_opening_times_change(
         data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
     )
-    assert f"{data_field_modified}_existing={previous_value}|{data_field_modified}_update=add={new_value}" == response
+    assert (
+        f"{data_field_modified}_existing={previous_value}",
+        f"{data_field_modified}_update=add={new_value}",
+    ) == response
 
 
 def test_dos_logger_log_service_update(capsys: CaptureFixture):
