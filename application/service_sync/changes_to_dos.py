@@ -261,18 +261,18 @@ def compare_nhs_uk_and_dos_data(
     if changes_to_dos.check_website_for_change():
         # Website has changed, is valid, so add to changes
         changes_to_dos.demographic_changes["web"] = changes_to_dos.new_website
-        service_history_change = ServiceHistoriesChange(
+        change = ServiceHistoriesChange(
             data=changes_to_dos.new_website,
             previous_value=changes_to_dos.current_website,
             change_key=DOS_WEBSITE_CHANGE_KEY,
         )
         changes_to_dos.service_histories.add_change(
             dos_change_key=DOS_WEBSITE_CHANGE_KEY,
-            change=service_history_change,
+            change=change,
         )
         dos_logger.log_service_update(
             data_field_modified=DOS_WEBSITE_CHANGE_KEY,
-            action=service_history_change.change_action,
+            action=change.change_action,
             previous_value=changes_to_dos.current_website,
             new_value=changes_to_dos.new_website,
         )
@@ -281,17 +281,15 @@ def compare_nhs_uk_and_dos_data(
     if changes_to_dos.check_public_phone_for_change():
         # Website has changed, is valid, so add to changes
         changes_to_dos.demographic_changes["publicphone"] = changes_to_dos.new_public_phone
-        changes_to_dos.service_histories.add_change(
-            dos_change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
-            change=ServiceHistoriesChange(
-                data=changes_to_dos.new_public_phone,
-                previous_value=changes_to_dos.current_public_phone,
-                change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
-            ),
+        change = ServiceHistoriesChange(
+            data=changes_to_dos.new_public_phone,
+            previous_value=changes_to_dos.current_public_phone,
+            change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
         )
+        changes_to_dos.service_histories.add_change(dos_change_key=DOS_PUBLIC_PHONE_CHANGE_KEY, change=change)
         dos_logger.log_service_update(
             data_field_modified=DOS_PUBLIC_PHONE_CHANGE_KEY,
-            action=service_history_change.change_action,
+            action=change.change_action,
             previous_value=changes_to_dos.current_public_phone,
             new_value=changes_to_dos.new_public_phone,
         )
@@ -300,33 +298,32 @@ def compare_nhs_uk_and_dos_data(
     address_change, postcode_change = changes_to_dos.check_for_address_and_postcode_for_changes()
     if address_change:
         changes_to_dos.demographic_changes["address"] = changes_to_dos.new_address
-        changes_to_dos.service_histories.add_change(
-            dos_change_key=DOS_ADDRESS_CHANGE_KEY,
-            change=ServiceHistoriesChange(
-                data=changes_to_dos.new_address,
-                previous_value=changes_to_dos.current_address,
-                change_key=DOS_ADDRESS_CHANGE_KEY,
-            ),
+        change = ServiceHistoriesChange(
+            data=changes_to_dos.new_address,
+            previous_value=changes_to_dos.current_address,
+            change_key=DOS_ADDRESS_CHANGE_KEY,
         )
+        changes_to_dos.service_histories.add_change(dos_change_key=DOS_ADDRESS_CHANGE_KEY, change=change)
         dos_logger.log_service_update(
             data_field_modified=DOS_ADDRESS_CHANGE_KEY,
-            action=service_history_change.change_action,
+            action=change.change_action,
             previous_value=changes_to_dos.current_address,
             new_value=changes_to_dos.new_address,
         )
     if postcode_change:
         changes_to_dos.demographic_changes["postcode"] = changes_to_dos.new_postcode
+        change = ServiceHistoriesChange(
+            data=changes_to_dos.new_postcode,
+            previous_value=changes_to_dos.current_postcode,
+            change_key=DOS_POSTCODE_CHANGE_KEY,
+        )
         changes_to_dos.service_histories.add_change(
             dos_change_key=DOS_POSTCODE_CHANGE_KEY,
-            change=ServiceHistoriesChange(
-                data=changes_to_dos.new_postcode,
-                previous_value=changes_to_dos.current_postcode,
-                change_key=DOS_POSTCODE_CHANGE_KEY,
-            ),
+            change=change,
         )
         dos_logger.log_service_update(
             data_field_modified=DOS_POSTCODE_CHANGE_KEY,
-            action=service_history_change.change_action,
+            action=change.change_action,
             previous_value=changes_to_dos.current_postcode,
             new_value=changes_to_dos.new_postcode,
         )
