@@ -674,8 +674,9 @@ def check_service_history_standard_times(context: Context, added_or_removed):
                 for dates in dos_times:
                     if currentday == list(dates.keys())[0]:
                         assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
-                        assert "add" not in entry[currentday]["data"]["remove"][0], (
-                            "ERROR: Unexpected add field found in service history")
+                        assert (
+                            "add" not in entry[currentday]["data"]["remove"][0]
+                        ), "ERROR: Unexpected add field found in service history"
                         counter += 1
     if counter == 0:
         raise ValueError("ERROR: No Assertions have been made")

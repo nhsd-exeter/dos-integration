@@ -468,23 +468,23 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
     return return_string
 
 
-def convert_standard_opening(standard_times) -> dict:
+def convert_standard_opening(standard_times) -> list[dict]:
     """Converts standard opening times from change event to be comparable with service history
     Args:
         standard_times (Dict): Standard Opening times pulled from Change Event
     Returns:
-        return_array (List): List of Dicts containing name of the day in cms format and times in seconds
+        return_list (List): List of Dicts containing name of the day in cms format and times in seconds
     """
-    return_array = []
+    return_list = []
     for entry in standard_times:
         current_day = entry["Weekday"].lower()
         if entry["IsOpen"] is True:
             opening_time = time_to_seconds(entry["OpeningTime"])
             closing_time = time_to_seconds(entry["ClosingTime"])
-            return_array.append({"name": f"cmsopentime{current_day}", "times": f"{opening_time}-{closing_time}"})
+            return_list.append({"name": f"cmsopentime{current_day}", "times": f"{opening_time}-{closing_time}"})
         else:
-            return_array.append({"name": f"cmsopentime{current_day}", "times": "closed"})
-    return return_array
+            return_list.append({"name": f"cmsopentime{current_day}", "times": "closed"})
+    return return_list
 
 
 def time_to_seconds(time: str):
