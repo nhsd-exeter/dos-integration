@@ -181,7 +181,7 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     """
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
-        logger.debug("Opening times are valid")
+        logger.info("Opening times are valid")
         for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
             if changes_to_dos.check_for_standard_opening_times_day_changes(weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(

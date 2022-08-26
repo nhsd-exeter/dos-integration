@@ -8,6 +8,8 @@ from aws_lambda_powertools.logging import Logger
 from boto3.dynamodb.types import TypeDeserializer
 from pytest import fixture, raises
 
+FILE_PATH = "application.common.dynamodb"
+
 
 @fixture
 def dynamodb_table_create(dynamodb_client):

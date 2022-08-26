@@ -1,3 +1,4 @@
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from typing import Any, Dict, List, Optional
@@ -364,10 +365,8 @@ def opening_period_times_from_list(open_periods: List[OpenPeriod], with_space: b
     )
 
 
-def string_to_time(time_str: str) -> time:
+def string_to_time(time_str: str) -> Optional[time]:
     for time_format in ("%H:%M", "%H:%M:%S"):
-        try:
+        with suppress(ValueError):
             return datetime.strptime(str(time_str), time_format).time()
-        except ValueError:
-            pass
     return None
