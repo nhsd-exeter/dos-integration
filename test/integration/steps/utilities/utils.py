@@ -425,11 +425,13 @@ def get_service_history_specified_opening_times(service_id: str) -> dict:
 def get_service_history_standard_opening_times(service_id: str):
     """This function grabs the latest standard opening times changes from service history"""
     service_history = get_service_history(service_id)
-    standard_history = []
+    standard_opening_times_from_service_history = []
     for entry in service_history[list(service_history.keys())[0]]["new"]:
-        if entry[-3:] == "day":
-            standard_history.append({entry: service_history[list(service_history.keys())[0]]["new"][entry]})
-    return standard_history
+        if entry.endswith("day"):
+            standard_opening_times_from_service_history.append(
+                {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
+                )
+    return standard_opening_times_from_service_history
 
 
 def convert_specified_opening(specified_date, closed_status=False) -> str:
@@ -468,10 +470,10 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
 
 def convert_standard_opening(standard_times) -> dict:
     """Converts standard opening times from change event to be comparable with service history
-        Args:
-            standard_times (Dict): Standard Opening times pulled from Change Event
-        Returns:
-            return_array (List): List of Dicts containing name of the day in cms format and times in seconds
+    Args:
+        standard_times (Dict): Standard Opening times pulled from Change Event
+    Returns:
+        return_array (List): List of Dicts containing name of the day in cms format and times in seconds
     """
     return_array = []
     for entry in standard_times:

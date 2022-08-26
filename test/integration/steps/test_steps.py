@@ -666,7 +666,7 @@ def check_service_history_standard_times(context: Context, added_or_removed):
             if entry["times"] == "closed":
                 for dates in dos_times:
                     if currentday == list(dates.keys())[0]:
-                        assert dates[currentday]["changetype"] == 'remove', "Open when expected closed"
+                        assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
                         counter += 1
     if counter == 0:
         raise ValueError("ERROR: No Assertions have been made")
