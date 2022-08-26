@@ -430,7 +430,7 @@ def get_service_history_standard_opening_times(service_id: str):
         if entry.endswith("day"):
             standard_opening_times_from_service_history.append(
                 {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
-                )
+            )
     return standard_opening_times_from_service_history
 
 

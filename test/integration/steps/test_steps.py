@@ -658,8 +658,15 @@ def check_service_history_standard_times(context: Context, added_or_removed):
             currentday = list(entry.keys())[0]
             for dates in expected_dates:
                 if dates["name"] == currentday:
-                    assert entry[currentday]["data"]["add"][0] == dates["times"], "Dates do not match"
+                    assert entry[currentday]["data"]["changetype"] == "add", "ERROR: Incorrect changetype"
+                    assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
+                    assert "remove" not in entry[currentday]["data"], "ERROR: Remove is present in service history"
                     counter += 1
+    elif added_or_removed == "modified":
+        # Modified will have the same assertions as add, but a different check on changetype
+        # They can be updated to be vars in a function where type is passed in
+        # Removed will remain unchanged
+        raise ValueError("Placeholder")
     else:
         for entry in expected_dates:
             currentday = entry["name"]
@@ -667,6 +674,8 @@ def check_service_history_standard_times(context: Context, added_or_removed):
                 for dates in dos_times:
                     if currentday == list(dates.keys())[0]:
                         assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
+                        assert "add" not in entry[currentday]["data"]["remove"][0], (
+                            "ERROR: Unexpected add field found in service history")
                         counter += 1
     if counter == 0:
         raise ValueError("ERROR: No Assertions have been made")
