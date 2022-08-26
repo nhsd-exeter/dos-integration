@@ -30,6 +30,7 @@ def test_field_names():
         "name",
         "odscode",
         "address",
+        "town",
         "postcode",
         "web",
         "typeid",
@@ -37,6 +38,10 @@ def test_field_names():
         "publicphone",
         "publicname",
         "servicename",
+        "easting",
+        "northing",
+        "latitude",
+        "longitude",
     ]
 
 
