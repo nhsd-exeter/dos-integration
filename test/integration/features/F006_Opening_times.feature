@@ -7,7 +7,7 @@ Feature: F006. Opening times
     Then the DoS service has been updated with the specified date and time is captured by DoS
     And the service history is updated with the "added" specified opening times
 
-  @complete @pharmacy_no_log_searches @kit
+  @complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -76,6 +76,7 @@ Feature: F006. Opening times
     Then the pharmacy is confirmed "open" for the standard day in Dos
     And the Changed Event is replayed with the pharmacy now "closed"
     And the pharmacy is confirmed "closed" for the standard day in Dos
+    And the service history is updated with the "removed" standard opening times
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F006S011. Same dual general opening times
