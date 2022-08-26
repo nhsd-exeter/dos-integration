@@ -416,7 +416,7 @@ def check_service_history_change_type(service_id: str, change_type: str):
 
 
 def get_service_history_specified_opening_times(service_id: str) -> dict:
-    """ This function grabs the latest cmsopentimespecified object for a service id and returns it """
+    """This function grabs the latest cmsopentimespecified object for a service id and returns it"""
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
     return specified_open_times
@@ -427,9 +427,8 @@ def check_service_history_standard(service_id: str):
     standard_history = []
     # get the specified days that have been changed
     for entry in service_history[list(service_history.keys())[0]]["new"]:
-        currententry = list(entry.keys())[0]
-        if currententry[-3:] == "day":
-            standard_history.append(entry)
+        if entry[-3:] == "day":
+            standard_history.append({entry: service_history[list(service_history.keys())[0]]["new"][entry]})
     return standard_history
 
 
@@ -467,7 +466,7 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
     return return_string
 
 
-def convert_standard_opening(standard_times):
+def convert_standard_opening(standard_times) -> dict:
     # {"Weekday": "Monday","OpeningTime": "07:30","ClosingTime": "23:00",
     # "OpeningTimeType": "General","IsOpen": True,}
     # "add": ["27000-82800"]

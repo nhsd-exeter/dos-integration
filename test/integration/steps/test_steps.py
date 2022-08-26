@@ -25,7 +25,6 @@ from .utilities.utils import (
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
-    check_service_history_specified,
     check_service_history_standard,
     confirm_approver_status,
     confirm_changes,
@@ -658,7 +657,7 @@ def check_service_history_standard_times(context: Context, added_or_removed):
         case _:
             raise ValueError("Invalid change type has been provided")
     if change_type == "add":
-        openingtimes = context.change_event.standard_opening_times[-1]
+        openingtimes = context.change_event.standard_opening_times
     # dos_times contains only changed dates
     # format [{"cmsopentimemonday": {"changetype": "add","data": {"add": ["60-48240"]},"area": "demographic"}}]
     dos_times = check_service_history_standard(context.service_id)
@@ -667,13 +666,13 @@ def check_service_history_standard_times(context: Context, added_or_removed):
     expected_dates = convert_standard_opening(openingtimes)
     # loop through the expected dates to match them to their expected times
     # for each entry in the dos_times
+    # raise ValueError(f"dos times are {dos_times} and expected dates are {expected_dates}")
     for entry in dos_times:
-        if list(entry.keys())[0] in expected_dates:
-            # to do
-            return expected_dates
-    # check the key value
-    # find it in the expected days list
-    # compare the added times
+        currentday = list(entry.keys())[0]
+        for dates in expected_dates:
+            if dates["name"] == currentday:
+                # raise ValueError(f"{entry[currentday]['data']['add'][0]} checked against {dates['times']}")
+                assert entry[currentday]["data"]["add"][0] == dates["times"], "Dates do not match"
     return context
 
 
