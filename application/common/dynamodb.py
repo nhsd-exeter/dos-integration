@@ -70,8 +70,8 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         raise Exception(f"Unable to get circuit status for '{circuit}'.") from err
 
 
-def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
-    """Add change request to dynamodb but store the message and use the event for details
+def add_change_event_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
+    """Add change event to dynamodb but store the message and use the event for details
     Args:
         change_event (Dict[str, Any]): sequence id for given ODSCode
         event_received_time (str): received timestamp from SQSEvent
@@ -94,7 +94,7 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Added record to dynamodb", extra={"response": response, "item": put_item})
     except Exception as err:
-        raise Exception(f"Unable to add change request (seq no: {sequence_number}) into dynamodb") from err
+        raise Exception(f"Unable to add change evenr (seq no: {sequence_number}) into dynamodb") from err
     return record_id
 
 

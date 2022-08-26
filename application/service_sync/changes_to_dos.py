@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
-from .dos_logger import DoSLogger
 from .format import format_address, format_website
 from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
@@ -44,7 +43,6 @@ class ChangesToDoS:
     dos_service: DoSService
     nhs_entity: NHSEntity
     service_histories: ServiceHistories
-    dos_logger: DoSLogger
     # Varible to know if fields need to be changed
     demographic_changes: Dict[Optional[str], Any] = field(default_factory=dict)
     standard_opening_times_changes: Dict[Optional[int], Any] = field(default_factory=dict)
@@ -253,34 +251,33 @@ def compare_nhs_uk_and_dos_data(
     Returns:
         ChangesToDoS: ChangesToDoS class with all the flags if changes need to be made and the changes to make
     """
-    dos_logger = DoSLogger(
-        correlation_id=logger.get_correlation_id(),
-        service_uid=str(dos_service.uid),
-        service_name=dos_service.name,
-        type_id=str(dos_service.typeid),
-    )
     # Set up the holder class
-    changes_to_dos = ChangesToDoS(
-        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
-    )
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
 
     # Compare and validate website
-    changes_to_dos = compare_website(changes_to_dos=changes_to_dos, dos_logger=dos_logger)
+    changes_to_dos = compare_website(changes_to_dos=changes_to_dos)
     # Compare public phone
-    changes_to_dos = compare_public_phone(changes_to_dos=changes_to_dos, dos_logger=dos_logger)
+    changes_to_dos = compare_public_phone(changes_to_dos=changes_to_dos)
     #  Compare and validate address & postcode
-    changes_to_dos = compare_location_data(changes_to_dos=changes_to_dos, dos_logger=dos_logger)
+    changes_to_dos = compare_location_data(changes_to_dos=changes_to_dos)
     # Compare and validate all opening_times
-    changes_to_dos = compare_opening_times(changes_to_dos=changes_to_dos, dos_logger=dos_logger)
+    changes_to_dos = compare_opening_times(changes_to_dos=changes_to_dos)
 
     return changes_to_dos
 
 
-def compare_website(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -> ChangesToDoS:
+def compare_website(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares and creates change for website if needed.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
     if changes_to_dos.check_website_for_change():
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_WEBSITE_CHANGE_KEY,
             new_value=changes_to_dos.new_website,
             previous_value=changes_to_dos.current_website,
@@ -289,11 +286,18 @@ def compare_website(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -> Chan
     return changes_to_dos
 
 
-def compare_public_phone(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -> ChangesToDoS:
+def compare_public_phone(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares and creates change for publicphone if needed.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
     if changes_to_dos.check_public_phone_for_change():
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
             new_value=changes_to_dos.new_public_phone,
             previous_value=changes_to_dos.current_public_phone,
@@ -302,12 +306,27 @@ def compare_public_phone(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) ->
     return changes_to_dos
 
 
-def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -> ChangesToDoS:
+def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares and creates changes individually for location data items if needed.
+    Location data covers the following fields:
+        - address
+        - postcode
+        - latitude
+        - longitude
+        - town
+        - easting
+        - northing
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
     address_change, postcode_change, dos_location = changes_to_dos.check_for_address_and_postcode_for_changes()
     if address_change:
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_ADDRESS_CHANGE_KEY,
             new_value=changes_to_dos.new_address,
             previous_value=changes_to_dos.current_address,
@@ -317,7 +336,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         dos_location: DoSLocation  # dos_location can not be none if postcode must be changed
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_POSTCODE_CHANGE_KEY,
             new_value=changes_to_dos.new_postcode,
             previous_value=changes_to_dos.current_postcode,
@@ -325,7 +343,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         )
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_POSTAL_TOWN_CHANGE_KEY,
             new_value=dos_location.postaltown,
             previous_value=changes_to_dos.dos_service.town,
@@ -333,7 +350,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         )
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_EASTING_CHANGE_KEY,
             new_value=dos_location.easting,
             previous_value=changes_to_dos.dos_service.easting,
@@ -341,7 +357,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         )
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DOS_NORTHING_CHANGE_KEY,
             new_value=dos_location.northing,
             previous_value=changes_to_dos.dos_service.northing,
@@ -349,7 +364,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         )
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DI_LATITUDE_CHANGE_KEY,
             new_value=dos_location.latitude,
             previous_value=changes_to_dos.dos_service.latitude,
@@ -358,7 +372,6 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
         )
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
-            dos_logger=dos_logger,
             change_key=DI_LONGITUDE_CHANGE_KEY,
             new_value=dos_location.longitude,
             previous_value=changes_to_dos.dos_service.longitude,
@@ -368,7 +381,15 @@ def compare_location_data(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
     return changes_to_dos
 
 
-def compare_opening_times(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -> ChangesToDoS:
+def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares and creates changes individually for all opening times if needed.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
         logger.debug("Opening times are valid")
@@ -377,30 +398,18 @@ def compare_opening_times(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
                     changes_to_dos, f"new_{weekday}_opening_times"
                 )
-                change = changes_to_dos.service_histories.add_standard_opening_times_change(
+                changes_to_dos.service_histories.add_standard_opening_times_change(
                     current_opening_times=changes_to_dos.dos_service.standard_opening_times,
                     new_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
                     dos_weekday_change_key=dos_weekday_key,
                     weekday=weekday,
                 )
-                dos_logger.log_standard_opening_times_service_update_for_weekday(
-                    data_field_modified=dos_weekday_key,
-                    action=change.change_action,
-                    previous_value=changes_to_dos.dos_service.standard_opening_times,
-                    new_value=changes_to_dos.nhs_entity.standard_opening_times,
-                    weekday=weekday,
-                )
 
         if changes_to_dos.check_for_specified_opening_times_changes():
             changes_to_dos.specified_opening_times_changes = True
-            change = changes_to_dos.service_histories.add_specified_opening_times_change(
+            changes_to_dos.service_histories.add_specified_opening_times_change(
                 current_opening_times=changes_to_dos.current_specified_opening_times,
                 new_opening_times=changes_to_dos.new_specified_opening_times,
-            )
-            dos_logger.log_specified_opening_times_service_update(
-                action=change.change_action,
-                previous_value=changes_to_dos.current_specified_opening_times,
-                new_value=changes_to_dos.new_specified_opening_times,
             )
     else:
         logger.info(
@@ -415,18 +424,17 @@ def compare_opening_times(changes_to_dos: ChangesToDoS, dos_logger: DoSLogger) -
 
 def set_up_for_services_table_change(
     changes_to_dos: ChangesToDoS,
-    dos_logger: DoSLogger,
     change_key: str,
     new_value: Any,
     previous_value: Any,
     service_table_field_name: str,
     update_service_history: bool = True,
 ) -> ChangesToDoS:
-    """Runs the prerequisites for a change
+    """Runs the prerequisites for a change to the services table.
+    Including adding the change to the change object, and updating the service history.
 
     Args:
         changes_to_dos (ChangesToDoS): The changes to dos object
-        dos_logger (DoSLogger): The dos logger object
         change_key (str): The service history change key
         new_value (Any): The new value to set the service table field to
         previous_value (Any): The previous value of the service table field
@@ -437,20 +445,13 @@ def set_up_for_services_table_change(
         ChangesToDoS: The changes to dos object
     """
     changes_to_dos.demographic_changes[service_table_field_name] = new_value
-    change = ServiceHistoriesChange(
-        data=new_value,
-        previous_value=previous_value,
-        change_key=change_key,
-    )
     if update_service_history:
         changes_to_dos.service_histories.add_change(
             dos_change_key=change_key,
-            change=change,
+            change=ServiceHistoriesChange(
+                data=new_value,
+                previous_value=previous_value,
+                change_key=change_key,
+            ),
         )
-    dos_logger.log_service_update(
-        data_field_modified=change_key,
-        action=change.change_action,
-        previous_value=previous_value,
-        new_value=new_value,
-    )
     return changes_to_dos
