@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from pytest import mark
 
 from application.common.opening_times import WEEKDAYS
-from application.service_sync.changes_to_dos import ChangesToDoS, compare_nhs_uk_and_dos_data
+from application.service_sync.changes_to_dos import ChangesToDoS
 
 FILE_PATH = "application.service_sync.changes_to_dos"
 
@@ -246,32 +246,3 @@ def test_changes_to_dos_check_public_phone_for_change_no_change():
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
     assert False is response
-
-
-@patch(f"{FILE_PATH}.compare_opening_times")
-@patch(f"{FILE_PATH}.compare_location_data")
-@patch(f"{FILE_PATH}.compare_public_phone")
-@patch(f"{FILE_PATH}.compare_website")
-@patch(f"{FILE_PATH}.ChangesToDoS")
-def test_compare_nhs_uk_and_dos_data(
-    mock_changes_to_dos: MagicMock,
-    mock_compare_website: MagicMock,
-    mock_compare_public_phone: MagicMock,
-    mock_compare_location_data: MagicMock,
-    mock_compare_opening_times: MagicMock,
-):
-    # Arrange
-    dos_service = MagicMock()
-    nhs_entity = MagicMock()
-    service_histories = MagicMock()
-    # Act
-    response = compare_nhs_uk_and_dos_data(dos_service, nhs_entity, service_histories)
-    # Assert
-    mock_changes_to_dos.assert_called_once_with(
-        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories
-    )
-    mock_compare_website.assert_called_once_with(changes_to_dos=mock_changes_to_dos.return_value)
-    mock_compare_public_phone.assert_called_once_with(changes_to_dos=mock_compare_website.return_value)
-    mock_compare_location_data.assert_called_once_with(changes_to_dos=mock_compare_public_phone.return_value)
-    mock_compare_opening_times.assert_called_once_with(changes_to_dos=mock_compare_location_data.return_value)
-    assert response == mock_compare_opening_times.return_value

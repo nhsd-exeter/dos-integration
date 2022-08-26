@@ -201,7 +201,7 @@ class ServiceUpdateLogger:
         )
 
 
-def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: ServiceHistories):
+def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: ServiceHistories) -> None:
     """Logs all service updates to DI Splunk and DoS Splunk.
 
     This is called after the service has been updated to guarantee
@@ -220,11 +220,9 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
     service_history_changes: Dict[str, str] = service_histories.service_history[most_recent_service_history_entry][
         "new"
     ]
-
     for change_key, change_values in service_history_changes.items():
         change_key: str
         change_values: dict[str, Any]
-
         if change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY:
             service_update_logger.log_specified_opening_times_service_update(
                 action=change_values["changetype"],

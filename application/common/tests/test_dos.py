@@ -14,6 +14,7 @@ from ..dos import (
     get_services_from_db,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
+    get_valid_dos_location,
 )
 from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from .conftest import dummy_dos_service
@@ -454,6 +455,29 @@ def test_get_all_valid_dos_postcodes(mock_query_dos_db, mock_connect_to_dos_db_r
     response = get_all_valid_dos_postcodes()
     # Assert
     assert response == expected_result
+
+
+@patch(f"{FILE_PATH}.get_dos_locations")
+def test_get_valid_dos_location(mock_get_dos_locations: MagicMock):
+    # Arrange
+    mock_get_dos_locations.return_value.is_valid.return_value = True
+    mock_get_dos_locations.return_value = mock_location = [MagicMock()]
+    postcode = "BA2 7AF"
+    # Act
+    location = get_valid_dos_location(postcode)
+    # Assert
+    assert location == mock_location[0]
+
+
+@patch(f"{FILE_PATH}.get_dos_locations")
+def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMock):
+    # Arrange
+    mock_get_dos_locations.return_value.is_valid.return_value = False
+    postcode = "BA2 7AF"
+    # Act
+    location = get_valid_dos_location(postcode)
+    # Assert
+    assert location is None
 
 
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")

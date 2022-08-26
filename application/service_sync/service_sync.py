@@ -8,7 +8,7 @@ from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 
-from .changes_to_dos import compare_nhs_uk_and_dos_data
+from .compare_data import compare_nhs_uk_and_dos_data
 from .dos_data import get_dos_service_and_history, run_db_health_check, update_dos_data
 from common.dynamodb import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
