@@ -4,7 +4,7 @@ from copy import copy
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
-from os import getenv
+from os import getenv, environ
 from random import randint
 from time import sleep
 
@@ -23,6 +23,7 @@ from .utilities.context import Context
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
     add_new_standard_open_day,
+    assert_standard_closing,
     assert_standard_openings,
     check_received_data_in_dos,
     check_service_history,
@@ -675,19 +676,15 @@ def check_service_history_standard_times(context: Context, added_or_removed):
     dos_times = get_service_history_standard_opening_times(context.service_id)
     expected_dates = convert_standard_opening(openingtimes)
     counter = 0
-    if added_or_removed == "added" or added_or_removed == "modified":
-        counter = assert_standard_openings(dos_times, expected_dates)
+    strictness = False
+    if "f006s012" in environ.get('PYTEST_CURRENT_TEST'):
+        strictness = True
+    if added_or_removed == "added":
+        counter = assert_standard_openings("add", dos_times, expected_dates, strictness)
+    elif added_or_removed == "modified":
+        counter = assert_standard_openings("modify", dos_times, expected_dates, strictness)
     else:
-        for entry in expected_dates:
-            currentday = entry["name"]
-            if entry["times"] == "closed":
-                for dates in dos_times:
-                    if currentday == list(dates.keys())[0]:
-                        assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
-                        assert (
-                            "add" not in dates[currentday]["data"]
-                        ), "ERROR: Unexpected add field found in service history"
-                        counter += 1
+        counter = assert_standard_closing(dos_times, expected_dates)
     if counter == 0:
         raise ValueError("ERROR: No Assertions have been made")
     return context

@@ -487,7 +487,7 @@ def convert_standard_opening(standard_times) -> list[dict]:
     return return_list
 
 
-def assert_standard_openings(dos_times, ce_times) -> int:
+def assert_standard_openings(change_type, dos_times, ce_times, strict=False) -> int:
     """Function to assert standard opening times changes. Added to remove complexity for sonar
 
     Args:
@@ -503,12 +503,31 @@ def assert_standard_openings(dos_times, ce_times) -> int:
         for dates in ce_times:
             if dates["name"] == currentday:
                 assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
-                assert entry[currentday]["changetype"] in valid_change_types, "ERROR: Incorrect changetype"
+                if strict:
+                    assert entry[currentday]["changetype"] == change_type, "ERROR: Incorrect changetype"
+                else:
+                    assert entry[currentday]["changetype"] in valid_change_types, "ERROR: Incorrect changetype"
                 if entry[currentday]["changetype"] == "add":
                     assert "remove" not in entry[currentday]["data"], "ERROR: Remove is present in service history"
                 elif entry[currentday]["changetype"] == "modify":
                     assert "remove" in entry[currentday]["data"], f"ERROR: Remove is not present for {currentday}"
                 counter += 1
+    return counter
+
+
+def assert_standard_closing(dos_times, ce_times) -> int:
+    #raise ValueError(str(dos_times) + str(ce_times))
+    counter = 0
+    for entry in ce_times:
+        currentday = entry["name"]
+        if entry["times"] == "closed":
+            for dates in dos_times:
+                if currentday == list(dates.keys())[0]:
+                    assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
+                    assert (
+                        "add" not in dates[currentday]["data"]
+                    ), "ERROR: Unexpected add field found in service history"
+                    counter += 1
     return counter
 
 
@@ -524,13 +543,15 @@ def add_new_standard_open_day(standard_opening_times: dict) -> dict:
         if days not in open_days:
             selected_day = days
             break
-    standard_opening_times.append({
-        "Weekday": selected_day,
-        "OpeningTime": "09:00",
-        "ClosingTime": "17:00",
-        "OpeningTimeType": "General",
-        "IsOpen": True,
-    })
+    standard_opening_times.append(
+        {
+            "Weekday": selected_day,
+            "OpeningTime": "09:00",
+            "ClosingTime": "17:00",
+            "OpeningTimeType": "General",
+            "IsOpen": True,
+        }
+    )
     return standard_opening_times
 
 
