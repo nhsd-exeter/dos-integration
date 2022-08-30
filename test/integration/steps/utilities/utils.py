@@ -487,6 +487,31 @@ def convert_standard_opening(standard_times) -> list[dict]:
     return return_list
 
 
+def assert_standard_openings(dos_times, ce_times) -> int:
+    """Function to assert standard opening times changes. Added to remove complexity for sonar
+
+    Args:
+        changetype (Str): The type of change being asserted
+        dos_times (Dict): The times pulled from DOS
+        ce_times (Dict): The times pulled from the change event to compare too
+    Returns:
+        counter (Int): The amount of assertions made"""
+    counter = 0
+    valid_change_types = ["add", "modify"]
+    for entry in dos_times:
+        currentday = list(entry.keys())[0]
+        for dates in ce_times:
+            if dates["name"] == currentday:
+                assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
+                assert entry[currentday]["changetype"] in valid_change_types, "ERROR: Incorrect changetype"
+                if entry[currentday]["changetype"] == "add":
+                    assert "remove" not in entry[currentday]["data"], "ERROR: Remove is present in service history"
+                elif entry[currentday]["changetype"] == "modify":
+                    assert "remove" in entry[currentday]["data"], f"ERROR: Remove is not present for {currentday}"
+                counter += 1
+    return counter
+
+
 def time_to_seconds(time: str):
     times = time.split(":")
     hour_seconds = int(times[0]) * 3600

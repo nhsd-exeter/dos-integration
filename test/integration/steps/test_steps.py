@@ -22,6 +22,7 @@ from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
+    assert_standard_openings,
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
@@ -653,20 +654,8 @@ def check_service_history_standard_times(context: Context, added_or_removed):
     dos_times = get_service_history_standard_opening_times(context.service_id)
     expected_dates = convert_standard_opening(openingtimes)
     counter = 0
-    if added_or_removed == "added":
-        for entry in dos_times:
-            currentday = list(entry.keys())[0]
-            for dates in expected_dates:
-                if dates["name"] == currentday:
-                    assert entry[currentday]["data"]["changetype"] == "add", "ERROR: Incorrect changetype"
-                    assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
-                    assert "remove" not in entry[currentday]["data"], "ERROR: Remove is present in service history"
-                    counter += 1
-    elif added_or_removed == "modified":
-        # Modified will have the same assertions as add, but a different check on changetype
-        # They can be updated to be vars in a function where type is passed in
-        # Removed will remain unchanged
-        raise ValueError("Placeholder")
+    if added_or_removed == "added" or added_or_removed == "modified":
+        counter = assert_standard_openings(dos_times, expected_dates)
     else:
         for entry in expected_dates:
             currentday = entry["name"]
@@ -675,7 +664,7 @@ def check_service_history_standard_times(context: Context, added_or_removed):
                     if currentday == list(dates.keys())[0]:
                         assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
                         assert (
-                            "add" not in entry[currentday]["data"]["remove"][0]
+                            "add" not in dates[currentday]["data"]
                         ), "ERROR: Unexpected add field found in service history"
                         counter += 1
     if counter == 0:
