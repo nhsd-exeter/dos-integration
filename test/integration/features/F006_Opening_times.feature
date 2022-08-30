@@ -7,7 +7,7 @@ Feature: F006. Opening times
     Then the DoS service has been updated with the specified date and time is captured by DoS
     And the service history is updated with the "added" specified opening times
 
-  @complete @pharmacy_no_log_searches @kit
+  @complete @pharmacy_no_log_searches
   Scenario: F006S002. Confirm actual opening times change for standard date and time is captured by Dos
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -61,7 +61,7 @@ Feature: F006. Opening times
     And the deleted specified date is confirmed removed from DoS
     And the service history is updated with the "removed" specified opening times
 
-  @complete @pharmacy_no_log_searches @kit
+  @complete @pharmacy_no_log_searches
   Scenario: F006S009. A recently closed pharmacy on a standard day can be opened
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -71,7 +71,7 @@ Feature: F006. Opening times
     And the pharmacy is confirmed "open" for the standard day in Dos
     And the service history is updated with the "modified" standard opening times
 
-  @complete @pharmacy_no_log_searches @kit
+  @complete @pharmacy_no_log_searches
   Scenario: F006S010. A recently opened pharmacy on a standard day can be closed
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -91,3 +91,16 @@ Feature: F006. Opening times
       | opening_type |
       | General      |
       | Additional   |
+
+  @complete @pharmacy_cloudwatch_queries @kit
+  Scenario Outline: F006S012. Service History checks for pharmacies
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the Changed Event has an "<update_type>" standard opening
+    When the Changed Event is sent for processing with "valid" api key
+    Then the service history is updated with the "<update_type>" standard opening times
+
+    Examples:
+      |update_type|
+      |added      |
+      |modified   |
+      |removed    |

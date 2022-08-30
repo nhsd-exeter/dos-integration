@@ -22,6 +22,7 @@ from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
+    add_new_standard_open_day,
     assert_standard_openings,
     check_received_data_in_dos,
     check_service_history,
@@ -158,6 +159,25 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
     context.change_event.standard_opening_times[-1]["OpeningTime"] = "00:01"
     context.change_event.standard_opening_times[-1]["ClosingTime"] = closing_time
     context.change_event.standard_opening_times[-1]["IsOpen"] = True
+    return context
+
+
+@given(parse('the Changed Event has an "{update_type}" standard opening'), target_fixture="context")
+def dos_event_standard_opening_time_change(update_type: str, context: Context):
+    match update_type:
+        case "added":
+            context.change_event.standard_opening_times = add_new_standard_open_day(
+                context.change_event.standard_opening_times
+            )
+        case "modified":
+            context.change_event.standard_opening_times[0]["OpeningTime"] = "00:15"
+            context.change_event.standard_opening_times[0]["ClosingTime"] = "00:45"
+        case "removed":
+            context.change_event.standard_opening_times[0]["IsOpen"] = False
+            context.change_event.standard_opening_times[0]["OpeningTime"] = ""
+            context.change_event.standard_opening_times[0]["ClosingTime"] = ""
+        case _:
+            raise ValueError("ERROR: Invalid standard opening time type defined")
     return context
 
 
@@ -650,6 +670,7 @@ def check_service_history_specified_times(context: Context, added_or_removed):
 
 @then(parse('the service history is updated with the "{added_or_removed}" standard opening times'))
 def check_service_history_standard_times(context: Context, added_or_removed):
+    sleep(10)
     openingtimes = context.change_event.standard_opening_times
     dos_times = get_service_history_standard_opening_times(context.service_id)
     expected_dates = convert_standard_opening(openingtimes)

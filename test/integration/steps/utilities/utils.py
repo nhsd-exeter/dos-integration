@@ -512,6 +512,28 @@ def assert_standard_openings(dos_times, ce_times) -> int:
     return counter
 
 
+def add_new_standard_open_day(standard_opening_times: dict) -> dict:
+    open_days = []
+    week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    selected_day = ""
+    for open_day in standard_opening_times:
+        open_days.append(open_day["Weekday"])
+    if len(open_days) == 0:
+        raise ValueError("ERROR: No available days to add")
+    for days in week:
+        if days not in open_days:
+            selected_day = days
+            break
+    standard_opening_times.append({
+        "Weekday": selected_day,
+        "OpeningTime": "09:00",
+        "ClosingTime": "17:00",
+        "OpeningTimeType": "General",
+        "IsOpen": True,
+    })
+    return standard_opening_times
+
+
 def time_to_seconds(time: str):
     times = time.split(":")
     hour_seconds = int(times[0]) * 3600
