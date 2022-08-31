@@ -53,7 +53,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords"
       ],
-      "Resource": ["*"]
+      "Resource": "*"
     },
     {
       "Effect": "Allow",
@@ -204,7 +204,6 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
 {
   "Version": "2012-10-17",
   "Statement": [
-
     {
       "Effect": "Allow",
       "Action": [
@@ -361,9 +360,7 @@ module "service_sync" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "dynamodb:Query"
-      ],
+      "Action": "dynamodb:Query",
       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
@@ -381,9 +378,7 @@ module "change_event_dlq_handler" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "kms:Decrypt"
-      ],
+      "Action": "kms:Decrypt",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
@@ -410,9 +405,7 @@ module "change_event_dlq_handler" {
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "dynamodb:Query"
-      ],
+      "Action": "dynamodb:Query",
       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
@@ -445,13 +438,11 @@ module "dos_db_update_dlq_handler" {
         "xray:PutTraceSegments",
         "xray:PutTelemetryRecords"
       ],
-      "Resource": ["*"]
+      "Resource": "*"
     },
     {
       "Effect": "Allow",
-      "Action": [
-        "kms:Decrypt"
-      ],
+      "Action": "kms:Decrypt",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
@@ -487,48 +478,3 @@ module "dos_db_handler" {
 }
 EOF
 }
-
-# module "send_email" {
-#   source               = "../../modules/lambda-iam-role"
-#   lambda_name          = var.send_email_lambda_name
-#   use_custom_policy    = true
-#   custom_lambda_policy = <<EOF
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Effect": "Allow",
-#       "Action": "kms:Decrypt",
-#       "Resource": "${aws_kms_key.signing_key.arn}"
-#     },
-#     {
-#       "Effect": "Allow",
-#       "Action": [
-#         "sqs:DeleteMessage",
-#         "sqs:GetQueueAttributes",
-#         "sqs:ReceiveMessage"
-#       ],
-#       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}"
-#     },
-#     {
-#       "Effect": "Allow",
-#       "Action": [
-#         "dynamodb:BatchGetItem",
-#         "dynamodb:GetItem",
-#         "dynamodb:Query",
-#         "dynamodb:Scan",
-#         "dynamodb:BatchWriteItem",
-#         "dynamodb:PutItem",
-#         "dynamodb:UpdateItem"
-#       ],
-#       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
-#     },
-#     {
-#       "Effect": "Allow",
-#       "Action": "dynamodb:Query",
-#       "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
-#     }
-#   ]
-# }
-# EOF
-# }
