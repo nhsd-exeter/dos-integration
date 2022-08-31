@@ -90,21 +90,20 @@ variable "orchestrator_role_name" {
   description = "Role name for event processor lambda"
 }
 
-
 variable "service_sync_role_name" {
   description = "Role name for event sender lambda"
 }
 
 variable "change_event_dlq_handler_role_name" {
-  description = "Role name for fifo dlq handler lambda"
+  description = "Role name for change event dlq handler lambda"
 }
 
 variable "dos_db_update_dlq_handler_role_name" {
-  description = "Role name for cr_fifo dlq handler lambda"
+  description = "Role name for dos db update dlq handler lambda"
 }
 
 variable "slack_messenger_role_name" {
-  description = "Role name for cr_fifo dlq handler lambda"
+  description = "Role name for slack messenger dlq handler lambda"
 }
 
 variable "event_replay_role_name" {
@@ -112,7 +111,36 @@ variable "event_replay_role_name" {
 }
 
 variable "dos_db_handler_role_name" {
-  description = "Role name for test db checker handler lambda"
+  description = "Role name for dos db handler lambda"
+}
+
+# ##############
+# # LAMBDAS
+# ##############
+
+variable "service_matcher_lambda_name" {
+  type        = string
+  description = "Name of service matcher lambda"
+}
+
+variable "service_sync_lambda_name" {
+  type        = string
+  description = "Name of service sync lambda"
+}
+
+variable "change_event_dlq_handler_lambda_name" {
+  type        = string
+  description = "Name of change event dlq handler lambda"
+}
+
+variable "dos_db_update_dlq_handler_lambda_name" {
+  type        = string
+  description = "Name of dos db update dlq handler lambda"
+}
+
+variable "dos_db_handler_lambda_name" {
+  type        = string
+  description = "Name of dos db handler lambda"
 }
 
 # ##############

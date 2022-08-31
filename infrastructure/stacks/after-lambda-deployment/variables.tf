@@ -206,7 +206,7 @@ variable "dos_firehose_role" {
   description = "The firehose delivery stream role name"
 }
 # ##############
-# # LAMBDA
+# # LAMBDAS
 # ##############
 
 variable "service_matcher_lambda_name" {
