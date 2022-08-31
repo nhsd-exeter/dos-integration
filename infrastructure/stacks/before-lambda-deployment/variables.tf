@@ -143,6 +143,40 @@ variable "dos_db_handler_lambda_name" {
   description = "Name of dos db handler lambda"
 }
 
+# ############################
+# Old Variables - remove after release 3.0
+# ############################
+
+variable "event_processor_role_name" {
+  description = "Role name for event processor lambda"
+}
+
+variable "event_sender_role_name" {
+  description = "Role name for event sender lambda"
+}
+
+variable "fifo_dlq_handler_role_name" {
+  description = "Role name for fifo dlq handler lambda"
+}
+
+variable "cr_fifo_dlq_handler_role_name" {
+  description = "Role name for cr_fifo dlq handler lambda"
+}
+
+variable "fifo_queue_name" {
+  description = ""
+}
+variable "cr_fifo_queue_name" {
+  description = ""
+}
+
+variable "dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
+
+variable "cr_dead_letter_queue_from_fifo_queue_name" {
+  description = ""
+}
 # ##############
 # # DYNAMO DB
 # ##############
@@ -154,9 +188,11 @@ variable "change_events_table_name" {
 ############
 # SQS
 ############
+
 variable "change_event_queue_name" {
   description = ""
 }
+
 variable "update_request_queue_name" {
   description = ""
 }
