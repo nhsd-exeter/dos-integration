@@ -6,8 +6,9 @@ resource "aws_iam_role" "lambda_role" {
 }
 
 resource "aws_iam_role_policy" "lambda_generic_policy" {
-  name   = "lambda-generic-policy"
-  role   = aws_iam_role.lambda_role.id
+  name = "lambda-generic-policy"
+  role = aws_iam_role.lambda_role.id
+  #tfsec:ignore:aws-iam-no-policy-wildcards:exp:2023-01-01
   policy = <<EOF
 {
   "Version": "2012-10-17",
