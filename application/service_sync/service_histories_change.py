@@ -50,9 +50,9 @@ class ServiceHistoriesChange:
         if previous_value == new_value:
             logger.error(f"previous_value {previous_value} is equal to new_value {new_value}")
             raise ValueError("Previous and new values are the same")
-        elif previous_value is None and new_value is not None:
+        elif previous_value is None or previous_value == "None" and new_value is not None:
             return "add"
-        elif previous_value is not None and new_value is None:
+        elif new_value is None:
             return "remove"
         else:
             return "modify"

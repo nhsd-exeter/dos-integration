@@ -101,12 +101,15 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
         service_id (int): Id of service to update
         service_histories (ServiceHistories): Service history of the service
     """
+
     connection = None
     try:
         # Save all the changes to the DoS database with a single transaction
         with connect_to_dos_db() as connection:
             is_demographic_changes: bool = save_demographics_into_db(
-                connection=connection, service_id=service_id, demographics_changes=changes_to_dos.demographic_changes
+                connection=connection,
+                service_id=service_id,
+                demographics_changes=changes_to_dos.demographic_changes,
             )
             is_standard_opening_times_changes: bool = save_standard_opening_times_into_db(
                 connection=connection,
@@ -146,13 +149,9 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
     """
     if demographics_changes:
         # Update the service demographics
-        logger.debug(f"Demographics changes found for service id {service_id}")
+        logger.info(f"Demographics changes found for service id {service_id}")
         query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(
-            SQL(
-                ", ".join(
-                    f"""{key} = '{value if value is not None else ""}'""" for key, value in demographics_changes.items()
-                )
-            )
+            SQL(", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items()))
         )
         query_str = query.as_string(connection)
 
@@ -165,7 +164,7 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
         return True
     else:
         # No demographic changes found so no need to update the service
-        logger.debug(f"No demographic changes found for service id {service_id}")
+        logger.info(f"No demographic changes found for service id {service_id}")
         return False
 
 
@@ -183,9 +182,9 @@ def save_standard_opening_times_into_db(
         bool: True if changes were made to the database, False if no changes were made
     """
     if standard_opening_times_changes:
-        logger.debug(f"Saving standard opening times changes for service id {service_id}")
+        logger.info(f"Saving standard opening times changes for service id {service_id}")
         for dayid, opening_periods in standard_opening_times_changes.items():
-            logger.debug(f"Deleting standard opening times for dayid: {dayid}")
+            logger.info(f"Deleting standard opening times for dayid: {dayid}")
             # Cascade delete the standard opening times in both
             # servicedayopenings table and servicedayopeningtimes table
             cursor = query_dos_db(
@@ -195,7 +194,7 @@ def save_standard_opening_times_into_db(
             )
             cursor.close()
             if opening_periods != []:
-                logger.debug(f"Saving standard opening times for dayid: {dayid}")
+                logger.info(f"Saving standard opening times for dayid: {dayid}")
                 cursor = query_dos_db(
                     connection=connection,
                     query=(
@@ -210,7 +209,7 @@ def save_standard_opening_times_into_db(
 
                 open_period: OpenPeriod  # Type hint for the for loop
                 for open_period in opening_periods:
-                    logger.debug(f"Saving standard opening times period for dayid: {dayid}, period: {open_period}")
+                    logger.info(f"Saving standard opening times period for dayid: {dayid}, period: {open_period}")
                     cursor = query_dos_db(
                         connection=connection,
                         query=(
@@ -225,10 +224,10 @@ def save_standard_opening_times_into_db(
                     )
                     cursor.close()
             else:
-                logger.debug(f"No standard opening times to add for {dayid}")
+                logger.info(f"No standard opening times to add for dayid: {dayid}")
         return True
     else:
-        logger.debug(f"No standard opening times changes to save for service id {service_id}")
+        logger.info(f"No standard opening times changes to save for service id {service_id}")
         return False
 
 
@@ -251,7 +250,7 @@ def save_specified_opening_times_into_db(
     """
 
     if is_changes:
-        logger.debug(f"Deleting all specified opening times for service id {service_id}")
+        logger.info(f"Deleting all specified opening times for service id {service_id}")
         # Cascade delete the standard opening times in both
         # servicedayopenings table and servicedayopeningtimes table
         cursor = query_dos_db(
@@ -261,7 +260,7 @@ def save_specified_opening_times_into_db(
         )
         cursor.close()
         for specified_opening_times_day in specified_opening_times_changes:
-            logger.debug(f"Saving specfied opening times for: {specified_opening_times_day}")
+            logger.info(f"Saving specfied opening times for: {specified_opening_times_day}")
             cursor = query_dos_db(
                 connection=connection,
                 query=(
@@ -310,7 +309,7 @@ def save_specified_opening_times_into_db(
                         """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s);"""
                     ),
                     vars={
-                        "IS_CLOSED": not specified_opening_times_day.is_open,
+                        "IS_CLOSED": {not specified_opening_times_day.is_open},
                         "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
                     },
                 )
@@ -318,5 +317,5 @@ def save_specified_opening_times_into_db(
 
         return True
     else:
-        logger.debug(f"No specified opening times changes to save for service id {service_id}")
+        logger.info(f"No specified opening times changes to save for service id {service_id}")
         return False

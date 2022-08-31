@@ -205,10 +205,9 @@ To format the code run:
 Code quality checks can be done with the pip installed 'flake8' module and run with the command.
     python3 -m flake8 --max-line-length=120
 
-This is also wrapped in a function
-To check the code quality run:
-    make python-code-check FILES=./application
-    make python-code-check FILES=./test
+This is also wrapped in a function:
+
+    make python-linting
 
 ## Testing
 

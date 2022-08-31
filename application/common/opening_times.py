@@ -154,12 +154,16 @@ class SpecifiedOpeningTime:
         )
 
     def export_service_history_format(self) -> List[str]:
-        """Exports Specified opening time into a DoS change request accepted format"""
+        """Exports Specified opening time into a DoS service history accepted format"""
         exp_open_periods = [op.export_time_in_seconds() for op in sorted(self.open_periods)]
         date_str = self.date.strftime(DOS_DATE_FORMAT)
-        if not self.is_open:
-            return [f"{date_str}-closed"]
-        return [f"{date_str}-{period}" for period in exp_open_periods]
+        return [f"{date_str}-{period}" for period in exp_open_periods] if self.is_open else [f"{date_str}-closed"]
+
+    def export_dos_log_format(self) -> List[str]:
+        """Exports Specified opening times into a DoS Logs accepted format"""
+        exp_open_periods = [op.export_db_string_format() for op in sorted(self.open_periods)]
+        date_str = self.date.strftime(DOS_DATE_FORMAT)
+        return [f"{date_str}-{period}" for period in exp_open_periods] if self.is_open else [f"{date_str}-closed"]
 
     def contradiction(self) -> bool:
         """Returns whether the open flag contradicts the number of open periods present."""
@@ -346,8 +350,18 @@ class StandardOpeningTimes:
         return change
 
 
-def opening_period_times_from_list(open_periods: List[OpenPeriod]) -> str:
-    return ", ".join([open_period.export_db_string_format() for open_period in open_periods])
+def opening_period_times_from_list(open_periods: List[OpenPeriod], with_space: bool = True) -> str:
+    """Converts a list of OpenPeriods into a string of times separated by a space
+
+    Args:
+        open_periods (List[OpenPeriod]): The list of OpenPeriods to convert
+        with_space (bool): Whether to add a space between each time
+    """
+    return (
+        ", ".join([open_period.export_db_string_format() for open_period in open_periods])
+        if with_space
+        else ",".join([open_period.export_db_string_format() for open_period in open_periods])
+    )
 
 
 def string_to_time(time_str: str) -> time:

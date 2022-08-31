@@ -13,8 +13,11 @@ def test_changes_to_dos():
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     # Act
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Assert
     assert dos_service == changes_to_dos.dos_service
     assert nhs_entity == changes_to_dos.nhs_entity
@@ -40,7 +43,10 @@ def test_changes_to_dos_check_for_standard_opening_times_day_changes(weekday: st
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     dos_service.standard_opening_times.same_openings.return_value = False
     # Act
     changes_to_dos.check_for_standard_opening_times_day_changes(weekday)
@@ -55,7 +61,10 @@ def test_changes_to_dos_check_for_standard_opening_times_day_changes_no_changes(
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     dos_service.standard_opening_times.same_openings.return_value = True
     # Act
     changes_to_dos.check_for_standard_opening_times_day_changes(weekday)
@@ -70,7 +79,10 @@ def test_changes_to_dos_check_for_specified_opening_times_changes(mock_specified
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     mock_specified_opening_time.equal_lists.return_value = False
     mock_specified_opening_time.remove_past_dates.return_value = ["2020-01-01"]
     # Act
@@ -87,7 +99,10 @@ def test_changes_to_dos_check_for_specified_opening_times_changes_no_change(mock
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     mock_specified_opening_time.equal_lists.return_value = True
     # Act
     response = changes_to_dos.check_for_specified_opening_times_changes()
@@ -103,7 +118,10 @@ def test_changes_to_dos_check_for_address_and_postcode_for_changes(mock_get_vali
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     address_response, postcode_response = changes_to_dos.check_for_address_and_postcode_for_changes()
     # Assert
@@ -125,7 +143,10 @@ def test_changes_to_dos_check_for_address_and_postcode_for_changes_postcode_inva
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     mock_get_valid_dos_postcode.return_value = None
     # Act
     address_response, postcode_response = changes_to_dos.check_for_address_and_postcode_for_changes()
@@ -148,8 +169,11 @@ def test_changes_to_dos_check_website_for_change_remove_website(
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     mock_is_val_none_or_empty.side_effect = [True, False]
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     response = changes_to_dos.check_website_for_change()
     # Assert
@@ -172,9 +196,12 @@ def test_changes_to_dos_check_website_for_change_add_website(
     nhs_entity = MagicMock()
     format_website.return_value = nhs_website = "www.example2.com"
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     mock_is_val_none_or_empty.side_effect = [False, False]
     mock_compare_and_validate_website.return_value = True
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     response = changes_to_dos.check_website_for_change()
     # Assert
@@ -191,8 +218,11 @@ def test_changes_to_dos_compare_and_validate_website_same_value(mock_validate_we
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     nhs_website = "www.example2.com"
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     mock_validate_website.return_value = True
     # Act
     response = changes_to_dos.compare_and_validate_website(dos_service, nhs_entity, nhs_website)
@@ -209,7 +239,10 @@ def test_changes_to_dos_compare_and_validate_website_different_value(mock_valida
     nhs_entity = MagicMock()
     service_histories = MagicMock()
     nhs_website = "www.example.com"
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     mock_validate_website.return_value = False
     # Act
     response = changes_to_dos.compare_and_validate_website(dos_service, nhs_entity, nhs_website)
@@ -225,7 +258,10 @@ def test_changes_to_dos_check_public_phone_for_change():
     service_histories = MagicMock()
     dos_service.publicphone = "0123456789"
     nhs_entity.publicphone = "012345678"
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_logger = MagicMock()
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
@@ -237,18 +273,24 @@ def test_changes_to_dos_check_public_phone_for_change_no_change():
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
+    dos_logger = MagicMock()
     dos_service.publicphone = "0123456789"
     nhs_entity.phone = "0123456789"
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
+    )
     # Act
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
     assert False is response
 
 
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
 @patch(f"{FILE_PATH}.validate_opening_times")
 @patch(f"{FILE_PATH}.ChangesToDoS")
-def test_compare_nhs_uk_and_dos_data(mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock):
+def test_compare_nhs_uk_and_dos_data(
+    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock, mock_service_histories_change: MagicMock
+):
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -266,11 +308,15 @@ def test_compare_nhs_uk_and_dos_data(mock_changes_to_dos: MagicMock, mock_valida
     mock_validate_opening_times.assert_called_once_with(
         dos_service=mock_changes_to_dos.return_value.dos_service, nhs_entity=mock_changes_to_dos.return_value.nhs_entity
     )
+    assert mock_service_histories_change.call_count == 4
 
 
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
 @patch(f"{FILE_PATH}.validate_opening_times")
 @patch(f"{FILE_PATH}.ChangesToDoS")
-def test_compare_nhs_uk_and_dos_data_no_changes(mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock):
+def test_compare_nhs_uk_and_dos_data_no_changes(
+    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock, mock_service_histories_change: MagicMock
+):
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -320,10 +366,11 @@ def test_compare_nhs_uk_and_dos_data_valid_opening_times_no_changes(
     )
 
 
+@patch(f"{FILE_PATH}.ServiceHistoriesChange")
 @patch(f"{FILE_PATH}.validate_opening_times")
 @patch(f"{FILE_PATH}.ChangesToDoS")
 def test_compare_nhs_uk_and_dos_data_invalid_opening_times(
-    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock
+    mock_changes_to_dos: MagicMock, mock_validate_opening_times: MagicMock, mock_service_histories_change: MagicMock
 ):
     # Arrange
     dos_service = MagicMock()
@@ -342,3 +389,4 @@ def test_compare_nhs_uk_and_dos_data_invalid_opening_times(
     mock_validate_opening_times.assert_called_once_with(
         dos_service=mock_changes_to_dos.return_value.dos_service, nhs_entity=mock_changes_to_dos.return_value.nhs_entity
     )
+    assert mock_service_histories_change.call_count == 4

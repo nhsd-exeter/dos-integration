@@ -161,7 +161,11 @@ variable "service_matcher_subscription_filter_name" {
   description = "Log filter name for event processor lambda"
 }
 
-variable "service_sync_subscription_filter_name" {
+variable "service_sync_dos_subscription_filter_name" {
+  description = "Log filter name for event sender lambda"
+}
+
+variable "service_sync_di_subscription_filter_name" {
   description = "Log filter name for event sender lambda"
 }
 
@@ -190,10 +194,17 @@ variable "dos_integration_firehose" {
   description = "The firehose delivery stream name"
 }
 
-variable "firehose_role" {
+variable "dos_firehose" {
+  description = "The firehose delivery stream name"
+}
+
+variable "di_firehose_role" {
   description = "The firehose delivery stream role name"
 }
 
+variable "dos_firehose_role" {
+  description = "The firehose delivery stream role name"
+}
 # ##############
 # # LAMBDA
 # ##############
