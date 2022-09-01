@@ -92,7 +92,7 @@ Feature: F006. Opening times
       | General      |
       | Additional   |
 
-  @complete @pharmacy_cloudwatch_queries @kit
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F006S012. Service History checks for pharmacies
     Given a "pharmacy" Changed Event is aligned with DoS
     And the Changed Event has an "<update_type>" standard opening

@@ -177,6 +177,11 @@ def dos_event_standard_opening_time_change(update_type: str, context: Context):
             context.change_event.standard_opening_times[0]["IsOpen"] = False
             context.change_event.standard_opening_times[0]["OpeningTime"] = ""
             context.change_event.standard_opening_times[0]["ClosingTime"] = ""
+            if (
+                context.change_event.standard_opening_times[0]["Weekday"]
+                == context.change_event.standard_opening_times[1]["Weekday"]
+            ):
+                del context.change_event.standard_opening_times[1]
         case _:
             raise ValueError("ERROR: Invalid standard opening time type defined")
     return context
@@ -676,13 +681,13 @@ def check_service_history_standard_times(context: Context, added_or_removed):
     dos_times = get_service_history_standard_opening_times(context.service_id)
     expected_dates = convert_standard_opening(openingtimes)
     counter = 0
-    strictness = False
-    if "f006s012" in environ.get('PYTEST_CURRENT_TEST'):
-        strictness = True
+    strict_checks = False
+    if "f006s012" in environ.get("PYTEST_CURRENT_TEST"):
+        strict_checks = True
     if added_or_removed == "added":
-        counter = assert_standard_openings("add", dos_times, expected_dates, strictness)
+        counter = assert_standard_openings("add", dos_times, expected_dates, strict_checks)
     elif added_or_removed == "modified":
-        counter = assert_standard_openings("modify", dos_times, expected_dates, strictness)
+        counter = assert_standard_openings("modify", dos_times, expected_dates, strict_checks)
     else:
         counter = assert_standard_closing(dos_times, expected_dates)
     if counter == 0:

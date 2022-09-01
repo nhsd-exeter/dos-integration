@@ -516,7 +516,6 @@ def assert_standard_openings(change_type, dos_times, ce_times, strict=False) -> 
 
 
 def assert_standard_closing(dos_times, ce_times) -> int:
-    #raise ValueError(str(dos_times) + str(ce_times))
     counter = 0
     for entry in ce_times:
         currentday = entry["name"]
