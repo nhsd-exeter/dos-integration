@@ -4,7 +4,7 @@ from copy import copy
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
-from os import getenv, environ
+from os import environ, getenv
 from random import randint
 from time import sleep
 
