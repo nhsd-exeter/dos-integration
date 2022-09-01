@@ -100,7 +100,7 @@ Feature: F006. Opening times
     Then the service history is updated with the "<update_type>" standard opening times
 
     Examples:
-      |update_type|
-      |added      |
-      |modified   |
-      |removed    |
+      | update_type |
+      | added       |
+      | modified    |
+      | removed     |
