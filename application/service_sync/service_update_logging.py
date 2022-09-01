@@ -10,6 +10,8 @@ from .service_histories import ServiceHistories
 from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST
 from common.opening_times import opening_period_times_from_list, SpecifiedOpeningTime, StandardOpeningTimes
 
+logger = PowerToolsLogger(child=True)
+
 
 class ServiceUpdateLogger:
     """A class to handle specfic logs to be sent to DoS Splunk"""
@@ -238,6 +240,7 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 weekday=change_key.removeprefix("cmsopentime"),
             )
         else:
+            logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
             service_update_logger.log_service_update(
                 data_field_modified=change_key,
                 action=change_values["changetype"],

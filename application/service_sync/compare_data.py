@@ -64,7 +64,6 @@ def compare_website(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         ChangesToDoS: ChangesToDoS holder object
     """
     if changes_to_dos.check_website_for_change():
-        print("Website is different")
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
             change_key=DOS_WEBSITE_CHANGE_KEY,
@@ -233,7 +232,7 @@ def set_up_for_services_table_change(
     Returns:
         ChangesToDoS: The changes to dos object
     """
-    changes_to_dos.demographic_changes[service_table_field_name] = new_value
+    changes_to_dos.demographic_changes[service_table_field_name] = new_value if new_value is not None else ""
     if update_service_history:
         changes_to_dos.service_histories.add_change(
             dos_change_key=change_key,
