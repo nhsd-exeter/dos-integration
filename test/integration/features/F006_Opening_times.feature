@@ -12,6 +12,7 @@ Feature: F006. Opening times
     Given an opened standard opening time Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the standard days and times is captured by DoS
+    And the service history is updated with the "modified" standard opening times
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S003. Pharmacy with one break in opening times
@@ -65,8 +66,10 @@ Feature: F006. Opening times
     Given a specific Changed Event is valid
     When the Changed Event is sent for processing with "valid" api key
     Then the pharmacy is confirmed "closed" for the standard day in Dos
+    And the service history is updated with the "removed" standard opening times
     And the Changed Event is replayed with the pharmacy now "open"
     And the pharmacy is confirmed "open" for the standard day in Dos
+    And the service history is updated with the "modified" standard opening times
 
   @complete @pharmacy_no_log_searches
   Scenario: F006S010. A recently opened pharmacy on a standard day can be closed
@@ -75,6 +78,7 @@ Feature: F006. Opening times
     Then the pharmacy is confirmed "open" for the standard day in Dos
     And the Changed Event is replayed with the pharmacy now "closed"
     And the pharmacy is confirmed "closed" for the standard day in Dos
+    And the service history is updated with the "removed" standard opening times
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F006S011. Same dual general opening times
@@ -87,3 +91,16 @@ Feature: F006. Opening times
       | opening_type |
       | General      |
       | Additional   |
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F006S012. Service History checks for pharmacies
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the Changed Event has an "<update_type>" standard opening
+    When the Changed Event is sent for processing with "valid" api key
+    Then the service history is updated with the "<update_type>" standard opening times
+
+    Examples:
+      |update_type|
+      |added      |
+      |modified   |
+      |removed    |

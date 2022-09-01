@@ -416,10 +416,22 @@ def check_service_history_change_type(service_id: str, change_type: str):
 
 
 def get_service_history_specified_opening_times(service_id: str) -> dict:
-    """ This function grabs the latest cmsopentimespecified object for a service id and returns it """
+    """This function grabs the latest cmsopentimespecified object for a service id and returns it"""
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
     return specified_open_times
+
+
+def get_service_history_standard_opening_times(service_id: str):
+    """This function grabs the latest standard opening times changes from service history"""
+    service_history = get_service_history(service_id)
+    standard_opening_times_from_service_history = []
+    for entry in service_history[list(service_history.keys())[0]]["new"]:
+        if entry.endswith("day"):
+            standard_opening_times_from_service_history.append(
+                {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
+            )
+    return standard_opening_times_from_service_history
 
 
 def convert_specified_opening(specified_date, closed_status=False) -> str:
@@ -454,6 +466,92 @@ def convert_specified_opening(specified_date, closed_status=False) -> str:
     else:
         return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-closed"
     return return_string
+
+
+def convert_standard_opening(standard_times) -> list[dict]:
+    """Converts standard opening times from change event to be comparable with service history
+    Args:
+        standard_times (Dict): Standard Opening times pulled from Change Event
+    Returns:
+        return_list (List): List of Dicts containing name of the day in cms format and times in seconds
+    """
+    return_list = []
+    for entry in standard_times:
+        current_day = entry["Weekday"].lower()
+        if entry["IsOpen"] is True:
+            opening_time = time_to_seconds(entry["OpeningTime"])
+            closing_time = time_to_seconds(entry["ClosingTime"])
+            return_list.append({"name": f"cmsopentime{current_day}", "times": f"{opening_time}-{closing_time}"})
+        else:
+            return_list.append({"name": f"cmsopentime{current_day}", "times": "closed"})
+    return return_list
+
+
+def assert_standard_openings(change_type, dos_times, ce_times, strict=False) -> int:
+    """Function to assert standard opening times changes. Added to remove complexity for sonar
+
+    Args:
+        changetype (Str): The type of change being asserted
+        dos_times (Dict): The times pulled from DOS
+        ce_times (Dict): The times pulled from the change event to compare too
+    Returns:
+        counter (Int): The amount of assertions made"""
+    counter = 0
+    valid_change_types = ["add", "modify"]
+    for entry in dos_times:
+        currentday = list(entry.keys())[0]
+        for dates in ce_times:
+            if dates["name"] == currentday:
+                assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
+                if strict:
+                    assert entry[currentday]["changetype"] == change_type, "ERROR: Incorrect changetype"
+                else:
+                    assert entry[currentday]["changetype"] in valid_change_types, "ERROR: Incorrect changetype"
+                if entry[currentday]["changetype"] == "add":
+                    assert "remove" not in entry[currentday]["data"], "ERROR: Remove is present in service history"
+                elif entry[currentday]["changetype"] == "modify":
+                    assert "remove" in entry[currentday]["data"], f"ERROR: Remove is not present for {currentday}"
+                counter += 1
+    return counter
+
+
+def assert_standard_closing(dos_times, ce_times) -> int:
+    counter = 0
+    for entry in ce_times:
+        currentday = entry["name"]
+        if entry["times"] == "closed":
+            for dates in dos_times:
+                if currentday == list(dates.keys())[0]:
+                    assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
+                    assert (
+                        "add" not in dates[currentday]["data"]
+                    ), "ERROR: Unexpected add field found in service history"
+                    counter += 1
+    return counter
+
+
+def add_new_standard_open_day(standard_opening_times: dict) -> dict:
+    open_days = []
+    week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    selected_day = ""
+    for open_day in standard_opening_times:
+        open_days.append(open_day["Weekday"])
+    if len(open_days) == 0:
+        raise ValueError("ERROR: No available days to add")
+    for days in week:
+        if days not in open_days:
+            selected_day = days
+            break
+    standard_opening_times.append(
+        {
+            "Weekday": selected_day,
+            "OpeningTime": "09:00",
+            "ClosingTime": "17:00",
+            "OpeningTimeType": "General",
+            "IsOpen": True,
+        }
+    )
+    return standard_opening_times
 
 
 def time_to_seconds(time: str):

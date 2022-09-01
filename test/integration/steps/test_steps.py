@@ -4,7 +4,7 @@ from copy import copy
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
-from os import getenv
+from os import environ, getenv
 from random import randint
 from time import sleep
 
@@ -22,12 +22,16 @@ from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
+    add_new_standard_open_day,
+    assert_standard_closing,
+    assert_standard_openings,
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
     confirm_approver_status,
     confirm_changes,
     convert_specified_opening,
+    convert_standard_opening,
     generate_correlation_id,
     generate_random_int,
     get_address_string,
@@ -37,6 +41,7 @@ from .utilities.utils import (
     get_latest_sequence_id_for_a_given_odscode,
     get_odscode_with_contact_data,
     get_service_history_specified_opening_times,
+    get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
     get_stored_events_from_dynamo_db,
@@ -155,6 +160,30 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
     context.change_event.standard_opening_times[-1]["OpeningTime"] = "00:01"
     context.change_event.standard_opening_times[-1]["ClosingTime"] = closing_time
     context.change_event.standard_opening_times[-1]["IsOpen"] = True
+    return context
+
+
+@given(parse('the Changed Event has an "{update_type}" standard opening'), target_fixture="context")
+def dos_event_standard_opening_time_change(update_type: str, context: Context):
+    match update_type:
+        case "added":
+            context.change_event.standard_opening_times = add_new_standard_open_day(
+                context.change_event.standard_opening_times
+            )
+        case "modified":
+            context.change_event.standard_opening_times[0]["OpeningTime"] = "00:15"
+            context.change_event.standard_opening_times[0]["ClosingTime"] = "00:45"
+        case "removed":
+            context.change_event.standard_opening_times[0]["IsOpen"] = False
+            context.change_event.standard_opening_times[0]["OpeningTime"] = ""
+            context.change_event.standard_opening_times[0]["ClosingTime"] = ""
+            if (
+                context.change_event.standard_opening_times[0]["Weekday"]
+                == context.change_event.standard_opening_times[1]["Weekday"]
+            ):
+                del context.change_event.standard_opening_times[1]
+        case _:
+            raise ValueError("ERROR: Invalid standard opening time type defined")
     return context
 
 
@@ -642,6 +671,27 @@ def check_service_history_specified_times(context: Context, added_or_removed):
     else:
         expected_dates = convert_specified_opening(openingtimes)
     assert expected_dates in changed_dates, f"{expected_dates}"
+    return context
+
+
+@then(parse('the service history is updated with the "{added_or_removed}" standard opening times'))
+def check_service_history_standard_times(context: Context, added_or_removed):
+    sleep(10)
+    openingtimes = context.change_event.standard_opening_times
+    dos_times = get_service_history_standard_opening_times(context.service_id)
+    expected_dates = convert_standard_opening(openingtimes)
+    counter = 0
+    strict_checks = False
+    if "f006s012" in environ.get("PYTEST_CURRENT_TEST"):
+        strict_checks = True
+    if added_or_removed == "added":
+        counter = assert_standard_openings("add", dos_times, expected_dates, strict_checks)
+    elif added_or_removed == "modified":
+        counter = assert_standard_openings("modify", dos_times, expected_dates, strict_checks)
+    else:
+        counter = assert_standard_closing(dos_times, expected_dates)
+    if counter == 0:
+        raise ValueError("ERROR: No Assertions have been made")
     return context
 
 
