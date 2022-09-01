@@ -102,6 +102,7 @@ def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, An
         DictCursor: _description_
     """
     cursor = connection.cursor(cursor_factory=DictCursor)
+    logger.debug("Query to execute", extra={"query": query, "vars": vars})
     query_string_log = f"Running SQL command: {cursor.mogrify(query, vars)}"
     if len(query_string_log) > 1000:
         query_string_log = f"{query_string_log[:490]}...       ...{query_string_log[-490:]}"

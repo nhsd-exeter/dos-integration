@@ -260,7 +260,9 @@ def compare_nhs_uk_and_dos_data(
     # Compare and validate website
     if changes_to_dos.check_website_for_change():
         # Website has changed, is valid, so add to changes
-        changes_to_dos.demographic_changes["web"] = changes_to_dos.new_website
+        changes_to_dos.demographic_changes["web"] = (
+            changes_to_dos.new_website if changes_to_dos.new_website is not None else ""
+        )
         change = ServiceHistoriesChange(
             data=changes_to_dos.new_website,
             previous_value=changes_to_dos.current_website,
@@ -280,7 +282,9 @@ def compare_nhs_uk_and_dos_data(
     # Compare public phone
     if changes_to_dos.check_public_phone_for_change():
         # Website has changed, is valid, so add to changes
-        changes_to_dos.demographic_changes["publicphone"] = changes_to_dos.new_public_phone
+        changes_to_dos.demographic_changes["publicphone"] = (
+            changes_to_dos.new_public_phone if changes_to_dos.new_public_phone is not None else ""
+        )
         change = ServiceHistoriesChange(
             data=changes_to_dos.new_public_phone,
             previous_value=changes_to_dos.current_public_phone,
@@ -297,7 +301,9 @@ def compare_nhs_uk_and_dos_data(
     # Compare and validate address & postcode
     address_change, postcode_change = changes_to_dos.check_for_address_and_postcode_for_changes()
     if address_change:
-        changes_to_dos.demographic_changes["address"] = changes_to_dos.new_address
+        changes_to_dos.demographic_changes["address"] = (
+            changes_to_dos.new_address if changes_to_dos.new_address is not None else ""
+        )
         change = ServiceHistoriesChange(
             data=changes_to_dos.new_address,
             previous_value=changes_to_dos.current_address,
@@ -311,7 +317,9 @@ def compare_nhs_uk_and_dos_data(
             new_value=changes_to_dos.new_address,
         )
     if postcode_change:
-        changes_to_dos.demographic_changes["postcode"] = changes_to_dos.new_postcode
+        changes_to_dos.demographic_changes["postcode"] = (
+            changes_to_dos.new_postcode if changes_to_dos.new_postcode is not None else ""
+        )
         change = ServiceHistoriesChange(
             data=changes_to_dos.new_postcode,
             previous_value=changes_to_dos.current_postcode,
