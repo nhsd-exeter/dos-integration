@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
-from psycopg2.sql import SQL, Identifier, Literal
+from psycopg2.sql import Identifier, Literal, SQL
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
