@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
-from psycopg2.sql import SQL
+from psycopg2.sql import SQL, Identifier, Literal
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
@@ -149,10 +149,17 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
     """
     if demographics_changes:
         # Update the service demographics
-        logger.info(f"Demographics changes found for service id {service_id}")
-        query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(
-            SQL(", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items()))
+        logger.info(
+            f"Demographics changes found for service id {service_id}",
+            extra={"demographics_changes": demographics_changes},
         )
+        columns_and_values = [
+            SQL("{} = {}").format(Identifier(key), Literal(value)).as_string(connection)
+            for key, value in demographics_changes.items()
+        ]
+        print(columns_and_values)
+        logger.debug("Columns and values", extra={"columns_and_values": columns_and_values})
+        query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(SQL(", ".join(columns_and_values)))
         query_str = query.as_string(connection)
 
         cursor = query_dos_db(

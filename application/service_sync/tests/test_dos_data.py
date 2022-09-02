@@ -270,19 +270,21 @@ def test_update_dos_data_no_changes(
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.SQL")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_demographics_into_db(mock_query_dos_db: MagicMock):
+def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: MagicMock):
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
     demographics_changes = {"test": "test"}
+    mock_sql.return_value.format.return_value.as_string.return_value = query = "SELECT * FROM test"
     # Act
     response = save_demographics_into_db(mock_connection, service_id, demographics_changes)
     # Assert
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
-        query="UPDATE services SET test = 'test' WHERE id = %(SERVICE_ID)s;",
+        query=query,
         vars={"SERVICE_ID": service_id},
     )
 

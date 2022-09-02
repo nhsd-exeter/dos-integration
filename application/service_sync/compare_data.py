@@ -232,7 +232,7 @@ def set_up_for_services_table_change(
     Returns:
         ChangesToDoS: The changes to dos object
     """
-    changes_to_dos.demographic_changes[service_table_field_name] = new_value if new_value is not None else ""
+    changes_to_dos.demographic_changes[service_table_field_name] = str(new_value) if new_value is not None else ""
     if update_service_history:
         changes_to_dos.service_histories.add_change(
             dos_change_key=change_key,
