@@ -159,6 +159,28 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             query="SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s",
             query_vars={"SERVICE_ID": service_id},
         )
+    elif request["type"] == "get_services_table_values":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing data in get_services_table_values request")
+        result = run_query(
+            query = (
+                "SELECT id, odscode, town, postcode, easting, northing, latitude, longitude "
+                "FROM services WHERE id = %(SERVICE_ID)s"
+                ),
+            query_vars={"SERVICE_ID": service_id},
+        )
+    elif request["type"] == "get_locations_table_values":
+        postcode = request.get("postcode")
+        if postcode is None:
+            raise ValueError("Missing data in get_locations_table_values")
+        result = run_query(
+            query = (
+                "SELECT postcode, easting, northing, postaltown, latitude, longitude "
+                "FROM locations WHERE postcode = %(POSTCODE)s"
+                ),
+            query_vars={"POSTCODE": postcode},
+        )
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)

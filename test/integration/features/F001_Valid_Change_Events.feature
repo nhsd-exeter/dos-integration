@@ -101,3 +101,10 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | Tester's new street | Testers New Street  | address |
       | new & test avenue   | New and Test Avenue | address |
       | 49a test avenue     | 49A Test Avenue     | address |
+
+  @complete @pharmacy_no_log_searches
+  Scenario: F001S010 Changed Event with updated postcode to verify location changes
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the field "Postcode" is set to "CT1 1AA"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the services table field "" is updated to ""
