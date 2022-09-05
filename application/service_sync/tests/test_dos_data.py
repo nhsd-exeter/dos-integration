@@ -189,6 +189,7 @@ def test_get_dos_service_and_history_mutiple_matches(
     mock_connect_to_dos_db.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.log_service_updates")
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_demographics_into_db")
@@ -198,33 +199,35 @@ def test_update_dos_data(
     mock_save_demographics_into_db: MagicMock,
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
+    mock_log_service_updates: MagicMock,
 ):
     # Arrange
-    change_to_dos = MagicMock()
+    changes_to_dos = MagicMock()
     service_histories = MagicMock()
     service_id = 1
     # Act
-    update_dos_data(change_to_dos, service_id, service_histories)
+    update_dos_data(changes_to_dos, service_id, service_histories)
     # Assert
     mock_save_demographics_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        demographics_changes=change_to_dos.demographic_changes,
+        demographics_changes=changes_to_dos.demographic_changes,
     )
     mock_save_standard_opening_times_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        standard_opening_times_changes=change_to_dos.standard_opening_times_changes,
+        standard_opening_times_changes=changes_to_dos.standard_opening_times_changes,
     )
     mock_save_specified_opening_times_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        is_changes=change_to_dos.specified_opening_times_changes,
-        specified_opening_times_changes=change_to_dos.new_specified_opening_times,
+        is_changes=changes_to_dos.specified_opening_times_changes,
+        specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
     )
     service_histories.save_service_histories.assert_called_once_with(connection=mock_connect_to_dos_db().__enter__())
     mock_connect_to_dos_db.return_value.__enter__.return_value.commit.assert_called_once()
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
+    mock_log_service_updates.assert_called_once_with(changes_to_dos=changes_to_dos, service_histories=service_histories)
 
 
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
@@ -267,19 +270,21 @@ def test_update_dos_data_no_changes(
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.SQL")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_demographics_into_db(mock_query_dos_db: MagicMock):
+def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: MagicMock):
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
     demographics_changes = {"test": "test"}
+    mock_sql.return_value.format.return_value.as_string.return_value = query = "SELECT * FROM test"
     # Act
     response = save_demographics_into_db(mock_connection, service_id, demographics_changes)
     # Assert
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
-        query="UPDATE services SET test = 'test' WHERE id = %(SERVICE_ID)s;",
+        query=query,
         vars={"SERVICE_ID": service_id},
     )
 

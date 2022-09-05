@@ -5,7 +5,7 @@ from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.constants import FIFO_DLQ_HANDLER_REPORT_ID
-from common.dynamodb import add_change_request_to_dynamodb
+from common.dynamodb import add_change_event_to_dynamodb
 from common.middlewares import unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, get_sqs_msg_attribute, handle_sqs_msg_attributes
 
@@ -53,4 +53,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     sequence_number = get_sequence_number(record)
-    add_change_request_to_dynamodb(body, sequence_number, sqs_timestamp)
+    add_change_event_to_dynamodb(body, sequence_number, sqs_timestamp)

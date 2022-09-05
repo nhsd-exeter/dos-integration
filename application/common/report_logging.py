@@ -30,7 +30,7 @@ def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List
     """
     for dos_service in matching_services:
         logger.warning(
-            "NHS Service marked as closed or hidden, no change requests will be produced from this event",
+            "NHS Service marked as closed or hidden, no change events will be produced from this event",
             extra={
                 "report_key": HIDDEN_OR_CLOSED_REPORT_ID,
                 "dos_service_id": dos_service.id,

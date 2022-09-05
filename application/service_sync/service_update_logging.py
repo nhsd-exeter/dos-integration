@@ -1,42 +1,48 @@
 from itertools import chain
 from logging import Formatter, INFO, Logger, StreamHandler
 from os import getenv
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
+from aws_lambda_powertools.logging import Logger as PowerToolsLogger
+
+from .changes_to_dos import ChangesToDoS
+from .service_histories import ServiceHistories
+from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST
 from common.opening_times import opening_period_times_from_list, SpecifiedOpeningTime, StandardOpeningTimes
 
+logger = PowerToolsLogger(child=True)
 
-class DoSLogger:
+
+class ServiceUpdateLogger:
     """A class to handle specfic logs to be sent to DoS Splunk"""
 
     NULL_VALUE: str = "NULL"
     # Format of the log message, will fail if logged to without the extra fields set
-    format = (
+    dos_format = (
         "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(correlation_id)s|DOS_INTEGRATION|"
         "%(null_value)s|%(service_uid)s|%(service_name)s|%(type_id)s|%(data_field_modified)s|%(action)s|"
         "%(data_changes)s|%(null_value)s|message=%(message)s|correlationId=%(correlation_id)s|"
         "elapsedTime=%(null_value)s|execution_time=%(null_value)s"
     )
-    logger: Logger
+    dos_logger: Logger
+    logger: PowerToolsLogger
 
-    def __init__(self, correlation_id: str, service_uid: str, service_name: str, type_id: str) -> None:
-        # Create a logger
-        logger = Logger("dos_logger")
+    def __init__(self, service_uid: str, service_name: str, type_id: str) -> None:
+        # Create new logger / get existing logger
+        self.dos_logger = Logger("dos_logger")
+        self.logger = PowerToolsLogger(child=True)
         # Set to log to stdout
         stream_handler = StreamHandler()
         # Set the format of the log message
-        stream_handler.setFormatter(Formatter(self.format))
+        stream_handler.setFormatter(Formatter(self.dos_format))
         # Add the stream handler to the logger
-        logger.addHandler(stream_handler)
-        logger.setLevel(INFO)
+        self.dos_logger.addHandler(stream_handler)
+        self.dos_logger.setLevel(INFO)
         # Extra fields to be set in the logger
-        self.correlation_id = correlation_id
         self.service_uid = service_uid
         self.service_name = service_name
         self.type_id = type_id
-        # Save the logger for use in the class
-        self.logger = logger
+        self.correlation_id = self.logger.get_correlation_id()
 
     def get_action_name(self, action: str) -> str:
         """Get the action name from the service history action name
@@ -92,6 +98,19 @@ class DoSLogger:
         new_value = "" if new_value in ["None", "", None] else f'"{new_value}"'
         # Log the message with all the extra fields set
         self.logger.info(
+            msg="UpdateService",
+            extra={
+                "action": self.get_action_name(action),
+                "correlation_id": self.correlation_id,
+                "data_changes": f"{previous_value}|{new_value}",
+                "data_field_modified": data_field_modified,
+                "null_value": self.NULL_VALUE,
+                "service_name": self.service_name,
+                "service_uid": self.service_uid,
+                "type_id": self.type_id,
+            },
+        )
+        self.dos_logger.info(
             msg="UpdateService",
             extra={
                 "action": self.get_action_name(action),
@@ -182,3 +201,49 @@ class DoSLogger:
             previous_value=existing_value,
             new_value=updated_value,
         )
+
+
+def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: ServiceHistories) -> None:
+    """Logs all service updates to DI Splunk and DoS Splunk.
+
+    This is called after the service has been updated to guarantee
+    that all updates have been saved to reduce chance of duplicate updates being logged.
+
+    Args:
+        changes_to_dos (ChangesToDoS): The changes to dos
+        service_histories (ServiceHistories): The service history for service
+    """
+    service_update_logger = ServiceUpdateLogger(
+        service_uid=str(changes_to_dos.dos_service.uid),
+        service_name=changes_to_dos.dos_service.name,
+        type_id=str(changes_to_dos.dos_service.typeid),
+    )
+    most_recent_service_history_entry = list(service_histories.service_history.keys())[0]
+    service_history_changes: Dict[str, str] = service_histories.service_history[most_recent_service_history_entry][
+        "new"
+    ]
+    for change_key, change_values in service_history_changes.items():
+        change_key: str
+        change_values: dict[str, Any]
+        if change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY:
+            service_update_logger.log_specified_opening_times_service_update(
+                action=change_values["changetype"],
+                previous_value=changes_to_dos.current_specified_opening_times,
+                new_value=changes_to_dos.new_specified_opening_times,
+            )
+        elif change_key in DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST:
+            service_update_logger.log_standard_opening_times_service_update_for_weekday(
+                data_field_modified=change_key,
+                action=change_values["changetype"],
+                previous_value=changes_to_dos.dos_service.standard_opening_times,
+                new_value=changes_to_dos.nhs_entity.standard_opening_times,
+                weekday=change_key.removeprefix("cmsopentime"),
+            )
+        else:
+            logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
+            service_update_logger.log_service_update(
+                data_field_modified=change_key,
+                action=change_values["changetype"],
+                previous_value=change_values["previous"],
+                new_value=change_values["data"],
+            )

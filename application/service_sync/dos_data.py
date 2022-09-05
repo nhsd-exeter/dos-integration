@@ -4,10 +4,11 @@ from typing import Dict, List, Tuple
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
-from psycopg2.sql import SQL
+from psycopg2.sql import Identifier, Literal, SQL
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
+from .service_update_logging import log_service_updates
 from common.dos import DoSService, get_specified_opening_times_from_db, get_standard_opening_times_from_db
 from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
 from common.dynamodb import put_circuit_is_open
@@ -59,9 +60,9 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
 
     """
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname,"
-        "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        "WHERE s.id = %(SERVICE_ID)s"
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, publicphone, publicname, "
+        "st.name servicename, easting, northing, latitude, longitude FROM services s "
+        "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.id = %(SERVICE_ID)s"
     )
     query_vars = {"SERVICE_ID": service_id}
     # Connect to the DoS database
@@ -107,9 +108,7 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
         # Save all the changes to the DoS database with a single transaction
         with connect_to_dos_db() as connection:
             is_demographic_changes: bool = save_demographics_into_db(
-                connection=connection,
-                service_id=service_id,
-                demographics_changes=changes_to_dos.demographic_changes,
+                connection=connection, service_id=service_id, demographics_changes=changes_to_dos.demographic_changes
             )
             is_standard_opening_times_changes: bool = save_standard_opening_times_into_db(
                 connection=connection,
@@ -127,6 +126,7 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 service_histories.save_service_histories(connection=connection)
                 connection.commit()
                 logger.info(f"Updates successfully committed to the DoS database for service id {service_id}")
+                log_service_updates(changes_to_dos=changes_to_dos, service_histories=service_histories)
             else:
                 logger.info(f"No changes to save for service id {service_id}")
     finally:
@@ -149,10 +149,16 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
     """
     if demographics_changes:
         # Update the service demographics
-        logger.info(f"Demographics changes found for service id {service_id}")
-        query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(
-            SQL(", ".join(f"{key} = '{value}'" for key, value in demographics_changes.items()))
+        logger.info(
+            f"Demographics changes found for service id {service_id}",
+            extra={"demographics_changes": demographics_changes},
         )
+        columns_and_values = [
+            SQL("{} = {}").format(Identifier(key), Literal(value)).as_string(connection)
+            for key, value in demographics_changes.items()
+        ]
+        logger.debug("Columns and values", extra={"columns_and_values": columns_and_values})
+        query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(SQL(", ".join(columns_and_values)))
         query_str = query.as_string(connection)
 
         cursor = query_dos_db(

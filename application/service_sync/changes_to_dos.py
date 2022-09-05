@@ -3,27 +3,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
-from .dos_logger import DoSLogger
 from .format import format_address, format_website
 from .service_histories import ServiceHistories
-from .service_histories_change import ServiceHistoriesChange
-from .validation import validate_opening_times, validate_website
-from common.constants import (
-    DOS_ADDRESS_CHANGE_KEY,
-    DOS_POSTCODE_CHANGE_KEY,
-    DOS_PUBLIC_PHONE_CHANGE_KEY,
-    DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
-    DOS_WEBSITE_CHANGE_KEY,
-)
-from common.dos import DoSService, get_valid_dos_postcode
+from .validation import validate_website
+from common.dos import DoSService, get_valid_dos_location
+from common.dos_location import DoSLocation
 from common.nhs import NHSEntity
-from common.opening_times import (
-    DAY_IDS,
-    opening_period_times_from_list,
-    SpecifiedOpeningTime,
-    StandardOpeningTimes,
-    WEEKDAYS,
-)
+from common.opening_times import opening_period_times_from_list, SpecifiedOpeningTime, StandardOpeningTimes
 from common.report_logging import log_invalid_nhsuk_postcode
 from common.utilities import is_val_none_or_empty
 
@@ -38,7 +24,6 @@ class ChangesToDoS:
     dos_service: DoSService
     nhs_entity: NHSEntity
     service_histories: ServiceHistories
-    dos_logger: DoSLogger
     # Varible to know if fields need to be changed
     demographic_changes: Dict[Optional[str], Any] = field(default_factory=dict)
     standard_opening_times_changes: Dict[Optional[int], Any] = field(default_factory=dict)
@@ -131,13 +116,13 @@ class ChangesToDoS:
             )
             return False
 
-    def check_for_address_and_postcode_for_changes(self) -> Tuple[bool, bool]:
+    def check_for_address_and_postcode_for_changes(self) -> Tuple[bool, bool, Optional[DoSLocation]]:
         """Check if address and postcode have changed between dos_service and nhs_entity,
         Postcode changes are validated against the DoS locations table
 
         Returns:
-            Tuple[bool, bool]: Tuple of booleans, first is if address has changed, second is if postcode has changed
-        """
+            Tuple[bool, bool]: Tuple of booleans, first is if address has changed, second is if postcode has changed, third is the DoSLocation object for the postcode
+        """  # noqa: E501
         logger.debug(f"Address before title casing: {self.nhs_entity.address_lines}")
         self.nhs_entity.address_lines = list(map(format_address, self.nhs_entity.address_lines))
         logger.debug(f"Address after title casing: {self.nhs_entity.address_lines}")
@@ -155,12 +140,13 @@ class ChangesToDoS:
         dos_postcode = self.dos_service.normal_postcode()
         nhs_postcode = self.nhs_entity.normal_postcode()
         is_postcode_same = True
+        valid_dos_location = None
         if dos_postcode != nhs_postcode:
             logger.info(f"Postcode is not equal, {dos_postcode=} != {nhs_postcode=}")
-
-            valid_dos_postcode = get_valid_dos_postcode(nhs_postcode)
+            valid_dos_location = get_valid_dos_location(nhs_postcode)
+            valid_dos_postcode = valid_dos_location.postcode if valid_dos_location else None
             if valid_dos_postcode is None:
-                log_invalid_nhsuk_postcode(self.nhs_entity, self.dos_service)
+                log_invalid_nhsuk_postcode(self.nhs_entity, self.dos_service)  # type: ignore
                 if not is_address_same:
                     is_address_same = True
                     self.new_address = None
@@ -174,7 +160,7 @@ class ChangesToDoS:
                 is_postcode_same = False
         else:
             logger.info(f"Postcode are equal, {dos_postcode=} == {nhs_postcode=}")
-        return not is_address_same, not is_postcode_same
+        return not is_address_same, not is_postcode_same, valid_dos_location
 
     def check_website_for_change(self) -> bool:
         """Compares the website of from the dos_service and nhs_entity"""
@@ -231,150 +217,3 @@ class ChangesToDoS:
                 f"Public Phone is equal, DoS='{self.current_public_phone}' == NHS UK='{self.new_public_phone}'"
             )
             return False
-
-
-def compare_nhs_uk_and_dos_data(
-    dos_service: DoSService, nhs_entity: NHSEntity, service_histories: ServiceHistories
-) -> ChangesToDoS:
-    """Compares the data of the dos_service and nhs_entity and returns a ChangesToDoS object.
-
-    Args:
-        dos_service (DoSService): DoSService object to compare
-        nhs_entity (NHSEntity): NHS UK entity to compare
-        service_histories (ServiceHistories): ServiceHistories object with the service histories of the new changes
-
-    Returns:
-        ChangesToDoS: ChangesToDoS class with all the flags if changes need to be made and the changes to make
-    """
-    dos_logger = DoSLogger(
-        correlation_id=logger.get_correlation_id(),
-        service_uid=str(dos_service.uid),
-        service_name=dos_service.name,
-        type_id=str(dos_service.typeid),
-    )
-    # Set up the holder class
-    changes_to_dos = ChangesToDoS(
-        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories, dos_logger=dos_logger
-    )
-
-    # Compare and validate website
-    if changes_to_dos.check_website_for_change():
-        # Website has changed, is valid, so add to changes
-        changes_to_dos.demographic_changes["web"] = (
-            changes_to_dos.new_website if changes_to_dos.new_website is not None else ""
-        )
-        change = ServiceHistoriesChange(
-            data=changes_to_dos.new_website,
-            previous_value=changes_to_dos.current_website,
-            change_key=DOS_WEBSITE_CHANGE_KEY,
-        )
-        changes_to_dos.service_histories.add_change(
-            dos_change_key=DOS_WEBSITE_CHANGE_KEY,
-            change=change,
-        )
-        dos_logger.log_service_update(
-            data_field_modified=DOS_WEBSITE_CHANGE_KEY,
-            action=change.change_action,
-            previous_value=changes_to_dos.current_website,
-            new_value=changes_to_dos.new_website,
-        )
-
-    # Compare public phone
-    if changes_to_dos.check_public_phone_for_change():
-        # Website has changed, is valid, so add to changes
-        changes_to_dos.demographic_changes["publicphone"] = (
-            changes_to_dos.new_public_phone if changes_to_dos.new_public_phone is not None else ""
-        )
-        change = ServiceHistoriesChange(
-            data=changes_to_dos.new_public_phone,
-            previous_value=changes_to_dos.current_public_phone,
-            change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
-        )
-        changes_to_dos.service_histories.add_change(dos_change_key=DOS_PUBLIC_PHONE_CHANGE_KEY, change=change)
-        dos_logger.log_service_update(
-            data_field_modified=DOS_PUBLIC_PHONE_CHANGE_KEY,
-            action=change.change_action,
-            previous_value=changes_to_dos.current_public_phone,
-            new_value=changes_to_dos.new_public_phone,
-        )
-
-    # Compare and validate address & postcode
-    address_change, postcode_change = changes_to_dos.check_for_address_and_postcode_for_changes()
-    if address_change:
-        changes_to_dos.demographic_changes["address"] = (
-            changes_to_dos.new_address if changes_to_dos.new_address is not None else ""
-        )
-        change = ServiceHistoriesChange(
-            data=changes_to_dos.new_address,
-            previous_value=changes_to_dos.current_address,
-            change_key=DOS_ADDRESS_CHANGE_KEY,
-        )
-        changes_to_dos.service_histories.add_change(dos_change_key=DOS_ADDRESS_CHANGE_KEY, change=change)
-        dos_logger.log_service_update(
-            data_field_modified=DOS_ADDRESS_CHANGE_KEY,
-            action=change.change_action,
-            previous_value=changes_to_dos.current_address,
-            new_value=changes_to_dos.new_address,
-        )
-    if postcode_change:
-        changes_to_dos.demographic_changes["postcode"] = (
-            changes_to_dos.new_postcode if changes_to_dos.new_postcode is not None else ""
-        )
-        change = ServiceHistoriesChange(
-            data=changes_to_dos.new_postcode,
-            previous_value=changes_to_dos.current_postcode,
-            change_key=DOS_POSTCODE_CHANGE_KEY,
-        )
-        changes_to_dos.service_histories.add_change(
-            dos_change_key=DOS_POSTCODE_CHANGE_KEY,
-            change=change,
-        )
-        dos_logger.log_service_update(
-            data_field_modified=DOS_POSTCODE_CHANGE_KEY,
-            action=change.change_action,
-            previous_value=changes_to_dos.current_postcode,
-            new_value=changes_to_dos.new_postcode,
-        )
-
-    if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
-        # Compare standard opening times
-        logger.debug("Opening times are valid")
-        for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
-            if changes_to_dos.check_for_standard_opening_times_day_changes(weekday=weekday):
-                changes_to_dos.standard_opening_times_changes[day_id] = getattr(
-                    changes_to_dos, f"new_{weekday}_opening_times"
-                )
-                change = changes_to_dos.service_histories.add_standard_opening_times_change(
-                    current_opening_times=changes_to_dos.dos_service.standard_opening_times,
-                    new_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
-                    dos_weekday_change_key=dos_weekday_key,
-                    weekday=weekday,
-                )
-                dos_logger.log_standard_opening_times_service_update_for_weekday(
-                    data_field_modified=dos_weekday_key,
-                    action=change.change_action,
-                    previous_value=changes_to_dos.dos_service.standard_opening_times,
-                    new_value=changes_to_dos.nhs_entity.standard_opening_times,
-                    weekday=weekday,
-                )
-
-        if changes_to_dos.check_for_specified_opening_times_changes():
-            changes_to_dos.specified_opening_times_changes = True
-            change = changes_to_dos.service_histories.add_specified_opening_times_change(
-                current_opening_times=changes_to_dos.current_specified_opening_times,
-                new_opening_times=changes_to_dos.new_specified_opening_times,
-            )
-            dos_logger.log_specified_opening_times_service_update(
-                action=change.change_action,
-                previous_value=changes_to_dos.current_specified_opening_times,
-                new_value=changes_to_dos.new_specified_opening_times,
-            )
-    else:
-        logger.info(
-            "Opening times are not valid",
-            extra={
-                "nhs_uk_standard_opening_times": changes_to_dos.nhs_entity.standard_opening_times,
-                "nhs_uk_specified_opening_times": changes_to_dos.nhs_entity.specified_opening_times,
-            },
-        )
-    return changes_to_dos

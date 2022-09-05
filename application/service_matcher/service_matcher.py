@@ -14,7 +14,7 @@ from boto3 import client
 from .change_event_validation import validate_change_event
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services, VALID_STATUS_ID
-from common.dynamodb import add_change_request_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.report_logging import (
@@ -76,7 +76,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     logger.info("Getting latest sequence number")
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
     logger.info("Writing change event to dynamo")
-    record_id = add_change_request_to_dynamodb(change_event, sequence_number, sqs_timestamp)
+    record_id = add_change_event_to_dynamodb(change_event, sequence_number, sqs_timestamp)
     correlation_id = logger.get_correlation_id()
     if "broken" in correlation_id.lower():
         raise ValueError("Everything is broken boo")

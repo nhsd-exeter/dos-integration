@@ -54,6 +54,7 @@ def dummy_dos_location() -> DoSLocation:
         postcode="".join(choices("01234567890ABCDEFGHIJKLM", k=6)),
         easting=randint(1111, 9999),
         northing=randint(1111, 9999),
+        postaltown="".join(choices("01234567890ABCDEFGHIJKLM", k=8)),
         latitude=uniform(-200.0, 200.0),
         longitude=uniform(-200.0, 200.0),
     )

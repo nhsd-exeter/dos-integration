@@ -7,8 +7,9 @@ class DoSLocation:
 
     id: int
     postcode: str
-    easting: int
-    northing: int
+    easting: float
+    northing: float
+    postaltown: str
     latitude: float
     longitude: float
 

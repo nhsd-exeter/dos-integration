@@ -9,6 +9,8 @@ from aws_lambda_powertools.logging.logger import Logger
 from boto3 import client
 from boto3.dynamodb.types import TypeSerializer
 
+from common.errors import DynamoDBException
+
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
@@ -40,7 +42,7 @@ def put_circuit_is_open(circuit: str, is_open: bool) -> None:
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Put circuit status", extra={"response": response, "item": put_item})
     except Exception as err:
-        raise Exception(f"Unable to set circuit '{circuit}' to open.") from err
+        raise DynamoDBException(f"Unable to set circuit '{circuit}' to open.") from err
 
 
 def get_circuit_is_open(circuit: str) -> Union[bool, None]:
@@ -67,11 +69,11 @@ def get_circuit_is_open(circuit: str) -> Union[bool, None]:
         return None if item is None else bool(item["IsOpen"]["BOOL"])
 
     except Exception as err:
-        raise Exception(f"Unable to get circuit status for '{circuit}'.") from err
+        raise DynamoDBException(f"Unable to get circuit status for '{circuit}'.") from err
 
 
-def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
-    """Add change request to dynamodb but store the message and use the event for details
+def add_change_event_to_dynamodb(change_event: Dict[str, Any], sequence_number: int, event_received_time: int) -> str:
+    """Add change event to dynamodb but store the message and use the event for details
     Args:
         change_event (Dict[str, Any]): sequence id for given ODSCode
         event_received_time (str): received timestamp from SQSEvent
@@ -94,7 +96,7 @@ def add_change_request_to_dynamodb(change_event: Dict[str, Any], sequence_number
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Added record to dynamodb", extra={"response": response, "item": put_item})
     except Exception as err:
-        raise Exception(f"Unable to add change request (seq no: {sequence_number}) into dynamodb") from err
+        raise DynamoDBException(f"Unable to add change event (seq no: {sequence_number}) into dynamodb") from err
     return record_id
 
 
@@ -120,5 +122,5 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
             sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
         logger.debug(f"Sequence number for osdscode '{odscode}'= {sequence_number}")
     except Exception as err:
-        raise Exception(f"Unable to get sequence id from dynamodb for a given ODSCode '{odscode}'.") from err
+        raise DynamoDBException(f"Unable to get sequence id from dynamodb for a given ODSCode '{odscode}'.") from err
     return sequence_number

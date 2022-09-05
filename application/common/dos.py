@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, fields
 from itertools import groupby
-from typing import Dict, Iterable, List, Set, Union
+from typing import Dict, Iterable, List, Optional, Set, Union
 
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
@@ -25,6 +25,7 @@ class DoSService:
     name: str
     odscode: str
     address: str
+    town: str
     postcode: str
     web: str
     typeid: int
@@ -32,6 +33,10 @@ class DoSService:
     publicphone: str
     publicname: str
     servicename: str
+    easting: int
+    northing: int
+    latitude: float
+    longitude: float
 
     @staticmethod
     def field_names() -> List[str]:
@@ -145,12 +150,17 @@ def get_all_valid_dos_postcodes() -> Set[str]:
     return postcodes
 
 
-def get_valid_dos_postcode(postcode: str) -> Union[str, None]:
-    """Finds the valid DoS formatted version of the given postcode. Or None if not a valid DoS postcode"""
+def get_valid_dos_location(postcode: str) -> Optional[DoSLocation]:
+    """Gets the valid DoS location for the given postcode.
+
+    Args:
+        postcode (str): The postcode to search for.
+
+    Returns:
+        Optional[DoSLocation]: The valid DoS location for the given postcode or None if no valid location is found.
+    """
     dos_locations = [loc for loc in get_dos_locations(postcode) if loc.is_valid()]
-    if not dos_locations:
-        return None
-    return dos_locations[0].postcode
+    return dos_locations[0] if dos_locations else None
 
 
 def get_services_from_db(typeids: Iterable) -> List[DoSService]:

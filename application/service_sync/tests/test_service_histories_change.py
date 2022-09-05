@@ -5,7 +5,7 @@ from pytest import mark, raises
 from ..service_histories_change import ServiceHistoriesChange
 from common.constants import (
     DOS_DEMOGRAPHICS_CHANGE_TYPE,
-    DOS_DEMOGRAPHICS_CHANGE_TYPE_LIST,
+    DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
@@ -22,7 +22,7 @@ DATA = "New value to be added to db"
 PREVIOUS_VALUE = "Old value to be removed from db"
 
 
-@mark.parametrize("demographics_change_key", (DOS_DEMOGRAPHICS_CHANGE_TYPE_LIST))
+@mark.parametrize("demographics_change_key", (DOS_SERVICES_TABLE_CHANGE_TYPE_LIST))
 @patch(f"{FILE_PATH}.ServiceHistoriesChange.get_demographics_change_action")
 def test_service_histories_change_demographics_change(mock_get_demographics_change_action, demographics_change_key):
     # Act

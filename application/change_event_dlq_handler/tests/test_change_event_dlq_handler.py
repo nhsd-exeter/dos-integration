@@ -53,13 +53,13 @@ def lambda_context():
 
 
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.add_change_request_to_dynamodb")
+@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler(
     mock_put_metric,
     mock_set_dimensions,
-    mock_add_change_request_to_dynamodb,
+    mock_add_change_event_to_dynamodb,
     mock_extract_body,
     dead_letter_change_event,
     lambda_context,
@@ -72,4 +72,4 @@ def test_lambda_handler(
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_change_event["Records"][0]["body"])
     expected_timestamp = int(dead_letter_change_event["Records"][0]["attributes"]["SentTimestamp"])
-    mock_add_change_request_to_dynamodb.assert_called_once_with(extracted_body, None, expected_timestamp)
+    mock_add_change_event_to_dynamodb.assert_called_once_with(extracted_body, None, expected_timestamp)
