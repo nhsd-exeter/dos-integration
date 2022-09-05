@@ -176,7 +176,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         if service_id is None or service_field is None:
             raise ValueError("Missing data in get_services_table_values request")
         result = run_query(
-            query=("SELECT %(SERVICE_FIELD)s " "FROM services WHERE id = %(SERVICE_ID)s"),
+            query=("SELECT %(SERVICE_FIELD)s FROM services WHERE id = %(SERVICE_ID)s"),
             query_vars={"SERVICE_ID": service_id, "SERVICE_FIELD": service_field},
         )
     elif request["type"] == "get_locations_table_values":
