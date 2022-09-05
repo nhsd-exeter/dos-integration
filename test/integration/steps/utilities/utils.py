@@ -826,3 +826,11 @@ def post_to_change_event_dlq(context: Context):
         MessageGroupId=str(randint(10000, 99999)),
         MessageAttributes=get_sqs_message_attributes(context.change_event.odscode),
     )
+
+    def get_services_table_row(service_id: str) -> str:
+        lambda_payload = {"type": "get_dentist_odscodes"}
+        services_row = get_odscodes_list(lambda_payload)
+        # odscode_list = sample(DENTIST_ODS_CODE_LIST, 1)[0]
+        # DENTIST_ODS_CODE_LIST.remove(odscode_list)
+        # odscode = odscode_list[0]
+        return services_row

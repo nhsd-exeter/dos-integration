@@ -1070,8 +1070,11 @@ def slack_message_check(message):
     assert_string = f"{current_environment} | {message}"
     assert assert_string in slack_entries
 
+
 @then(parse('the services table field "{field_name}" is updated to "{expected_value}"'))
 def generic_services_table_check(context: Context, field_name: str, expected_value: str):
-    #Pull services table entries
-    #Check field name against value
+    # Pull services table entries
+    # Check field name against value
+    # get_locations_table_values
+    # get_services_table_values
     raise ValueError(f"ERROR: {field_name} and {expected_value}")
