@@ -75,7 +75,7 @@ def test_service_histories_change_no_change(demographics_change_key, mock_get_op
 
 @mark.parametrize(
     "data, previous_value, expected_action",
-    [(DATA, PREVIOUS_VALUE, "modify"), (None, PREVIOUS_VALUE, "remove"), (DATA, None, "add")],
+    [(DATA, PREVIOUS_VALUE, "modify"), (None, PREVIOUS_VALUE, "delete"), (DATA, None, "add")],
 )
 def test_service_histories_change_get_demographics_change_action(data, previous_value, expected_action):
     # Act
@@ -96,7 +96,7 @@ def test_service_histories_change_get_demographics_change_action_error():
     "data, expected_action",
     [
         ({"remove": "TO_REMOVE", "add": "TO_ADD"}, "modify"),
-        ({"remove": "TO_REMOVE"}, "remove"),
+        ({"remove": "TO_REMOVE"}, "delete"),
         ({"add": "TO_ADD"}, "add"),
     ],
 )
