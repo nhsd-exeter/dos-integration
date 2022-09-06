@@ -655,7 +655,7 @@ def check_service_history_specified_times(context: Context, added_or_removed):
         case "added":
             change_type = "add"
         case "removed":
-            change_type = "delete"
+            change_type = "remove"
         case "closed":
             change_type = "add"
         case _:
