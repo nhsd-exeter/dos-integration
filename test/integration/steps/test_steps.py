@@ -982,7 +982,7 @@ def event_replayed_with_pharmacy_closed(context: Context, open_or_closed):
 def standard_day_confirmed_open(context: Context, open_or_closed: str):
     if context.service_id is None:
         context.service_id = get_service_id(context.change_event.odscode)
-    wait_for_service_update(context.service_id)
+    sleep(20)
     opening_time_event = get_change_event_standard_opening_times(context.service_id)
     week_day = context.change_event.standard_opening_times[-1]["Weekday"]
     match open_or_closed.upper():
