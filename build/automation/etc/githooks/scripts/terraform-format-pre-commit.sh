@@ -22,7 +22,7 @@ if [ $(make git-check-if-commit-changed-directory DIR=infrastructure PRECOMMIT=t
 fi
 
 # TODO: Add `make docker-run-terraform-tfsec`
-# TODO: Add `make docker-run-terraform-checkov`
+# TODO: Add `make docker-run-checkov`
 # TODO: Add `make docker-run-terraform-compliance`
 # TODO: Add `make docker-run-config-lint`
 

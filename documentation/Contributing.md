@@ -202,8 +202,8 @@ Merging a branch to main - this should be done only in an exceptional circumstan
     # When prompted change commit type to `squash` for all the commits except the top one
     # On the following screen replace pre-inserted comments by a single summary
 
-    git rebase main                                   # Rebase the task branch on top of main
-    git checkout main                                 # Switch to main branch
+    git rebase main                                     # Rebase the task branch on top of main
+    git checkout main                                   # Switch to main branch
     git merge -ff task/JIRA-XXX_Descriptive_branch_name # Fast-forward merge
     git push                                            # Push main to remote
 

@@ -1,8 +1,8 @@
 TEST_VNC_HOST = localhost
 TEST_VNC_PORT = 5900
 
-WIREMOCK_VERSION = 2.28.0
-POSTMAN_NEWMAN_VERSION = 5.2.3
+WIREMOCK_VERSION = 2.32.0
+POSTMAN_NEWMAN_VERSION = 5.3
 
 # ==============================================================================
 
