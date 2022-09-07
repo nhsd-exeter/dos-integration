@@ -58,6 +58,7 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
         # Log custom metrics
         add_success_metric(event=event)  # type: ignore
         add_metric("UpdateRequestSuccess")
+        add_metric("ServiceUpdateSuccess")
     except Exception:
         put_circuit_is_open(environ["CIRCUIT"], True)
         add_metric("UpdateRequestFailed")  # type: ignore

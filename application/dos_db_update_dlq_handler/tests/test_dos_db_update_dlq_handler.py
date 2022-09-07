@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from os import environ
 from unittest.mock import patch
 
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
@@ -67,8 +68,11 @@ def test_lambda_handler(mock_put_metric, mock_set_dimentions, mock_extract_body,
             }
         ]
     }
+    environ["ENV"] = "test"
     mock_extract_body.return_value = extracted_body
     # Act
     lambda_handler(dead_letter_message, lambda_context)
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_message["Records"][0]["body"])
+    # Clean up
+    del environ["ENV"]

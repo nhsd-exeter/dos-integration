@@ -6,7 +6,7 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.constants import DLQ_HANDLER_REPORT_ID
 from common.middlewares import unhandled_exception_logging
-from common.utilities import extract_body, get_sqs_msg_attribute
+from common.utilities import add_metric, extract_body, get_sqs_msg_attribute
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 tracer = Tracer()
@@ -48,3 +48,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("message", error_msg)
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.put_metric("NumberOfMessagesReceived", 1, "Count")
+    add_metric("ServiceUpdateFailed")
