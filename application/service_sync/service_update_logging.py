@@ -69,7 +69,7 @@ class ServiceUpdateLogger:
         Returns:
             tuple[str, str]: The formatted previous and new values
         """
-        existing_value = f"{data_field_modified}_existing={previous_value}"
+        existing_value = f"{data_field_modified}_existing={previous_value}" if previous_value != "" else previous_value
         if previous_value != "" and new_value != "":
             # Modify
             updated_value = f"{data_field_modified}_update=remove={previous_value}add={new_value}"
@@ -227,14 +227,14 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
         change_values: dict[str, Any]
         if change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY:
             service_update_logger.log_specified_opening_times_service_update(
-                action=change_values["changetype"],
+                action=change_values.get("changetype", "UNKOWN"),
                 previous_value=changes_to_dos.current_specified_opening_times,
                 new_value=changes_to_dos.new_specified_opening_times,
             )
         elif change_key in DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST:
             service_update_logger.log_standard_opening_times_service_update_for_weekday(
                 data_field_modified=change_key,
-                action=change_values["changetype"],
+                action=change_values.get("changetype", "UNKOWN"),
                 previous_value=changes_to_dos.dos_service.standard_opening_times,
                 new_value=changes_to_dos.nhs_entity.standard_opening_times,
                 weekday=change_key.removeprefix("cmsopentime"),
@@ -243,7 +243,9 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
             logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
             service_update_logger.log_service_update(
                 data_field_modified=change_key,
-                action=change_values["changetype"],
-                previous_value=change_values["previous"],
-                new_value=change_values["data"],
+                action=change_values.get("changetype", "UNKOWN"),
+                previous_value=change_values.get("previous", "UNKOWN"),
+                new_value=change_values.get("data", "UNKOWN"),
             )
+        # UNKOWN should never be logged as it is only used as a default value
+        # so if it is logged it means a bug has occurred

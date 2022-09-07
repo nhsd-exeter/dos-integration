@@ -97,10 +97,7 @@ def test_service_update_logger_get_opening_times_change_add(service_update_logge
     response = service_update_logger.get_opening_times_change(
         data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
     )
-    assert (
-        f"{data_field_modified}_existing={previous_value}",
-        f"{data_field_modified}_update=add={new_value}",
-    ) == response
+    assert ("", f"{data_field_modified}_update=add={new_value}") == response
 
 
 def test_service_update_logger_log_service_update(capsys: CaptureFixture):
