@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from os import environ
-from unittest.mock import MagicMock, patch
+from unittest.mock import call, MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -124,7 +124,7 @@ def test_lambda_handler_no_healthcheck(
     mock_remove_sqs_message_from_queue.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
     mock_add_success_metric.assert_called_once_with(event=UPDATE_REQUEST_QUEUE_ITEM)
     mock_run_db_health_check.assert_not_called()
-    mock_add_metric.assert_called_once_with("UpdateRequestSuccess")
+    mock_add_metric.assert_has_calls(calls=[call("UpdateRequestSuccess"), call("ServiceUpdateSuccess")])
     # Cleanup
     del environ["ENV"]
 

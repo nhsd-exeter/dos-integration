@@ -85,7 +85,12 @@ def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, 
 
 @metric_scope
 def add_metric(metric_name: str, metrics) -> None:  # type: ignore
-    """Adds a failure metric to the custom metrics collection"""
+    """Adds a metric to the custom metrics collection
+
+    Args:
+        metric_name (str): Name of the metric to be added to cloudwatch
+        metrics (_type_): Metrics class
+    """
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.put_metric(metric_name, 1, "Count")
