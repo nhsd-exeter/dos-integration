@@ -44,7 +44,7 @@ class ServiceHistoriesChange:
         """Gets the change action for a demographics change
 
         Returns:
-            str: Change action - add, remove, modify
+            str: Change action - add, delete, modify
         """
         new_value = self.data
         previous_value = self.previous_value
@@ -54,7 +54,7 @@ class ServiceHistoriesChange:
         elif previous_value is None or previous_value == "None" and new_value is not None:
             return "add"
         elif new_value is None:
-            return "remove"
+            return "delete"
         else:
             return "modify"
 
@@ -62,12 +62,12 @@ class ServiceHistoriesChange:
         """Gets the change action for a opening times (specified or standard) change
 
         Returns:
-            str: Change action - add, remove, modify
+            str: Change action - add, delete, modify
         """
         if "remove" in self.data and "add" in self.data:
             return "modify"
         elif "remove" in self.data:
-            return "remove"
+            return "delete"
         elif "add" in self.data:
             return "add"
         else:

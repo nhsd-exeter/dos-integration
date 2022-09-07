@@ -522,7 +522,7 @@ def assert_standard_closing(dos_times, ce_times) -> int:
         if entry["times"] == "closed":
             for dates in dos_times:
                 if currentday == list(dates.keys())[0]:
-                    assert dates[currentday]["changetype"] == "remove", "Open when expected closed"
+                    assert dates[currentday]["changetype"] == "delete", "Open when expected closed"
                     assert (
                         "add" not in dates[currentday]["data"]
                     ), "ERROR: Unexpected add field found in service history"
@@ -531,11 +531,9 @@ def assert_standard_closing(dos_times, ce_times) -> int:
 
 
 def add_new_standard_open_day(standard_opening_times: dict) -> dict:
-    open_days = []
     week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    selected_day = ""
-    for open_day in standard_opening_times:
-        open_days.append(open_day["Weekday"])
+
+    open_days = [open_day["Weekday"] for open_day in standard_opening_times]
     if len(open_days) == 0:
         raise ValueError("ERROR: No available days to add")
     for days in week:

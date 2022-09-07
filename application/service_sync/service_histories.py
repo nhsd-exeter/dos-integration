@@ -131,7 +131,7 @@ class ServiceHistories:
             data["remove"] = current_specified_opening_times
             data["add"] = new_specified_opening_times
         elif current_specified_opening_times != []:
-            # Data item removed
+            # Data item deleted
             data["remove"] = current_specified_opening_times
         elif new_specified_opening_times != []:
             # Data item added
