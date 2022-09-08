@@ -181,7 +181,7 @@ def get_locations_table_data(postcode: str) -> list:
     return data
 
 
-def get_services_location_data(service_id: str) -> list:
+def get_services_table_location_data(service_id: str) -> list:
     lambda_payload = {"type": "get_services_table_location", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))

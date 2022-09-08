@@ -46,7 +46,7 @@ from .utilities.utils import (
     get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
-    get_services_location_data,
+    get_services_table_location_data,
     get_stored_events_from_dynamo_db,
     post_to_change_event_dlq,
     post_ur_fifo,
@@ -1082,7 +1082,7 @@ def slack_message_check(message):
 def services_location_update_assertion(context: Context):
     sleep(10)
     location_data = get_locations_table_data(context.change_event.postcode)
-    services_data = get_services_location_data(context.service_id)
+    services_data = get_services_table_location_data(context.service_id)
     assert services_data == location_data, "ERROR: Services and Location data does not match"
 
 
