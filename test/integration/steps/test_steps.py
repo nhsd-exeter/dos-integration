@@ -41,6 +41,7 @@ from .utilities.utils import (
     get_latest_sequence_id_for_a_given_odscode,
     get_locations_table_data,
     get_odscode_with_contact_data,
+    get_service_history,
     get_service_history_specified_opening_times,
     get_service_history_standard_opening_times,
     get_service_id,
@@ -1076,8 +1077,18 @@ def slack_message_check(message):
     assert_string = f"{current_environment} | {message}"
     assert assert_string in slack_entries
 
+
 @then("the service table has been updated with locations data")
 def services_location_update_assertion(context: Context):
-    services_data = get_services_location_data(context.service_id)
+    sleep(10)
     location_data = get_locations_table_data(context.change_event.postcode)
+    services_data = get_services_location_data(context.service_id)
+    # raise ValueError(f"services_data: {services_data} location_data: {location_data}")
     assert services_data == location_data, "ERROR: Services and Location data does not match"
+
+
+@then("the service history table has been updated with locations data")
+def services_location_history_update_assertion(context: Context):
+    history_data = get_service_history(context.service_id)
+    location_data = get_locations_table_data(context.change_event.postcode)
+    assert history_data == location_data, "ERROR: Services and Location data does not match"
