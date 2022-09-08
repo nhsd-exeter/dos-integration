@@ -165,7 +165,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing data in get_services_table_values request")
         result = run_query(
             query=(
-                "SELECT id, odscode, town, postcode, easting, northing, latitude, longitude "
+                "SELECT town, postcode, easting, northing, latitude, longitude "
                 "FROM services WHERE id = %(SERVICE_ID)s"
             ),
             query_vars={"SERVICE_ID": service_id},
@@ -176,7 +176,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing data in get_locations_table_values")
         result = run_query(
             query=(
-                "SELECT postcode, easting, northing, postaltown, latitude, longitude "
+                "SELECT postaltown, postcode, easting, northing, latitude, longitude "
                 "FROM locations WHERE postcode = %(POSTCODE)s"
             ),
             query_vars={"POSTCODE": postcode},

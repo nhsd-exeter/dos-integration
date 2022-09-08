@@ -174,6 +174,22 @@ def get_changes(correlation_id: str) -> list:
     return data
 
 
+def get_locations_table_data(postcode: str) -> list:
+    lambda_payload = {"type": "get_locations_table_values", "postcode": postcode}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    raise ValueError(data)
+    return data
+
+
+def get_services_location_data(service_id: str) -> list:
+    lambda_payload = {"type": "get_services_table_location", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    raise ValueError(data)
+    return data
+
+
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
     data = []

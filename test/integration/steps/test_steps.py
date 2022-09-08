@@ -39,11 +39,13 @@ from .utilities.utils import (
     get_change_event_standard_opening_times,
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
+    get_locations_table_data,
     get_odscode_with_contact_data,
     get_service_history_specified_opening_times,
     get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
+    get_services_location_data,
     get_stored_events_from_dynamo_db,
     post_to_change_event_dlq,
     post_ur_fifo,
@@ -616,6 +618,10 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    if plain_english_service_table_field in ["easting", "northing"]:
+        expected_data = int(expected_data)
+    elif plain_english_service_table_field in ["latitude", "longitude"]:
+        expected_data = float(expected_data)
     assert (
         field_data == expected_data
     ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data, expected: {expected_data}, actual: {field_data}"  # noqa: E501
@@ -1069,3 +1075,9 @@ def slack_message_check(message):
     current_environment = getenv("ENVIRONMENT")
     assert_string = f"{current_environment} | {message}"
     assert assert_string in slack_entries
+
+@then("the service table has been updated with locations data")
+def services_location_update_assertion(context: Context):
+    services_data = get_services_location_data(context.service_id)
+    location_data = get_locations_table_data(context.change_event.postcode)
+    assert services_data == location_data, "ERROR: Services and Location data does not match"
