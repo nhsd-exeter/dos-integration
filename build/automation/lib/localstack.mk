@@ -1,5 +1,5 @@
 LOCALSTACK_HOST = localstack.$(PROJECT_NAME_SHORT).local
-LOCALSTACK_VERSION = 0.12.18
+LOCALSTACK_VERSION = 0.14.3
 
 localstack-start: project-config _localstack-copy-ssl-certificate ### Start localstack
 	mkdir -p $(TMP_DIR)/localstack

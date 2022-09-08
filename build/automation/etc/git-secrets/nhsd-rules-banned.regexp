@@ -3,6 +3,8 @@
 [a-z]{2}-[a-z-]*-[1,2,3]\.rds\.amazonaws\.com
 rds\.[a-z]{2}-[a-z-]*-[1,2,3]\.amazonaws\.com
 dynamodb\.[a-z]{2}-[a-z-]*-[1,2,3]\.amazonaws\.com
+arn:aws:.*:.*:[0-9]{12}
+[0-9]{12}\.dkr\.ecr\.[a-z-]*-[1,2,3]\.amazonaws\.com
 [a-z]{2}-[a-z-]*-[1,2,3]\.es\.amazonaws\.com
 [a-z]*[1-3]\.cache\.amazonaws\.com
 hooks\.slack\.com/services/T[a-zA-Z0-9]*/B[a-zA-Z0-9]*/[a-zA-Z0-9]*

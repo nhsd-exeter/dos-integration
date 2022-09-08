@@ -37,7 +37,7 @@ test-docker:
 		test-docker-run-python-multiple-cmd-pip-install \
 		test-docker-run-terraform \
 		test-docker-run-terraform-tfsec \
-		test-docker-run-terraform-checkov \
+		test-docker-run-checkov \
 		test-docker-run-terraform-compliance \
 		test-docker-run-config-lint \
 		test-docker-run-tools-single-cmd \
@@ -348,12 +348,12 @@ test-docker-run-terraform-tfsec:
 	# assert
 	mk_test "1 -eq $$output"
 
-test-docker-run-terraform-checkov:
+test-docker-run-checkov:
 	# arrange
 	make docker-config
 	# act
 	output=$$(
-		make -s docker-run-terraform-checkov \
+		make -s docker-run-checkov \
 			DIR="build/automation/lib/terraform/template/modules/s3" \
 		| grep -Eo "By bridgecrew" | wc -l)
 	# assert
