@@ -113,14 +113,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And DoS has "53.781108" in the "latitude" field
     And DoS has "-2.886537" in the "longitude" field
 
-  @complete @pharmacy_no_log_searches @kit
+  @complete @pharmacy_no_log_searches
   Scenario: F001S011 Locations update check for postcode change
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "PR4 2BE"
     When the Changed Event is sent for processing with "valid" api key
     Then the service table has been updated with locations data
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @kit
   Scenario: F001S012 Locations update check service history
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "PR4 2BE"

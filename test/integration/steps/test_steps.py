@@ -1083,12 +1083,19 @@ def services_location_update_assertion(context: Context):
     sleep(10)
     location_data = get_locations_table_data(context.change_event.postcode)
     services_data = get_services_location_data(context.service_id)
-    # raise ValueError(f"services_data: {services_data} location_data: {location_data}")
     assert services_data == location_data, "ERROR: Services and Location data does not match"
 
 
 @then("the service history table has been updated with locations data")
 def services_location_history_update_assertion(context: Context):
+    sleep(10)
     history_data = get_service_history(context.service_id)
+    history_data = history_data[list(history_data.keys())[0]]["new"]
+    history_list = []
+    history_list.append(history_data["cmsorgtown"]["data"])
+    history_list.append(history_data["postalcode"]["data"])
+    history_list.append(history_data["cmseastings"]["data"])
+    history_list.append(history_data["cmsnorthings"]["data"])
     location_data = get_locations_table_data(context.change_event.postcode)
-    assert history_data == location_data, "ERROR: Services and Location data does not match"
+    location_data = location_data[0][:-2]
+    assert history_list == location_data, "ERROR: Service History and Location data does not match"
