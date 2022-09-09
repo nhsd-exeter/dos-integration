@@ -47,9 +47,6 @@
       - [Example](#example)
   - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
     - [Dentists](#dentists)
-  - [Architecture](#architecture-1)
-    - [Data](#data)
-    - [Authentication and Authorisation](#authentication-and-authorisation)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
     - [Observability](#observability)
@@ -316,7 +313,7 @@ Releases are semantically versioned using the following format:
 
 All standard releases are considered major releases. Minor releases are used for hotfixes.
 
-Deployment images instead tagged with the commit hash of the commit it was built from.
+Deployment images are instead tagged with the commit hash of the commit it was built from. Standard non deployment images are tagged with the timestamp and commit hash of the commit they were built from.
 
 ### CI/CD Pipelines
 
@@ -437,27 +434,6 @@ or
 These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
 
     python3 comparison_reporting/run_dentist_reports.py
-
-## Architecture
-
-### Data
-
-What sort of data system operates on and processes
-
-- Data set
-- Consistency and integrity
-- Persistence
-
-### Authentication and Authorisation
-
-- Default user login for testing
-- Different user roles
-- Authorisation type
-- Authentication method
-
-It is recommended that any other documentation related to the aspect of security should be stored in a private workspace.
-
-
 
 ### Guiding Principles
 
