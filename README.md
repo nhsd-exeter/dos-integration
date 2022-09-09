@@ -46,7 +46,7 @@
     - [How to deploy](#how-to-deploy)
       - [Example](#example)
   - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
-      - [Dentists](#dentists)
+    - [Dentists](#dentists)
   - [Architecture](#architecture-1)
     - [Data](#data)
     - [Authentication and Authorisation](#authentication-and-authorisation)
@@ -295,7 +295,7 @@ To run a load test
 
 #### Where are the performance tests run?
 
-Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages adhoc against the performance environment.
+Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages ad hoc against the performance environment.
 
 ### Test data and mock services
 
@@ -322,12 +322,12 @@ Deployment images instead tagged with the commit hash of the commit it was built
 
 <img src="./documentation/diagrams/DevOps-Pipelines and Automations.drawio.png" width="1024" /><br /><br />
 
-All `test`  Codebuild automations can be found in the AWS CodePipeline app in `Texas` `mgmt` account and included the following:
+All `test`  CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
 
 - uec-dos-int-tools-stress-test-stage
 - uec-dos-int-tools-load-test-stage
 
-More information can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+More information can be on the DI confluence <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 
 ### Deployment From the Command-line
@@ -336,7 +336,7 @@ More information can be on the DI confluence https://nhsd-confluence.digital.nhs
 
 ### Branching Strategy
 
-More information can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+More information can be on the DI confluence <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 <img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
 
@@ -354,7 +354,7 @@ For a branch that is meant for testing or another purpose and you don't want it 
 #### Quick Re-deploy
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
-    make sls-only-deploy PROFILE=task VERSION=latest
+    make quick-build-and-deploy PROFILE=task ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
 
 ### Remove Deployment From the Command-line
 
@@ -362,15 +362,15 @@ To quick update the lambdas run the following command. Note this only updates th
 
 ### Remove deployment with commit tag
 
-You can remove a task deployment using a single command to create a tag which then runs an AWS codebuild stage that will undeploy that environment
+You can remove a task deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
     e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 task environment
 
 ### Remove deployment on Pull Request merge
 
-When a pull request is merged it will run an AWS Codebuild project that will destroy the environment if it exists.
-The codebuild stage can be found within the development-pipeline terraform stack.
+When a pull request is merged it will run an AWS CodeBuild project that will destroy the environment if it exists.
+The AWS CodeBuild project can be found within the development-pipeline terraform stack.
 
 ### Secrets
 
@@ -413,7 +413,7 @@ To Deploy Live
 
 Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
 
-#### Dentists
+### Dentists
 
 To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
 
@@ -505,7 +505,7 @@ What are the links of the supporting systems?
 List all the environments and their relation to profiles
 
 - Task
-  - Profile: 'task'
+  - Profile: `task`
 - Dev
   - Profile: `dev`
 - Demo
