@@ -101,3 +101,28 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | Tester's new street | Testers New Street  | address |
       | new & test avenue   | New and Test Avenue | address |
       | 49a test avenue     | 49A Test Avenue     | address |
+
+  @complete @pharmacy_no_log_searches
+  Scenario: F001S010 Changed Event with updated postcode to verify location changes
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the field "Postcode" is set to "PR4 2BE"
+    When the Changed Event is sent for processing with "valid" api key
+    Then DoS has "KIRKHAM" in the "town" field
+    And DoS has "341832" in the "easting" field
+    And DoS has "432011" in the "northing" field
+    And DoS has "53.781108" in the "latitude" field
+    And DoS has "-2.886537" in the "longitude" field
+
+  @complete @pharmacy_no_log_searches
+  Scenario: F001S011 Locations update check for postcode change
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the field "Postcode" is set to "PR4 2BE"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the service table has been updated with locations data
+
+  @complete @pharmacy_no_log_searches
+  Scenario: F001S012 Locations update check service history
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the field "Postcode" is set to "PR4 2BE"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the service history table has been updated with locations data
