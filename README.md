@@ -177,10 +177,12 @@ These variable will be stored in AWS Secrets Manager and will be retrieved by th
 ### Code Formatting
 
 Code quality checks can be done with the pip installed 'black' module and run with the command.
+
     python -m black --line-length 120
 
 This is also wrapped in a function
 To format all python files in the project run the following commands:
+
     make python-code-format FILES=./application
     make python-code-format FILES=./test
 
@@ -229,11 +231,11 @@ The unit tests are run using pytest and coverage (both available to download via
 
 #### Where are the unit tests run?
 
-The unit tests are run in multiple places. They are developed and run locally. Also are run in GitHub Actions on each pull request and commit on develop. The unit tests are also run in the development pipeline on each deployment merge into develop.
+The unit tests are run in multiple places. They are developed and run locally. They are also run in GitHub Actions on each pull request and commit on develop. The unit tests are also run in the development pipeline on each deployment merge into develop.
 
 ### Integration Testing
 
-Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals. This testing is done on AWS to test the connection between components.
+Integration Testing is used to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together, achieving the overall business goals. This testing is done on AWS to test the connection between components.
 
 This testing includes:
 
@@ -246,6 +248,8 @@ This testing is generally done by a tester
 Prerequisites
 
     tx-mfa
+    Sign into Non-Prod VPN # To connect to lambdas within the VPC
+    IP is in the IP Allow List # To connect to the API Gateway
     make tester-build
 
 To run unit tests run the following commands
@@ -317,14 +321,14 @@ Deployment images are instead tagged with the commit hash of the commit it was b
 
 ### CI/CD Pipelines
 
-<img src="./documentation/diagrams/DevOps-Pipelines and Automations.drawio.png" width="1024" /><br /><br />
+<img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
 
 All `test`  CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
 
 - uec-dos-int-tools-stress-test-stage
 - uec-dos-int-tools-load-test-stage
 
-More information can be on the DI confluence <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
+More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 
 ### Deployment From the Command-line
@@ -333,7 +337,7 @@ More information can be on the DI confluence <https://nhsd-confluence.digital.nh
 
 ### Branching Strategy
 
-More information can be on the DI confluence <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
+More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 <img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
 
@@ -342,7 +346,7 @@ More information can be on the DI confluence <https://nhsd-confluence.digital.nh
 
 For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
 
-Once a branch which meets this criteria has been pushed the it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
+Once a branch which meets this criteria has been pushed then it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
 
 ### Branch Naming to not automatically deploy
 
@@ -351,6 +355,7 @@ For a branch that is meant for testing or another purpose and you don't want it 
 #### Quick Re-deploy
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
+
     make quick-build-and-deploy PROFILE=task ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
 
 ### Remove Deployment From the Command-line
