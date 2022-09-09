@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from json import dumps
 from os import environ
 from unittest.mock import call, patch
+from datetime import date
 
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
@@ -13,6 +14,7 @@ from application.service_matcher.service_matcher import get_matching_services, l
 
 from common.nhs import NHSEntity
 from common.tests.conftest import dummy_dos_service
+from common.opening_times import SpecifiedOpeningTime, OpenPeriod
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
@@ -491,6 +493,50 @@ def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock)
     mock_logger.assert_called_with("Sent off update request for id=1")
     # Clean up
     del environ["UPDATE_REQUEST_QUEUE_URL"]
+
+
+@patch(f"{FILE_PATH}.send_update_requests")
+@patch(f"{FILE_PATH}.validate_change_event")
+@patch(f"{FILE_PATH}.log_invalid_open_times")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
+@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
+@patch(f"{FILE_PATH}.get_matching_services")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+def test_lambda_handler_invalid_existing_dos_opening_times(
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_get_matching_services,
+    mock_add_change_event_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    mock_log_invalid_open_times,
+    mock_validate_change_event,
+    mock_send_update_requests,
+    change_event,
+    lambda_context,
+):
+
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    mock_extract_body.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_add_change_event_to_dynamodb.return_value = 1
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
+
+    service = dummy_dos_service()
+    spec_open_time = SpecifiedOpeningTime([OpenPeriod.from_string("12:00-16:00")], date(2023, 3, 1), True)
+    service.specified_opening_times = [spec_open_time, spec_open_time]
+    mock_get_matching_services.return_value = [service]
+
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    lambda_handler(sqs_event, lambda_context)
+    # Assert
+    # Clean up
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        del environ[env]
 
 
 SQS_EVENT = {

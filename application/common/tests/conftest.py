@@ -1,7 +1,8 @@
 import json
 from dataclasses import dataclass
-from os import environ
+from os import environ, path
 from random import choices, randint, uniform
+from pathlib import Path
 
 from boto3 import client
 from moto import mock_dynamodb
@@ -10,8 +11,7 @@ from pytest import fixture
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = "application/service_matcher/tests/STANDARD_EVENT.json"
-
+STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
