@@ -78,7 +78,7 @@ def test_send_email(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_
     # Assert
     assert response is None
     mock_get_secret.assert_called_once_with(secret_name)
-    mock_smtp.assert_called_once_with(host="smtp.office365.com", port=587)
+    mock_smtp.assert_called_once_with(host="smtp.office365.com", port=587, timeout=15)
     mock_smtp.return_value.ehlo.assert_called_once()
     mock_smtp.return_value.starttls.assert_called_once()
     mock_smtp.return_value.login.assert_called_once_with(di_system_mailbox_address, di_system_mailbox_password)
