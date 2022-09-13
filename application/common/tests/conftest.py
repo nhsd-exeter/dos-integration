@@ -17,7 +17,7 @@ with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
 
 
 def dummy_dos_service(**kwargs) -> DoSService:
-    """Creates a DoSService Object with random data for the unit testing."""
+    """Creates a DoSService Object with random data for the unit testing"""
     test_data = {}
     for col in DoSService.field_names():
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
