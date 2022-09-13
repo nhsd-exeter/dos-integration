@@ -1,10 +1,10 @@
 import hashlib
 import logging
 from dataclasses import dataclass
+from datetime import date
 from json import dumps
 from os import environ
 from unittest.mock import call, patch
-from datetime import date
 
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
@@ -13,8 +13,8 @@ from pytest import fixture, raises
 from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
 
 from common.nhs import NHSEntity
+from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from common.tests.conftest import dummy_dos_service
-from common.opening_times import SpecifiedOpeningTime, OpenPeriod
 
 FILE_PATH = "application.service_matcher.service_matcher"
 

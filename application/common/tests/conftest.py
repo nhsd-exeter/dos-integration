@@ -1,8 +1,8 @@
 import json
 from dataclasses import dataclass
 from os import environ, path
-from random import choices, randint, uniform
 from pathlib import Path
+from random import choices, randint, uniform
 
 from boto3 import client
 from moto import mock_dynamodb
