@@ -27,8 +27,8 @@ ROW = {
 }
 EXPECTED_QUERY = (
     "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid "
-    "FROM changes c LEFT JOIN users u ON u.username = c.creatorsname "
-    "LEFT JOIN services s ON s.id = c.serviceid "
+    "FROM changes c INNER JOIN users u ON u.username = c.creatorsname "
+    "INNER JOIN services s ON s.id = c.serviceid "
     "WHERE serviceid=%(SERVICE_ID)s AND approvestatus='PENDING'"
 )
 
