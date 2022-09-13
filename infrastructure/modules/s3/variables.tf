@@ -76,3 +76,14 @@ variable "lifecycle_days_to_expiration" {
   description = "Specifies the number of days after object creation when the object expires."
   default     = "365"
 }
+variable "server_side_encryption_configuration" {
+  description = "Specifies server-side encryption configuration for the bucket."
+
+  default = {
+    rule = {
+      apply_server_side_encryption_by_default = {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}

@@ -187,7 +187,16 @@ variable "event_replay_subscription_filter_name" {
 }
 
 variable "orchestrator_subscription_filter_name" {
-  description = "Log filter name for event replay lambda"
+  description = "Log filter name for orchestrator lambda"
+}
+
+variable "slack_messenger_subscription_filter_name" {
+  description = "Log filter name for slack messenger lambda"
+}
+
+
+variable "send_email_subscription_filter_name" {
+  description = "Log filter name for send email lambda"
 }
 
 variable "dos_integration_firehose" {
@@ -231,4 +240,21 @@ variable "event_replay_lambda_name" {
 
 variable "orchestrator_lambda_name" {
   description = "Name of orchestrator lambda"
+}
+
+variable "slack_messenger_lambda_name" {
+  description = "Name of slack messenger lambda"
+}
+
+variable "send_email_lambda_name" {
+  description = "Name of send email lambda"
+}
+
+# ##############
+# # S3
+# ##############
+
+variable "send_email_bucket_name" {
+  type        = string
+  description = "Name of the bucket to temporarily store emails to be sent"
 }

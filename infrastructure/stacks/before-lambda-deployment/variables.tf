@@ -113,6 +113,9 @@ variable "event_replay_role_name" {
 variable "dos_db_handler_role_name" {
   description = "Role name for dos db handler lambda"
 }
+variable "send_email_role_name" {
+  description = "Role name for send email lambda"
+}
 
 # ##############
 # # LAMBDAS
@@ -222,4 +225,13 @@ variable "developer_role_name" {
 # #######################
 variable "sns_topic_app_alerts_for_slack" {
   description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+}
+
+# ##############
+# # S3
+# ##############
+
+variable "send_email_bucket_name" {
+  type        = string
+  description = "Name of the bucket to temporarily store emails to be sent"
 }

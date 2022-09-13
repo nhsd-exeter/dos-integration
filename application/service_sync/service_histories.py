@@ -10,7 +10,7 @@ from psycopg2.extras import DictCursor, Json
 from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
-from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
+from common.constants import DOS_INTEGRATION_USER_NAME, DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
 from common.dos_db_connection import query_dos_db
 from common.opening_times import SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -63,8 +63,8 @@ class ServiceHistories:
         """Creates a new entry in the service_histories json for any changes that will be made to the service"""
         self.service_history[self.NEW_CHANGE_KEY] = {
             "new": {},
-            "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
-            "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
+            "initiator": {"userid": DOS_INTEGRATION_USER_NAME, "timestamp": "TBD"},
+            "approver": {"userid": DOS_INTEGRATION_USER_NAME, "timestamp": "TBD"},
         }  # Timestamp will be created when the change is sent to db for it to be realtime
 
     def add_change(self, dos_change_key: str, change: ServiceHistoriesChange) -> None:
@@ -185,10 +185,14 @@ class ServiceHistories:
         cursor = query_dos_db(
             connection=connection,
             query=(
-                """UPDATE services SET modifiedby='DOS_INTEGRATION', """
+                """UPDATE services SET modifiedby=%(USER_NAME)s, """
                 """modifiedtime=%(CURRENT_DATE_TIME)s WHERE id = %(SERVICE_ID)s;"""
             ),
-            vars={"CURRENT_DATE_TIME": current_date_time, "SERVICE_ID": self.service_id},
+            vars={
+                "USER_NAME": DOS_INTEGRATION_USER_NAME,
+                "CURRENT_DATE_TIME": current_date_time,
+                "SERVICE_ID": self.service_id,
+            },
         )
         cursor.close()
         if self.history_already_exists:

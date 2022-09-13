@@ -1,5 +1,5 @@
-resource "aws_cloudwatch_query_definition" "errors" {
-  name = "${var.project_id}/${var.environment}/errors"
+resource "aws_cloudwatch_query_definition" "search_for_errors" {
+  name = "${var.project_id}/${var.environment}/search-for-errors"
 
   log_group_names = [
     "/aws/lambda/${var.service_matcher_lambda_name}",
@@ -17,8 +17,8 @@ fields @timestamp,correlation_id,ods_code,level,message_received,function_name, 
 EOF
 }
 
-resource "aws_cloudwatch_query_definition" "by_correlation_id" {
-  name = "${var.project_id}/${var.environment}/by-correlation-id"
+resource "aws_cloudwatch_query_definition" "search_by_correlation_id" {
+  name = "${var.project_id}/${var.environment}/search-by-correlation-id"
 
   log_group_names = [
     "/aws/lambda/${var.service_matcher_lambda_name}",
@@ -35,8 +35,8 @@ fields @timestamp,correlation_id,ods_code,level,message_received,function_name, 
 EOF
 }
 
-resource "aws_cloudwatch_query_definition" "by_correlation_id_simple" {
-  name = "${var.project_id}/${var.environment}/by-correlation-id-simple"
+resource "aws_cloudwatch_query_definition" "search_by_correlation_id_simple" {
+  name = "${var.project_id}/${var.environment}/search-by-correlation-id-simple"
 
   log_group_names = [
     "/aws/lambda/${var.service_matcher_lambda_name}",
@@ -54,8 +54,8 @@ EOF
 }
 
 
-resource "aws_cloudwatch_query_definition" "by_invalid_postcode" {
-  name = "${var.project_id}/${var.environment}/by-invalid-postcode"
+resource "aws_cloudwatch_query_definition" "search_for_invalid_postcode" {
+  name = "${var.project_id}/${var.environment}/search-for-invalid-postcode"
 
   log_group_names = [
     "/aws/lambda/${var.service_matcher_lambda_name}",
@@ -72,8 +72,8 @@ fields @timestamp,correlation_id,ods_code,level,message_received,function_name, 
 EOF
 }
 
-resource "aws_cloudwatch_query_definition" "by_invalid_opening_times" {
-  name = "${var.project_id}/${var.environment}/by-invalid-opening-times"
+resource "aws_cloudwatch_query_definition" "search_for_invalid_opening_times" {
+  name = "${var.project_id}/${var.environment}/search-for-invalid-opening-times"
 
   log_group_names = [
     "/aws/lambda/${var.service_matcher_lambda_name}",
@@ -87,5 +87,19 @@ resource "aws_cloudwatch_query_definition" "by_invalid_opening_times" {
 fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
 | filter report_key == 'INVALID_OPEN_TIMES'
 | sort @timestamp
+EOF
+}
+
+resource "aws_cloudwatch_query_definition" "search_by_email_correlation_id" {
+  name = "${var.project_id}/${var.environment}/search-by-email-correlation-id"
+
+  log_group_names = [
+    "/aws/lambda/${var.service_sync_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields correlation_id
+| filter message =="Email Correlation Id"
+| filter email_correlation_id == "ADD_EMAIL_CORRELATION_ID"
 EOF
 }

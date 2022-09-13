@@ -13,16 +13,20 @@ exclude = [
   "dos_db_update_dlq_handler/tests",
   "event_replay/tests",
   "orchestrator/tests",
+  "send_email/tests",
   "service_matcher/tests",
   "service_sync/tests",
-  "slack_messenger/tests"
+  "slack_messenger/tests",
   ]
 sort_by_size = true
 ignore_names = [
-  "lambda_handler",
-  "field_names",
-  "recipient_id",
+  "email_body",
+  "email_subject",
   "encoding",
-  "metadata",
+  "field_names",
   "is_health_check",
+  "lambda_handler",
+  "metadata",
+  "recipient_email_address",
+  "recipient_id",
   ]

@@ -99,7 +99,7 @@ def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, An
         vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
 
     Returns:
-        DictCursor: _description_
+        DictCursor: Cursor to the query results
     """
     cursor = connection.cursor(cursor_factory=DictCursor)
     logger.debug("Query to execute", extra={"query": query, "vars": vars})

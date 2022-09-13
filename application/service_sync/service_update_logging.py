@@ -7,7 +7,11 @@ from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
-from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST
+from common.constants import (
+    DOS_INTEGRATION_USER_NAME,
+    DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+    DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
+)
 from common.opening_times import opening_period_times_from_list, SpecifiedOpeningTime, StandardOpeningTimes
 from common.report_logging import log_service_updated
 
@@ -18,13 +22,7 @@ class ServiceUpdateLogger:
     """A class to handle specfic logs to be sent to DoS Splunk"""
 
     NULL_VALUE: str = "NULL"
-    # Format of the log message, will fail if logged to without the extra fields set
-    dos_format = (
-        "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(correlation_id)s|DOS_INTEGRATION|"
-        "%(null_value)s|%(service_uid)s|%(service_name)s|%(type_id)s|%(data_field_modified)s|%(action)s|"
-        "%(data_changes)s|%(null_value)s|message=%(message)s|correlationId=%(correlation_id)s|"
-        "elapsedTime=%(null_value)s|execution_time=%(null_value)s"
-    )
+    dos_basic_format = "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(message)s"
     dos_logger: Logger
     logger: PowerToolsLogger
 
@@ -35,7 +33,7 @@ class ServiceUpdateLogger:
         # Set to log to stdout
         stream_handler = StreamHandler()
         # Set the format of the log message
-        stream_handler.setFormatter(Formatter(self.dos_format))
+        stream_handler.setFormatter(Formatter(self.dos_basic_format))
         # Add the stream handler to the logger
         self.dos_logger.addHandler(stream_handler)
         self.dos_logger.setLevel(INFO)
@@ -44,6 +42,7 @@ class ServiceUpdateLogger:
         self.service_name = service_name
         self.type_id = type_id
         self.correlation_id = self.logger.get_correlation_id()
+        self.environment = getenv("ENV", "UNKNOWN").upper()
 
     def get_action_name(self, action: str) -> str:
         """Get the action name from the service history action name
@@ -70,7 +69,7 @@ class ServiceUpdateLogger:
         Returns:
             tuple[str, str]: The formatted previous and new values
         """
-        existing_value = f"{data_field_modified}_existing={previous_value}"
+        existing_value = f"{data_field_modified}_existing={previous_value}" if previous_value != "" else previous_value
         if previous_value != "" and new_value != "":
             # Modify
             updated_value = f"{data_field_modified}_update=remove={previous_value}add={new_value}"
@@ -93,7 +92,6 @@ class ServiceUpdateLogger:
             previous_value (Optional[str]): The previous value of the field
             new_value (Optional[str]): The new value of the field
         """
-        environment = getenv("ENV", "UNKNOWN").upper()
         # Handle the case where the values could be None
         previous_value = "" if previous_value in ["None", "", None] else f'"{previous_value}"'
         new_value = "" if new_value in ["None", "", None] else f'"{new_value}"'
@@ -107,19 +105,15 @@ class ServiceUpdateLogger:
             service_uid=self.service_uid,
             type_id=self.type_id,
         )
+
         self.dos_logger.info(
-            msg="UpdateService",
-            extra={
-                "action": self.get_action_name(action),
-                "correlation_id": self.correlation_id,
-                "data_changes": f"{previous_value}|{new_value}",
-                "data_field_modified": data_field_modified,
-                "environment": environment,
-                "null_value": self.NULL_VALUE,
-                "service_name": self.service_name,
-                "service_uid": self.service_uid,
-                "type_id": self.type_id,
-            },
+            msg=(
+                f"{self.correlation_id}|{DOS_INTEGRATION_USER_NAME}|{self.NULL_VALUE}|{self.service_uid}|"
+                f"{self.service_name}|{self.type_id}|{data_field_modified}|{self.get_action_name(action)}|"
+                f"{previous_value}|{new_value}|{self.NULL_VALUE}|message=UpdateService|"
+                f"correlationId={self.correlation_id}|elapsedTime={self.NULL_VALUE}|execution_time={self.NULL_VALUE}"
+            ),
+            extra={"environment": self.environment},
         )
 
     def log_standard_opening_times_service_update_for_weekday(
@@ -197,6 +191,25 @@ class ServiceUpdateLogger:
             action=action,
             previous_value=existing_value,
             new_value=updated_value,
+        )
+
+    def log_rejected_change(
+        self,
+        change_id: str,
+    ) -> None:
+        """Logs a rejected change to DoS Splunk
+
+        Args:
+            change_id (str): The change id to log
+        """
+        self.dos_logger.info(
+            msg=(
+                f"update|{self.correlation_id}|{self.NULL_VALUE}|{DOS_INTEGRATION_USER_NAME}|RejectDeleteChange|"
+                f"request|success|action=reject|changeId={change_id}|org_id={self.service_uid}|"
+                f"org_name={self.service_name}|change_status=PENDING|info=change rejected|"
+                f"execution_time={self.NULL_VALUE}"
+            ),
+            extra={"environment": self.environment},
         )
 
 

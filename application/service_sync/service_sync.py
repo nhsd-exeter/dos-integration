@@ -10,6 +10,7 @@ from boto3 import client
 
 from .compare_data import compare_nhs_uk_and_dos_data
 from .dos_data import get_dos_service_and_history, run_db_health_check, update_dos_data
+from .pending_changes import check_and_remove_pending_dos_changes
 from common.dynamodb import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
@@ -37,11 +38,12 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
             return
         set_up_logging(event)
         # Not a health check, so process the update request
+        service_id: int = event["update_request"]["service_id"]
+        check_and_remove_pending_dos_changes(service_id)
         # Set up NHS UK Service
         change_event: Dict[str, Any] = event["update_request"]["change_event"]
         nhs_entity = NHSEntity(change_event)
         # Get current DoS state
-        service_id: int = event["update_request"]["service_id"]
         dos_service, service_histories = get_dos_service_and_history(service_id=service_id)
         # Compare NHS UK and DoS data
         changes_to_dos = compare_nhs_uk_and_dos_data(

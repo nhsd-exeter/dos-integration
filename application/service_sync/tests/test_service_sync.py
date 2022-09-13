@@ -79,6 +79,7 @@ def test_lambda_handler_healthcheck(
     del environ["ENV"]
 
 
+@patch(f"{FILE_PATH}.check_and_remove_pending_dos_changes")
 @patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.run_db_health_check")
 @patch(f"{FILE_PATH}.add_success_metric")
@@ -98,6 +99,7 @@ def test_lambda_handler_no_healthcheck(
     mock_add_success_metric: MagicMock,
     mock_run_db_health_check: MagicMock,
     mock_add_metric: MagicMock,
+    mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
 ):
     # Arrange
@@ -111,6 +113,9 @@ def test_lambda_handler_no_healthcheck(
     lambda_handler(event=UPDATE_REQUEST_QUEUE_ITEM, context=lambda_context)
     # Assert
     mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
+    mock_check_and_remove_pending_dos_changes.assert_called_once_with(
+        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"]
+    )
     mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
     mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
     mock_compare_nhs_uk_and_dos_data.assert_called_once_with(
@@ -129,6 +134,7 @@ def test_lambda_handler_no_healthcheck(
     del environ["ENV"]
 
 
+@patch(f"{FILE_PATH}.check_and_remove_pending_dos_changes")
 @patch.object(Logger, "exception")
 @patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.put_circuit_is_open")
@@ -152,6 +158,7 @@ def test_lambda_handler_no_healthcheck_exception(
     mock_put_circuit_is_open: MagicMock,
     mock_add_metric: MagicMock,
     mock_logger_exception: MagicMock,
+    mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
 ):
     # Arrange
@@ -164,6 +171,9 @@ def test_lambda_handler_no_healthcheck_exception(
     lambda_handler(event=UPDATE_REQUEST_QUEUE_ITEM, context=lambda_context)
     # Assert
     mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
+    mock_check_and_remove_pending_dos_changes.assert_called_once_with(
+        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"]
+    )
     mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
     mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
     mock_compare_nhs_uk_and_dos_data.assert_not_called()

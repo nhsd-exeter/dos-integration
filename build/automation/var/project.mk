@@ -15,8 +15,8 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,service-matcher,service-sync,slack-messenger,dos-db-handler
-PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,service-matcher,service-sync,slack-messenger
+PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,dos-db-handler
+PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
@@ -50,9 +50,10 @@ TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 DOS_INTEGRATION_URL := $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)/v1/change-event
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
+
+# SQS Queues
 TF_VAR_change_event_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-queue.fifo
 TF_VAR_update_request_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-update-request-queue.fifo
-
 update_request_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue_name)
 update_request_dlq_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_dlq)
 TF_VAR_change_event_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-dead-letter-queue.fifo
@@ -67,10 +68,10 @@ TF_VAR_dos_db_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-handler-r
 TF_VAR_dos_db_update_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
 TF_VAR_orchestrator_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-role
+TF_VAR_send_email_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email-role
 TF_VAR_service_matcher_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher-role
 TF_VAR_service_sync_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-sync-role
 TF_VAR_slack_messenger_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-slack-messenger-role
-
 # Kinisis Firehose (Splunk Logs)
 TF_VAR_dos_integration_firehose := $(PROJECT_ID)-cw-logs-firehose
 TF_VAR_di_firehose_role := $(PROJECT_ID)_cw_firehose_access_role
@@ -83,21 +84,26 @@ TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONM
 TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_replay_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_orchestrator_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-cw-logs-firehose-subscription
+TF_VAR_send_email_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email-cw-logs-firehose-subscription
 TF_VAR_service_matcher_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher-cw-logs-firehose-subscription
-TF_VAR_service_sync_dos_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-sync-dos-cw-logs-firehose-subscription
 TF_VAR_service_sync_di_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-sync-di-cw-logs-firehose-subscription
-
+TF_VAR_service_sync_dos_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-sync-dos-cw-logs-firehose-subscription
+TF_VAR_slack_messenger_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-slack-messenger-cw-logs-firehose-subscription
 # Lambda names
 TF_VAR_change_event_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-dlq-handler
 TF_VAR_dos_db_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-handler
 TF_VAR_dos_db_update_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
 TF_VAR_orchestrator_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator
+TF_VAR_send_email_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email
 TF_VAR_service_matcher_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher
 TF_VAR_service_sync_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-sync
+TF_VAR_slack_messenger_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-slack-messenger
+
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
-
+SEND_EMAIL_BUCKET_NAME:=$(PROJECT_ID)-$(ENVIRONMENT)-send-email-bucket
+TF_VAR_send_email_bucket_name := $(SEND_EMAIL_BUCKET_NAME)
 # Cloudwatch monitoring dashboard
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(ENVIRONMENT)-sqs-dlq-recieved-msg-alert
