@@ -8,6 +8,7 @@ from ..report_logging import (
     log_closed_or_hidden_services,
     log_invalid_nhsuk_postcode,
     log_invalid_open_times,
+    log_service_updated,
     log_service_with_generic_bank_holiday,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
@@ -19,6 +20,7 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
+    SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
@@ -279,5 +281,43 @@ def test_log_website_is_invalid(mock_logger: MagicMock):
             "error_info": f"NHSUK unedited website: '{nhs_entity.website}', NHSUK website='{nhs_website}'",
             "nhs_unedited_website": nhs_entity.website,
             "nhs_website": nhs_website,
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_service_updated(mock_logger: MagicMock):
+    # Arrange
+    action = "action"
+    data_field_modified = "data_field_modified"
+    new_value = "new_value"
+    previous_value = "previous_value"
+    service_name = "ServiceName"
+    service_uid = "1234567890"
+    type_id = "1"
+    # Act
+    log_service_updated(
+        action=action,
+        data_field_modified=data_field_modified,
+        new_value=new_value,
+        previous_value=previous_value,
+        service_name=service_name,
+        service_uid=service_uid,
+        type_id=type_id,
+    )
+    # Assert
+    assert SERVICE_UPDATE_REPORT_ID == "SERVICE_UPDATE"
+    mock_logger.assert_called_with(
+        "Service update complete",
+        extra={
+            "report_key": SERVICE_UPDATE_REPORT_ID,
+            "action": action,
+            "correlation_id": "test",
+            "previous_value": previous_value,
+            "new_value": new_value,
+            "data_field_modified": data_field_modified,
+            "service_name": service_name,
+            "service_uid": service_uid,
+            "type_id": type_id,
         },
     )

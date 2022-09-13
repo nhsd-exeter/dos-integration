@@ -9,6 +9,7 @@ from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from common.constants import DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST
 from common.opening_times import opening_period_times_from_list, SpecifiedOpeningTime, StandardOpeningTimes
+from common.report_logging import log_service_updated
 
 logger = PowerToolsLogger(child=True)
 
@@ -97,18 +98,14 @@ class ServiceUpdateLogger:
         previous_value = "" if previous_value in ["None", "", None] else f'"{previous_value}"'
         new_value = "" if new_value in ["None", "", None] else f'"{new_value}"'
         # Log the message with all the extra fields set
-        self.logger.info(
-            msg="UpdateService",
-            extra={
-                "action": self.get_action_name(action),
-                "correlation_id": self.correlation_id,
-                "data_changes": f"{previous_value}|{new_value}",
-                "data_field_modified": data_field_modified,
-                "null_value": self.NULL_VALUE,
-                "service_name": self.service_name,
-                "service_uid": self.service_uid,
-                "type_id": self.type_id,
-            },
+        log_service_updated(
+            action=action,
+            data_field_modified=data_field_modified,
+            new_value=new_value,
+            previous_value=previous_value,
+            service_name=self.service_name,
+            service_uid=self.service_uid,
+            type_id=self.type_id,
         )
         self.dos_logger.info(
             msg="UpdateService",
@@ -244,6 +241,6 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
             service_update_logger.log_service_update(
                 data_field_modified=change_key,
                 action=change_values["changetype"],
-                previous_value=change_values["previous"],
+                previous_value=change_values.get("previous", ""),
                 new_value=change_values["data"],
             )
