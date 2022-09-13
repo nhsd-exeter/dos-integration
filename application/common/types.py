@@ -24,6 +24,13 @@ class UpdateRequestQueueItem(TypedDict):
 
 class EmailFile(TypedDict):
     correlation_id: str
+    user_id: str
+    email_body: str
+    email_subject: str
+
+
+class EmailMessage(TypedDict):
+    correlation_id: str
     recipient_email_address: str
     email_body: str
     email_subject: str

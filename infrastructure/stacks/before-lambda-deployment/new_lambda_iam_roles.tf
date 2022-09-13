@@ -367,6 +367,11 @@ module "service_sync" {
       "Effect": "Allow",
       "Action": "s3:PutObject",
       "Resource":"arn:aws:s3:::${var.send_email_bucket_name}/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource":"arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.send_email_lambda_name}"
     }
   ]
 }
@@ -428,25 +433,6 @@ module "dos_db_update_dlq_handler" {
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "ec2:CreateNetworkInterface",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface",
-        "ec2:AssignPrivateIpAddresses",
-        "ec2:UnassignPrivateIpAddresses",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs",
-        "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
       "Action": "kms:Decrypt",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
@@ -484,66 +470,31 @@ module "dos_db_handler" {
 EOF
 }
 
-resource "aws_iam_role" "send_email_role" {
-  name               = var.send_email_role_name
-  path               = "/"
-  description        = ""
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "send_email_policy" {
-  name   = "send_email_policy"
-  role   = aws_iam_role.send_email_role.id
-  policy = <<EOF
+module "send_email" {
+  source               = "../../modules/lambda-iam-role"
+  lambda_name          = var.send_email_lambda_name
+  use_custom_policy    = true
+  custom_lambda_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "ec2:CreateNetworkInterface",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface",
-        "ec2:AssignPrivateIpAddresses",
-        "ec2:UnassignPrivateIpAddresses",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs",
-        "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords"
-      ],
-      "Resource": ["*"]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:GenerateDataKey*",
-        "kms:DescribeKey"
-      ],
+      "Action": "kms:Decrypt",
       "Resource": "${aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
       "Action": "s3:GetObject",
-      "Resource":"arn:aws:s3:::${var.send_email_bucket_name}"
+      "Resource":[
+        "arn:aws:s3:::${var.send_email_bucket_name}",
+        "arn:aws:s3:::${var.send_email_bucket_name}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:uec-dos-int-*"
     }
   ]
 }

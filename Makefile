@@ -30,8 +30,8 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 	done
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
+	eval "$$(make -s populate-deployment-variables)"
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
@@ -53,6 +53,9 @@ populate-deployment-variables:
 	echo "export DB_READ_AND_WRITE_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
 	echo "export DB_READ_ONLY_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_READ_ONLY_USER_NAME_SECRET_NAME) KEY=$(DB_READ_ONLY_USER_NAME_SECRET_KEY))"
 	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
+	echo "export PROJECT_SYSTEM_EMAIL_ADDRESS=$$(make -s secret-get-existing-value NAME=$(EMAIL_SECRETS) KEY=$(SYSTEM_EMAIL_KEY))"
+	echo "export PROJECT_TEAM_EMAIL_ADDRESS=$$(make -s secret-get-existing-value NAME=$(EMAIL_SECRETS) KEY=$(TEAM_EMAIL_KEY))"
+	echo "export TERRAFORM_KMS_KEY_ID=$$(make terraform-output STACKS=before-lambda-deployment | grep -oP 'kms_key_id = "\K[^"]+')"
 
 unit-test-local:
 	pyenv local .venv
@@ -256,6 +259,15 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 
 push-tester-image:
 	make docker-push NAME=tester
+
+# ==============================================================================
+# SES (Simple Email Service)
+
+deploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
+	make terraform-apply-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
+
+undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
+	make terraform-destroy-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
 
 # ==============================================================================
 # Pipelines

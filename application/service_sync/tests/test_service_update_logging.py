@@ -2,7 +2,7 @@ from datetime import date, time
 from logging import INFO
 from unittest.mock import MagicMock, patch
 
-from pytest import fixture, mark
+from pytest import fixture
 
 from application.common.constants import (
     DOS_INTEGRATION_USER_NAME,
@@ -15,6 +15,7 @@ from application.service_sync.service_update_logging import log_service_updates,
 SERVICE_UID = "12345"
 SERVICE_NAME = "Test Service"
 TYPE_ID = "1"
+ODSCODE = "ODS123"
 EXAMPLE_DATA_FIELD_MODIFIED = "test_field"
 EXAMPLE_ACTION = "update"
 EXAMPLE_PREVIOUS_VALUE = "test_value"
@@ -25,7 +26,7 @@ FILE_PATH = "application.service_sync.service_update_logging"
 
 @fixture
 def service_update_logger():
-    yield ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID)
+    yield ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE)
 
 
 def test_dos_logger(service_update_logger: ServiceUpdateLogger):
@@ -40,21 +41,6 @@ def test_dos_logger(service_update_logger: ServiceUpdateLogger):
     assert service_update_logger.service_uid == SERVICE_UID
     assert service_update_logger.service_name == SERVICE_NAME
     assert service_update_logger.type_id == TYPE_ID
-
-
-def test_service_update_logger_get_action_name_remove(service_update_logger: ServiceUpdateLogger):
-    # Act
-    action = service_update_logger.get_action_name("remove")
-    # Assert
-    assert action == "delete"
-
-
-@mark.parametrize("expected_action", ["update", "add", "delete", "other"])
-def test_service_update_logger_get_action_name_other(expected_action: str, service_update_logger: ServiceUpdateLogger):
-    # Act
-    action = service_update_logger.get_action_name(expected_action)
-    # Assert
-    assert expected_action == action
 
 
 def test_service_update_logger_get_opening_times_change_modify(service_update_logger: ServiceUpdateLogger):
@@ -112,6 +98,7 @@ def test_service_update_logger_log_service_update(
         previous_value=EXAMPLE_PREVIOUS_VALUE,
         new_value=EXAMPLE_NEW_VALUE,
     )
+
     # Assert
     mock_log_service_update.assert_called_once_with(
         action=EXAMPLE_ACTION,
@@ -138,9 +125,9 @@ def test_service_update_logger_log_standard_opening_times_service_update_for_wee
     mock_opening_period_times_from_list: MagicMock,
     mock_get_opening_times_change: MagicMock,
     mock_log_service_update: MagicMock,
+    service_update_logger: ServiceUpdateLogger,
 ):
     # Arrange
-    service_update_logger = ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID)
     weekday = "monday"
     mock_get_opening_times_change.return_value = (EXAMPLE_PREVIOUS_VALUE, EXAMPLE_NEW_VALUE)
     # Act
@@ -171,7 +158,9 @@ def test_service_update_logger_log_specified_opening_times_service_update(
     mock_log_service_update: MagicMock,
 ):
     # Arrange
-    service_update_logger = ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID)
+    service_update_logger = ServiceUpdateLogger(
+        service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE
+    )
     open_periods = [
         OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
         OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
@@ -228,6 +217,7 @@ def test_log_service_updates_demographics_change(mock_service_update_logger: Mag
         service_uid=str(changes_to_dos.dos_service.uid),
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
+        odscode=str(changes_to_dos.nhs_entity.odscode),
     )
     mock_service_update_logger.return_value.log_service_update.assert_called_once_with(
         data_field_modified=change_key,
@@ -267,6 +257,7 @@ def test_log_service_updates_standard_opening_times_change(mock_service_update_l
         service_uid=str(changes_to_dos.dos_service.uid),
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
+        odscode=str(changes_to_dos.nhs_entity.odscode),
     )
     mock_service_update_logger.return_value.log_standard_opening_times_service_update_for_weekday.assert_called_once_with(  # noqa: E501
         data_field_modified=change_key,
@@ -307,6 +298,7 @@ def test_log_service_updates_specified_opening_times_change(mock_service_update_
         service_uid=str(changes_to_dos.dos_service.uid),
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
+        odscode=str(changes_to_dos.nhs_entity.odscode),
     )
     mock_service_update_logger.return_value.log_specified_opening_times_service_update.assert_called_once_with(
         action=EXAMPLE_ACTION,

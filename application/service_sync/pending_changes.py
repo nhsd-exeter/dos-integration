@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime
-from json import dump, loads
-from os import remove
+from json import dumps, loads
+from os import environ
 from time import time_ns
 from typing import List, Optional
 
 from aws_lambda_powertools.logging import Logger
+from boto3 import client
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
 from pytz import timezone
@@ -13,8 +14,8 @@ from pytz import timezone
 from .service_update_logging import ServiceUpdateLogger
 from common.constants import DI_CHANGE_ITEMS, DOS_INTEGRATION_USER_NAME
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
-from common.s3 import put_email_to_s3
-from common.types import EmailFile
+from common.s3 import put_content_to_s3
+from common.types import EmailFile, EmailMessage
 
 logger = Logger(child=True)
 
@@ -30,6 +31,7 @@ class PendingChange:
     typeid: str  # Type id of the service
     name: str  # Name of the service
     uid: str  # Uid of the service
+    user_id: str  # User id of the user who made the change
 
     def __init__(self, db_cursor_row: dict) -> None:
         """Sets the attributes of this object to those found in the db row
@@ -38,6 +40,21 @@ class PendingChange:
         """
         for row_key, row_value in db_cursor_row.items():
             setattr(self, row_key, row_value)
+
+    def __repr__(self) -> str:
+        """Returns a string representation of this object
+
+        Returns:
+            str: String representation of this object
+        """
+        value = loads(self.value)
+        value["initiator"]["userid"] = "Hidden in Logs"
+        value["approver"] = "Hidden in Logs"
+
+        return (
+            f"PendingChange(id={self.id}, value={value}, typeid={self.typeid}, "
+            f"name={self.name}, uid={self.uid}, user_id={self.user_id})"
+        )
 
     def is_valid(self) -> bool:
         """Checks if the pending change is valid
@@ -51,7 +68,9 @@ class PendingChange:
             is_types_valid = [True if change in DI_CHANGE_ITEMS else False for change in changes.keys()]
             return all(is_types_valid)
         except Exception:
-            logger.exception(f"Invalid JSON: {self.value}")
+            logger.exception(
+                f"Invalid JSON at pending change {self.id}, unable to show as contains sensitive user data"
+            )
             return False
 
 
@@ -86,7 +105,7 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     """
     # Get pending changes
     sql_query = (
-        "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid "
+        "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid, u.id AS user_id "
         "FROM changes c INNER JOIN users u ON u.username = c.creatorsname "
         "INNER JOIN services s ON s.id = c.serviceid "
         "WHERE serviceid=%(SERVICE_ID)s AND approvestatus='PENDING'"
@@ -94,7 +113,6 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     query_vars = {"SERVICE_ID": service_id}
     cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
     rows: List[DictCursor] = cursor.fetchall()
-    logger.debug("rows", extra={"rows": rows})
     cursor.close()
     if len(rows) >= 1:
         logger.info(f"Pending changes found for Service ID {service_id}")
@@ -147,9 +165,7 @@ def log_rejected_changes(pending_changes: List[PendingChange]) -> None:
     """
     for pending_change in pending_changes:
         ServiceUpdateLogger(
-            service_uid=pending_change.uid,
-            service_name=pending_change.name,
-            type_id=pending_change.typeid,
+            service_uid=pending_change.uid, service_name=pending_change.name, type_id=pending_change.typeid, odscode=""
         ).log_rejected_change(pending_change.id)
 
 
@@ -159,24 +175,37 @@ def send_rejection_emails(pending_changes: List[PendingChange]) -> None:
     Args:
         pending_changes (List[PendingChange]): The pending changes to send rejection emails for
     """
+    subject = "Your DoS Change has been rejected"
     for pending_change in pending_changes:
+        file_name = f"rejection-emails/rejection-email-{time_ns()}.json"
+        file_contents = build_change_rejection_email_contents(pending_change, file_name)
+        correlation_id: str = logger.get_correlation_id()
         file = EmailFile(
-            correlation_id=logger.get_correlation_id(),
-            recipient_email_address=pending_change.email,
-            email_body=build_change_rejection_email_contents(pending_change),
-            email_subject="Your DoS Change has been rejected",
+            correlation_id=correlation_id,
+            user_id=pending_change.user_id,
+            email_body=file_contents,
+            email_subject=subject,
         )
-        logger.debug("Create email file", extra={"file": file})
-        email_file_filepath = "/tmp/rejection-email.json"  # nosec - File is created in a temporary directory in
-        with open(email_file_filepath, "w+") as email_file:
-            dump(file, email_file)
-            email_file.close()
         logger.debug("Email file created")
-        put_email_to_s3(email_file_filepath, f"rejection-emails/rejection-email-{time_ns()}.json")
-        remove(email_file_filepath)
+        put_content_to_s3(content=dumps(file), s3_filename=file_name)
+        logger.info("File contents uploaded to S3")
+        file_contents = file_contents.replace("{{InitiatorName}}", pending_change.creatorsname)
+        message = EmailMessage(
+            correlation_id=correlation_id,
+            recipient_email_address=pending_change.email,
+            email_body=file_contents,
+            email_subject=subject,
+        )
+        logger.debug("Email message created")
+        client("lambda").invoke(
+            FunctionName=environ["SEND_EMAIL_LAMBDA_NAME"],
+            InvocationType="Event",
+            Payload=dumps(message),
+        )
+        logger.info("Send email lambda invoked")
 
 
-def build_change_rejection_email_contents(pending_change: PendingChange) -> str:
+def build_change_rejection_email_contents(pending_change: PendingChange, file_name: str) -> str:
     """Builds the contents of the change rejection email
 
     Args:
@@ -189,11 +218,11 @@ def build_change_rejection_email_contents(pending_change: PendingChange) -> str:
         file_contents = email_template.read()
         email_template.close()
     email_correlation_id = f"{pending_change.uid}-{time_ns()}"
-    file_contents = file_contents.replace("{{InitiatorName}}", pending_change.creatorsname)
     file_contents = file_contents.replace("{{ServiceName}}", pending_change.name)
     file_contents = file_contents.replace("{{ServiceUid}}", pending_change.uid)
     file_contents = file_contents.replace("{{EmailCorrelationId}}", email_correlation_id)
-    logger.info("Email Correlation Id", extra={"email_correlation_id": email_correlation_id})
+    file_contents = file_contents.replace("{{DiTeamEmail}}", environ.get("TEAM_EMAIL_ADDRESS", ""))
+    logger.info("Email Correlation Id", extra={"email_correlation_id": email_correlation_id, "file_name": file_name})
     json_value = loads(pending_change.value)
     for change_key, value in json_value["new"].items():
         # Add a new change row to the table in the email
@@ -202,7 +231,6 @@ def build_change_rejection_email_contents(pending_change: PendingChange) -> str:
         row = row.replace("{{previous}}", str(value.get("previous")))
         row = row.replace("{{new}}", str(value.get("data")))
         file_contents = file_contents.replace("{{row}}", row)
-        logger.debug("Added row to table in email", extra={"row": row})
     # Remove the placeholder row
     file_contents = file_contents.replace("{{row}}", " ")
     # Remove the \n characters from the HTML

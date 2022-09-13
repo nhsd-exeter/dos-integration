@@ -1,50 +1,6 @@
-##########################
-# INFRASTRUCTURE COMPONENT
-##########################
-
 ############
-# AWS COMMON
+# VPC
 ############
-
-variable "aws_region" {
-  description = "The AWS region"
-}
-
-variable "aws_account_id" {
-  description = "AWS account Number for Athena log location"
-}
-
-# ##############
-# # TEXAS COMMON
-# ##############
-
-variable "profile" {
-  description = "The tag used to identify profile e.g. dev, test, live, ..."
-}
-
-variable "service_name" {
-  description = "The tag used to identify the service the resource belongs to"
-  default     = "uec-dos-int"
-}
-
-variable "texas_s3_logs_bucket" {
-  description = "The texas s3 log bucket for s3 bucket logs"
-}
-
-variable "programme" {
-  description = "Programme name"
-}
-
-variable "project_id" {
-  description = "Project ID"
-}
-variable "environment" {
-  description = "Environment name"
-}
-
-variable "terraform_platform_state_store" {
-  description = "Texas Platform State store bucket"
-}
 
 variable "vpc_terraform_state_key" {
   description = "Texas Platform State store bucket key"
@@ -60,6 +16,16 @@ variable "api_gateway_api_key_name" {
 
 variable "nhs_uk_api_key_key" {
   description = "API Key key for secrets manager"
+}
+
+variable "email_secrets" {
+  type        = string
+  description = "Where the email secrets are stored"
+}
+
+variable "system_email_address_key" {
+  type        = string
+  description = "The key for the email address in the secrets manager secret"
 }
 
 # ############################
@@ -81,17 +47,8 @@ variable "dos_db_replica_name" {
 # ############################
 # # IAM
 # ############################
-
-variable "service_matcher_role_name" {
-  description = "Role name for event processor lambda"
-}
-
 variable "orchestrator_role_name" {
   description = "Role name for event processor lambda"
-}
-
-variable "service_sync_role_name" {
-  description = "Role name for event sender lambda"
 }
 
 variable "change_event_dlq_handler_role_name" {
@@ -116,6 +73,7 @@ variable "dos_db_handler_role_name" {
 variable "send_email_role_name" {
   description = "Role name for send email lambda"
 }
+
 
 # ##############
 # # LAMBDAS
@@ -146,6 +104,10 @@ variable "dos_db_handler_lambda_name" {
   description = "Name of dos db handler lambda"
 }
 
+variable "send_email_lambda_name" {
+  type        = string
+  description = "Name of send email lambda"
+}
 # ############################
 # Old Variables - remove after release 3.0
 # ############################

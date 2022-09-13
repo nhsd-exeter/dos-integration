@@ -64,3 +64,7 @@ data "aws_iam_policy_document" "kms_policy" {
     not_resources = []
   }
 }
+
+data "aws_secretsmanager_secret_version" "deployment_secrets" {
+  secret_id = var.email_secrets
+}
