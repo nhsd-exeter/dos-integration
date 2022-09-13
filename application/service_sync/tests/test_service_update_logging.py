@@ -103,11 +103,13 @@ def test_service_update_logger_get_opening_times_change_add(service_update_logge
     ) == response
 
 
-def test_service_update_logger_log_service_update(capsys: CaptureFixture):
+@patch(f"{FILE_PATH}.log_service_updated")
+def test_service_update_logger_log_service_update(
+    mock_log_service_update: MagicMock, capsys: CaptureFixture, service_update_logger: ServiceUpdateLogger
+):
     # Arrange
-    service_update_logger = ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID)
-
     environ["ENV"] = environment = "test"
+    service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     # Act
     service_update_logger.log_service_update(
         data_field_modified=EXAMPLE_DATA_FIELD_MODIFIED,
@@ -116,12 +118,29 @@ def test_service_update_logger_log_service_update(capsys: CaptureFixture):
         new_value=EXAMPLE_NEW_VALUE,
     )
     # Assert
-    captured = capsys.readouterr()
-    assert (
-        f"|INFO|DOS_INTEGRATION_{environment.upper()}|1|DOS_INTEGRATION|NULL|{SERVICE_UID}"
-        f'|{SERVICE_NAME}|{TYPE_ID}|{EXAMPLE_DATA_FIELD_MODIFIED}|{EXAMPLE_ACTION}|"{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"|NULL|'  # noqa: E501
-        f"message=UpdateService|correlationId=1|elapsedTime=NULL|execution_time=NULL"
-    ) in captured.err
+    mock_log_service_update.assert_called_once_with(
+        action=EXAMPLE_ACTION,
+        data_field_modified=EXAMPLE_DATA_FIELD_MODIFIED,
+        new_value=f'"{EXAMPLE_NEW_VALUE}"',
+        previous_value=f'"{EXAMPLE_PREVIOUS_VALUE}"',
+        service_name=SERVICE_NAME,
+        service_uid=SERVICE_UID,
+        type_id=TYPE_ID,
+    )
+    dos_logger_mock.info.assert_called_once_with(
+        msg="UpdateService",
+        extra={
+            "action": EXAMPLE_ACTION,
+            "correlation_id": "1",
+            "data_changes": f'"{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"',
+            "data_field_modified": EXAMPLE_DATA_FIELD_MODIFIED,
+            "environment": environment.upper(),
+            "null_value": "NULL",
+            "service_name": SERVICE_NAME,
+            "service_uid": SERVICE_UID,
+            "type_id": "1",
+        },
+    )
     # Cleanup
     del environ["ENV"]
 

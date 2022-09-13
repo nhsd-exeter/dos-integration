@@ -11,6 +11,7 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
+    SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
@@ -193,5 +194,30 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
             "error_info": f"NHSUK unedited website: '{nhs_uk_entity.website}', NHSUK website='{nhs_website}'",
             "nhs_unedited_website": nhs_uk_entity.website,
             "nhs_website": nhs_website,
+        },
+    )
+
+
+def log_service_updated(
+    action: str,
+    data_field_modified: str,
+    new_value: str,
+    previous_value: str,
+    service_name: str,
+    service_uid: str,
+    type_id: str,
+) -> None:
+    logger.warning(
+        "Service update complete",
+        extra={
+            "report_key": SERVICE_UPDATE_REPORT_ID,
+            "action": action,
+            "correlation_id": logger.get_correlation_id(),
+            "previous_value": previous_value,
+            "new_value": new_value,
+            "data_field_modified": data_field_modified,
+            "service_name": service_name,
+            "service_uid": service_uid,
+            "type_id": type_id,
         },
     )
