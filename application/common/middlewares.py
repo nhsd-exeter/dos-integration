@@ -28,6 +28,24 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
 
 
 @lambda_handler_decorator(trace_execution=True)
+def unhandled_exception_logging_hidden_event(handler, event, context: LambdaContext):
+    try:
+        response = handler(event, context)
+        return response
+    except ValidationException as err:
+        logger.exception(f"Validation Error - {err}", extra={"error": err})
+        return
+    except ClientError as err:
+        error_code = err.response["Error"]["Code"]
+        error_msg = err.response["Error"]["Message"]
+        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err})
+        raise err
+    except BaseException as err:
+        logger.exception(f"Something went wrong - {err}", extra={"error": err})
+        raise err
+
+
+@lambda_handler_decorator(trace_execution=True)
 def set_correlation_id(handler, event: SQSEvent, context: LambdaContext):
     """Set correlation id from SQS event"""
     record = next(event.records)

@@ -103,7 +103,6 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     Returns:
         Optional[List[Dict[str, Any]]]: A list of pending changes or None if there are no pending changes
     """
-    # Get pending changes
     sql_query = (
         "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid, u.id AS user_id "
         "FROM changes c INNER JOIN users u ON u.username = c.creatorsname "
@@ -114,22 +113,20 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
     rows: List[DictCursor] = cursor.fetchall()
     cursor.close()
-    if len(rows) >= 1:
-        logger.info(f"Pending changes found for Service ID {service_id}")
-        pending_changes: List[PendingChange] = []
-        for row in rows:
-            pending_change = PendingChange(row)
-            logger.info(f"Pending change found: {pending_change}", extra={"pending_change": pending_change})
-            if pending_change.is_valid():
-                logger.debug(f"Pending change is valid: {pending_change.id}", extra={"pending_change": pending_change})
-                pending_changes.append(pending_change)
-            else:
-                logger.info(f"Pending change {pending_change.id} is invalid", extra={"pending_change": pending_change})
-        return pending_changes
-    elif not rows:
+    if len(rows) < 1:
         return None
-    else:
-        raise ValueError(f"Multiple services found for Service Id: {service_id}")
+    logger.info(f"Pending changes found for Service ID {service_id}")
+    pending_changes: List[PendingChange] = []
+    for row in rows:
+        pending_change = PendingChange(row)
+        logger.info(f"Pending change found: {pending_change}", extra={"pending_change": pending_change})
+        if pending_change.is_valid():
+            logger.debug(f"Pending change is valid: {pending_change.id}", extra={"pending_change": pending_change})
+            pending_changes.append(pending_change)
+        else:
+            logger.info(f"Pending change {pending_change.id} is invalid", extra={"pending_change": pending_change})
+
+    return pending_changes
 
 
 def reject_pending_changes(connection: connection, pending_changes: List[PendingChange]) -> None:

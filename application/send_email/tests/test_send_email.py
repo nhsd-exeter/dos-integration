@@ -91,3 +91,29 @@ def test_send_email(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_
     # Clean up
     del environ["AWS_ACCOUNT_NAME"]
     del environ["EMAIL_SECRET_NAME"]
+
+
+@patch(f"{FILE_PATH}.MIMEMultipart")
+@patch(f"{FILE_PATH}.SMTP")
+@patch(f"{FILE_PATH}.get_secret")
+def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock):
+    # Arrange
+    environ["AWS_ACCOUNT_NAME"] = "nonprod"
+    email_address = "test@test.com"
+    html_content = "This is the email body"
+    subject = "Subject of email"
+    correlation_id = "correlation_id"
+    # Act
+    response = send_email(
+        email_address=email_address,
+        html_content=html_content,
+        subject=subject,
+        correlation_id=correlation_id,
+    )
+    # Assert
+    assert response is None
+    mock_get_secret.assert_not_called()
+    mock_smtp.assert_not_called()
+    mock_mime_multipart.assert_not_called()
+    # Clean up
+    del environ["AWS_ACCOUNT_NAME"]

@@ -1,3 +1,4 @@
+from json import dumps
 from os import environ
 from random import choices
 from unittest.mock import call, MagicMock, patch
@@ -46,6 +47,24 @@ def test_pending_change():
     assert pending_change.typeid == ROW["typeid"]
     assert pending_change.name == ROW["name"]
     assert pending_change.uid == ROW["uid"]
+    assert pending_change.user_id == ROW["user_id"]
+
+
+def test_pending_change__repr__():
+    # Arrange
+    row = ROW.copy()
+    row_value = {"new": {"name": "test"}, "initiator": {"userid": "test"}, "approver": "test"}
+    row["value"] = dumps(row_value)
+    pending_change = PendingChange(row)
+    # Act
+    response = repr(pending_change)
+    # Assert
+    row_value["initiator"]["userid"] = "Hidden in Logs"
+    row_value["approver"] = "Hidden in Logs"
+    assert (
+        f"""PendingChange(id={ROW["id"]}, value={row_value}, typeid={ROW["typeid"]}, """
+        f"""name={ROW["name"]}, uid={ROW["uid"]}, user_id={ROW["user_id"]})"""
+    ) == response
 
 
 def test_pending_change_is_valid_true():

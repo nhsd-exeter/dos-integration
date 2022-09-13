@@ -7,7 +7,7 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from common.middlewares import unhandled_exception_logging
+from common.middlewares import unhandled_exception_logging_hidden_event
 from common.secretsmanager import get_secret
 from common.types import EmailMessage
 
@@ -16,7 +16,7 @@ logger = Logger()
 
 
 @tracer.capture_lambda_handler()
-@unhandled_exception_logging
+@unhandled_exception_logging_hidden_event
 @logger.inject_lambda_context
 def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
     """Entrypoint handler for the service_sync lambda
