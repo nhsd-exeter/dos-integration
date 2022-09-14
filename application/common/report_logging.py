@@ -14,12 +14,39 @@ from common.constants import (
     SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
+    BLANK_STANDARD_OPENINGS_REPORT_ID,
 )
 from common.dos import DoSService, VALID_STATUS_ID
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 
 logger = Logger(child=True)
+
+
+def log_blank_standard_opening_times(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
+    """Log events where matches services are found but no std opening times exist
+
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        matching_services (List[DoSService]): The list of DoS matching services
+    """
+    for dos_service in matching_services:
+        logger.warning(
+            "NHS Service has matching DoS services but no given standard opening times.",
+            extra={
+                "report_key": BLANK_STANDARD_OPENINGS_REPORT_ID,
+                "nhsuk_odscode": nhs_entity.odscode,
+                "dos_service_id": dos_service.id,
+                "dos_service_uid": dos_service.uid,
+                "dos_service_publicname": dos_service.name,
+                "nhsuk_service_status": nhs_entity.org_status,
+                "nhsuk_service_type": nhs_entity.org_type,
+                "nhsuk_sector": nhs_entity.org_sub_type,
+                "dos_service_status": dos_service.statusid,
+                "dos_service_type": dos_service.typeid,
+                "dos_service_type_name": dos_service.servicename,
+            },
+        )
 
 
 def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:

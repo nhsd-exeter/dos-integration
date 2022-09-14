@@ -288,6 +288,13 @@ class StandardOpeningTimes:
 
         return all_closed_days
 
+    def fully_closed(self) -> bool:
+        """"Returns whether the object contains any openings"""
+        for day in WEEKDAYS:
+            if len(getattr(self, day)) > 0:
+                return False
+        return True
+
     def is_open(self, weekday: str) -> bool:
         return len(getattr(self, weekday)) > 0
 

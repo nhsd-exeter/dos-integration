@@ -18,6 +18,7 @@ from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id
 from common.middlewares import set_correlation_id, unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.report_logging import (
+    log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_unmatched_nhsuk_service,
@@ -115,6 +116,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     if not nhs_entity.all_times_valid():
         log_invalid_open_times(nhs_entity, matching_services)
+
+    if nhs_entity.standard_opening_times.fully_closed() and len(matching_services) > 0:
+        # Also requires valid type/subtype, but this condition is already met in code by this point
+        log_blank_standard_opening_times(nhs_entity, matching_services)
 
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services

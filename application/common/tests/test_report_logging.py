@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from aws_lambda_powertools.logging import Logger
 
 from ..report_logging import (
+    log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_invalid_nhsuk_postcode,
     log_invalid_open_times,
@@ -23,11 +24,42 @@ from common.constants import (
     SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
+    BLANK_STANDARD_OPENINGS_REPORT_ID
 )
 from common.dos import VALID_STATUS_ID
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 from common.tests.conftest import dummy_dos_service
+
+
+@patch.object(Logger, "warning")
+def test_log_blank_standard_opening_times(mock_logger, change_event):
+    # Arrange
+    nhs_entity = NHSEntity(change_event)
+    dos_service = dummy_dos_service()
+    matching_services = [dos_service]
+    # Act
+    log_blank_standard_opening_times(nhs_entity, matching_services)
+    # Assert
+    assert (
+        BLANK_STANDARD_OPENINGS_REPORT_ID == "BLANK_STANDARD_OPENINGS"
+    ), f"Report ID should be BLANK_STANDARD_OPENINGS but was {BLANK_STANDARD_OPENINGS_REPORT_ID}"
+    mock_logger.assert_called_with(
+        "NHS Service has matching DoS services but no given standard opening times.",
+        extra={
+            "report_key": BLANK_STANDARD_OPENINGS_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "dos_service_id": dos_service.id,
+            "dos_service_uid": dos_service.uid,
+            "dos_service_publicname": dos_service.name,
+            "nhsuk_service_status": nhs_entity.org_status,
+            "nhsuk_service_type": nhs_entity.org_type,
+            "nhsuk_sector": nhs_entity.org_sub_type,
+            "dos_service_status": dos_service.statusid,
+            "dos_service_type": dos_service.typeid,
+            "dos_service_type_name": dos_service.servicename,
+        },
+    )
 
 
 @patch.object(Logger, "warning")
