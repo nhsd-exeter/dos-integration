@@ -6,6 +6,7 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.constants import (
+    BLANK_STANDARD_OPENINGS_REPORT_ID,
     GENERIC_BANK_HOLIDAY_REPORT_ID,
     GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
     HIDDEN_OR_CLOSED_REPORT_ID,
@@ -14,7 +15,6 @@ from common.constants import (
     SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
-    BLANK_STANDARD_OPENINGS_REPORT_ID,
 )
 from common.dos import DoSService, VALID_STATUS_ID
 from common.nhs import NHSEntity
