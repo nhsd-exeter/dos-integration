@@ -181,6 +181,24 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             ),
             query_vars={"POSTCODE": postcode},
         )
+    elif request["type"] == "create_changes_entry_for_service":
+        service_id = request.get("service_id")
+        unique_id = request.get("unique_id")
+        if service_id is None:
+            raise ValueError("Missing service id for changes table")
+        result = run_query(
+            query=(
+                "INSERT INTO pathwaysdos.changes VALUES ( "
+                "'5F301ABC-D3A4-0B8F-D7F8-F286INT%(UNIQUE_ID)s','PENDING',"
+                "'modify','Test Admin','Test Duplicate','DoS Region','{\"new\":"
+                "{\"cmstelephoneno\":{\"changetype\":\"add\",\"data\":\"\",\"area\":\"demographic\",\"previous\":\"0\"}},"
+                "\"initiator\":{\"userid\":\"admin\",\"timestamp\":\"2022-09-01 13:35:41\"},"
+                "\"approver\":{\"userid\":\"admin\",\"timestamp\":\"01-09-2022 13:35:41\"}}',"
+                "'2022-09-06 11:00:00.000 +0100','Test Admin','2022-09-06 11:00:00.000 +0100',"
+                "'Test Admin',%(SERVICE_ID)s,null,null,null) "
+            ),
+            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id},
+        )
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)
