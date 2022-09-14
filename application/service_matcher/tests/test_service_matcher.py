@@ -190,6 +190,55 @@ def test_lambda_handler_no_matching_dos_services(
 
 
 @patch(f"{FILE_PATH}.validate_change_event")
+@patch(f"{FILE_PATH}.log_blank_standard_opening_times")
+@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
+@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
+@patch(f"{FILE_PATH}.get_matching_services")
+@patch(f"{FILE_PATH}.send_update_requests")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+def test_lambda_handler_blank_std_opening_report_log(
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_send_update_requests,
+    mock_get_matching_services,
+    mock_add_change_event_to_dynamodb,
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    mock_log_blank_standard_opening_times,
+    validate_change_event,
+    change_event,
+    lambda_context,
+):
+    # Arrange
+    service = dummy_dos_service()
+    service.id = 1
+    service.uid = 101
+    service.odscode = "SLC4501"
+    service.web = "www.fakesite.com"
+    service.publicphone = "01462622435"
+    service.postcode = "S45 1AB"
+    change_event["OpeningTimes"] = []
+
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(change_event)
+    mock_extract_body.return_value = change_event
+    mock_nhs_entity.return_value = mock_entity
+    mock_add_change_event_to_dynamodb.return_value = 1
+    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
+    mock_get_matching_services.return_value = [service]
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    lambda_handler(sqs_event, lambda_context)
+    # Assert
+    mock_log_blank_standard_opening_times.assert_called_once()
+    # Clean up
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
+@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_closed_or_hidden_services")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
