@@ -1112,5 +1112,5 @@ def services_location_history_update_assertion(context: Context):
 
 @then("the s3 bucket contains an email file matching the service id")
 def check_s3_contains_email_file(context: Context):
-    email_file = get_s3_email_file()
+    email_file = get_s3_email_file(context)
     assert context.service_id in email_file, "ERROR: Service id not found in email file"

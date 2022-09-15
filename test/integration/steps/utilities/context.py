@@ -20,5 +20,6 @@ class Context:
     def __repr__(self) -> str:
         return (
             f"Context(correlation_id={self.correlation_id}, sequence_number={self.sequence_number}"
-            f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event})"
+            f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event}"
+            f", other={self.other})"
         )

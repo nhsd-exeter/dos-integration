@@ -2,7 +2,7 @@ from ast import literal_eval
 from datetime import datetime, timedelta
 from decimal import Decimal
 from json import dumps, loads, load
-from os import getenv
+from os import getenv, remove
 from random import randint, randrange, sample
 from re import sub
 from time import sleep, time, time_ns
@@ -855,7 +855,7 @@ def post_to_change_event_dlq(context: Context):
     )
 
 
-def get_s3_email_file() -> dict:
+def get_s3_email_file(context: Context) -> dict:
     sleep(15)
     current_environment = getenv("ENVIRONMENT")
     bucket_name = f"uec-dos-int-{current_environment}-send-email-bucket"
@@ -865,5 +865,6 @@ def get_s3_email_file() -> dict:
     object_key = response["Contents"][-1]["Key"]
     S3_RESOURCE = resource("s3")
     S3_RESOURCE.meta.client.download_file(bucket_name, object_key, "email_file.json")
-    data = load(open("email_file.json", "r"))
-    return data
+    context.other = load(open("email_file.json", "r"))
+    remove("email_file.json")
+    return context
