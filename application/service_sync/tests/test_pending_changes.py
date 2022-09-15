@@ -1,5 +1,7 @@
+from json import dumps
+from os import environ
 from random import choices
-from unittest.mock import MagicMock, patch
+from unittest.mock import call, MagicMock, patch
 
 from pytest import CaptureFixture
 from pytz import timezone
@@ -24,9 +26,10 @@ ROW = {
     "typeid": "".join(choices("ABCDEFGHIJKLM", k=8)),
     "name": "".join(choices("ABCDEFGHIJKLM", k=8)),
     "uid": "".join(choices("ABCDEFGHIJKLM", k=8)),
+    "user_id": "".join(choices("ABCDEFGHIJKLM", k=8)),
 }
 EXPECTED_QUERY = (
-    "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid "
+    "SELECT c.id, c.value, c.creatorsname, u.email, s.typeid, s.name, s.uid, u.id AS user_id "
     "FROM changes c INNER JOIN users u ON u.username = c.creatorsname "
     "INNER JOIN services s ON s.id = c.serviceid "
     "WHERE serviceid=%(SERVICE_ID)s AND approvestatus='PENDING'"
@@ -44,6 +47,24 @@ def test_pending_change():
     assert pending_change.typeid == ROW["typeid"]
     assert pending_change.name == ROW["name"]
     assert pending_change.uid == ROW["uid"]
+    assert pending_change.user_id == ROW["user_id"]
+
+
+def test_pending_change__repr__():
+    # Arrange
+    row = ROW.copy()
+    row_value = {"new": {"name": "test"}, "initiator": {"userid": "test"}, "approver": "test"}
+    row["value"] = dumps(row_value)
+    pending_change = PendingChange(row)
+    # Act
+    response = repr(pending_change)
+    # Assert
+    row_value["initiator"]["userid"] = "Hidden in Logs"
+    row_value["approver"] = "Hidden in Logs"
+    assert (
+        f"""PendingChange(id={ROW["id"]}, value={row_value}, typeid={ROW["typeid"]}, """
+        f"""name={ROW["name"]}, uid={ROW["uid"]}, user_id={ROW["user_id"]})"""
+    ) == response
 
 
 def test_pending_change_is_valid_true():
@@ -163,14 +184,18 @@ def test_check_and_remove_pending_dos_changes_invalid_changes(
     mock_send_rejection_emails.assert_not_called()
 
 
+@patch(f"{FILE_PATH}.PendingChange.__repr__")
 @patch(f"{FILE_PATH}.PendingChange.is_valid")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_pending_changes_is_pending_changes_valid_changes(mock_query_dos_db: MagicMock, mock_is_valid: MagicMock):
+def test_get_pending_changes_is_pending_changes_valid_changes(
+    mock_query_dos_db: MagicMock, mock_is_valid: MagicMock, mock_repr: MagicMock
+):
     # Arrange
     connection = MagicMock()
     service_id = "test"
     mock_query_dos_db.return_value.fetchall.return_value = [ROW]
     mock_is_valid.return_value = True
+    mock_repr.return_value = "test"
     # Act
     response = get_pending_changes(connection, service_id)
     # Assert
@@ -179,18 +204,23 @@ def test_get_pending_changes_is_pending_changes_valid_changes(mock_query_dos_db:
         query=EXPECTED_QUERY,
         vars={"SERVICE_ID": service_id},
     )
+    assert mock_repr.call_count == 2
     mock_is_valid.assert_called_once()
     assert PendingChange(ROW) == response[0]
 
 
+@patch(f"{FILE_PATH}.PendingChange.__repr__")
 @patch(f"{FILE_PATH}.PendingChange.is_valid")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_pending_changes_is_pending_changes_invalid_changes(mock_query_dos_db: MagicMock, mock_is_valid: MagicMock):
+def test_get_pending_changes_is_pending_changes_invalid_changes(
+    mock_query_dos_db: MagicMock, mock_is_valid: MagicMock, mock_repr: MagicMock
+):
     # Arrange
     connection = MagicMock()
     service_id = "test"
     mock_query_dos_db.return_value.fetchall.return_value = [ROW]
     mock_is_valid.return_value = False
+    mock_repr.return_value = "test"
     # Act
     response = get_pending_changes(connection, service_id)
     # Assert
@@ -199,6 +229,7 @@ def test_get_pending_changes_is_pending_changes_invalid_changes(mock_query_dos_d
         query=EXPECTED_QUERY,
         vars={"SERVICE_ID": service_id},
     )
+    assert mock_repr.call_count == 3
     mock_is_valid.assert_called_once()
     assert response == []
 
@@ -290,42 +321,63 @@ def test_log_rejected_changes(capsys: CaptureFixture):
     ) in captured.err
 
 
-@patch(f"{FILE_PATH}.remove")
+@patch(f"{FILE_PATH}.client")
+@patch(f"{FILE_PATH}.EmailMessage")
 @patch(f"{FILE_PATH}.build_change_rejection_email_contents")
 @patch(f"{FILE_PATH}.time_ns")
-@patch(f"{FILE_PATH}.dump")
+@patch(f"{FILE_PATH}.dumps")
 @patch("builtins.open")
-@patch(f"{FILE_PATH}.put_email_to_s3")
+@patch(f"{FILE_PATH}.put_content_to_s3")
 def test_send_rejection_emails(
-    mock_put_email_to_s3: MagicMock,
+    mock_put_content_to_s3: MagicMock,
     mock_open: MagicMock,
-    mock_dump: MagicMock,
+    mock_dumps: MagicMock,
     mock_time_ns: MagicMock,
     mock_build_change_rejection_email_contents: MagicMock,
-    mock_remove: MagicMock,
+    mock_email_message: MagicMock,
+    mock_client: MagicMock,
 ):
     # Arrange
+    environ["SEND_EMAIL_LAMBDA_NAME"] = send_email_lambda_name = "test"
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
-    mock_build_change_rejection_email_contents.return_value = email_contents = "test"
-    expected_file_path = "/tmp/rejection-email.json"
+    mock_build_change_rejection_email_contents.return_value = file_contents = "test"
+    expected_subject = "Your DoS Change has been rejected"
     # Act
     response = send_rejection_emails(pending_changes)
     # Assert
     assert None is response
-    mock_dump.assert_called_once_with(
-        {
-            "correlation_id": "1",
-            "recipient_email_address": pending_change.email,
-            "email_body": email_contents,
-            "email_subject": "Your DoS Change has been rejected",
-        },
-        mock_open.return_value.__enter__.return_value,
+    mock_dumps.assert_has_calls(
+        calls=[
+            call(
+                {
+                    "correlation_id": "1",
+                    "user_id": pending_change.user_id,
+                    "email_body": mock_build_change_rejection_email_contents.return_value,
+                    "email_subject": expected_subject,
+                }
+            ),
+            call(mock_email_message.return_value),
+        ]
     )
-    mock_put_email_to_s3.assert_called_once_with(
-        expected_file_path, f"rejection-emails/rejection-email-{mock_time_ns.return_value}.json"
+    mock_put_content_to_s3.assert_called_once_with(
+        content=mock_dumps.return_value,
+        s3_filename=f"rejection-emails/rejection-email-{mock_time_ns.return_value}.json",
     )
-    mock_remove.assert_called_once_with(expected_file_path)
+    mock_email_message.assert_called_once_with(
+        correlation_id="1",
+        recipient_email_address=pending_change.email,
+        email_body=file_contents,
+        email_subject=expected_subject,
+    )
+    mock_client.assert_called_once_with("lambda")
+    mock_client.return_value.invoke.assert_called_once_with(
+        FunctionName=send_email_lambda_name,
+        InvocationType="Event",
+        Payload=mock_dumps.return_value,
+    )
+    # Cleanup
+    del environ["SEND_EMAIL_LAMBDA_NAME"]
 
 
 @patch("builtins.open")
@@ -334,7 +386,7 @@ def test_build_change_rejection_email_contents(mock_open: MagicMock):
     pending_change = PendingChange(ROW)
     pending_change.value = '{"new":{"cmsurl":{"previous":"test.com","data":"https://www.test.com"}}}'
     # Act
-    response = build_change_rejection_email_contents(pending_change)
+    response = build_change_rejection_email_contents(pending_change, "test_file")
     # Assert
     assert (
         response

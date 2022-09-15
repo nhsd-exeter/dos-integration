@@ -14,25 +14,3 @@ module "di_send_email_bucket" {
     }]
   }
 }
-
-resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
-  bucket = module.di_send_email_bucket.s3_bucket_id
-  lambda_function {
-    lambda_function_arn = data.aws_lambda_function.send_email.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-  depends_on = [
-    module.di_send_email_bucket
-  ]
-}
-
-resource "aws_lambda_permission" "send_email_s3_notification_permission" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = data.aws_lambda_function.send_email.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = module.di_send_email_bucket.s3_bucket_arn
-  depends_on = [
-    module.di_send_email_bucket
-  ]
-}

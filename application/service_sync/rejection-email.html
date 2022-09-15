@@ -18,10 +18,12 @@
     <body>
         <!-- Greetings -->
         <p>Dear {{InitiatorName}},</p>
+        <br>
         <!-- The main body of the email -->
         <p>A change that you made in the DoS has been rejected automatically. This happened because there was a conflict with a new change from DoS Integration.</p>
         <p>The service is: {{ServiceName}}</p>
         <p>The service uid: {{ServiceUid}}</p>
+        <br>
         <p class="table_caption">Your rejected change was:</p>
         <!-- This table is used for showing the changes that have been rejected -->
         <table class="changes_table">
@@ -39,9 +41,12 @@
           </tbody>
         </table>
         <!-- The footer of the email -->
-        <p>Please review DoS to view the new change. If no changes are present DoS Integration considers DoS data to be correct</p>
+        <p>Please visit DoS to view the new change. If no changes are present DoS Integration considers DoS data to be correct</p>
+        <br>
         <p>Your DoS Integration Email Correlation Id is: {{EmailCorrelationId}}</p>
+        <br>
         <p>Kind regards,</p>
         <p>DoS Integration</p>
+        <p>(Please do not reply to this email as the mailbox is not monitored.  If you have any queries then please email {{DiTeamEmail}} directly)</p>
       </body>
 </html>

@@ -40,14 +40,12 @@ provider:
       format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
   tracing:
     lambda: true
-    apiGateway: true
-  endpointType: regional
 
 plugins:
   - serverless-vpc-discovery
 
-functions:
 
+functions:
   change-event-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/change-event-dlq-handler:${env:VERSION}
     architecture: x86_64
@@ -160,6 +158,9 @@ functions:
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
       SEND_EMAIL_BUCKET_NAME: ${env:SEND_EMAIL_BUCKET_NAME}
+      TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
+      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
+      SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: '${env:AWS_VPC_NAME}'
@@ -195,8 +196,13 @@ functions:
     name: ${env:PROJECT_ID}-${sls:stage}-send-email
     description: ${sls:stage} Send Email lambda
     memorySize: 128
-    timeout: 10
+    timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
+    environment:
+      AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
+      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
+      EMAIL_SECRET_NAME : ${env:PROJECT_EMAIL_SECRET_NAME}
+    maximumRetryAttempts: 2
 
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}

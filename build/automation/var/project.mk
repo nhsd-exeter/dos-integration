@@ -6,7 +6,6 @@ PROJECT_NAME = integration
 PROJECT_NAME_SHORT = int
 PROJECT_DISPLAY_NAME = DoS Integration
 PROJECT_ID = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)
-TEAM_NAME = DoS Integration
 TEAM_ID = dos-integration
 
 ROLE_PREFIX = UECCommon
@@ -21,18 +20,19 @@ DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 TF_VAR_aws_vpc_name = $(AWS_VPC_NAME)
-SLS_AWS_MONITORING_FREQUENCY = 1000
+SLS_AWS_MONITORING_FREQUENCY = 500
+TF_VAR_service_name=$(PROJECT_ID)
 TF_VAR_team_id = $(TEAM_ID)
 TF_VAR_programme = $(PROGRAMME)
 TF_VAR_environment = $(ENVIRONMENT)
+TF_VAR_aws_account_name = $(AWS_ACCOUNT_NAME)
+TF_VAR_deployment_secrets = $(DEPLOYMENT_SECRETS)
 TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 TF_VAR_dos_db_replica_name := $(DB_REPLICA_SERVER_NAME)
-
-TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 # ==============================================================================
