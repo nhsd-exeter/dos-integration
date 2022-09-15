@@ -186,12 +186,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         unique_id = request.get("unique_id")
         if service_id is None:
             raise ValueError("Missing service id for changes table")
-        json_obj = (
-            """{"new": {"cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic","""
-            """"previous": "0"},"cmsurl": {"changetype": "add", "data": "/", "area": "demographic","""
-            """ "previous": ""}},"initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},"""
-            """"approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"}}"""
-        )
+        json_obj = {"new": {"cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic",
+            "previous": "0"},"cmsurl": {"changetype": "add", "data": "/", "area": "demographic",
+            "previous": ""}},"initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
+            "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"}}
         run_query(
             query=(
                 "INSERT INTO pathwaysdos.changes VALUES ( "
@@ -200,7 +198,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
                 "'2022-09-06 11:00:00.000 +0100','Test Admin','2022-09-06 11:00:00.000 +0100',"
                 "'Test Admin',%(SERVICE_ID)s,null,null,null) RETURNING id"
             ),
-            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id, "JSON_OBJ": str(json_obj)},
+            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id, "JSON_OBJ": dumps(json_obj)},
         )
         result = {}
     else:
