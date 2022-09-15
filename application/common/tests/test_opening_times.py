@@ -2,7 +2,13 @@ from datetime import date, datetime, time, timedelta
 
 import pytest
 
-from ..opening_times import opening_period_times_from_list, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from ..opening_times import (
+    opening_period_times_from_list,
+    OpenPeriod,
+    SpecifiedOpeningTime,
+    StandardOpeningTimes,
+    WEEKDAYS,
+)
 
 OP = OpenPeriod.from_string
 
@@ -718,3 +724,13 @@ def test_opening_period_times_from_list():
     response = opening_period_times_from_list(times)
     # Assert
     assert "08:00-09:00, 09:00-10:00" == response
+
+
+def test_std_open_times_fully_closed():
+    std_open_times = StandardOpeningTimes()
+    assert std_open_times.fully_closed()
+
+    for day in WEEKDAYS:
+        std_open_times.add_open_period(OP("08:00-13:00"), day)
+        assert not std_open_times.fully_closed()
+        setattr(std_open_times, day, [])
