@@ -37,7 +37,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
-	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any" DB_READ_ONLY_USER_NAME="any" DB_READ_AND_WRITE_USER_NAME="any" DB_REPLICA_SERVER="any"
+	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any" DB_READ_ONLY_USER_NAME="any" DB_READ_AND_WRITE_USER_NAME="any" DB_REPLICA_SERVER="any" PROJECT_TEAM_EMAIL_ADDRESS="any" DB_NAME="any" PROJECT_SYSTEM_EMAIL_ADDRESS="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
