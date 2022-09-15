@@ -186,14 +186,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         unique_id = request.get("unique_id")
         if service_id is None:
             raise ValueError("Missing service id for changes table")
-        json_obj = {
-            "new": {
-                "cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic", "previous": "0"},
-                "cmsurl": {"changetype": "add", "data": "/", "area": "demographic", "previous": ""},
-            },
-            "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
-            "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
-        }
+        json_obj = ("{'new': {'cmstelephoneno': {'changetype': 'add', 'data': '', 'area': 'demographic',"
+                    "'previous': '0'},'cmsurl': {'changetype': 'add', 'data': '/', 'area': 'demographic',"
+                    " 'previous': ''},},'initiator': {'userid': 'admin', 'timestamp': '2022-09-01 13:35:41'},"
+                    "'approver': {'userid': 'admin', 'timestamp': '01-09-2022 13:35:41'},}")
         run_query(
             query=(
                 "INSERT INTO pathwaysdos.changes VALUES ( "
