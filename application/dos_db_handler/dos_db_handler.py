@@ -194,15 +194,22 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
             "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
         }
+        values = (
+            f"5F301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
+            "PENDING",
+            "modify",
+            "Test Admin",
+            "Test Duplicate",
+            "DoS Region",
+            dumps(json_obj),
+            "2022-09-06 11:00:00.000 +0100",
+            "Test Admin",
+            "2022-09-06 11:00:00.000 +0100",
+            "Test Admin",
+            str(service_id),
+        )
         run_query(
-            query=(
-                "INSERT INTO pathwaysdos.changes VALUES ( "
-                "\'5F301ABC-D3A4-0B8F-D7F8-F286INT%(UNIQUE_ID)s\',\'PENDING\',"
-                "\'modify\',\'Test Admin\',\'Test Duplicate\',\'DoS Region\',%(JSON_OBJ)s,"
-                "\'2022-09-06 11:00:00.000 +0100\',\'Test Admin\',\'2022-09-06 11:00:00.000 +0100\',"
-                "\'Test Admin\',%(SERVICE_ID)s,null,null,null) RETURNING id"
-            ),
-            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id, "JSON_OBJ": dumps(json_obj)},
+            query=(f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)} " ", null, null, null) RETURNING id")
         )
         result = {}
     else:
