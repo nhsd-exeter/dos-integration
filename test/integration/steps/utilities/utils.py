@@ -240,7 +240,7 @@ def get_service_id(odscode: str) -> str:
 
 def create_pending_change_for_service(service_id: str):
     success_status = False
-    unique_id = randint(10000,99999)
+    unique_id = randint(10000, 99999)
     lambda_payload = {
         "type": "create_changes_entry_for_service",
         "service_id": service_id,
@@ -860,10 +860,10 @@ def get_s3_email_file() -> dict:
     current_environment = getenv("ENVIRONMENT")
     bucket_name = f"uec-dos-int-{current_environment}-send-email-bucket"
     response = S3_CLIENT.list_objects(
-    Bucket=bucket_name,
+        Bucket=bucket_name,
     )
     object_key = response["Contents"][-1]["Key"]
-    s3 = resource('s3')
-    s3.meta.client.download_file(bucket_name, object_key, 'email_file.json')
-    data = load(open('email_file.json', 'r'))
+    S3_RESOURCE = resource("s3")
+    S3_RESOURCE.meta.client.download_file(bucket_name, object_key, "email_file.json")
+    data = load(open("email_file.json", "r"))
     return data

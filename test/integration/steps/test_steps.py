@@ -1110,7 +1110,7 @@ def services_location_history_update_assertion(context: Context):
     assert history_list == location_data, "ERROR: Service History and Location data does not match"
 
 
-@then("the S3 bucket contains an email file")
+@then("the s3 bucket contains an email file matching the service id")
 def check_s3_contains_email_file(context: Context):
     email_file = get_s3_email_file()
     assert context.service_id in email_file, "ERROR: Service id not found in email file"
