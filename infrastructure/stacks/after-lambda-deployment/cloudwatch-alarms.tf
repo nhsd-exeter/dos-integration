@@ -247,3 +247,19 @@ resource "aws_cloudwatch_metric_alarm" "health_check_failures_alert" {
   statistic                 = "Sum"
   threshold                 = "2"
 }
+
+resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert for when DI is failing to send emails"
+  alarm_name                = "${var.project_id} | ${var.environment} | Failed Emails"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "EmailFailed"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "120" # 2 minutes
+  statistic                 = "Sum"
+  threshold                 = "1"
+}

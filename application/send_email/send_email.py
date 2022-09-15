@@ -1,12 +1,12 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from os import environ
-from smtplib import SMTP
+from smtplib import SMTP, SMTPException
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
-
+from common.utilities import add_metric
 from common.middlewares import unhandled_exception_logging_hidden_event
 from common.secretsmanager import get_secret
 from common.types import EmailMessage
@@ -47,16 +47,24 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
     aws_account_name = environ["AWS_ACCOUNT_NAME"]
     if aws_account_name != "nonprod" or "email" in correlation_id:
         email_secrets = get_secret(environ["EMAIL_SECRET_NAME"])
-        to_email_address = email_secrets["DI_TEAM_MAILBOX_ADDRESS"] if "email" in correlation_id else email_address
+        to_email_address = email_address
         di_system_email_address = email_secrets["DI_SYSTEM_MAILBOX_ADDRESS"]
         di_system_email_password = email_secrets["DI_SYSTEM_MAILBOX_PASSWORD"]
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, "html"))
         logger.info("Sending email")
-        smtp = SMTP(host="smtp.office365.com", port=587, timeout=15)
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.login(di_system_email_address, di_system_email_password)
-        smtp.sendmail(from_addr=di_system_email_address, to_addrs=[to_email_address], msg=msg.as_string())
-        smtp.quit()
+        try:
+            # Don't log any variables that contain PID or password
+            smtp = SMTP(host="smtp.office365.com", port=587, timeout=15)
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.login(di_system_email_address, di_system_email_password)
+            smtp.sendmail(from_addr=di_system_email_address, to_addrs=[to_email_address], msg=msg.as_string())
+            smtp.quit()
+            logger.info("Email sent")
+            add_metric("EmailSent")  # type: ignore
+        except SMTPException as error:
+            logger.exception("Error sending email", extra={"error": error})
+            add_metric("EmailFailed")  # type: ignore
+            raise error
