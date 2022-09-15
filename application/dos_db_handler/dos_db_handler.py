@@ -198,11 +198,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             query=(
                 "INSERT INTO pathwaysdos.changes VALUES ( "
                 "'5F301ABC-D3A4-0B8F-D7F8-F286INT%(UNIQUE_ID)s','PENDING',"
-                f"'modify','Test Admin','Test Duplicate','DoS Region',\"{json_obj}\","
+                "'modify','Test Admin','Test Duplicate','DoS Region','%(JSON_OBJ)s',"
                 "'2022-09-06 11:00:00.000 +0100','Test Admin','2022-09-06 11:00:00.000 +0100',"
                 "'Test Admin',%(SERVICE_ID)s,null,null,null) "
             ),
-            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id},
+            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id, "JSON_OBJ": json_obj},
         )
         result = {}
     else:
