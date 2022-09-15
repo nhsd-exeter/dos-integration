@@ -87,13 +87,14 @@ get-unit-test-path:
 UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
-		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
-		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
 		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
+		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
+		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
+		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
@@ -213,7 +214,7 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 	make build-and-deploy-single-function FUNCTION_NAME=event-replay
 
 # ==============================================================================
-# Test DB Checker Handler (dos-db-handler)
+# DoS DB Checker Handler (dos-db-handler)
 
 dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
@@ -223,6 +224,12 @@ dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler la
 
 orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
+
+# ==============================================================================
+# Send Email
+
+send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=send-email
 
 # ==============================================================================
 # Deployments

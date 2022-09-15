@@ -23,6 +23,10 @@ data "aws_lambda_function" "dos_db_update_dlq_handler" {
   function_name = var.dos_db_update_dlq_handler_lambda_name
 }
 
+data "aws_lambda_function" "send_email" {
+  function_name = var.send_email_lambda_name
+}
+
 data "aws_secretsmanager_secret_version" "api_key" {
   secret_id = var.api_gateway_api_key_name
 }

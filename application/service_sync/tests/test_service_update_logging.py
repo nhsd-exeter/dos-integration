@@ -1,11 +1,11 @@
 from datetime import date, time
 from logging import INFO
-from os import environ
 from unittest.mock import MagicMock, patch
 
-from pytest import CaptureFixture, fixture, mark
+from pytest import fixture, mark
 
 from application.common.constants import (
+    DOS_INTEGRATION_USER_NAME,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
 )
@@ -19,6 +19,7 @@ EXAMPLE_DATA_FIELD_MODIFIED = "test_field"
 EXAMPLE_ACTION = "update"
 EXAMPLE_PREVIOUS_VALUE = "test_value"
 EXAMPLE_NEW_VALUE = "new_test_value"
+NULL_VALUE = "NULL"
 FILE_PATH = "application.service_sync.service_update_logging"
 
 
@@ -32,11 +33,9 @@ def test_dos_logger(service_update_logger: ServiceUpdateLogger):
     assert service_update_logger.logger.name == "service_undefined.application.service_sync.service_update_logging"
     assert service_update_logger.dos_logger.name == "dos_logger"
     assert service_update_logger.dos_logger.level == INFO
-    assert service_update_logger.dos_format == (
-        "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(correlation_id)s|DOS_INTEGRATION|"
-        "%(null_value)s|%(service_uid)s|%(service_name)s|%(type_id)s|%(data_field_modified)s|%(action)s"
-        "|%(data_changes)s|%(null_value)s|message=%(message)s|correlationId=%(correlation_id)s|"
-        "elapsedTime=%(null_value)s|execution_time=%(null_value)s"
+    assert (
+        service_update_logger.dos_basic_format
+        == "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(message)s"
     )
     assert service_update_logger.service_uid == SERVICE_UID
     assert service_update_logger.service_name == SERVICE_NAME
@@ -97,18 +96,14 @@ def test_service_update_logger_get_opening_times_change_add(service_update_logge
     response = service_update_logger.get_opening_times_change(
         data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
     )
-    assert (
-        f"{data_field_modified}_existing={previous_value}",
-        f"{data_field_modified}_update=add={new_value}",
-    ) == response
+    assert ("", f"{data_field_modified}_update=add={new_value}") == response
 
 
 @patch(f"{FILE_PATH}.log_service_updated")
 def test_service_update_logger_log_service_update(
-    mock_log_service_update: MagicMock, capsys: CaptureFixture, service_update_logger: ServiceUpdateLogger
+    mock_log_service_update: MagicMock, service_update_logger: ServiceUpdateLogger
 ):
     # Arrange
-    environ["ENV"] = environment = "test"
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     # Act
     service_update_logger.log_service_update(
@@ -128,21 +123,12 @@ def test_service_update_logger_log_service_update(
         type_id=TYPE_ID,
     )
     dos_logger_mock.info.assert_called_once_with(
-        msg="UpdateService",
-        extra={
-            "action": EXAMPLE_ACTION,
-            "correlation_id": "1",
-            "data_changes": f'"{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"',
-            "data_field_modified": EXAMPLE_DATA_FIELD_MODIFIED,
-            "environment": environment.upper(),
-            "null_value": "NULL",
-            "service_name": SERVICE_NAME,
-            "service_uid": SERVICE_UID,
-            "type_id": "1",
-        },
+        msg=f"1|{DOS_INTEGRATION_USER_NAME}|{NULL_VALUE}|{SERVICE_UID}|"
+        f"{SERVICE_NAME}|{TYPE_ID}|{EXAMPLE_DATA_FIELD_MODIFIED}|{EXAMPLE_ACTION}|"
+        f""""{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"|{NULL_VALUE}|message=UpdateService|"""
+        f"correlationId=1|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
+        extra={"environment": "UNKNOWN"},
     )
-    # Cleanup
-    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger.log_service_update")

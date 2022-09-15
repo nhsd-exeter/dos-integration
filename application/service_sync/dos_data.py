@@ -160,7 +160,6 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
         logger.debug("Columns and values", extra={"columns_and_values": columns_and_values})
         query = SQL("""UPDATE services SET {} WHERE id = %(SERVICE_ID)s;""").format(SQL(", ".join(columns_and_values)))
         query_str = query.as_string(connection)
-
         cursor = query_dos_db(
             connection=connection,
             query=query_str,

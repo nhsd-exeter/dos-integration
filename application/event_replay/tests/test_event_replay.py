@@ -29,9 +29,11 @@ def event() -> Dict[str, Any]:
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "dos-db-update-dlq-handler"
+        """Mock LambdaContext - All dummy values"""
+
+        function_name: str = "event-replay"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:dos-db-update-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:event-replay"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

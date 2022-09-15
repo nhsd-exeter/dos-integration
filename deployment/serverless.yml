@@ -159,6 +159,7 @@ functions:
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
       DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
+      SEND_EMAIL_BUCKET_NAME: ${env:SEND_EMAIL_BUCKET_NAME}
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: '${env:AWS_VPC_NAME}'
@@ -187,6 +188,15 @@ functions:
     events:
       - sns:
           arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack}
+
+  send-email:
+    image: ${env:DOCKER_REGISTRY}/send-email:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-send-email
+    description: ${sls:stage} Send Email lambda
+    memorySize: 128
+    timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
 
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}

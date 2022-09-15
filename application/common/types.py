@@ -20,3 +20,10 @@ class UpdateRequestQueueItem(TypedDict):
     recipient_id: Optional[str]
     metadata: Optional[UpdateRequestMetadata]
     is_health_check: bool
+
+
+class EmailFile(TypedDict):
+    correlation_id: str
+    recipient_email_address: str
+    email_body: str
+    email_subject: str
