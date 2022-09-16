@@ -195,17 +195,17 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
         }
         values = (
-            f"5F301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
-            "PENDING",
-            "modify",
-            "Test Admin",
-            "Test Duplicate",
-            "DoS Region",
+            f"'5F301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}'",
+            "'PENDING'",
+            "'modify'",
+            "'Test Admin'",
+            "'Test Duplicate'",
+            "'DoS Region'",
             dumps(json_obj),
-            "2022-09-06 11:00:00.000 +0100",
-            "Test Admin",
-            "2022-09-06 11:00:00.000 +0100",
-            "Test Admin",
+            "'2022-09-06 11:00:00.000 +0100'",
+            "'Test Admin'",
+            "'2022-09-06 11:00:00.000 +0100'",
+            "'Test Admin'",
             str(service_id),
         )
         query = f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)}, null, null, null) RETURNING id"
