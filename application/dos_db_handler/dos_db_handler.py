@@ -1,5 +1,6 @@
 from json import dumps
 from typing import Any, Dict
+from psycopg2.extras import Json
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
@@ -201,14 +202,14 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "Test Admin",
             "Test Duplicate",
             "DoS Region",
-            dumps(json_obj),
+            Json(json_obj),
             "2022-09-06 11:00:00.000 +0100",
             "Test Admin",
             "2022-09-06 11:00:00.000 +0100",
             "Test Admin",
             str(service_id),
         )
-        query=(f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)}, null, null, null) RETURNING id")
+        query = f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)}, null, null, null) RETURNING id"
         run_query(query, None)
         result = {}
     else:
