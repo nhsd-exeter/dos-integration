@@ -6,10 +6,11 @@ from smtplib import SMTP, SMTPException
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from common.utilities import add_metric
+
 from common.middlewares import unhandled_exception_logging_hidden_event
 from common.secretsmanager import get_secret
 from common.types import EmailMessage
+from common.utilities import add_metric
 
 tracer = Tracer()
 logger = Logger()
