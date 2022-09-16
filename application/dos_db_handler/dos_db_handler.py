@@ -208,9 +208,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "Test Admin",
             str(service_id),
         )
-        run_query(
-            query=(f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)} " ", null, null, null) RETURNING id")
-        )
+        query=(f"INSERT INTO pathwaysdos.changes VALUES ({', '.join(values)}, null, null, null) RETURNING id")
+        run_query(query, None)
         result = {}
     else:
         raise ValueError("Unsupported request")
