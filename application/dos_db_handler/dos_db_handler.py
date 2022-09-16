@@ -1,6 +1,5 @@
 from json import dumps
 from typing import Any, Dict
-from psycopg2.extras import Json
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
@@ -202,7 +201,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "Test Admin",
             "Test Duplicate",
             "DoS Region",
-            Json(json_obj),
+            dumps(json_obj),
             "2022-09-06 11:00:00.000 +0100",
             "Test Admin",
             "2022-09-06 11:00:00.000 +0100",
