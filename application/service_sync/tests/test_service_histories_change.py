@@ -86,12 +86,6 @@ def test_service_histories_change_get_demographics_change_action(data, previous_
     assert expected_action == service_histories_change.change_action
 
 
-def test_service_histories_change_get_demographics_change_action_error():
-    # Act & Assert
-    with raises(ValueError, match="Previous and new values are the same"):
-        ServiceHistoriesChange(data=DATA, previous_value=DATA, change_key=DOS_WEBSITE_CHANGE_KEY)
-
-
 @mark.parametrize(
     "data, expected_action",
     [

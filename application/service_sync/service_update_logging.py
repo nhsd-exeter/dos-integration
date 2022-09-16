@@ -160,8 +160,8 @@ class ServiceUpdateLogger:
         ) -> str:
             specified_opening_times = (
                 [specified_opening_time.export_dos_log_format() for specified_opening_time in specified_opening_times]
-                if not isinstance(specified_opening_times, str)
-                else previous_value  # type: ignore
+                if specified_opening_times is not None
+                else ""  # type: ignore
             )
             return (
                 ",".join(list(chain.from_iterable(specified_opening_times)))
@@ -247,5 +247,3 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 previous_value=change_values.get("previous", ""),
                 new_value=change_values["data"],
             )
-        # UNKOWN should never be logged as it is only used as a default value
-        # so if it is logged it means a bug has occurred
