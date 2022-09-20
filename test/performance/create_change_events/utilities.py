@@ -34,20 +34,24 @@ class OdsCodes:
     invalid_ods_codes: Union[list[list[str]], None] = None
     valid_ods_codes: Union[list[list[str]], None] = None
 
-    def __init__(self):
-        self.valid_ods_codes = self.get_ods_codes_from_file("valid_ods_codes.csv")
-        self.invalid_ods_codes = self.get_ods_codes_from_file("invalid_ods_codes.csv")
-
     def get_ods_codes_from_file(self, ods_code_file: str) -> list[list[str]]:
         file = open(f"resources/{ods_code_file}", "r")
         csv_reader = reader(file)
         return list(csv_reader)
 
     def get_valid_ods_code(self) -> str:
-        return choice(self.valid_ods_codes)[0]
+        if self.valid_ods_codes is None or len(self.valid_ods_codes) == 0:
+            self.valid_ods_codes = self.get_ods_codes_from_file("valid_ods_codes.csv")
+        odscode_list_of_one = choice(self.valid_ods_codes)
+        self.valid_ods_codes.remove(odscode_list_of_one)
+        return odscode_list_of_one[0]
 
     def get_invalid_ods_code(self) -> str:
-        return choice(self.invalid_ods_codes)[0]
+        if self.invalid_ods_codes is None or len(self.invalid_ods_codes) == 0:
+            self.invalid_ods_codes = self.get_ods_codes_from_file("invalid_ods_codes.csv")
+        odscode_list_of_one = choice(self.invalid_ods_codes)
+        self.invalid_ods_codes.remove(odscode_list_of_one)
+        return odscode_list_of_one[0]
 
 
 ODSCODES = OdsCodes()
