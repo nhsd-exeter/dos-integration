@@ -106,7 +106,7 @@ functions:
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
       EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-service-sync
       RUN_FOR: 280
-      SLEEP_FOR_WHEN_OPEN: 10
+      SLEEP_FOR_WHEN_OPEN: 2
 
   service-matcher:
     image: ${env:DOCKER_REGISTRY}/service-matcher:${env:VERSION}

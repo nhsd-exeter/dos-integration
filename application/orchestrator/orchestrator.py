@@ -42,7 +42,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
             update_request_queue_item = UpdateRequestQueueItem(
                 is_health_check=True, update_request=None, recipient_id=None, metadata=None
             )
-
             logger.info(
                 "Sending health check to try and re-open the circuit", extra={"request": update_request_queue_item}
             )
@@ -92,15 +91,16 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                 invoke_lambda(lambda_client, update_request_queue_item)
                 it_end = time()
                 to_sleep = max(0, (TIME_TO_SLEEP - (it_end - it_start)))
+                # If ever 0 is slept we are over the limit,
+                # We are unable to improve performance without changing the logic or cpu count
                 logger.debug(f"Sleeping for {to_sleep}")
                 sleep(to_sleep)
         loop = loop + 1
 
 
 def invoke_lambda(lambda_client, payload: Dict[str, Any]) -> Dict[str, Any]:
-    response = lambda_client.invoke(
+    return lambda_client.invoke(
         FunctionName=getenv("EVENT_SENDER_FUNCTION_NAME"),
         InvocationType="Event",
         Payload=dumps(payload),
-    )
-    return response
+    )  # type: ignore
