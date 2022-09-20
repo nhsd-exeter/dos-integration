@@ -19,7 +19,7 @@ class AllChangesChangeEvent(FastHttpUser):
     def change_event(self):
         self.payload = setup_change_event_request()
         self.payload["ODSCode"] = ODSCODES.get_valid_ods_code()
-        self.headers = setup_headers(self.payload["ODSCode"])
+        self.headers = setup_headers()
         self.headers["x-api-key"] = self.api_key
         self.client.post("", headers=self.headers, json=self.payload, name="AllChangesChangeEvent")
 
@@ -39,6 +39,6 @@ class OdscodeDoesNotExistInDoS(FastHttpUser):
     def change_event(self):
         self.payload = setup_change_event_request()
         self.payload["ODSCode"] = ODSCODES.get_invalid_ods_code()
-        self.headers = setup_headers(self.payload["ODSCode"])
+        self.headers = setup_headers()
         self.headers["x-api-key"] = self.api_key
         self.client.post("", headers=self.headers, json=self.payload, name="OdscodeDoesNotExistInDoS")

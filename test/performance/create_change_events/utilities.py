@@ -15,20 +15,17 @@ def setup_change_event_request() -> dict[str, Any]:
     return payload
 
 
-def setup_headers(ods_code: str) -> dict[str, str]:
-    headers = {"sequence-number": str(time_ns())}
-    return headers
+def setup_headers() -> dict[str, str]:
+    return {"sequence-number": str(time_ns())}
 
 
 def get_api_key() -> str:
     api_key_json = get_secret(getenv("API_KEY_SECRET_NAME"))
-    api_key = loads(api_key_json)[getenv("API_KEY_SECRET_KEY")]
-    return api_key
+    return loads(api_key_json)[getenv("API_KEY_SECRET_KEY")]
 
 
 def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
     time = time_ns()
-    payload["OrganisationName"] = f'{payload["OrganisationName"]} {time}'
     payload["Address1"] = f'{payload["Address1"]} {time}'
     return payload
 
@@ -44,8 +41,7 @@ class OdsCodes:
     def get_ods_codes_from_file(self, ods_code_file: str) -> list[list[str]]:
         file = open(f"resources/{ods_code_file}", "r")
         csv_reader = reader(file)
-        ods_codes = list(csv_reader)
-        return ods_codes
+        return list(csv_reader)
 
     def get_valid_ods_code(self) -> str:
         return choice(self.valid_ods_codes)[0]
