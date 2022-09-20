@@ -461,35 +461,10 @@ PERFORMANCE_TEST_DIR_AND_ARGS= \
 		-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
 		"
 
-performance-test-data-collection: # Runs data collection for performance tests - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
-	make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python data_collection.py" \
-		DIR=./test/performance/data_collection \
-		ARGS="\
-			-e START_TIME=$(START_TIME) \
-			-e END_TIME=$(END_TIME) \
-			-e CHANGE_EVENT_QUEUE_NAME=$(TF_VAR_change_event_queue_name) \
-			-e CHANGE_EVENT_DLQ_NAME=$(TF_VAR_change_event_dlq) \
-			-e SERVICE_SYNC_NAME=$(TF_VAR_service_sync_lambda_name) \
-			-e SERVICE_MATCHER_NAME=$(TF_VAR_service_matcher_lambda_name) \
-			-e RDS_INSTANCE_IDENTIFIER=$(DB_SERVER_NAME) \
-			"
-
-generate-performance-test-details: # Generates performance test details - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp], TEST_TYPE="string", CODE_VERSION="string"
-	rm -rf $(TMP_DIR)/performance
-	mkdir $(TMP_DIR)/performance
-	echo -e "PROFILE=$(PROFILE)\nENVIRONMENT=$(ENVIRONMENT)\nTEST_TYPE=$(TEST_TYPE)\nCODE_VERSION=$(CODE_VERSION)\nSTART_TIME=$(START_TIME)\nEND_TIME=$(END_TIME)" > $(TMP_DIR)/performance/test_details.txt
-	cp test/performance/create_change_events/results/$(START_TIME)* $(TMP_DIR)/performance
-	cp test/performance/data_collection/results/$(START_TIME)* $(TMP_DIR)/performance
-	zip -r $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip $(TMP_DIR)/performance
-	aws s3 cp $(TMP_DIR)/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip s3://uec-dos-int-performance-tests-nonprod/$(START_TIME)-$(ENVIRONMENT)-performance-tests.zip
-
 performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
-	rm -rf $(PROJECT_DIR)/test/performance/data_collection/results/*.csv
 
 stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
@@ -499,8 +474,6 @@ stress-test-in-pipeline: # An all in one stress test make target
 	sleep 4.5h
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
-	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="stress test" CODE_VERSION=$$CODE_VERSION
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 load-test-in-pipeline: # An all in one load test make target
@@ -511,8 +484,6 @@ load-test-in-pipeline: # An all in one load test make target
 	sleep 10m
 	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
 	AWS_END_TIME=$$(date +%FT%TZ)
-	make performance-test-data-collection START_TIME=$$START_TIME END_TIME=$$END_TIME
-	make generate-performance-test-details START_TIME=$$START_TIME END_TIME=$$END_TIME TEST_TYPE="load test" CODE_VERSION=$$CODE_VERSION
 	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
 
 send-performance-dashboard-slack-message:
