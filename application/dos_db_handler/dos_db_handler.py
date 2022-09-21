@@ -186,38 +186,19 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         unique_id = request.get("unique_id")
         if service_id is None:
             raise ValueError("Missing service id for changes table")
-        json_obj = {
-            "new": {
-                "cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic", "previous": "0"},
-                "cmsurl": {"changetype": "add", "data": "/", "area": "demographic", "previous": ""},
-            },
-            "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
-            "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
-        }
-
-        named_args = {
-            "LONG_ID": f"5F301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
-            "STATUS": "PENDING",
-            "ACTION": "modify",
-            "USER": "Test Admin",
-            "DUPLICATE": "Test Duplicate",
-            "REGION": "DoS Region",
-            "JSON": dumps(json_obj),
-            "DATE_1": "2022-09-06 11:00:00.000 +0100",
-            "FIELD_1": "Test Admin",
-            "DATE_2": "2022-09-06 11:00:00.000 +0100",
-            "FIELD_2": "Test Admin",
-            "SERVICE_ID": str(service_id)
-        }
-
-        query = (
-        "INSERT INTO pathwaysdos.changes "
-        "VALUES (%(LONG_ID)s, %(STATUS)s, %(ACTION)s, %(USER)s, %(DUPLICATE)s, %(REGION)s, %(JSON)s, "
-        "%(DATE_1)s, %(FIELD_1)s, %(DATE_2)s, %(FIELD_2)s, %(SERVICE_ID)s, null, null, null) "
-        "RETURNING id"
+        run_query(
+            query=(
+                r"INSERT INTO pathwaysdos.changes VALUES ( "
+                r"'5F301ABC-D3A4-0B8F-D7F8-F286INT%(UNIQUE_ID)s','PENDING',"
+                r"'modify','Test Admin','Test Duplicate','DoS Region','{\"new\":"
+                r'{"cmstelephoneno":{"changetype":"add","data":"","area":"demographic","previous":"0"}},'
+                r'"initiator":{"userid":"admin","timestamp":"2022-09-01 13:35:41"},'
+                r'"approver":{"userid":"admin","timestamp":"01-09-2022 13:35:41"}}\','
+                r"'2022-09-06 11:00:00.000 +0100','Test Admin','2022-09-06 11:00:00.000 +0100',"
+                r"'Test Admin',%(SERVICE_ID)s,null,null,null) RETURNING id"
+            ),
+            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id},
         )
-
-        run_query(query, named_args)
         result = {}
     else:
         raise ValueError("Unsupported request")
