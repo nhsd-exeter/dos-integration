@@ -138,9 +138,9 @@ def test_send_email_exception(
         "DI_SYSTEM_MAILBOX_ADDRESS": di_system_mailbox_address,
         "DI_SYSTEM_MAILBOX_PASSWORD": di_system_mailbox_password,
     }
-    mock_smtp.return_value.ehlo.side_effect = SMTPException("Test exception")
+    mock_smtp.return_value.ehlo.side_effect = SMTPException()
     # Act
-    with raises(SMTPException):
+    with raises(SMTPException, match="An error occurred while sending the email"):
         send_email(
             email_address=RECIPIENT_EMAIL_ADDRESS,
             html_content=EMAIL_BODY,

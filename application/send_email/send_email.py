@@ -65,7 +65,7 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
             smtp.quit()
             logger.info("Email sent")
             add_metric("EmailSent")  # type: ignore
-        except SMTPException as error:
-            logger.exception("Error sending email", extra={"error": error})
+        except SMTPException:
             add_metric("EmailFailed")  # type: ignore
-            raise error
+            logger.error("Email failed")
+            raise SMTPException("An error occurred while sending the email")
