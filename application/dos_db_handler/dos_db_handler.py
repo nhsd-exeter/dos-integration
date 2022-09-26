@@ -188,8 +188,8 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing service id for changes table")
         json_obj = {
             "new": {
-                "cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic", "previous": "0"},
-                "cmsurl": {"changetype": "add", "data": "/", "area": "demographic", "previous": ""},
+                "cmstelephoneno": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": "0"},
+                "cmsurl": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": ""},
             },
             "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
             "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
@@ -216,7 +216,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         query = (
             "INSERT INTO pathwaysdos.changes VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             " RETURNING id"
-            )
+        )
         result = run_query(query, values)
     else:
         raise ValueError("Unsupported request")
@@ -229,6 +229,7 @@ def run_query(query, query_vars) -> list:
         cursor = query_dos_db(connection=connection, query=query, vars=query_vars)
         query_result = cursor.fetchall()
         cursor.close()
+        # connection.commit()
     return query_result
 
 
