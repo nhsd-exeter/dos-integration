@@ -90,7 +90,7 @@ def connection_to_db(
     )
 
 
-def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, Any]] = None) -> DictCursor:
+def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True) -> DictCursor:
     """Queries the database given in the connection object
 
     Args:
@@ -102,11 +102,13 @@ def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, An
         DictCursor: Cursor to the query results
     """
     cursor = connection.cursor(cursor_factory=DictCursor)
-    logger.debug("Query to execute", extra={"query": query, "vars": vars})
-    query_string_log = f"Running SQL command: {cursor.mogrify(query, vars)}"
+
+    logger.debug("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
+    query_string_log = cursor.mogrify(query, vars) if log_vars else query
     if len(query_string_log) > 1000:
-        query_string_log = f"{query_string_log[:490]}...       ...{query_string_log[-490:]}"
-    logger.info(query_string_log)
+        query_string_log = f"{query_string_log[:490]}...  ...{query_string_log[-490:]}"
+    logger.info(f"Running SQL command: {query_string_log}")
+
     time_start = time_ns() // 1000000
     cursor.execute(query, vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
