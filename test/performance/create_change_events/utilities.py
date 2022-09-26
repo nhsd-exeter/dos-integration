@@ -3,7 +3,7 @@ from json import load, loads
 from os import getenv
 from random import choice
 from time import time_ns
-from typing import Any, Union
+from typing import Any, Optional, Tuple
 
 from aws import get_secret
 
@@ -31,27 +31,39 @@ def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 class OdsCodes:
-    invalid_ods_codes: Union[list[list[str]], None] = None
-    valid_ods_codes: Union[list[list[str]], None] = None
+    invalid_ods_codes: Optional[list[list[str]]] = None
+    valid_ods_codes: Optional[list[list[str]]] = None
 
     def get_ods_codes_from_file(self, ods_code_file: str) -> list[list[str]]:
         file = open(f"resources/{ods_code_file}", "r")
         csv_reader = reader(file)
         return list(csv_reader)
 
+    def generic_get_ods_code(
+        self, ods_code_file_name: str, odscode_list: Optional[list[list[str]]]
+    ) -> Tuple[str, list[list[str]]]:
+        """Get a random ods code from list or file if list is empty
+
+        Args:
+            ods_code_file_name (str): The name of the file to get the ods codes from if the list is empty
+            odscode_list (Optional[list[list[str]]]): The list of ods codes to get the odscode from
+
+        Returns:
+            Tuple[str, list[list[str]]]: The odscode and the list of ods codes
+        """
+        if odscode_list is None or len(odscode_list) == 0:
+            odscode_list = self.get_ods_codes_from_file(ods_code_file_name)
+        odscode_list_of_one = choice(odscode_list)
+        odscode_list.remove(odscode_list_of_one)
+        return odscode_list_of_one[0], odscode_list
+
     def get_valid_ods_code(self) -> str:
-        if self.valid_ods_codes is None or len(self.valid_ods_codes) == 0:
-            self.valid_ods_codes = self.get_ods_codes_from_file("valid_ods_codes.csv")
-        odscode_list_of_one = choice(self.valid_ods_codes)
-        self.valid_ods_codes.remove(odscode_list_of_one)
-        return odscode_list_of_one[0]
+        odscode, self.valid_ods_codes = self.generic_get_ods_code("valid_ods_codes.csv", self.valid_ods_codes)
+        return odscode
 
     def get_invalid_ods_code(self) -> str:
-        if self.invalid_ods_codes is None or len(self.invalid_ods_codes) == 0:
-            self.invalid_ods_codes = self.get_ods_codes_from_file("invalid_ods_codes.csv")
-        odscode_list_of_one = choice(self.invalid_ods_codes)
-        self.invalid_ods_codes.remove(odscode_list_of_one)
-        return odscode_list_of_one[0]
+        odscode, self.invalid_ods_codes = self.generic_get_ods_code("invalid_ods_codes.csv", self.invalid_ods_codes)
+        return odscode
 
 
 ODSCODES = OdsCodes()
