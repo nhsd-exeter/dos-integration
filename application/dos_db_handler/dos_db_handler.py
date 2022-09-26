@@ -205,17 +205,13 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             dumps(json_obj),
             "2022-09-06 11:00:00.000 +0100",
             "Test Admin",
-            "2022-09-06 11:00:00.000 +0100",
-            "Test Admin",
-            str(service_id),
-            None,
-            None,
-            None,
+            str(service_id)
         )
 
         query = (
-            "INSERT INTO pathwaysdos.changes VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            " RETURNING id"
+            "INSERT INTO pathwaysdos.changes VALUES (id, approvestatus, \"type\", initiatorname, servicename, "
+            "servicetype, value, createdtimestamp, creatorsname, serviceid) "
+            "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
         )
         result = run_query(query, values)
     else:
@@ -229,7 +225,6 @@ def run_query(query, query_vars) -> list:
         cursor = query_dos_db(connection=connection, query=query, vars=query_vars)
         query_result = cursor.fetchall()
         cursor.close()
-        # connection.commit()
     return query_result
 
 
