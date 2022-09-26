@@ -1080,7 +1080,7 @@ def slack_message_check(message):
 
 @then("the service table has been updated with locations data")
 def services_location_update_assertion(context: Context):
-    sleep(10)
+    sleep(20)
     location_data = get_locations_table_data(context.change_event.postcode)
     services_data = get_services_table_location_data(context.service_id)
     assert services_data == location_data, "ERROR: Services and Location data does not match"
