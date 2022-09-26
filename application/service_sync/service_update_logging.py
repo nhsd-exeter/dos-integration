@@ -144,24 +144,24 @@ class ServiceUpdateLogger:
     def log_specified_opening_times_service_update(
         self,
         action: str,
-        previous_value: Union[List[SpecifiedOpeningTime], str],
-        new_value: Union[List[SpecifiedOpeningTime], str],
+        previous_value: Optional[List[SpecifiedOpeningTime]],
+        new_value: Optional[List[SpecifiedOpeningTime]],
     ) -> None:
         """Logs a service update to DoS Splunk for a specified opening times update
 
         Args:
             action (str): The action that was performed e.g add, remove, update
-            previous_value (Union[List[SpecifiedOpeningTime], str]): The previous value of the field or empty string if none
-            new_value (Union[List[SpecifiedOpeningTime], str]): The new value of the field or empty string if none
+            previous_value (Optional[List[SpecifiedOpeningTime]]): The previous value of the field or none
+            new_value (Optional[List[SpecifiedOpeningTime]]): The new value of the field or none
         """  # noqa: E501
 
         def get_and_format_specified_opening_times(
-            specified_opening_times: Union[List[SpecifiedOpeningTime], str],
+            specified_opening_times: Optional[List[SpecifiedOpeningTime]],
         ) -> str:
             specified_opening_times = (
                 [specified_opening_time.export_dos_log_format() for specified_opening_time in specified_opening_times]
-                if not isinstance(specified_opening_times, str)
-                else previous_value  # type: ignore
+                if specified_opening_times is not None
+                else ""  # type: ignore
             )
             return (
                 ",".join(list(chain.from_iterable(specified_opening_times)))
@@ -247,5 +247,3 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 previous_value=change_values.get("previous", ""),
                 new_value=change_values["data"],
             )
-        # UNKOWN should never be logged as it is only used as a default value
-        # so if it is logged it means a bug has occurred
