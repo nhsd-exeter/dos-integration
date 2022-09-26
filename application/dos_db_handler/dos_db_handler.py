@@ -186,20 +186,38 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         unique_id = request.get("unique_id")
         if service_id is None:
             raise ValueError("Missing service id for changes table")
-        run_query(
-            query=(
-                r"INSERT INTO pathwaysdos.changes VALUES ( "
-                r"'5F301ABC-D3A4-0B8F-D7F8-F286INT%(UNIQUE_ID)s','PENDING',"
-                r"'modify','Test Admin','Test Duplicate','DoS Region','{\"new\":"
-                r'{"cmstelephoneno":{"changetype":"add","data":"","area":"demographic","previous":"0"}},'
-                r'"initiator":{"userid":"admin","timestamp":"2022-09-01 13:35:41"},'
-                r'"approver":{"userid":"admin","timestamp":"01-09-2022 13:35:41"}}\','
-                r"'2022-09-06 11:00:00.000 +0100','Test Admin','2022-09-06 11:00:00.000 +0100',"
-                r"'Test Admin',%(SERVICE_ID)s,null,null,null) RETURNING id"
-            ),
-            query_vars={"SERVICE_ID": service_id, "UNIQUE_ID": unique_id},
+        json_obj = {
+            "new": {
+                "cmstelephoneno": {"changetype": "add", "data": "", "area": "demographic", "previous": "0"},
+                "cmsurl": {"changetype": "add", "data": "/", "area": "demographic", "previous": ""},
+            },
+            "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
+            "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
+        }
+
+        values = (
+            f"66301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
+            "PENDING",
+            "modify",
+            "Test Admin",
+            "Test Duplicate",
+            "DoS Region",
+            dumps(json_obj),
+            "2022-09-06 11:00:00.000 +0100",
+            "Test Admin",
+            "2022-09-06 11:00:00.000 +0100",
+            "Test Admin",
+            str(service_id),
+            None,
+            None,
+            None,
         )
-        result = {}
+
+        query = (
+            "INSERT INTO pathwaysdos.changes VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            " RETURNING id"
+            )
+        result = run_query(query, values)
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)
