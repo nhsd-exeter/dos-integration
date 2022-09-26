@@ -16,7 +16,7 @@ from common.utilities import extract_body
 logger = Logger()
 tracer = Tracer()
 QUEUE_URL = getenv("UPDATE_REQUEST_QUEUE_URL")
-sqs = client("sqs")
+sqs_client = client("sqs")
 lambda_client = client("lambda")
 
 
@@ -45,11 +45,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
             logger.info(
                 "Sending health check to try and re-open the circuit", extra={"request": update_request_queue_item}
             )
-            invoke_lambda(lambda_client, update_request_queue_item)
+            invoke_lambda(update_request_queue_item)
             continue
 
         logger.append_keys(loop=loop)
-        response = sqs.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
+        response = sqs_client.receive_message(QueueUrl=QUEUE_URL, MaxNumberOfMessages=10, MessageAttributeNames=["All"])
         messages = response.get("Messages")
         if messages is None:
             logger.info("No messages at this time")
@@ -90,7 +90,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                         "ods_code": ods_code,
                     },
                 )
-                invoke_lambda(lambda_client, update_request_queue_item)
+                invoke_lambda(update_request_queue_item)
                 it_end = time()
                 to_sleep = max(0, (TIME_TO_SLEEP - (it_end - it_start)))
                 # If ever 0 is slept we are over the limit,
@@ -100,7 +100,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         loop = loop + 1
 
 
-def invoke_lambda(lambda_client, payload: Dict[str, Any]) -> Dict[str, Any]:
+def invoke_lambda(payload: Dict[str, Any]) -> Dict[str, Any]:
     return lambda_client.invoke(
         FunctionName=getenv("EVENT_SENDER_FUNCTION_NAME"),
         InvocationType="Event",

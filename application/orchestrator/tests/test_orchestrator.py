@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from json import dumps
 from os import environ
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
+from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from pytest import approx, fixture
 
 from application.orchestrator.orchestrator import invoke_lambda, lambda_handler
@@ -33,18 +34,18 @@ LAMBDA_INVOKE_RESPONSE = {
 }
 
 
-def test_invoke_lambda(lambda_context):
+@patch(f"{FILE_PATH}.lambda_client")
+def test_invoke_lambda(mock_lambda_client: MagicMock, lambda_context: LambdaContext):
     # Arrange
-    client_mock = Mock()
     environ["EVENT_SENDER_FUNCTION_NAME"] = "MyFirstFunction"
     expected = LAMBDA_INVOKE_RESPONSE
-    client_mock.invoke.return_value = expected
+    mock_lambda_client.invoke.return_value = expected
 
     # Act
     payload = {"hello": "dave"}
-    response = invoke_lambda(client_mock, payload)
+    response = invoke_lambda(payload)
     # Assert
-    client_mock.invoke.assert_called_once_with(
+    mock_lambda_client.invoke.assert_called_once_with(
         FunctionName="MyFirstFunction", InvocationType="Event", Payload=dumps(payload)
     )
     assert response == expected
@@ -100,14 +101,22 @@ EXPECTED_HEALTH_CHECK: UpdateRequestQueueItem = {
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
-@patch(f"{FILE_PATH}.client")
+@patch(f"{FILE_PATH}.QUEUE_URL")
+@patch(f"{FILE_PATH}.sqs_client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
 @patch(
     f"{FILE_PATH}.time",
     side_effect=[1645527500, 1645527501, 1645527501, 1645527501.1, 1645527501.5, 1645527501.7, 1645527511],
 )
-def test_orchestrator_circuit_closed_single_loop(mock_time, mock_sleep, mock_invoke, mock_client, lambda_context):
+def test_orchestrator_circuit_closed_single_loop(
+    mock_time: MagicMock,
+    mock_sleep: MagicMock,
+    mock_invoke: MagicMock,
+    mock_sqs_client: MagicMock,
+    mock_queue_url: MagicMock,
+    lambda_context: LambdaContext,
+):
 
     # Arrange
     environ["RUN_FOR"] = "10"
@@ -115,8 +124,7 @@ def test_orchestrator_circuit_closed_single_loop(mock_time, mock_sleep, mock_inv
     environ["SLEEP_FOR_WHEN_OPEN"] = "5"
     environ["DOS_TRANSACTIONS_PER_SECOND"] = "2"
     mock_invoke.return_value = LAMBDA_INVOKE_RESPONSE
-    mock_client().invoke.return_value = {}
-    mock_client().receive_message.return_value = {
+    mock_sqs_client.receive_message.return_value = {
         "Messages": [
             {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_1), "ReceiptHandle": "H1"},
             {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_2), "ReceiptHandle": "H2"},
@@ -137,7 +145,8 @@ def test_orchestrator_circuit_closed_single_loop(mock_time, mock_sleep, mock_inv
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
-@patch(f"{FILE_PATH}.client")
+@patch(f"{FILE_PATH}.QUEUE_URL")
+@patch(f"{FILE_PATH}.sqs_client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
 @patch(
@@ -155,7 +164,14 @@ def test_orchestrator_circuit_closed_single_loop(mock_time, mock_sleep, mock_inv
         1645527511,
     ],
 )
-def test_orchestrator_circuit_closed_double_loop(mock_time, mock_sleep, mock_invoke, mock_client, lambda_context):
+def test_orchestrator_circuit_closed_double_loop(
+    mock_time: MagicMock,
+    mock_sleep: MagicMock,
+    mock_invoke: MagicMock,
+    mock_sqs_client: MagicMock,
+    mock_queue_url: MagicMock,
+    lambda_context: LambdaContext,
+):
 
     # Arrange
     environ["RUN_FOR"] = "10"
@@ -163,8 +179,7 @@ def test_orchestrator_circuit_closed_double_loop(mock_time, mock_sleep, mock_inv
     environ["SLEEP_FOR_WHEN_OPEN"] = "5"
     environ["DOS_TRANSACTIONS_PER_SECOND"] = "2"
     mock_invoke.return_value = LAMBDA_INVOKE_RESPONSE
-    mock_client().invoke.return_value = {}
-    mock_client().receive_message.side_effect = [
+    mock_sqs_client.receive_message.side_effect = [
         {
             "Messages": [
                 {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_1), "ReceiptHandle": "H1"},
@@ -194,12 +209,18 @@ def test_orchestrator_circuit_closed_double_loop(mock_time, mock_sleep, mock_inv
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
-@patch(f"{FILE_PATH}.client")
+@patch(f"{FILE_PATH}.QUEUE_URL")
+@patch(f"{FILE_PATH}.sqs_client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
 @patch(f"{FILE_PATH}.time", side_effect=[1645527500, 1645527501, 1645527511])
 def test_orchestrator_circuit_closed_single_loop_no_messages(
-    mock_time, mock_sleep, mock_invoke, mock_client, lambda_context
+    mock_time: MagicMock,
+    mock_sleep: MagicMock,
+    mock_invoke: MagicMock,
+    mock_sqs_client: MagicMock,
+    mock_queue_url: MagicMock,
+    lambda_context: LambdaContext,
 ):
     # Arrange
     environ["RUN_FOR"] = "10"
@@ -207,9 +228,7 @@ def test_orchestrator_circuit_closed_single_loop_no_messages(
     environ["SLEEP_FOR_WHEN_OPEN"] = "5"
     environ["DOS_TRANSACTIONS_PER_SECOND"] = "2"
     mock_invoke.return_value = LAMBDA_INVOKE_RESPONSE
-    mock_client().invoke.return_value = {}
-    mock_client().receive_message.return_value = {}
-
+    mock_sqs_client.receive_message.return_value = {}
     # Act
     lambda_handler({}, lambda_context)
 
@@ -222,12 +241,18 @@ def test_orchestrator_circuit_closed_single_loop_no_messages(
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=True)
-@patch(f"{FILE_PATH}.client")
+@patch(f"{FILE_PATH}.QUEUE_URL")
+@patch(f"{FILE_PATH}.sqs_client")
 @patch(f"{FILE_PATH}.invoke_lambda")
 @patch(f"{FILE_PATH}.sleep")
 @patch(f"{FILE_PATH}.time", side_effect=[1645527500, 1645527501, 1645527511])
 def test_orchestrator_circuit_closed_single_loop_circuit_open(
-    mock_time, mock_sleep, mock_invoke, mock_client, lambda_context
+    mock_time: MagicMock,
+    mock_sleep: MagicMock,
+    mock_invoke: MagicMock,
+    mock_sqs_client: MagicMock,
+    mock_queue_url: MagicMock,
+    lambda_context: LambdaContext,
 ):
     # Arrange
     environ["RUN_FOR"] = "10"
@@ -235,8 +260,7 @@ def test_orchestrator_circuit_closed_single_loop_circuit_open(
     environ["SLEEP_FOR_WHEN_OPEN"] = "5"
     environ["DOS_TRANSACTIONS_PER_SECOND"] = "2"
     mock_invoke.return_value = LAMBDA_INVOKE_RESPONSE
-    mock_client().invoke.return_value = {}
-    mock_client().receive_message.return_value = {}
+    mock_sqs_client().receive_message.return_value = {}
 
     # Act
     lambda_handler({}, lambda_context)
@@ -245,6 +269,5 @@ def test_orchestrator_circuit_closed_single_loop_circuit_open(
     assert 3 == mock_time.call_count
     assert 1 == mock_invoke.call_count
     assert 1 == mock_sleep.call_count
-    mock_invoke.assert_called_once_with(mock_client(), EXPECTED_HEALTH_CHECK)
-
+    mock_invoke.assert_called_once_with(EXPECTED_HEALTH_CHECK)
     mock_sleep.assert_called_once_with(5)
