@@ -37,17 +37,17 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     if request["type"] == "get_pharmacy_odscodes":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
-            f"SELECT LEFT(odscode, 5) FROM services WHERE typeid {type_id_query} "
+            f"SELECT LEFT(odscode, 5) FROM pathwaysdos.services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
         )
         result = run_query(query, None)
     elif request["type"] == "get_taken_odscodes":
-        query = "SELECT LEFT(odscode, 5) FROM services"
+        query = "SELECT LEFT(odscode, 5) FROM pathwaysdos.services"
         result = run_query(query, None)
     elif request["type"] == "get_pharmacy_odscodes_with_contacts":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
-            f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} AND LENGTH(odscode) > 4 "
+            f"SELECT LEFT(odscode,5) FROM pathwaysdos.services WHERE typeid {type_id_query} AND LENGTH(odscode) > 4 "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
             "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
         )
@@ -55,7 +55,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     elif request["type"] == "get_single_service_pharmacy_odscode":
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
-            f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} "
+            f"SELECT LEFT(odscode,5) FROM pathwaysdos.services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
             "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
         )
@@ -63,7 +63,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     elif request["type"] == "get_dentist_odscodes":
         type_id_query = get_valid_service_types_equals_string("Dentist")
         query = (
-            f"SELECT odscode FROM services WHERE typeid {type_id_query} "
+            f"SELECT odscode FROM pathwaysdos.services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'"
         )
         result = run_query(query, None)
@@ -71,7 +71,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         cid = request.get("odscode")
         if cid is None:
             raise ValueError("Missing odscode")
-        query = f"SELECT count(*) from services where odscode like '{cid}%'"
+        query = f"SELECT count(*) FROM pathwaysdos.services where odscode like '{cid}%'"
         result = run_query(query, None)
     elif request["type"] == "get_changes":
         cid = request.get("correlation_id")
@@ -85,7 +85,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError("Missing correlation id")
         type_id_query = get_valid_service_types_equals_string("PHA")
         query = (
-            f"SELECT id FROM services WHERE typeid {type_id_query} "
+            f"SELECT id FROM pathwaysdos.services WHERE typeid {type_id_query} "
             f"AND statusid = {VALID_STATUS_ID} AND odscode like '{odscode}%' LIMIT 1"
         )
         result = run_query(query, None)
@@ -115,7 +115,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         )
         query = (
             f"SELECT {', '.join(db_columns)} "
-            f"FROM services WHERE odscode like %(ODSCODE)s AND typeid {type_id_query} "
+            f"FROM pathwaysdos.services WHERE odscode like %(ODSCODE)s AND typeid {type_id_query} "
             "AND statusid = %(VALID_STATUS_ID)s AND odscode IS NOT NULL"
         )
         query_vars = {
@@ -148,7 +148,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         if service_id is None or field is None:
             raise ValueError("Missing data in get_service_table_field request")
         result = run_query(
-            query=f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s",
+            query=f"SELECT {field} FROM pathwaysdos.services WHERE id = %(SERVICE_ID)s",
             query_vars={"SERVICE_ID": service_id},
         )
     elif request["type"] == "get_service_history":
@@ -166,7 +166,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         result = run_query(
             query=(
                 "SELECT town, postcode, easting, northing, latitude, longitude "
-                "FROM services WHERE id = %(SERVICE_ID)s"
+                "FROM pathwaysdos.services WHERE id = %(SERVICE_ID)s"
             ),
             query_vars={"SERVICE_ID": service_id},
         )
