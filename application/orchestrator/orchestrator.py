@@ -82,7 +82,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                     metadata=update_request_metadata,
                 )
                 logger.info(
-                    "Sending request to event sender",
+                    "Sending request to service sync",
                     extra={
                         "request": update_request_queue_item,
                         "message_received": message_received_pretty,

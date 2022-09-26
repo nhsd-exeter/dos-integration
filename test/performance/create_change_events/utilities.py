@@ -67,3 +67,25 @@ class OdsCodes:
 
 
 ODSCODES = OdsCodes()
+
+
+def send_valid_change_event(change_event_class):
+    change_event_class.payload = setup_change_event_request()
+    change_event_class.payload["ODSCode"] = ODSCODES.get_valid_ods_code()
+    change_event_class.headers = setup_headers()
+    change_event_class.headers["x-api-key"] = change_event_class.api_key
+    change_event_class.client.post(
+        "", headers=change_event_class.headers, json=change_event_class.payload, name="AllChangesChangeEvent"
+    )
+    return change_event_class
+
+
+def send_invalid_change_event(change_event_class):
+    change_event_class.payload = setup_change_event_request()
+    change_event_class.payload["ODSCode"] = ODSCODES.get_invalid_ods_code()
+    change_event_class.headers = setup_headers()
+    change_event_class.headers["x-api-key"] = change_event_class.api_key
+    change_event_class.client.post(
+        "", headers=change_event_class.headers, json=change_event_class.payload, name="OdscodeDoesNotExistInDoS"
+    )
+    return change_event_class
