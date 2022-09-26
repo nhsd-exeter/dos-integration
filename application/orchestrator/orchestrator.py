@@ -16,6 +16,8 @@ from common.utilities import extract_body
 logger = Logger()
 tracer = Tracer()
 QUEUE_URL = getenv("UPDATE_REQUEST_QUEUE_URL")
+sqs = client("sqs")
+lambda_client = client("lambda")
 
 
 @unhandled_exception_logging()
@@ -30,8 +32,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
 
     Event: The event payload should contain an Update Request
     """
-    sqs = client("sqs")
-    lambda_client = client("lambda")
     start = time()
     loop = 0
     TIME_TO_SLEEP = 1 / int(getenv("DOS_TRANSACTIONS_PER_SECOND", default=3))
@@ -64,22 +64,16 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                 dynamo_record_id: str = message["MessageAttributes"]["dynamo_record_id"]["StringValue"]
                 message_received: int = int(message["MessageAttributes"]["message_received"]["StringValue"])
                 ods_code: str = message["MessageAttributes"]["ods_code"]["StringValue"]
-                message_deduplication_id: str = message["MessageAttributes"]["message_deduplication_id"]["StringValue"]
-                message_group_id: str = message["MessageAttributes"]["message_group_id"]["StringValue"]
                 logger.set_correlation_id(correlation_id)
-                logger.append_keys(ods_code=ods_code)
                 s, ms = divmod(message_received, 1000)
                 message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
-                logger.append_keys(message_received=message_received_pretty)
-                logger.append_keys(dynamo_record_id=dynamo_record_id)
-                logger.append_keys(ods_code=ods_code)
                 update_request_metadata = UpdateRequestMetadata(
                     dynamo_record_id=dynamo_record_id,
                     correlation_id=correlation_id,
                     message_received=message_received,
                     ods_code=ods_code,
-                    message_deduplication_id=message_deduplication_id,
-                    message_group_id=message_group_id,
+                    message_deduplication_id=message["MessageAttributes"]["message_deduplication_id"]["StringValue"],
+                    message_group_id=message["MessageAttributes"]["message_group_id"]["StringValue"],
                 )
                 update_request_queue_item = UpdateRequestQueueItem(
                     is_health_check=False,
@@ -87,7 +81,15 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
                     recipient_id=message["ReceiptHandle"],
                     metadata=update_request_metadata,
                 )
-                logger.info("Sending request to event sender", extra={"request": update_request_queue_item})
+                logger.info(
+                    "Sending request to event sender",
+                    extra={
+                        "request": update_request_queue_item,
+                        "message_received": message_received_pretty,
+                        "dynamo_record_id": dynamo_record_id,
+                        "ods_code": ods_code,
+                    },
+                )
                 invoke_lambda(lambda_client, update_request_queue_item)
                 it_end = time()
                 to_sleep = max(0, (TIME_TO_SLEEP - (it_end - it_start)))
