@@ -27,6 +27,7 @@ def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
         context (LambdaContext): Lambda function context object
     """
     logger.set_correlation_id(event["correlation_id"])
+    logger.append_keys(user_id=event["user_id"], change_id=event["change_id"], s3_filename=event["s3_filename"])
     logger.info("Starting send_email lambda")
     send_email(
         email_address=event["recipient_email_address"],
@@ -45,8 +46,10 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
         subject (str): Subject of the email
         correlation_id (str): Correlation ID of the email
     """
+
     aws_account_name = environ["AWS_ACCOUNT_NAME"]
     if aws_account_name != "nonprod" or "email" in correlation_id:
+        logger.info("Preparing to send email")
         email_secrets = get_secret(environ["EMAIL_SECRET_NAME"])
         to_email_address = email_address
         di_system_email_address = email_secrets["DI_SYSTEM_MAILBOX_ADDRESS"]
@@ -54,18 +57,23 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg.attach(MIMEText(html_content, "html"))
-        logger.info("Sending email")
+        logger.info("Email content prepared")
         try:
             # Don't log any variables that contain PID or password
             smtp = SMTP(host="smtp.office365.com", port=587, timeout=15)
+            logger.info("Connected to SMTP server")
             smtp.ehlo()
+            logger.info("Sent EHLO")
             smtp.starttls()
+            logger.info("Started TLS")
             smtp.login(di_system_email_address, di_system_email_password)
+            logger.info("Logged in to SMTP server")
             smtp.sendmail(from_addr=di_system_email_address, to_addrs=[to_email_address], msg=msg.as_string())
+            logger.info("Sent email")
             smtp.quit()
-            logger.info("Email sent")
+            logger.info("Disconnected from SMTP server")
             add_metric("EmailSent")  # type: ignore
-        except SMTPException:
+        except BaseException as exception:
             add_metric("EmailFailed")  # type: ignore
-            logger.error("Email failed")
+            logger.error("Email failed", extra={"error_name": type(exception).__name__})
             raise SMTPException("An error occurred while sending the email")

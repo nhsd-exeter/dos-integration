@@ -192,6 +192,9 @@ def send_rejection_emails(pending_changes: List[PendingChange]) -> None:
             recipient_email_address=pending_change.email,
             email_body=file_contents,
             email_subject=subject,
+            user_id=pending_change.user_id,
+            change_id=pending_change.id,
+            s3_filename=file_name,
         )
         logger.debug("Email message created")
         client("lambda").invoke(

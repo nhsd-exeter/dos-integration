@@ -34,3 +34,6 @@ class EmailMessage(TypedDict):
     recipient_email_address: str
     email_body: str
     email_subject: str
+    user_id: str
+    change_id: str
+    s3_filename: str

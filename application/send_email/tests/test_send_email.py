@@ -21,6 +21,9 @@ EVENT = EmailMessage(
     recipient_email_address=RECIPIENT_EMAIL_ADDRESS,
     email_body=EMAIL_BODY,
     email_subject=EMAIL_SUBJECT,
+    user_id="user_id",
+    change_id="change_id",
+    s3_filename="s3_filename",
 )
 
 
