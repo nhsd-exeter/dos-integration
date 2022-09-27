@@ -177,24 +177,24 @@ def send_rejection_emails(pending_changes: List[PendingChange]) -> None:
         file_name = f"rejection-emails/rejection-email-{time_ns()}.json"
         file_contents = build_change_rejection_email_contents(pending_change, file_name)
         correlation_id: str = logger.get_correlation_id()
-        file = EmailFile(
+        email_file = EmailFile(
             correlation_id=correlation_id,
-            user_id=pending_change.user_id,
             email_body=file_contents,
             email_subject=subject,
+            user_id=pending_change.user_id,
         )
-        logger.debug("Email file created")
-        put_content_to_s3(content=dumps(file), s3_filename=file_name)
+        logger.info("Email file created", extra={"subject": subject, "user_id": pending_change.user_id})
+        put_content_to_s3(content=dumps(email_file), s3_filename=file_name)
         logger.info("File contents uploaded to S3")
         file_contents = file_contents.replace("{{InitiatorName}}", pending_change.creatorsname)
         message = EmailMessage(
+            change_id=pending_change.id,
             correlation_id=correlation_id,
-            recipient_email_address=pending_change.email,
             email_body=file_contents,
             email_subject=subject,
-            user_id=pending_change.user_id,
-            change_id=pending_change.id,
+            recipient_email_address=pending_change.email,
             s3_filename=file_name,
+            user_id=pending_change.user_id,
         )
         logger.debug("Email message created")
         client("lambda").invoke(

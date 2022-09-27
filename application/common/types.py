@@ -24,16 +24,16 @@ class UpdateRequestQueueItem(TypedDict):
 
 class EmailFile(TypedDict):
     correlation_id: str
-    user_id: str
     email_body: str
     email_subject: str
+    user_id: str
 
 
 class EmailMessage(TypedDict):
+    change_id: str
     correlation_id: str
-    recipient_email_address: str
     email_body: str
     email_subject: str
-    user_id: str
-    change_id: str
+    recipient_email_address: str
     s3_filename: str
+    user_id: str
