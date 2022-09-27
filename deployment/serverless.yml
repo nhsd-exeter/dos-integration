@@ -43,7 +43,13 @@ provider:
 
 plugins:
   - serverless-vpc-discovery
+  - serverless-plugin-ifelse
 
+custom:
+  serverlessIfElse:
+    - If: '"${env:AWS_ACCOUNT_NAME}" == "prod"'
+      Exclude:
+        - functions.dos-db-handler
 
 functions:
   change-event-dlq-handler:

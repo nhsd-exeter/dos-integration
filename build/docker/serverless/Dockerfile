@@ -10,3 +10,4 @@ ADD assets/serverless.tar.gz /deployment/
 RUN chmod -R 777 /deployment
 WORKDIR /deployment
 RUN serverless plugin install -n serverless-vpc-discovery
+RUN serverless plugin install -n serverless-plugin-ifelse
