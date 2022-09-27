@@ -188,6 +188,11 @@ def get_services_table_location_data(service_id: str) -> list:
     data = loads(loads(response))
     return data
 
+def get_service_uid(service_id: str) -> list:
+    lambda_payload = {"type": "get_service_uid", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return data
 
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
@@ -856,7 +861,7 @@ def post_to_change_event_dlq(context: Context):
 
 
 def get_s3_email_file(context: Context) -> dict:
-    sleep(15)
+    sleep(45)
     current_environment = getenv("ENVIRONMENT")
     bucket_name = f"uec-dos-int-{current_environment}-send-email-bucket"
     response = S3_CLIENT.list_objects(
