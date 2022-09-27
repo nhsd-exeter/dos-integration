@@ -25,6 +25,7 @@ from .utilities.utils import (
     add_new_standard_open_day,
     assert_standard_closing,
     assert_standard_openings,
+    check_pending_service_is_rejected,
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
@@ -1117,3 +1118,9 @@ def services_location_history_update_assertion(context: Context):
 def check_s3_contains_email_file(context: Context):
     get_s3_email_file(context)
     assert context.service_uid in context.other["email_body"], "ERROR: service_uid not found in email body"
+
+
+@then("the changes table shows change is now rejected")
+def check_changes_table_has_been_updated(context: Context):
+    status = check_pending_service_is_rejected(context.service_id)
+    assert status == "REJECTED", "ERROR: changes table has not been updated"

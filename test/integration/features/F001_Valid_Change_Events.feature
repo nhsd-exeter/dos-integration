@@ -135,3 +135,4 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And a pending entry exists in the changes table for this service
     When the Changed Event is sent for processing with "valid" api key
     Then the s3 bucket contains an email file matching the service uid
+    And the changes table shows change is now rejected
