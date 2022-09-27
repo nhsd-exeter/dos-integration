@@ -209,7 +209,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         )
 
         query = (
-            "INSERT INTO pathwaysdos.changes VALUES (id, approvestatus, \"type\", initiatorname, servicename, "
+            "INSERT INTO pathwaysdos.changes VALUES (id, approvestatus, 'type', initiatorname, servicename, "
             "servicetype, value, createdtimestamp, creatorsname, serviceid) "
             "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
         )
