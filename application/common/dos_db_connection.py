@@ -90,7 +90,11 @@ def connection_to_db(
     )
 
 
-def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True) -> DictCursor:
+def query_dos_db(
+        connection: connection,
+        query: str,
+        vars: Optional[Dict[str, Any]] = None,
+        log_vars: bool = True) -> DictCursor:
     """Queries the database given in the connection object
 
     Args:
