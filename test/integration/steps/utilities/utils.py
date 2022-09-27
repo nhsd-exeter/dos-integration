@@ -1,7 +1,7 @@
 from ast import literal_eval
 from datetime import datetime, timedelta
 from decimal import Decimal
-from json import dumps, loads, load
+from json import dumps, load, loads
 from os import getenv, remove
 from random import randint, randrange, sample
 from re import sub

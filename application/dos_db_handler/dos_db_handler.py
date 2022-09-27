@@ -218,6 +218,12 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
         )
         result = run_query(query, values)
+    elif request["type"] == "check_changes_entry_rejected":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing service id")
+        query = f"SELECT approvestatus FROM changes WHERE serviceid = {service_id} "
+        result = run_query(query, None)
     elif request["type"] == "get_service_uid":
         service_id = request.get("service_id")
         if service_id is None:
