@@ -173,7 +173,7 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
 def change_table_entry_creation_for_service(context: Context):
     service_id = get_service_id(context.change_event.odscode)
     service_uid = get_service_uid(service_id)
-    context.service_uid = service_uid
+    context.service_uid = service_uid[0][0]
     create_pending_change_for_service(service_id)
     return context
 
@@ -1115,5 +1115,5 @@ def services_location_history_update_assertion(context: Context):
 
 @then("the s3 bucket contains an email file matching the service uid")
 def check_s3_contains_email_file(context: Context):
-    email_file = get_s3_email_file(context)
-    assert context.service_uid in email_file, "ERROR: Service id not found in email file"
+    get_s3_email_file(context)
+    assert context.service_uid in context.other["email_body"], "ERROR: service_uid not found in email body"

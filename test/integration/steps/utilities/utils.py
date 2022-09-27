@@ -188,11 +188,13 @@ def get_services_table_location_data(service_id: str) -> list:
     data = loads(loads(response))
     return data
 
+
 def get_service_uid(service_id: str) -> list:
     lambda_payload = {"type": "get_service_uid", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
+
 
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0

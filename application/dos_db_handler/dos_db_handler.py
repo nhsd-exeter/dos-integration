@@ -222,9 +222,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         service_id = request.get("service_id")
         if service_id is None:
             raise ValueError("Missing service id")
-        query = (
-            f"SELECT uid FROM services WHERE id = {service_id} "
-        )
+        query = f"SELECT uid FROM services WHERE id = {service_id} "
         result = run_query(query, None)
     else:
         raise ValueError("Unsupported request")

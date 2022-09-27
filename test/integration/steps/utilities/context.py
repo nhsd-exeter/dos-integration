@@ -9,6 +9,7 @@ from .change_event import ChangeEvent
 class Context:
     change_event: ChangeEvent | None = None
     service_id: str | None = None
+    service_uid: str | None = None
     correlation_id: str | None = None
     response: Response | None = None
     sequence_number: int | None = None
@@ -21,5 +22,5 @@ class Context:
         return (
             f"Context(correlation_id={self.correlation_id}, sequence_number={self.sequence_number}"
             f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event}"
-            f", other={self.other})"
+            f", other={self.other}, service_uid={self.service_uid})"
         )
