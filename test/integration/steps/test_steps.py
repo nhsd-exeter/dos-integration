@@ -25,6 +25,7 @@ from .utilities.utils import (
     add_new_standard_open_day,
     assert_standard_closing,
     assert_standard_openings,
+    check_pending_service_is_rejected,
     check_received_data_in_dos,
     check_service_history,
     check_service_history_change_type,
@@ -32,6 +33,7 @@ from .utilities.utils import (
     confirm_changes,
     convert_specified_opening,
     convert_standard_opening,
+    create_pending_change_for_service,
     generate_correlation_id,
     generate_random_int,
     get_address_string,
@@ -41,11 +43,13 @@ from .utilities.utils import (
     get_latest_sequence_id_for_a_given_odscode,
     get_locations_table_data,
     get_odscode_with_contact_data,
+    get_s3_email_file,
     get_service_history,
     get_service_history_specified_opening_times,
     get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
+    get_service_uid,
     get_services_table_location_data,
     get_stored_events_from_dynamo_db,
     post_to_change_event_dlq,
@@ -163,6 +167,15 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
     context.change_event.standard_opening_times[-1]["OpeningTime"] = "00:01"
     context.change_event.standard_opening_times[-1]["ClosingTime"] = closing_time
     context.change_event.standard_opening_times[-1]["IsOpen"] = True
+    return context
+
+
+@given("a pending entry exists in the changes table for this service", target_fixture="context")
+def change_table_entry_creation_for_service(context: Context):
+    service_id = get_service_id(context.change_event.odscode)
+    service_uid = get_service_uid(service_id)
+    context.service_uid = service_uid[0][0]
+    create_pending_change_for_service(service_id)
     return context
 
 
@@ -1099,3 +1112,15 @@ def services_location_history_update_assertion(context: Context):
     location_data = get_locations_table_data(context.change_event.postcode)
     location_data = location_data[0][:-2]
     assert history_list == location_data, "ERROR: Service History and Location data does not match"
+
+
+@then("the s3 bucket contains an email file matching the service uid")
+def check_s3_contains_email_file(context: Context):
+    get_s3_email_file(context)
+    assert context.service_uid in context.other["email_body"], "ERROR: service_uid not found in email body"
+
+
+@then("the changes table shows change is now rejected")
+def check_changes_table_has_been_updated(context: Context):
+    status = check_pending_service_is_rejected(context.service_id)
+    assert "REJECTED" in status, "ERROR: changes table has not been updated"

@@ -126,3 +126,13 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the field "Postcode" is set to "PR4 2BE"
     When the Changed Event is sent for processing with "valid" api key
     Then the service history table has been updated with locations data
+
+  @complete @pharmacy_no_log_searches
+  Scenario: F001S015 To check the emails sending
+    Given a "pharmacy" Changed Event is aligned with DoS
+    And the correlation-id is "email"
+    And the field "Address1" is set to "Test Address"
+    And a pending entry exists in the changes table for this service
+    When the Changed Event is sent for processing with "valid" api key
+    Then the s3 bucket contains an email file matching the service uid
+    And the changes table shows change is now rejected

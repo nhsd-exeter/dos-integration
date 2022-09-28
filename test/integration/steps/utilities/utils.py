@@ -1,14 +1,14 @@
 from ast import literal_eval
 from datetime import datetime, timedelta
 from decimal import Decimal
-from json import dumps, loads
-from os import getenv
+from json import dumps, load, loads
+from os import getenv, remove
 from random import randint, randrange, sample
 from re import sub
 from time import sleep, time, time_ns
 from typing import Any, Dict, Tuple
 
-from boto3 import client
+from boto3 import client, resource
 from boto3.dynamodb.types import TypeDeserializer
 from pytz import UTC
 from requests import get, post, Response
@@ -30,6 +30,7 @@ LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
 DYNAMO_CLIENT = client("dynamodb")
 RDS_DB_CLIENT = client("rds")
+S3_CLIENT = client("s3", region_name="eu-west-2")
 
 PHARMACY_ODS_CODE_LIST = None
 DENTIST_ODS_CODE_LIST = None
@@ -188,6 +189,13 @@ def get_services_table_location_data(service_id: str) -> list:
     return data
 
 
+def get_service_uid(service_id: str) -> list:
+    lambda_payload = {"type": "get_service_uid", "service_id": service_id}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    data = loads(loads(response))
+    return data
+
+
 def confirm_changes(correlation_id: str) -> list:
     changes_loop_count = 0
     data = []
@@ -235,6 +243,24 @@ def get_service_id(odscode: str) -> str:
         raise ValueError("Error!.. Service Id not found")
 
     return data[0][0]
+
+
+def create_pending_change_for_service(service_id: str):
+    success_status = False
+    unique_id = randint(10000, 99999)
+    lambda_payload = {
+        "type": "create_changes_entry_for_service",
+        "service_id": service_id,
+        "unique_id": unique_id,
+    }
+    success_status = invoke_dos_db_handler_lambda(lambda_payload)
+    return success_status
+
+
+def check_pending_service_is_rejected(service_id: str):
+    lambda_payload = {"type": "check_changes_entry_rejected", "service_id": service_id}
+    success_status = invoke_dos_db_handler_lambda(lambda_payload)
+    return success_status
 
 
 def get_service_type_data(organisation_type_id: str) -> list[int]:
@@ -840,3 +866,18 @@ def post_to_change_event_dlq(context: Context):
         MessageGroupId=str(randint(10000, 99999)),
         MessageAttributes=get_sqs_message_attributes(context.change_event.odscode),
     )
+
+
+def get_s3_email_file(context: Context) -> dict:
+    sleep(45)
+    current_environment = getenv("ENVIRONMENT")
+    bucket_name = f"uec-dos-int-{current_environment}-send-email-bucket"
+    response = S3_CLIENT.list_objects(
+        Bucket=bucket_name,
+    )
+    object_key = response["Contents"][-1]["Key"]
+    S3_RESOURCE = resource("s3")
+    S3_RESOURCE.meta.client.download_file(bucket_name, object_key, "email_file.json")
+    context.other = load(open("email_file.json", "r"))
+    remove("email_file.json")
+    return context

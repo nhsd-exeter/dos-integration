@@ -71,7 +71,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         cid = request.get("odscode")
         if cid is None:
             raise ValueError("Missing odscode")
-        query = f"SELECT count(*) from services where odscode like '{cid}%'"
+        query = f"SELECT count(*) FROM services where odscode like '{cid}%'"
         result = run_query(query, None)
     elif request["type"] == "get_changes":
         cid = request.get("correlation_id")
@@ -181,6 +181,55 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             ),
             query_vars={"POSTCODE": postcode},
         )
+    elif request["type"] == "create_changes_entry_for_service":
+        service_id = request.get("service_id")
+        unique_id = request.get("unique_id")
+        if service_id is None:
+            raise ValueError("Missing service id for changes table")
+        json_obj = {
+            "new": {
+                "cmstelephoneno": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": "0"},
+                "cmsurl": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": ""},
+            },
+            "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
+            "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
+        }
+
+        values = (
+            f"66301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
+            "PENDING",
+            "modify",
+            "admin",
+            "Test Duplicate",
+            "DoS Region",
+            dumps(json_obj),
+            "2022-09-06 11:00:00.000 +0100",
+            "admin",
+            "2022-09-06 11:00:00.000 +0100",
+            "admin",
+            str(service_id),
+            None,
+            None,
+            None,
+        )
+
+        query = (
+            "INSERT INTO pathwaysdos.changes VALUES "
+            "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
+        )
+        result = run_query(query, values)
+    elif request["type"] == "check_changes_entry_rejected":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing service id")
+        query = f"SELECT approvestatus FROM changes WHERE serviceid = {service_id} "
+        result = run_query(query, None)
+    elif request["type"] == "get_service_uid":
+        service_id = request.get("service_id")
+        if service_id is None:
+            raise ValueError("Missing service id")
+        query = f"SELECT uid FROM services WHERE id = {service_id} "
+        result = run_query(query, None)
     else:
         raise ValueError("Unsupported request")
     return dumps(result, default=str)
@@ -191,6 +240,7 @@ def run_query(query, query_vars) -> list:
     with connect_to_dos_db() as connection:
         cursor = query_dos_db(connection=connection, query=query, vars=query_vars)
         query_result = cursor.fetchall()
+        connection.commit()
         cursor.close()
     return query_result
 
