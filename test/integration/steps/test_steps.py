@@ -1123,4 +1123,4 @@ def check_s3_contains_email_file(context: Context):
 @then("the changes table shows change is now rejected")
 def check_changes_table_has_been_updated(context: Context):
     status = check_pending_service_is_rejected(context.service_id)
-    assert status == "REJECTED", "ERROR: changes table has not been updated"
+    assert "REJECTED" in status, "ERROR: changes table has not been updated"
