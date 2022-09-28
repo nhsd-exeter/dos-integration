@@ -258,10 +258,7 @@ def create_pending_change_for_service(service_id: str):
 
 
 def check_pending_service_is_rejected(service_id: str):
-    lambda_payload = {
-        "type": "check_changes_entry_rejected",
-        "service_id": service_id
-    }
+    lambda_payload = {"type": "check_changes_entry_rejected", "service_id": service_id}
     success_status = invoke_dos_db_handler_lambda(lambda_payload)
     return success_status
 
