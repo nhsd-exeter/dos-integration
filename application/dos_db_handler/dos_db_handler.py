@@ -240,6 +240,7 @@ def run_query(query, query_vars) -> list:
     with connect_to_dos_db() as connection:
         cursor = query_dos_db(connection=connection, query=query, vars=query_vars)
         query_result = cursor.fetchall()
+        connection.commit()
         cursor.close()
     return query_result
 

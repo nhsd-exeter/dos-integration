@@ -78,7 +78,7 @@ def connection_to_db(
     """
     logger.info(f"Attempting connection to database '{server}'")
     logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}, user={db_user}")
-    connection = connect(
+    return connect(
         host=server,
         port=port,
         dbname=db_name,
@@ -88,8 +88,6 @@ def connection_to_db(
         options=f"-c search_path=dbo,{db_schema}",
         application_name="DOS INTEGRATION <psycopg2>",
     )
-    connection.autocommit = True
-    return connection
 
 
 def query_dos_db(connection: connection, query: str, vars: Optional[Dict[str, Any]] = None) -> DictCursor:
