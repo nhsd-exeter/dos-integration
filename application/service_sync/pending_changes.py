@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from json import dumps, loads
+from json import JSONDecodeError, dumps, loads
 from os import environ
 from time import time_ns
 from typing import List, Optional
@@ -47,9 +47,12 @@ class PendingChange:
         Returns:
             str: String representation of this object
         """
-        value = loads(self.value)
-        value["initiator"]["userid"] = "Hidden in Logs"
-        value["approver"] = "Hidden in Logs"
+        try:
+            value = loads(self.value)
+            value["initiator"]["userid"] = "Hidden in Logs"
+            value["approver"] = "Hidden in Logs"
+        except JSONDecodeError:
+            value = "Unable to show value as unable to decode JSON to remove sensitive user data"
 
         return (
             f"PendingChange(id={self.id}, value={value}, typeid={self.typeid}, "
