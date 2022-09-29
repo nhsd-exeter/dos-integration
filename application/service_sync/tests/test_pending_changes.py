@@ -365,10 +365,13 @@ def test_send_rejection_emails(
         s3_filename=f"rejection-emails/rejection-email-{mock_time_ns.return_value}.json",
     )
     mock_email_message.assert_called_once_with(
+        change_id=pending_change.id,
         correlation_id="1",
         recipient_email_address=pending_change.email,
         email_body=file_contents,
         email_subject=expected_subject,
+        s3_filename=f"rejection-emails/rejection-email-{mock_time_ns.return_value}.json",
+        user_id=pending_change.user_id,
     )
     mock_client.assert_called_once_with("lambda")
     mock_client.return_value.invoke.assert_called_once_with(

@@ -32,16 +32,8 @@ def unhandled_exception_logging_hidden_event(handler, event, context: LambdaCont
     try:
         response = handler(event, context)
         return response
-    except ValidationException as err:
-        logger.exception(f"Validation Error - {err}", extra={"error": err})
-        return
-    except ClientError as err:
-        error_code = err.response["Error"]["Code"]
-        error_msg = err.response["Error"]["Message"]
-        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err})
-        raise err
     except BaseException as err:
-        logger.exception(f"Something went wrong - {err}", extra={"error": err})
+        logger.error("Something went wrong but the event is hidden")
         raise err
 
 
