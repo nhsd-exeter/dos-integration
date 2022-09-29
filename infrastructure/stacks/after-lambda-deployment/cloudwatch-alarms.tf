@@ -263,3 +263,18 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
   statistic                 = "Sum"
   threshold                 = "1"
 }
+
+resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack.arn]
+  alarm_description         = "Alert for when DI is failing to send emails"
+  alarm_name                = "${var.project_id} | ${var.environment} | High Number of Emails Sent"
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  dimensions                = { ENV = var.environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "EmailSent"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "86400" # 1 Day
+  statistic                 = "Sum"
+  threshold                 = "2"
+}
