@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from json import JSONDecodeError, dumps, loads
+from json import dumps, JSONDecodeError, loads
 from os import environ
 from time import time_ns
 from typing import List, Optional
