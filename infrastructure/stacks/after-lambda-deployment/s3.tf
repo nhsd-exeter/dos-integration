@@ -13,4 +13,6 @@ module "di_send_email_bucket" {
       }
     }]
   }
+  lifecycle_days_to_expiration = "90"
+  lifecycle_expiration_enabled = "true"
 }
