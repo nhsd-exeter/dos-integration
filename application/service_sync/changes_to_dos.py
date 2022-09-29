@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
-from .format import format_address, format_website
+from .format import format_website
 from .service_histories import ServiceHistories
 from .validation import validate_website
 from common.dos import DoSService, get_valid_dos_location
@@ -123,9 +123,13 @@ class ChangesToDoS:
         Returns:
             Tuple[bool, bool]: Tuple of booleans, first is if address has changed, second is if postcode has changed, third is the DoSLocation object for the postcode
         """  # noqa: E501
-        logger.debug(f"Address before title casing: {self.nhs_entity.address_lines}")
-        self.nhs_entity.address_lines = list(map(format_address, self.nhs_entity.address_lines))
-        logger.debug(f"Address after title casing: {self.nhs_entity.address_lines}")
+        # Address Formatting Turned off in DI-591
+        # before_title_case_address = self.nhs_entity.address_lines
+        # self.nhs_entity.address_lines = list(map(format_address, self.nhs_entity.address_lines))
+        # logger.info(
+        #     f"Address after title casing: {self.nhs_entity.address_lines}",
+        #     extra={"before": before_title_case_address, "after": self.nhs_entity.address_lines},
+        # )
         nhs_uk_address_string = "$".join(self.nhs_entity.address_lines)
         dos_address = self.dos_service.address
         is_address_same = True
