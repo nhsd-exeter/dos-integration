@@ -35,6 +35,7 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 TF_VAR_dos_db_replica_name := $(DB_REPLICA_SERVER_NAME)
 
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
+DOS_TRANSACTIONS_PER_SECOND = 6
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 
@@ -109,7 +110,6 @@ TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-moni
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
-DOS_TRANSACTIONS_PER_SECOND=3
 
 # Performance Pipelines
 TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
