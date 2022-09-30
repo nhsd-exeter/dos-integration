@@ -3,6 +3,8 @@
 # ==============================================================================
 # Service variables
 
+DEPLOYMENT_SECRETS = $(PROJECT_ID)-live/deployment # Move to project.mk when nonprod profiles are merged
+
 LOG_LEVEL:= INFO
 
 DB_SERVER_NAME := uec-core-dos-live-db-12
@@ -25,6 +27,8 @@ TF_VAR_ip_address_secret := uec-dos-int-live-ip-addresses-allowlist
 SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-live/deployment
 SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-live-status
+
+TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 
 # ==============================================================================
 # Organisation Types Feature Flags

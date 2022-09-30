@@ -70,3 +70,22 @@ variable "project_display_name" {
 variable "terraform_platform_state_store" {
   description = "Texas Platform State store bucket"
 }
+
+# ################
+# # TAGGING COMMON
+# ################
+
+variable "data_classification" {
+  type        = string
+  description = "Project data classification"
+}
+
+variable "service_category" {
+  type        = string
+  description = "Project service category"
+}
+
+variable "distribution_list" {
+  type        = string
+  description = "Project distribution list"
+}

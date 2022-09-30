@@ -14,17 +14,29 @@ provider:
     blockPublicAccess: true
     skipPolicySetup: true
   stackTags:
+    BUILD_TIMESTAMP: ${env:VERSION}
+    DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
+    OWNER: ${env:PROJECT_DISTRIBUTION_LIST}
     PROFILE: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_ID}
+    ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    TagVersion: "2.0"
+    Tool: "Serverless Framework Deployed by CloudFormation"
   tags:
+    BUILD_TIMESTAMP: ${env:VERSION}
+    DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
+    OWNER: ${env:PROJECT_DISTRIBUTION_LIST}
     PROFILE: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
     Service: ${env:PROJECT_ID}
+    ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    TagVersion: "2.0"
+    Tool: "Serverless Framework Deployed by CloudFormation"
   environment:
     PROFILE: ${env:PROFILE}
     ENV: ${env:ENVIRONMENT}
@@ -33,7 +45,7 @@ provider:
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
-    BUILD_TIMESTAMP: ${env:VERSION}
+
     IMAGE_VERSION: ${env:VERSION}
   logs:
     restApi:
