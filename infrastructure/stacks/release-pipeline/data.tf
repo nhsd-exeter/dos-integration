@@ -17,5 +17,5 @@ data "aws_sns_topic" "development_pipeline_topic" {
 
 locals {
   deploy_envs = toset(["test", "perf"])
-  to_build    = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "orchestrator", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "authoriser", "dos-api-gateway"])
+  to_build    = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "orchestrator", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email"])
 }
