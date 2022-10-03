@@ -16,7 +16,7 @@ SERVICE_TAG_COMMON = texas
 PROJECT_TECH_STACK_LIST = python,terraform
 PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,dos-db-handler
 PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger
-DEPLOYMENT_SECRETS = $(PROJECT_ID)-$(PROFILE)/deployment
+PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 TF_VAR_aws_vpc_name = $(AWS_VPC_NAME)
@@ -38,6 +38,12 @@ UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 DOS_TRANSACTIONS_PER_SECOND = 6
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
+
+# Common variables
+TF_VAR_tags_secret_manager = $(TAG_SECRET_MANAGER)
+SERVICE_CATEGORY_KEY := DI_SERVICE_CATEGORY
+DATA_CLASSIFICATION_KEY := DI_DATA_CLASSIFICATION
+DISTRIBUTION_LIST_KEY := DI_DISTRIBUTION_LIST
 
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key

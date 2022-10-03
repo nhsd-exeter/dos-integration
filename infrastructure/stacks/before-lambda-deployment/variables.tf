@@ -18,15 +18,7 @@ variable "nhs_uk_api_key_key" {
   description = "API Key key for secrets manager"
 }
 
-variable "email_secrets" {
-  type        = string
-  description = "Where the email secrets are stored"
-}
 
-variable "system_email_address_key" {
-  type        = string
-  description = "The key for the email address in the secrets manager secret"
-}
 
 # ############################
 # # SECURITY GROUP / RULES

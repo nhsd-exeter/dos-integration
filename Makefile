@@ -30,14 +30,15 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 	done
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
 	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
-	make serverless-remove VERSION="any" DB_PASSWORD="any" DB_SERVER="any" DB_USER_NAME="any" SLACK_WEBHOOK_URL="any" DB_READ_ONLY_USER_NAME="any" DB_READ_AND_WRITE_USER_NAME="any" DB_REPLICA_SERVER="any" PROJECT_TEAM_EMAIL_ADDRESS="any" DB_NAME="any" PROJECT_SYSTEM_EMAIL_ADDRESS="any"
+	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
@@ -50,12 +51,19 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 populate-deployment-variables:
 	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
 	echo "export DB_REPLICA_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_REPLICA_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
-	echo "export DB_READ_AND_WRITE_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY))"
-	echo "export DB_READ_ONLY_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_READ_ONLY_USER_NAME_SECRET_NAME) KEY=$(DB_READ_ONLY_USER_NAME_SECRET_KEY))"
-	echo "export SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))"
-	echo "export PROJECT_SYSTEM_EMAIL_ADDRESS=$$(make -s secret-get-existing-value NAME=$(EMAIL_SECRETS) KEY=$(SYSTEM_EMAIL_KEY))"
-	echo "export PROJECT_TEAM_EMAIL_ADDRESS=$$(make -s secret-get-existing-value NAME=$(EMAIL_SECRETS) KEY=$(TEAM_EMAIL_KEY))"
-	echo "export TERRAFORM_KMS_KEY_ID=$$(make terraform-output STACKS=before-lambda-deployment | grep -oP 'kms_key_id = "\K[^"]+')"
+	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
+	echo "export DB_READ_AND_WRITE_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
+	echo "export DB_READ_ONLY_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
+	echo "export SLACK_WEBHOOK_URL=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SLACK_WEBHOOK_SECRET_KEY)')"
+	echo "export PROJECT_SYSTEM_EMAIL_ADDRESS=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SYSTEM_EMAIL_KEY)')"
+	echo "export PROJECT_TEAM_EMAIL_ADDRESS=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(TEAM_EMAIL_KEY)')"
+	echo "export PROJECT_SERVICE_CATEGORY=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
+	echo "export PROJECT_DATA_CLASSIFICATION=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
+	echo "export PROJECT_DISTRIBUTION_LIST=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
+	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
+	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
+	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
+# echo "export TERRAFORM_KMS_KEY_ID=$$(make terraform-output STACKS=before-lambda-deployment | grep -oP 'kms_key_id = "\K[^"]+')"
 
 unit-test-local:
 	pyenv local .venv

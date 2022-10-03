@@ -14,17 +14,35 @@ provider:
     blockPublicAccess: true
     skipPolicySetup: true
   stackTags:
+    BUILD_TIMESTAMP: ${env:VERSION}
+    DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
-    PROFILE: ${env:PROFILE}
+    EnvironmentType: ${env:AWS_ACCOUNT_NAME}
+    Owner: ${env:PROJECT_DISTRIBUTION_LIST}
+    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
+    Project: ${env:PROJECT_DISPLAY_NAME}
+    PublicFacing: "No"
     Service: ${env:PROJECT_ID}
+    ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    TagVersion: "2.0"
+    Tool: "Serverless Framework deployed by CloudFormation"
   tags:
+    BUILD_TIMESTAMP: ${env:VERSION}
+    DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
-    PROFILE: ${env:PROFILE}
+    EnvironmentType: ${env:AWS_ACCOUNT_NAME}
+    Owner: ${env:PROJECT_DISTRIBUTION_LIST}
+    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
+    Project: ${env:PROJECT_DISPLAY_NAME}
+    PublicFacing: "No"
     Service: ${env:PROJECT_ID}
+    ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    TagVersion: "2.0"
+    Tool: "Serverless Framework deployed by CloudFormation"
   environment:
     PROFILE: ${env:PROFILE}
     ENV: ${env:ENVIRONMENT}
@@ -33,7 +51,7 @@ provider:
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
-    BUILD_TIMESTAMP: ${env:VERSION}
+
     IMAGE_VERSION: ${env:VERSION}
   logs:
     restApi:
@@ -207,7 +225,7 @@ functions:
     environment:
       AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
-      EMAIL_SECRET_NAME : ${env:PROJECT_EMAIL_SECRET_NAME}
+      EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
     maximumRetryAttempts: 2
 
   dos-db-handler:
@@ -243,8 +261,3 @@ functions:
         - tagKey: Name
           tagValues:
             - '${env:TF_VAR_lambda_security_group_name}'
-
-resources:
-  Conditions:
-    CreateNonProdResources:
-      !Not [!Equals ["${env:AWS_ACCOUNT_NAME}", prod]]
