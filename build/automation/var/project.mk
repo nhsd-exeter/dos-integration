@@ -16,6 +16,7 @@ SERVICE_TAG_COMMON = texas
 PROJECT_TECH_STACK_LIST = python,terraform
 PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,dos-db-handler
 PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger
+PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 TF_VAR_aws_vpc_name = $(AWS_VPC_NAME)

@@ -27,7 +27,7 @@ provider:
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
     TagVersion: "2.0"
-    Tool: "Serverless Framework Deployed by CloudFormation"
+    Tool: "Serverless Framework deployed by CloudFormation"
   tags:
     BUILD_TIMESTAMP: ${env:VERSION}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
@@ -42,7 +42,7 @@ provider:
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
     TagVersion: "2.0"
-    Tool: "Serverless Framework Deployed by CloudFormation"
+    Tool: "Serverless Framework deployed by CloudFormation"
   environment:
     PROFILE: ${env:PROFILE}
     ENV: ${env:ENVIRONMENT}
@@ -225,7 +225,7 @@ functions:
     environment:
       AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
-      EMAIL_SECRET_NAME : ${env:PROJECT_EMAIL_SECRET_NAME}
+      EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
     maximumRetryAttempts: 2
 
   dos-db-handler:
