@@ -17,10 +17,13 @@ provider:
     BUILD_TIMESTAMP: ${env:VERSION}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
-    OWNER: ${env:PROJECT_DISTRIBUTION_LIST}
-    PROFILE: ${env:PROFILE}
+    EnvironmentType: ${env:AWS_ACCOUNT_NAME}
+    Owner: ${env:PROJECT_DISTRIBUTION_LIST}
+    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
+    Project: ${env:PROJECT_DISPLAY_NAME}
+    PublicFacing: "No"
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
     TagVersion: "2.0"
@@ -29,10 +32,13 @@ provider:
     BUILD_TIMESTAMP: ${env:VERSION}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
     Environment: ${env:ENVIRONMENT}
-    OWNER: ${env:PROJECT_DISTRIBUTION_LIST}
-    PROFILE: ${env:PROFILE}
+    EnvironmentType: ${env:AWS_ACCOUNT_NAME}
+    Owner: ${env:PROJECT_DISTRIBUTION_LIST}
+    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
     Programme: ${env:PROGRAMME}
+    Project: ${env:PROJECT_DISPLAY_NAME}
+    PublicFacing: "No"
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
     TagVersion: "2.0"
