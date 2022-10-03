@@ -255,8 +255,3 @@ functions:
         - tagKey: Name
           tagValues:
             - '${env:TF_VAR_lambda_security_group_name}'
-
-resources:
-  Conditions:
-    CreateNonProdResources:
-      !Not [!Equals ["${env:AWS_ACCOUNT_NAME}", prod]]
