@@ -1,7 +1,7 @@
 import csv
 import pathlib
 from io import StringIO
-from os import path
+from os import path, makedirs
 from typing import List
 
 import requests
@@ -44,7 +44,8 @@ class Reporter:
             (self.create_invalid_spec_opening_times_report(), "invalid_spec_opening_times_report"),
             (self.create_invalid_std_opening_times_report(), "invalid_std_opening_times_report"),
         )
-        pathlib.Path(output_dir).mkdir(exist_ok=True)
+        if not path.exists(output_dir):
+            makedirs(output_dir)
         for report, report_name in reports:
             filename = f"{file_prefix}_{report_name}.csv"
             report.to_csv(path.join(output_dir, filename), index=False)
@@ -96,14 +97,14 @@ class Reporter:
         for nhs_entity in self.nhs_entities:
             services = self.entity_service_map.get(nhs_entity.odscode, [])
             for service in services:
-                if not nhs_entity.standard_opening_times.same_openings(service._standard_opening_times, weekday):
+                if nhs_entity.standard_opening_times != service.standard_opening_times:
                     rows.append(
                         [
                             nhs_entity.odscode,
                             nhs_entity.standard_opening_times.to_string("\n"),
                             service.odscode,
                             service.uid,
-                            service.
+                            service.standard_opening_times.to_string("\n"),
                             service.name,
                             service.statusid,
                         ]

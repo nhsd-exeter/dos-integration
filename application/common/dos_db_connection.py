@@ -22,14 +22,19 @@ def connect_to_dos_db_replica() -> Generator[connection, None, None]:
         Generator[connection, None, None]: Connection to the database
     """
     # Before the context manager is entered, the connection is created
-    db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
+    try:
+        db_password = environ["DB_SECRET"]
+    except KeyError:
+        db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
+        db_password = db_secret[environ["DB_REPLICA_SECRET_KEY"]]
+
     db_connection = connection_to_db(
         server=environ["DB_REPLICA_SERVER"],
         port=environ["DB_PORT"],
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
         db_user=environ["DB_READ_ONLY_USER_NAME"],
-        db_password=db_secret[environ["DB_REPLICA_SECRET_KEY"]],
+        db_password=db_password
     )
     # Yield the connection object to the context manager
     yield db_connection
