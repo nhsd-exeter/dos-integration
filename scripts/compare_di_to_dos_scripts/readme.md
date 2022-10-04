@@ -36,7 +36,6 @@ Using these setting you should receive an email with the database connection det
 
 **Once you submitted your request make sure to post in the `#db-clone` slack channel that a clone has been requested with TTL e.g. for a 6hr clone `live(6) requested`. When you receive the database details make sure to post them in the channel.**
 
-
 ### **DI Clone**
 
 To get a DI Clone select the `UEC-DOS-INT` option and use the prefilled username with the password found on the `DBCLONE_USER` in the `dos-int-live/deployment` secret found in the Prod Texas Account.
@@ -65,8 +64,7 @@ Using a Database client like DBeaver connect to the DoS clone database and do a 
     join servicespecifiedopeningdates ssod on ssod.serviceid  = s.id
     join servicespecifiedopeningtimes ssot on ssot.servicespecifiedopeningdateid = ssod.id where ssod."date" > now()
     group by s.id, s.uid, s.odscode, s."name", s.statusid, s.typeid, ssod."date", ssot.starttime, ssot.endtime, ssot.isclosed) as ssod_grouped) as ssod_grouped_json
-    where ssod_grouped_json.id = service.id )) as "specified_openings" from (select distinct s2.* from services s2 join servicespecifiedopeningdates ssod2 on ssod2.serviceid = s2.id where ssod2."date" > now()
-	  and s2.typeid in (13, 131, 132, 134, 137) and s2.statusid = 1 and s2.odscode like 'F%') as service
+    where ssod_grouped_json.id = service.id )) as "specified_openings" from (select distinct s2.* from services s2 join servicespecifiedopeningdates ssod2 on ssod2.serviceid = s2.id where ssod2."date" > now() and s2.typeid in (13, 131, 132, 134, 137) and s2.statusid = 1 and s2.odscode like 'F%') as service
 
 In DB Beaver this done by highlighting the script in the script editor then right clicking to get the mouse menu then opening the `Execute` menu and then select the `Export from Query` option. This will open an option box select the option to export to CSV and then click next.
 On the next part just check the `fetch size` is quite large e.g. 100k and click next. Then on the next menu `output` set the location where you want to save the file to and give the file
