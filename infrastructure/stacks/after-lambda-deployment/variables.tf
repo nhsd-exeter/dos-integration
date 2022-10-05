@@ -34,13 +34,19 @@ variable "dos_db_replica_name" {
 variable "sqs_dlq_recieved_msg_alert_name" {
   description = "The name of the cloudwatch alert for msgs recieved in the sqs dlq"
 }
-variable "sns_topic_app_alerts_for_slack" {
-  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+
+variable "sns_topic_app_alerts_for_slack_default_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the default region"
+}
+
+variable "sns_topic_app_alerts_for_slack_alarm_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the alarm region"
 }
 
 # ############################
 # SQS FIFO QUEUE
 # ############################
+
 variable "change_event_queue_name" {
   description = ""
 }
@@ -93,8 +99,13 @@ variable "ip_address_secret" {
 # ############################
 # # KMS
 # ############################
+
 variable "signing_key_alias" {
-  description = "Alias of key used for signing"
+  description = "Alias of key used for signing in the default region"
+}
+
+variable "alarm_region_signing_key_alias" {
+  description = "Alias of key used for signing in the alarm region"
 }
 
 # ##############

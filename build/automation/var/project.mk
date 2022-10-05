@@ -44,6 +44,7 @@ TF_VAR_tags_secret_manager = $(TAG_SECRET_MANAGER)
 SERVICE_CATEGORY_KEY := DI_SERVICE_CATEGORY
 DATA_CLASSIFICATION_KEY := DI_DATA_CLASSIFICATION
 DISTRIBUTION_LIST_KEY := DI_DISTRIBUTION_LIST
+TF_VAR_alarm_region = us-east-1
 
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
@@ -88,8 +89,8 @@ TF_VAR_dos_firehose_role := dos_cw_firehose_access_role
 # Log Group Filters for Firehose
 TF_VAR_change_event_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
-TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-cw-logs-firehose-subscription
-TF_VAR_event_replay_subscription_filter_name := $(PROFILE_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_event_replay_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_orchestrator_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-cw-logs-firehose-subscription
 TF_VAR_send_email_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email-cw-logs-firehose-subscription
 TF_VAR_service_matcher_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher-cw-logs-firehose-subscription
@@ -109,12 +110,14 @@ TF_VAR_slack_messenger_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-slack-messeng
 
 TF_VAR_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(ENVIRONMENT)
 TF_VAR_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-signing-key-alias
+TF_VAR_alarm_region_signing_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-alarm-region-signing-key-alias
 SEND_EMAIL_BUCKET_NAME:=$(PROJECT_ID)-$(ENVIRONMENT)-send-email-bucket
 TF_VAR_send_email_bucket_name := $(SEND_EMAIL_BUCKET_NAME)
 # Cloudwatch monitoring dashboard
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-monitoring-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(ENVIRONMENT)-sqs-dlq-recieved-msg-alert
-TF_VAR_sns_topic_app_alerts_for_slack := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack
+TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack-default-region
+TF_VAR_sns_topic_app_alerts_for_slack_alarm_region := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
 
 # Performance Pipelines

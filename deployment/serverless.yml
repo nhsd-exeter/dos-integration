@@ -215,7 +215,9 @@ functions:
       SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
     events:
       - sns:
-          arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack}
+          arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_default_region}
+      - sns:
+          arn: arn:aws:sns:${env:TF_VAR_alarm_region}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_alarm_region}
 
   send-email:
     image: ${env:DOCKER_REGISTRY}/send-email:${env:VERSION}
