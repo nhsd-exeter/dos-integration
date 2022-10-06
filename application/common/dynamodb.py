@@ -3,10 +3,10 @@ from decimal import Decimal
 from json import dumps, loads
 from os import environ
 from time import time
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, List, Optional
 
 from aws_lambda_powertools.logging.logger import Logger
-from boto3 import client
+from boto3 import client, resource
 from boto3.dynamodb.types import TypeSerializer
 
 from common.errors import DynamoDBException
@@ -14,6 +14,7 @@ from common.errors import DynamoDBException
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
+ddb_change_table = resource("dynamodb").Table(environ["CHANGE_EVENTS_TABLE_NAME"])
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -124,3 +125,27 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     except Exception as err:
         raise DynamoDBException(f"Unable to get sequence id from dynamodb for a given ODSCode '{odscode}'.") from err
     return sequence_number
+
+
+def get_most_recent_events(max_pages: Optional[int] = None) -> List[dict]:
+    # Get all items from DDB
+    resp = ddb_change_table.scan()
+    data = resp.get("Items")
+    pages = 1
+    while "LastEvaluatedKey" in resp and (max_pages is None or pages < max_pages):
+        logger.info(f"Received {pages} page/s of DDB Table data.")
+        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"])
+        data.extend(resp["Items"])
+        pages += 1
+    
+    # Find the most recent entry of each odscode present
+    most_recent_events = {}
+    for item in data:
+        odscode = item["ODSCode"]
+        try:
+            if most_recent_events[odscode]["SequenceNumber"] < item["SequenceNumber"]:
+                most_recent_events[odscode] = item
+        except KeyError:
+            most_recent_events[odscode] = item
+
+    return most_recent_events
