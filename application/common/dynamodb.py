@@ -14,7 +14,7 @@ from common.errors import DynamoDBException
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
-ddb_change_table = resource("dynamodb").Table(environ["CHANGE_EVENTS_TABLE_NAME"])
+ddb_change_table = resource("dynamodb", region_name=environ["AWS_REGION"]).Table(environ["CHANGE_EVENTS_TABLE_NAME"])
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -129,12 +129,12 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
 
 def get_most_recent_events(max_pages: Optional[int] = None) -> List[dict]:
     # Get all items from DDB
-    resp = ddb_change_table.scan()
+    resp = ddb_change_table.scan(Limit=999)
     data = resp.get("Items")
     pages = 1
     while "LastEvaluatedKey" in resp and (max_pages is None or pages < max_pages):
         logger.info(f"Received {pages} page/s of DDB Table data.")
-        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"])
+        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"], Limit=999)
         data.extend(resp["Items"])
         pages += 1
     

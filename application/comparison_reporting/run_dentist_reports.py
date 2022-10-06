@@ -4,6 +4,9 @@ from datetime import datetime
 from itertools import groupby
 from os import path
 from typing import List
+from pathlib import Path
+
+from psycopg2 import connect
 
 from aws_lambda_powertools.logging import Logger
 from comparison_reporting.reporter import download_csv_as_dicts, Reporter
@@ -13,12 +16,12 @@ from common.dos import get_services_from_db
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
+from common.dos_db_connection import connection_to_db
+
 logger = Logger(child=True)
 logger.setLevel("DEBUG")
 DENTIST_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/Dentists.csv"
 DENTIST_OPENING_TIMES_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/DentistOpeningTimes.csv"
-THIS_DIR = pathlib.Path(__file__).parent.resolve()
-OUTPUT_DIR = path.join(THIS_DIR, "out")
 
 
 def get_dentists() -> List[NHSEntity]:
@@ -93,13 +96,14 @@ def get_dentists() -> List[NHSEntity]:
     return dentists
 
 
-def run_dentist_reports():
+def run_dentist_reports(output_dir):
     logger.info("Running Dentist reports, Ensure you are connected to required vpn for DB or this may stall.")
     nhsuk_dentists = get_dentists()
     dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
     reporter = Reporter(nhs_entities=nhsuk_dentists, dos_services=dentist_dos_services)
-    reporter.run_and_save_reports("dentists", OUTPUT_DIR)
+    reporter.run_and_save_reports("dentists", output_dir)
 
 
 if __name__ == "__main__":
-    run_dentist_reports()
+    output_dir = path.join(Path.home(), "reports_output")
+    run_dentist_reports(output_dir)

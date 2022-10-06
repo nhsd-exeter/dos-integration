@@ -131,10 +131,10 @@ class Reporter:
                     rows.append(
                         [
                             nhs_entity.odscode,
-                            "/n".join(str(spec_open_time) for spec_open_time in nhs_entity.specified_opening_times),
+                            "\n".join(str(spec_open_time) for spec_open_time in nhs_entity.specified_opening_times),
                             service.odscode,
                             service.uid,
-                            "/n".join(str(spec_open_time) for spec_open_time in service.specified_opening_times),
+                            "\n".join(str(spec_open_time) for spec_open_time in service.specified_opening_times),
                             service.name,
                             service.statusid,
                         ]
