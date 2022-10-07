@@ -125,16 +125,16 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     return sequence_number
 
 
-def get_newest_event_per_odscode(max_pages: Optional[int] = None) -> dict[str, dict]:
+def get_newest_event_per_odscode(max_pages: Optional[int] = None, limit: int = 999) -> dict[str, dict]:
     """Will return a dict map of the most recent DB entry for every ODSCode"""
     # Get every item from DDB
     ddb_change_table = resource("dynamodb", region_name=environ["AWS_REGION"]).Table(environ["CHANGE_EVENTS_TABLE_NAME"])
-    resp = ddb_change_table.scan(Limit=999)
+    resp = ddb_change_table.scan(Limit=limit)
     data = resp.get("Items")
     pages = 1
     while "LastEvaluatedKey" in resp and (max_pages is None or pages < max_pages):
         logger.info(f"Received {pages} page/s of DDB Table data.")
-        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"], Limit=999)
+        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"], Limit=limit)
         data.extend(resp["Items"])
         pages += 1
 

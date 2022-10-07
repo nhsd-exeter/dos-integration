@@ -245,25 +245,25 @@ def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynam
 
     ceAAA11 = change_event.copy()
     ceAAA11["ODSCode"] = "AAA11"
-    add_change_event_to_dynamodb(ceAAA11, 1, int(time()))
-    add_change_event_to_dynamodb(ceAAA11, 2, int(time()))
-    add_change_event_to_dynamodb(ceAAA11, 3, int(time()))
+    add_change_event_to_dynamodb(ceAAA11, 301, int(time()))
+    for i in range(5):
+        add_change_event_to_dynamodb(ceAAA11, i, int(time()))
 
     ceBBB22 = change_event.copy()
     ceBBB22["ODSCode"] = "BBB22"
-    add_change_event_to_dynamodb(ceBBB22, 5, int(time()))
-    add_change_event_to_dynamodb(ceBBB22, 133, int(time()))
-    add_change_event_to_dynamodb(ceBBB22, 101, int(time()))
+    add_change_event_to_dynamodb(ceBBB22, 505, int(time()))
+    for i in range(5):
+        add_change_event_to_dynamodb(ceBBB22, i, int(time()))
 
     ceCCC33 = change_event.copy()
     ceCCC33["ODSCode"] = "CCC33"
     add_change_event_to_dynamodb(ceCCC33, 400, int(time()))
-    add_change_event_to_dynamodb(ceCCC33, 45, int(time()))
-    add_change_event_to_dynamodb(ceCCC33, 9, int(time()))
+    for i in range(5):
+        add_change_event_to_dynamodb(ceCCC33, i, int(time()))
 
-    resp = get_newest_event_per_odscode()
+    resp = get_newest_event_per_odscode(limit=1)
 
-    expected_seq_num = {"AAA11": 3, "BBB22": 133, "CCC33": 400}
+    expected_seq_num = {"AAA11": 301, "BBB22": 505, "CCC33": 400}
     assert len(resp) == 3
     for resp_event in resp.values():
         assert resp_event["SequenceNumber"] == expected_seq_num[resp_event["ODSCode"]]
