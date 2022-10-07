@@ -1,12 +1,9 @@
-import pathlib
 from collections import defaultdict
 from datetime import datetime
 from itertools import groupby
 from os import path
 from typing import List
 from pathlib import Path
-
-from psycopg2 import connect
 
 from aws_lambda_powertools.logging import Logger
 from comparison_reporting.reporter import download_csv_as_dicts, Reporter

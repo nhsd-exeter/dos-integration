@@ -1,11 +1,7 @@
 # Run from application/ dir using below command
 # python3 -m comparison_reporting.run_update_error_reports
-from os import environ, path
-import sys
+from os import path
 from pathlib import Path
-import boto3
-from pprint import pprint as pp
-from typing import List
 
 from comparison_reporting.reporter import Reporter
 from common.dos import get_services_from_db
