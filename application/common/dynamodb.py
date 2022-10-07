@@ -3,7 +3,7 @@ from decimal import Decimal
 from json import dumps, loads
 from os import environ
 from time import time
-from typing import Any, Dict, Union, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from aws_lambda_powertools.logging.logger import Logger
 from boto3 import client, resource
@@ -137,7 +137,7 @@ def get_most_recent_events(max_pages: Optional[int] = None) -> List[dict]:
         resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"], Limit=999)
         data.extend(resp["Items"])
         pages += 1
-    
+
     # Find the most recent entry of each odscode present
     most_recent_events = {}
     for item in data:

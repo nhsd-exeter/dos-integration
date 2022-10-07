@@ -1,7 +1,6 @@
 import csv
-import pathlib
 from io import StringIO
-from os import path, makedirs
+from os import makedirs, path
 from typing import List
 
 import requests
@@ -10,7 +9,7 @@ from pandas import DataFrame
 
 from common.dos import DoSService, get_all_valid_dos_postcodes
 from common.nhs import match_nhs_entities_to_services, NHSEntity
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
+from common.opening_times import SpecifiedOpeningTime
 from common.tests.conftest import blank_dos_service
 
 logger = Logger(child=True)
@@ -127,7 +126,9 @@ class Reporter:
         for nhs_entity in self.nhs_entities:
             services = self.entity_service_map.get(nhs_entity.odscode, [])
             for service in services:
-                if not SpecifiedOpeningTime.equal_lists(nhs_entity.specified_opening_times, service.specified_opening_times):
+                if not SpecifiedOpeningTime.equal_lists(
+                        nhs_entity.specified_opening_times,
+                        service.specified_opening_times):
                     rows.append(
                         [
                             nhs_entity.odscode,
