@@ -238,3 +238,32 @@ def copy_and_modify_website(ce, new_website: str):
     copy = ce.copy()
     copy["Contacts"][0]["ContactValue"] = new_website
     return copy
+
+
+def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynamodb_client):
+    from ..dynamodb import add_change_event_to_dynamodb, get_newest_event_per_odscode
+
+    ceAAA11 = change_event.copy()
+    ceAAA11["ODSCode"] = "AAA11"
+    add_change_event_to_dynamodb(ceAAA11, 1, int(time()))
+    add_change_event_to_dynamodb(ceAAA11, 2, int(time()))
+    add_change_event_to_dynamodb(ceAAA11, 3, int(time()))
+
+    ceBBB22 = change_event.copy()
+    ceBBB22["ODSCode"] = "BBB22"
+    add_change_event_to_dynamodb(ceBBB22, 5, int(time()))
+    add_change_event_to_dynamodb(ceBBB22, 133, int(time()))
+    add_change_event_to_dynamodb(ceBBB22, 101, int(time()))
+
+    ceCCC33 = change_event.copy()
+    ceCCC33["ODSCode"] = "CCC33"
+    add_change_event_to_dynamodb(ceCCC33, 400, int(time()))
+    add_change_event_to_dynamodb(ceCCC33, 45, int(time()))
+    add_change_event_to_dynamodb(ceCCC33, 9, int(time()))
+
+    resp = get_newest_event_per_odscode()
+
+    expected_seq_num = {"AAA11": 3, "BBB22": 133, "CCC33": 400}
+    assert len(resp) == 3
+    for resp_event in resp.values():
+        assert resp_event["SequenceNumber"] == expected_seq_num[resp_event["ODSCode"]]

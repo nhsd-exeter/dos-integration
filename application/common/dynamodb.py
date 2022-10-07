@@ -3,7 +3,7 @@ from decimal import Decimal
 from json import dumps, loads
 from os import environ
 from time import time
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from aws_lambda_powertools.logging.logger import Logger
 from boto3 import client, resource
@@ -127,8 +127,9 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     return sequence_number
 
 
-def get_most_recent_events(max_pages: Optional[int] = None) -> List[dict]:
-    # Get all items from DDB
+def get_newest_event_per_odscode(max_pages: Optional[int] = None) -> dict[str, dict]:
+    """Will return a dict map of the most recent DB entry for every ODSCode"""
+    # Get every item from DDB
     resp = ddb_change_table.scan(Limit=999)
     data = resp.get("Items")
     pages = 1
@@ -139,13 +140,9 @@ def get_most_recent_events(max_pages: Optional[int] = None) -> List[dict]:
         pages += 1
 
     # Find the most recent entry of each odscode present
-    most_recent_events = {}
-    for item in data:
-        odscode = item["ODSCode"]
-        try:
-            if most_recent_events[odscode]["SequenceNumber"] < item["SequenceNumber"]:
-                most_recent_events[odscode] = item
-        except KeyError:
-            most_recent_events[odscode] = item
-
-    return most_recent_events
+    newest_events = {}
+    for event in data:
+        newest_event = newest_events.get(event["ODSCode"])
+        if not (newest_event is not None and newest_event["SequenceNumber"] > event["SequenceNumber"]):
+            newest_events[event["ODSCode"]] = event
+    return newest_events
