@@ -20,7 +20,7 @@ The `run_dentist_reports.py` script creates reports comparing Dentist NHS Entity
 This script utilises the main code base of the DI project, and such as a requirement for it to run it needs..
 
 - Most imported modules needed in the main codebase of the project (installing from application/requirements-dev.txt should be enough, but attempting to run the program and installing packages that it says are missing should work fine.)
-- The details of the chosen DoS database to use need to be available to the program in the same way they would be for the main DI project, via the enviornmental variables.
+- The details of the chosen DoS database to use need to be available to the program in the same way they would be for the main DI project, via the enviornmental variables. The correct VPN needs to be used as would need to be to access the database in question for the machine running the script.
     - DB_REPLICA_SERVER
     - DB_PORT
     - DB_READ_ONLY_USER_NAME
