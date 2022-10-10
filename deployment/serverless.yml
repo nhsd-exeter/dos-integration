@@ -51,13 +51,13 @@ provider:
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
     LOG_LEVEL: ${env:LOG_LEVEL}
-
     IMAGE_VERSION: ${env:VERSION}
   logs:
     restApi:
       format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
   tracing:
     lambda: true
+  disableRollback: true
 
 plugins:
   - serverless-vpc-discovery
