@@ -16,6 +16,14 @@ with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 
+def get_std_event(**kwargs) -> dict:
+    event = PHARMACY_STANDARD_EVENT.copy()
+    for name, value in kwargs.items():
+        if value is not None:
+            event[name] = value
+    return event
+
+
 def dummy_dos_service(**kwargs) -> DoSService:
     """Creates a DoSService Object with random data for the unit testing"""
     test_data = {}

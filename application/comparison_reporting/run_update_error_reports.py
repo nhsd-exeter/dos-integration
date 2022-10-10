@@ -21,4 +21,4 @@ def run_update_error_reports(output_dir: str = "reports_out/", small_sample: boo
 
 if __name__ == "__main__":
     output_dir = path.join(Path.home(), "reports_output")
-    run_update_error_reports(output_dir, True)
+    run_update_error_reports(output_dir, False)

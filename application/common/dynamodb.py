@@ -15,6 +15,7 @@ TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
 
+
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
     """MD5 hash of a dictionary."""
     change_event_hash = hashlib.new("md5", usedforsecurity=False)
