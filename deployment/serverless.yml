@@ -13,6 +13,9 @@ provider:
   deploymentBucket:
     blockPublicAccess: true
     skipPolicySetup: true
+    versioning: true
+    serverSideEncryption: aws:kms
+    sseKMSKeyId: ${env:TERRAFORM_KMS_KEY_ID}
   stackTags:
     BUILD_TIMESTAMP: ${env:VERSION}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
