@@ -32,12 +32,14 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
@@ -63,7 +65,9 @@ populate-deployment-variables:
 	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
 	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
-# echo "export TERRAFORM_KMS_KEY_ID=$$(make terraform-output STACKS=before-lambda-deployment | grep -oP 'kms_key_id = "\K[^"]+')"
+
+populate-serverless-variables:
+	echo "export TERRAFORM_KMS_KEY_ID=$$(make -s terraform-output STACKS=before-lambda-deployment OPTS='-raw kms_key_id' | tail -n1)"
 
 unit-test-local:
 	pyenv local .venv
@@ -247,6 +251,7 @@ send-email-build-and-deploy: ### Build and deploy send email lambda docker image
 
 sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp/latest]
 	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
 
 quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE, ENVIRONMENT
