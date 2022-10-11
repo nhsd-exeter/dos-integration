@@ -4,6 +4,7 @@ from decimal import Decimal
 from json import dumps, load, loads
 from os import getenv, remove
 from random import randint, randrange, sample
+from re import sub
 from time import sleep, time, time_ns
 from typing import Any, Dict, Tuple
 
@@ -387,9 +388,9 @@ def get_address_string(change_event: ChangeEvent) -> str:
         if isinstance(line, str) and line.strip() != ""
     ]
     address = "$".join(address_lines)
-    # address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address) # Turned off in DI-591
-    # address = address.replace("'", "")
-    # address = address.replace("&", "and")
+    address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
+    address = address.replace("'", "")
+    address = address.replace("&", "and")
     return address
 
 
