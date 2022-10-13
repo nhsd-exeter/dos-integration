@@ -240,28 +240,28 @@ def copy_and_modify_website(ce, new_website: str):
     return copy
 
 
-def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynamodb_client):
+def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynamodb_client, dynamodb_resource):
     from ..dynamodb import add_change_event_to_dynamodb, get_newest_event_per_odscode
 
     ceAAA11 = change_event.copy()
     ceAAA11["ODSCode"] = "AAA11"
     add_change_event_to_dynamodb(ceAAA11, 301, int(time()))
-    for i in range(5):
+    for i in range(20):
         add_change_event_to_dynamodb(ceAAA11, i, int(time()))
 
     ceBBB22 = change_event.copy()
     ceBBB22["ODSCode"] = "BBB22"
     add_change_event_to_dynamodb(ceBBB22, 505, int(time()))
-    for i in range(5):
+    for i in range(20):
         add_change_event_to_dynamodb(ceBBB22, i, int(time()))
 
     ceCCC33 = change_event.copy()
     ceCCC33["ODSCode"] = "CCC33"
     add_change_event_to_dynamodb(ceCCC33, 400, int(time()))
-    for i in range(5):
+    for i in range(20):
         add_change_event_to_dynamodb(ceCCC33, i, int(time()))
 
-    resp = get_newest_event_per_odscode(limit=1)
+    resp = get_newest_event_per_odscode()
 
     expected_seq_num = {"AAA11": 301, "BBB22": 505, "CCC33": 400}
     assert len(resp) == 3

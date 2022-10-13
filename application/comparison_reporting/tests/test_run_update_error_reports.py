@@ -11,8 +11,7 @@ from common.tests.conftest import dummy_dos_service, get_std_event
 def test_run_update_error_reports(
         mock_get_newest_event_per_odscode,
         mock_get_services_from_db,
-        mock_Reporter,
-        mock_run_and_save_reports):
+        mock_Reporter):
 
     mock_get_services_from_db.side_effect = [dummy_dos_service() for i in range(10)]
     mock_get_newest_event_per_odscode.side_effect = {

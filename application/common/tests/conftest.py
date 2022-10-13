@@ -4,7 +4,7 @@ from os import environ, path
 from pathlib import Path
 from random import choices, randint, uniform
 
-from boto3 import client
+from boto3 import Session
 from moto import mock_dynamodb
 from pytest import fixture
 
@@ -86,10 +86,22 @@ def aws_credentials():
 
 
 @fixture
-def dynamodb_client(aws_credentials):
+def dynamodb_client(boto_session):
+    conn = boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
+    yield conn
+
+
+@fixture
+def dynamodb_resource(boto_session):
+    conn = boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
+    yield conn
+
+
+@fixture
+def boto_session(aws_credentials):
     with mock_dynamodb():
-        conn = client("dynamodb", region_name=environ["AWS_REGION"])
-        yield conn
+        session = Session()
+        yield session
 
 
 @fixture
