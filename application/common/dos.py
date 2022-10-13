@@ -165,6 +165,7 @@ def get_valid_dos_location(postcode: str) -> Optional[DoSLocation]:
 
 def get_services_from_db(typeids: Iterable) -> List[DoSService]:
     """VUNERABLE TO SQL INJECTION: DO NOT USE IN LAMBDA"""
+    print("RUNNING REAL")
     # Find base services
     sql_query = (  # nosec - Not for use within lambda
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "

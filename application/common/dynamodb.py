@@ -16,7 +16,7 @@ from common.errors import DynamoDBException
 TTL = 157680000  # int((365*5)*24*60*60) 5 years in seconds
 logger = Logger(child=True)
 dynamodb = client("dynamodb", region_name=environ["AWS_REGION"])
-ddb_change_table = resource("dynamodb", region_name=environ["AWS_REGION"]).Table(environ["CHANGE_EVENTS_TABLE_NAME"])
+ddb_resource = resource("dynamodb", region_name=environ["AWS_REGION"])
 
 
 def dict_hash(change_event: Dict[str, Any], sequence_number: str) -> str:
@@ -131,6 +131,7 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
 
 def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
     """Will return a dict map of the most recent DB entry for every ODSCode"""
+    change_event_table = ddb_resource.Table(environ["CHANGE_EVENTS_TABLE_NAME"])
     logger.info(
         f"Returning newest events per ODSCode from DDB table "
         f"{environ['CHANGE_EVENTS_TABLE_NAME']}' ({threads} threads).")
@@ -146,7 +147,7 @@ def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
         newest_events = {}
         total_events = 0
         for scans in itertools.count():
-            resp = ddb_change_table.scan(**scan_kwargs)
+            resp = change_event_table.scan(**scan_kwargs)
             more_events = resp["Items"]
             total_events += len(more_events)
             merge_newest_events(newest_events, more_events)

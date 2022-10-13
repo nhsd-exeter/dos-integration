@@ -12,10 +12,11 @@ from common.nhs import NHSEntity
 
 
 def run_update_error_reports(output_dir: str = "reports_output/"):
+    dos_services = get_services_from_db(PHARMACY_SERVICE_TYPE_IDS + DENTIST_SERVICE_TYPE_IDS)
     most_recent_events = get_newest_event_per_odscode()
     nhs_entities = [NHSEntity(item["Event"]) for item in most_recent_events if "Event" in item]
-    dos_services = get_services_from_db(PHARMACY_SERVICE_TYPE_IDS + DENTIST_SERVICE_TYPE_IDS)
     reporter = Reporter(nhs_entities, dos_services)
+
     reporter.run_and_save_reports(file_prefix="Update_err_reports_", output_dir=output_dir)
 
 
