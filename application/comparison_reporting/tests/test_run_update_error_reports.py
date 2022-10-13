@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 from common.tests.conftest import dummy_dos_service, get_std_event
-from comparison_reporting.run_update_error_reports import run_update_error_reports
 
 
 @patch("application.comparison_reporting.reporter.Reporter")
@@ -12,8 +11,8 @@ def test_run_update_error_reports(
         mock_get_services_from_db,
         mock_Reporter):
 
-    mock_get_services_from_db.return_value  = [dummy_dos_service() for i in range(10)]
-    mock_get_newest_event_per_odscode.return_value  = {
+    mock_get_services_from_db.return_value = [dummy_dos_service() for i in range(10)]
+    mock_get_newest_event_per_odscode.return_value = {
         "FAT91": {
             "ODSCOde": "FAT91",
             "Event": get_std_event(ODSCode="FAT91")
