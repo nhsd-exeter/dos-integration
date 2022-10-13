@@ -1,9 +1,11 @@
 import hashlib
+import itertools
+from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from json import dumps, loads
 from os import environ
 from time import time
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Union
 
 from aws_lambda_powertools.logging.logger import Logger
 from boto3 import client, resource
@@ -126,26 +128,39 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     return sequence_number
 
 
-def get_newest_event_per_odscode(max_pages: Optional[int] = None, limit: int = 999) -> dict[str, dict]:
+def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
     """Will return a dict map of the most recent DB entry for every ODSCode"""
-    # Get every item from DDB
     table_name = environ["CHANGE_EVENTS_TABLE_NAME"]
-    ddb_change_table = resource("dynamodb", region_name=environ["AWS_REGION"]).Table(table_name)
-    resp = ddb_change_table.scan(Limit=limit)
-    data = resp.get("Items")
-    pages = 1
-    while "LastEvaluatedKey" in resp and (max_pages is None or pages < max_pages):
-        logger.info(f"Receiving {pages} page/s of DDB Table data.")
-        resp = ddb_change_table.scan(ExclusiveStartKey=resp["LastEvaluatedKey"], Limit=limit)
-        data.extend(resp["Items"])
-        pages += 1
-    logger.info(f"Found {len(data)} items in '{table_name}' table.")
+    ddb_change_table = resource("dynamodb").Table(table_name)
+    logger.info(
+        f"Returning newest events per ODSCode from DDB table '{table_name}' ({threads} threads).")
 
-    # Find the most recent entry of each odscode present
-    newest_events = {}
-    for event in data:
-        newest_event = newest_events.get(event["ODSCode"])
-        if not (newest_event is not None and newest_event["SequenceNumber"] > event["SequenceNumber"]):
-            newest_events[event["ODSCode"]] = event
-    logger.info(f"Found {len(newest_events)} unique ODSCode events in '{table_name}' table.")
+    def merge_newest_events(newest_events: dict, more_events: List[dict]):
+        for event in more_events:
+            newest_event = newest_events.get(event["ODSCode"])
+            if not (newest_event is not None and newest_event["SequenceNumber"] > event["SequenceNumber"]):
+                newest_events[event["ODSCode"]] = event
+
+    def scan_thread(segment: int, total_segments: int):
+        scan_kwargs = {"Segment": segment, "TotalSegments": total_segments}
+        newest_events = {}
+        total_events = 0
+        for scans in itertools.count():
+            resp = ddb_change_table.scan(**scan_kwargs)
+            more_events = resp["Items"]
+            total_events += len(more_events)
+            merge_newest_events(newest_events, more_events)
+            if "LastEvaluatedKey" not in resp or scans % 10 == 0:
+                logger.info(f"Thread {segment} found {len(newest_events)}/{total_events} unique ODSCode events.")
+            if "LastEvaluatedKey" in resp:
+                scan_kwargs["ExclusiveStartKey"] = resp["LastEvaluatedKey"]
+            else:
+                return newest_events
+
+    with ThreadPoolExecutor() as executor:
+        thread_runs = [
+            executor.submit(scan_thread, segment=i, total_segments=threads) for i in range(threads)]
+        newest_events = {}
+        for thread in thread_runs:
+            merge_newest_events(newest_events, thread.result().values())
     return newest_events
