@@ -12,7 +12,8 @@ from common.nhs import NHSEntity
 
 
 def run_update_error_reports(output_dir: str = "reports_output/"):
-    dos_services = get_services_from_db(PHARMACY_SERVICE_TYPE_IDS + DENTIST_SERVICE_TYPE_IDS)
+    service_type_ids = PHARMACY_SERVICE_TYPE_IDS + DENTIST_SERVICE_TYPE_IDS
+    dos_services = get_services_from_db(service_type_ids)
     most_recent_events = get_newest_event_per_odscode()
     nhs_entities = [NHSEntity(item["Event"]) for item in most_recent_events if "Event" in item]
     reporter = Reporter(nhs_entities, dos_services)
@@ -20,5 +21,4 @@ def run_update_error_reports(output_dir: str = "reports_output/"):
 
 
 if __name__ == "__main__":
-    output_dir = path.join(Path.home(), "reports_output")
-    run_update_error_reports(output_dir)
+    run_update_error_reports(path.join(Path.home(), "reports_output"))
