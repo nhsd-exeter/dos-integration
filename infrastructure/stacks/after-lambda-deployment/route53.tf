@@ -29,3 +29,18 @@ resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
     evaluate_target_health = true
   }
 }
+
+resource "aws_route53_health_check" "di_endpoint_health_check" {
+  fqdn              = "uec-dos-integration-di-561.k8s-nonprod.texasplatform.uk"
+  port              = 443
+  type              = "TCP"
+  failure_threshold = "5"
+  request_interval  = "30"
+  tags = {
+    Name = "${var.project_id}-${var.environment}-di-endpoint-health-check"
+  }
+
+  depends_on = [
+    aws_route53_record.uec_dos_integration_api_endpoint
+  ]
+}

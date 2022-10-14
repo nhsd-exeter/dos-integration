@@ -7,7 +7,11 @@
 ############
 
 variable "aws_region" {
-  description = "The AWS region"
+  description = "The default AWS region"
+}
+
+variable "alarm_region" {
+  description = "The AWS region for the CloudWatch global alarms"
 }
 
 variable "aws_account_name" {
@@ -42,6 +46,8 @@ variable "aws_account_id_tools" {
   description = "Account ID for the tools account"
   default     = "00000000000"
 }
+
+
 # ##############
 # # TEXAS COMMON
 # ##############
@@ -78,14 +84,17 @@ variable "terraform_platform_state_store" {
 variable "data_classification" {
   type        = string
   description = "Project data classification"
+  default     = "Worry if you see this message in Prod"
 }
 
 variable "service_category" {
   type        = string
   description = "Project service category"
+  default     = "Worry if you see this message in Prod"
 }
 
 variable "distribution_list" {
   type        = string
   description = "Project distribution list"
+  default     = "Worry if you see this message in Prod"
 }

@@ -18,13 +18,9 @@ Delete not appropriate
 ## Development Checklist
 
 - [ ] I have performed a self-review of my own code
-- [ ] I have run the [code formatting checks](../README.md#code-quality)
-- [ ] I have run the [code quality checks](../README.md#code-quality)
-- [ ] New code meets [standards](https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working) agreed by the team
 - [ ] Tests have added that prove my fix is effective or that my feature works (Integration tests)
 - [ ] I have updated Dependabot to include my changes (if applicable)
 
 ## Code Reviewer Checklist
 
 - [ ] I can confirm the changes have been tested or approved by a tester
-- [ ] I have checked any ignore commands for code linting tools and I agree that the code is safe
