@@ -95,10 +95,12 @@ def run_dentist_reports(output_dir):
     logger.info("Running Dentist reports, Ensure you are connected to required vpn for DB or this may stall.")
     nhsuk_dentists = get_dentists()
     dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
-    reporter = Reporter(nhs_entities=nhsuk_dentists, dos_services=dentist_dos_services)
+    reporter = Reporter(
+        nhs_entities=nhsuk_dentists,
+        dos_services=dentist_dos_services
+    )
     reporter.run_and_save_reports("dentists", output_dir)
 
 
 if __name__ == "__main__":
-    output_dir = path.join(Path.home(), "reports_output")
-    run_dentist_reports(output_dir)
+    run_dentist_reports(path.join(Path.home(), "reports_output"))

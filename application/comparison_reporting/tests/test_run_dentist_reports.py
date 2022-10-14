@@ -129,3 +129,20 @@ def test_get_dentists(mock_download_csv_as_dicts):
     assert d2.org_name == "Fake Dentist 2"
     assert d2.standard_opening_times == std2
     assert SpecifiedOpeningTime.equal_lists(d2.specified_opening_times, spec2)
+
+
+"""
+FILE_PATH = "run_dentist_reports"
+@patch(f"{FILE_PATH}.get_services_from_db")
+@patch(f"{FILE_PATH}.get_dentists")
+def test_run_dentist_reports(mock_get_dentists, mock_get_services_from_db):
+
+    mock_get_dentists.return_value = [
+        NHSEntity({}),
+        NHSEntity({})
+    ]
+
+    mock_get_services_from_db.return_value = [dummy_dos_service() for i in range(10)]
+
+    run_dentist_reports("")
+"""
