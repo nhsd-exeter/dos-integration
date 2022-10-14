@@ -45,7 +45,7 @@ def test_connect_to_dos_db_replica(mock_get_secret, mock_connection_to_db):
     with connect_to_dos_db_replica() as db_connection:
         # Assert
         assert db_connection is not None
-    mock_connection_to_db.assert_called_once_with(
+    mock_connection_to_db.assert_called_with(
         server=DB_SERVER,
         port=DB_PORT,
         db_name=DB_NAME,
@@ -54,13 +54,11 @@ def test_connect_to_dos_db_replica(mock_get_secret, mock_connection_to_db):
         db_password=DB_PASSWORD,
     )
     # Clean up
-    del environ["DB_REPLICA_SECRET_NAME"]
     del environ["DB_REPLICA_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
     del environ["DB_READ_ONLY_USER_NAME"]
-    del environ["DB_REPLICA_SECRET_KEY"]
 
 
 @patch(f"{FILE_PATH}.connection_to_db")
