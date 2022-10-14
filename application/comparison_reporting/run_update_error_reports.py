@@ -16,7 +16,6 @@ def run_update_error_reports(output_dir: str = "reports_output/"):
     most_recent_events = get_newest_event_per_odscode()
     nhs_entities = [NHSEntity(item["Event"]) for item in most_recent_events if "Event" in item]
     reporter = Reporter(nhs_entities, dos_services)
-
     reporter.run_and_save_reports(file_prefix="Update_err_reports_", output_dir=output_dir)
 
 
