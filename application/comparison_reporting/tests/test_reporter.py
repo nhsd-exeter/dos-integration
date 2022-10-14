@@ -1,4 +1,7 @@
+import os
+import tempfile
 from datetime import date
+from random import randint
 from unittest.mock import patch
 
 import responses
@@ -25,6 +28,13 @@ def test_download_csv_as_dicts():
     responses.add(rsp1)
     # Act
     download_csv_as_dicts(test_url)
+
+
+def test_run_and_save_reports():
+    reporter = Reporter([], [], lookup_postcodes=False)
+    dir = os.path.join(tempfile.gettempdir(), f"/tmp/test_output_{randint(11111, 99999)}")
+    reporter.run_and_save_reports("test_", dir)
+    assert os.path.exists(dir)
 
 
 @patch(f"{FILE_PATH}.get_all_valid_dos_postcodes")

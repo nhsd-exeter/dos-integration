@@ -27,11 +27,12 @@ def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
 
 
 class Reporter:
-    def __init__(self, nhs_entities: List[NHSEntity], dos_services: List[DoSService]):
+    def __init__(self, nhs_entities: List[NHSEntity], dos_services: List[DoSService], lookup_postcodes: bool = True):
         self.nhs_entities = nhs_entities
         self.dos_services = dos_services
         self.entity_service_map = match_nhs_entities_to_services(self.nhs_entities, self.dos_services)
         self.valid_normalised_postcodes = None
+        self.lookup_postcodes = lookup_postcodes
 
     def run_and_save_reports(self, file_prefix: str, output_dir: str) -> None:
         reports = (
@@ -210,7 +211,7 @@ class Reporter:
     def create_invalid_postcode_report(self) -> DataFrame:
         logger.info("Running Invalid Postcode report.")
 
-        if self.valid_normalised_postcodes is None:
+        if self.valid_normalised_postcodes is None and self.lookup_postcodes:
             self.valid_normalised_postcodes = get_all_valid_dos_postcodes()
 
         headers = [
