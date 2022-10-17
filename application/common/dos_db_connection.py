@@ -21,13 +21,16 @@ def connect_to_dos_db_replica() -> Generator[connection, None, None]:
     Yields:
         Generator[connection, None, None]: Connection to the database
     """
-    # Before the context manager is entered, the connection is created
-    try:
+    # Use AWS secret values, or failing that check env for DB password
+    if "DB_REPLICA_SECRET_NAME" in environ and "DB_REPLICA_SECRET_KEY" in environ:
         db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
         db_password = db_secret[environ["DB_REPLICA_SECRET_KEY"]]
-    except KeyError:
+    elif "DB_SECRET" in environ:
         db_password = environ["DB_SECRET"]
+    else:
+        raise KeyError("No 'DB_REPLICA_SECRET_NAME'+'DB_REPLICA_SECRET_KEY' OR 'DB_SECRET' in env vars.")
 
+    # Before the context manager is entered, the connection is created
     db_connection = connection_to_db(
         server=environ["DB_REPLICA_SERVER"],
         port=environ["DB_PORT"],
