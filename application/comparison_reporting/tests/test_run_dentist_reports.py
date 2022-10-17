@@ -1,7 +1,7 @@
 from datetime import date
 from unittest.mock import patch
 
-from comparison_reporting.run_dentist_reports import run_dentist_reports
+from application.comparison_reporting import run_dentist_reports
 
 from ..run_dentist_reports import get_dentists
 from common.nhs import NHSEntity
@@ -158,7 +158,7 @@ def test_run_dentist_reports(
     mock_get_services_from_db.return_value = dos_service_dentists
     mock_get_all_valid_dos_postcodes.return_value = postcodes
 
-    run_dentist_reports()
+    run_dentist_reports.run_dentist_reports()
     mock_Reporter.assert_called_once_with(
         nhs_entities=dentists,
         dos_services=dos_service_dentists,
