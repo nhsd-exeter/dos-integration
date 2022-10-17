@@ -25,15 +25,15 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_default_re
   }
 }
 
-resource "aws_sns_topic" "sns_topic_app_alerts_for_slack_alarm_region" {
-  provider          = aws.alarm-region
-  name              = var.sns_topic_app_alerts_for_slack_alarm_region
-  kms_master_key_id = "alias/${var.alarm_region_signing_key_alias}"
+resource "aws_sns_topic" "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
+  provider          = aws.route53_health_check_alarm_region
+  name              = var.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region
+  kms_master_key_id = "alias/${var.route53_health_check_alarm_region_signing_key_alias}"
 }
 
 resource "aws_sns_topic_policy" "sns_topic_app_alerts_for_slack_policy_alarm_region" {
-  provider = aws.alarm-region
-  arn      = aws_sns_topic.sns_topic_app_alerts_for_slack_alarm_region.arn
+  provider = aws.route53_health_check_alarm_region
+  arn      = aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn
   policy   = data.aws_iam_policy_document.sns_topic_app_alerts_for_slack_access_alarm_region.json
   depends_on = [
     data.aws_iam_policy_document.sns_topic_app_alerts_for_slack_access_alarm_region
@@ -41,13 +41,13 @@ resource "aws_sns_topic_policy" "sns_topic_app_alerts_for_slack_policy_alarm_reg
 }
 
 data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_region" {
-  provider = aws.alarm-region
+  provider = aws.route53_health_check_alarm_region
   statement {
     actions = ["sns:Publish"]
     principals {
       type        = "Service"
       identifiers = ["cloudwatch.amazonaws.com"]
     }
-    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_alarm_region.arn]
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   }
 }

@@ -280,8 +280,8 @@ resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "di_endpoint_health_check_alarm" {
-  provider                  = aws.alarm-region
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_alarm_region.arn]
+  provider                  = aws.route53_health_check_alarm_region
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   alarm_description         = "Alert for when DI endpoint is failing Route53 health checks"
   alarm_name                = "${var.project_id} | ${var.environment} | DI Endpoint Route 53 Health Checks Failing"
   comparison_operator       = "LessThanThreshold"

@@ -21,8 +21,8 @@ provider "aws" {
 }
 
 provider "aws" {
-  region = var.alarm_region
-  alias  = "alarm-region"
+  region = var.route53_health_check_alarm_region
+  alias  = "route53_health_check_alarm_region"
   default_tags {
     tags = {
       "DataClassification" = var.data_classification
@@ -33,7 +33,7 @@ provider "aws" {
       "Profile"            = var.profile
       "Programme"          = var.programme
       "Project"            = var.project_display_name
-      "ProviderRegion"     = var.alarm_region
+      "ProviderRegion"     = var.route53_health_check_alarm_region
       "PublicFacing"       = "No"
       "Service"            = var.project_id
       "ServiceCategory"    = var.service_category
