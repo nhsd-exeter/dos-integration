@@ -104,5 +104,5 @@ def run_dentist_reports(output_dir: str = "reports_output/"):
     reporter.run_and_save_reports("dentists", output_dir)
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     run_dentist_reports(path.join(Path.home(), "reports_output"))

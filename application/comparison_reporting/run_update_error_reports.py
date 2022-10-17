@@ -24,5 +24,5 @@ def run_update_error_reports(output_dir: str = "reports_output/"):
     reporter.run_and_save_reports(file_prefix="Update_err_reports_", output_dir=output_dir)
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     run_update_error_reports(path.join(Path.home(), "reports_output"))
