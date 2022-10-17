@@ -1,7 +1,7 @@
 from datetime import date
 from unittest.mock import patch
 
-from application.comparison_reporting import run_dentist_reports
+from comparison_reporting import run_dentist_reports
 
 from ..run_dentist_reports import get_dentists
 from common.nhs import NHSEntity
