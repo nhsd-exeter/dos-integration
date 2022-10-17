@@ -87,14 +87,14 @@ def aws_credentials():
 
 @fixture
 def dynamodb_client(boto_session):
-    conn = boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
-    yield conn
+    client = boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
+    yield client
 
 
 @fixture
 def dynamodb_resource(boto_session):
-    conn = boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
-    yield conn
+    resource = boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
+    yield resource
 
 
 @fixture

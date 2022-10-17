@@ -1,13 +1,13 @@
 import csv
 from io import StringIO
 from os import makedirs, path
-from typing import List
+from typing import List, Set
 
 import requests
 from aws_lambda_powertools.logging import Logger
 from pandas import DataFrame
 
-from common.dos import DoSService, get_all_valid_dos_postcodes
+from common.dos import DoSService
 from common.nhs import match_nhs_entities_to_services, NHSEntity
 from common.opening_times import SpecifiedOpeningTime
 from common.tests.conftest import blank_dos_service
@@ -27,12 +27,16 @@ def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
 
 
 class Reporter:
-    def __init__(self, nhs_entities: List[NHSEntity], dos_services: List[DoSService], lookup_postcodes: bool = True):
+    def __init__(
+            self,
+            nhs_entities: List[NHSEntity],
+            dos_services: List[DoSService],
+            valid_dos_postcodes: Set[str] = None):
+
         self.nhs_entities = nhs_entities
         self.dos_services = dos_services
         self.entity_service_map = match_nhs_entities_to_services(self.nhs_entities, self.dos_services)
-        self.valid_normalised_postcodes = None
-        self.lookup_postcodes = lookup_postcodes
+        self.valid_normalised_postcodes = valid_dos_postcodes
 
     def run_and_save_reports(self, file_prefix: str, output_dir: str) -> None:
         reports = (
@@ -211,8 +215,8 @@ class Reporter:
     def create_invalid_postcode_report(self) -> DataFrame:
         logger.info("Running Invalid Postcode report.")
 
-        if self.valid_normalised_postcodes is None and self.lookup_postcodes:
-            self.valid_normalised_postcodes = get_all_valid_dos_postcodes()
+        if self.valid_normalised_postcodes is None:
+            logger.warning("No set of valid DoS postcodes input, so report will be blank.")
 
         headers = [
             "NHSUK ODSCode",

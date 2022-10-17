@@ -164,4 +164,5 @@ def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
         newest_events = {}
         for thread in thread_runs:
             merge_newest_events(newest_events, thread.result().values())
+            print(f"ALL events size = {len(newest_events)}")
     return newest_events

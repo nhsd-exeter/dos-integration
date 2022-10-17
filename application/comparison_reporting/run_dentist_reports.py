@@ -9,7 +9,7 @@ from aws_lambda_powertools.logging import Logger
 from comparison_reporting.reporter import download_csv_as_dicts, Reporter
 
 from common.constants import DENTIST_SERVICE_TYPE_IDS
-from common.dos import get_services_from_db
+from common.dos import get_all_valid_dos_postcodes, get_services_from_db
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -91,13 +91,15 @@ def get_dentists() -> List[NHSEntity]:
     return dentists
 
 
-def run_dentist_reports(output_dir):
+def run_dentist_reports(output_dir: str = "reports_output/"):
     logger.info("Running Dentist reports, Ensure you are connected to required vpn for DB or this may stall.")
     nhsuk_dentists = get_dentists()
     dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
+    valid_dos_postcodes = get_all_valid_dos_postcodes()
     reporter = Reporter(
         nhs_entities=nhsuk_dentists,
-        dos_services=dentist_dos_services
+        dos_services=dentist_dos_services,
+        valid_dos_postcodes=valid_dos_postcodes
     )
     reporter.run_and_save_reports("dentists", output_dir)
 

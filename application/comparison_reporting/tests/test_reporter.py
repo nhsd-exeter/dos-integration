@@ -2,7 +2,6 @@ import os
 import tempfile
 from datetime import date
 from random import randint
-from unittest.mock import patch
 
 import responses
 from pandas import DataFrame
@@ -31,17 +30,14 @@ def test_download_csv_as_dicts():
 
 
 def test_run_and_save_reports():
-    reporter = Reporter([], [], lookup_postcodes=False)
+    reporter = Reporter(nhs_entities=[], dos_services=[], valid_dos_postcodes=None)
     dir = os.path.join(tempfile.gettempdir(), f"/tmp/test_output_{randint(11111, 99999)}")
     reporter.run_and_save_reports("test_", dir)
     assert os.path.exists(dir)
 
 
-@patch(f"{FILE_PATH}.get_all_valid_dos_postcodes")
-def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
+def test_create_invalid_postcode_report():
     test_valid_postcodes = set(pc.replace(" ", "").upper() for pc in ["BA2 7EB", "TE57ER", "QR8 9PM", "R3 7YX"])
-    mock_get_all_valid_dos_postcodes.return_value = test_valid_postcodes
-
     nhs1 = NHSEntity({"ODSCode": "FAT911", "OrganisationName": "Fakey Mcfakename", "Postcode": "TE57EH"})
     nhs2 = NHSEntity({"ODSCode": "QR132", "OrganisationName": "Fakey Mcfakename 2", "Postcode": "BA27EB"})
     nhs3 = NHSEntity({"ODSCode": "TR272", "OrganisationName": "Fakey Mcfakename 3", "Postcode": "R3 7YX"})
@@ -50,7 +46,7 @@ def test_create_invalid_postcode_report(mock_get_all_valid_dos_postcodes):
 
     nhs_entities = [nhs1, nhs2, nhs3]
     dos_services = [dos1]
-    reporter = Reporter(nhs_entities, dos_services)
+    reporter = Reporter(nhs_entities, dos_services, test_valid_postcodes)
 
     pc_report = reporter.create_invalid_postcode_report()
     expected_pc_report = DataFrame(

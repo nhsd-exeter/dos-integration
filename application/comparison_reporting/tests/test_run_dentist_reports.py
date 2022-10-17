@@ -1,14 +1,18 @@
 from datetime import date
 from unittest.mock import patch
 
+from comparison_reporting.run_dentist_reports import run_dentist_reports
+
 from ..run_dentist_reports import get_dentists
+from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.tests.conftest import dummy_dos_service
 
 OP = OpenPeriod.from_string
-FILE_PATH = "application.comparison_reporting.run_dentist_reports"
+MODULE_PATH = "comparison_reporting.run_dentist_reports"
 
 
-@patch(f"{FILE_PATH}.download_csv_as_dicts")
+@patch(f"application.{MODULE_PATH}.download_csv_as_dicts")
 def test_get_dentists(mock_download_csv_as_dicts):
 
     mock_download_csv_as_dicts.side_effect = [
@@ -131,18 +135,29 @@ def test_get_dentists(mock_download_csv_as_dicts):
     assert SpecifiedOpeningTime.equal_lists(d2.specified_opening_times, spec2)
 
 
-"""
-FILE_PATH = "run_dentist_reports"
-@patch(f"{FILE_PATH}.get_services_from_db")
-@patch(f"{FILE_PATH}.get_dentists")
-def test_run_dentist_reports(mock_get_dentists, mock_get_services_from_db):
+@patch(f"{MODULE_PATH}.get_services_from_db")
+@patch(f"{MODULE_PATH}.get_dentists")
+@patch(f"{MODULE_PATH}.Reporter")
+@patch(f"{MODULE_PATH}.get_all_valid_dos_postcodes")
+def test_run_dentist_reports(
+        mock_get_all_valid_dos_postcodes,
+        mock_Reporter,
+        mock_get_dentists,
+        mock_get_services_from_db):
 
-    mock_get_dentists.return_value = [
+    dentists = [
         NHSEntity({}),
         NHSEntity({})
     ]
+    dos_service_dentists = [dummy_dos_service() for i in range(10)]
+    postcodes = {"SG5718", "DH79IK"}
 
-    mock_get_services_from_db.return_value = [dummy_dos_service() for i in range(10)]
+    mock_get_dentists.return_value = dentists
+    mock_get_services_from_db.return_value = dos_service_dentists
+    mock_get_all_valid_dos_postcodes.return_value = postcodes
 
-    run_dentist_reports("")
-"""
+    run_dentist_reports()
+    mock_Reporter.assert_called_once_with(
+        nhs_entities=dentists,
+        dos_services=dos_service_dentists,
+        valid_dos_postcodes=postcodes)
