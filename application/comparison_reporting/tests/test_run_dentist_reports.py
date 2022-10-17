@@ -118,7 +118,9 @@ def test_get_dentists(mock_download_csv_as_dicts):
 
     std2 = StandardOpeningTimes()
     std2.friday.append(OP("09:00-19:00"))
-    spec2 = [SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)]
+    spec2 = [
+        SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)
+    ]
 
     actual_dentists = get_dentists()
 
