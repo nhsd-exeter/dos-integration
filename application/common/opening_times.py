@@ -253,16 +253,13 @@ class StandardOpeningTimes:
         """Check equality of 2 StandardOpeningTimes (generic bankholiday values are ignored)"""
 
         if not isinstance(other, StandardOpeningTimes):
-            print("NOT STD OPENING TIME")
             return False
 
         if self.all_closed_days() != other.all_closed_days():
-            print("ALL CLOSED DAYS DIFFER")
             return False
 
         for day in WEEKDAYS:
             if not OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day)):
-                print("WEEKDAY OPENINGS DIFFER")
                 return False
 
         return True
