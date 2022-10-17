@@ -1,89 +1,119 @@
-from os import environ, getenv
-from typing import Union
+from contextlib import contextmanager
+from os import environ
 from time import time_ns
+from typing import Any, Dict, Generator, Optional
 
-import psycopg2
-from aws_lambda_powertools import Logger
-from common.secretsmanager import get_secret
+from aws_lambda_powertools.logging import Logger
+from psycopg2 import connect
 from psycopg2.extensions import connection
 from psycopg2.extras import DictCursor
+
+from common.secretsmanager import get_secret
 
 logger = Logger(child=True)
 db_connection = None
 
 
-def _connect_dos_db() -> connection:
-    """Creates a new connection to the DoS DB and returns the connection object
+@contextmanager
+def connect_to_dos_db_replica() -> Generator[connection, None, None]:
+    """Creates a new connection to the DoS DB Replica
 
-    warning: Do not use. Should only be used by query_dos_db() func
+    Yields:
+        Generator[connection, None, None]: Connection to the database
     """
+    # Before the context manager is entered, the connection is created
+    db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
+    db_connection = connection_to_db(
+        server=environ["DB_REPLICA_SERVER"],
+        port=environ["DB_PORT"],
+        db_name=environ["DB_NAME"],
+        db_schema=environ["DB_SCHEMA"],
+        db_user=environ["DB_READ_ONLY_USER_NAME"],
+        db_password=db_secret[environ["DB_REPLICA_SECRET_KEY"]],
+    )
+    # Yield the connection object to the context manager
+    yield db_connection
+    # After the context manager is exited, the connection is closed
+    db_connection.close()
+
+
+@contextmanager
+def connect_to_dos_db() -> Generator[connection, None, None]:
+    """Creates a new connection to the DoS DB
+
+    Yields:
+        Generator[connection, None, None]: Connection to the database
+    """
+    # Before the context manager is entered, the connection is created
     db_secret = get_secret(environ["DB_SECRET_NAME"])
-    server = environ["DB_SERVER"]
-    port = environ["DB_PORT"]
-    db_name = environ["DB_NAME"]
-    db_schema = environ["DB_SCHEMA"]
-    db_user = environ["DB_USER_NAME"]
-    db_password = db_secret[environ["DB_SECRET_KEY"]]
-    trace_id = getenv("_X_AMZN_TRACE_ID", default="<NO-TRACE-ID>")
+    db_connection = connection_to_db(
+        server=environ["DB_SERVER"],
+        port=environ["DB_PORT"],
+        db_name=environ["DB_NAME"],
+        db_schema=environ["DB_SCHEMA"],
+        db_user=environ["DB_READ_AND_WRITE_USER_NAME"],
+        db_password=db_secret[environ["DB_SECRET_KEY"]],
+    )
+    # Yield the connection object to the context manager
+    yield db_connection
+    # After the context manager is exited, the connection is closed
+    db_connection.close()
 
-    logger.debug(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} user={db_user}")
 
+def connection_to_db(
+    server: str, port: str, db_name: str, db_schema: str, db_user: str, db_password: str
+) -> connection:
+    """Creates a new connection to a database
+
+    Args:
+        server (str): Database server to connect to
+        port (str): Database port to connect to
+        db_name (str): Database name to connect to
+        db_schema (str): Database schema to connect to
+        db_user (str): Database user to connect as
+        db_password (str): Database password for the user
+
+    Returns:
+        connection: Connection to the database
+    """
     logger.info(f"Attempting connection to database '{server}'")
-    logger.info(f"host={server}, port={port}, dbname={db_name}, schema={db_schema} user={db_user}")
-
-    db = psycopg2.connect(
+    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}, user={db_user}")
+    return connect(
         host=server,
         port=port,
         dbname=db_name,
         user=db_user,
         password=db_password,
-        connect_timeout=30,
+        connect_timeout=2,
         options=f"-c search_path=dbo,{db_schema}",
-        application_name=f"DI-Application <psycopg2> tid={trace_id}",
+        application_name="DOS INTEGRATION <psycopg2>",
     )
 
-    return db
 
+def query_dos_db(
+        connection: connection,
+        query: str,
+        vars: Optional[Dict[str, Any]] = None,
+        log_vars: bool = True) -> DictCursor:
+    """Queries the database given in the connection object
 
-def disconnect_dos_db() -> None:
-    """Closes the DoS database connection if it exists and is open"""
-    global db_connection
-    if db_connection is not None:
-        try:
-            db_connection.close()
-            logger.info("The DoS database connection was closed.")
-        except Exception as e:
-            logger.exception(f"There was an exception while trying to close DoS database connection: {e}")
+    Args:
+        connection (connection): Connection to the database
+        query (str): Query to execute
+        vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
 
+    Returns:
+        DictCursor: Cursor to the query results
+    """
+    cursor = connection.cursor(cursor_factory=DictCursor)
 
-def query_dos_db(query: str, vars: Union[tuple, dict, None] = None) -> DictCursor:
-    """Queries the dos database with given sql command and returns the resulting cursor object"""
-
-    # Check if new connection needed.
-    time_start = time_ns() // 1000000
-    global db_connection
-    if db_connection is None or db_connection.closed != 0:
-        db_connection = _connect_dos_db()
-    else:
-        logger.info("Using existing open database connection.")
-
-    c = db_connection.cursor(cursor_factory=DictCursor)
-
-    query_string_log = f"Running SQL command: {c.mogrify(query, vars)}"
+    logger.debug("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
+    query_string_log = cursor.mogrify(query, vars) if log_vars else query
     if len(query_string_log) > 1000:
-        query_string_log = f"{query_string_log[:490]}...       ...{query_string_log[-490:]}"
-    logger.info(query_string_log)
+        query_string_log = f"{query_string_log[:490]}...  ...{query_string_log[-490:]}"
+    logger.info(f"Running SQL command: {query_string_log}")
 
-    c.execute(query, vars)
+    time_start = time_ns() // 1000000
+    cursor.execute(query, vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
-    return c
-
-
-def _set_db_connection(value):
-    global db_connection
-    db_connection = value
-
-
-def _get_db_connection():
-    return db_connection
+    return cursor

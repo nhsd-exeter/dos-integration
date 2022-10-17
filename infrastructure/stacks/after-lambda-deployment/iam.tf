@@ -46,7 +46,7 @@ resource "aws_iam_role_policy" "di_endpoint_role_policy" {
     {
       "Effect": "Allow",
       "Action": ["sqs:SendMessage"],
-      "Resource": "${aws_sqs_queue.di_change_event_fifo_queue.arn}"
+      "Resource": "${aws_sqs_queue.change_event_queue.arn}"
     },
     {
       "Effect": "Allow",

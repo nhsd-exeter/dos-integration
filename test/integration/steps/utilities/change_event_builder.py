@@ -1,6 +1,6 @@
-import re
 from datetime import datetime
-from typing import Dict
+from re import fullmatch, sub
+from typing import Tuple
 from uuid import uuid4
 
 from dateutil.relativedelta import relativedelta
@@ -116,7 +116,7 @@ class ChangeEventBuilder:
         )
         return self._change_event
 
-    def build_same_as_dos_change_event_by_ods(self, ods_code: str) -> ChangeEvent:
+    def build_same_as_dos_change_event_by_ods(self, ods_code: str) -> Tuple[ChangeEvent, str]:
         change_event: ChangeEvent = ChangeEvent()
         match self.service_type.upper():
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
@@ -131,7 +131,10 @@ class ChangeEventBuilder:
                 change_event.organisation_sub_type = DENTIST_SUB_TYPE
             case _:
                 raise ValueError(f"Service type {self.service_type} does not exist")
-        change_event.organisation_name = demographics_data["publicname"]
+        service_id = demographics_data["id"]
+        change_event.organisation_name = (
+            demographics_data["publicname"] if demographics_data["publicname"] else demographics_data["name"]
+        )
         change_event.postcode = demographics_data["postcode"]
         change_event.website = demographics_data["web"]
         change_event.phone = demographics_data["publicphone"]
@@ -163,7 +166,7 @@ class ChangeEventBuilder:
                         "IsOpen": True,
                     }
                 )
-        return change_event
+        return change_event, service_id
 
     def make_change_event_unique(self):
         self._change_event.unique_key = str(uuid4())
@@ -201,6 +204,12 @@ class ChangeEventBuilder:
         return organisation_sub_type
 
     def set_same_as_dos_address(self, change_event: ChangeEvent, address: str) -> ChangeEvent:
+        def format_address(address: str) -> str:
+            address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
+            address = address.replace("'", "")
+            address = address.replace("&", "and")
+            return address
+
         address_parts = address.split("$", 4)
         if len(address_parts) < 5:
             number_of_unused_address_parts = 5 - len(address_parts)
@@ -208,11 +217,11 @@ class ChangeEventBuilder:
                 address_parts.append(None)
 
         change_event.build_address_lines(
-            address_line_1=address_parts[0],
-            address_line_2=address_parts[1],
-            address_line_3=address_parts[2],
-            city=address_parts[3],
-            county=address_parts[4],
+            address_line_1=format_address(address_parts[0]) if address_parts[0] else None,
+            address_line_2=format_address(address_parts[1]) if address_parts[1] else None,
+            address_line_3=format_address(address_parts[2]) if address_parts[2] else None,
+            city=format_address(address_parts[3]) if address_parts[3] else None,
+            county=format_address(address_parts[4]) if address_parts[4] else None,
         )
         return change_event
 
@@ -220,29 +229,31 @@ class ChangeEventBuilder:
 def valid_change_event(change_event: ChangeEvent) -> bool:
     """This function checks if the data stored in DoS would pass the change request
     validation within DoS API Gateway"""
-    if change_event.website is not None and not re.fullmatch(
+    if change_event.website is not None and not fullmatch(
         r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
         change_event.website,
     ):
         return False
-    if change_event.phone is not None and not re.fullmatch(r"[+0][0-9 ()]{9,}", change_event.phone):
+    if change_event.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", change_event.phone):
         return False
     return True
 
 
-def build_same_as_dos_change_event(service_type: str) -> ChangeEvent:
+def build_same_as_dos_change_event(service_type: str) -> Tuple[ChangeEvent, str]:
     while True:
         match service_type.upper():
             case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
                 ods_code = random_dentist_odscode()
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+                # Goes here and returns valid value
                 ods_code = get_single_service_pharmacy()
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
-        change_event: Dict = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
+        # This one leads to failure
+        change_event, service_id = ChangeEventBuilder(service_type).build_same_as_dos_change_event_by_ods(ods_code)
         if valid_change_event(change_event):
             break
-    return change_event
+    return change_event, service_id
 
 
 def set_opening_times_change_event(service_type: str) -> ChangeEvent:

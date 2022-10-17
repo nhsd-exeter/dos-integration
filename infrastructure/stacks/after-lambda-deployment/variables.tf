@@ -1,63 +1,3 @@
-##########################
-# INFRASTRUCTURE COMPONENT
-##########################
-
-############
-# AWS COMMON
-############
-
-variable "aws_region" {
-  description = "The AWS region"
-}
-
-variable "aws_account_id" {
-  description = "AWS account Number for Athena log location"
-}
-
-# ##############
-# # TEXAS COMMON
-# ##############
-
-variable "profile" {
-  description = "The tag used to identify profile e.g. dev, test, live, ..."
-}
-
-variable "texas_s3_logs_bucket" {
-  description = "The texas s3 log bucket for s3 bucket logs"
-}
-
-variable "terraform_platform_state_store" {
-  description = "platform state store"
-}
-
-variable "vpc_terraform_state_key" {
-  description = "vpc state key"
-}
-
-variable "programme" {
-  description = "Programme name"
-}
-
-variable "project_id" {
-  description = "Project ID"
-}
-
-variable "environment" {
-  description = "Environment name"
-}
-
-# ############################
-# # Common
-# ############################
-
-variable "route53_terraform_state_key" {
-  description = "terraform state key"
-}
-
-variable "team_id" {
-  description = "team id"
-}
-
 # ############################
 # API GATEWAY
 # ############################
@@ -70,6 +10,9 @@ variable "di_endpoint_api_gateway_stage" {
   description = "Name for the API Gateway stage"
 }
 
+variable "route53_terraform_state_key" {
+  description = "terraform state key"
+}
 # ######################
 # # CLOUDWATCH DASHBOARD
 # #######################
@@ -81,9 +24,13 @@ variable "dos_db_name" {
   description = "Name of db dos instance to connect to"
 }
 
+variable "dos_db_replica_name" {
+  description = "Name of db dos replica to connect to"
+}
 # ######################
 # # CLOUDWATCH ALERTS
 # #######################
+
 variable "sqs_dlq_recieved_msg_alert_name" {
   description = "The name of the cloudwatch alert for msgs recieved in the sqs dlq"
 }
@@ -91,28 +38,26 @@ variable "sns_topic_app_alerts_for_slack" {
   description = "The name of the sns topic to recieve alerts for the application to forward to slack"
 }
 
-
 # ############################
 # SQS FIFO QUEUE
 # ############################
-
-variable "fifo_queue_name" {
-  description = "FIFO queue name feed by API Gateway"
+variable "change_event_queue_name" {
+  description = ""
 }
 
-variable "cr_fifo_queue_name" {
-  description = "FIFO queue name fed by event processor"
+variable "update_request_queue_name" {
+  description = ""
 }
 
 # ############################
 # SQS DEAD LETTER QUEUE
 # ############################
 
-variable "dead_letter_queue_from_fifo_queue_name" {
+variable "change_event_dlq" {
   description = ""
 }
 
-variable "cr_dead_letter_queue_from_fifo_queue_name" {
+variable "update_request_dlq" {
   description = ""
 }
 
@@ -156,11 +101,15 @@ variable "signing_key_alias" {
 # # FIREHOSE
 # ##############
 
-variable "event_processor_subscription_filter_name" {
+variable "service_matcher_subscription_filter_name" {
   description = "Log filter name for event processor lambda"
 }
 
-variable "event_sender_subscription_filter_name" {
+variable "service_sync_dos_subscription_filter_name" {
+  description = "Log filter name for event sender lambda"
+}
+
+variable "service_sync_di_subscription_filter_name" {
   description = "Log filter name for event sender lambda"
 }
 
@@ -169,15 +118,11 @@ variable "change_event_gateway_subscription_filter_name" {
 }
 
 
-variable "change_request_gateway_subscription_filter_name" {
-  description = "Log filter name for change event api gateway logs"
-}
-
-variable "fifo_dlq_handler_subscription_filter_name" {
+variable "change_event_dlq_handler_subscription_filter_name" {
   description = "Log filter name for fifo dlq lambda"
 }
 
-variable "cr_fifo_dlq_handler_subscription_filter_name" {
+variable "dos_db_update_dlq_handler_subscription_filter_name" {
   description = "Log filter name for cr_fifo dlq handler lambda"
 }
 
@@ -186,34 +131,50 @@ variable "event_replay_subscription_filter_name" {
 }
 
 variable "orchestrator_subscription_filter_name" {
-  description = "Log filter name for event replay lambda"
+  description = "Log filter name for orchestrator lambda"
+}
+
+variable "slack_messenger_subscription_filter_name" {
+  description = "Log filter name for slack messenger lambda"
+}
+
+
+variable "send_email_subscription_filter_name" {
+  description = "Log filter name for send email lambda"
 }
 
 variable "dos_integration_firehose" {
   description = "The firehose delivery stream name"
 }
 
-variable "firehose_role" {
+variable "dos_firehose" {
+  description = "The firehose delivery stream name"
+}
+
+variable "di_firehose_role" {
   description = "The firehose delivery stream role name"
 }
 
+variable "dos_firehose_role" {
+  description = "The firehose delivery stream role name"
+}
 # ##############
-# # LAMBDA
+# # LAMBDAS
 # ##############
 
-variable "event_processor_lambda_name" {
+variable "service_matcher_lambda_name" {
   description = "Name of event processor lambda"
 }
 
-variable "event_sender_lambda_name" {
+variable "service_sync_lambda_name" {
   description = "Name of event sender lambda"
 }
 
-variable "fifo_dlq_handler_lambda_name" {
+variable "change_event_dlq_handler_lambda_name" {
   description = "Name of fifo dlq handler lambda"
 }
 
-variable "cr_fifo_dlq_handler_lambda_name" {
+variable "dos_db_update_dlq_handler_lambda_name" {
   description = "Name of cr_fifo dlq handler lambda"
 }
 
@@ -223,4 +184,21 @@ variable "event_replay_lambda_name" {
 
 variable "orchestrator_lambda_name" {
   description = "Name of orchestrator lambda"
+}
+
+variable "slack_messenger_lambda_name" {
+  description = "Name of slack messenger lambda"
+}
+
+variable "send_email_lambda_name" {
+  description = "Name of send email lambda"
+}
+
+# ##############
+# # S3
+# ##############
+
+variable "send_email_bucket_name" {
+  type        = string
+  description = "Name of the bucket to temporarily store emails to be sent"
 }

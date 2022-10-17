@@ -11,6 +11,10 @@ data "aws_db_instance" "dos_db" {
   db_instance_identifier = var.dos_db_name
 }
 
+data "aws_db_instance" "dos_db_replica" {
+  db_instance_identifier = var.dos_db_replica_name
+}
+
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -59,4 +63,8 @@ data "aws_iam_policy_document" "kms_policy" {
     ]
     not_resources = []
   }
+}
+
+data "aws_secretsmanager_secret_version" "deployment_secrets" {
+  secret_id = var.email_secrets
 }

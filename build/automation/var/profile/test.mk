@@ -5,19 +5,21 @@
 
 LOG_LEVEL:= DEBUG
 
-DOS_API_GATEWAY_SECRETS = core-dos-dev/deployment
-DOS_API_GATEWAY_USERNAME_KEY := DOS_API_GATEWAY_USER
-DOS_API_GATEWAY_PASSWORD_KEY := DOS_API_GATEWAY_PASSWORD
-DOS_API_GATEWAY_URL :=  https://core-dos-regressiondi-ddc-core-dos-api-gateway.k8s-nonprod.texasplatform.uk/api/change-request
-
-DB_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
+DB_SERVER_NAME := uec-core-dos-regression-db-12
+DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
 DB_PORT := 5432
 DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
+
 DB_SECRET_NAME := core-dos-dev/deployment
-DB_SECRET_KEY := DB_DI_READONLY_PASSWORD
+DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
-DB_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
+DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
+
+DB_REPLICA_SECRET_NAME := core-dos-dev/deployment
+DB_REPLICA_SECRET_KEY := DB_DI_READONLY_PASSWORD
+DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
+DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_DB_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-dev/deployment

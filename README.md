@@ -21,25 +21,24 @@
     - [Code Quality](#code-quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
+      - [Where are the unit tests run?](#where-are-the-unit-tests-run)
     - [Integration Testing](#integration-testing)
+      - [Where are the integration tests run?](#where-are-the-integration-tests-run)
     - [Performance Testing](#performance-testing)
+      - [Where are the performance tests run?](#where-are-the-performance-tests-run)
     - [Test data and mock services](#test-data-and-mock-services)
-    - [Manual check](#manual-check)
-    - [Extra test to check lambda access to DoS database read replica](#extra-test-to-check-lambda-access-to-dos-database-read-replica)
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
     - [Artefacts Versioning](#artefacts-versioning)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
+    - [Branching Strategy](#branching-strategy)
     - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
     - [Branch Naming to not automatically deploy](#branch-naming-to-not-automatically-deploy)
-      - [Quick Deployment](#quick-deployment)
+      - [Quick Re-deploy](#quick-re-deploy)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
     - [Remove deployment on Pull Request merge](#remove-deployment-on-pull-request-merge)
-    - [Switch Performance Testing Environment](#switch-performance-testing-environment)
-      - [Switch Performance Environment to use DoS Mock](#switch-performance-environment-to-use-dos-mock)
-      - [Switch Performance Environment to use DoS Performance API Gateway](#switch-performance-environment-to-use-dos-performance-api-gateway)
     - [Secrets](#secrets)
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
@@ -47,10 +46,7 @@
     - [How to deploy](#how-to-deploy)
       - [Example](#example)
   - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
-      - [Dentists](#dentists)
-  - [Architecture](#architecture-1)
-    - [Data](#data)
-    - [Authentication and Authorisation](#authentication-and-authorisation)
+    - [Dentists](#dentists)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
     - [Observability](#observability)
@@ -79,7 +75,7 @@ https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
 The current technology stack is:
 
 - Python - Main programming language
-- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS
+- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS, S3
 - Serverless Framework - (Where supported)
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
@@ -97,7 +93,7 @@ The main components you will need for *basic* development work, are your OS vers
 
 - A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
-- Python (The project currenly runs on 3.9.7)
+- Python (The project currenly runs on 3.9)
 - AWS CLI
 - Docker
 
@@ -174,32 +170,19 @@ To add an IP address to the IP allow lists and deploy the allow list to environm
 
 ### DoS Database Connection
 
-The following env vars are required for the project to establish a connection to the DoS database (or a replica).
-
-DB_SECRET_NAME
-DB_SERVER
-DB_PORT
-DB_NAME
-DB_SCHEMA
-DB_USER_NAME
-DB_SECRET_KEY
-
-To connect to the local postgres database use these connection
-
-    Host = localhost
-    Port = 5432
-    Database = postgres
-    Username = postgres
-    Password = postgres
-    Schema = postgres
+The following vars are required for the project to establish a connection to the DoS database (or a replica).
+`Host, Port, Database, Username, Password, Schema`
+These variable will be stored in AWS Secrets Manager and will be retrieved by the project at either deployment or runtime.
 
 ### Code Formatting
 
 Code quality checks can be done with the pip installed 'black' module and run with the command.
+
     python -m black --line-length 120
 
 This is also wrapped in a function
-To format the code run:
+To format all python files in the project run the following commands:
+
     make python-code-format FILES=./application
     make python-code-format FILES=./test
 
@@ -208,10 +191,9 @@ To format the code run:
 Code quality checks can be done with the pip installed 'flake8' module and run with the command.
     python3 -m flake8 --max-line-length=120
 
-This is also wrapped in a function
-To check the code quality run:
-    make python-code-check FILES=./application
-    make python-code-check FILES=./test
+This is also wrapped in a function:
+
+    make python-linting
 
 ## Testing
 
@@ -219,19 +201,13 @@ List all the type of test suites included and provide instructions how to execut
 
 - Unit
 - Integration
-- Contract
-- End-to-end
 - Performance
-- Security
-- Smoke
-
-How to run test suite in the pipeline
 
 ### Unit Testing
 
 Unit testing is to test the functions within each lambda. This testing is done on the local system to where the commands are run e.g CLI, CI/CD Pipelines
 
-This includes:This testing includes:
+This includes:
 
 - Function calls
 - Correct data types and data returned from function
@@ -248,20 +224,22 @@ For coverage run
 
     make coverage-report
 
-The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own enviornment directly by going to the /application directory and running.
+The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own environment directly by going to the /application directory and running.
 
     python3 -m pytest --cov=. -vv
 
-It is always a good idea to run the unit tests in the IMAGE enviornment for a final run-through to ensure they pass in the correct enviormental conditions.
 
+#### Where are the unit tests run?
+
+The unit tests are run in multiple places. They are developed and run locally. They are also run in GitHub Actions on each pull request and commit on develop. The unit tests are also run in the development pipeline on each deployment merge into develop.
 
 ### Integration Testing
 
-Integration Testing is to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together achieving the overall business goals. This testing is done on AWS to test the connection between components.
+Integration Testing is used to test the functional capabilities of the individual component work together with mocks and partner services. Asserting that individual components can work in harmony together, achieving the overall business goals. This testing is done on AWS to test the connection between components.
 
 This testing includes:
 
-- Limited use of Mocks
+- No Mocking. Except Emails which are mocked in NonProd
 - Check data when passed between components
 - Meets business needs of the application
 
@@ -270,12 +248,23 @@ This testing is generally done by a tester
 Prerequisites
 
     tx-mfa
-    Sign into Non-Prod VPN
+    Sign into Non-Prod VPN # To connect to lambdas within the VPC
+    IP is in the IP Allow List # To connect to the API Gateway
     make tester-build
 
 To run unit tests run the following commands
 
-    make integration-test PROFILE=task TAGS=dev PARALLEL_TEST_COUNT=10
+    make integration-test PROFILE=task TAGS=pharmacy PARALLEL_TEST_COUNT=10
+
+Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
+
+- pharmacy - All Tests that check pharmacy functionality
+- pharmacy_no_log_searches - Pharmacy tests that do not use the AWS CloudWatch Log Insights search functionality. These tests are fast as they check the database directly
+- pharmacy_cloudwatch_queries - Pharmacy tests that use the AWS CloudWatch Log Insights search functionality. These tests are slow as they check the CloudWatch Logs.
+
+#### Where are the integration tests run?
+
+Integration tests are run locally against development environments. They are also run in the development pipeline on each deployment merge into develop.
 
 ### Performance Testing
 
@@ -305,45 +294,41 @@ To run a load test
     Wait for the test to complete
     make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
 
+#### Where are the performance tests run?
+
+Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages ad hoc against the performance environment.
+
 ### Test data and mock services
 
 - How the test data set is produced
 - Are there any mock services in place
 
-### Manual check
-
-Here are the steps to perform meaningful local system check:
-
-- Log in to the system using a well known username role
-
-### Extra test to check lambda access to DoS database read replica
-
-A make target has been added to check that a lambda can successful access the dos database read replica in non-prod. The target currently intend to be used to test the event processor. It can be run using the following:
-
-    make test-deployed-event-processor-db-connection LAMBDA_NAME=uec-dos-int-di-203-event-processor
-
-It will return a error a code if it hasn't worked successfully. It use the json in the file in `test/common` as a payload. The file contains an example change event with a service that exists in the replica database.
-
 ## General Deployment
 
 ### API Key
 
-API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be manually generated prior to deployment.
+API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be generated prior to deployment of the api gateway.
 
 ### Artefacts Versioning
 
-E.g. semantic versioning vs. timestamp-based
+Releases are semantically versioned using the following format:
+
+    MAJOR.MINOR
+
+All standard releases are considered major releases. Minor releases are used for hotfixes.
+
+Deployment images are instead tagged with the commit hash of the commit it was built from. Standard non deployment images are tagged with the timestamp and commit hash of the commit they were built from.
 
 ### CI/CD Pipelines
 
-<img src="./documentation/diagrams/DevOps-Pipelines and Automations.drawio.png" width="1024" /><br /><br />
+<img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
 
-All `test`  Codebuild automations can be found in the AWS CodePipeline app in `Texas` `mgmt` account and included the following:
+All `test`  CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
 
 - uec-dos-int-tools-stress-test-stage
 - uec-dos-int-tools-load-test-stage
 
-More infromation can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 
 ### Deployment From the Command-line
@@ -352,27 +337,26 @@ More infromation can be on the DI confluence https://nhsd-confluence.digital.nhs
 
 ### Branching Strategy
 
-More infromation can be on the DI confluence https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment
+More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
 <img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
 
 
-
 ### Branch Naming for Automatic Deployments
 
-For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS Codebuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
+For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
 
-Once a branch which meets this criteria has been pushed the it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
+Once a branch which meets this criteria has been pushed then it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
 
 ### Branch Naming to not automatically deploy
 
 For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
 
-#### Quick Deployment
+#### Quick Re-deploy
 
-To quick update the lambdas run the following command. Note this only updates the lambdas and api-gateway
+To quick update the lambdas run the following command. Note this only updates the lambdas
 
-    make sls-only-deploy PROFILE=task VERSION=latest
+    make quick-build-and-deploy PROFILE=task ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
 
 ### Remove Deployment From the Command-line
 
@@ -380,36 +364,15 @@ To quick update the lambdas run the following command. Note this only updates th
 
 ### Remove deployment with commit tag
 
-You can remove a task deployment using a single command to create a tag which then runs an AWS codebuild stage that will undeploy that environment
+You can remove a task deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
     e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 task environment
 
 ### Remove deployment on Pull Request merge
 
-When a pull request is merged it will run an AWS Codebuild project that will destroy the environment if it exists.
-The codebuild stage can be found within the development-pipeline terraform stack.
-
-
-### Switch Performance Testing Environment
-
-These make targets are to switch an environment between the DoS API Gateway they use. This means that the make targets only work on an existing environment. This doesn't deploy a new fresh environment.
-
-#### Switch Performance Environment to use DoS Mock
-
-This is to switch the DoS API Gateway to use the DoS Mock API Gateway. This is useful for performance testing without changing the DoS DB which means that the tests are more repeatable.
-
-  make deploy-perf-environment-mock-api ENVIRONMENT=perf # Deploys the Event Sender to point to DoS Mock API Gateway
-
-NOTE: `PROFILE` variable doesn't need to be set as it is set by the make target. `ENVIRONMENT` variable sets which environment to switch.
-
-#### Switch Performance Environment to use DoS Performance API Gateway
-
-This is to switch the DoS API Gateway to use the DoS Performance API Gateway. This is useful for performance testing with changing the DoS DB which means that the tests are more live like.
-
-  make deploy-perf-environment-real-api ENVIRONMENT=perf # Deploys the Event Sender to point to DoS Performance API Gateway
-
-NOTE: `PROFILE` variable doesn't need to be set as it is set by the make target. `ENVIRONMENT` variable sets which environment to switch.
+When a pull request is merged it will run an AWS CodeBuild project that will destroy the environment if it exists.
+The AWS CodeBuild project can be found within the development-pipeline terraform stack.
 
 ### Secrets
 
@@ -452,7 +415,7 @@ To Deploy Live
 
 Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
 
-#### Dentists
+### Dentists
 
 To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
 
@@ -476,27 +439,6 @@ or
 These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
 
     python3 comparison_reporting/run_dentist_reports.py
-
-## Architecture
-
-### Data
-
-What sort of data system operates on and processes
-
-- Data set
-- Consistency and integrity
-- Persistence
-
-### Authentication and Authorisation
-
-- Default user login for testing
-- Different user roles
-- Authorisation type
-- Authentication method
-
-It is recommended that any other documentation related to the aspect of security should be stored in a private workspace.
-
-
 
 ### Guiding Principles
 
@@ -544,7 +486,7 @@ What are the links of the supporting systems?
 List all the environments and their relation to profiles
 
 - Task
-  - Profile: 'task'
+  - Profile: `task`
 - Dev
   - Profile: `dev`
 - Demo

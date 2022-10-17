@@ -1,11 +1,10 @@
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
 
-from common.change_event_exceptions import ValidationException
-
+from common.errors import ValidationException
 
 logger = Logger(child=True)
 
@@ -25,6 +24,16 @@ def unhandled_exception_logging(handler, event, context: LambdaContext):
         raise err
     except BaseException as err:
         logger.exception(f"Something went wrong - {err}", extra={"error": err, "event": event})
+        raise err
+
+
+@lambda_handler_decorator(trace_execution=True)
+def unhandled_exception_logging_hidden_event(handler, event, context: LambdaContext):
+    try:
+        response = handler(event, context)
+        return response
+    except BaseException as err:
+        logger.error("Something went wrong but the event is hidden")
         raise err
 
 

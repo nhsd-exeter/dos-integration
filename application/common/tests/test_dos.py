@@ -1,25 +1,24 @@
 from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
-import pytest
 
-from .conftest import dummy_dos_location, dummy_dos_service
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
-from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from ..dos import (
-    DoSLocation,
-    DoSService,
-    get_dos_locations,
-    get_matching_dos_services,
-    get_specified_opening_times_from_db,
-    get_standard_opening_times_from_db,
-    get_all_valid_dos_postcodes,
-    get_services_from_db,
-    db_rows_to_std_open_times,
-    db_rows_to_std_open_times_map,
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
+    db_rows_to_std_open_times,
+    db_rows_to_std_open_times_map,
+    DoSService,
+    get_all_valid_dos_postcodes,
+    get_dos_locations,
+    get_matching_dos_services,
+    get_services_from_db,
+    get_specified_opening_times_from_db,
+    get_standard_opening_times_from_db,
+    get_valid_dos_location,
 )
+from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from .conftest import dummy_dos_service
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 
 OP = OpenPeriod.from_string
 FILE_PATH = "application.common.dos"
@@ -32,6 +31,7 @@ def test_field_names():
         "name",
         "odscode",
         "address",
+        "town",
         "postcode",
         "web",
         "typeid",
@@ -39,6 +39,10 @@ def test_field_names():
         "publicphone",
         "publicname",
         "servicename",
+        "easting",
+        "northing",
+        "latitude",
+        "longitude",
     ]
 
 
@@ -97,86 +101,94 @@ def test__init__no_name():
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db):
+def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
-    id = 22851351399
-    db_return = [get_db_item(odscode, name, id=id)]
+    service_id = 22851351399
+    db_return = [get_db_item(odscode, name, id=service_id)]
     mock_connection = MagicMock()
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     # Act
     response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == id
+    assert service.id == service_id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
             "statusid, publicphone, publicname, st.name servicename FROM services s "
             "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
-        vars={"ODS": f"{odscode[0:5]}%"},
+        vars={"ODS": f"{odscode[:5]}%"},
     )
-    mock_connection.fetchall.assert_called_with()
-    mock_connection.close.assert_called_with()
+    mock_cursor.fetchall.assert_called_with()
+    mock_cursor.close.assert_called_with()
 
 
 def test_any_generic_bankholiday_open_periods():
     dos_service = dummy_dos_service()
-    dos_service._standard_opening_times = StandardOpeningTimes()
+    dos_service.standard_opening_times = StandardOpeningTimes()
     op1 = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
     op2 = OpenPeriod(time(14, 0, 0), time(18, 0, 0))
 
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
-    dos_service._standard_opening_times.add_open_period(op1, "monday")
+    dos_service.standard_opening_times.add_open_period(op1, "monday")
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
-    dos_service._standard_opening_times.add_open_period(op2, "monday")
+    dos_service.standard_opening_times.add_open_period(op2, "monday")
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
-    dos_service._standard_opening_times.add_open_period(op1, "tuesday")
-    dos_service._standard_opening_times.add_open_period(op1, "wednesday")
-    dos_service._standard_opening_times.add_open_period(op1, "thursday")
-    dos_service._standard_opening_times.add_open_period(op1, "friday")
-    dos_service._standard_opening_times.add_open_period(op1, "saturday")
-    dos_service._standard_opening_times.add_open_period(op1, "sunday")
+    dos_service.standard_opening_times.add_open_period(op1, "tuesday")
+    dos_service.standard_opening_times.add_open_period(op1, "wednesday")
+    dos_service.standard_opening_times.add_open_period(op1, "thursday")
+    dos_service.standard_opening_times.add_open_period(op1, "friday")
+    dos_service.standard_opening_times.add_open_period(op1, "saturday")
+    dos_service.standard_opening_times.add_open_period(op1, "sunday")
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
-    dos_service._standard_opening_times.add_open_period(op1, "bankholiday")
+    dos_service.standard_opening_times.add_open_period(op1, "bankholiday")
     assert dos_service.any_generic_bankholiday_open_periods()
 
-    dos_service._standard_opening_times.add_open_period(op2, "bankholiday")
+    dos_service.standard_opening_times.add_open_period(op2, "bankholiday")
     assert dos_service.any_generic_bankholiday_open_periods()
 
-    dos_service._standard_opening_times.generic_bankholiday = []
+    dos_service.standard_opening_times.generic_bankholiday = []
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
+def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     odscode = "V00393a"
     name = "My Dental Practice"
-    id = 22851351399
-    db_return = [get_db_item(odscode, name, id=id)]
+    service_id = 22851351399
+    db_return = [get_db_item(odscode, name, id=service_id)]
     mock_connection = MagicMock()
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     ods6_code = "V0393a"
     # Act
     response = get_matching_dos_services(odscode, DENTIST_ORG_TYPE_ID)
     # Assert
     service = response[0]
     assert service.odscode == odscode
-    assert service.id == id
+    assert service.id == service_id
     assert service.name == name
     mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
             "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
@@ -184,38 +196,45 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db):
         ),
         vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
     )
-    mock_connection.fetchall.assert_called_with()
-    mock_connection.close.assert_called_with()
+    mock_cursor.fetchall.assert_called_with()
+    mock_cursor.close.assert_called_with()
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_no_services_returned(mock_query_dos_db):
+def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     odscode = "FQ038"
     db_return = []
     mock_connection = MagicMock()
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     # Act
     response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
     # Assert
     assert response == []
     mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, "
             "publicphone, publicname, st.name servicename FROM services s LEFT JOIN servicetypes"
             " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
-        vars={"ODS": f"{odscode[0:5]}%"},
+        vars={"ODS": f"{odscode[:5]}%"},
     )
-    mock_connection.fetchall.assert_called_with()
-    mock_connection.close.assert_called_with()
+    mock_cursor.fetchall.assert_called_with()
+    mock_cursor.close.assert_called_with()
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
+def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
     db_return = [
         {
             "serviceid": 28334,
@@ -267,8 +286,8 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
             "isclosed": False,
         },
     ]
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     service_id = 123456
     expected_responses_set = sorted(
         [
@@ -280,7 +299,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
         ]
     )
     # Act
-    responses = get_specified_opening_times_from_db(service_id)
+    responses = get_specified_opening_times_from_db(connection=mock_connection, service_id=service_id)
     responses_str = sorted([repr(s) for s in responses])
     # Assert
     assert (
@@ -288,62 +307,69 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db):
     ), f"Should return {expected_responses_set} string, actually: {responses_str}"
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        connection=mock_connection,
+        query="SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.id = ssot.servicespecifiedopeningdateid "
-        "WHERE ssod.serviceid = %(service_id)s",
-        {"service_id": service_id},
+        "WHERE ssod.serviceid = %(SERVICE_ID)s",
+        vars={"SERVICE_ID": service_id},
     )
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db):
+def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     db_return = [
         {"serviceid": 28334, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
         {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(9, 0, 0), "endtime": time(11, 30, 0)},
         {"serviceid": 28334, "dayid": 1, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
     ]
-    mock_connection = MagicMock()
+    mock_cursor = MagicMock()
     service_id = 123456
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     expected_std_opening_times = StandardOpeningTimes()
     expected_std_opening_times.add_open_period(OpenPeriod(time(8, 0, 0), time(17, 0, 0)), "tuesday")
     expected_std_opening_times.add_open_period(OpenPeriod(time(9, 0, 0), time(11, 30, 0)), "friday")
     expected_std_opening_times.add_open_period(OpenPeriod(time(13, 0, 0), time(15, 30, 0)), "friday")
-
+    mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
     # Act
-    response = get_standard_opening_times_from_db(service_id)
+    response = get_standard_opening_times_from_db(connection=mock_connection, service_id=service_id)
     # Assert
     assert (
         response == expected_std_opening_times
     ), f"Should return {expected_std_opening_times} string, actually: {response}"
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
+        connection=mock_connection,
+        query="SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
         "FROM servicedayopenings sdo "
         "INNER JOIN servicedayopeningtimes sdot "
         "ON sdo.id = sdot.servicedayopeningid "
         "LEFT JOIN openingtimedays otd "
         "ON sdo.dayid = otd.id "
-        "WHERE sdo.serviceid = %(service_id)s",
-        {"service_id": service_id},
+        "WHERE sdo.serviceid = %(SERVICE_ID)s",
+        vars={"SERVICE_ID": service_id},
     )
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db):
+def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
     db_return = []
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     service_id = 123456
     expected_responses_set = sorted([])
     # Act
-    responses = get_specified_opening_times_from_db(service_id)
+    responses = get_specified_opening_times_from_db(connection=mock_connection, service_id=service_id)
     responses_str = sorted([str(s) for s in responses])
     # Assert
     assert (
@@ -351,67 +377,37 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
     ), f"Should return {expected_responses_set} string, actually: {responses_str}"
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        connection=mock_connection,
+        query="SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
         "FROM servicespecifiedopeningdates ssod "
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.id = ssot.servicespecifiedopeningdateid "
-        "WHERE ssod.serviceid = %(service_id)s",
-        {"service_id": service_id},
+        "WHERE ssod.serviceid = %(SERVICE_ID)s",
+        vars={"SERVICE_ID": service_id},
     )
 
 
-@pytest.mark.parametrize(
-    "dos_location, expected_result",
-    [
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=None, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=1, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=None, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=None, northing=None, latitude=1.1, longitude=1.1), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=None, longitude=None), False),
-        (DoSLocation(id=1, postcode="TE57ER", easting=1, northing=1, latitude=1.1, longitude=1.1), True),
-    ],
-)
-def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
-    actual_result = dos_location.is_valid()
-    assert (
-        actual_result is expected_result
-    ), f"is_valued check on {dos_location} was found to be {actual_result}, it should be {expected_result}."
-
-
-@pytest.mark.parametrize(
-    "input_postcode, expected_result",
-    [
-        ("TE57ER", "TE57ER"),
-        ("TE5 7ER", "TE57ER"),
-        ("T E57ER", "TE57ER"),
-        ("T E57E R", "TE57ER"),
-        ("T E 5 7 E R", "TE57ER"),
-        ("TE57ER  ", "TE57ER"),
-        ("   TE57ER", "TE57ER"),
-        ("te5 7er", "TE57ER"),
-        ("te5  7 e   r", "TE57ER"),
-    ],
-)
-def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
-    dos_location = dummy_dos_location()
-    dos_location.postcode = input_postcode
-    actual_output = dos_location.normal_postcode()
-    assert (
-        actual_output == expected_result
-    ), f"Normalised postcode for '{input_postcode}' is '{actual_output}', it should be '{expected_result}'."
-
-
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_dos_locations(mock_query_dos_db):
+def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
     mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
     postcode = "BA2 7AF"
-    db_return = [{"id": 111, "postcode": postcode, "easting": 2, "northing": 3, "latitude": 4.0, "longitude": 2.0}]
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
-
+    db_return = [
+        {
+            "id": 111,
+            "postcode": postcode,
+            "easting": 2,
+            "northing": 3,
+            "postaltown": "town",
+            "latitude": 4.0,
+            "longitude": 2.0,
+        }
+    ]
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
     # Act
     responses = get_dos_locations(postcode)
     # Assert
@@ -428,16 +424,19 @@ def test_get_dos_locations(mock_query_dos_db):
     postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
 
     mock_query_dos_db.assert_called_once_with(
-        "SELECT id, postcode, easting, northing, latitude, longitude "
+        connection=mock_connection,
+        query="SELECT id, postcode, easting, northing, postaltown, latitude, longitude "
         "FROM locations WHERE postcode IN %(pc_variations)s",
         vars={"pc_variations": tuple(postcode_variations)},
     )
 
 
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_all_valid_dos_postcodes(mock_query_dos_db):
+def test_get_all_valid_dos_postcodes(mock_query_dos_db, mock_connect_to_dos_db_replica):
     # Arrange
-    mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = MagicMock()
+    mock_cursor = MagicMock()
     db_return = [
         {"postcode": "BA2 7AF"},
         {"postcode": "EY8 8AH"},
@@ -447,8 +446,8 @@ def test_get_all_valid_dos_postcodes(mock_query_dos_db):
         {"postcode": "B W 4 5 H D"},
         {"postcode": "BA2 7AF"},
     ]
-    mock_connection.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_connection
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
 
     expected_result = {"BA27AF", "EY88AH", "SW95EZ", "W28PP", "PO19", "BW45HD"}
 
@@ -458,10 +457,34 @@ def test_get_all_valid_dos_postcodes(mock_query_dos_db):
     assert response == expected_result
 
 
-@patch(f"{FILE_PATH}.query_dos_db")
-def test_get_services_from_db(mock_query_dos_db):
+@patch(f"{FILE_PATH}.get_dos_locations")
+def test_get_valid_dos_location(mock_get_dos_locations: MagicMock):
     # Arrange
-    mock_connection = MagicMock()
+    mock_get_dos_locations.return_value.is_valid.return_value = True
+    mock_get_dos_locations.return_value = mock_location = [MagicMock()]
+    postcode = "BA2 7AF"
+    # Act
+    location = get_valid_dos_location(postcode)
+    # Assert
+    assert location == mock_location[0]
+
+
+@patch(f"{FILE_PATH}.get_dos_locations")
+def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMock):
+    # Arrange
+    mock_get_dos_locations.return_value.is_valid.return_value = False
+    postcode = "BA2 7AF"
+    # Act
+    location = get_valid_dos_location(postcode)
+    # Assert
+    assert location is None
+
+
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_services_from_db(mock_query_dos_db, mock_connect_to_dos_db_replica):
+    # Arrange
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = MagicMock()
     db_returns = [
         [get_db_item(id=1, typeid=12), get_db_item(id=2, typeid=14)],
         [
@@ -502,8 +525,9 @@ def test_get_services_from_db(mock_query_dos_db):
             },
         ],
     ]
-    mock_connection.fetchall.side_effect = db_returns
-    mock_query_dos_db.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.side_effect = db_returns
+    mock_query_dos_db.return_value = mock_cursor
 
     expected_reprs = sorted(
         [
@@ -524,7 +548,7 @@ def test_get_services_from_db(mock_query_dos_db):
     # Act
     services = get_services_from_db([12, 14])
     actual_service_repr = [
-        repr(s) + repr(s._standard_opening_times) + "".join(repr(spectime) for spectime in s._specified_opening_times)
+        repr(s) + repr(s.standard_opening_times) + "".join(repr(spectime) for spectime in s.specified_opening_times)
         for s in services
     ]
 

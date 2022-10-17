@@ -4,7 +4,6 @@ from os import environ
 from unittest.mock import patch
 
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
-from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
 from pytest import fixture, mark, raises
 
 from application.slack_messenger.slack_messenger import (
@@ -14,6 +13,8 @@ from application.slack_messenger.slack_messenger import (
     send_msg_slack,
 )
 
+from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
+
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
 
@@ -21,9 +22,11 @@ FILE_PATH = "application.slack_messenger.slack_messenger"
 def lambda_context():
     @dataclass
     class LambdaContext:
+        """Mock LambdaContext - All dummy values"""
+
         function_name: str = "slack-messenger"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:slack-messenger"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:slack-messenger"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
@@ -202,12 +205,12 @@ def test_generate_cloudwatch_url():
     region = "eu-west-2"
     metric_name = "InvalidPostcode"
     report_key = METRIC_REPORT_KEY_MAP.get(metric_name, "")
-    log_groups = [f"{project_id}-event-processor"]
+    log_groups = [f"{project_id}-service-matcher"]
     filters = {"report_key": report_key}
     expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
     # Act
     url = generate_aws_cloudwatch_log_insights_url(region, log_groups, filters, 10)
     # Assert
     assert report_key == INVALID_POSTCODE_REPORT_ID
-    assert log_groups == ["test-service-name-event-processor"]
+    assert log_groups == ["test-service-name-service-matcher"]
     assert url.startswith(expected_url)

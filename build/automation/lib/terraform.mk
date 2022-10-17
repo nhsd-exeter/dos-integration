@@ -153,6 +153,10 @@ _terraform-stacks: ### Set up infrastructure for a given list of stacks - mandat
 	done
 
 _terraform-stack: ### Set up infrastructure for a single stack - mandatory: STACK=[name],CMD=[Terraform command]; optional: TERRAFORM_REINIT=false,PROFILE=[name]
+	if [ -d $(TERRAFORM_DIR)/common ]; then
+		make _terraform-remove-common STACK=$(STACK)
+		make _terraform-copy-common STACK=$(STACK)
+	fi
 	if [ -f $(TERRAFORM_DIR)/$(STACK)/terraform.tf ]; then
 		if [ "$(TERRAFORM_USE_STATE_STORE)" == false ]; then
 				sed -i 's/  backend "s3"/  #backend "s3"/g' $(TERRAFORM_DIR)/$(STACK)/terraform.tf
@@ -164,6 +168,9 @@ _terraform-stack: ### Set up infrastructure for a single stack - mandatory: STAC
 		make _terraform-reinitialise DIR="$(TERRAFORM_DIR)" STACK="$(STACK)"
 	fi
 	make docker-run-terraform DIR="$(TERRAFORM_DIR)/$(STACK)" CMD="$(CMD)"
+	if [ -d $(TERRAFORM_DIR)/common ]; then
+		make _terraform-remove-common STACK=$(STACK)
+	fi
 
 _terraform-reinitialise: ### Reinitialise infrastructure state - mandatory: STACK=[name]; optional: TERRAFORM_DO_NOT_REMOVE_STATE_FILE=true,PROFILE=[name]
 	[ "$(TERRAFORM_DO_NOT_REMOVE_STATE_FILE)" != true ] && rm -rf $(DIR)/$(STACK)/*terraform.tfstate*
@@ -197,6 +204,14 @@ _terraform-delete-state-lock: ### Delete Terraform state lock - mandatory: STACK
 			--table-name $(TERRAFORM_STATE_LOCK) \
 			--key '$$key' \
 		"
+
+# ==============================================================================
+
+_terraform-copy-common: # Copies all common terraform files to the desired stack - Mandatory: STACK - name of stack to copy common terraform file into
+	cp $(TERRAFORM_DIR)/common/common-*.tf $(TERRAFORM_DIR)/$(STACK)
+
+_terraform-remove-common: # Removes all common terraform files from the desired stack - Mandatory: STACK - name of stack to clean up common terraform file from
+	rm -f $(TERRAFORM_DIR)/$(STACK)/common-*.tf
 
 # ==============================================================================
 
@@ -277,4 +292,6 @@ terraform-check-module-versions: ### Check Terraform module versions alignment
 	terraform-export-variables-from-secret \
 	terraform-export-variables-from-shell \
 	terraform-output \
-	terraform-show
+	terraform-show \
+	terraform-copy-common \
+	terraform-remove-common

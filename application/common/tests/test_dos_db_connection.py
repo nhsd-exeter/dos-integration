@@ -1,56 +1,119 @@
-from os import environ, getenv
+from os import environ
 from unittest.mock import MagicMock, patch
 
-from ..dos_db_connection import _get_db_connection, _set_db_connection, disconnect_dos_db, query_dos_db
+from psycopg2.extras import DictCursor
+
+from ..dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, connection_to_db, query_dos_db
 
 FILE_PATH = "application.common.dos_db_connection"
 
+DB_SERVER = "test.db"
+DB_PORT = "5432"
+DB_NAME = "my-db"
+DB_SCHEMA = "db_schema"
+DB_USER = "my-user"
+DB_PASSWORD = "my-password"
 
+
+@patch(f"{FILE_PATH}.connection_to_db")
 @patch(f"{FILE_PATH}.get_secret")
-@patch("psycopg2.connect")
-def test_query_dos_db(mock_connect, mock_get_secret):
+def test_connect_to_dos_db_replica(mock_get_secret, mock_connection_to_db):
     # Arrange
-    environ["DB_SERVER"] = server = "test.db"
-    environ["DB_PORT"] = port = "5432"
-    environ["DB_NAME"] = db_name = "my-db"
-    environ["DB_SCHEMA"] = db_schema = "db_schema"
-    environ["DB_USER_NAME"] = db_user = "my-user"
-    environ["DB_SECRET_NAME"] = "my_secret_name"
-    environ["DB_SECRET_KEY"] = "my_secret_key"
-    mock_get_secret.return_value = {environ["DB_SECRET_KEY"]: "my-password"}
-    db_password = mock_get_secret.return_value[environ["DB_SECRET_KEY"]]
-    query = "SELECT * FROM my_table" + ("text filler" * 500)
-    vars = None
+    mock_get_secret.return_value = {"DB_REPLICA_SECRET_KEY": DB_PASSWORD}
+    environ["DB_REPLICA_SECRET_NAME"] = "my_secret_name"
+    environ["DB_REPLICA_SERVER"] = DB_SERVER
+    environ["DB_PORT"] = DB_PORT
+    environ["DB_NAME"] = DB_NAME
+    environ["DB_SCHEMA"] = DB_SCHEMA
+    environ["DB_READ_ONLY_USER_NAME"] = DB_USER
+    environ["DB_REPLICA_SECRET_KEY"] = "DB_REPLICA_SECRET_KEY"
     # Act
-    query_dos_db(query, vars)
-    # Assert
-    mock_connect.assert_called_with(
-        host=server,
-        port=port,
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        connect_timeout=30,
-        options=f"-c search_path=dbo,{db_schema}",
-        application_name=f"DI-Application <psycopg2> tid={getenv('_X_AMZN_TRACE_ID', default='<NO-TRACE-ID>')}",
+    with connect_to_dos_db_replica() as db_connection:
+        # Assert
+        assert db_connection is not None
+    mock_connection_to_db.assert_called_once_with(
+        server=DB_SERVER,
+        port=DB_PORT,
+        db_name=DB_NAME,
+        db_schema=DB_SCHEMA,
+        db_user=DB_USER,
+        db_password=DB_PASSWORD,
     )
-    mock_get_secret.assert_called_once_with(environ["DB_SECRET_NAME"])
-    assert _get_db_connection() is not None
     # Clean up
+    del environ["DB_REPLICA_SECRET_NAME"]
+    del environ["DB_REPLICA_SERVER"]
+    del environ["DB_PORT"]
+    del environ["DB_NAME"]
+    del environ["DB_SCHEMA"]
+    del environ["DB_READ_ONLY_USER_NAME"]
+    del environ["DB_REPLICA_SECRET_KEY"]
+
+
+@patch(f"{FILE_PATH}.connection_to_db")
+@patch(f"{FILE_PATH}.get_secret")
+def test_connect_to_dos_db(mock_get_secret, mock_connection_to_db):
+    # Arrange
+    mock_get_secret.return_value = {"DB_SECRET_KEY": DB_PASSWORD}
+    environ["DB_SECRET_NAME"] = "my_secret_name"
+    environ["DB_SERVER"] = DB_SERVER
+    environ["DB_PORT"] = DB_PORT
+    environ["DB_NAME"] = DB_NAME
+    environ["DB_SCHEMA"] = DB_SCHEMA
+    environ["DB_READ_AND_WRITE_USER_NAME"] = DB_USER
+    environ["DB_SECRET_KEY"] = "DB_SECRET_KEY"
+    # Act
+    with connect_to_dos_db() as db_connection:
+        # Assert
+        assert db_connection is not None
+    mock_connection_to_db.assert_called_once_with(
+        server=DB_SERVER,
+        port=DB_PORT,
+        db_name=DB_NAME,
+        db_schema=DB_SCHEMA,
+        db_user=DB_USER,
+        db_password=DB_PASSWORD,
+    )
+    # Clean up
+    del environ["DB_SECRET_NAME"]
     del environ["DB_SERVER"]
     del environ["DB_PORT"]
     del environ["DB_NAME"]
     del environ["DB_SCHEMA"]
-    del environ["DB_USER_NAME"]
-    del environ["DB_SECRET_NAME"]
+    del environ["DB_READ_AND_WRITE_USER_NAME"]
     del environ["DB_SECRET_KEY"]
 
 
-def test_disconnect_dos_db():
-    # Arrange
-    mock_db_connection = MagicMock()
-    _set_db_connection(mock_db_connection)
+@patch(f"{FILE_PATH}.connect")
+def test_connection_to_db(mock_connect):
     # Act
-    disconnect_dos_db()
+    connection_to_db(
+        server=DB_SERVER,
+        port=DB_PORT,
+        db_name=DB_NAME,
+        db_schema=DB_SCHEMA,
+        db_user=DB_USER,
+        db_password=DB_PASSWORD,
+    )
     # Assert
-    mock_db_connection.close.assert_called()
+    mock_connect.assert_called_with(
+        host=DB_SERVER,
+        port=DB_PORT,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        connect_timeout=2,
+        options=f"-c search_path=dbo,{DB_SCHEMA}",
+        application_name="DOS INTEGRATION <psycopg2>",
+    )
+
+
+def test_query_dos_db():
+    # Arrange
+    query = "SELECT * FROM my_table"
+    connection = MagicMock()
+    # Act
+    result = query_dos_db(connection, query)
+    # Assert
+    assert result == connection.cursor.return_value
+    connection.cursor.assert_called_once_with(cursor_factory=DictCursor)
+    connection.cursor.return_value.execute.assert_called_once_with(query, None)

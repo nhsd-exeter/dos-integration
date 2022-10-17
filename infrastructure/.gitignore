@@ -38,3 +38,7 @@ terraform.rc
 
 # For Checkov
 .external_modules
+
+# Common
+common-*.tf
+!stacks/common/*.tf

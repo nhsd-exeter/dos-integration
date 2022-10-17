@@ -88,6 +88,10 @@ devops-copy: ### Copy the DevOps automation toolchain scripts from this codebase
 			$(DIR)/build \
 			$(DIR)/documentation/adr \
 			$(DIR)/documentation/diagrams
+		# Clean up
+		rm -rf \
+			$(DIR)/documentation/CONTRIBUTING.md \
+			$(DIR)/documentation/ONBOARDING.md
 		# Library files
 		rsync -rav \
 			--include=build/ \
@@ -133,13 +137,13 @@ devops-copy: ### Copy the DevOps automation toolchain scripts from this codebase
 		)
 		# Project documentation
 		[ ! -f $(DIR)/README.md ] && cp -fv build/automation/lib/project/template/README.md $(DIR)
-		[ -f $(DIR)/TODO.md ] && mv -fv $(DIR)/TODO.md $(DIR)/documentation; [ ! -f $(DIR)/documentation/TODO.md ] && cp -fv build/automation/lib/project/template/documentation/TODO.md $(DIR)/documentation
+		[ -f $(DIR)/Todo.md ] && mv -fv $(DIR)/Todo.md $(DIR)/documentation; [ ! -f $(DIR)/documentation/Todo.md ] && cp -fv build/automation/lib/project/template/documentation/Todo.md $(DIR)/documentation
 		cp -fv build/automation/lib/project/template/documentation/adr/README.md $(DIR)/documentation/adr
 		[ ! -f $(DIR)/documentation/diagrams/C4model.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/C4model* $(DIR)/documentation/diagrams
 		[ ! -f $(DIR)/documentation/diagrams/Infrastructure.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/Infrastructure* $(DIR)/documentation/diagrams
 		[ ! -f $(DIR)/documentation/diagrams/DevOps.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/DevOps* $(DIR)/documentation/diagrams
-		[ ! -f $(DIR)/documentation/CONTRIBUTING.md ] && cp -fv build/automation/lib/project/template/documentation/CONTRIBUTING.md $(DIR)/documentation
-		[ ! -f $(DIR)/documentation/ONBOARDING.md ] && cp -fv build/automation/lib/project/template/documentation/ONBOARDING.md $(DIR)/documentation
+		[ ! -f $(DIR)/documentation/Contributing.md ] && cp -fv build/automation/lib/project/template/documentation/Contributing.md $(DIR)/documentation
+		[ ! -f $(DIR)/documentation/Onboarding.md ] && cp -fv build/automation/lib/project/template/documentation/Onboarding.md $(DIR)/documentation
 		# ---
 		make _devops-project-clean DIR=$(DIR)
 		# ---
@@ -207,6 +211,10 @@ devops-update devops-synchronise: ### Update/upgrade the DevOps automation toolc
 			$(PARENT_PROJECT_DIR)/build \
 			$(PARENT_PROJECT_DIR)/documentation/adr \
 			$(PARENT_PROJECT_DIR)/documentation/diagrams
+		# Clean up
+		rm -rf \
+			$(PARENT_PROJECT_DIR)/documentation/CONTRIBUTING.md \
+			$(PARENT_PROJECT_DIR)/documentation/ONBOARDING.md
 		# Library files
 		rsync -rav \
 			--include=build/ \
@@ -252,13 +260,13 @@ devops-update devops-synchronise: ### Update/upgrade the DevOps automation toolc
 		)
 		# Project documentation
 		[ ! -f $(PARENT_PROJECT_DIR)/README.md ] && cp -fv build/automation/lib/project/template/README.md $(PARENT_PROJECT_DIR)
-		[ -f $(PARENT_PROJECT_DIR)/TODO.md ] && mv -fv $(PARENT_PROJECT_DIR)/TODO.md $(PARENT_PROJECT_DIR)/documentation; [ ! -f $(PARENT_PROJECT_DIR)/documentation/TODO.md ] && cp -fv build/automation/lib/project/template/documentation/TODO.md $(PARENT_PROJECT_DIR)/documentation
+		[ -f $(PARENT_PROJECT_DIR)/Todo.md ] && mv -fv $(PARENT_PROJECT_DIR)/Todo.md $(PARENT_PROJECT_DIR)/documentation; [ ! -f $(PARENT_PROJECT_DIR)/documentation/Todo.md ] && cp -fv build/automation/lib/project/template/documentation/Todo.md $(PARENT_PROJECT_DIR)/documentation
 		cp -fv build/automation/lib/project/template/documentation/adr/README.md $(PARENT_PROJECT_DIR)/documentation/adr
 		[ ! -f $(PARENT_PROJECT_DIR)/documentation/diagrams/C4model.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/C4model* $(PARENT_PROJECT_DIR)/documentation/diagrams
 		[ ! -f $(PARENT_PROJECT_DIR)/documentation/diagrams/Infrastructure.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/Infrastructure* $(PARENT_PROJECT_DIR)/documentation/diagrams
 		[ ! -f $(PARENT_PROJECT_DIR)/documentation/diagrams/DevOps.drawio ] && cp -fv build/automation/lib/project/template/documentation/diagrams/DevOps* $(PARENT_PROJECT_DIR)/documentation/diagrams
-		[ ! -f $(PARENT_PROJECT_DIR)/documentation/CONTRIBUTING.md ] && cp -fv build/automation/lib/project/template/documentation/CONTRIBUTING.md $(PARENT_PROJECT_DIR)/documentation
-		[ ! -f $(PARENT_PROJECT_DIR)/documentation/ONBOARDING.md ] && cp -fv build/automation/lib/project/template/documentation/ONBOARDING.md $(PARENT_PROJECT_DIR)/documentation
+		[ ! -f $(PARENT_PROJECT_DIR)/documentation/Contributing.md ] && cp -fv build/automation/lib/project/template/documentation/Contributing.md $(PARENT_PROJECT_DIR)/documentation
+		[ ! -f $(PARENT_PROJECT_DIR)/documentation/Onboarding.md ] && cp -fv build/automation/lib/project/template/documentation/Onboarding.md $(PARENT_PROJECT_DIR)/documentation
 		# ---
 		make _devops-project-clean DIR=$(PARENT_PROJECT_DIR)
 		# ---

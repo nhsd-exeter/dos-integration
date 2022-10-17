@@ -1,8 +1,8 @@
 from typing import List
 
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
+
 from common.appconfig import AppConfig
-from common.change_event_exceptions import ValidationException
 from common.constants import (
     DENTIST_ORG_TYPE_ID,
     ORGANISATION_SUB_TYPES_KEY,
@@ -11,6 +11,7 @@ from common.constants import (
     SERVICE_TYPES_ALIAS_KEY,
     VALID_SERVICE_TYPES_KEY,
 )
+from common.errors import ValidationException
 
 logger = Logger(child=True)
 
@@ -38,7 +39,7 @@ def validate_organisation_type_id(org_type_id: str) -> None:
     Args:
         org_type_id (str): organisation type id
     """
-    app_config = AppConfig("event-processor")
+    app_config = AppConfig("service-matcher")
     feature_flags = app_config.get_feature_flags()
     in_accepted_org_types: bool = feature_flags.evaluate(
         name="accepted_org_types", context={"org_type": org_type_id}, default=False

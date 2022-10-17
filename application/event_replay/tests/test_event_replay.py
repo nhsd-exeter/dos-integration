@@ -5,7 +5,7 @@ from os import environ
 from typing import Any, Dict
 from unittest.mock import patch
 
-from aws_lambda_powertools import Logger
+from aws_lambda_powertools.logging import Logger
 from boto3.dynamodb.types import TypeSerializer
 from pytest import fixture, raises
 
@@ -29,9 +29,11 @@ def event() -> Dict[str, Any]:
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "cr-fifo-dlq-handler"
+        """Mock LambdaContext - All dummy values"""
+
+        function_name: str = "event-replay"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:cr-fifo-dlq-handler"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:event-replay"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
@@ -176,7 +178,7 @@ def test_send_change_event(mock_client, change_event, event):
     # Arrange
     correlation_id = "CORRELATION_ID"
     queue_name = "my-queue"
-    environ["FIFO_SQS_NAME"] = queue_name
+    environ["CHANGE_EVENT_SQS_NAME"] = queue_name
     queue_url = "https://sqs.eu-west-1.amazonaws.com/123456789/my-queue"
     mock_client().get_queue_url.return_value = {"QueueUrl": queue_url}
     # Act
@@ -194,4 +196,4 @@ def test_send_change_event(mock_client, change_event, event):
         },
     )
     # Clean up
-    del environ["FIFO_SQS_NAME"]
+    del environ["CHANGE_EVENT_SQS_NAME"]

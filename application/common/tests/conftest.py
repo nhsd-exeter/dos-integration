@@ -1,16 +1,17 @@
 import json
-from os import environ
+from dataclasses import dataclass
+from os import environ, path
+from pathlib import Path
 from random import choices, randint, uniform
 
 from boto3 import client
 from moto import mock_dynamodb
 from pytest import fixture
-from dataclasses import dataclass
+
 from ..dos import DoSLocation, DoSService
 from ..opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = "application/event_processor/tests/STANDARD_EVENT.json"
-
+STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
@@ -22,8 +23,8 @@ def dummy_dos_service(**kwargs) -> DoSService:
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
         test_data[col] = random_str
     dos_service = DoSService(test_data)
-    dos_service._standard_opening_times = StandardOpeningTimes()
-    dos_service._specified_opening_times = []
+    dos_service.standard_opening_times = StandardOpeningTimes()
+    dos_service.specified_opening_times = []
 
     for name, value in kwargs.items():
         if value is not None:
@@ -53,6 +54,7 @@ def dummy_dos_location() -> DoSLocation:
         postcode="".join(choices("01234567890ABCDEFGHIJKLM", k=6)),
         easting=randint(1111, 9999),
         northing=randint(1111, 9999),
+        postaltown="".join(choices("01234567890ABCDEFGHIJKLM", k=8)),
         latitude=uniform(-200.0, 200.0),
         longitude=uniform(-200.0, 200.0),
     )
@@ -135,9 +137,9 @@ def dead_letter_message():
 def lambda_context():
     @dataclass
     class LambdaContext:
-        function_name: str = "event-processor"
+        function_name: str = "service-matcher"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:event-processor"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:service-matcher"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

@@ -7,6 +7,9 @@ resource "aws_api_gateway_rest_api" "di_endpoint" {
   lifecycle {
     create_before_destroy = true
   }
+  tags = {
+    "PublicFacing" = "Yes"
+  }
 }
 
 resource "aws_api_gateway_rest_api_policy" "di_endpoint_policy" {
@@ -74,7 +77,7 @@ resource "aws_api_gateway_integration" "di_endpoint_integration" {
   rest_api_id             = aws_api_gateway_rest_api.di_endpoint.id
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:sqs:path/${var.aws_account_id}/${var.fifo_queue_name}"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:sqs:path/${var.aws_account_id}/${var.change_event_queue_name}"
   credentials             = aws_iam_role.di_endpoint_role.arn
   passthrough_behavior    = "NEVER"
   request_parameters = {
@@ -142,6 +145,9 @@ resource "aws_api_gateway_stage" "di_endpoint_stage" {
       }
     )
   }
+  tags = {
+    "PublicFacing" = "Yes"
+  }
 }
 
 resource "aws_api_gateway_usage_plan" "di_endpoint_usage_plan" {
@@ -150,6 +156,9 @@ resource "aws_api_gateway_usage_plan" "di_endpoint_usage_plan" {
   api_stages {
     api_id = aws_api_gateway_rest_api.di_endpoint.id
     stage  = aws_api_gateway_stage.di_endpoint_stage.stage_name
+  }
+  tags = {
+    "PublicFacing" = "Yes"
   }
 }
 

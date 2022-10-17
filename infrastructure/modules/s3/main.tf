@@ -1,14 +1,17 @@
+#tfsec:ignore:aws-s3-enable-bucket-logging
 module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "3.3.0"
+  version = "3.4.0"
   bucket  = var.name
   acl     = var.acl
 
   // S3 bucket-level Public Access Block configuration
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls                     = true
+  block_public_policy                   = true
+  ignore_public_acls                    = true
+  restrict_public_buckets               = true
+  attach_deny_insecure_transport_policy = true
+
 
   force_destroy = var.force_destroy
 
@@ -18,13 +21,7 @@ module "s3_bucket" {
     enabled = var.versioning_enabled
   }
 
-  server_side_encryption_configuration = {
-    rule = {
-      apply_server_side_encryption_by_default = {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
+  server_side_encryption_configuration = var.server_side_encryption_configuration
 
   lifecycle_rule = [{
     id      = "transition-to-infrequent-access-storage"

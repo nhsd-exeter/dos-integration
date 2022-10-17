@@ -40,140 +40,38 @@ provider:
       format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
   tracing:
     lambda: true
-    apiGateway: true
-  apiGateway:
-    usagePlan:
-      throttle:
-        rateLimit: 3
-        burstLimit: 5
-  endpointType: regional
-
-custom:
-  vpcDiscovery:
-  # Documentation - https://www.serverless.com/plugins/serverless-vpc-discovery
-    vpcName: '${env:AWS_VPC_NAME}'
-    subnets:
-      - tagKey: Name
-        tagValues:
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-          - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-    securityGroups:
-      - tagKey: Name
-        tagValues:
-          - '${env:TF_VAR_lambda_security_group_name}'
 
 plugins:
   - serverless-vpc-discovery
+  - serverless-plugin-ifelse
+
+custom:
+  serverlessIfElse:
+    - If: '"${env:AWS_ACCOUNT_NAME}" == "prod"'
+      Exclude:
+        - functions.dos-db-handler
+
 functions:
-  orchestrator:
-    image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
+  change-event-dlq-handler:
+    image: ${env:DOCKER_REGISTRY}/change-event-dlq-handler:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
-    description: ${sls:stage} Orchestrator
-    memorySize: 128
-    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins?)
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
-    maximumRetryAttempts: 0 #???
-    reservedConcurrency: 1 # ensure only one orchestrator running at a time
-    events:
-      - schedule: rate(1 minute)
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      RUN_FOR: 280
-      SLEEP_FOR_WHEN_OPEN: 10
-      CIRCUIT: DOS_API_GATEWAY
-      EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-event-sender
-      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-
-  event-processor:
-    image: ${env:DOCKER_REGISTRY}/event-processor:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-event-processor
-    description: ${sls:stage} Event Processor lambda
-    memorySize: 192
-    timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_processor_role_name}
-    maximumRetryAttempts: 0
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      DB_SERVER: ${env:DB_SERVER}
-      DB_PORT: ${env:DB_PORT}
-      DB_NAME: ${env:DB_NAME}
-      DB_SCHEMA: ${env:DB_SCHEMA}
-      DB_USER_NAME: ${env:DB_USER_NAME}
-      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
-      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-
-  fifo-dlq-handler:
-    image: ${env:DOCKER_REGISTRY}/fifo-dlq-handler:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-fifo-dlq-handler
-    description: ${sls:stage} FIFO DLQ Handler lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-change-event-dlq-handler
+    description: ${sls:stage} Change Event DLQ Handler lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_fifo_dlq_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_change_event_dlq_handler_role_name}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
 
-  event-sender:
-    image: ${env:DOCKER_REGISTRY}/event-sender:${env:VERSION}
+  dos-db-update-dlq-handler:
+    image: ${env:DOCKER_REGISTRY}/dos-db-update-dlq-handler:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-event-sender
-    description: ${sls:stage} Event Sender lambda
-    memorySize: 512
-    timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_sender_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      DOS_API_GATEWAY_SECRETS: ${env:DOS_API_GATEWAY_SECRETS}
-      DOS_API_GATEWAY_USERNAME_KEY: ${env:DOS_API_GATEWAY_USERNAME_KEY}
-      DOS_API_GATEWAY_PASSWORD_KEY: ${env:DOS_API_GATEWAY_PASSWORD_KEY}
-      DOS_API_GATEWAY_REQUEST_TIMEOUT: ${env:DOS_API_GATEWAY_REQUEST_TIMEOUT}
-      DOS_API_GATEWAY_URL: ${env:DOS_API_GATEWAY_URL}
-      CR_QUEUE_URL: ${env:cr_fifo_queue_url}
-      CR_DLQ_URL: ${env:cr_dlq_queue_url}
-      CIRCUIT: DOS_API_GATEWAY
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-    maximumRetryAttempts: 0
-
-  slack-messenger:
-    image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
-    description: ${sls:stage} Slack Messenger lambda
-    memorySize: 128
-    timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
-    environment:
-      SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
-      SLACK_ALERT_CHANNEL: ${env:SLACK_ALERT_CHANNEL}
-    events:
-      - sns:
-          arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack}
-
-  cr-fifo-dlq-handler:
-    image: ${env:DOCKER_REGISTRY}/cr-fifo-dlq-handler:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-cr-fifo-dlq-handler
-    description: ${sls:stage} cr-fifo DLQ Handler lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-dos-db-update-dlq-handler
+    description: ${sls:stage} DoS DB Update DLQ Handler lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_cr_fifo_dlq_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_update_dlq_handler_role_name}
     maximumRetryAttempts: 0
 
   event-replay:
@@ -184,34 +82,169 @@ functions:
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_replay_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      FIFO_SQS_NAME: ${env:TF_VAR_fifo_queue_name}
+      CHANGE_EVENT_SQS_NAME: ${env:TF_VAR_change_event_queue_name}
     maximumRetryAttempts: 0
 
-  test-db-checker-handler:
-    image: ${env:DOCKER_REGISTRY}/test-db-checker-handler:${env:VERSION}
+  orchestrator:
+    image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-test-db-checker-handler
-    description: ${sls:stage} Test DB Checker Handler lambda
+    name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
+    description: ${sls:stage} Orchestrator
+    memorySize: 128
+    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins)
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
+    maximumRetryAttempts: 0
+    reservedConcurrency: 1 # ensure only one orchestrator running at a time
+    events:
+      - schedule: rate(1 minute)
+    environment:
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      CIRCUIT: DOS_DATABASE
+      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
+      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
+      EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-service-sync
+      RUN_FOR: 280
+      SLEEP_FOR_WHEN_OPEN: 2
+
+  service-matcher:
+    image: ${env:DOCKER_REGISTRY}/service-matcher:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-service-matcher
+    description: ${sls:stage} Service Matcher lambda
+    memorySize: 192
+    timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_matcher_role_name}
+    maximumRetryAttempts: 0
+    environment:
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
+      DB_NAME: ${env:DB_NAME}
+      DB_PORT: ${env:DB_PORT}
+      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
+      DB_REPLICA_SECRET_KEY: ${env:DB_REPLICA_SECRET_KEY}
+      DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
+      DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
+      DB_SCHEMA: ${env:DB_SCHEMA}
+    vpcDiscovery:
+      vpcName: '${env:AWS_VPC_NAME}'
+      subnets:
+        - tagKey: Name
+          tagValues:
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+      securityGroups:
+        - tagKey: Name
+          tagValues:
+            - '${env:TF_VAR_lambda_security_group_name}'
+
+  service-sync:
+    image: ${env:DOCKER_REGISTRY}/service-sync:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-service-sync
+    description: ${sls:stage} Service Sync lambda
+    memorySize: 512
+    timeout: 20
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_sync_role_name}
+    environment:
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+      CIRCUIT: DOS_DATABASE
+      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
+      DB_NAME: ${env:DB_NAME}
+      DB_PORT: ${env:DB_PORT}
+      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
+      DB_REPLICA_SECRET_KEY: ${env:DB_REPLICA_SECRET_KEY}
+      DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
+      DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
+      DB_SERVER: ${env:DB_SERVER}
+      DB_SCHEMA: ${env:DB_SCHEMA}
+      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
+      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
+      SEND_EMAIL_BUCKET_NAME: ${env:SEND_EMAIL_BUCKET_NAME}
+      TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
+      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
+      SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
+    maximumRetryAttempts: 0
+    vpcDiscovery:
+      vpcName: '${env:AWS_VPC_NAME}'
+      subnets:
+        - tagKey: Name
+          tagValues:
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+      securityGroups:
+        - tagKey: Name
+          tagValues:
+            - '${env:TF_VAR_lambda_security_group_name}'
+
+  slack-messenger:
+    image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
+    description: ${sls:stage} Slack Messenger lambda
+    memorySize: 128
+    timeout: 10
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role_name}
+    environment:
+      SLACK_ALERT_CHANNEL: ${env:SLACK_ALERT_CHANNEL}
+      SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
+    events:
+      - sns:
+          arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack}
+
+  send-email:
+    image: ${env:DOCKER_REGISTRY}/send-email:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-send-email
+    description: ${sls:stage} Send Email lambda
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_test_db_checker_handler_role_name}
-    tags:
-      PYTHON_VERSION: ${env:SERVERLESS_PYTHON_VERSION_TAG}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
     environment:
-      DB_SERVER: ${env:DB_SERVER}
-      DB_PORT: ${env:DB_PORT}
+      AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
+      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
+      EMAIL_SECRET_NAME : ${env:PROJECT_EMAIL_SECRET_NAME}
+    maximumRetryAttempts: 2
+
+  dos-db-handler:
+    image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-dos-db-handler
+    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in NonProd
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role_name}
+    environment:
       DB_NAME: ${env:DB_NAME}
+      DB_PORT: ${env:DB_PORT}
+      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
+      DB_REPLICA_SECRET_KEY: ${env:DB_REPLICA_SECRET_KEY}
+      DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
+      DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
+      DB_SERVER: ${env:DB_SERVER}
       DB_SCHEMA: ${env:DB_SCHEMA}
-      DB_USER_NAME: ${env:DB_USER_NAME}
-      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
       DB_SECRET_KEY: ${env:DB_SECRET_KEY}
+      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
     maximumRetryAttempts: 0
+    vpcDiscovery:
+      vpcName: '${env:AWS_VPC_NAME}'
+      subnets:
+        - tagKey: Name
+          tagValues:
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+      securityGroups:
+        - tagKey: Name
+          tagValues:
+            - '${env:TF_VAR_lambda_security_group_name}'
 
 resources:
   Conditions:
     CreateNonProdResources:
-      !Not [!Equals ["${sls:stage}", live]]
+      !Not [!Equals ["${env:AWS_ACCOUNT_NAME}", prod]]

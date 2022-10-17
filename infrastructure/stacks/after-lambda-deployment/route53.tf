@@ -14,6 +14,9 @@ resource "aws_api_gateway_domain_name" "api_gateway_domain_name" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+  tags = {
+    "PublicFacing" = "Yes"
+  }
 }
 
 resource "aws_route53_record" "uec_dos_integration_api_endpoint" {

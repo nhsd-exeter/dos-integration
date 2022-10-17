@@ -1,9 +1,11 @@
 from json import loads
+from os import environ
 
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
+from pytest import mark, raises
 
-from pytest import raises, mark
 from ..utilities import (
+    add_metric,
     extract_body,
     get_sequence_number,
     get_sqs_msg_attribute,
@@ -26,7 +28,7 @@ def test_extract_body():
 
 def test_extract_body_exception():
     # Arrange
-    expected_change_event = {"test": "test"}
+    expected_change_event = "test"
     # Act & Assert
     with raises(Exception):
         extract_body(expected_change_event)
@@ -104,17 +106,32 @@ def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
 
 
-@mark.parametrize("input_dict,keys_tobe_removed,msg_limit,expected", [
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
-    ({"Name": "John", "Address": ["2", "4"], "Age": 34}, [""], 20, {"Name": "John", "Address": ["2", "4"], "Age": 34}),
-    ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34})
-    ])
+@mark.parametrize(
+    "input_dict,keys_tobe_removed,msg_limit,expected",
+    [
+        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
+        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
+        (
+            {"Name": "John", "Address": ["2", "4"], "Age": 34},
+            [""],
+            20,
+            {"Name": "John", "Address": ["2", "4"], "Age": 34},
+        ),
+        ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34}),
+    ],
+)
 def test_remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit, expected):
     event = remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit)
-    assert (
-        event == expected
-    ), f"Change event should be {expected} but is {event}"
+    assert event == expected, f"Change event should be {expected} but is {event}"
+
+
+def test_add_metric():
+    # Arrange
+    environ["ENV"] = "test"
+    # Act
+    add_metric("test_metric")
+    # Cleanup
+    del environ["ENV"]
 
 
 SQS_EVENT = {

@@ -1,4 +1,4 @@
-SONAR_SCANNER_CLI_VERSION = 4.6
+SONAR_SCANNER_CLI_VERSION = 4.7
 
 sonar-scanner-cli: ### Run Sonar scanner CLI- mandatory: SONAR_HOST_TOKEN; optional: SONAR_HOST_URL=[defaults to 'https://sonarcloud.io'],SONAR_EXCLUSIONS=[e.g. '**/*.java'],SONAR_ARGS
 	make docker-run-sonar-scanner-cli CMD=" \

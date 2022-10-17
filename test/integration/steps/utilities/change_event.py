@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
 from random import randrange
+from typing import Any, Dict, List
 
 
 @dataclass(repr=True)

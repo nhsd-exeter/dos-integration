@@ -4,48 +4,66 @@ from copy import copy
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
-from os import getenv
+from os import environ, getenv
 from random import randint
 from time import sleep
-from dateutil.relativedelta import relativedelta
 
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
-from .utilities.aws import get_logs, negative_log_check
 from .utilities.change_event_builder import (
-    ChangeEventBuilder,
     build_same_as_dos_change_event,
+    ChangeEventBuilder,
     set_opening_times_change_event,
     valid_change_event,
 )
+from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
+from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
-    check_contact_delete_in_dos,
+    add_new_standard_open_day,
+    assert_standard_closing,
+    assert_standard_openings,
+    check_pending_service_is_rejected,
     check_received_data_in_dos,
-    check_specified_received_opening_times_date_in_dos,
-    check_specified_received_opening_times_time_in_dos,
-    check_standard_received_opening_times_time_in_dos,
+    check_service_history,
+    check_service_history_change_type,
     confirm_approver_status,
     confirm_changes,
+    convert_specified_opening,
+    convert_standard_opening,
+    create_pending_change_for_service,
     generate_correlation_id,
     generate_random_int,
+    get_address_string,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
-    get_changes,
+    get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
+    get_locations_table_data,
     get_odscode_with_contact_data,
+    get_s3_email_file,
+    get_service_history,
+    get_service_history_specified_opening_times,
+    get_service_history_standard_opening_times,
     get_service_id,
-    get_service_type_data,
-    get_service_type_from_cr,
+    get_service_table_field,
+    get_service_uid,
+    get_services_table_location_data,
     get_stored_events_from_dynamo_db,
+    post_to_change_event_dlq,
+    post_ur_fifo,
+    post_ur_sqs,
     process_change_request_payload,
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
     remove_opening_days,
-    time_to_sec,
+    service_history_negative_check,
+    service_not_updated,
+    slack_retry,
+    wait_for_service_update,
 )
 
 scenarios(
@@ -59,38 +77,39 @@ scenarios(
 FAKER = Faker("en_GB")
 
 
-@given(parse('a Changed Event with changed "{contact}" is valid'), target_fixture="context")
+@given(parse('the "{contact}" is changed and is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact: str, context: Context):
-    context.change_event = ChangeEventBuilder("pharmacy").build_change_event_from_default()
     validated = False
-    while validated is False:
-        match contact:
+    while not validated:
+        match contact.lower():
             case "website":
+                context.previous_value = context.change_event.website
                 context.change_event.website = FAKER.domain_word() + ".nhs.uk"
             case "phone_no":
+                context.previous_value = context.change_event.phone
                 context.change_event.phone = FAKER.phone_number()
             case "address":
+                context.previous_value = get_address_string(context.change_event)
                 context.change_event.address_line_1 = FAKER.street_name()
             case _:
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
-
         validated = valid_change_event(context.change_event)
     return context
 
 
-@given(parse('a Changed Event with a "{data}" value for "{contact_field}"'), target_fixture="context")
-def a_valid_changed_event_with_empty_contact(data, contact_field, context: Context):
+@given(parse('a Changed Event with a "{value}" value for "{field}"'), target_fixture="context")
+def a_valid_changed_event_with_empty_contact(value, field, context: Context):
     def get_value_from_data():
 
-        match data:
+        match value:
             case "None":
                 return None
             case "''":
                 return ""
             case _:
-                return data
+                return value
 
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     context.change_event.organisation_name = f"Test Service {get_value_from_data()}"
     context.change_event.website = None
     context.change_event.phone = None
@@ -100,15 +119,13 @@ def a_valid_changed_event_with_empty_contact(data, contact_field, context: Conte
         context.correlation_id = f"{run_id}_{unique_key}_contact_data_alignment_run"
     context.response = process_payload(context.change_event, True, context.correlation_id)
     assert confirm_approver_status(context.correlation_id) != []
-    match contact_field:
+    match field.lower():
         case "website":
             context.change_event.website = get_value_from_data()
         case "phone_no":
             context.change_event.phone = get_value_from_data()
-        case "organisation_name":
-            context.change_event.organisation_name = get_value_from_data()
         case _:
-            raise ValueError(f"ERROR!.. Input parameter '{contact_field}' not compatible")
+            raise ValueError(f"ERROR!.. Input parameter '{field}' not compatible")
     context.correlation_id = None
     return context
 
@@ -119,37 +136,25 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
+@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+def post_an_sqs_message(queue_type: str, context: Context):
+    match queue_type.lower():
+        case "change event dlq":
+            post_to_change_event_dlq(context)
+        case "update request dlq":
+            post_ur_sqs()
+        case "update request failure":
+            post_ur_fifo()
+        case _:
+            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+
+
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")
 def a_specified_opening_time_change_event_is_valid(context: Context):
     closing_time = datetime.datetime.now().time().strftime("%H:%M")
     context.change_event = set_opening_times_change_event("pharmacy")
     context.change_event.specified_opening_times[-1]["OpeningTime"] = "00:01"
     context.change_event.specified_opening_times[-1]["ClosingTime"] = closing_time
-    context.change_event.specified_opening_times[-1]["IsOpen"] = True
-    return context
-
-
-@given("a specified multiple opening time Changed Event is valid", target_fixture="context")
-def a_specified_multiple_opening_time_change_event_is_valid(context: Context):
-    context.change_event = set_opening_times_change_event("pharmacy")
-    date = dt.today() + relativedelta(months=1)
-    context.change_event.specified_opening_times.append(
-        {
-            "Weekday": "",
-            "OpeningTime": "",
-            "ClosingTime": "",
-            "OffsetOpeningTime": 0,
-            "OffsetClosingTime": 0,
-            "OpeningTimeType": "Additional",
-            "AdditionalOpeningDate": date.strftime("%b %d %Y"),
-            "IsOpen": False,
-        }
-    )
-    context.change_event.specified_opening_times[-2]["OpeningTime"] = "09:00"
-    context.change_event.specified_opening_times[-2]["ClosingTime"] = "14:00"
-    context.change_event.specified_opening_times[-1]["OpeningTime"] = "15:00"
-    context.change_event.specified_opening_times[-1]["ClosingTime"] = "20:00"
-    context.change_event.specified_opening_times[-2]["IsOpen"] = True
     context.change_event.specified_opening_times[-1]["IsOpen"] = True
     return context
 
@@ -165,27 +170,66 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
     return context
 
 
-@given(parse('a "{org_type}" Changed Event is aligned with Dos'), target_fixture="context")
+@given("a pending entry exists in the changes table for this service", target_fixture="context")
+def change_table_entry_creation_for_service(context: Context):
+    service_id = get_service_id(context.change_event.odscode)
+    service_uid = get_service_uid(service_id)
+    context.service_uid = service_uid[0][0]
+    create_pending_change_for_service(service_id)
+    return context
+
+
+@given(parse('the Changed Event has an "{update_type}" standard opening'), target_fixture="context")
+def dos_event_standard_opening_time_change(update_type: str, context: Context):
+    match update_type:
+        case "added":
+            context.change_event.standard_opening_times = add_new_standard_open_day(
+                context.change_event.standard_opening_times
+            )
+        case "modified":
+            context.change_event.standard_opening_times[0]["OpeningTime"] = "00:15"
+            context.change_event.standard_opening_times[0]["ClosingTime"] = "00:45"
+        case "removed":
+            context.change_event.standard_opening_times[0]["IsOpen"] = False
+            context.change_event.standard_opening_times[0]["OpeningTime"] = ""
+            context.change_event.standard_opening_times[0]["ClosingTime"] = ""
+            if (
+                context.change_event.standard_opening_times[0]["Weekday"]
+                == context.change_event.standard_opening_times[1]["Weekday"]
+            ):
+                del context.change_event.standard_opening_times[1]
+        case _:
+            raise ValueError("ERROR: Invalid standard opening time type defined")
+    return context
+
+
+@given(parse('a "{org_type}" Changed Event is aligned with DoS'), target_fixture="context")
 def dos_event_from_scratch(org_type: str, context: Context):
-    if org_type.lower() in ["pharmacy", "dentist"]:
-        context.change_event = build_same_as_dos_change_event(org_type)
-        return context
-    else:
+    if org_type.lower() not in {"pharmacy", "dentist"}:
         raise ValueError(f"Invalid event type '{org_type}' provided")
+    context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    return context
 
 
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")
 def a_change_event_is_valid_with_contact_set(contact: str, context: Context):
-    context.change_event = ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
-        get_odscode_with_contact_data()
-    )
-    match contact.lower():
-        case "website":
-            context.change_event.website = None
-        case "phone":
-            context.change_event.phone = None
-        case _:
-            raise ValueError(f"Invalid contact '{contact}' provided")
+    for _ in range(5):
+        context.change_event, context.service_id = ChangeEventBuilder("pharmacy").build_same_as_dos_change_event_by_ods(
+            get_odscode_with_contact_data()
+        )
+        match contact.lower():
+            case "website":
+                if context.change_event.website is None or context.change_event.website == "":
+                    continue
+                context.previous_value = context.change_event.website
+                context.change_event.website = None
+            case "phone":
+                if context.change_event.phone is None or context.change_event.phone == "":
+                    continue
+                context.previous_value = context.change_event.phone
+                context.change_event.phone = None
+            case _:
+                raise ValueError(f"Invalid contact '{contact}' provided")
     return context
 
 
@@ -200,7 +244,7 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
         "AdditionalOpeningDate": selected_date,
         "IsOpen": False,
     }
-    context.change_event.specified_opening_times.append(additional_date)
+    context.change_event.specified_opening_times.insert(0, additional_date)
     return context
 
 
@@ -208,13 +252,26 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
 def generic_event_config(context: Context, field: str, value: str):
     match field.lower():
         case "website":
+            context.previous_value = context.change_event.website
             context.change_event.website = value
         case "phone":
+            context.previous_value = context.change_event.phone
             context.change_event.phone = value
         case "odscode":
+            context.previous_value = context.change_event.odscode
             context.change_event.odscode = value
         case "postcode":
+            context.previous_value = context.change_event.postcode
             context.change_event.postcode = value
+        case "address":
+            context.previous_value = get_address_string(context.change_event)
+            context.change_event.address_line_1 = value
+            context.change_event.address_line_2 = None
+            context.change_event.address_line_3 = None
+            context.change_event.city = None
+            context.change_event.county = None
+        case "organisationname":
+            context.change_event.organisation_name = value
         case "organisationstatus":
             context.change_event.organisation_status = value
         case "organisationtypeid":
@@ -375,10 +432,9 @@ def change_event_same_dual(context: Context, opening_type):
     return context
 
 
-# Check that the requested ODS code exists in ddb, and create an entry if not
 @given("an ODS has an entry in dynamodb", target_fixture="context")
 def current_ods_exists_in_ddb(context: Context):
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     odscode = context.change_event.odscode
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
@@ -389,9 +445,20 @@ def current_ods_exists_in_ddb(context: Context):
 
 @given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
 def a_changed_url_event_is_valid(url: str, context: Context):
-    context.change_event = build_same_as_dos_change_event("pharmacy")
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
     context.change_event.website = url
     context.change_event.postcode = "NG5 2JJ"
+    return context
+
+
+@given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
+def a_changed_address_event_is_valid(address: str, context: Context):
+    context.change_event, context.service_id = build_same_as_dos_change_event("pharmacy")
+    context.change_event.address_line_1 = address
+    context.change_event.address_line_2 = None
+    context.change_event.address_line_3 = None
+    context.change_event.city = None
+    context.change_event.county = None
     return context
 
 
@@ -502,17 +569,6 @@ def stored_dynamo_db_events_are_pulled(context: Context):
     return context
 
 
-@then("the exception is reported to cloudwatch", target_fixture="context")
-def service_exception(context: Context):
-    query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        ' | filter level="ERROR"'
-    )
-    logs = get_logs(query, "processor", context.start_time)
-    assert logs != [], "ERROR!!.. Expected exception not logged."
-    return context
-
-
 @then("the OpeningTimes exception is reported to cloudwatch")
 def openingtimes_service_exception(context: Context):
     query = (
@@ -523,14 +579,14 @@ def openingtimes_service_exception(context: Context):
     assert "opening_dates" not in logs, "ERROR!!.. Expected OpeningTimes exception not captured."
 
 
-@then(parse("the {address} from the changes is not included in the change request"))
-def address_change_is_discarded_in_event_sender(context: Context, address: str):
-    query = (
-        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        '| filter message like "Attempting to send change request to DoS"'
-    )
-    logs = get_logs(query, "sender", context.start_time)
-    assert f"{address}" not in logs, "ERROR!!.. Unexpected Address change found in logs."
+@then(parse('the "{plain_english_service_table_field}" has not been changed in DoS'))
+def field_is_not_updated_in_dos(context: Context, plain_english_service_table_field: str):
+    sleep(120)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    assert (
+        field_data == context.previous_value
+    ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data - It has changed from expected value, expected: {context.previous_value}, actual: {field_data}"  # noqa: E501
 
 
 @then("the processed Changed Request is sent to Dos", target_fixture="context")
@@ -561,57 +617,124 @@ def the_changed_event_is_not_processed(context: Context):
     assert f"{cr_received_search_param}" not in logs, "ERROR!!.. expected exception logs not found."
 
 
-@then("the Changed Request is accepted by Dos")
-def the_changed_request_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    response = confirm_changes(context.correlation_id)
-    assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
-    return context
+# @then("Changes are saved into DoS DB")
+# def changes_are_saved_into_dos_db(context: Context):
+#     """assert dos API response and validate processed record in Dos CR Queue database"""
+#     assert_service_updated(context.service_id)
+#     response = confirm_changes(context.correlation_id)
+#     assert response != [], "ERROR!!.. Expected Event confirmation in Dos not found."
+#     return context
 
 
-@then(parse('the Changed Request is accepted by Dos with "{contact}" deleted'))
-def the_changed_request_is_accepted_by_dos_with_contact_delete(context: Context, contact):
-    service_id = get_service_id(context.correlation_id)
-    approver_status = confirm_approver_status(context.correlation_id)
-    match contact:
-        case "phone":
-            cms = "cmstelephoneno"
-        case "website":
-            cms = "cmsurl"
-        case _:
-            raise ValueError(f"Invalid contact provided: '{contact}'")
-    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
-    response = check_contact_delete_in_dos(context.correlation_id, cms)
-    assert response is True, "ERROR!!.. Expected Event confirmation in Dos not found."
-    return context
-
-
-@then(parse('the Changed Request with formatted "{expected_url}" is captured by Dos'))
-def the_changed_web_address_is_accepted_by_dos(context: Context, expected_url: str):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    cms = "cmsurl"
-    correlation_id = context.correlation_id.replace("/", r"\/")
+@then(parse('DoS has "{expected_data}" in the "{plain_english_service_table_field}" field'))
+def expected_data_is_within_dos(context: Context, expected_data: str, plain_english_service_table_field: str):
+    """Assert DoS demographics data is updated"""
+    wait_for_service_update(context.service_id)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    if plain_english_service_table_field in ["easting", "northing"]:
+        expected_data = int(expected_data)
+    elif plain_english_service_table_field in ["latitude", "longitude"]:
+        expected_data = float(expected_data)
     assert (
-        check_received_data_in_dos(correlation_id, cms, expected_url) is True
-    ), f"ERROR!.. Dos not updated with web address change: {expected_url}"
+        field_data == expected_data
+    ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data, expected: {expected_data}, actual: {field_data}"  # noqa: E501
 
 
-@then(parse("the Change is included in the Change request"))
-def change_is_included_in_event_sender(context: Context):
-    if "/" in context.correlation_id:
-        context.correlation_id = context.correlation_id.replace("/", r"\/")
-    query = (
-        f'fields change_request_body | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        '| filter message like "Successfully send change request to DoS"'
+@then(parse('the "{plain_english_service_table_field}" is updated within the DoS DB'))
+def check_the_service_table_field_has_updated(context: Context, plain_english_service_table_field: str):
+    """TODO"""
+    wait_for_service_update(context.service_id)
+    field_name = get_service_table_field_name(plain_english_service_table_field)
+    field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
+    expected_value = get_expected_data(context, plain_english_service_table_field)
+    expected_value = expected_value if expected_value is not None else ""
+    assert field_data == expected_value, (
+        f"ERROR!!.. Expected {plain_english_service_table_field} not found in Dos DB., "
+        f"expected: {expected_value}, found: {field_data}"
     )
-    logs = get_logs(query, "sender", context.start_time)
-    assert logs != [], "ERROR!!.. Expected Change not found in logs."
+    return context
 
 
-@then(parse('the Changed Request with changed "{contact}" is captured by Dos'))
-def the_changed_contact_is_accepted_by_dos(context: Context, contact):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    match contact:
+@then(parse('the service history is updated with the "{plain_english_service_table_field}"'))
+def check_the_service_history_has_updated(context: Context, plain_english_service_table_field: str):
+    """TODO"""
+    expected_data = get_expected_data(context, plain_english_service_table_field)
+    check_service_history(
+        service_id=context.service_id,
+        plain_english_field_name=plain_english_service_table_field,
+        expected_data=expected_data,
+        previous_data=context.previous_value,
+    )
+    return context
+
+
+@then(parse('the service history is updated with the "{added_or_removed}" specified opening times'))
+def check_service_history_specified_times(context: Context, added_or_removed):
+    match added_or_removed:
+        case "added":
+            change_type = "add"
+        case "removed":
+            change_type = "remove"
+        case "closed":
+            change_type = "add"
+        case _:
+            raise ValueError("Invalid change type has been provided")
+    if change_type == "add":
+        openingtimes = context.change_event.specified_opening_times[-1]
+    if change_type == "remove":
+        openingtimes = context.other
+    dos_times = get_service_history_specified_opening_times(context.service_id)
+    changed_dates = dos_times["data"][change_type]
+    if added_or_removed == "closed":
+        expected_dates = convert_specified_opening(openingtimes, True)
+    else:
+        expected_dates = convert_specified_opening(openingtimes)
+    assert expected_dates in changed_dates, f"{expected_dates}"
+    return context
+
+
+@then(parse('the service history is updated with the "{added_or_removed}" standard opening times'))
+def check_service_history_standard_times(context: Context, added_or_removed):
+    sleep(10)
+    openingtimes = context.change_event.standard_opening_times
+    dos_times = get_service_history_standard_opening_times(context.service_id)
+    expected_dates = convert_standard_opening(openingtimes)
+    counter = 0
+    strict_checks = False
+    if "f006s012" in environ.get("PYTEST_CURRENT_TEST"):
+        strict_checks = True
+    if added_or_removed == "added":
+        counter = assert_standard_openings("add", dos_times, expected_dates, strict_checks)
+    elif added_or_removed == "modified":
+        counter = assert_standard_openings("modify", dos_times, expected_dates, strict_checks)
+    else:
+        counter = assert_standard_closing(dos_times, expected_dates)
+    if counter == 0:
+        raise ValueError("ERROR: No Assertions have been made")
+    return context
+
+
+@then(parse("the service history is not updated"))
+def check_service_history_not_updated(
+    context: Context,
+):
+    service_history_status = service_history_negative_check(context.service_id)
+    assert service_history_status == "Not Updated", "ERROR: Service history was unexpectedly updated"
+    return context
+
+
+@then(parse('the service history shows change type is "{change_type}"'))
+def check_service_history_for_change_type(context: Context, change_type: str):
+    change_status = check_service_history_change_type(context.service_id, change_type)
+    assert change_status == "Change type matches", f"ERROR: Expected {change_type} but {change_status}"
+    return context
+
+
+@then(parse("the Last Updated Date is updated within the DoS DB"))
+def check_the_last_updated_date_has_updated(context: Context, service_table_field: str):
+    """TODO"""
+    match service_table_field.lower():
         case "phone_no":
             cms = "cmstelephoneno"
             changed_data = context.change_event.phone
@@ -620,18 +743,21 @@ def the_changed_contact_is_accepted_by_dos(context: Context, contact):
             changed_data = context.change_event.website
         case "address":
             cms = "postaladdress"
-            changed_data = context.change_event.address_line_1
+            changed_data = str(context.change_event.address_line_1).title()
+        case "postcode":
+            cms = "cmspostcode"
+            changed_data = context.change_event.postcode
         case _:
-            raise ValueError(f"Error!.. Input parameter '{contact}' not compatible")
+            raise ValueError(f"Error!.. Input parameter '{service_table_field}' not compatible")
     assert (
         check_received_data_in_dos(context.correlation_id, cms, changed_data) is True
-    ), f"ERROR!.. Dos not updated with {contact} change: {changed_data}"
+    ), f"ERROR!.. Dos not updated with {service_table_field} change: {changed_data}"
 
 
 @then(parse('the Changed Event with changed "{field}" is not captured by Dos'))
 def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
     """assert dos API response and validate processed record in Dos CR Queue database"""
-    match field:
+    match field.lower():
         case "phone_no":
             cms = "cmstelephoneno"
             changed_data = context.change_event.phone
@@ -648,50 +774,35 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
     ), f"ERROR!.. Dos incorrectly updated with {field} change: {changed_data}"
 
 
-@then("the Changed Request with changed specified date and time is captured by Dos")
-def the_changed_opening_date_time_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
-    closing_time = time_to_sec(context.change_event.specified_opening_times[-1]["ClosingTime"])
-    changed_time = f"{open_time}-{closing_time}"
+@then("the DoS service has been updated with the specified date and time is captured by DoS")
+def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_captured_by_dos(context: Context):
+    context.service_id = get_service_id(context.change_event.odscode)
+    wait_for_service_update(context.service_id)
+    opening_time = context.change_event.specified_opening_times[-1]["OpeningTime"]
+    closing_time = context.change_event.specified_opening_times[-1]["ClosingTime"]
     changed_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
-    cms = "cmsopentimespecified"
-    approver_status = confirm_approver_status(context.correlation_id)
-    assert approver_status != [], f"Error!.. Dos Change for correlation id: {context.correlation_id} not COMPLETED"
-    assert (
-        check_specified_received_opening_times_date_in_dos(context.correlation_id, cms, changed_date) is True
-    ), f"ERROR!.. Dos not updated with change: {changed_date}"
-    assert (
-        check_specified_received_opening_times_time_in_dos(context.correlation_id, cms, changed_time) is True
-    ), f"ERROR!.. Dos not updated with change: {changed_time}"
-    return context
+    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
+    expected_opening_date = dt.strptime(changed_date, "%b %d %Y").strftime("%Y-%m-%d")
+    assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
+    assert current_specified_openings[expected_opening_date][0]["start_time"] == opening_time
+    assert current_specified_openings[expected_opening_date][0]["end_time"] == closing_time
 
 
-@then("the Changed Request with changed standard day time is captured by Dos")
-def the_changed_opening_standard_time_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    open_time = time_to_sec(context.change_event.standard_opening_times[-1]["OpeningTime"])
-    closing_time = time_to_sec(context.change_event.standard_opening_times[-1]["ClosingTime"])
-    changed_time = f"{open_time}-{closing_time}"
-    cms = "cmsopentimemonday"
-    assert (
-        check_standard_received_opening_times_time_in_dos(context.correlation_id, cms, changed_time) is True
-    ), f"ERROR!.. Dos not updated with change: {changed_time}"
+@then("the DoS service has been updated with the standard days and times is captured by DoS")
+def the_dos_service_has_been_updated_with_the_standard_days_and_times_is_captured_by_dos(context: Context):
+    context.service_id = get_service_id(context.change_event.odscode)
+    wait_for_service_update(context.service_id)
+    open_time = context.change_event.standard_opening_times[-1]["OpeningTime"]
+    closing_time = context.change_event.standard_opening_times[-1]["ClosingTime"]
+    current_standard_openings = get_change_event_standard_opening_times(context.service_id)
+    assert "Monday" in current_standard_openings, "DoS not updated with standard opening time"
+    assert current_standard_openings["Monday"][0]["start_time"] == open_time
+    assert current_standard_openings["Monday"][0]["end_time"] == closing_time
 
 
-@then("the Changed Request with changed address is captured by Dos")
-def the_changed_address_is_accepted_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    changed_address = context.change_event.address_line_1
-    assert (
-        check_received_data_in_dos(context.correlation_id, "postaladdress", changed_address) is True
-    ), f"ERROR!.. Dos not updated with address change: {changed_address}"
-
-
-@then("the Changed Event is not sent to Dos")
+@then("the DoS Service is not updated")
 def the_changed_event_is_not_sent_to_dos(context: Context):
-    response = get_changes(context.correlation_id)
-    assert response == [], "ERROR!!.. Event data found in Dos."
+    service_not_updated(context.service_id)
 
 
 @then(parse('the change request has status code "{status}"'))
@@ -708,7 +819,7 @@ def invalid_opening_times_exception(context: Context):
         f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
         '| filter report_key="INVALID_OPEN_TIMES"'
     )
-    logs = get_logs(query, "processor", context.start_time)
+    logs = get_logs(query, "service-matcher", context.start_time)
     for item in [
         "nhsuk_odscode",
         "nhsuk_organisation_name",
@@ -722,19 +833,28 @@ def invalid_opening_times_exception(context: Context):
 @then("the date for the specified opening time returns an empty list")
 def specified_opening_date_closed(context: Context):
     closed_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
-    date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%Y-%m-%d")
+    date_obj = dt.strptime(closed_date, "%b %d %Y").strftime("%d-%m-%Y")
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-    logs = get_logs(query, "sender", context.start_time)
-    assert f'\\"{date_obj}\\":[]' in logs, f"Expected closed date '{closed_date}' not captured"
+    logs = get_logs(query, "service-sync", context.start_time)
+    assert (
+        f"Saving specfied opening times for: CLOSED on {date_obj} []" in logs
+    ), f"Expected closed date '{closed_date}' not captured"
     return context
 
 
 @then("the day for the standard opening time returns an empty list")
 def standard_opening_day_closed(context: Context):
-    closed_day = context.change_event.standard_opening_times[-1]["Weekday"]
+    days = {"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
+    closed_day: str = context.change_event.standard_opening_times[-1]["Weekday"]
+    closed_day_id = days[closed_day.lower()]
     query = f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-    logs = get_logs(query, "sender", context.start_time)
-    assert f'\\"{closed_day}\\":[]' in logs, f"Expected closed day '{closed_day}' not captured"
+    logs = get_logs(query, "service-sync", context.start_time)
+    assert (
+        f"Deleting standard opening times for dayid: {closed_day_id}" in logs
+    ), f"Expected closed day '{closed_day}' not captured"
+    assert (
+        f"Saving standard opening times period for dayid: {closed_day_id}" not in logs
+    ), f"Expected closed day '{closed_day}' not captured"
     return context
 
 
@@ -754,13 +874,45 @@ def verify_replayed_changed_event(context: Context):
     assert response != [], "Error!.. Re-processed change event not found in Dos"
 
 
-@then("the opening times changes are confirmed valid")
-def no_opening_times_errors(context: Context):
-    response = confirm_changes(context.correlation_id)
-    assert "cmsopentime" in str(response), "Error!.. Opening time Change not found in Dos Changes"
+@then("opening times with a break are updated in DoS")
+def opening_times_with_a_break_are_updated_in_dos(context: Context):
+    context.service_id = get_service_id(context.change_event.odscode)
+    wait_for_service_update(context.service_id)
+    first_open_time = context.change_event.standard_opening_times[0]["OpeningTime"]
+    first_closing_time = context.change_event.standard_opening_times[0]["ClosingTime"]
+    second_open_time = context.change_event.standard_opening_times[1]["OpeningTime"]
+    second_closing_time = context.change_event.standard_opening_times[1]["ClosingTime"]
+    current_standard_openings = get_change_event_standard_opening_times(context.service_id)
+    assert "Monday" in current_standard_openings, "DoS not updated with standard opening time"
+    assert current_standard_openings["Monday"][0]["start_time"] == first_open_time
+    assert current_standard_openings["Monday"][0]["end_time"] == first_closing_time
+    assert current_standard_openings["Monday"][1]["start_time"] == second_open_time
+    assert current_standard_openings["Monday"][1]["end_time"] == second_closing_time
+    assert len(current_standard_openings["Monday"]) == 2, "Expected 2 opening times"
 
 
-@then("the Changed Request with special characters is accepted by DOS")
+@then("opening times with two breaks are updated in DoS")
+def opening_times_with_two_breaks_are_updated_in_dos(context: Context):
+    context.service_id = get_service_id(context.change_event.odscode)
+    wait_for_service_update(context.service_id)
+    first_open_time = context.change_event.standard_opening_times[0]["OpeningTime"]
+    first_closing_time = context.change_event.standard_opening_times[0]["ClosingTime"]
+    second_open_time = context.change_event.standard_opening_times[1]["OpeningTime"]
+    second_closing_time = context.change_event.standard_opening_times[1]["ClosingTime"]
+    third_open_time = context.change_event.standard_opening_times[2]["OpeningTime"]
+    third_closing_time = context.change_event.standard_opening_times[2]["ClosingTime"]
+    current_standard_openings = get_change_event_standard_opening_times(context.service_id)
+    assert "Monday" in current_standard_openings, "DoS not updated with standard opening time"
+    assert current_standard_openings["Monday"][0]["start_time"] == first_open_time
+    assert current_standard_openings["Monday"][0]["end_time"] == first_closing_time
+    assert current_standard_openings["Monday"][1]["start_time"] == second_open_time
+    assert current_standard_openings["Monday"][1]["end_time"] == second_closing_time
+    assert current_standard_openings["Monday"][2]["start_time"] == third_open_time
+    assert current_standard_openings["Monday"][2]["end_time"] == third_closing_time
+    assert len(current_standard_openings["Monday"]) == 3, "Expected 3 opening times"
+
+
+@then("the Change Request with special characters is accepted by DOS")
 def the_changed_website_is_accepted_by_dos(context: Context):
     #   the test env uses a 'prod-like' DOS endpoint which rejects these
     current_env = getenv("ENVIRONMENT")
@@ -791,54 +943,39 @@ def the_changed_website_is_accepted_by_dos(context: Context):
         assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
 
 
-@then("the Changed Event is replayed with the specified opening date deleted")
+@then("DoS is updated with the new specified opening times", target_fixture="context")
+def the_changed_opening_time_is_accepted_by_dos(context: Context):
+    context.service_id = get_service_id(context.change_event.odscode)
+    wait_for_service_update(context.service_id)
+    changed_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
+    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
+    expected_opening_date = dt.strptime(changed_date, "%b %d %Y").strftime("%Y-%m-%d")
+    assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
+    return context
+
+
+@then("the Changed Event is replayed with the specified opening date deleted", target_fixture="context")
 def change_event_is_replayed(context: Context):
+    sleep(60)
     target_date = context.change_event.specified_opening_times[-1]["AdditionalOpeningDate"]
+    del_opening = context.change_event.specified_opening_times[-1]["OpeningTime"]
+    del_closing = context.change_event.specified_opening_times[-1]["ClosingTime"]
     context.change_event.specified_opening_times = []
     context.correlation_id = f"{context.correlation_id}-replay"
     context.response = process_payload(context.change_event, True, context.correlation_id)
-    context.other = {"deleted_date": target_date}
+    context.other = {"AdditionalOpeningDate": target_date, "OpeningTime": del_opening, "ClosingTime": del_closing}
     return context
 
 
-@then("the deleted specified date is confirmed removed from Dos")
+@then("the deleted specified date is confirmed removed from DoS")
 def specified_date_is_removed_from_dos(context: Context):
-    service_id = get_service_id(context.correlation_id)
-    removed_date = dt.strptime(context.other["deleted_date"], "%b %d %Y").strftime("%y-%m-%d")
-    approver_status = confirm_approver_status(context.correlation_id)
-    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
-    specified_opening_times_from_db = get_change_event_specified_opening_times(service_id)
-    assert removed_date not in str(
-        specified_opening_times_from_db
-    ), f"Error!.. Removed specified date: {removed_date} still exists in Dos"
-
-
-@then("the processed Changed Event is replayed with a specified opening time changed")
-def change_aligned_event_is_replayed(context: Context):
-    service_id = get_service_id(context.correlation_id)
-    approver_status = confirm_approver_status(context.correlation_id)
-    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
-    context.change_event.specified_opening_times[-1]["OpeningTime"] = "15:01"
-    context.change_event.specified_opening_times[-1]["ClosingTime"] = "20:00"
-    context.correlation_id = f"replayed-{context.correlation_id}"
-    context.response = process_payload(context.change_event, True, context.correlation_id)
-    return context
-
-
-@then("the Changed Request with changed specified time is captured by Dos")
-def the_changed_opening_time_is_captured_by_dos(context: Context):
-    """assert dos API response and validate processed record in Dos CR Queue database"""
-    service_id = get_service_id(context.correlation_id)
-    approver_status = confirm_approver_status(context.correlation_id)
-    assert approver_status != [], f"Error!.. Dos Change for Serviceid: {service_id} has been REJECTED"
-    open_time = time_to_sec(context.change_event.specified_opening_times[-1]["OpeningTime"])
-    closing_time = time_to_sec(context.change_event.specified_opening_times[-1]["ClosingTime"])
-    changed_time = f"{open_time}-{closing_time}"
-    cms = "cmsopentimespecified"
+    context.service_id = get_service_id(context.change_event.odscode)
+    sleep(60)
+    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
+    expected_opening_date = dt.strptime(context.other["AdditionalOpeningDate"], "%b %d %Y").strftime("%Y-%m-%d")
     assert (
-        check_specified_received_opening_times_time_in_dos(context.correlation_id, cms, changed_time) is True
-    ), f"ERROR!.. Dos not updated with change: {changed_time}"
-    return context
+        expected_opening_date not in current_specified_openings
+    ), f"Specified date {expected_opening_date} not removed from DoS"
 
 
 @then(parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
@@ -861,12 +998,12 @@ def event_replayed_with_pharmacy_closed(context: Context, open_or_closed):
     return context
 
 
-@then(parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'))
-def standard_day_confirmed_open(context: Context, open_or_closed):
-    approver_status = confirm_approver_status(context.correlation_id)
-    assert approver_status != [], "Error!.. Dos Change not Approved or COMPLETED"
-    service_id = get_service_id(context.correlation_id)
-    opening_time_event = get_change_event_standard_opening_times(service_id)
+@then(parse('the pharmacy is confirmed "{open_or_closed}" for the standard day in Dos'), target_fixture="context")
+def standard_day_confirmed_open(context: Context, open_or_closed: str):
+    if context.service_id is None:
+        context.service_id = get_service_id(context.change_event.odscode)
+    sleep(60)
+    opening_time_event = get_change_event_standard_opening_times(context.service_id)
     week_day = context.change_event.standard_opening_times[-1]["Weekday"]
     match open_or_closed.upper():
         case "CLOSED":
@@ -882,11 +1019,11 @@ def standard_day_confirmed_open(context: Context, open_or_closed):
     return context
 
 
-@then("the Dentist changes with service type id is captured by Dos")
-def dentist_changes_confirmed_in_dos(context: Context):
-    change_event_service_type = get_service_type_data(context.change_event.organisation_type_id)["VALID_SERVICE_TYPES"]
-    change_request_service_type = get_service_type_from_cr(context.correlation_id)
-    assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
+# @then("the Dentist changes with service type id is captured by Dos")
+# def dentist_changes_confirmed_in_dos(context: Context):
+#     change_event_service_type = get_service_type_data(context.change_event.organisation_type_id)["VALID_SERVICE_TYPES"] # noqa: E501
+#     change_request_service_type = get_service_type_from_cr(context.correlation_id)
+#     assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
 
 
 @then(parse('the Changed Event finds a matching dentist with ods "{odscode}"'))
@@ -899,7 +1036,7 @@ def check_logs_for_dentist_match(context: Context, odscode):
     assert odscode in logs, "ERROR!!.. error processor does not have correct ods."
 
 
-@then(parse('the Event Sender sends the ods "{odscode}"'))
+@then(parse('the Service Sync sends the ods "{odscode}"'))
 def check_logs_for_correct_sent_cr(context: Context, odscode):
     query = (
         f'fields message, ods_code | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
@@ -909,24 +1046,24 @@ def check_logs_for_correct_sent_cr(context: Context, odscode):
     assert odscode in logs, "ERROR!!.. error sender does not have correct ods."
 
 
-@then(parse('the Event "{processor}" shows field "{field}" with message "{message}"'))
-def generic_processor_check_function(context: Context, processor, field, message):
+@then(parse('the "{lambda_name}" lambda shows field "{field}" with message "{message}"'))
+def generic_lambda_log_check_function(context: Context, lambda_name: str, field, message):
     if "/" in context.correlation_id:
         context.correlation_id = context.correlation_id.replace("/", r"\/")
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
     )
-    logs = get_logs(query, processor, context.start_time)
+    logs = get_logs(query, lambda_name, context.start_time)
     assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
 
 
-@then(parse('the Event "{processor}" does not show "{field}" with message "{message}"'))
-def generic_processor_negative_check_function(context: Context, processor, field, message):
+@then(parse('the "{lambda_name}" lambda does not show "{field}" with message "{message}"'))
+def generic_lambda_log_negative_check_function(context: Context, lambda_name: str, field, message):
     find_request_id_query = (
         "fields function_request_id | sort @timestamp asc" f' | filter correlation_id="{context.correlation_id}"'
     )
-    find_request_id = loads(get_logs(find_request_id_query, processor, context.start_time))
+    find_request_id = loads(get_logs(find_request_id_query, lambda_name, context.start_time))
 
     request_id = ""
     for x in find_request_id["results"][0]:
@@ -935,12 +1072,55 @@ def generic_processor_negative_check_function(context: Context, processor, field
 
     finished_check = f'fields @message | filter @requestId == "{request_id}" | filter @type == "END"'
 
-    get_logs(finished_check, processor, context.start_time, 2)
+    get_logs(finished_check, lambda_name, context.start_time, 2)
 
     query = (
         f"fields {field} | sort @timestamp asc"
         f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
     )
-    logs_found = negative_log_check(query, processor, context.start_time)
+    logs_found = negative_log_check(query, lambda_name, context.start_time)
 
     assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parse('the Slack channel shows an alert saying "{message}"'))
+def slack_message_check(message):
+    slack_entries = slack_retry(message)
+    current_environment = getenv("ENVIRONMENT")
+    assert_string = f"{current_environment} | {message}"
+    assert assert_string in slack_entries
+
+
+@then("the service table has been updated with locations data")
+def services_location_update_assertion(context: Context):
+    sleep(20)
+    location_data = get_locations_table_data(context.change_event.postcode)
+    services_data = get_services_table_location_data(context.service_id)
+    assert services_data == location_data, "ERROR: Services and Location data does not match"
+
+
+@then("the service history table has been updated with locations data")
+def services_location_history_update_assertion(context: Context):
+    sleep(10)
+    history_data = get_service_history(context.service_id)
+    history_data = history_data[list(history_data.keys())[0]]["new"]
+    history_list = []
+    history_list.append(history_data["cmsorgtown"]["data"])
+    history_list.append(history_data["postalcode"]["data"])
+    history_list.append(history_data["cmseastings"]["data"])
+    history_list.append(history_data["cmsnorthings"]["data"])
+    location_data = get_locations_table_data(context.change_event.postcode)
+    location_data = location_data[0][:-2]
+    assert history_list == location_data, "ERROR: Service History and Location data does not match"
+
+
+@then("the s3 bucket contains an email file matching the service uid")
+def check_s3_contains_email_file(context: Context):
+    get_s3_email_file(context)
+    assert context.service_uid in context.other["email_body"], "ERROR: service_uid not found in email body"
+
+
+@then("the changes table shows change is now rejected")
+def check_changes_table_has_been_updated(context: Context):
+    status = check_pending_service_is_rejected(context.service_id)
+    assert "REJECTED" in status, "ERROR: changes table has not been updated"

@@ -34,10 +34,7 @@ variable "aws_vpc_name" {
   description = ""
 }
 
-variable "aws_account_id_tools" {
-  description = ""
-  default     = "00000000000"
-}
+
 variable "aws_account_id_live_parent" {
   description = ""
 }

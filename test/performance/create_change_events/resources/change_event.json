@@ -1,0 +1,92 @@
+{
+  "ODSCode": "FC766",
+  "OrganisationName": "Test Pharmacy",
+  "OrganisationTypeId": "PHA",
+  "OrganisationSubType": "Community",
+  "OrganisationStatus": "Visible",
+  "Address1": "501 MANSFIELD ROAD",
+  "Address2": null,
+  "Address3": null,
+  "City": "NOTTINGHAM",
+  "County": null,
+  "Postcode": "TA3 7QY",
+  "OpeningTimes": [
+    {
+      "Weekday": "Monday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Tuesday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Wednesday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Thursday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Friday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Saturday",
+      "OpeningTime": "07:30",
+      "ClosingTime": "23:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "Weekday": "Sunday",
+      "OpeningTime": "10:00",
+      "ClosingTime": "17:00",
+      "OpeningTimeType": "General",
+      "IsOpen": true
+    },
+    {
+      "OpeningTime": "10:00",
+      "ClosingTime": "17:00",
+      "OpeningTimeType": "Additional",
+      "AdditionalOpeningDate": "Dec 25 2022",
+      "IsOpen": true
+    }
+  ],
+  "Contacts": [
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Website",
+      "ContactValue": "http://www.test.co.uk/"
+    },
+    {
+      "ContactType": "Primary",
+      "ContactAvailabilityType": "Office hours",
+      "ContactMethodType": "Telephone",
+      "ContactValue": "0118 999 88199 9119 725 3"
+    }
+  ],
+
+  "LastUpdatedDates": {
+    "OpeningTimes": "2021-09-07T10:21:30+00:00",
+    "Facilities": "2021-09-07T10:21:42+00:00",
+    "Services": "2021-09-07T10:21:36+00:00",
+    "ContactDetails": "2017-10-23T14:06:46+00:00"
+  }
+}

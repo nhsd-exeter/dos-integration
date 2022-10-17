@@ -1,7 +1,7 @@
 from typing import Any, Dict, Union
 
-from locust import FastHttpUser, task, constant_pacing
-from utilities import setup_change_event_request, ODSCODES, setup_headers, get_api_key
+from locust import constant_pacing, FastHttpUser, task
+from utilities import get_api_key, send_invalid_change_event, send_valid_change_event
 
 
 class AllChangesChangeEvent(FastHttpUser):
@@ -18,11 +18,7 @@ class AllChangesChangeEvent(FastHttpUser):
 
     @task
     def change_event(self):
-        self.payload = setup_change_event_request()
-        self.payload["ODSCode"] = ODSCODES.get_valid_ods_code()
-        self.headers = setup_headers(self.payload["ODSCode"])
-        self.headers["x-api-key"] = self.api_key
-        self.client.post("", headers=self.headers, json=self.payload, name="AllChangesChangeEvent")
+        self = send_valid_change_event(self)
 
 
 class OdscodeDoesNotExistInDoS(FastHttpUser):
@@ -39,8 +35,4 @@ class OdscodeDoesNotExistInDoS(FastHttpUser):
 
     @task
     def change_event(self):
-        self.payload = setup_change_event_request()
-        self.payload["ODSCode"] = ODSCODES.get_invalid_ods_code()
-        self.headers = setup_headers(self.payload["ODSCode"])
-        self.headers["x-api-key"] = self.api_key
-        self.client.post("", headers=self.headers, json=self.payload, name="OdscodeDoesNotExistInDoS")
+        self = send_invalid_change_event(self)

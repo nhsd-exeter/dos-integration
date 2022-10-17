@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   mockservice:
-    image: rodolpheche/wiremock:$DOCKER_WIREMOCK_VERSION
+    image: wiremock/wiremock:$DOCKER_WIREMOCK_VERSION
     container_name: mockservice
     volumes:
       - $PROJECT_DIR/test/contract/mappings/:/home/wiremock/mappings/

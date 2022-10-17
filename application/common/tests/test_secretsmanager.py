@@ -1,8 +1,8 @@
 from json import dumps
-from pytest import raises
 
 import boto3
 from moto import mock_secretsmanager
+from pytest import raises
 
 FILE_PATH = "application.common.secretsmanager"
 

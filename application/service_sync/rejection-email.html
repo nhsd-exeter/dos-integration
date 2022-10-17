@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+    <head>
+        <title>DoS Change Rejection Email</title>
+        <style>
+          body {font-family: "Frutiger W01",Arial,sans-serif;}
+          table, th, td {
+            border: 1px solid #828282;
+            border-collapse: collapse;
+            padding: 5px;
+          }
+          th {
+            color: white;
+            background-color: #005eb8;
+          }
+        </style>
+    </head>
+    <body>
+        <!-- Greetings -->
+        <p>Dear {{InitiatorName}},</p>
+        <br>
+        <!-- The main body of the email -->
+        <p>A change that you made in the DoS has been rejected automatically. This happened because there was a conflict with a new change from DoS Integration.</p>
+        <p>The service is: {{ServiceName}}</p>
+        <p>The service uid: {{ServiceUid}}</p>
+        <br>
+        <p class="table_caption">Your rejected change was:</p>
+        <!-- This table is used for showing the changes that have been rejected -->
+        <table class="changes_table">
+          <!-- Table Headers -->
+          <thead>
+          <tr>
+            <th>Change Key</th>
+            <th>Data before requested change</th>
+            <th>Proposed Change</th>
+          </tr>
+          </thead>
+          <!-- Body of table -->
+          <tbody>
+          {{row}}
+          </tbody>
+        </table>
+        <!-- The footer of the email -->
+        <p>Please visit DoS to view the new change. If no changes are present DoS Integration considers DoS data to be correct</p>
+        <br>
+        <p>Your DoS Integration Email Correlation Id is: {{EmailCorrelationId}}</p>
+        <br>
+        <p>Kind regards,</p>
+        <p>DoS Integration</p>
+        <p>(Please do not reply to this email as the mailbox is not monitored.  If you have any queries then please email {{DiTeamEmail}} directly)</p>
+      </body>
+</html>

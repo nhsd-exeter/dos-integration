@@ -3,7 +3,8 @@ from os import getenv
 from time import time_ns
 from typing import Any, Dict
 
-from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 from boto3.dynamodb.types import TypeDeserializer
@@ -44,9 +45,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
 
 def validate_event(event: Dict[str, Any]) -> None:
     if "odscode" not in event:
-        raise Exception("Missing 'odscode' in event")
+        raise ValueError("Missing 'odscode' in event")
     if "sequence_number" not in event:
-        raise Exception("Missing 'sequence_number' in event")
+        raise ValueError("Missing 'sequence_number' in event")
 
 
 def build_correlation_id():
@@ -71,7 +72,7 @@ def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
         ScanIndexForward=False,
     )
     if len(response["Items"]) == 0:
-        raise Exception(f"No change event found for ods code {odscode} and sequence number {sequence_number}")
+        raise ValueError(f"No change event found for ods code {odscode} and sequence number {sequence_number}")
     item = response["Items"][0]
     logger.info("Retrieved change event from dynamodb", extra={"item": item})
     deserializer = TypeDeserializer()
@@ -83,7 +84,7 @@ def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
 
 def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_number: int, correlation_id: str):
     sqs = client("sqs")
-    queue_url = sqs.get_queue_url(QueueName=getenv("FIFO_SQS_NAME"))["QueueUrl"]
+    queue_url = sqs.get_queue_url(QueueName=getenv("CHANGE_EVENT_SQS_NAME"))["QueueUrl"]
     logger.info("Sending change event to SQS", extra={"queue_url": queue_url})
     change_event_str = dumps(change_event)
     response = sqs.send_message(
