@@ -31,7 +31,8 @@ def test_download_csv_as_dicts():
 
 def test_run_and_save_reports():
     reporter = Reporter(nhs_entities=[], dos_services=[], valid_dos_postcodes=None)
-    dir = os.path.join(tempfile.gettempdir(), f"/tmp/test_output_{randint(11111, 99999)}")
+    dir = os.path.join(tempfile.gettempdir(), f"test_output_{randint(11111, 99999)}")
+    reporter.run_and_save_reports("test_", dir)
     reporter.run_and_save_reports("test_", dir)
     assert os.path.exists(dir)
 
