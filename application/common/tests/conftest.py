@@ -87,21 +87,18 @@ def aws_credentials():
 
 @fixture
 def dynamodb_client(boto_session):
-    client = boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
-    yield client
+    yield boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
 
 
 @fixture
 def dynamodb_resource(boto_session):
-    resource = boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
-    yield resource
+    yield boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
 
 
 @fixture
 def boto_session(aws_credentials):
     with mock_dynamodb():
-        session = Session()
-        yield session
+        yield Session()
 
 
 @fixture
