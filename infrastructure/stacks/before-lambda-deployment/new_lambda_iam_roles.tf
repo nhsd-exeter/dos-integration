@@ -237,7 +237,7 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
       "Action": "sns:*",
       "Resource": [
         "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*",
-        "arn:aws:sns:${var.alarm_region}:${var.aws_account_id}:uec-dos-int-*"
+        "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:uec-dos-int-*"
       ]
     }
   ]
