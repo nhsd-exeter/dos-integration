@@ -246,19 +246,19 @@ def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynam
     ceAAA11 = change_event.copy()
     ceAAA11["ODSCode"] = "AAA11"
     add_change_event_to_dynamodb(ceAAA11, 301, int(time()))
-    for i in range(20):
+    for i in range(100):
         add_change_event_to_dynamodb(ceAAA11, i, int(time()))
 
     ceBBB22 = change_event.copy()
     ceBBB22["ODSCode"] = "BBB22"
     add_change_event_to_dynamodb(ceBBB22, 505, int(time()))
-    for i in range(20):
+    for i in range(100):
         add_change_event_to_dynamodb(ceBBB22, i, int(time()))
 
     ceCCC33 = change_event.copy()
     ceCCC33["ODSCode"] = "CCC33"
     add_change_event_to_dynamodb(ceCCC33, 400, int(time()))
-    for i in range(20):
+    for i in range(100):
         add_change_event_to_dynamodb(ceCCC33, i, int(time()))
 
     resp = get_newest_event_per_odscode()
