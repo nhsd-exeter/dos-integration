@@ -1,7 +1,7 @@
 from datetime import date
 from unittest.mock import patch
 
-from comparison_reporting import run_dentist_reports
+from application.comparison_reporting import run_dentist_reports
 
 from ..run_dentist_reports import get_dentists
 from common.nhs import NHSEntity
@@ -9,10 +9,10 @@ from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeni
 from common.tests.conftest import dummy_dos_service
 
 OP = OpenPeriod.from_string
-MODULE_PATH = "comparison_reporting.run_dentist_reports"
+MODULE_PATH = "application.comparison_reporting.run_dentist_reports"
 
 
-@patch(f"application.{MODULE_PATH}.download_csv_as_dicts")
+@patch(f"{MODULE_PATH}.download_csv_as_dicts")
 def test_get_dentists(mock_download_csv_as_dicts):
 
     mock_download_csv_as_dicts.side_effect = [
