@@ -149,9 +149,18 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
     return data
 
 
+def get_single_service_pharmacy_odscode() -> Dict:
+    query = (
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid 13 "
+        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+        "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
+    )
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    return invoke_dos_db_handler_lambda(lambda_payload)
+
+
 def get_pharmacy_odscode() -> str:
-    lambda_payload = {"type": "get_single_service_pharmacy_odscode"}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
+    response = get_single_service_pharmacy_odscode()
     data = loads(response)
     data = literal_eval(data)
     odscode = sample(tuple(data), 1)[0][0]
@@ -160,37 +169,50 @@ def get_pharmacy_odscode() -> str:
 
 def get_single_service_pharmacy() -> str:
     ods_code = get_pharmacy_odscode()
-    lambda_payload = {"type": "get_services_count", "odscode": ods_code}
+    query = "SELECT count(*) FROM services where odscode like '%(ODS_CODE)s%'"
+    query_vars = {"ODS_CODE": ods_code}
+    lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))[0][0]
+    data = loads(loads(response))
     if data != 1:
         ods_code = get_single_service_pharmacy()
     return ods_code
 
 
 def get_changes(correlation_id: str) -> list:
-    lambda_payload = {"type": "get_changes", "correlation_id": correlation_id}
+    query = "SELECT value from changes where externalref = '%(CID)s'"
+    query_vars = {"CID": correlation_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
 
 def get_locations_table_data(postcode: str) -> list:
-    lambda_payload = {"type": "get_locations_table_values", "postcode": postcode}
+    query = (
+        "SELECT postaltown, postcode, easting, northing, latitude, longitude "
+        "FROM locations WHERE postcode = %(POSTCODE)s"
+    )
+    query_vars = {"POSTCODE": postcode}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
 
 def get_services_table_location_data(service_id: str) -> list:
-    lambda_payload = {"type": "get_services_table_location", "service_id": service_id}
+    query = "SELECT town, postcode, easting, northing, latitude, longitude FROM services WHERE id = %(SERVICE_ID)s"
+    query_vars = {"SERVICE_ID": service_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
 
 
 def get_service_uid(service_id: str) -> list:
-    lambda_payload = {"type": "get_service_uid", "service_id": service_id}
+    query = "SELECT uid FROM services WHERE id = %(SERVICE_ID)s"
+    query_vars = {"SERVICE_ID": service_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
@@ -209,7 +231,9 @@ def confirm_changes(correlation_id: str) -> list:
 
 
 def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
-    lambda_payload = {"type": "get_approver_status", "correlation_id": correlation_id}
+    query = "SELECT modifiedtimestamp from changes where approvestatus = 'COMPLETE' and externalref = '%(CID)s'"
+    query_vars = {"CID": correlation_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     return data
@@ -231,8 +255,13 @@ def confirm_approver_status(
 
 def get_service_id(odscode: str) -> str:
     data = []
+    query = (
+        "SELECT id FROM services WHERE typeid 13 "
+        "AND statusid = 1 AND odscode like '%(ODSCODE)s%' LIMIT 1"
+    )
     for _ in range(16):
-        lambda_payload = {"type": "get_service_id", "odscode": odscode}
+        query_vars = {"ODSCODE": odscode}
+        lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
         response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(response)
         data = literal_eval(data)
@@ -248,17 +277,44 @@ def get_service_id(odscode: str) -> str:
 def create_pending_change_for_service(service_id: str):
     success_status = False
     unique_id = randint(10000, 99999)
-    lambda_payload = {
-        "type": "create_changes_entry_for_service",
-        "service_id": service_id,
-        "unique_id": unique_id,
+    json_obj = {
+        "new": {
+            "cmstelephoneno": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": "0"},
+            "cmsurl": {"changetype": "add", "data": "abcd", "area": "demographic", "previous": ""},
+        },
+        "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
+        "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
     }
+    query =(
+        "INSERT INTO pathwaysdos.changes "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
+    )
+    query_vars = (
+            f"66301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
+            "PENDING",
+            "modify",
+            "admin",
+            "Test Duplicate",
+            "DoS Region",
+            dumps(json_obj),
+            "2022-09-06 11:00:00.000 +0100",
+            "admin",
+            "2022-09-06 11:00:00.000 +0100",
+            "admin",
+            str(service_id),
+            None,
+            None,
+            None,
+        )
+    lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     success_status = invoke_dos_db_handler_lambda(lambda_payload)
     return success_status
 
 
 def check_pending_service_is_rejected(service_id: str):
-    lambda_payload = {"type": "check_changes_entry_rejected", "service_id": service_id}
+    query = "SELECT approvestatus FROM changes WHERE serviceid = %(SERVICE_ID)s"
+    query_vars = {"SERVICE_ID": service_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     success_status = invoke_dos_db_handler_lambda(lambda_payload)
     return success_status
 
@@ -295,9 +351,15 @@ def get_change_event_specified_opening_times(service_id: str) -> Any:
     return data
 
 
+def get_pharmacy_ods_codes(type_id) -> Dict:
+    query = "SELECT LEFT(odscode, 5) FROM services WHERE typeid = %(TYPE_ID)s AND statusid = 1 AND odscode IS NOT NULL"
+    query_vars = {"TYPE_ID": type_id}
+    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
+    return invoke_dos_db_handler_lambda(lambda_payload)
+
+
 def get_odscode_with_contact_data() -> str:
-    lambda_payload = {"type": "get_pharmacy_odscodes_with_contacts"}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
+    response = get_pharmacy_ods_codes(13)
     data = loads(response)
     data = literal_eval(data)
     odscode = sample(data, 1)[0][0]
@@ -325,10 +387,12 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
 
 
 def get_service_table_field(service_id: str, field_name: str) -> Any:
-    lambda_payload = {"type": "get_service_table_field", "service_id": service_id, "field": field_name}
+    query = "SELECT %(FIELD)s FROM services WHERE id = %(SERVICE_ID)s"
+    query_vars = {"SERVICE_ID": service_id, "FIELD": field_name}
+    lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return data[0][0]
+    return data
 
 
 def wait_for_service_update(service_id: str) -> Any:
@@ -610,7 +674,9 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
     data = []
     retrycounter = 0
     while data == [] and retrycounter < 5:
-        lambda_payload = {"type": "get_service_history", "service_id": service_id}
+        query = "SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s"
+        query_vars = {"SERVICE_ID": service_id}
+        lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
         response = invoke_dos_db_handler_lambda(lambda_payload)
         data = loads(loads(response))
         retrycounter += 1
@@ -717,8 +783,7 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
 def random_pharmacy_odscode() -> str:
     global PHARMACY_ODS_CODE_LIST
     if PHARMACY_ODS_CODE_LIST is None:
-        lambda_payload = {"type": "get_pharmacy_odscodes"}
-        PHARMACY_ODS_CODE_LIST = get_odscodes_list(lambda_payload)
+        PHARMACY_ODS_CODE_LIST = get_pharmacy_ods_codes(13)
     odscode_list = sample(PHARMACY_ODS_CODE_LIST, 1)[0]
     PHARMACY_ODS_CODE_LIST.remove(odscode_list)
     odscode = odscode_list[0]
@@ -734,7 +799,8 @@ def generate_untaken_ods() -> str:
 
 
 def check_ods_list(odscode: str) -> str:
-    lambda_payload = {"type": "get_taken_odscodes"}
+    query = "SELECT LEFT(odscode, 5) FROM services"
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
     ods_list = get_odscodes_list(lambda_payload)
     if odscode not in ods_list:
         return True
@@ -745,7 +811,11 @@ def check_ods_list(odscode: str) -> str:
 def random_dentist_odscode() -> str:
     global DENTIST_ODS_CODE_LIST
     if DENTIST_ODS_CODE_LIST is None:
-        lambda_payload = {"type": "get_dentist_odscodes"}
+        query = (
+            "SELECT odscode FROM services WHERE typeid 12 "
+            "AND statusid = 1 AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'"
+        )
+        lambda_payload = {"type": "read", "query": query, "query_vars": None}
         DENTIST_ODS_CODE_LIST = get_odscodes_list(lambda_payload)
     odscode_list = sample(DENTIST_ODS_CODE_LIST, 1)[0]
     DENTIST_ODS_CODE_LIST.remove(odscode_list)
