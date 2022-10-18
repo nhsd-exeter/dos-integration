@@ -16,7 +16,6 @@ High level requirements:
 
 * Change events are grouped into a single (latest) change event
 * Most messages are grouped into a single change event within a reasonable time frame
-*
 
 ### Detailed analysis of the options
 
