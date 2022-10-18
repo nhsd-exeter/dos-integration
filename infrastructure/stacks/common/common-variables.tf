@@ -75,6 +75,7 @@ variable "project_display_name" {
 
 variable "terraform_platform_state_store" {
   description = "Texas Platform State store bucket"
+  default     = ""
 }
 
 # ################
