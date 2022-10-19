@@ -169,7 +169,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python application/comparison_reporting/run_dentist_reports.py" \
+	CMD="python3 -m application.comparison_reporting.run_dentist_reports" \
 	ARGS=" \
 		-e DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address) \
 		-e DB_PORT=$(DB_PORT) \
