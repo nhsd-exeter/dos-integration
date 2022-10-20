@@ -255,10 +255,7 @@ def confirm_approver_status(
 
 def get_service_id(odscode: str) -> str:
     data = []
-    query = (
-        "SELECT id FROM services WHERE typeid 13 "
-        "AND statusid = 1 AND odscode like '%(ODSCODE)s%' LIMIT 1"
-    )
+    query = "SELECT id FROM services WHERE typeid 13 " "AND statusid = 1 AND odscode like '%(ODSCODE)s%' LIMIT 1"
     for _ in range(16):
         query_vars = {"ODSCODE": odscode}
         lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
@@ -285,27 +282,27 @@ def create_pending_change_for_service(service_id: str):
         "initiator": {"userid": "admin", "timestamp": "2022-09-01 13:35:41"},
         "approver": {"userid": "admin", "timestamp": "01-09-2022 13:35:41"},
     }
-    query =(
+    query = (
         "INSERT INTO pathwaysdos.changes "
         "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
     )
     query_vars = (
-            f"66301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
-            "PENDING",
-            "modify",
-            "admin",
-            "Test Duplicate",
-            "DoS Region",
-            dumps(json_obj),
-            "2022-09-06 11:00:00.000 +0100",
-            "admin",
-            "2022-09-06 11:00:00.000 +0100",
-            "admin",
-            str(service_id),
-            None,
-            None,
-            None,
-        )
+        f"66301ABC-D3A4-0B8F-D7F8-F286INT{unique_id}",
+        "PENDING",
+        "modify",
+        "admin",
+        "Test Duplicate",
+        "DoS Region",
+        dumps(json_obj),
+        "2022-09-06 11:00:00.000 +0100",
+        "admin",
+        "2022-09-06 11:00:00.000 +0100",
+        "admin",
+        str(service_id),
+        None,
+        None,
+        None,
+    )
     lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     success_status = invoke_dos_db_handler_lambda(lambda_payload)
     return success_status
