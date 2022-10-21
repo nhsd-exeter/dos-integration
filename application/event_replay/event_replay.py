@@ -18,8 +18,9 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
-@logger.inject_lambda_context
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
+@logger.inject_lambda_context(clear_state=True)
+def lambda_handler(event: Dict[str, Any], conte
+xt: LambdaContext) -> str:
     """Entrypoint handler for the authoriser lambda
 
     Args:

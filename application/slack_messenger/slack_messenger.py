@@ -151,7 +151,7 @@ def generate_aws_cloudwatch_log_insights_url(region: str, log_groups: list, filt
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SNSEvent)
-@logger.inject_lambda_context
+@logger.inject_lambda_context(clear_state=True)
 def lambda_handler(event: SNSEvent, context: LambdaContext) -> None:
     """Entrypoint handler for the slack_messenger lambda
 
