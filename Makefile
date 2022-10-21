@@ -179,9 +179,7 @@ create-dentist-reports: # Must use a PROFILE argument with appropriate DB detail
 		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
 		-e DB_SCHEMA=$(DB_SCHEMA) \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_
-		
-		reporting \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 	"
 
 create-error-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
@@ -198,9 +196,7 @@ create-error-reports: # Must use a PROFILE argument with appropriate DB details,
 		-e DB_SCHEMA=$(DB_SCHEMA) \
 		-e CHANGE_EVENTS_TABLE_NAME=$(CHANGE_EVENTS_TABLE_NAME) \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_
-		
-		reporting \
+		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 	"
 
 clean: # Runs whole project clean
