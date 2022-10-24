@@ -314,7 +314,7 @@ def test_log_rejected_changes(capsys: CaptureFixture):
     assert None is response
     captured = capsys.readouterr()
     assert (
-        f"update|1|NULL|DOS_INTEGRATION|RejectDeleteChange|"
+        f"update|correlation_id|NULL|DOS_INTEGRATION|RejectDeleteChange|"
         f"request|success|action=reject|changeId={pending_change.id}|org_id={pending_change.uid}|"
         f"org_name={pending_change.name}|change_status=PENDING|info=change rejected|"
         "execution_time=NULL"
@@ -351,7 +351,7 @@ def test_send_rejection_emails(
         calls=[
             call(
                 {
-                    "correlation_id": "1",
+                    "correlation_id": "correlation_id",
                     "user_id": pending_change.user_id,
                     "email_body": mock_build_change_rejection_email_contents.return_value,
                     "email_subject": expected_subject,
@@ -366,7 +366,7 @@ def test_send_rejection_emails(
     )
     mock_email_message.assert_called_once_with(
         change_id=pending_change.id,
-        correlation_id="1",
+        correlation_id="correlation_id",
         recipient_email_address=pending_change.email,
         email_body=file_contents,
         email_subject=expected_subject,

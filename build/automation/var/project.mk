@@ -14,8 +14,8 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,dos-db-handler
-PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger
+PROJECT_LAMBDAS_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,dos-db-handler,ingest-change-event
+PROJECT_LAMBDAS_PROD_LIST = change-event-dlq-handler,dos-db-update-dlq-handler,event-replay,orchestrator,send-email,service-matcher,service-sync,slack-messenger,ingest-change-event
 PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
@@ -61,8 +61,10 @@ TF_VAR_di_endpoint_api_gateway_stage := $(ENVIRONMENT)
 
 # SQS Queues
 TF_VAR_change_event_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-queue.fifo
+TF_VAR_holding_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-holding-queue.fifo # TODO: Convert to standard queue when/if message grouping is implemented
 TF_VAR_update_request_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-update-request-queue.fifo
 update_request_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue_name)
+holding_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_holding_queue_name)
 update_request_dlq_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_dlq)
 TF_VAR_change_event_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-dead-letter-queue.fifo
 TF_VAR_update_request_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-update-request-dead-letter-queue.fifo
@@ -75,6 +77,7 @@ TF_VAR_change_event_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-change
 TF_VAR_dos_db_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-handler-role
 TF_VAR_dos_db_update_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-role
 TF_VAR_event_replay_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay-role
+TF_VAR_ingest_change_event_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-ingest-change-event-role
 TF_VAR_orchestrator_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-role
 TF_VAR_send_email_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email-role
 TF_VAR_service_matcher_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher-role
@@ -92,6 +95,7 @@ TF_VAR_change_event_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVI
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
 TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler-cw-logs-firehose-subscription
 TF_VAR_event_replay_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-eventbridge-dlq-handler-cw-logs-firehose-subscription
+TF_VAR_ingest_change_event_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-ingest-change-event-cw-logs-firehose-subscription
 TF_VAR_orchestrator_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator-cw-logs-firehose-subscription
 TF_VAR_send_email_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email-cw-logs-firehose-subscription
 TF_VAR_service_matcher_subscription_filter_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher-cw-logs-firehose-subscription
@@ -104,6 +108,7 @@ TF_VAR_change_event_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-chan
 TF_VAR_dos_db_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-handler
 TF_VAR_dos_db_update_dlq_handler_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-dos-db-update-dlq-handler
 TF_VAR_event_replay_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-replay
+TF_VAR_ingest_change_event_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-ingest-change-event
 TF_VAR_orchestrator_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-orchestrator
 TF_VAR_send_email_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-send-email
 TF_VAR_service_matcher_lambda_name := $(PROJECT_ID)-$(ENVIRONMENT)-service-matcher
@@ -133,14 +138,4 @@ TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-ni
 # AppConfig
 TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)
 
-# ==============================================================================
-# Old variables - TODO: Delete these after release 3.0
-TF_VAR_event_processor_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-processor-role
-TF_VAR_event_sender_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-event-sender-role
-TF_VAR_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-dlq-handler-role
-TF_VAR_cr_fifo_dlq_handler_role_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-dlq-handler-role
-TF_VAR_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-fifo-queue.fifo
-TF_VAR_cr_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-fifo-queue.fifo
-TF_VAR_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-dead-letter-queue.fifo
-TF_VAR_cr_dead_letter_queue_from_fifo_queue_name := $(PROJECT_ID)-$(ENVIRONMENT)-cr-dead-letter-queue.fifo
 # ==============================================================================

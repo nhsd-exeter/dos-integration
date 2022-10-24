@@ -1,0 +1,2 @@
+aws-embedded-metrics
+aws-lambda-powertools[tracer, validation] ~= 2.0.0

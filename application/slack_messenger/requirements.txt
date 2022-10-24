@@ -1,2 +1,2 @@
-aws-lambda-powertools == 1.31.1
+aws-lambda-powertools[tracer] ~= 2.0.0
 requests

@@ -233,6 +233,19 @@ functions:
       EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
     maximumRetryAttempts: 2
 
+  ingest-change-event:
+    image: ${env:DOCKER_REGISTRY}/ingest-change-event:${env:VERSION}
+    architecture: x86_64
+    name: ${env:PROJECT_ID}-${sls:stage}-ingest-change-event
+    description: ${sls:stage} Ingest Change Event lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_ingest_change_event_role_name}
+    environment:
+      HOLDING_QUEUE_URL: ${env:holding_queue_url}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+    maximumRetryAttempts: 2
+
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}
     architecture: x86_64
