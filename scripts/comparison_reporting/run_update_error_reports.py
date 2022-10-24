@@ -1,14 +1,14 @@
-# Run from application/ dir using below command
-# python3 -m comparison_reporting.run_update_error_reports
-from os import path
+import sys
+from os.path import join
 from pathlib import Path
 
-from comparison_reporting.reporter import Reporter
-
+sys.path.insert(1, join(Path().absolute().parent.parent, "application"))
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.dos import get_all_valid_dos_postcodes, get_services_from_db
 from common.dynamodb import get_newest_event_per_odscode
 from common.nhs import NHSEntity
+
+from reporter import Reporter
 
 
 def run_update_error_reports(output_dir: str = "reports_output/"):
@@ -25,4 +25,4 @@ def run_update_error_reports(output_dir: str = "reports_output/"):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    run_update_error_reports(path.join(Path.home(), "reports_output"))
+    run_update_error_reports(join(Path.home(), "reports_output"))

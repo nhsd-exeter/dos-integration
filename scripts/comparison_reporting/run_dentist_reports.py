@@ -1,17 +1,20 @@
+import sys
+from os.path import join
 from collections import defaultdict
 from datetime import datetime
 from itertools import groupby
-from os import path
 from pathlib import Path
 from typing import List
 
 from aws_lambda_powertools.logging import Logger
-from comparison_reporting.reporter import download_csv_as_dicts, Reporter
 
+sys.path.insert(1, join(Path().absolute().parent.parent, "application"))
 from common.constants import DENTIST_SERVICE_TYPE_IDS
 from common.dos import get_all_valid_dos_postcodes, get_services_from_db
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+
+from reporter import download_csv_as_dicts, Reporter
 
 logger = Logger(child=True)
 logger.setLevel("DEBUG")
@@ -104,5 +107,5 @@ def run_dentist_reports(output_dir: str = "reports_output/"):
     reporter.run_and_save_reports("dentists", output_dir)
 
 
-if __name__ == "__main__":  # pragma: no cover
-    run_dentist_reports(path.join(Path.home(), "reports_output"))
+if __name__ == "__main__":
+    run_dentist_reports(join(Path.home(), "reports_output"))
