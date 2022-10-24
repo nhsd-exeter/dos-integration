@@ -586,6 +586,7 @@ python-format:
 python-check-imports:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
 		CMD="python -m isort . -l=120 --check-only --profile=black \
 			--force-alphabetical-sort-within-sections --known-local-folder=common \
 			"
@@ -593,6 +594,7 @@ python-check-imports:
 python-fix-imports:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
 		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
 			--known-local-folder=common \
 			"
