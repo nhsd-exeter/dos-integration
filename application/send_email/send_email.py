@@ -18,7 +18,7 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging_hidden_event
-@logger.inject_lambda_context(clear_state=True)
+@logger.inject_lambda_context(clear_state=True, correlation_id_path="correlation_id")
 def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
     """Entrypoint handler for the service_sync lambda
 
@@ -26,7 +26,6 @@ def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
         event (EmailMessage): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    logger.set_correlation_id(event["correlation_id"])
     logger.append_keys(user_id=event["user_id"], change_id=event["change_id"], s3_filename=event["s3_filename"])
     logger.info("Starting send_email lambda")
     send_email(
