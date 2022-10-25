@@ -22,7 +22,7 @@ lambda_client = client("lambda")
 
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
-@logger.inject_lambda_context()
+@logger.inject_lambda_context(clear_state=True)
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
     """Entrypoint handler for the orchestrator lambda
 

@@ -23,7 +23,7 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
-@logger.inject_lambda_context()
+@logger.inject_lambda_context(clear_state=True)
 def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> None:
     """Entrypoint handler for the service_sync lambda
 

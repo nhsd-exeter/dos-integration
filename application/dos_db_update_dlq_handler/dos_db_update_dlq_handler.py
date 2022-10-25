@@ -16,7 +16,7 @@ logger = Logger()
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context()
+@logger.inject_lambda_context(clear_state=True)lear_state=True)
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the lambda
