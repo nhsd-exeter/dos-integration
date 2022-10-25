@@ -146,8 +146,10 @@ def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
         scan_kwargs = {"Segment": segment, "TotalSegments": total_segments}
         newest_events = {}
         total_events = 0
-        for scans in itertools.count():
+        scans = 0
+        while True:
             resp = change_event_table.scan(**scan_kwargs)
+            scans += 1
             more_events = resp["Items"]
             total_events += len(more_events)
             merge_newest_events(newest_events, more_events)
