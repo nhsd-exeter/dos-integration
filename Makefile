@@ -576,6 +576,7 @@ python-code-checks:
 python-check-dead-code:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(PROJECT_DIR) \
 		CMD="python -m vulture"
 
 python-format:
