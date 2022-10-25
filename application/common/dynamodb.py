@@ -1,5 +1,4 @@
 import hashlib
-import itertools
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from json import dumps, loads
