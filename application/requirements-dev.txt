@@ -1,6 +1,5 @@
 Faker
 aws-lambda-context
-aws_lambda_powertools
 bandit
 boto3
 coverage
