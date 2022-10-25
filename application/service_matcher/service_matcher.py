@@ -36,7 +36,7 @@ tracer = Tracer()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
 @set_correlation_id()
-@logger.inject_lambda_context(clear_state=True)
+@logger.inject_lambda_context()
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the service_matcher lambda
