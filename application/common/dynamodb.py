@@ -154,7 +154,7 @@ def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
             total_events += len(more_events)
             merge_newest_events(newest_events, more_events)
             if "LastEvaluatedKey" not in resp or scans % 10 == 0:
-                logger.info(f"Thread {segment} found {len(newest_events)}/{total_events} unique ODSCode events.")
+                logger.info(f"Thread {segment} found {len(newest_events)}/{total_events} unique ODSCode events")
             if "LastEvaluatedKey" in resp:
                 scan_kwargs["ExclusiveStartKey"] = resp["LastEvaluatedKey"]
             else:
