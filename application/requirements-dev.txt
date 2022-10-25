@@ -3,6 +3,7 @@ aws-lambda-context
 bandit
 boto3
 coverage
+fastjsonschema
 isort
 locust
 moto
