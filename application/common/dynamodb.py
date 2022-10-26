@@ -128,7 +128,7 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     return sequence_number
 
 
-def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
+def get_newest_event_per_odscode(threads: int = 2, limit: int = None) -> dict[str, dict]:
     """Will return a dict map of the most recent DB entry for every ODSCode"""
     change_event_table = ddb_resource.Table(environ["CHANGE_EVENTS_TABLE_NAME"])
     logger.info(
@@ -143,6 +143,8 @@ def get_newest_event_per_odscode(threads: int = 2) -> dict[str, dict]:
 
     def scan_thread(segment: int, total_segments: int):
         scan_kwargs = {"Segment": segment, "TotalSegments": total_segments}
+        if limit is not None:
+            scan_kwargs["Limit"] = limit
         newest_events = {}
         total_events = 0
         scans = 0
