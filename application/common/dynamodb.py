@@ -1,6 +1,7 @@
 import hashlib
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
+from itertools import count
 from json import dumps, loads
 from os import environ
 from time import time
@@ -147,10 +148,8 @@ def get_newest_event_per_odscode(threads: int = 2, limit: int = None) -> dict[st
             scan_kwargs["Limit"] = limit
         newest_events = {}
         total_events = 0
-        scans = 0
-        while True:
+        for scans in count():
             resp = change_event_table.scan(**scan_kwargs)
-            scans += 1
             more_events = resp["Items"]
             total_events += len(more_events)
             merge_newest_events(newest_events, more_events)
