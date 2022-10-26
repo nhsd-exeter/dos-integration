@@ -1,2 +1,2 @@
 aws-embedded-metrics
-aws-lambda-powertools == 1.31.1
+aws-lambda-powertools == 2.0.0
