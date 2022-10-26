@@ -47,6 +47,7 @@ resource "aws_sqs_queue" "update_request_queue" {
   depends_on = [aws_sqs_queue.update_request_dlq]
 }
 
+
 #TODO: REPLACE WITH BLUE GREEN LINK STACK
 resource "aws_lambda_event_source_mapping" "change_event_event_source_mapping" {
   batch_size       = 1
@@ -71,6 +72,14 @@ resource "aws_sqs_queue" "change_event_dlq" {
 
 resource "aws_sqs_queue" "update_request_dlq" {
   name                      = var.update_request_dlq
+  fifo_queue                = true
+  kms_master_key_id         = data.aws_kms_key.signing_key.key_id
+  message_retention_seconds = 1209600 # 14 days
+}
+
+#TODO:  MOVE TO SHARED RESOURCES STACK
+resource "aws_sqs_queue" "shared_resources_dlq" {
+  name                      = var.shared_resources_dlq
   fifo_queue                = true
   kms_master_key_id         = data.aws_kms_key.signing_key.key_id
   message_retention_seconds = 1209600 # 14 days

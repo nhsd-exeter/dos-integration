@@ -68,6 +68,7 @@ holding_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$
 update_request_dlq_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_dlq)
 TF_VAR_change_event_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-change-event-dead-letter-queue.fifo
 TF_VAR_update_request_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-update-request-dead-letter-queue.fifo
+TF_VAR_shared_resources_dlq := $(PROJECT_ID)-$(ENVIRONMENT)-shared-resources-dead-letter-queue.fifo
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(ENVIRONMENT)-change-events
