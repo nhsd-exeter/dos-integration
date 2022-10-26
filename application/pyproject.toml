@@ -6,19 +6,10 @@ skips = ["B101"]
 make_whitelist = true
 paths=["."]
 exclude = [
-  "change_event_dlq_handler/tests",
-  "common/tests",
-  "comparison_reporting/tests",
-  "dos_db_handler/tests",
-  "dos_db_update_dlq_handler/tests",
-  "event_replay/tests",
-  "orchestrator/tests",
-  "send_email/tests",
-  "service_matcher/tests",
-  "service_sync/tests",
-  "slack_messenger/tests",
+  "/tests",
   ]
 sort_by_size = true
+min_confidence = 100
 ignore_names = [
   "email_body",
   "email_subject",

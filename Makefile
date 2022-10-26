@@ -166,22 +166,6 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		-e CR_FIFO_DLQ=$(TF_VAR_dos_db_update_dlq_handler_lambda_name) \
 		"
 
-create-dentist-reports: # Must use a PROFILE argument with appropriate DB details, or manually pass in details as arguments themselves
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python application/comparison_reporting/run_dentist_reports.py" \
-	ARGS=" \
-		-e DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address) \
-		-e DB_PORT=$(DB_PORT) \
-		-e DB_NAME=$(DB_NAME) \
-		-e DB_USER_NAME=$$(make -s secret-get-existing-value NAME=$(DB_USER_NAME_SECRET_NAME) KEY=$(DB_USER_NAME_SECRET_KEY)) \
-		-e DB_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DB_SECRET_KEY=$(DB_SECRET_KEY) \
-		-e DB_SCHEMA=$(DB_SCHEMA) \
-		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
-	"
-
 clean: # Runs whole project clean
 	make \
 		docker-clean \
@@ -569,6 +553,7 @@ python-format:
 python-check-imports:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
 		CMD="python -m isort . -l=120 --check-only --profile=black \
 			--force-alphabetical-sort-within-sections --known-local-folder=common \
 			"
@@ -576,6 +561,7 @@ python-check-imports:
 python-fix-imports:
 	make -s docker-run-python \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
 		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
 			--known-local-folder=common \
 			"

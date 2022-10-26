@@ -1,24 +1,25 @@
-import pathlib
+import sys
+from os.path import join
 from collections import defaultdict
 from datetime import datetime
 from itertools import groupby
-from os import path
+from pathlib import Path
 from typing import List
 
 from aws_lambda_powertools.logging import Logger
-from comparison_reporting.reporter import download_csv_as_dicts, Reporter
 
+sys.path.insert(1, join(Path().absolute().parent.parent, "application"))
 from common.constants import DENTIST_SERVICE_TYPE_IDS
-from common.dos import get_services_from_db
+from common.dos import get_all_valid_dos_postcodes, get_services_from_db
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+
+from reporter import download_csv_as_dicts, Reporter
 
 logger = Logger(child=True)
 logger.setLevel("DEBUG")
 DENTIST_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/Dentists.csv"
 DENTIST_OPENING_TIMES_DATA_FILE_URL = "https://assets.nhs.uk/data/foi/DentistOpeningTimes.csv"
-THIS_DIR = pathlib.Path(__file__).parent.resolve()
-OUTPUT_DIR = path.join(THIS_DIR, "out")
 
 
 def get_dentists() -> List[NHSEntity]:
@@ -93,13 +94,18 @@ def get_dentists() -> List[NHSEntity]:
     return dentists
 
 
-def run_dentist_reports():
+def run_dentist_reports(output_dir: str = "reports_output/"):
     logger.info("Running Dentist reports, Ensure you are connected to required vpn for DB or this may stall.")
     nhsuk_dentists = get_dentists()
     dentist_dos_services = get_services_from_db(DENTIST_SERVICE_TYPE_IDS)
-    reporter = Reporter(nhs_entities=nhsuk_dentists, dos_services=dentist_dos_services)
-    reporter.run_and_save_reports("dentists", OUTPUT_DIR)
+    valid_dos_postcodes = get_all_valid_dos_postcodes()
+    reporter = Reporter(
+        nhs_entities=nhsuk_dentists,
+        dos_services=dentist_dos_services,
+        valid_dos_postcodes=valid_dos_postcodes
+    )
+    reporter.run_and_save_reports("dentists", output_dir)
 
 
 if __name__ == "__main__":
-    run_dentist_reports()
+    run_dentist_reports(join(Path.home(), "reports_output"))
