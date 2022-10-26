@@ -39,6 +39,8 @@ DOS_TRANSACTIONS_PER_SECOND = 6
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
 
+TF_VAR_route53_health_check_alarm_region = us-east-1
+
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(ENVIRONMENT)-api-key
 TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
