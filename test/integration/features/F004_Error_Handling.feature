@@ -43,7 +43,7 @@ Feature: F004. Error Handling
   Scenario Outline: F004S007. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id "<seqid>"
-    Then the "service-matcher" lambda shows field "message" with message "Sequence id is smaller than the existing one"
+    Then the "ingest-change-event" lambda shows field "message" with message "Sequence id is smaller than the existing one"
 
     Examples: These are both lower than the default sequence-id values
       | seqid |
@@ -93,7 +93,7 @@ Feature: F004. Error Handling
   Scenario Outline: F004S013. Exception is raised when unaccepted Dentist org type CE is processed
     Given a "dentist" Changed Event is aligned with DoS
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'Dentist'"
+    Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'Dentist'"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F004S014 Exception raised and CR created for Changed Event with invalid URL
