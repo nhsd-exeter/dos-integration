@@ -51,10 +51,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     Some code may need to be changed if the exact input format is changed.
     """
     time_start_ns = time_ns()
-    logger.append_keys(
-        ods_code=None, org_type=None, org_sub_type=None, dynamo_record_id=None, message_received=None, service_type=None
-    )
-
     if len(list(event.records)) != 1:
         raise ValueError(f"{len(list(event.records))} records found in event. Expected 1.")
 
