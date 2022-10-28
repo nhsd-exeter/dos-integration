@@ -1,20 +1,20 @@
 import hashlib
-import logging
 from dataclasses import dataclass
 from datetime import date
 from json import dumps
 from os import environ
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 from pytest import fixture, raises
 
+from application.common.types import HoldingQueueChangeEventItem
 from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
 
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.tests.conftest import dummy_dos_service
+from common.tests.conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
@@ -97,23 +97,15 @@ def get_message_attributes(
 
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.validate_change_event")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.time_ns", return_value=1642619746522500523)
 @patch.object(MetricsLogger, "put_metric")
 @patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_unmatched_service(
     mock_set_dimension,
     mock_put_metric,
-    mock_time,
     mock_extract_body,
     mock_nhs_entity,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    mock_validate_change_event,
     mock_send_update_requests,
     mock_get_matching_services,
     change_event,
@@ -123,11 +115,9 @@ def test_lambda_handler_unmatched_service(
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = None
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     mock_get_matching_services.return_value = []
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -139,18 +129,12 @@ def test_lambda_handler_unmatched_service(
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_not_called()
-    mock_set_dimension.assert_has_calls([call({"ENV": "test"}), call({"ENV": "test"})])
-
-    mock_put_metric.assert_called_with("QueueToProcessorLatency", 3000, "Milliseconds")
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
 
 
-@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_unmatched_nhsuk_service")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -160,21 +144,16 @@ def test_lambda_handler_no_matching_dos_services(
     mock_nhs_entity,
     mock_send_update_requests,
     mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_unmatched_nhsuk_service,
-    validate_change_event,
     change_event,
     lambda_context,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     mock_get_matching_services.return_value = []
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -183,16 +162,12 @@ def test_lambda_handler_no_matching_dos_services(
     # Assert
     mock_log_unmatched_nhsuk_service.assert_called_once()
     mock_send_update_requests.assert_not_called()
-
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
 
 
-@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_blank_standard_opening_times")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -202,10 +177,7 @@ def test_lambda_handler_blank_std_opening_report_log(
     mock_nhs_entity,
     mock_send_update_requests,
     mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_blank_standard_opening_times,
-    validate_change_event,
     change_event,
     lambda_context,
 ):
@@ -221,11 +193,9 @@ def test_lambda_handler_blank_std_opening_report_log(
 
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     mock_get_matching_services.return_value = [service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -238,10 +208,7 @@ def test_lambda_handler_blank_std_opening_report_log(
         del environ[env]
 
 
-@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_closed_or_hidden_services")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -251,10 +218,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     mock_nhs_entity,
     mock_send_update_requests,
     mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_closed_or_hidden_services,
-    mock_validate_change_event,
     change_event,
     lambda_context,
 ):
@@ -270,11 +234,9 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     change_event["OrganisationStatus"] = "closed"
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     mock_get_matching_services.return_value = [service]
 
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
@@ -290,10 +252,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
 
 
 @patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_invalid_open_times")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
@@ -301,10 +260,7 @@ def test_lambda_handler_invalid_open_times(
     mock_extract_body,
     mock_nhs_entity,
     mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_invalid_open_times,
-    mock_validate_change_event,
     mock_send_update_requests,
     change_event,
     lambda_context,
@@ -338,11 +294,9 @@ def test_lambda_handler_invalid_open_times(
     ]
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
     mock_get_matching_services.return_value = [service]
 
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
@@ -352,50 +306,6 @@ def test_lambda_handler_invalid_open_times(
     # Assert
     mock_log_invalid_open_times.assert_called_once()
     mock_send_update_requests.assert_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_should_throw_exception(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    change_event,
-    lambda_context,
-    caplog,
-):
-    # Arrange
-    service = dummy_dos_service()
-    service.id = 1
-    service.uid = 101
-    service.odscode = "SLC4501"
-    service.web = "www.fakesite.com"
-    service.publicphone = "01462622435"
-    service.postcode = "S45 1AB"
-
-    del change_event["OrganisationSubType"]
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
-    mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
-    mock_get_matching_services.return_value = [service]
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    with caplog.at_level(logging.ERROR):
-        lambda_handler(sqs_event, lambda_context)
-    assert "Validation Error" in caplog.text
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
@@ -414,93 +324,10 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
         del environ[env]
 
 
-@patch.object(Logger, "error")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_no_sequence_number(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    mock_add_change_event_to_dynamodb,
-    mock_send_update_requests,
-    mock_logger,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
-    mock_extract_body.return_value = change_event
-    mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = None
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(sqs_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_nhs_entity.assert_not_called()
-    mock_send_update_requests.assert_not_called()
-    mock_logger.assert_called_with("No sequence number provided, so message will be ignored.")
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch.object(Logger, "error")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_sequence_number_is_less_than_db_sequence_number(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_get_sequence_number,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
-    mock_add_change_event_to_dynamodb,
-    mock_send_update_requests,
-    mock_logger,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
-    mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = None
-    mock_get_sequence_number.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 3
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(sqs_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_nhs_entity.assert_not_called()
-    mock_send_update_requests.assert_not_called()
-    mock_logger.assert_called_with(
-        "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
-        extra={"incoming_sequence_number": 1, "db_latest_sequence_number": 3},
-    )
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
+@patch(f"{FILE_PATH}.sqs")
 @patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "info")
-@patch(f"{FILE_PATH}.client")
-def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock):
+def test_send_update_requests(mock_logger, get_correlation_id_mockm, mock_sqs):
     # Arrange
     q_name = "test-queue"
     environ["UPDATE_REQUEST_QUEUE_URL"] = q_name
@@ -508,14 +335,7 @@ def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock)
     record_id = "someid"
     sequence_number = 1
     odscode = "FXXX1"
-    update_requests = [
-        {
-            "service_id": "1",
-            "change_event": {
-                "ODSCode": odscode,
-            },
-        }
-    ]
+    update_requests = [{"service_id": "1", "change_event": {"ODSCode": odscode}}]
     # Act
     send_update_requests(
         update_requests=update_requests,
@@ -524,7 +344,6 @@ def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock)
         sequence_number=sequence_number,
     )
     # Assert
-    mock_client.assert_called_with("sqs")
     payload = dumps(update_requests[0])
     encoded = payload.encode()
     hashed_payload = hashlib.sha256(encoded).hexdigest()
@@ -537,7 +356,7 @@ def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock)
             "1", message_received, record_id, odscode, f"1-{hashed_payload}", "1"
         ),
     }
-    mock_client.return_value.send_message_batch.assert_called_with(
+    mock_sqs.send_message_batch.assert_called_with(
         QueueUrl=q_name,
         Entries=[entry_details],
     )
@@ -547,10 +366,7 @@ def test_send_update_requests(mock_client, mock_logger, get_correlation_id_mock)
 
 
 @patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.log_invalid_open_times")
-@patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
@@ -558,22 +374,17 @@ def test_lambda_handler_invalid_existing_dos_opening_times(
     mock_extract_body,
     mock_nhs_entity,
     mock_get_matching_services,
-    mock_add_change_event_to_dynamodb,
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
     mock_log_invalid_open_times,
-    mock_validate_change_event,
     mock_send_update_requests,
     change_event,
     lambda_context,
 ):
-
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(change_event)
-    mock_extract_body.return_value = change_event
+    holding_queue_change_event_item = HOLDING_QUEUE_CHANGE_EVENT_ITEM.copy()
+    holding_queue_change_event_item["change_event"] = change_event
+    mock_extract_body.return_value = holding_queue_change_event_item
     mock_nhs_entity.return_value = mock_entity
-    mock_add_change_event_to_dynamodb.return_value = 1
-    mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 0
 
     service = dummy_dos_service()
     spec_open_time = SpecifiedOpeningTime([OpenPeriod.from_string("12:00-16:00")], date(2023, 3, 1), True)
@@ -590,12 +401,19 @@ def test_lambda_handler_invalid_existing_dos_opening_times(
         del environ[env]
 
 
+HOLDING_QUEUE_CHANGE_EVENT_ITEM = HoldingQueueChangeEventItem(
+    change_event=PHARMACY_STANDARD_EVENT.copy(),
+    message_received=1234567890,
+    sequence_number=1,
+    dynamo_record_id="123",
+    correlation_id="correlation_id",
+)
 SQS_EVENT = {
     "Records": [
         {
             "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
             "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
-            "body": "Test message.",
+            "body": dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM),
             "attributes": {
                 "ApproximateReceiveCount": "1",
                 "SentTimestamp": "1642619743522",

@@ -13,6 +13,7 @@ updates:
     schedule:
       interval: "daily"
     target-branch: "develop"
+    versioning-strategy: increase-if-necessary
 
   # Docker Dependencies
   - package-ecosystem: "docker"

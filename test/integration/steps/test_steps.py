@@ -823,7 +823,6 @@ def invalid_opening_times_exception(context: Context):
     for item in [
         "nhsuk_odscode",
         "nhsuk_organisation_name",
-        "message_received",
         "nhsuk_open_times_payload",
         "dos_services",
     ]:

@@ -36,7 +36,7 @@ def extract_body(body: str) -> Dict[str, Any]:
 
 
 def get_sequence_number(record: SQSRecord) -> Union[int, None]:
-    """Gets the sequence number from the SQS record
+    """Gets the sequence number from the SQS record sent by NHS UK
     Args:
         record (SQSRecord): SQS record
     Returns:

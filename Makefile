@@ -79,7 +79,7 @@ unit-test:
 	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -103,9 +103,9 @@ UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
 		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
+		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
 		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
@@ -146,7 +146,7 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 60" \
+	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
@@ -231,6 +231,12 @@ send-email-build-and-deploy: ### Build and deploy send email lambda docker image
 	make build-and-deploy-single-function FUNCTION_NAME=send-email
 
 # ==============================================================================
+# Ingest Change Event
+
+ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+
+# ==============================================================================
 # Deployments
 
 sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp/latest]
@@ -247,6 +253,7 @@ build-and-deploy-single-function: # Build and deploy single lambda only (meant t
 	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
 	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
@@ -520,7 +527,7 @@ trigger-dos-deployment-pipeline:
 	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
 	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
 	-F "TARGET=\"regressiondi\"" \
-	-F "IMAGE_TAG=\"7.12.1_d393439\"" \
+	-F "IMAGE_TAG=\"7.12.1_8659599\"" \
 	-F "REFRESH=\"true\""
 	echo Jenkins Job has started
 	echo Sleeping for 3 minutes

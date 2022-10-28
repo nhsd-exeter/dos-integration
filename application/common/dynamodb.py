@@ -110,22 +110,22 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
     Returns:
         int: Sequence number of the message or None if not present
     """
-    try:
-        resp = dynamodb.query(
-            TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
-            IndexName="gsi_ods_sequence",
-            KeyConditionExpression="ODSCode = :odscode",
-            ExpressionAttributeValues={":odscode": {"S": odscode}},
-            Limit=1,
-            ScanIndexForward=False,
-            ProjectionExpression="ODSCode,SequenceNumber",
-        )
-        sequence_number = 0
-        if resp.get("Count") > 0:
-            sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
-        logger.debug(f"Sequence number for osdscode '{odscode}'= {sequence_number}")
-    except Exception as err:
-        raise DynamoDBException(f"Unable to get sequence id from dynamodb for a given ODSCode '{odscode}'.") from err
+    # try:
+    resp = dynamodb.query(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        IndexName="gsi_ods_sequence",
+        KeyConditionExpression="ODSCode = :odscode",
+        ExpressionAttributeValues={":odscode": {"S": odscode}},
+        Limit=1,
+        ScanIndexForward=False,
+        ProjectionExpression="ODSCode,SequenceNumber",
+    )
+    sequence_number = 0
+    if resp.get("Count") > 0:
+        sequence_number = int(resp.get("Items")[0]["SequenceNumber"]["N"])
+    logger.debug(f"Sequence number for osdscode '{odscode}'= {sequence_number}")
+    # except Exception as err:
+    #     raise DynamoDBException(f"Unable to get sequence id from dynamodb for a given ODSCode '{odscode}'.") from err
     return sequence_number
 
 

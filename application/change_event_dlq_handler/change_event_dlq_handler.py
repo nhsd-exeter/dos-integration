@@ -17,32 +17,51 @@ logger = Logger()
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context(
-    clear_state=True,
-    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue')
+@logger.inject_lambda_context(clear_state=True)
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
-    """Entrypoint handler for the lambda
+    """Entrypoint handler for the change event dlq handler lambda
+
+    Messages are sent to the change event dlq handler lambda when a message
+    fails in either the change event queue or holding queue
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
         context (LambdaContext): Lambda function context object
     """
     record = next(event.records)
-    attributes = handle_sqs_msg_attributes(record.message_attributes)
-    logger.append_keys(dynamo_record_id=get_sqs_msg_attribute(record.message_attributes, "dynamo_record_id"))
-    logger.append_keys(message_received=get_sqs_msg_attribute(record.message_attributes, "message_received"))
-    logger.append_keys(ods_code=get_sqs_msg_attribute(record.message_attributes, "ods_code"))
-    message = record.body
-    body = extract_body(message)
+    handle_sqs_msg_attributes(record.message_attributes)
+    body = extract_body(record.body)
+    if "dynamo_record_id" not in record.body:
+        # This is when a message comes from the change event queue
+        attributes = handle_sqs_msg_attributes(record.message_attributes)
+        correlation_id = get_sqs_msg_attribute(record.message_attributes, "correlation-id")
+        logger.set_correlation_id(correlation_id)
+        logger.append_keys(dynamo_record_id=get_sqs_msg_attribute(record.message_attributes, "dynamo_record_id"))
+        logger.append_keys(message_received=get_sqs_msg_attribute(record.message_attributes, "message_received"))
+        logger.append_keys(ods_code=get_sqs_msg_attribute(record.message_attributes, "ods_code"))
+        change_event = body
+        sequence_number = get_sequence_number(record)
+    else:
+        # This is when a message comes from the holding queue
+        attributes = handle_sqs_msg_attributes(record.message_attributes)
+        logger.info("Message received from holding queue", extra={"body": record.body})
+        change_event = body["change_event"]
+        correlation_id = body.get("correlation_id")
+        logger.set_correlation_id(correlation_id)
+        logger.append_keys(dynamo_record_id=body.get("dynamo_record_id"))
+        logger.append_keys(message_received=body.get("message_received"))
+        logger.append_keys(ods_code=change_event.get("ODSCode"))
+        sequence_number = body.get("sequence_number")
+
     error_msg = attributes["error_msg"]
     logger.warning(
-        "FIFO Dead Letter Queue Handler received event",
+        "Change Event Dead Letter Queue Handler received event",
         extra={
             "report_key": FIFO_DLQ_HANDLER_REPORT_ID,
             "error_msg": f"Message Abandoned: {error_msg}",
             "error_msg_http_code": attributes["error_msg_http_code"],
-            "payload": body,
+            "payload": change_event,
         },
     )
     metrics.set_namespace("AWS/SQS")
@@ -52,5 +71,4 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.put_metric("NumberOfMessagesReceived", 1, "Count")
 
     sqs_timestamp = int(record.attributes["SentTimestamp"])
-    sequence_number = get_sequence_number(record)
-    add_change_event_to_dynamodb(body, sequence_number, sqs_timestamp)
+    add_change_event_to_dynamodb(change_event, sequence_number, sqs_timestamp)

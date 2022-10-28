@@ -89,20 +89,6 @@ resource "aws_codepipeline" "codepipeline" {
     }
   }
   stage {
-    name = "Setup_DoS_Integration_Environment"
-    action {
-      name            = "SetupIntegrationTest"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-${var.environment}-setup-integration-test-stage"
-      }
-    }
-  }
-  stage {
     name = "Integration_Test"
     dynamic "action" {
       for_each = local.integration_make_targets
