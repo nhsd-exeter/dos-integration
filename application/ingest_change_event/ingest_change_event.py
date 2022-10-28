@@ -11,7 +11,7 @@ from boto3 import client
 
 from .change_event_validation import validate_change_event
 from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
-from common.middlewares import set_correlation_id, unhandled_exception_logging
+from common.middlewares import unhandled_exception_logging
 from common.types import HoldingQueueChangeEventItem
 from common.utilities import extract_body, get_sequence_number, remove_given_keys_from_dict_by_msg_limit
 
@@ -23,8 +23,10 @@ sqs = client("sqs")
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context(clear_state=True)
-@set_correlation_id()
+@logger.inject_lambda_context(
+    clear_state=True,
+    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue',
+)
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the ingest change event lambda

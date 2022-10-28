@@ -17,9 +17,7 @@ logger = Logger()
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context(
-    clear_state=True,
-    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue')
+@logger.inject_lambda_context(clear_state=True)
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the change event dlq handler lambda

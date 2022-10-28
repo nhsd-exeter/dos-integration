@@ -33,21 +33,18 @@ sqs = client("sqs")
 
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
+@logger.inject_lambda_context(clear_state=True)
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context(
-    clear_state=True,
-    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue')
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the service_matcher lambda
 
     Args:
-        event (SQSEvent): Lambda function invocation event (list of 1 SQS Message) - Change Event is valid
+        event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
+            Change Event has been validate by the ingest change event lambda
         context (LambdaContext): Lambda function context object
 
     Event: The event payload should contain a NHS Entity (Service)
-
-    Some code may need to be changed if the exact input format is changed.
     """
     record = next(event.records)
     holding_queue_change_event_item: HoldingQueueChangeEventItem = extract_body(record.body)

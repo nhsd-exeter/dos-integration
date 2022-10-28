@@ -192,8 +192,7 @@ def test_lambda_handler_no_healthcheck_exception(
 
 
 @patch.object(Logger, "append_keys")
-@patch.object(Logger, "set_correlation_id")
-def test_set_up_logging(mock_set_correlation_id: MagicMock, mock_append_keys: MagicMock):
+def test_set_up_logging(mock_append_keys: MagicMock):
     # Act
     set_up_logging(UPDATE_REQUEST_QUEUE_ITEM)
     # Assert
