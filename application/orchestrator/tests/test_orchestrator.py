@@ -4,8 +4,9 @@ from os import environ
 from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
-from application.orchestrator.orchestrator import invoke_lambda, lambda_handler
 from pytest import approx, fixture
+
+from application.orchestrator.orchestrator import invoke_lambda, lambda_handler
 
 from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
 
