@@ -1,12 +1,13 @@
 from dataclasses import dataclass
-
+from json import dumps
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
-from json import dumps
+
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from pytest import fixture
-from common.tests.conftest import PHARMACY_STANDARD_EVENT
+
 from ..change_event_dlq_handler import lambda_handler
+from common.tests.conftest import PHARMACY_STANDARD_EVENT
 
 FILE_PATH = "application.change_event_dlq_handler.change_event_dlq_handler"
 
