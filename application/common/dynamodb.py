@@ -130,7 +130,7 @@ def get_latest_sequence_id_for_a_given_odscode_from_dynamodb(odscode: str) -> in
 
 
 def get_newest_event_per_odscode(threads: int = 2, limit: int = None) -> dict[str, dict]:
-    """Will return a dict map of the most recent DB entry for every ODSCode"""
+    """Will return a dict map of the most recent DB entry for every ODSCode."""
     change_event_table = ddb_resource.Table(environ["CHANGE_EVENTS_TABLE_NAME"])
     logger.info(
         f"Returning newest events per ODSCode from DDB table "
