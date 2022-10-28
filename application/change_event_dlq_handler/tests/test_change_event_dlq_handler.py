@@ -43,7 +43,7 @@ def dead_letter_change_event_from_change_event_queue():
                         "dataType": "String",
                     },
                     "sequence-number": {
-                        "stringValue": "059f36b4-87a3-44ab-83d2-661975830a7d",
+                        "stringValue": "123456789",
                         "stringListValues": [],
                         "binaryListValues": [],
                         "dataType": "String",
@@ -117,7 +117,7 @@ def test_lambda_handler_event_from_change_event_queue(
     expected_timestamp = int(
         dead_letter_change_event_from_change_event_queue["Records"][0]["attributes"]["SentTimestamp"]
     )
-    mock_add_change_event_to_dynamodb.assert_called_once_with(extracted_body, None, expected_timestamp)
+    mock_add_change_event_to_dynamodb.assert_called_once_with(extracted_body, 123456789, expected_timestamp)
 
 
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")

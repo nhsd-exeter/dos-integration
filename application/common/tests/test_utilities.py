@@ -40,13 +40,13 @@ def test_get_sequence_number():
     # Act
     sequence_number = get_sequence_number(record)
     # Assert
-    assert sequence_number == int(SQS_EVENT["Records"][0]["messageAttributes"]["sequence_number"]["stringValue"])
+    assert sequence_number == int(SQS_EVENT["Records"][0]["messageAttributes"]["sequence-number"]["stringValue"])
 
 
 def test_get_sequence_number_empty():
     # Arrange
     sqs_event = SQS_EVENT.copy()
-    del sqs_event["Records"][0]["messageAttributes"]["sequence_number"]
+    del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
     record = SQSRecord(sqs_event["Records"][0])
     # Act
     sequence_number = get_sequence_number(record)
@@ -142,7 +142,7 @@ SQS_EVENT = {
             "body": "Test message.",
             "attributes": {},
             "messageAttributes": {
-                "sequence_number": {"stringValue": "1", "dataType": "Number"},
+                "sequence-number": {"stringValue": "1", "dataType": "Number"},
                 "error_msg": {"stringValue": "Test Message", "dataType": "String"},
             },
             "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",

@@ -79,7 +79,7 @@ unit-test:
 	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv" \
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -103,7 +103,6 @@ UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
 		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
-		--volume $(APPLICATION_DIR)/comparison_reporting:/tmp/.packages/comparison_reporting \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
