@@ -17,7 +17,9 @@ logger = Logger()
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
-@logger.inject_lambda_context()
+@logger.inject_lambda_context(
+    clear_state=True,
+    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue')
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the lambda
@@ -28,8 +30,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """
     record = next(event.records)
     attributes = handle_sqs_msg_attributes(record.message_attributes)
-    correlation_id = get_sqs_msg_attribute(record.message_attributes, "correlation-id")
-    logger.set_correlation_id(correlation_id)
     logger.append_keys(dynamo_record_id=get_sqs_msg_attribute(record.message_attributes, "dynamo_record_id"))
     logger.append_keys(message_received=get_sqs_msg_attribute(record.message_attributes, "message_received"))
     logger.append_keys(ods_code=get_sqs_msg_attribute(record.message_attributes, "ods_code"))

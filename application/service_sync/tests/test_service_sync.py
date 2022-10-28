@@ -197,7 +197,6 @@ def test_set_up_logging(mock_set_correlation_id: MagicMock, mock_append_keys: Ma
     # Act
     set_up_logging(UPDATE_REQUEST_QUEUE_ITEM)
     # Assert
-    mock_set_correlation_id.assert_called_once_with("correlation_id")
     mock_append_keys.assert_called_once_with(ods_code=CHANGE_EVENT["ODSCode"], service_id=SERVICE_ID)
 
 
