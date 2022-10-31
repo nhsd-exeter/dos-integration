@@ -1123,3 +1123,13 @@ def check_s3_contains_email_file(context: Context):
 def check_changes_table_has_been_updated(context: Context):
     status = check_pending_service_is_rejected(context.service_id)
     assert "REJECTED" in status, "ERROR: changes table has not been updated"
+
+
+@then("service sync log contains no overlapping log data", target_fixture="context")
+def show_service_sync_logs(context: Context):
+    query = (
+        f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        '|filter message like "Attempting connection to database"'
+    )
+    logs = loads(get_logs(query, "service-sync", context.start_time))["results"][0][0]["value"]
+    assert "service_uid" and "service_name" not in logs, "ERROR: service uid and service name found in logs"
