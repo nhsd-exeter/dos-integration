@@ -2,7 +2,6 @@ from json import dumps
 from typing import Any, Dict
 
 from aws_lambda_powertools.logging import Logger
-from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.dos import (
@@ -15,12 +14,9 @@ from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.middlewares import unhandled_exception_logging
 from common.service_type import get_valid_service_types
 
-tracer = Tracer()
 logger = Logger()
 
-
 @unhandled_exception_logging()
-@tracer.capture_lambda_handler()
 @logger.inject_lambda_context(clear_state=True)
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """Entrypoint handler for the lambda
