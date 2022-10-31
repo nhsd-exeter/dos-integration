@@ -54,6 +54,10 @@ data "template_file" "demo_deploy_buildspec" {
   template = file("demo-deploy-buildspec.yml")
 }
 
+data "template_file" "build_cicd_artefact_buildspec" {
+  template = file("build-cicd-artefact-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
