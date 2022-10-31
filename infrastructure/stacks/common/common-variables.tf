@@ -10,6 +10,10 @@ variable "aws_region" {
   description = "The AWS region"
 }
 
+variable "route53_health_check_alarm_region" {
+  description = "The AWS region for the CloudWatch global alarms"
+}
+
 variable "aws_account_name" {
   description = "Current AWS account name"
 }
