@@ -16,6 +16,7 @@ from common.service_type import get_valid_service_types
 
 logger = Logger()
 
+
 @unhandled_exception_logging()
 @logger.inject_lambda_context(clear_state=True)
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:

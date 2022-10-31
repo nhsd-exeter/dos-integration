@@ -169,9 +169,8 @@ def get_pharmacy_odscode() -> str:
 
 def get_single_service_pharmacy() -> str:
     ods_code = get_pharmacy_odscode()
-    query = "SELECT count(*) FROM services where odscode like '%(ODS_CODE)s%'"
-    query_vars = {"ODS_CODE": ods_code}
-    lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
+    query = f"SELECT count(*) FROM services where odscode like '{ods_code}%'"
+    lambda_payload = {"type": "write", "query": query, "query_vars": None}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
     if data != 1:
