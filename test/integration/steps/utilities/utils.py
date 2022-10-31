@@ -151,7 +151,7 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
 
 def get_single_service_pharmacy_odscode() -> Dict:
     query = (
-        "SELECT LEFT(odscode,5) FROM services WHERE typeid 13 "
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 "
         "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
         "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
     )
