@@ -115,7 +115,7 @@ UNIT_TEST_ARGS=" \
 
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration service-matcher --client-id test-id test_tmp.txt
+	--configuration ingest-change-event --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
 		echo "PHA"
@@ -129,7 +129,7 @@ integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PRO
 
 integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration service-matcher --client-id test-id test_tmp.txt
+	--configuration ingest-change-event --client-id test-id test_tmp.txt
 	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
 	if [[ $$VALUE =~ .*"PHA".* ]]; then
 		echo "PHA"
