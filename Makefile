@@ -31,17 +31,17 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources,before-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=after-lambda-deployment
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -356,7 +356,7 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
 	fi
 
-re-tag-images-for-deployment: # Re-tag images for deployment
+re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SOURCE=[tag], TARGET=[tag]
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_PROD_LIST) | tr "," "\n"); do
 		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
 		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)

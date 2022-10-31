@@ -1,20 +1,3 @@
-#TODO:  MOVE TO SHARED RESOURCES STACK
-resource "aws_sqs_queue" "change_event_queue" {
-  name                        = var.change_event_queue_name
-  fifo_queue                  = true
-  content_based_deduplication = true
-  deduplication_scope         = "messageGroup"
-  message_retention_seconds   = 1209600 # 14 days
-  fifo_throughput_limit       = "perMessageGroupId"
-  visibility_timeout_seconds  = 30 # Must be same as ingest change event lambda max execution time
-  kms_master_key_id           = data.aws_kms_key.signing_key.key_id
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.change_event_dlq.arn
-    maxReceiveCount     = 5
-  })
-  depends_on = [aws_sqs_queue.change_event_dlq]
-}
-
 resource "aws_sqs_queue" "holding_queue" {
   name                        = var.holding_queue_name
   fifo_queue                  = true
@@ -47,15 +30,6 @@ resource "aws_sqs_queue" "update_request_queue" {
   depends_on = [aws_sqs_queue.update_request_dlq]
 }
 
-
-#TODO: REPLACE WITH BLUE GREEN LINK STACK
-resource "aws_lambda_event_source_mapping" "change_event_event_source_mapping" {
-  batch_size       = 1
-  event_source_arn = aws_sqs_queue.change_event_queue.arn
-  enabled          = true
-  function_name    = data.aws_lambda_function.ingest_change_event.arn
-}
-
 resource "aws_lambda_event_source_mapping" "holding_queue_event_source_mapping" {
   batch_size       = 1
   event_source_arn = aws_sqs_queue.holding_queue.arn
@@ -72,14 +46,6 @@ resource "aws_sqs_queue" "change_event_dlq" {
 
 resource "aws_sqs_queue" "update_request_dlq" {
   name                      = var.update_request_dlq
-  fifo_queue                = true
-  kms_master_key_id         = data.aws_kms_key.signing_key.key_id
-  message_retention_seconds = 1209600 # 14 days
-}
-
-#TODO:  MOVE TO SHARED RESOURCES STACK
-resource "aws_sqs_queue" "shared_resources_dlq" {
-  name                      = var.shared_resources_dlq
   fifo_queue                = true
   kms_master_key_id         = data.aws_kms_key.signing_key.key_id
   message_retention_seconds = 1209600 # 14 days

@@ -250,7 +250,7 @@ functions:
     image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}
     architecture: x86_64
     name: ${env:PROJECT_ID}-${sls:stage}-dos-db-handler
-    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in NonProd
+    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in Non-Live environments
     memorySize: 128
     timeout: 30
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role_name}

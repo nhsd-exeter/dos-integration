@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -151,7 +151,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -230,7 +230,7 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -283,7 +283,7 @@ module "service_matcher" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     }
   ]
 }
@@ -310,7 +310,7 @@ module "service_sync" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -369,7 +369,7 @@ module "change_event_dlq_handler" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -414,7 +414,7 @@ module "dos_db_update_dlq_handler" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -461,7 +461,7 @@ module "send_email" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -497,7 +497,7 @@ module "ingest_change_event" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
