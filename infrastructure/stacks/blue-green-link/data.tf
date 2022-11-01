@@ -10,12 +10,20 @@ data "aws_lambda_function" "slack_messenger" {
   function_name = var.slack_messenger_lambda_name
 }
 
+data "aws_lambda_function" "change_event_dlq_handler" {
+  function_name = var.change_event_dlq_handler_lambda_name
+}
+
 # ##############
 # # SQS
 # ##############
 
 data "aws_sqs_queue" "change_event_queue" {
   name = var.change_event_queue_name
+}
+
+data "aws_sqs_queue" "shared_resources_dlq" {
+  name = var.shared_resources_dlq
 }
 
 # ##############

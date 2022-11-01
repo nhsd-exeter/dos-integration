@@ -86,6 +86,10 @@ data "aws_iam_policy_document" "shared_resources_sns_topic_app_alerts_for_slack_
   }
 }
 
+data "aws_iam_role" "di_firehose_role" {
+  name = var.di_firehose_role
+}
+
 # ##############
 # # ROUTE 53
 # ##############
@@ -102,6 +106,14 @@ data "terraform_remote_state" "route53" {
 data "aws_acm_certificate" "issued" {
   domain   = "*.${var.texas_hosted_zone}"
   statuses = ["ISSUED"]
+}
+
+# ##############
+# # KINESIS
+# ##############
+
+data "aws_kinesis_firehose_delivery_stream" "dos_integration_firehose" {
+  name = var.dos_integration_firehose
 }
 
 # ##############

@@ -56,7 +56,7 @@ variable "change_event_queue_name" {
 
 variable "shared_resources_dlq" {
   type        = string
-  description = "DLQ for change event queue when disconnected from blue/green environment"
+  description = "DLQ for change event queue"
 }
 
 # ############################
@@ -113,4 +113,23 @@ variable "shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_a
 variable "send_email_bucket_name" {
   type        = string
   description = "Name of the bucket to temporarily store emails to be sent"
+}
+
+# ##############
+# # KINESIS
+# ##############
+
+variable "change_event_gateway_subscription_filter_name" {
+  type        = string
+  description = "Log filter name for change event api gateway logs"
+}
+
+variable "dos_integration_firehose" {
+  type        = string
+  description = "The firehose delivery stream name"
+}
+
+variable "di_firehose_role" {
+  type        = string
+  description = "The firehose delivery stream role name"
 }

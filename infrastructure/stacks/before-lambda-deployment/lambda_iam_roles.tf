@@ -236,8 +236,8 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
       "Effect": "Allow",
       "Action": "sns:*",
       "Resource": [
-        "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*",
-        "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:uec-dos-int-*"
+        "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${var.project_id}-*",
+        "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:${var.project_id}-*"
       ]
     }
   ]
@@ -378,7 +378,10 @@ module "change_event_dlq_handler" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}"
+      "Resource": [
+        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}",
+        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.shared_resources_dlq}"
+      ]
     },
     {
       "Effect": "Allow",

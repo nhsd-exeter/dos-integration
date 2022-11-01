@@ -11,20 +11,6 @@ resource "aws_sns_topic_policy" "sns_topic_app_alerts_for_slack_policy_default_r
   ]
 }
 
-data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_default_region" {
-  statement {
-    actions = ["sns:Publish"]
-    principals {
-      type = "Service"
-      identifiers = [
-        "cloudwatch.amazonaws.com",
-        "codestar-notifications.amazonaws.com"
-      ]
-    }
-    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  }
-}
-
 resource "aws_sns_topic" "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
   provider          = aws.route53_health_check_alarm_region
   name              = var.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region
@@ -38,16 +24,4 @@ resource "aws_sns_topic_policy" "sns_topic_app_alerts_for_slack_policy_alarm_reg
   depends_on = [
     data.aws_iam_policy_document.sns_topic_app_alerts_for_slack_access_alarm_region
   ]
-}
-
-data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_region" {
-  provider = aws.route53_health_check_alarm_region
-  statement {
-    actions = ["sns:Publish"]
-    principals {
-      type        = "Service"
-      identifiers = ["cloudwatch.amazonaws.com"]
-    }
-    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
-  }
 }

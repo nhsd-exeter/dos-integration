@@ -111,12 +111,6 @@ variable "service_sync_di_subscription_filter_name" {
   description = "Log filter name for event sender lambda"
 }
 
-variable "change_event_gateway_subscription_filter_name" {
-  type        = string
-  description = "Log filter name for change event api gateway logs"
-}
-
-
 variable "change_event_dlq_handler_subscription_filter_name" {
   type        = string
   description = "Log filter name for fifo dlq lambda"
