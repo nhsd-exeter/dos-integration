@@ -31,7 +31,7 @@ resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
 }
 
 resource "aws_route53_health_check" "di_endpoint_health_check" {
-  fqdn              = "uec-dos-integration-di-561.k8s-nonprod.texasplatform.uk"
+  fqdn              = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
   port              = 443
   type              = "TCP"
   failure_threshold = "5"
