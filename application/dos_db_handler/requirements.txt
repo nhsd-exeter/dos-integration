@@ -1,2 +1,2 @@
-aws-lambda-powertools[tracer] ~= 2.0.0
+aws-lambda-powertools[tracer] ~= 2.1.0
 psycopg2-binary
