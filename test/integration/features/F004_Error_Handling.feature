@@ -105,3 +105,11 @@ Feature: F004. Error Handling
       | url                            |
       | https://TESTPHARMACY@GMAIL.COM |
       | test@gmail.com                 |
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F004015 Verify service sync log data does not overlap
+    Given a "pharmacy" Changed Event is aligned with DoS
+    When the Changed Event is sent for processing with "valid" api key
+    Given a "pharmacy" Changed Event is aligned with DoS
+    When the Changed Event is sent for processing with "valid" api key
+    Then service sync log contains no overlapping log data
