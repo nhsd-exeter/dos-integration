@@ -16,7 +16,7 @@ resource "aws_codebuild_webhook" "live_deployment_webhook" {
 resource "aws_codebuild_project" "di_deploy_live" {
   name           = "${var.project_id}-${var.environment}-deploy-live-stage"
   description    = "Deploy to the live environment"
-  build_timeout  = "30"
+  build_timeout  = "90"
   queued_timeout = "30"
   service_role   = data.aws_iam_role.pipeline_role.arn
 

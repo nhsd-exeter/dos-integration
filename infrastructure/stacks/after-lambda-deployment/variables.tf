@@ -16,6 +16,7 @@ variable "route53_terraform_state_key" {
 # ######################
 # # CLOUDWATCH DASHBOARD
 # #######################
+
 variable "cloudwatch_monitoring_dashboard_name" {
   description = "Name of the dashboard to see the various performance metrics in AWS"
 }
@@ -34,13 +35,19 @@ variable "dos_db_replica_name" {
 variable "sqs_dlq_recieved_msg_alert_name" {
   description = "The name of the cloudwatch alert for msgs recieved in the sqs dlq"
 }
-variable "sns_topic_app_alerts_for_slack" {
-  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+
+variable "sns_topic_app_alerts_for_slack_default_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the default region"
+}
+
+variable "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the route53 health check alarm region"
 }
 
 # ############################
 # SQS FIFO QUEUE
 # ############################
+
 variable "change_event_queue_name" {
   description = ""
 }
@@ -93,8 +100,13 @@ variable "ip_address_secret" {
 # ############################
 # # KMS
 # ############################
+
 variable "signing_key_alias" {
-  description = "Alias of key used for signing"
+  description = "Alias of key used for signing in the default region"
+}
+
+variable "route53_health_check_alarm_region_signing_key_alias" {
+  description = "Alias of key used for signing in the route53 health check alarm region"
 }
 
 # ##############

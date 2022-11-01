@@ -18,15 +18,7 @@ variable "nhs_uk_api_key_key" {
   description = "API Key key for secrets manager"
 }
 
-variable "email_secrets" {
-  type        = string
-  description = "Where the email secrets are stored"
-}
 
-variable "system_email_address_key" {
-  type        = string
-  description = "The key for the email address in the secrets manager secret"
-}
 
 # ############################
 # # SECURITY GROUP / RULES
@@ -175,7 +167,11 @@ variable "update_request_dlq" {
 # ##############
 
 variable "signing_key_alias" {
-  description = "Alias of key used for signing"
+  description = "Alias of key used for signing in the default region"
+}
+
+variable "route53_health_check_alarm_region_signing_key_alias" {
+  description = "Alias of key used for signing in the alarm region"
 }
 
 variable "developer_role_name" {
@@ -185,8 +181,13 @@ variable "developer_role_name" {
 # ######################
 # # CLOUDWATCH ALERTS
 # #######################
-variable "sns_topic_app_alerts_for_slack" {
-  description = "The name of the sns topic to recieve alerts for the application to forward to slack"
+
+variable "sns_topic_app_alerts_for_slack_default_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the default region"
+}
+
+variable "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
+  description = "The name of the sns topic to recieve alerts for the application to forward to slack in the alarm region"
 }
 
 # ##############

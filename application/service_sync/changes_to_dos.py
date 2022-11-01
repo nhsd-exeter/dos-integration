@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from aws_lambda_powertools.logging import Logger
 
-from .format import format_website
+from .format import format_address, format_website
 from .service_histories import ServiceHistories
 from .validation import validate_website
 from common.dos import DoSService, get_valid_dos_location
@@ -98,13 +98,10 @@ class ChangesToDoS:
                 "Removing Specified opening times that occur in the past",
                 extra={"all_nhs": nhs_spec_open_dates, "future_nhs": future_nhs_spec_open_dates},
             )
-        if SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, future_nhs_spec_open_dates):
-            logger.info(
-                "Specified opening times are equal, so no change",
-                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
-            )
-            return False
-        else:
+        equal_specified_opening_times = SpecifiedOpeningTime.equal_lists(
+            dos_spec_open_dates, future_nhs_spec_open_dates
+        )
+        if not equal_specified_opening_times or len(nhs_spec_open_dates) != len(future_nhs_spec_open_dates):
             logger.info(
                 "Specified opening times not equal",
                 extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
@@ -112,6 +109,12 @@ class ChangesToDoS:
             self.current_specified_opening_times = dos_spec_open_dates
             self.new_specified_opening_times = future_nhs_spec_open_dates
             return True
+        else:
+            logger.info(
+                "Specified opening times are equal, so no change",
+                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+            )
+            return False
 
     def check_for_address_and_postcode_for_changes(self) -> Tuple[bool, bool, Optional[DoSLocation]]:
         """Check if address and postcode have changed between dos_service and nhs_entity,
@@ -120,13 +123,12 @@ class ChangesToDoS:
         Returns:
             Tuple[bool, bool]: Tuple of booleans, first is if address has changed, second is if postcode has changed, third is the DoSLocation object for the postcode
         """  # noqa: E501
-        # Address Formatting Turned off in DI-591
-        # before_title_case_address = self.nhs_entity.address_lines
-        # self.nhs_entity.address_lines = list(map(format_address, self.nhs_entity.address_lines))
-        # logger.info(
-        #     f"Address after title casing: {self.nhs_entity.address_lines}",
-        #     extra={"before": before_title_case_address, "after": self.nhs_entity.address_lines},
-        # )
+        before_title_case_address = self.nhs_entity.address_lines
+        self.nhs_entity.address_lines = list(map(format_address, self.nhs_entity.address_lines))
+        logger.info(
+            f"Address after title casing: {self.nhs_entity.address_lines}",
+            extra={"before": before_title_case_address, "after": self.nhs_entity.address_lines},
+        )
         nhs_uk_address_string = "$".join(self.nhs_entity.address_lines)
         dos_address = self.dos_service.address
         is_address_same = True

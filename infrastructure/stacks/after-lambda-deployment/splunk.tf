@@ -87,7 +87,6 @@ resource "aws_cloudwatch_log_subscription_filter" "di_endpoint_access_logs" {
   depends_on      = [time_sleep.wait_a_minute]
 }
 
-
 resource "time_sleep" "wait_a_minute" {
   create_duration = "1m"
 }

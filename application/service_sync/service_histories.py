@@ -193,7 +193,7 @@ class ServiceHistories:
                 "CURRENT_DATE_TIME": current_date_time,
                 "SERVICE_ID": self.service_id,
             },
-            log_vars=False
+            log_vars=False,
         )
         cursor.close()
         if self.history_already_exists:
@@ -204,7 +204,7 @@ class ServiceHistories:
                     """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
                 vars={"SERVICE_HISTORY": Json(self.service_history), "SERVICE_ID": self.service_id},
-                log_vars=False
+                log_vars=False,
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
             cursor.close()
@@ -217,7 +217,7 @@ class ServiceHistories:
                     """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
                 vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": Json(self.service_history)},
-                log_vars=False
+                log_vars=False,
             )
             cursor.close()
             logger.warning(f"Service history created in the database for serviceid {self.service_id}")

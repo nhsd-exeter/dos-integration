@@ -7,7 +7,7 @@
 ############
 
 variable "aws_region" {
-  description = "The AWS region"
+  description = "The default AWS region"
 }
 
 variable "route53_health_check_alarm_region" {
@@ -46,6 +46,8 @@ variable "aws_account_id_tools" {
   description = "Account ID for the tools account"
   default     = "00000000000"
 }
+
+
 # ##############
 # # TEXAS COMMON
 # ##############
@@ -73,4 +75,27 @@ variable "project_display_name" {
 
 variable "terraform_platform_state_store" {
   description = "Texas Platform State store bucket"
+  default     = ""
+}
+
+# ################
+# # TAGGING COMMON
+# ################
+
+variable "data_classification" {
+  type        = string
+  description = "Project data classification"
+  default     = "Worry if you see this message in Prod"
+}
+
+variable "service_category" {
+  type        = string
+  description = "Project service category"
+  default     = "Worry if you see this message in Prod"
+}
+
+variable "distribution_list" {
+  type        = string
+  description = "Project distribution list"
+  default     = "Worry if you see this message in Prod"
 }

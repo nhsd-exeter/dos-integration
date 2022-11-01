@@ -87,20 +87,20 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | https://Www.testpharmacy.co.uk                   | https://www.testpharmacy.co.uk                   | website |
       | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test | website |
 
-  # @complete @pharmacy_no_log_searches  - Turned off in DI-591
-  # Scenario Outline: F001S009 Changed Event with address line variations is title cased and accepted by Dos
-  #   Given a Changed Event with "<address>" is valid
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then DoS has "<expected_address>" in the "<field>" field
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001S009 Changed Event with address line variations is title cased and accepted by Dos
+    Given a Changed Event with "<address>" is valid
+    When the Changed Event is sent for processing with "valid" api key
+    Then DoS has "<expected_address>" in the "<field>" field
 
-  #   Examples: Address variations
-  #     | address             | expected_address    | field   |
-  #     | 5 TESTER WAY        | 5 Tester Way        | address |
-  #     | 1 Test STREET       | 1 Test Street       | address |
-  #     | new test street     | New Test Street     | address |
-  #     | Tester's new street | Testers New Street  | address |
-  #     | new & test avenue   | New and Test Avenue | address |
-  #     | 49a test avenue     | 49A Test Avenue     | address |
+    Examples: Address variations
+      | address             | expected_address    | field   |
+      | 5 TESTER WAY        | 5 Tester Way        | address |
+      | 1 Test STREET       | 1 Test Street       | address |
+      | new test street     | New Test Street     | address |
+      | Tester's new street | Testers New Street  | address |
+      | new & test avenue   | New and Test Avenue | address |
+      | 49a test avenue     | 49A Test Avenue     | address |
 
   @complete @pharmacy_no_log_searches
   Scenario: F001S010 Changed Event with updated postcode to verify location changes

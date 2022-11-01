@@ -8,12 +8,9 @@ TF_VAR_terraform_platform_state_store = nhsd-texasplatform-terraform-state-store
 
 TF_VAR_developer_role_name = UECPUServiceDeveloper
 
-EMAIL_SECRETS := uec-dos-int-dev/deployment
-PROJECT_EMAIL_SECRET_NAME := $(EMAIL_SECRETS)
+
 SYSTEM_EMAIL_KEY := DI_SYSTEM_MAILBOX_ADDRESS
 TEAM_EMAIL_KEY := DI_TEAM_MAILBOX_ADDRESS
-TF_VAR_email_secrets := $(EMAIL_SECRETS)
-TF_VAR_system_email_address_key := $(SYSTEM_EMAIL_KEY)
 
 # ==============================================================================
 

@@ -29,5 +29,4 @@ ignore_names = [
   "metadata",
   "recipient_email_address",
   "recipient_id",
-  "format_address",
   ]

@@ -1,4 +1,4 @@
-# ADR-004: Email Sending Architecture
+# ADR-005: Email Sending Architecture
 
 ## Overview
 
