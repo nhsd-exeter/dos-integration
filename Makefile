@@ -611,3 +611,43 @@ github-actions-best-practices:
 
 checkov-secret-scanning:
 	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
+
+# ==============================================================================
+# 6.0 Release targets
+
+other:
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_dynamodb_table.message-history-table'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.route53_health_check_alarm_region_signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.alarm_region_signing_key'"
+
+blue-green-move-terraform-resources:
+# Init new shared resources state
+	make _terraform-initialise STACK=shared-resources
+# Import terraform resources
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_dynamodb_table.message-history-table' $(TF_VAR_change_events_table_name)"
+	SIGNING_KEY=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.signing_key' $$SIGNING_KEY"
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.signing_key' alias/$(TF_VAR_signing_key_alias)"
+	GLOBAL_REGION_SIGNING_KEY=$$(aws kms describe-key --region=$(TF_VAR_route53_health_check_alarm_region) --key-id alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias) --query KeyMetadata.KeyId --output text)
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.route53_health_check_alarm_region_signing_key' $$GLOBAL_REGION_SIGNING_KEY"
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.alarm_region_signing_key' alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias)"
+# Remove moved resources from current state
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_dynamodb_table.message-history-table'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.route53_health_check_alarm_region_signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.alarm_region_signing_key'"
+# Destroy non shared resources
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+# Rebuild resources
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=shared-resources,before-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-deploy
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link

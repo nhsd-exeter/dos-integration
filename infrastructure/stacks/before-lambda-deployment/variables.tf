@@ -169,7 +169,6 @@ variable "update_request_dlq" {
   description = "Update request SQS DLQ name"
 }
 
-
 variable "shared_resources_dlq" {
   type        = string
   description = "DLQ for change event queue"
