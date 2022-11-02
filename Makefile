@@ -38,7 +38,7 @@ deploy: # Deploys whole project - mandatory: PROFILE
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	make terraform-destroy-auto-approve STACKS=blue-green-link,after-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources,appconfig
@@ -67,7 +67,7 @@ populate-deployment-variables:
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
 
 populate-serverless-variables:
-	echo "export TERRAFORM_KMS_KEY_ID=$$(make -s terraform-output STACKS=before-lambda-deployment OPTS='-raw kms_key_id' | tail -n1)"
+	echo "export TERRAFORM_KMS_KEY_ID=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)"
 
 unit-test-local:
 	pyenv local .venv
@@ -615,12 +615,11 @@ checkov-secret-scanning:
 # ==============================================================================
 # 6.0 Release targets
 
-other:
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_dynamodb_table.message-history-table'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.route53_health_check_alarm_region_signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.alarm_region_signing_key'"
+deploy-release-6-pipeline:
+	make terraform-apply-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
+
+undeploy-release-6-pipeline:
+	make terraform-destroy-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
 
 blue-green-move-terraform-resources:
 # Init new shared resources state
@@ -645,6 +644,7 @@ blue-green-move-terraform-resources:
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+	aws logs delete-log-group --log-group-name /aws/lambda/$(TF_VAR_orchestrator_lambda_name) 2> /dev/null ||:
 # Rebuild resources
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=shared-resources,before-lambda-deployment
