@@ -151,9 +151,10 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
 
 def get_single_service_pharmacy_odscode() -> Dict:
     query = (
-        "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 "
-        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
-        "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
+        "select left(odscode,5) from services where typeid = 13 AND statusid = 1 "
+        "AND odscode IS NOT null AND LENGTH(odscode) > 4 and odscode in ( "
+        "select odscode from (SELECT left(odscode,5) as odscode, COUNT(*) AS amount "
+        "FROM services GROUP BY left(odscode,5)) as subset where amount = 1 )"
     )
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return invoke_dos_db_handler_lambda(lambda_payload)
@@ -168,13 +169,13 @@ def get_pharmacy_odscode() -> str:
 
 
 def get_single_service_pharmacy() -> str:
-    ods_code = get_pharmacy_odscode()
-    query = f"SELECT count(*) FROM services where odscode like '{ods_code}%'"
-    lambda_payload = {"type": "write", "query": query, "query_vars": None}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
-    if data != 1:
-        ods_code = get_single_service_pharmacy()
+    data = 0
+    while data != "1":
+        ods_code = get_pharmacy_odscode()
+        query = f"SELECT count(*) FROM services where odscode like '{ods_code}%'"
+        lambda_payload = {"type": "read", "query": query, "query_vars": None}
+        response = invoke_dos_db_handler_lambda(lambda_payload)
+        data = response[3]
     return ods_code
 
 
@@ -387,7 +388,7 @@ def get_service_table_field(service_id: str, field_name: str) -> Any:
     query_vars = {"SERVICE_ID": service_id, "FIELD": field_name}
     lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
+    data = loads(response)
     return data
 
 

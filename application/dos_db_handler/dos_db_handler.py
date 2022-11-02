@@ -32,10 +32,11 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     request = event
     result = None
 
-    query = request["query"]
-    query_vars = request["query_vars"]
+    if request["type"] in ["write", "read", "insert"]:
+        query = request["query"]
+        query_vars = request["query_vars"]
 
-    result = run_query(query, query_vars)
+        result = run_query(query, query_vars)
 
     if request["type"] == "write":
         # returns a single value (typically id)
@@ -53,6 +54,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         with connect_to_dos_db() as connection:
             standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
             result = standard_opening_times.export_test_format()
+            return result
     elif request["type"] == "change_event_specified_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
@@ -60,6 +62,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         with connect_to_dos_db() as connection:
             specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
             result = SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
+            return result
     elif request["type"] == "change_event_demographics":
         odscode = request.get("odscode")
         organisation_type_id = request.get("organisation_type_id")
@@ -92,88 +95,113 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError(f"No matching services for odscode {odscode}")
         query_results = query_results[0]
         result = dict(zip(db_columns, query_results))
-    elif request["type"] == "change_event_standard_opening_times":
-        service_id = request.get("service_id")
-        if service_id is None:
-            raise ValueError("Missing service_id")
-        with connect_to_dos_db() as connection:
-            standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
-            result = standard_opening_times.export_test_format()
-    elif request["type"] == "change_event_specified_opening_times":
-        service_id = request.get("service_id")
-        if service_id is None:
-            raise ValueError("Missing service_id")
-        with connect_to_dos_db() as connection:
-            specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
-            result = SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
-    elif request["type"] == "get_service_table_field":
-        service_id = request.get("service_id")
-        field = request.get("field")
-        if service_id is None or field is None:
-            raise ValueError("Missing data in get_service_table_field request")
-        result = run_query(
-            query=f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s",
-            query_vars={"SERVICE_ID": service_id},
-        )
-    elif request["type"] == "get_service_history":
-        service_id = request.get("service_id")
-        if service_id is None:
-            raise ValueError("Missing data in get_service_history request")
-        result = run_query(
-            query="SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s",
-            query_vars={"SERVICE_ID": service_id},
-        )
-    elif request["type"] == "get_services_table_location":
-        service_id = request.get("service_id")
-        if service_id is None:
-            raise ValueError("Missing data in get_services_table_values request")
-        result = run_query(
-            query=(
-                "SELECT town, postcode, easting, northing, latitude, longitude "
-                "FROM services WHERE id = %(SERVICE_ID)s"
-            ),
-            query_vars={"SERVICE_ID": service_id},
-        )
-    elif request["type"] == "add_specified_opening_time":
-        service_id = request.get("service_id")
-        date = request.get("date")
-        start_time = request.get("start_time")
-        end_time = request.get("end_time")
-        if service_id is None:
-            raise ValueError("Missing data in get_services_table_values request")
-        result1 = run_query(
-            query=(
-                """INSERT INTO servicespecifiedopeningdates (date,serviceid)"""
-                """VALUES (%(SERVICE_SPECIFIED_OPENING_DATE_ID)s,%(SERVICE_ID)s) RETURNING id;"""
-            ),
-            query_vars={"SERVICE_ID": service_id, "SERVICE_SPECIFIED_OPENING_DATE_ID": date},
-        )
-        service_specified_opening_date_id = result1[0][0]
-        result = run_query(
-            query=(
-                """INSERT INTO servicespecifiedopeningtimes """
-                """(starttime, endtime, isclosed, servicespecifiedopeningdateid) """
-                """VALUES (%(OPEN_PERIOD_START)s, %(OPEN_PERIOD_END)s,"""
-                """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s) RETURNING id;"""
-            ),
-            query_vars={
-                "OPEN_PERIOD_START": start_time,
-                "OPEN_PERIOD_END": end_time,
-                "IS_CLOSED": False,
-                "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
-            },
-        )
-    elif request["type"] == "get_locations_table_values":
-        postcode = request.get("postcode")
-        if postcode is None:
-            raise ValueError("Missing data in get_locations_table_values")
-        result = run_query(
-            query=(
-                "SELECT postaltown, postcode, easting, northing, latitude, longitude "
-                "FROM locations WHERE postcode = %(POSTCODE)s"
-            ),
-            query_vars={"POSTCODE": postcode},
-        )
+        return result
+    else:
+        raise ValueError("Unsupported request")
+
+    # if request["type"] == "get_pharmacy_odscodes":
+    #     type_id_query = get_valid_service_types_equals_string("PHA")
+    #     query = (
+    #         f"SELECT LEFT(odscode, 5) FROM services WHERE typeid {type_id_query} "
+    #         f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL"
+    #     )
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_taken_odscodes":
+    #     query = "SELECT LEFT(odscode, 5) FROM services"
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_pharmacy_odscodes_with_contacts":
+    #     # This is currently unused
+    #     type_id_query = get_valid_service_types_equals_string("PHA")
+    #     query = (
+    #         f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} AND LENGTH(odscode) > 4 "
+    #         f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+    #         "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
+    #     )
+    #     result = run_query(query, None)
+    # It seems like there are multiple requests that get the same information
+    # elif request["type"] == "get_single_service_pharmacy_odscode":
+    #     type_id_query = get_valid_service_types_equals_string("PHA")
+    #     query = (
+    #         f"SELECT LEFT(odscode,5) FROM services WHERE typeid {type_id_query} "
+    #         f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+    #         "AND LENGTH(odscode) > 4 GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
+    #     )
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_dentist_odscodes":
+    #     type_id_query = get_valid_service_types_equals_string("Dentist")
+    #     query = (
+    #         f"SELECT odscode FROM services WHERE typeid {type_id_query} "
+    #     f"AND statusid = {VALID_STATUS_ID} AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'"
+    #     )
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_services_count":
+    #     cid = request.get("odscode")
+    #     if cid is None:
+    #         raise ValueError("Missing odscode")
+    #     query = f"SELECT count(*) FROM services where odscode like '{cid}%'"
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_changes":
+    #     cid = request.get("correlation_id")
+    #     if cid is None:
+    #         raise ValueError("Missing correlation id")
+    #     query = f"SELECT value from changes where externalref = '{cid}'"
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_service_id":
+    #     odscode = request.get("odscode")
+    #     if odscode is None:
+    #         raise ValueError("Missing correlation id")
+    #     type_id_query = get_valid_service_types_equals_string("PHA")
+    #     query = (
+    #         f"SELECT id FROM services WHERE typeid {type_id_query} "
+    #         f"AND statusid = {VALID_STATUS_ID} AND odscode like '{odscode}%' LIMIT 1"
+    #     )
+    #     result = run_query(query, None)
+    # elif request["type"] == "get_approver_status":
+    #     cid = request.get("correlation_id")
+    #     if cid is None:
+    #         raise ValueError("Missing correlation id")
+    #     query = f"SELECT modifiedtimestamp from changes where approvestatus = 'COMPLETE' and externalref = '{cid}'"
+    #     result = run_query(query, None)
+    # This is the one being called
+    # elif request["type"] == "get_service_table_field":
+    #     service_id = request.get("service_id")
+    #     field = request.get("field")
+    #     if service_id is None or field is None:
+    #         raise ValueError("Missing data in get_service_table_field request")
+    #     result = run_query(
+    #         query=f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s",
+    #         query_vars={"SERVICE_ID": service_id},
+    #     )
+    # elif request["type"] == "get_service_history":
+    #     service_id = request.get("service_id")
+    #     if service_id is None:
+    #         raise ValueError("Missing data in get_service_history request")
+    #     result = run_query(
+    #         query="SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s",
+    #         query_vars={"SERVICE_ID": service_id},
+    #     )
+    # elif request["type"] == "get_services_table_location":
+    #     service_id = request.get("service_id")
+    #     if service_id is None:
+    #         raise ValueError("Missing data in get_services_table_values request")
+    #     result = run_query(
+    #         query=(
+    #             "SELECT town, postcode, easting, northing, latitude, longitude "
+    #             "FROM services WHERE id = %(SERVICE_ID)s"
+    #         ),
+    #         query_vars={"SERVICE_ID": service_id},
+    #     )
+    # elif request["type"] == "get_locations_table_values":
+    #     postcode = request.get("postcode")
+    #     if postcode is None:
+    #         raise ValueError("Missing data in get_locations_table_values")
+    #     result = run_query(
+    #         query=(
+    #             "SELECT postaltown, postcode, easting, northing, latitude, longitude "
+    #             "FROM locations WHERE postcode = %(POSTCODE)s"
+    #         ),
+    #         query_vars={"POSTCODE": postcode},
+    #     )
     # elif request["type"] == "create_changes_entry_for_service":
     #     service_id = request.get("service_id")
     #     unique_id = request.get("unique_id")
