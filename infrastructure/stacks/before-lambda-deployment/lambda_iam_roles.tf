@@ -260,17 +260,12 @@ module "service_matcher" {
     },
     {
       "Effect": "Allow",
-      "Action": "appconfig:GetConfiguration",
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.holding_queue_name}"
     },
     {
       "Effect": "Allow",
@@ -289,24 +284,6 @@ module "service_matcher" {
         "kms:Decrypt"
       ],
       "Resource": "${aws_kms_key.signing_key.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:GetItem",
-        "dynamodb:Query",
-        "dynamodb:Scan",
-        "dynamodb:BatchWriteItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem"
-      ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }
@@ -498,6 +475,73 @@ module "send_email" {
       "Effect": "Allow",
       "Action": "secretsmanager:GetSecretValue",
       "Resource": "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:uec-dos-int-*"
+    }
+  ]
+}
+EOF
+}
+
+module "ingest_change_event" {
+  source               = "../../modules/lambda-iam-role"
+  lambda_name          = var.ingest_change_event_lambda_name
+  use_custom_policy    = true
+  custom_lambda_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:DescribeKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "${aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
+      ],
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.holding_queue_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "appconfig:GetConfiguration",
+        "appconfig:StartConfigurationSession",
+        "appconfig:GetLatestConfiguration"
+        ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:GetItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
+      ],
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "dynamodb:Query",
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
     }
   ]
 }

@@ -1,7 +1,7 @@
+from datetime import datetime
 from hashlib import sha256
 from json import dumps
 from os import environ
-from time import gmtime, strftime, time_ns
 from typing import Any, Dict, List
 
 from aws_embedded_metrics import metric_scope
@@ -11,11 +11,9 @@ from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 
-from .change_event_validation import validate_change_event
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services, VALID_STATUS_ID
-from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
-from common.middlewares import set_correlation_id, unhandled_exception_logging
+from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.report_logging import (
     log_blank_standard_opening_times,
@@ -25,79 +23,42 @@ from common.report_logging import (
     log_unmatched_service_types,
 )
 from common.service_type import get_valid_service_types
-from common.types import UpdateRequest
-from common.utilities import extract_body, get_sequence_number, remove_given_keys_from_dict_by_msg_limit
+from common.types import HoldingQueueChangeEventItem, UpdateRequest
+from common.utilities import extract_body
 
 logger = Logger()
 tracer = Tracer()
+sqs = client("sqs")
 
 
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
+@logger.inject_lambda_context(clear_state=True)
 @event_source(data_class=SQSEvent)
-@set_correlation_id()
-@logger.inject_lambda_context
 @metric_scope
 def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     """Entrypoint handler for the service_matcher lambda
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
+            Change Event has been validate by the ingest change event lambda
         context (LambdaContext): Lambda function context object
 
     Event: The event payload should contain a NHS Entity (Service)
-
-    Some code may need to be changed if the exact input format is changed.
     """
-    time_start_ns = time_ns()
-    logger.append_keys(
-        ods_code=None, org_type=None, org_sub_type=None, dynamo_record_id=None, message_received=None, service_type=None
-    )
-
-    if len(list(event.records)) != 1:
-        raise ValueError(f"{len(list(event.records))} records found in event. Expected 1.")
-
     record = next(event.records)
-    change_event = extract_body(record.body)
-    ods_code = change_event.get("ODSCode")
-    add_change_event_received_metric(ods_code=ods_code)
-    logger.append_keys(ods_code=ods_code)
-    sequence_number = get_sequence_number(record)
-    sqs_timestamp = int(record.attributes["SentTimestamp"])
-    s, ms = divmod(sqs_timestamp, 1000)
-    message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
-    logger.append_keys(message_received=message_received_pretty)
-    change_event_for_log = remove_given_keys_from_dict_by_msg_limit(change_event, ["Facilities", "Metrics"], 10000)
-    logger.info("Change Event received", extra={"change-event": change_event_for_log})
+    holding_queue_change_event_item: HoldingQueueChangeEventItem = extract_body(record.body)
+    logger.set_correlation_id(holding_queue_change_event_item["correlation_id"])
+    change_event = holding_queue_change_event_item["change_event"]
+
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("function_name", context.function_name)
-    metrics.set_property("message_received", message_received_pretty)
 
-    logger.info("Getting latest sequence number")
-    db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
-    logger.info("Writing change event to dynamo")
-    record_id = add_change_event_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    correlation_id = logger.get_correlation_id()
-    if "broken" in correlation_id.lower():
-        raise ValueError("Everything is broken boo")
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.set_property("dynamo_record_id", record_id)
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QueueToProcessorLatency", (time_start_ns // 1000000) - sqs_timestamp, "Milliseconds")
-    logger.append_keys(dynamo_record_id=record_id)
+    # Get Datetime from milliseconds
+    date_time = datetime.fromtimestamp(holding_queue_change_event_item["message_received"] // 1000.0)
+    metrics.set_property("message_received", date_time.strftime("%m/%d/%Y, %H:%M:%S"))
 
-    if sequence_number is None:
-        logger.error("No sequence number provided, so message will be ignored.")
-        return
-    elif sequence_number < db_latest_sequence_number:
-        logger.error(
-            "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
-            extra={"incoming_sequence_number": sequence_number, "db_latest_sequence_number": db_latest_sequence_number},
-        )
-        return
-
-    validate_change_event(change_event)
     nhs_entity = NHSEntity(change_event)
     logger.append_keys(ods_code=nhs_entity.odscode)
     logger.append_keys(org_type=nhs_entity.org_type)
@@ -125,7 +86,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
     ]
 
-    send_update_requests(update_requests, sqs_timestamp, record_id, sequence_number)
+    send_update_requests(
+        update_requests=update_requests,
+        message_received=holding_queue_change_event_item["message_received"],
+        record_id=holding_queue_change_event_item["dynamo_record_id"],
+        sequence_number=holding_queue_change_event_item["sequence_number"],
+    )
 
 
 def divide_chunks(to_chunk, chunk_size):
@@ -173,7 +139,6 @@ def send_update_requests(
     update_requests: List[Dict[str, Any]], message_received: int, record_id: str, sequence_number: int
 ) -> None:
     """Sends update request payload off to next part of workflow"""
-    sqs = client("sqs")
     messages = []
     for update_request in update_requests:
         service_id = update_request.get("service_id")
@@ -194,7 +159,6 @@ def send_update_requests(
                 "sequence_number": str(sequence_number),
             },
         )
-
         messages.append(
             {
                 "Id": entry_id,
@@ -221,17 +185,3 @@ def send_update_requests(
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
         logger.info("Response received", extra={"response": response})
         logger.info(f"Sent off update request for id={service_id}")
-
-
-@metric_scope
-def add_change_event_received_metric(ods_code: str, metrics) -> None:  # type: ignore
-    """Adds a success metric to the custom metrics collection
-
-    Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
-    metrics.set_property("message", f"Change Event Received for ODSCode: {ods_code}")
-    metrics.put_metric("ChangeEventReceived", 1, "Count")
-    metrics.set_dimensions({"ENV": environ["ENV"]})

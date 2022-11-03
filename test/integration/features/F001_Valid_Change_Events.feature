@@ -69,7 +69,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id
     Then the Changed Event is stored in dynamo db
-    And the "service-matcher" lambda shows field "message" with message "Added record to dynamodb"
+    And the "ingest-change-event" lambda shows field "message" with message "Added record to dynamodb"
 
   @complete @pharmacy_no_log_searches
   Scenario Outline: F001S008 Changed Event with URL variations is formatted and accepted by Dos

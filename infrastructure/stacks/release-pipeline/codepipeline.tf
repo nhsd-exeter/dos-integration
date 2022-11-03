@@ -87,20 +87,6 @@ resource "aws_codepipeline" "release_codepipeline" {
     }
   }
   stage {
-    name = "SetupDoSIntegrationEnvironment"
-    action {
-      name            = "SetupIntegrationTest"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["source_output"]
-      version         = "1"
-      configuration = {
-        ProjectName = "${var.project_id}-dev-setup-integration-test-stage"
-      }
-    }
-  }
-  stage {
     name = "Integration_Test"
     dynamic "action" {
       for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_make_targets

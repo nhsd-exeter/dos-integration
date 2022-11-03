@@ -98,10 +98,13 @@ class ChangesToDoS:
                 "Removing Specified opening times that occur in the past",
                 extra={"all_nhs": nhs_spec_open_dates, "future_nhs": future_nhs_spec_open_dates},
             )
-        equal_specified_opening_times = SpecifiedOpeningTime.equal_lists(
-            dos_spec_open_dates, future_nhs_spec_open_dates
-        )
-        if not equal_specified_opening_times or len(nhs_spec_open_dates) != len(future_nhs_spec_open_dates):
+        if SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, future_nhs_spec_open_dates):
+            logger.info(
+                "Specified opening times are equal, so no change",
+                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+            )
+            return False
+        else:
             logger.info(
                 "Specified opening times not equal",
                 extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
@@ -109,12 +112,6 @@ class ChangesToDoS:
             self.current_specified_opening_times = dos_spec_open_dates
             self.new_specified_opening_times = future_nhs_spec_open_dates
             return True
-        else:
-            logger.info(
-                "Specified opening times are equal, so no change",
-                extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
-            )
-            return False
 
     def check_for_address_and_postcode_for_changes(self) -> Tuple[bool, bool, Optional[DoSLocation]]:
         """Check if address and postcode have changed between dos_service and nhs_entity,

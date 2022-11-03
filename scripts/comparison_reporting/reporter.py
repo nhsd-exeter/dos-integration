@@ -1,16 +1,15 @@
 import csv
-import pathlib
 from io import StringIO
-from os import path
-from typing import List
+from os import makedirs, path
+from typing import List, Set
 
 import requests
 from aws_lambda_powertools.logging import Logger
 from pandas import DataFrame
 
-from common.dos import DoSService, get_all_valid_dos_postcodes
+from common.dos import DoSService
 from common.nhs import match_nhs_entities_to_services, NHSEntity
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime, WEEKDAYS
+from common.opening_times import SpecifiedOpeningTime
 from common.tests.conftest import blank_dos_service
 
 logger = Logger(child=True)
@@ -28,11 +27,16 @@ def download_csv_as_dicts(url: str, delimiter: str = ",") -> List[dict]:
 
 
 class Reporter:
-    def __init__(self, nhs_entities: List[NHSEntity], dos_services: List[DoSService]):
+    def __init__(
+            self,
+            nhs_entities: List[NHSEntity],
+            dos_services: List[DoSService],
+            valid_dos_postcodes: Set[str] = None):
+
         self.nhs_entities = nhs_entities
         self.dos_services = dos_services
         self.entity_service_map = match_nhs_entities_to_services(self.nhs_entities, self.dos_services)
-        self.valid_normalised_postcodes = None
+        self.valid_normalised_postcodes = valid_dos_postcodes
 
     def run_and_save_reports(self, file_prefix: str, output_dir: str) -> None:
         reports = (
@@ -44,7 +48,8 @@ class Reporter:
             (self.create_invalid_spec_opening_times_report(), "invalid_spec_opening_times_report"),
             (self.create_invalid_std_opening_times_report(), "invalid_std_opening_times_report"),
         )
-        pathlib.Path(output_dir).mkdir(exist_ok=True)
+        if not path.exists(output_dir):
+            makedirs(output_dir)
         for report, report_name in reports:
             filename = f"{file_prefix}_{report_name}.csv"
             report.to_csv(path.join(output_dir, filename), index=False)
@@ -86,31 +91,28 @@ class Reporter:
         headers = [
             "NHSUK ODSCode",
             "NHSUK Standard Opening Times",
-            "Weekday",
             "DoS Service ODSCode",
             "DoS Service UID",
-            "DoS Service Name",
             "DoS Standard Opening Times",
+            "DoS Service Name",
             "DoS Service Status",
         ]
         rows = []
         for nhs_entity in self.nhs_entities:
             services = self.entity_service_map.get(nhs_entity.odscode, [])
             for service in services:
-                for weekday in WEEKDAYS:
-                    if not nhs_entity.standard_opening_times.same_openings(service._standard_opening_times, weekday):
-                        rows.append(
-                            [
-                                nhs_entity.odscode,
-                                OpenPeriod.list_string(nhs_entity.standard_opening_times.get_openings(weekday)),
-                                weekday,
-                                service.odscode,
-                                service.uid,
-                                service.name,
-                                OpenPeriod.list_string(service._standard_opening_times.get_openings(weekday)),
-                                service.statusid,
-                            ]
-                        )
+                if nhs_entity.standard_opening_times != service.standard_opening_times:
+                    rows.append(
+                        [
+                            nhs_entity.odscode,
+                            nhs_entity.standard_opening_times.to_string("\n"),
+                            service.odscode,
+                            service.uid,
+                            service.standard_opening_times.to_string("\n"),
+                            service.name,
+                            service.statusid,
+                        ]
+                    )
 
         return DataFrame(data=rows, columns=headers)
 
@@ -119,40 +121,30 @@ class Reporter:
         headers = [
             "NHSUK ODSCode",
             "NHSUK Specified Opening Times",
-            "Date",
             "DoS Service ODSCode",
             "DoS Service UID",
-            "DoS Service Name",
             "DoS Specified Opening Times",
+            "DoS Service Name",
             "DoS Service Status",
         ]
         rows = []
         for nhs_entity in self.nhs_entities:
-            nhs_entity_dates = set(spec_open_time.date for spec_open_time in nhs_entity.specified_opening_times)
             services = self.entity_service_map.get(nhs_entity.odscode, [])
             for service in services:
-
-                all_dates = nhs_entity_dates.union(
-                    set(spec_open_time.date for spec_open_time in service._specified_opening_times)
-                )
-
-                for date in all_dates:
-                    nhs_times = SpecifiedOpeningTime.from_list(nhs_entity.specified_opening_times, date)
-                    dos_times = SpecifiedOpeningTime.from_list(service._specified_opening_times, date)
-
-                    if nhs_times != dos_times:
-                        rows.append(
-                            [
-                                nhs_entity.odscode,
-                                "NULL" if nhs_times is None else OpenPeriod.list_string(nhs_times.open_periods),
-                                str(date),
-                                service.odscode,
-                                service.uid,
-                                service.name,
-                                "NULL" if dos_times is None else OpenPeriod.list_string(dos_times.open_periods),
-                                service.statusid,
-                            ]
-                        )
+                if not SpecifiedOpeningTime.equal_lists(
+                        nhs_entity.specified_opening_times,
+                        service.specified_opening_times):
+                    rows.append(
+                        [
+                            nhs_entity.odscode,
+                            "\n".join(str(spec_open_time) for spec_open_time in nhs_entity.specified_opening_times),
+                            service.odscode,
+                            service.uid,
+                            "\n".join(str(spec_open_time) for spec_open_time in service.specified_opening_times),
+                            service.name,
+                            service.statusid,
+                        ]
+                    )
 
         return DataFrame(data=rows, columns=headers)
 
@@ -224,7 +216,7 @@ class Reporter:
         logger.info("Running Invalid Postcode report.")
 
         if self.valid_normalised_postcodes is None:
-            self.valid_normalised_postcodes = get_all_valid_dos_postcodes()
+            logger.warning("No set of valid DoS postcodes input, so report will be blank.")
 
         headers = [
             "NHSUK ODSCode",

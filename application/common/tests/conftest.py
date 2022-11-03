@@ -4,7 +4,7 @@ from os import environ, path
 from pathlib import Path
 from random import choices, randint, uniform
 
-from boto3 import client
+from boto3 import Session
 from moto import mock_dynamodb
 from pytest import fixture
 
@@ -14,6 +14,14 @@ from ..opening_times import StandardOpeningTimes
 STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
+
+
+def get_std_event(**kwargs) -> dict:
+    event = PHARMACY_STANDARD_EVENT.copy()
+    for name, value in kwargs.items():
+        if value is not None:
+            event[name] = value
+    return event
 
 
 def dummy_dos_service(**kwargs) -> DoSService:
@@ -78,10 +86,19 @@ def aws_credentials():
 
 
 @fixture
-def dynamodb_client(aws_credentials):
+def dynamodb_client(boto_session):
+    yield boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
+
+
+@fixture
+def dynamodb_resource(boto_session):
+    yield boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
+
+
+@fixture
+def boto_session(aws_credentials):
     with mock_dynamodb():
-        conn = client("dynamodb", region_name=environ["AWS_REGION"])
-        yield conn
+        yield Session()
 
 
 @fixture
