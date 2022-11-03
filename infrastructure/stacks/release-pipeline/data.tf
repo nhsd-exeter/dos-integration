@@ -14,8 +14,3 @@ data "aws_iam_role" "pipeline_role" {
 data "aws_sns_topic" "development_pipeline_topic" {
   name = "${var.project_id}-dev-pipeline-topic"
 }
-
-locals {
-  deploy_envs = toset(["test", "perf"])
-  to_build    = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "orchestrator", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email"])
-}

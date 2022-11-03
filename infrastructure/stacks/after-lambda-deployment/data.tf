@@ -15,6 +15,10 @@ data "aws_lambda_function" "service_matcher" {
   function_name = var.service_matcher_lambda_name
 }
 
+data "aws_lambda_function" "ingest_change_event" {
+  function_name = var.ingest_change_event_lambda_name
+}
+
 data "aws_lambda_function" "change_event_dlq_handler" {
   function_name = var.change_event_dlq_handler_lambda_name
 }

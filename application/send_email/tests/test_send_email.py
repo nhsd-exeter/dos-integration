@@ -6,8 +6,9 @@ from unittest.mock import MagicMock, patch
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from pytest import fixture, raises
 
-from application.common.types import EmailMessage
 from application.send_email.send_email import lambda_handler, send_email
+
+from common.types import EmailMessage
 
 FILE_PATH = "application.send_email.send_email"
 BUCKET = "bucket"

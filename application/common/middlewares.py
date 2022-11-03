@@ -1,6 +1,5 @@
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
-from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
 
@@ -35,12 +34,3 @@ def unhandled_exception_logging_hidden_event(handler, event, context: LambdaCont
     except BaseException as err:
         logger.error("Something went wrong but the event is hidden")
         raise err
-
-
-@lambda_handler_decorator(trace_execution=True)
-def set_correlation_id(handler, event: SQSEvent, context: LambdaContext):
-    """Set correlation id from SQS event"""
-    record = next(event.records)
-    logger.set_correlation_id(record.message_attributes["correlation-id"]["stringValue"])
-    response = handler(event, context)
-    return response

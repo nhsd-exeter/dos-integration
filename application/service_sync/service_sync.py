@@ -23,7 +23,7 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
-@logger.inject_lambda_context
+@logger.inject_lambda_context(clear_state=True, correlation_id_path="metadata.correlation_id")
 def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> None:
     """Entrypoint handler for the service_sync lambda
 
@@ -68,7 +68,6 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
 
 
 def set_up_logging(event: UpdateRequestQueueItem) -> None:
-    logger.set_correlation_id(event["metadata"]["correlation_id"])
     logger.append_keys(
         ods_code=event["update_request"]["change_event"].get("ODSCode"),
         service_id=event["update_request"]["service_id"],

@@ -344,7 +344,7 @@ def test_log_service_updated(mock_logger: MagicMock):
         extra={
             "report_key": SERVICE_UPDATE_REPORT_ID,
             "action": action,
-            "correlation_id": "test",
+            "correlation_id": "123456789",
             "previous_value": previous_value,
             "new_value": new_value,
             "data_field_modified": data_field_modified,

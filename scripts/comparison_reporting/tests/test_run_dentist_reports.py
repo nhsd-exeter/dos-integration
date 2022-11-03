@@ -1,14 +1,18 @@
 from datetime import date
 from unittest.mock import patch
 
+from application.comparison_reporting import run_dentist_reports
+
 from ..run_dentist_reports import get_dentists
+from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.tests.conftest import dummy_dos_service
 
 OP = OpenPeriod.from_string
-FILE_PATH = "application.comparison_reporting.run_dentist_reports"
+MODULE_PATH = "application.comparison_reporting.run_dentist_reports"
 
 
-@patch(f"{FILE_PATH}.download_csv_as_dicts")
+@patch(f"{MODULE_PATH}.download_csv_as_dicts")
 def test_get_dentists(mock_download_csv_as_dicts):
 
     mock_download_csv_as_dicts.side_effect = [
@@ -114,7 +118,9 @@ def test_get_dentists(mock_download_csv_as_dicts):
 
     std2 = StandardOpeningTimes()
     std2.friday.append(OP("09:00-19:00"))
-    spec2 = [SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)]
+    spec2 = [
+        SpecifiedOpeningTime([], date(2022, 5, 8), is_open=False)
+    ]
 
     actual_dentists = get_dentists()
 
@@ -129,3 +135,31 @@ def test_get_dentists(mock_download_csv_as_dicts):
     assert d2.org_name == "Fake Dentist 2"
     assert d2.standard_opening_times == std2
     assert SpecifiedOpeningTime.equal_lists(d2.specified_opening_times, spec2)
+
+
+@patch(f"{MODULE_PATH}.get_services_from_db")
+@patch(f"{MODULE_PATH}.get_dentists")
+@patch(f"{MODULE_PATH}.Reporter")
+@patch(f"{MODULE_PATH}.get_all_valid_dos_postcodes")
+def test_run_dentist_reports(
+        mock_get_all_valid_dos_postcodes,
+        mock_Reporter,
+        mock_get_dentists,
+        mock_get_services_from_db):
+
+    dentists = [
+        NHSEntity({}),
+        NHSEntity({})
+    ]
+    dos_service_dentists = [dummy_dos_service() for i in range(10)]
+    postcodes = {"SG5718", "DH79IK"}
+
+    mock_get_dentists.return_value = dentists
+    mock_get_services_from_db.return_value = dos_service_dentists
+    mock_get_all_valid_dos_postcodes.return_value = postcodes
+
+    run_dentist_reports.run_dentist_reports()
+    mock_Reporter.assert_called_once_with(
+        nhs_entities=dentists,
+        dos_services=dos_service_dentists,
+        valid_dos_postcodes=postcodes)

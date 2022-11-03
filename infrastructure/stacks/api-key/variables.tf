@@ -3,9 +3,11 @@
 # ############################
 
 variable "api_gateway_api_key_name" {
-  description = "API Key for DI AWS API Gateway"
+  type        = string
+  description = "Secret name for API Gateway API Key"
 }
 
 variable "nhs_uk_api_key_key" {
-  description = "API Key key for secrets manager"
+  type        = string
+  description = "API Key secrets manager key"
 }

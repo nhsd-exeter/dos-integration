@@ -13,7 +13,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "QueueToProcessorLatency", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "QueueToMessageGrouperLatency", "ENV", "${var.environment}" ],
                     [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ],
                     [ "...", { "stat": "TM(0%:90%)" } ]
                 ],

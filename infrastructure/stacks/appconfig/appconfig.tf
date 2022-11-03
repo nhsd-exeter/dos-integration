@@ -1,12 +1,12 @@
 resource "aws_appconfig_application" "di_lambdas" {
   name        = "${var.project_id}-${var.environment}-lambda-app-config"
-  description = "Example AppConfig Application"
+  description = "DoS Integration AppConfig Application"
 }
 
-resource "aws_appconfig_configuration_profile" "service_matcher" {
+resource "aws_appconfig_configuration_profile" "ingest_change_event" {
   application_id = aws_appconfig_application.di_lambdas.id
-  name           = "service-matcher"
-  description    = "AppConfig Configuration Profile for Service Matcher"
+  name           = "ingest-change-event"
+  description    = "AppConfig Configuration Profile for Ingest Change Event lambda"
   location_uri   = "hosted"
   type           = "AWS.Freeform"
 }
@@ -17,10 +17,10 @@ resource "aws_appconfig_environment" "lambdas_environment" {
   application_id = aws_appconfig_application.di_lambdas.id
 }
 
-resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" {
+resource "aws_appconfig_hosted_configuration_version" "ingest_change_event_version" {
   application_id           = aws_appconfig_application.di_lambdas.id
-  configuration_profile_id = aws_appconfig_configuration_profile.service_matcher.configuration_profile_id
-  description              = "AppConfig Hosted Configuration Version for Service Matcher"
+  configuration_profile_id = aws_appconfig_configuration_profile.ingest_change_event.configuration_profile_id
+  description              = "AppConfig Hosted Configuration Version for Ingest Change Event lambda"
   content_type             = "application/json"
 
   content = jsonencode({
@@ -45,9 +45,9 @@ resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" 
 
 resource "aws_appconfig_deployment" "deployment" {
   application_id           = aws_appconfig_application.di_lambdas.id
-  configuration_profile_id = aws_appconfig_configuration_profile.service_matcher.configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.service_matcher_version.version_number
+  configuration_profile_id = aws_appconfig_configuration_profile.ingest_change_event.configuration_profile_id
+  configuration_version    = aws_appconfig_hosted_configuration_version.ingest_change_event_version.version_number
   deployment_strategy_id   = "AppConfig.AllAtOnce"
-  description              = "AppConfig Deployment for Service Matcher"
+  description              = "AppConfig Deployment for ${var.environment} Ingest Change Event"
   environment_id           = aws_appconfig_environment.lambdas_environment.environment_id
 }

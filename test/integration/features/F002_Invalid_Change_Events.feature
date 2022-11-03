@@ -29,7 +29,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
+    Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -37,7 +37,7 @@ Feature: F002. Invalid change event Exception handling
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
+    Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S006. A Changed Event with no postcode LAT Long Values is reported

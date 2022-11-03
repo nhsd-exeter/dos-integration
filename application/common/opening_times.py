@@ -193,13 +193,6 @@ class SpecifiedOpeningTime:
         return all([x.is_valid() for x in list])
 
     @staticmethod
-    def from_list(list: List["SpecifiedOpeningTime"], chosen_date: date, default=None) -> bool:
-        for item in list:
-            if item.date == chosen_date:
-                return item
-        return default
-
-    @staticmethod
     def remove_past_dates(list: List["SpecifiedOpeningTime"], date_now=None) -> List["SpecifiedOpeningTime"]:
         if date_now is None:
             date_now = datetime.now().date()

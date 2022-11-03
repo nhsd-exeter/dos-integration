@@ -3,7 +3,6 @@
 
 import json
 import sys
-from datetime import date
 from datetime import datetime as dt
 
 import numpy as np
@@ -56,7 +55,7 @@ for index, value in df_di_latest_events["Event"].items():
                     "date": dt.strptime(op["AdditionalOpeningDate"], "%b %d %Y").strftime("%Y-%m-%d"),
                     "starttime": "00:00:00" if not op["OpeningTime"] else op["OpeningTime"] + ":00",
                     "endtime": "00:00:00" if not op["ClosingTime"] else op["ClosingTime"] + ":00",
-                    "isclosed": (op["IsOpen"] == False),
+                    "isclosed": (op["IsOpen"] is False),
                 }
                 row_opening_times_specified[sp["date"]] = sp
         else:
@@ -103,7 +102,7 @@ joined = df_di_latest_specified_openings.join(dos_df_slim)
 joined["sp_aligned"] = np.where(joined["OpeningTimeSpecified"] == joined["specified_openings"], True, False)
 joined = joined.drop_duplicates(subset=["uid"], keep="first")
 print(joined)
-filtered_joined = joined.loc[joined["sp_aligned"] == False]
+filtered_joined = joined.loc[joined["sp_aligned"] is False]
 print(filtered_joined)
 print("..Finished aligning and comparing")
 save_filename = "live-di-dos-sp-compare-" + dt.today().strftime("%Y%m%d-%H%M") + ".csv"
