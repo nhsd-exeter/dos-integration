@@ -1,3 +1,7 @@
+# ##############
+# # OTHER
+# ##############
+
 data "terraform_remote_state" "vpc" {
   backend = "s3"
   config = {
@@ -7,6 +11,10 @@ data "terraform_remote_state" "vpc" {
   }
 }
 
+# ##############
+# # RDS
+# ##############
+
 data "aws_db_instance" "dos_db" {
   db_instance_identifier = var.dos_db_name
 }
@@ -15,52 +23,40 @@ data "aws_db_instance" "dos_db_replica" {
   db_instance_identifier = var.dos_db_replica_name
 }
 
-data "aws_caller_identity" "current" {}
+# ##############
+# # KMS
+# ##############
 
-data "aws_region" "current" {}
+data "aws_kms_key" "signing_key" {
+  key_id = "alias/${var.signing_key_alias}"
+}
 
-data "aws_iam_policy_document" "kms_policy" {
-  #checkov:skip=CKV_AWS_109
-  #checkov:skip=CKV_AWS_111
-  policy_id     = null
-  source_json   = null
-  override_json = null
-  version       = "2012-10-17"
+# ##############
+# # SNS
+# ##############
+
+data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_default_region" {
   statement {
-    sid    = null
-    effect = "Allow"
+    actions = ["sns:Publish"]
     principals {
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.developer_role_name}"
-      ]
-      type = "AWS"
-    }
-    actions = [
-      "kms:*"
-    ]
-    not_actions = []
-    resources = [
-      "*"
-    ]
-    not_resources = []
-  }
-  statement {
-    sid    = null
-    effect = "Allow"
-    principals {
-      identifiers = [
-        "cloudwatch.amazonaws.com"
-      ]
       type = "Service"
+      identifiers = [
+        "cloudwatch.amazonaws.com",
+        "codestar-notifications.amazonaws.com"
+      ]
     }
-    actions = [
-      "kms:*"
-    ]
-    not_actions = []
-    resources = [
-      "*"
-    ]
-    not_resources = []
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  }
+}
+
+data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_region" {
+  provider = aws.route53_health_check_alarm_region
+  statement {
+    actions = ["sns:Publish"]
+    principals {
+      type        = "Service"
+      identifiers = ["cloudwatch.amazonaws.com"]
+    }
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   }
 }
