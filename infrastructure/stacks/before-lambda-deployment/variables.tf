@@ -87,6 +87,11 @@ variable "ingest_change_event_role_name" {
 # # LAMBDAS
 # ##############
 
+variable "slack_messenger_lambda_name" {
+  type        = string
+  description = "Name of slack messenger lambda"
+}
+
 variable "service_matcher_lambda_name" {
   type        = string
   description = "Name of service matcher lambda"
@@ -150,6 +155,10 @@ variable "holding_queue_name" {
   description = "Holding queue SQS name"
 }
 
+# ############################
+# SQS DEAD LETTER QUEUE
+# ############################
+
 variable "change_event_dlq" {
   type        = string
   description = "Change event SQS DLQ name"
@@ -158,6 +167,11 @@ variable "change_event_dlq" {
 variable "update_request_dlq" {
   type        = string
   description = "Update request SQS DLQ name"
+}
+
+variable "shared_resources_dlq" {
+  type        = string
+  description = "DLQ for change event queue"
 }
 
 # ##############

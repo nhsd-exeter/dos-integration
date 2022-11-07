@@ -8,7 +8,7 @@ PROJECT_DISPLAY_NAME = DoS Integration
 PROJECT_ID = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)
 TEAM_ID = dos-integration
 
-ROLE_PREFIX = UECCommon
+ROLE_PREFIX = UECDoSInt
 PROJECT_TAG = $(PROJECT_NAME)
 SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
@@ -128,6 +128,8 @@ TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(ENVIRONMENT)-moni
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
+TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(ENVIRONMENT)-shared-resources-topic-app-alerts-for-slack-default-region
+TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(ENVIRONMENT)-shared-resources-topic-app-alerts-for-slack-route53-health-check-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
 
 # Performance Pipelines

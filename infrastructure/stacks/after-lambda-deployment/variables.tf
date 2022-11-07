@@ -7,15 +7,6 @@ variable "di_endpoint_api_gateway_name" {
   description = "Name for the API Gateway endpoint"
 }
 
-variable "di_endpoint_api_gateway_stage" {
-  type        = string
-  description = "Name for the API Gateway stage"
-}
-
-variable "route53_terraform_state_key" {
-  type        = string
-  description = "terraform state key"
-}
 # ######################
 # # CLOUDWATCH DASHBOARD
 # #######################
@@ -87,44 +78,6 @@ variable "update_request_dlq" {
   description = "DLQ for update request queue"
 }
 
-variable "shared_resources_dlq" {
-  type        = string
-  description = "DLQ for change event queue when disconnected from blue/green environment"
-}
-
-# ############################
-# # ROUTE53
-# ############################
-
-variable "dos_integration_sub_domain_name" {
-  type        = string
-  description = "sub domain name"
-}
-
-variable "texas_hosted_zone" {
-  type        = string
-  description = "hosted zone"
-}
-
-# ############################
-# # SECRETS
-# ############################
-
-variable "api_gateway_api_key_name" {
-  type        = string
-  description = "API Key for DI AWS API Gateway"
-}
-
-variable "nhs_uk_api_key_key" {
-  type        = string
-  description = "API Key key for secrets manager"
-}
-
-variable "ip_address_secret" {
-  type        = string
-  description = "IP Address secret"
-}
-
 # ############################
 # # KMS
 # ############################
@@ -157,12 +110,6 @@ variable "service_sync_di_subscription_filter_name" {
   type        = string
   description = "Log filter name for event sender lambda"
 }
-
-variable "change_event_gateway_subscription_filter_name" {
-  type        = string
-  description = "Log filter name for change event api gateway logs"
-}
-
 
 variable "change_event_dlq_handler_subscription_filter_name" {
   type        = string
@@ -267,13 +214,4 @@ variable "send_email_lambda_name" {
 variable "ingest_change_event_lambda_name" {
   type        = string
   description = "Name of ingest change event lambda"
-}
-
-# ##############
-# # S3
-# ##############
-
-variable "send_email_bucket_name" {
-  type        = string
-  description = "Name of the bucket to temporarily store emails to be sent"
 }

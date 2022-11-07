@@ -1,2 +1,2 @@
 aws-embedded-metrics
-aws-lambda-powertools[tracer] ~= 2.0.0
+aws-lambda-powertools[tracer] ~= 2.1.0
