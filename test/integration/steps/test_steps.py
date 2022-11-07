@@ -136,17 +136,44 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
-@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
-def post_an_sqs_message(queue_type: str, context: Context):
-    match queue_type.lower():
-        case "change event dlq":
-            post_to_change_event_dlq(context)
-        case "update request dlq":
-            post_ur_sqs()
-        case "update request failure":
-            post_ur_fifo()
-        case _:
-            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+@given("contains a specified opening date in the past", target_fixture="context")
+def past_specified_opening_date(context: Context):
+    # wip
+    pass
+
+
+@when(parse('a specified opening date is set to a "{future_past}" date'), target_fixture="context")
+def future_set_specified_opening_date(future_past: str, context: Context):
+    match future_past:
+        case "future":
+            next_year = dt.now().year + 1
+            context.change_event.specified_opening_times = [
+                {
+                    "Weekday": "",
+                    "OpeningTime": "08:00",
+                    "ClosingTime": "16:00",
+                    "OffsetOpeningTime": 0,
+                    "OffsetClosingTime": 0,
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": f"Jan 10 {next_year}",
+                    "IsOpen": True,
+                }
+            ]
+        case "past":
+            next_year = dt.now().year - 1
+            context.change_event.specified_opening_times = [
+                {
+                    "Weekday": "",
+                    "OpeningTime": "08:00",
+                    "ClosingTime": "16:00",
+                    "OffsetOpeningTime": 0,
+                    "OffsetClosingTime": 0,
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": f"Jan 10 {next_year}",
+                    "IsOpen": True,
+                }
+            ]
+    return context
 
 
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")
@@ -209,6 +236,16 @@ def dos_event_from_scratch(org_type: str, context: Context):
         raise ValueError(f"Invalid event type '{org_type}' provided")
     context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
     return context
+
+
+@given(parse('a "{org_type}" Changed Event aligned with DoS with past specified date '), target_fixture="context")
+def dos_event_with_past_date(org_type: str, context: Context):
+    # if org_type.lower() not in {"pharmacy", "dentist"}:
+    #     raise ValueError(f"Invalid event type '{org_type}' provided")
+    # context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    # return context
+    # WIP
+    pass
 
 
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")
@@ -460,6 +497,19 @@ def a_changed_address_event_is_valid(address: str, context: Context):
     context.change_event.city = None
     context.change_event.county = None
     return context
+
+
+@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+def post_an_sqs_message(queue_type: str, context: Context):
+    match queue_type.lower():
+        case "change event dlq":
+            post_to_change_event_dlq(context)
+        case "update request dlq":
+            post_ur_sqs()
+        case "update request failure":
+            post_ur_fifo()
+        case _:
+            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
 
 
 # IsOpen is true AND Times is blank
@@ -786,6 +836,10 @@ def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_capture
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     assert current_specified_openings[expected_opening_date][0]["start_time"] == opening_time
     assert current_specified_openings[expected_opening_date][0]["end_time"] == closing_time
+    # print(expected_opening_date)
+    # print(current_specified_openings)
+    # print(changed_date)
+    # raise ValueError('Error')
 
 
 @then("the DoS service has been updated with the standard days and times is captured by DoS")

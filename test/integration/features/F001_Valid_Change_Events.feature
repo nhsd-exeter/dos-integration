@@ -136,3 +136,47 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the s3 bucket contains an email file matching the service uid
     And the changes table shows change is now rejected
+
+
+  @complete @pharmacy_no_log_searches @wip
+  Scenario: F001S016 Specified Opening Times are different
+    #  * DoS contains a past specified opening dates
+    # Given a "pharmacy" Changed Event aligned with DoS with past specified date
+    Given a "pharmacy" Changed Event is aligned with DoS
+    # And contains a specified opening date in the past
+    # * NHS UK passes on only future specified opening dates
+    When a specified opening date is set to a "past" date
+    And the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times"
+# Then the service history is not updated
+# Then the DoS service has been updated with the specified date and time is captured by DoS
+
+
+
+#
+
+#
+
+#     * Expected: NHS UK date applied to db - (DoS dates removed)
+
+
+#     * NHS UK contains a past specified opening dates
+#     Given a "pharmacy" Changed Event is aligned with DoS
+#     And a specified opening time is set to "Jan 1 2022"
+
+#     * DoS only future specified opening dates
+
+#     the Changed Event contains a specified opening date that is "Closed"
+
+#     * NHS UK Change Event contains no specified opening dates
+
+#     * DoS DB contains no specified opening dates
+
+
+#     * DoS contains a specified opening dates
+
+#     * NHS UK Change Event contains a specified opening dates
+
+# NHS UK Change Event contains no Standard Opening Times
+
+# DoS contains no Standard Opening Times
