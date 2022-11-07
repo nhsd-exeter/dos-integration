@@ -141,8 +141,8 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_no_log_searches @wip
   Scenario: F001S016 Specified Opening Times are different
     #  * DoS contains a past specified opening dates
-    # Given a "pharmacy" Changed Event aligned with DoS with past specified date
-    Given a "pharmacy" Changed Event is aligned with DoS
+    Given a "pharmacy" Changed Event aligned with DoS with past specified date
+# Given a "pharmacy" Changed Event is aligned with DoS
     # And contains a specified opening date in the past
     # * NHS UK passes on only future specified opening dates
     When a specified opening date is set to a "past" date
@@ -150,7 +150,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times"
 # Then the service history is not updated
 # Then the DoS service has been updated with the specified date and time is captured by DoS
-
 
 
 #

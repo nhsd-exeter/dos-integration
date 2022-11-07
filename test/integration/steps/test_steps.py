@@ -64,6 +64,7 @@ from .utilities.utils import (
     service_not_updated,
     slack_retry,
     wait_for_service_update,
+    add_specified_opening_time,
 )
 
 scenarios(
@@ -238,14 +239,20 @@ def dos_event_from_scratch(org_type: str, context: Context):
     return context
 
 
-@given(parse('a "{org_type}" Changed Event aligned with DoS with past specified date '), target_fixture="context")
+@given(parse('a "{org_type}" Changed Event aligned with DoS with past specified date'), target_fixture="context")
 def dos_event_with_past_date(org_type: str, context: Context):
-    # if org_type.lower() not in {"pharmacy", "dentist"}:
-    #     raise ValueError(f"Invalid event type '{org_type}' provided")
-    # context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
-    # return context
+    # date: str, start_time: str, end_time: str,
+    if org_type.lower() not in {"pharmacy", "dentist"}:
+        raise ValueError(f"Invalid event type '{org_type}' provided")
+    context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    date_var = "2020-01-10"
+    start_time = "07:00"
+    end_time = "12:00"
+    output = add_specified_opening_time(context.service_id, date_var, start_time, end_time)
+    print(output)
+    raise ValueError("ERROR")
     # WIP
-    pass
+    # pass
 
 
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")

@@ -178,24 +178,30 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         end_time = request.get("end_time")
         if service_id is None:
             raise ValueError("Missing data in get_services_table_values request")
-        result = run_query(
+        result1 = run_query(
             query=(
                 """INSERT INTO servicespecifiedopeningdates (date,serviceid)"""
-                """VALUES (%(SPECIFIED_OPENING_TIMES_DATE)s,%(SERVICE_ID)s) RETURNING id;"""),
-            query_vars={"SERVICE_ID": service_id, "SPECIFIED_OPENING_TIMES_DATE": date},
+                """VALUES (%(SERVICE_SPECIFIED_OPENING_DATE_ID)s,%(SERVICE_ID)s) RETURNING id;"""
+            ),
+            query_vars={"SERVICE_ID": service_id, "SERVICE_SPECIFIED_OPENING_DATE_ID": date},
         )
-        print(result)
-        service_specified_opening_date_id = result[0]
+        # print(result)
+        service_specified_opening_date_id = result1[0][0]
         result = run_query(
             query=(
                 """INSERT INTO servicespecifiedopeningtimes """
                 """(starttime, endtime, isclosed, servicespecifiedopeningdateid) """
                 """VALUES (%(OPEN_PERIOD_START)s, %(OPEN_PERIOD_END)s,"""
-                """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s) RETURNING id;"""),
-            query_vars={"OPEN_PERIOD_START": start_time, "OPEN_PERIOD_END": end_time, "IS_CLOSED": False,
-                        "SPECIFIED_OPENING_TIMES_DATE_ID": service_specified_opening_date_id},
+                """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s) RETURNING id;"""
+            ),
+            query_vars={
+                "OPEN_PERIOD_START": start_time,
+                "OPEN_PERIOD_END": end_time,
+                "IS_CLOSED": False,
+                "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
+            },
         )
-        print(result)
+        # print(result)
 
     elif request["type"] == "get_locations_table_values":
         postcode = request.get("postcode")

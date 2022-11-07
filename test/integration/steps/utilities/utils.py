@@ -639,6 +639,18 @@ def get_specified_opening_times(service_id: str):
     return loads(data[0][0])
 
 
+def add_specified_opening_time(service_id: str, date: str, start_time: str, end_time: str):
+    lambda_payload = {
+        "type": "add_specified_opening_time",
+        "service_id": service_id,
+        "date": date,
+        "start_time": start_time,
+        "end_time": end_time,
+    }
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    return response
+
+
 def check_contact_delete_in_dos(corr_id: str, search_key: str):
     response = get_changes(corr_id)
     if_value_not_in_string_raise_exception(search_key, str(response))
