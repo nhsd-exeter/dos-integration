@@ -1,6 +1,6 @@
-resource "aws_codebuild_webhook" "build_cicd_artefact_webhook" {
+resource "aws_codebuild_webhook" "build_cicd_shared_resources_artefact_webhook" {
   count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_build_cicd_artefact[0].name
+  project_name = aws_codebuild_project.di_build_cicd_shared_resources_artefact[0].name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -10,15 +10,15 @@ resource "aws_codebuild_webhook" "build_cicd_artefact_webhook" {
 
     filter {
       type    = "HEAD_REF"
-      pattern = "^refs/tags/.*-cicd"
+      pattern = "^refs/tags/.*-shared-resources"
     }
   }
-  depends_on = [aws_codebuild_project.di_build_cicd_artefact]
+  depends_on = [aws_codebuild_project.di_build_cicd_shared_resources_artefact]
 }
 
-resource "aws_codebuild_project" "di_build_cicd_artefact" {
+resource "aws_codebuild_project" "di_build_cicd_shared_resources_artefact" {
   count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-build-cicd-artefact"
+  name           = "${var.project_id}-${var.environment}-build-cicd-shared-resources-artefact"
   description    = "Builds artefacts based on tag for CI/CD Pipeline"
   build_timeout  = "30"
   queued_timeout = "5"
@@ -43,11 +43,11 @@ resource "aws_codebuild_project" "di_build_cicd_artefact" {
 
     environment_variable {
       name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-cicd-artefact"
+      value = "${var.project_id}-${var.environment}-build-cicd-shared-resources-artefact"
     }
     environment_variable {
       name  = "CICD_ARTIFACT_BUCKET"
-      value = "${var.project_id}-${var.environment}-cicd-pipeline-artefacts"
+      value = "${var.project_id}-${var.environment}-cicd-shared-resources-pipeline-artefact"
     }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
@@ -72,7 +72,7 @@ resource "aws_codebuild_project" "di_build_cicd_artefact" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-cicd-artefact-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-cicd-shared-resources-artefact-stage"
       stream_name = ""
     }
   }
@@ -80,7 +80,7 @@ resource "aws_codebuild_project" "di_build_cicd_artefact" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = "https://github.com/nhsd-exeter/dos-integration.git"
-    buildspec       = data.template_file.build_cicd_artefact_buildspec.rendered
+    buildspec       = data.template_file.build_cicd_shared_resources_artefact_buildspec.rendered
   }
   depends_on = [
     module.cicd_pipeline_artefact_bucket
