@@ -1,10 +1,8 @@
 resource "aws_api_gateway_base_path_mapping" "uec_dos_integration_api_mapping" {
   api_id      = aws_api_gateway_rest_api.di_endpoint.id
-  stage_name  = var.environment
+  stage_name  = var.shared_environment
   domain_name = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
-  depends_on = [
-    aws_api_gateway_stage.di_endpoint_stage,
-  ]
+  depends_on  = [aws_api_gateway_stage.di_endpoint_stage]
 }
 
 resource "aws_api_gateway_domain_name" "api_gateway_domain_name" {
@@ -37,7 +35,7 @@ resource "aws_route53_health_check" "di_endpoint_health_check" {
   failure_threshold = "5"
   request_interval  = "30"
   tags = {
-    Name = "${var.project_id}-${var.environment}-di-endpoint-health-check"
+    Name = "${var.project_id}-${var.shared_environment}-di-endpoint-health-check"
   }
 
   depends_on = [

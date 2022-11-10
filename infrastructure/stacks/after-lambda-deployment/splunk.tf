@@ -17,7 +17,7 @@ resource "aws_cloudwatch_log_subscription_filter" "service_sync_di_logs_subscrip
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "service_sync_dos_logs_subscription_filter" {
-  count           = var.environment == "demo" ? 0 : 1
+  count           = var.profile == "demo" ? 0 : 1
   name            = var.service_sync_dos_subscription_filter_name
   role_arn        = data.aws_iam_role.dos_firehose_role.arn
   log_group_name  = "/aws/lambda/${var.service_sync_lambda_name}"

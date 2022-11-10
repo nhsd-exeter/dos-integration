@@ -54,7 +54,7 @@ variable "change_event_queue_name" {
   description = "Change event queue name"
 }
 
-variable "shared_resources_dlq" {
+variable "change_event_dlq" {
   type        = string
   description = "DLQ for change event queue"
 }

@@ -73,13 +73,13 @@ unit-test-local:
 	pyenv local .venv
 	pip install -r application/requirements-dev.txt -r application/service_matcher/requirements.txt -r application/event_replay/requirements.txt -r application/service_sync/requirements.txt -r application/change_event_dlq_handler/requirements.txt
 	cd application
-	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
+	python -m pytest --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
 	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=application -vv" \
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -149,6 +149,8 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
+		-e SHARED_ENVIRONMENT=$(SHARED_ENVIRONMENT) \
+		-e BLUE_GREEN_ENVIRONMENT=$(BLUE_GREEN_ENVIRONMENT) \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
@@ -498,7 +500,6 @@ send-performance-dashboard-slack-message:
 
 update-all-ip-allowlists: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	USERNAME=$$(git config user.name)
-	make -s update-ip-allowlist PROFILE=task USERNAME="$$USERNAME"
 	make -s update-ip-allowlist PROFILE=dev USERNAME="$$USERNAME"
 
 update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
@@ -651,3 +652,37 @@ blue-green-move-terraform-resources:
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
+
+deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources
+
+deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=before-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-deploy VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment
+
+build-and-deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make build-and-push VERSION=$(BUILD_TAG)
+	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
+
+link-blue-green-environment: # Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-apply-auto-approve STACKS=blue-green-link
+
+undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
+	if [ "$(PROFILE)" != "live" ]; then
+		make terraform-destroy-auto-approve STACKS=api-key
+	fi
+
+undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+
+unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-destroy-auto-approve STACKS=blue-green-link

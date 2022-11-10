@@ -24,20 +24,18 @@ Feature: F004. Error Handling
     When the Changed Event is sent for processing with "valid" api key
     Then the day for the standard opening time returns an empty list
 
-  # Rename to remove change request when it means change event
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S005. An exception is raised when Sequence number is not present in headers
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with no sequence id
-    Then the change request has status code "400"
+    Then the change event response has status code "400"
 
-  # Rename to remove change request when it means change event
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004S006. An Alphanumeric Sequence number raises a 400 Bad Request exception
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id "ABCD1"
-    Then the change request has status code "400"
-    And the Slack channel shows an alert saying "DI Endpoint Errors"
+    Then the change event response has status code "400"
+    And the Slack channel shows an alert saying "DI 4XX Endpoint Errors" from "SHARED_ENVIRONMENT"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario Outline: F004S007. An exception is raised when Sequence number is less than previous
