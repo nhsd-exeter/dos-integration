@@ -58,6 +58,10 @@ data "template_file" "build_cicd_artefact_buildspec" {
   template = file("build-cicd-artefact-buildspec.yml")
 }
 
+data "template_file" "build_cicd_shared_resources_artefact_buildspec" {
+  template = file("build-cicd-shared-resources-artefact-buildspec.yml")
+}
+
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
 }
