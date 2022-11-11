@@ -17,19 +17,14 @@ resource "aws_api_gateway_rest_api_policy" "di_endpoint_policy" {
   policy      = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [{
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "execute-api:Invoke",
-      "Resource": "execute-api:/*/*/*"
-    },
+  "Statement": [
     {
-      "Effect": "Deny",
+      "Effect": "Allow",
       "Principal": "*",
       "Action": "execute-api:Invoke",
       "Resource": "execute-api:/*/*/*",
       "Condition": {
-        "NotIpAddress": {
+        "IpAddress": {
           "aws:SourceIp": ${jsonencode(local.ip_addresses)}
         }
       }
