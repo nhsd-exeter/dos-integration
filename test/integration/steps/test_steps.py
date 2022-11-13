@@ -137,13 +137,7 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
-@given("contains a specified opening date in the past", target_fixture="context")
-def past_specified_opening_date(context: Context):
-    # wip
-    pass
-
-
-@when(parse('a specified opening date is set to a "{future_past}" date'), target_fixture="context")
+@given(parse('the specified opening date is set to "{future_past}" date'), target_fixture="context")
 def future_set_specified_opening_date(future_past: str, context: Context):
     match future_past:
         case "future":
@@ -161,7 +155,7 @@ def future_set_specified_opening_date(future_past: str, context: Context):
                 }
             ]
         case "past":
-            next_year = dt.now().year - 1
+            last_year = dt.now().year - 1
             context.change_event.specified_opening_times = [
                 {
                     "Weekday": "",
@@ -170,10 +164,12 @@ def future_set_specified_opening_date(future_past: str, context: Context):
                     "OffsetOpeningTime": 0,
                     "OffsetClosingTime": 0,
                     "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": f"Jan 10 {next_year}",
+                    "AdditionalOpeningDate": f"Jan 10 {last_year}",
                     "IsOpen": True,
                 }
             ]
+        case "no":
+            context.change_event.specified_opening_times = []
     return context
 
 
@@ -239,20 +235,53 @@ def dos_event_from_scratch(org_type: str, context: Context):
     return context
 
 
-@given(parse('a "{org_type}" Changed Event aligned with DoS with past specified date'), target_fixture="context")
-def dos_event_with_past_date(org_type: str, context: Context):
-    # date: str, start_time: str, end_time: str,
+@given(
+    parse('a "{org_type}" Changed Event with "{future_past}" specified opening date is aligned with DoS'),
+    target_fixture="context",
+)
+def dos_event_with_past_date(org_type: str, future_past: str, context: Context):
     if org_type.lower() not in {"pharmacy", "dentist"}:
         raise ValueError(f"Invalid event type '{org_type}' provided")
     context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
-    date_var = "2020-01-10"
-    start_time = "07:00"
-    end_time = "12:00"
-    output = add_specified_opening_time(context.service_id, date_var, start_time, end_time)
-    print(output)
-    raise ValueError("ERROR")
-    # WIP
-    # pass
+    match future_past:
+        case "future":
+            time = dt.now() + datetime.timedelta(days=31)
+            time = str(time)[:10]
+            month = dt.strptime(time[5:7], "%m")
+            month = month.strftime("%b")
+            date_var = time
+            start_time = "07:00"
+            end_time = "12:00"
+            add_specified_opening_time(context.service_id, date_var, start_time, end_time)
+            additional_date = {
+                "Weekday": "",
+                "OpeningTime": start_time,
+                "ClosingTime": end_time,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
+                "IsOpen": True,
+            }
+        case "past":
+            time = dt.now() - datetime.timedelta(days=31)
+            time = str(time)[:10]
+            month = dt.strptime(time[5:7], "%m")
+            month = month.strftime("%b")
+            date_var = time
+            start_time = "07:00"
+            end_time = "12:00"
+            add_specified_opening_time(context.service_id, date_var, start_time, end_time)
+            additional_date = {
+                "Weekday": "",
+                "OpeningTime": start_time,
+                "ClosingTime": end_time,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
+                "IsOpen": True,
+            }
+        case "no":
+            additional_date = ""
+    context.change_event.specified_opening_times.insert(0, additional_date)
+    return context
 
 
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")

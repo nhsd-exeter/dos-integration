@@ -648,7 +648,7 @@ def add_specified_opening_time(service_id: str, date: str, start_time: str, end_
         "end_time": end_time,
     }
     response = invoke_dos_db_handler_lambda(lambda_payload)
-    return response
+    return response[0][0]
 
 
 def check_contact_delete_in_dos(corr_id: str, search_key: str):

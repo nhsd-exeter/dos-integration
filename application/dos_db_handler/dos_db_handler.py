@@ -185,7 +185,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             ),
             query_vars={"SERVICE_ID": service_id, "SERVICE_SPECIFIED_OPENING_DATE_ID": date},
         )
-        # print(result)
         service_specified_opening_date_id = result1[0][0]
         result = run_query(
             query=(
@@ -201,7 +200,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
                 "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
             },
         )
-        # print(result)
 
     elif request["type"] == "get_locations_table_values":
         postcode = request.get("postcode")
