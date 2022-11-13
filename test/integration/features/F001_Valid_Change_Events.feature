@@ -137,35 +137,35 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the s3 bucket contains an email file matching the service uid
     And the changes table shows change is now rejected
 
-  @complete @pharmacy_cloudwatch_queries @wip
+@complete @pharmacy_cloudwatch_queries
   Scenario: F001S016 Past Specified Opening Times on Dos are removed and updated
     Given a "pharmacy" Changed Event with "past" specified opening date is aligned with DoS
     And the specified opening date is set to "future" date
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-  @complete @pharmacy_cloudwatch_queries @wip
+@complete @pharmacy_cloudwatch_queries
   Scenario: F001S017 All specified opening times are removed from DoS
     Given a "pharmacy" Changed Event with "future" specified opening date is aligned with DoS
     And the specified opening date is set to "past" date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
 
-  @complete @pharmacy_cloudwatch_queries @wip
+@complete @pharmacy_cloudwatch_queries
   Scenario: F001S018 Empty Specified opening times results in no change and no error
     Given a "pharmacy" Changed Event with "no" specified opening date is aligned with DoS
     And the specified opening date is set to "no" date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "No valid pending changes found"
 
-  @complete @pharmacy_cloudwatch_queries @wip
+@complete @pharmacy_cloudwatch_queries
   Scenario: F001S019 Empty CE Specified opening times removes all SP times in DoS
     Given a "pharmacy" Changed Event with "future" specified opening date is aligned with DoS
     And the specified opening date is set to "no" date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
 
-  @complete @pharmacy_cloudwatch_queries @wip
+@complete @pharmacy_cloudwatch_queries
   Scenario: F001S020 CE Specified Opening Times with future dates replaces empty Dos SP times
     Given a "pharmacy" Changed Event with "no" specified opening date is aligned with DoS
     And the specified opening date is set to "future" date

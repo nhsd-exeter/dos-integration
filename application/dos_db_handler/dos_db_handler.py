@@ -170,7 +170,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             ),
             query_vars={"SERVICE_ID": service_id},
         )
-
     elif request["type"] == "add_specified_opening_time":
         service_id = request.get("service_id")
         date = request.get("date")
@@ -200,7 +199,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
                 "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
             },
         )
-
     elif request["type"] == "get_locations_table_values":
         postcode = request.get("postcode")
         if postcode is None:
