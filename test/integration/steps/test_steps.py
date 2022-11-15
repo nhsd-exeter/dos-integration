@@ -240,44 +240,34 @@ def dos_event_from_scratch(org_type: str, context: Context):
     target_fixture="context",
 )
 def dos_event_with_past_date(org_type: str, future_past: str, context: Context):
+    def specified_opening_time_difference(time):
+        time = str(time)[:10]
+        month = dt.strptime(time[5:7], "%m")
+        month = month.strftime("%b")
+        date_var = time
+        start_time = "07:00"
+        end_time = "12:00"
+        add_specified_opening_time(context.service_id, date_var, start_time, end_time)
+        additional_date = {
+            "Weekday": "",
+            "OpeningTime": start_time,
+            "ClosingTime": end_time,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
+            "IsOpen": True,
+        }
+        return additional_date
+
     if org_type.lower() not in {"pharmacy", "dentist"}:
         raise ValueError(f"Invalid event type '{org_type}' provided")
     context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
     match future_past:
         case "future":
             time = dt.now() + datetime.timedelta(days=31)
-            time = str(time)[:10]
-            month = dt.strptime(time[5:7], "%m")
-            month = month.strftime("%b")
-            date_var = time
-            start_time = "07:00"
-            end_time = "12:00"
-            add_specified_opening_time(context.service_id, date_var, start_time, end_time)
-            additional_date = {
-                "Weekday": "",
-                "OpeningTime": start_time,
-                "ClosingTime": end_time,
-                "OpeningTimeType": "Additional",
-                "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
-                "IsOpen": True,
-            }
+            additional_date = specified_opening_time_difference(time)
         case "past":
             time = dt.now() - datetime.timedelta(days=31)
-            time = str(time)[:10]
-            month = dt.strptime(time[5:7], "%m")
-            month = month.strftime("%b")
-            date_var = time
-            start_time = "07:00"
-            end_time = "12:00"
-            add_specified_opening_time(context.service_id, date_var, start_time, end_time)
-            additional_date = {
-                "Weekday": "",
-                "OpeningTime": start_time,
-                "ClosingTime": end_time,
-                "OpeningTimeType": "Additional",
-                "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
-                "IsOpen": True,
-            }
+            additional_date = specified_opening_time_difference(time)
         case "no":
             additional_date = ""
     context.change_event.specified_opening_times.insert(0, additional_date)
@@ -872,10 +862,6 @@ def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_capture
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     assert current_specified_openings[expected_opening_date][0]["start_time"] == opening_time
     assert current_specified_openings[expected_opening_date][0]["end_time"] == closing_time
-    # print(expected_opening_date)
-    # print(current_specified_openings)
-    # print(changed_date)
-    # raise ValueError('Error')
 
 
 @then("the DoS service has been updated with the standard days and times is captured by DoS")
