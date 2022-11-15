@@ -170,6 +170,35 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             ),
             query_vars={"SERVICE_ID": service_id},
         )
+    elif request["type"] == "add_specified_opening_time":
+        service_id = request.get("service_id")
+        date = request.get("date")
+        start_time = request.get("start_time")
+        end_time = request.get("end_time")
+        if service_id is None:
+            raise ValueError("Missing data in get_services_table_values request")
+        result1 = run_query(
+            query=(
+                """INSERT INTO servicespecifiedopeningdates (date,serviceid)"""
+                """VALUES (%(SERVICE_SPECIFIED_OPENING_DATE_ID)s,%(SERVICE_ID)s) RETURNING id;"""
+            ),
+            query_vars={"SERVICE_ID": service_id, "SERVICE_SPECIFIED_OPENING_DATE_ID": date},
+        )
+        service_specified_opening_date_id = result1[0][0]
+        result = run_query(
+            query=(
+                """INSERT INTO servicespecifiedopeningtimes """
+                """(starttime, endtime, isclosed, servicespecifiedopeningdateid) """
+                """VALUES (%(OPEN_PERIOD_START)s, %(OPEN_PERIOD_END)s,"""
+                """%(IS_CLOSED)s,%(SERVICE_SPECIFIED_OPENING_DATE_ID)s) RETURNING id;"""
+            ),
+            query_vars={
+                "OPEN_PERIOD_START": start_time,
+                "OPEN_PERIOD_END": end_time,
+                "IS_CLOSED": False,
+                "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
+            },
+        )
     elif request["type"] == "get_locations_table_values":
         postcode = request.get("postcode")
         if postcode is None:

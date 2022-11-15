@@ -64,6 +64,7 @@ from .utilities.utils import (
     service_not_updated,
     slack_retry,
     wait_for_service_update,
+    add_specified_opening_time,
 )
 
 scenarios(
@@ -136,17 +137,40 @@ def a_specific_change_event_is_valid(context: Context):
     return context
 
 
-@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
-def post_an_sqs_message(queue_type: str, context: Context):
-    match queue_type.lower():
-        case "change event dlq":
-            post_to_change_event_dlq(context)
-        case "update request dlq":
-            post_ur_sqs()
-        case "update request failure":
-            post_ur_fifo()
-        case _:
-            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+@given(parse('the specified opening date is set to "{future_past}" date'), target_fixture="context")
+def future_set_specified_opening_date(future_past: str, context: Context):
+    match future_past:
+        case "future":
+            next_year = dt.now().year + 1
+            context.change_event.specified_opening_times = [
+                {
+                    "Weekday": "",
+                    "OpeningTime": "08:00",
+                    "ClosingTime": "16:00",
+                    "OffsetOpeningTime": 0,
+                    "OffsetClosingTime": 0,
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": f"Jan 10 {next_year}",
+                    "IsOpen": True,
+                }
+            ]
+        case "past":
+            last_year = dt.now().year - 1
+            context.change_event.specified_opening_times = [
+                {
+                    "Weekday": "",
+                    "OpeningTime": "08:00",
+                    "ClosingTime": "16:00",
+                    "OffsetOpeningTime": 0,
+                    "OffsetClosingTime": 0,
+                    "OpeningTimeType": "Additional",
+                    "AdditionalOpeningDate": f"Jan 10 {last_year}",
+                    "IsOpen": True,
+                }
+            ]
+        case "no":
+            context.change_event.specified_opening_times = []
+    return context
 
 
 @given("an opened specified opening time Changed Event is valid", target_fixture="context")
@@ -208,6 +232,45 @@ def dos_event_from_scratch(org_type: str, context: Context):
     if org_type.lower() not in {"pharmacy", "dentist"}:
         raise ValueError(f"Invalid event type '{org_type}' provided")
     context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    return context
+
+
+@given(
+    parse('a "{org_type}" Changed Event with "{future_past}" specified opening date is aligned with DoS'),
+    target_fixture="context",
+)
+def dos_event_with_past_date(org_type: str, future_past: str, context: Context):
+    def specified_opening_time_difference(time):
+        time = str(time)[:10]
+        month = dt.strptime(time[5:7], "%m")
+        month = month.strftime("%b")
+        date_var = time
+        start_time = "07:00"
+        end_time = "12:00"
+        add_specified_opening_time(context.service_id, date_var, start_time, end_time)
+        additional_date = {
+            "Weekday": "",
+            "OpeningTime": start_time,
+            "ClosingTime": end_time,
+            "OpeningTimeType": "Additional",
+            "AdditionalOpeningDate": month + " " + time[-2:10] + " " + time[:4],
+            "IsOpen": True,
+        }
+        return additional_date
+
+    if org_type.lower() not in {"pharmacy", "dentist"}:
+        raise ValueError(f"Invalid event type '{org_type}' provided")
+    context.change_event, context.service_id = build_same_as_dos_change_event(org_type)
+    match future_past:
+        case "future":
+            time = dt.now() + datetime.timedelta(days=31)
+            additional_date = specified_opening_time_difference(time)
+        case "past":
+            time = dt.now() - datetime.timedelta(days=31)
+            additional_date = specified_opening_time_difference(time)
+        case "no":
+            additional_date = ""
+    context.change_event.specified_opening_times.insert(0, additional_date)
     return context
 
 
@@ -460,6 +523,19 @@ def a_changed_address_event_is_valid(address: str, context: Context):
     context.change_event.city = None
     context.change_event.county = None
     return context
+
+
+@when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
+def post_an_sqs_message(queue_type: str, context: Context):
+    match queue_type.lower():
+        case "change event dlq":
+            post_to_change_event_dlq(context)
+        case "update request dlq":
+            post_ur_sqs()
+        case "update request failure":
+            post_ur_fifo()
+        case _:
+            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
 
 
 # IsOpen is true AND Times is blank
