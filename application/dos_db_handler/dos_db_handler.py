@@ -31,8 +31,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """
     request = event
     result = None
+    generic_queries = ["write", "read", "insert"]
 
-    if request["type"] in ["write", "read", "insert"]:
+    if request["type"] in generic_queries:
         query = request["query"]
         query_vars = request["query_vars"]
 
@@ -95,7 +96,6 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
             raise ValueError(f"No matching services for odscode {odscode}")
         query_results = query_results[0]
         result = dict(zip(db_columns, query_results))
-        return result
     else:
         raise ValueError("Unsupported request")
 
