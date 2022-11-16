@@ -131,6 +131,7 @@ class ChangeEventBuilder:
                 change_event.organisation_sub_type = DENTIST_SUB_TYPE
             case _:
                 raise ValueError(f"Service type {self.service_type} does not exist")
+        raise ValueError(demographics_data)
         service_id = demographics_data["id"]
         change_event.organisation_name = (
             demographics_data["publicname"] if demographics_data["publicname"] else demographics_data["name"]

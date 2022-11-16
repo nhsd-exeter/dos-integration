@@ -327,7 +327,7 @@ def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Di
         "organisation_type_id": organisation_type_id,
     }
     response = invoke_dos_db_handler_lambda(lambda_payload)
-    # raise ValueError(type(response))
+    raise ValueError(response)
     data = loads(response)
     return data
 
@@ -486,7 +486,6 @@ def check_service_history(
 
 def service_history_negative_check(service_id: str):
     service_history = get_service_history(service_id)
-    # raise ValueError(f"service_history = {service_history} and type = {type(service_history)}")
     if service_history == []:
         return "Not Updated"
     else:
