@@ -1,7 +1,7 @@
 # TODO: Look in to rotating kms keeps
-#tfsec:ignore:aws-kms-auto-rotate-keys:2022-01-01
+#tfsec:ignore:aws-kms-auto-rotate-keys:2023-01-01
 resource "aws_kms_key" "signing_key" {
-  description              = "${var.environment} signing key for default region"
+  description              = "${var.shared_environment} signing key for default region"
   key_usage                = "ENCRYPT_DECRYPT"
   customer_master_key_spec = "SYMMETRIC_DEFAULT"
   policy                   = data.aws_iam_policy_document.kms_policy.json
@@ -15,10 +15,10 @@ resource "aws_kms_alias" "signing_key" {
   target_key_id = aws_kms_key.signing_key.key_id
 }
 
-#tfsec:ignore:aws-kms-auto-rotate-keys:2022-01-01
+#tfsec:ignore:aws-kms-auto-rotate-keys:2023-01-01
 resource "aws_kms_key" "route53_health_check_alarm_region_signing_key" {
   provider                 = aws.route53_health_check_alarm_region
-  description              = "${var.environment} alarm region signing key"
+  description              = "${var.shared_environment} alarm region signing key"
   key_usage                = "ENCRYPT_DECRYPT"
   customer_master_key_spec = "SYMMETRIC_DEFAULT"
   policy                   = data.aws_iam_policy_document.kms_policy.json

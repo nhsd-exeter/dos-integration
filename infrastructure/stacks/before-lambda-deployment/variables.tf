@@ -164,14 +164,14 @@ variable "change_event_dlq" {
   description = "Change event SQS DLQ name"
 }
 
+variable "holding_queue_dlq" {
+  type        = string
+  description = "DLQ for holding queue"
+}
+
 variable "update_request_dlq" {
   type        = string
   description = "Update request SQS DLQ name"
-}
-
-variable "shared_resources_dlq" {
-  type        = string
-  description = "DLQ for change event queue"
 }
 
 # ##############

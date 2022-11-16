@@ -70,7 +70,12 @@ variable "update_request_queue_name" {
 
 variable "change_event_dlq" {
   type        = string
-  description = "DLQ for change event queue (when connected to blue/green environment) and holding queue"
+  description = "DLQ for chane event queue"
+}
+
+variable "holding_queue_dlq" {
+  type        = string
+  description = "DLQ for holding queue"
 }
 
 variable "update_request_dlq" {

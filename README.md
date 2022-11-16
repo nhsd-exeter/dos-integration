@@ -148,11 +148,11 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
 
-An IP Allowlist is kept in secrets manager for each environment (task, dev, live etc). The task environment list is used for each task environment deployed. The Secret Name for each is of the format
+An IP Allowlist is kept in secrets manager for each environment (dev, demo, live, etc). The Secret Name for each is of the format
 
     uec-dos-int-XXXX-ip-addresses-allowlist
 
-where XXXX is the name of the environment in lowercase. For most development work you only need to add your IP to the task and dev environments list.
+where XXXX is the name of the environment in lowercase. For most development work you only need to add your IP to the dev environments list.
 
 You can also add your IP to the lists with a script.
 
@@ -166,7 +166,7 @@ To add an IP address to the IP allow lists, Ensure you're authenticated for acce
 
 To add an IP address to the IP allow lists and deploy the allow list to environment run the following command.The `PROFILE` delineates which environment to update with the latest IP allow list. Set `ENVIRONMENT` if you are changing an environment not linked to your branch
 
-    make update-ip-allowlists-and-deploy-allowlist PROFILE=task
+    make update-ip-allowlists-and-deploy-allowlist PROFILE=dev
 
 ### DoS Database Connection
 
@@ -254,7 +254,7 @@ Prerequisites
 
 To run unit tests run the following commands
 
-    make integration-test PROFILE=task TAGS=pharmacy PARALLEL_TEST_COUNT=10
+    make integration-test PROFILE=dev TAGS=pharmacy PARALLEL_TEST_COUNT=10
 
 Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
 
@@ -307,7 +307,7 @@ Performance tests are run locally against development environments. They are als
 
 ### API Key
 
-API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=task`. However the dev, demo and live profiles' key must be generated prior to deployment of the api gateway.
+API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=dev`. However the dev, demo and live profiles' key must be generated prior to deployment of the api gateway.
 
 ### Artefacts Versioning
 
@@ -333,7 +333,7 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 ### Deployment From the Command-line
 
-    make build-and-deploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+    make build-and-deploy PROFILE=dev # Builds docker images, pushes them and deploys to lambda
 
 ### Branching Strategy
 
@@ -356,18 +356,18 @@ For a branch that is meant for testing or another purpose and you don't want it 
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
 
-    make quick-build-and-deploy PROFILE=task ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
+    make quick-build-and-deploy PROFILE=dev ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
 
 ### Remove Deployment From the Command-line
 
-    make undeploy PROFILE=task # Builds docker images, pushes them and deploys to lambda
+    make undeploy PROFILE=dev # Builds docker images, pushes them and deploys to lambda
 
 ### Remove deployment with commit tag
 
-You can remove a task deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
+You can remove a dev deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
-    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 task environment
+    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 dev environment
 
 ### Remove deployment on Pull Request merge
 
@@ -483,16 +483,17 @@ What are the links of the supporting systems?
 
 ### Cloud Environments
 
-List all the environments and their relation to profiles
+List all the profiles
 
-- Task
-  - Profile: `task`
 - Dev
   - Profile: `dev`
+  - Used for development, testing and integration. This is the default profile in Non-Production environments.
 - Demo
   - Profile: `demo`
+  - This is the profile used for the demo environment which is used for user acceptance testing and smoke testing.
 - Live
   - Profile: `live`
+  - This is the profile used for the live environment which is used for production.
 
 ### Runbooks
 

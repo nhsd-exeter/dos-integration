@@ -26,7 +26,7 @@ variable "change_event_queue_name" {
   description = "Change event queue name"
 }
 
-variable "shared_resources_dlq" {
+variable "change_event_dlq" {
   type        = string
   description = "DLQ for change event queue"
 }
@@ -46,12 +46,21 @@ variable "shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_a
 }
 
 # ##############
-# # CONDITIONS
+# # PARAMETER STORE
 # ##############
 
-variable "attach_to_environment" {
-  default     = true
-  type        = bool
-  description = "Whether to attach this stack to the environment, if true then the stack will be attached to the environment else some will be removed"
+variable "blue_green_deployment_previous_version_parameter_name" {
+  type        = string
+  description = "The name of the parameter in the parameter store that stores the previous version of the blue/green deployment"
+}
 
+variable "blue_green_deployment_current_version_parameter_name" {
+  type        = string
+  description = "The name of the parameter in the parameter store that stores the current version of the blue/green deployment"
+}
+
+variable "previous_blue_green_environment" {
+  type        = string
+  description = "(optional) The name of the previous blue/green environment"
+  default     = "NA"
 }

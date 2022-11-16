@@ -1,0 +1,19 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - is_pipeline_running=$(aws codepipeline list-pipeline-executions --pipeline-name $CICD_SHARED_RESOURCES_DEPLOYMENT_PIPELINE --query "pipelineExecutionSummaries[?status == 'InProgress'].pipelineExecutionId")
+      - |
+        if [[ "$is_pipeline_running" != "[]" ]]; then
+          echo "Pipeline is already running. Exiting."
+          exit 1
+        fi
+      - make -s clean > /dev/null 2>&1
+  build:
+    commands:
+      # Start the pipeline by triggering the first s3 source stage
+      - make -s clean > /dev/null 2>&1
+      - git archive -o repository.zip HEAD
+      - aws s3 cp repository.zip s3://$CICD_ARTIFACT_BUCKET/repository.zip

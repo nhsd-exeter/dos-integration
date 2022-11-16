@@ -8,13 +8,13 @@ resource "aws_sqs_queue" "change_event_queue" {
   visibility_timeout_seconds  = 30 # Must be same or higher than ingest change event lambda max execution time
   kms_master_key_id           = aws_kms_key.signing_key.key_id
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.shared_resources_dlq.arn
+    deadLetterTargetArn = aws_sqs_queue.change_event_dlq.arn
     maxReceiveCount     = 5
   })
 }
 
-resource "aws_sqs_queue" "shared_resources_dlq" {
-  name                      = var.shared_resources_dlq
+resource "aws_sqs_queue" "change_event_dlq" {
+  name                      = var.change_event_dlq
   fifo_queue                = true
   kms_master_key_id         = aws_kms_key.signing_key.key_id
   message_retention_seconds = 1209600 # 14 days

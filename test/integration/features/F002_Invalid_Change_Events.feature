@@ -60,7 +60,7 @@ Feature: F002. Invalid change event Exception handling
     Given a Changed Event with the Weekday NOT present in the Opening Times data
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
-    And the Slack channel shows an alert saying "Invalid Opening Times"
+    And the Slack channel shows an alert saying "Invalid Opening Times" from "BLUE_GREEN_ENVIRONMENT"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002S009. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional

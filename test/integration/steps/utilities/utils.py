@@ -20,16 +20,10 @@ from .secrets_manager import get_secret
 from .translation import get_service_history_data_key
 
 URL = getenv("URL")
-CR_URL = getenv("CR_URL")
-SQS_URL = getenv("SQS_URL")
-EVENT_PROCESSOR = getenv("EVENT_PROCESSOR")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
-CR_DLQ_NAME = getenv("CR_DLQ_NAME")
-CE_DLQ_NAME = getenv("CE_DLQ_NAME")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
 DYNAMO_CLIENT = client("dynamodb")
-RDS_DB_CLIENT = client("rds")
 S3_CLIENT = client("s3", region_name="eu-west-2")
 
 PHARMACY_ODS_CODE_LIST = None
@@ -66,22 +60,6 @@ def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str
     payload = change_event.get_change_event()
     output = post(url=URL, headers=headers, data=dumps(payload))
     if output.status_code != 200 and isinstance(sequence_id, int):
-        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
-    return output
-
-
-def process_change_request_payload(change_event: ChangeEvent, valid_api_key: bool) -> Response:
-    api_key = "invalid"
-    if valid_api_key:
-        secret = loads(get_secret(getenv("CR_API_KEY_SECRET")))
-        api_key = secret[getenv("CR_API_KEY_KEY")]
-    headers = {
-        "x-api-key": api_key,
-        "Content-Type": "application/json",
-    }
-    payload = change_event.get_change_event()
-    output = post(url=CR_URL, headers=headers, data=dumps(payload))
-    if valid_api_key and output.status_code != 200:
         raise ValueError(f"Unable to process change request payload. Error: {output.text}")
     return output
 
@@ -751,14 +729,14 @@ def remove_opening_days(opening_times, day) -> dict:
     return opening_times
 
 
-def slack_retry(message) -> str:
+def slack_retry(message: str) -> str:
     slack_channel, slack_oauth = slack_secrets()
     for _ in range(6):
         sleep(60)
         response_value = check_slack(slack_channel, slack_oauth)
         if message in response_value:
             return response_value
-    raise ValueError("Slack alert message not found")
+    raise ValueError(f"Slack alert message not found, message: {message}")
 
 
 def slack_secrets() -> Tuple[str, str]:
@@ -772,30 +750,30 @@ def check_slack(channel, token) -> str:
         "Content-Type": "application/json",
     }
     current = str(time() - 3600)
-
     output = get(url=f"https://slack.com/api/conversations.history?channel={channel}&oldest={current}", headers=headers)
     return output.text
 
 
 def get_sqs_queue_name(queue_type: str) -> str:
     response = ""
-    current_environment = getenv("ENVIRONMENT")
+    blue_green_environment = getenv("BLUE_GREEN_ENVIRONMENT")
+    shared_environment = getenv("SHARED_ENVIRONMENT")
+    profile = getenv("PROFILE")
     match queue_type.lower():
         case "changeevent":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-change-event-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{shared_environment}-change-event-dead-letter-queue.fifo",
             )
         case "updaterequest":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-update-request-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{profile}-{blue_green_environment}-update-request-dead-letter-queue.fifo",
             )
         case "updaterequestfail":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{current_environment}-update-request-queue.fifo",
+                QueueName=f"uec-dos-int-{profile}-{blue_green_environment}-update-request-queue.fifo",
             )
         case _:
             raise ValueError("Invalid SQS queue type specified")
-    print(response)
 
     return response["QueueUrl"]
 
@@ -870,8 +848,8 @@ def post_to_change_event_dlq(context: Context):
 
 def get_s3_email_file(context: Context) -> dict:
     sleep(45)
-    current_environment = getenv("ENVIRONMENT")
-    bucket_name = f"uec-dos-int-{current_environment}-send-email-bucket"
+    shared_environment = getenv("SHARED_ENVIRONMENT")
+    bucket_name = f"uec-dos-int-{shared_environment}-send-email-bucket"
     response = S3_CLIENT.list_objects(
         Bucket=bucket_name,
     )

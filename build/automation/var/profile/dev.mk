@@ -1,4 +1,4 @@
--include $(VAR_DIR)/profile/nonprd.mk
+-include $(VAR_DIR)/platform-texas/v1/account-live-k8s-nonprod.mk
 
 # ==============================================================================
 # Service variables
@@ -8,7 +8,7 @@ LOG_LEVEL:= DEBUG
 DB_SERVER_NAME := uec-core-dos-regression-db-12
 DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
 DB_PORT := 5432
-DB_NAME := pathwaysdos
+DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
 
 DB_SECRET_NAME := core-dos-dev/deployment
