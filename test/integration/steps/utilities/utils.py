@@ -849,10 +849,9 @@ def post_to_change_event_dlq(context: Context):
 def get_s3_email_file(context: Context) -> dict:
     sleep(45)
     shared_environment = getenv("SHARED_ENVIRONMENT")
-    bucket_name = f"uec-dos-int-{shared_environment}-send-email-bucket"
-    response = S3_CLIENT.list_objects(
-        Bucket=bucket_name,
-    )
+    profile = getenv("PROFILE")
+    bucket_name = f"uec-dos-int-{profile}-{shared_environment}-send-email-bucket"
+    response = S3_CLIENT.list_objects(Bucket=bucket_name)
     object_key = response["Contents"][-1]["Key"]
     S3_RESOURCE = resource("s3")
     S3_RESOURCE.meta.client.download_file(bucket_name, object_key, "email_file.json")

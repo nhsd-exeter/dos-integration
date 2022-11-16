@@ -65,7 +65,7 @@ phases:
       - cd $CODEBUILD_SRC_DIR/git_repo
       - git clone $GIT_REPO_URL .
       - git checkout $PREVIOUS_VERSION
-      - export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION)
+      - "export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION) 2> /dev/null ||:"
       - echo FULL_PREVIOUS_VERSION=$FULL_PREVIOUS_VERSION
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
