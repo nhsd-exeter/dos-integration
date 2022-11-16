@@ -61,11 +61,12 @@ phases:
       - make link-blue-green-environment VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT TF_VAR_previous_blue_green_environment=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30"
 
       - echo "[Destroy Previous Rollback Version]"
+      # In this snippet, we are triggering the codebuild stage to destroy the previous rollback blue-green environment
       - mkdir -p $CODEBUILD_SRC_DIR/git_repo
       - cd $CODEBUILD_SRC_DIR/git_repo
       - git clone $GIT_REPO_URL .
-      - git checkout $PREVIOUS_VERSION
-      - "export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION) 2> /dev/null ||:"
+      - git checkout $PREVIOUS_VERSION || true
+      - export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION) || true
       - echo FULL_PREVIOUS_VERSION=$FULL_PREVIOUS_VERSION
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY

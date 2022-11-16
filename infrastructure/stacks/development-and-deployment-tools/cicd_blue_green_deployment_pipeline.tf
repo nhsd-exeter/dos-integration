@@ -118,7 +118,7 @@ resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
             },
             {
               name  = "SHARED_ENVIRONMENT"
-              value = "cicd-release"
+              value = "cicd-test"
               type  = "PLAINTEXT"
             }
           ])
