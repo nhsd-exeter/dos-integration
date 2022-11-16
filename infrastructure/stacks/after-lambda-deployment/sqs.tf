@@ -8,10 +8,10 @@ resource "aws_sqs_queue" "holding_queue" {
   visibility_timeout_seconds  = 10 # Must be same as service matcher max execution time
   kms_master_key_id           = data.aws_kms_key.signing_key.key_id
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.change_event_dlq.arn
+    deadLetterTargetArn = aws_sqs_queue.holding_queue_dlq.arn
     maxReceiveCount     = 5
   })
-  depends_on = [aws_sqs_queue.change_event_dlq]
+  depends_on = [aws_sqs_queue.holding_queue_dlq]
 }
 
 resource "aws_sqs_queue" "update_request_queue" {
@@ -37,8 +37,8 @@ resource "aws_lambda_event_source_mapping" "holding_queue_event_source_mapping" 
   function_name    = data.aws_lambda_function.service_matcher.arn
 }
 
-resource "aws_sqs_queue" "change_event_dlq" {
-  name                      = var.change_event_dlq
+resource "aws_sqs_queue" "holding_queue_dlq" {
+  name                      = var.holding_queue_dlq
   fifo_queue                = true
   kms_master_key_id         = data.aws_kms_key.signing_key.key_id
   message_retention_seconds = 1209600 # 14 days
@@ -51,9 +51,9 @@ resource "aws_sqs_queue" "update_request_dlq" {
   message_retention_seconds = 1209600 # 14 days
 }
 
-resource "aws_lambda_event_source_mapping" "change_event_dlq_event_source_mapping" {
+resource "aws_lambda_event_source_mapping" "holding_queue_dlq_event_source_mapping" {
   batch_size       = 1
-  event_source_arn = aws_sqs_queue.change_event_dlq.arn
+  event_source_arn = aws_sqs_queue.holding_queue_dlq.arn
   enabled          = true
   function_name    = data.aws_lambda_function.change_event_dlq_handler.arn
 }

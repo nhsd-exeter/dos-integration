@@ -10,7 +10,7 @@ FILE_PATH = "application.common.appconfig"
 def test_app_config(mock_app_config_store):
     # Arrange
     environment = "unittest"
-    environ["ENV"] = environment
+    environ["SHARED_ENVIRONMENT"] = environment
     feature_flags_name = "service-matcher"
     # Act
     AppConfig(feature_flags_name)
@@ -19,21 +19,21 @@ def test_app_config(mock_app_config_store):
         environment=environment, application=f"uec-dos-int-{environment}-lambda-app-config", name=feature_flags_name
     )
     # Clean up
-    del environ["ENV"]
+    del environ["SHARED_ENVIRONMENT"]
 
 
 @patch(f"{FILE_PATH}.AppConfigStore")
 def test_app_config_get_raw_configuration(mock_app_config_store):
     # Arrange
     environment = "unittest"
-    environ["ENV"] = environment
+    environ["SHARED_ENVIRONMENT"] = environment
     feature_flags_name = "service-matcher"
     # Act
     response = AppConfig(feature_flags_name).get_raw_configuration()
     # Assert
     assert isinstance(response, MagicMock)
     # Clean up
-    del environ["ENV"]
+    del environ["SHARED_ENVIRONMENT"]
 
 
 @patch(f"{FILE_PATH}.FeatureFlags")
@@ -41,11 +41,11 @@ def test_app_config_get_raw_configuration(mock_app_config_store):
 def test_app_config_feature_flags(mock_app_config_store, mock_feature_flags):
     # Arrange
     environment = "unittest"
-    environ["ENV"] = environment
+    environ["SHARED_ENVIRONMENT"] = environment
     feature_flags_name = "service-matcher"
     # Act
     AppConfig(feature_flags_name).get_feature_flags()
     # Assert
     mock_feature_flags.assert_called_once_with(store=mock_app_config_store.return_value)
     # Clean up
-    del environ["ENV"]
+    del environ["SHARED_ENVIRONMENT"]

@@ -22,8 +22,8 @@ data "aws_sqs_queue" "change_event_queue" {
   name = var.change_event_queue_name
 }
 
-data "aws_sqs_queue" "shared_resources_dlq" {
-  name = var.shared_resources_dlq
+data "aws_sqs_queue" "change_event_dlq" {
+  name = var.change_event_dlq
 }
 
 # ##############

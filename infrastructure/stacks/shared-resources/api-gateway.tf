@@ -109,7 +109,7 @@ resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
 }
 
 #tfsec:ignore:aws-cloudwatch-log-group-customer-key
-resource "aws_cloudwatch_log_group" "api_gw" {
+resource "aws_cloudwatch_log_group" "di_endpoint_access_logs" {
   name              = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
   retention_in_days = 30
 }
@@ -122,7 +122,7 @@ resource "aws_api_gateway_stage" "di_endpoint_stage" {
   xray_tracing_enabled = true
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+    destination_arn = aws_cloudwatch_log_group.di_endpoint_access_logs.arn
     format = jsonencode({
       requestTime              = "$context.requestTime"
       requestId                = "$context.requestId"

@@ -102,7 +102,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
 
 def invoke_lambda(payload: Dict[str, Any]) -> Dict[str, Any]:
     return lambda_client.invoke(
-        FunctionName=getenv("EVENT_SENDER_FUNCTION_NAME"),
+        FunctionName=getenv("SERVICE_SYNC_FUNCTION_NAME"),
         InvocationType="Event",
         Payload=dumps(payload),
     )  # type: ignore

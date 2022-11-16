@@ -113,7 +113,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
     {
       "Effect": "Allow",
       "Action": "lambda:InvokeFunction",
-      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-service-sync"
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.service_sync_lambda_name}"
     },
     {
       "Effect": "Allow",
@@ -380,7 +380,7 @@ module "change_event_dlq_handler" {
       ],
       "Resource": [
         "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}",
-        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.shared_resources_dlq}"
+        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.holding_queue_dlq}"
       ]
     },
     {

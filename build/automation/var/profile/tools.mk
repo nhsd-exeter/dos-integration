@@ -17,17 +17,7 @@ TERRAFORM_NETWORKING_VPC_ID = 0
 TERRAFORM_NETWORKING_ROUTE53_ZONE_NAME = $(PROJECT_GROUP_SHORT).$(TEXAS_TLD_NAME)
 TERRAFORM_NHSD_IDENTITIES_ACCOUNT_ID = $(AWS_ACCOUNT_ID_IDENTITIES)
 
-
-TF_VAR_code_pipeline_branch_name := develop
-TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
-TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
-TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
-TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
-
-TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(ENVIRONMENT)-lambda-sg
-TF_VAR_test_signing_key_alias := $(PROJECT_ID)-test-signing-key-alias
-TF_VAR_aws_np_vpc_name = lk8s-nonprod.texasplatform.uk
-
 TF_VAR_service_state_bucket = $(TERRAFORM_STATE_STORE)
 TF_VAR_development_pipeline_state = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)/dev/development-pipeline/terraform.state
 TF_VAR_mgmt_vpc_name := mgmt.texasplatform.uk
+TF_VAR_developer_role_name = UECPUServiceDeveloper
