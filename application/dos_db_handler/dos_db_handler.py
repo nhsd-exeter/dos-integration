@@ -98,6 +98,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         result = dict(zip(db_columns, query_results))
         return result
     else:
+        #add comment
         raise ValueError("Unsupported request")
 
 
