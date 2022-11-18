@@ -335,7 +335,6 @@ def get_change_event_standard_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
-    # data = literal_eval(data)
     return data
 
 
@@ -343,7 +342,6 @@ def get_change_event_specified_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
-    # data = literal_eval(data)
     return data
 
 

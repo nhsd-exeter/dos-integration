@@ -47,7 +47,7 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
         return dumps(result, default=str)
     elif request["type"] == "insert":
         # returns no values
-        return True
+        return "True"
     elif request["type"] == "change_event_standard_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
@@ -124,8 +124,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
                 "OPEN_PERIOD_END": end_time,
                 "IS_CLOSED": False,
                 "SERVICE_SPECIFIED_OPENING_DATE_ID": service_specified_opening_date_id,
-            },
+            }
         )
+        return result
     else:
         # add comment
         raise ValueError("Unsupported request")
