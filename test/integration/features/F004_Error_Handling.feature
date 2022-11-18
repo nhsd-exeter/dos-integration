@@ -40,6 +40,7 @@ Feature: F004. Error Handling
     And the Slack channel shows an alert saying "DI Endpoint Errors"
 
   @complete @dev @pharmacy_cloudwatch_queries
+  #This test has issues on a cleared ddb
   Scenario Outline: F004S007. An exception is raised when Sequence number is less than previous
     Given an ODS has an entry in dynamodb
     When the Changed Event is sent for processing with sequence id "<seqid>"
