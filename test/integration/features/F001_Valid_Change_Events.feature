@@ -10,6 +10,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service history shows change type is "modify"
 
   @complete @dev @pharmacy_cloudwatch_queries
+  #Failures because of case sensitive addresses
   Scenario: F001S002. A Changed event with aligned data does not save an update to DoS
     Given a "pharmacy" Changed Event is aligned with DoS
     When the Changed Event is sent for processing with "valid" api key

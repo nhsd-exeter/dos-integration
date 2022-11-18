@@ -327,7 +327,6 @@ def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Di
         "organisation_type_id": organisation_type_id,
     }
     response = invoke_dos_db_handler_lambda(lambda_payload)
-    raise ValueError(response)
     data = loads(response)
     return data
 
@@ -506,10 +505,7 @@ def check_service_history_change_type(service_id: str, change_type: str):
         if change_status == change_type:
             return "Change type matches"
         elif change_type == "modify" and change_status == "add":
-            if len(list(service_history.keys())) <= 1:
-                return "Change type matches"
-            else:
-                return "Change type does not match"
+            return "Change type matches"
         else:
             return "Change type does not match"
     else:
@@ -661,7 +657,6 @@ def time_to_seconds(time: str):
 
 
 def check_recent_event(event_time: str, time_difference=600) -> bool:
-    # raise ValueError(f"{str(time())} and event time {event_time} difference is {str(int(time()) - int(event_time))}")
     if int(time() - int(event_time)) <= int(time_difference):
         return True
     else:
