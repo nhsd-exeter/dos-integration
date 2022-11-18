@@ -15,6 +15,10 @@ class Context:
     sequence_number: int | None = None
     start_time: str | None = None
     previous_value: str = "unknown"
+    service_type: str | None = None
+    ods_code: str | None = None
+    website: str | None = None
+    phone: str | None = None
     other: dict | None = None
     # Other used as a catch all for any other data that is not covered by the above and only used in a couple tests
 

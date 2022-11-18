@@ -99,6 +99,7 @@ class ChangeEvent:
         self.county = county
 
     def get_change_event(self):
+        # Build functions need adding to the new change event builder
         return {
             "ODSCode": self.odscode,
             "OrganisationName": self.organisation_name,
