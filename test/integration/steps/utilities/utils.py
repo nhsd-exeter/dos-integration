@@ -30,18 +30,19 @@ PHARMACY_ODS_CODE_LIST = None
 DENTIST_ODS_CODE_LIST = None
 
 
-def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_id: str) -> Response:
+# def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_id: str) -> Response:
+def process_payload(context, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = generate_unique_sequence_number(change_event.odscode)
+    sequence_number = generate_unique_sequence_number(context.change_event["ODSCode"])
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
         "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
-    payload = change_event.get_change_event()
+    payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if valid_api_key and output.status_code != 200:
         raise ValueError(f"Unable to process change request payload. Error: {output.text}")
@@ -399,27 +400,27 @@ def get_expected_data(context: Context, changed_data_name: str) -> Any:
     """Get the previous data from the context"""
     match changed_data_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
-            changed_data = context.change_event.phone
+            changed_data = context.phone
         case "website" | "web":
-            changed_data = context.change_event.website
+            changed_data = context.website
         case "address":
-            changed_data = get_address_string(context.change_event)
+            changed_data = get_address_string(context)
         case "postcode":
-            changed_data = context.change_event.postcode
+            changed_data = context.change_event["Postcode"]
         case _:
             raise ValueError(f"Error!.. Input parameter '{changed_data_name}' not compatible")
     return changed_data
 
 
-def get_address_string(change_event: ChangeEvent) -> str:
+def get_address_string(context) -> str:
     address_lines = [
         line
         for line in [
-            change_event.address_line_1,
-            change_event.address_line_2,
-            change_event.address_line_3,
-            change_event.city,
-            change_event.county,
+            context.change_event["Address1"],
+            context.change_event["Address2"],
+            context.change_event["Address3"],
+            context.change_event["City"],
+            context.change_event["County"],
         ]
         if isinstance(line, str) and line.strip() != ""
     ]

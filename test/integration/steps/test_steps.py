@@ -84,14 +84,14 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
     while not validated:
         match contact.lower():
             case "website":
-                context.previous_value = context.change_event.website
-                context.change_event.website = FAKER.domain_word() + ".nhs.uk"
+                context.previous_value = context.website
+                context.website = FAKER.domain_word() + ".nhs.uk"
             case "phone_no":
-                context.previous_value = context.change_event.phone
-                context.change_event.phone = FAKER.phone_number()
+                context.previous_value = context.phone
+                context.phone = FAKER.phone_number()
             case "address":
-                context.previous_value = get_address_string(context.change_event)
-                context.change_event.address_line_1 = FAKER.street_name()
+                context.previous_value = get_address_string(context)
+                context.change_event["Address1"] = FAKER.street_name()
             case _:
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
         validated = valid_change_event(context)
@@ -287,15 +287,15 @@ def a_change_event_is_valid_with_contact_set(contact: str, context: Context):
         build_same_as_dos_change_event_by_ods(context, get_odscode_with_contact_data())
         match contact.lower():
             case "website":
-                if context.change_event.website is None or context.change_event.website == "":
+                if context.website is None or context.website == "":
                     continue
-                context.previous_value = context.change_event.website
-                context.change_event.website = None
+                context.previous_value = context.website
+                context.website = None
             case "phone":
-                if context.change_event["phone"] is None or context.change_event["phone"] == "":
+                if context.phone is None or context.phone == "":
                     continue
-                context.previous_value = context.change_event["phone"]
-                context.change_event["phone"] = None
+                context.previous_value = context.phone
+                context.phone = None
             case _:
                 raise ValueError(f"Invalid contact '{contact}' provided")
     return context
@@ -320,32 +320,32 @@ def adjust_specified_opening_date(context: Context, selected_date: str):
 def generic_event_config(context: Context, field: str, value: str):
     match field.lower():
         case "website":
-            context.previous_value = context.change_event.website
-            context.change_event.website = value
+            context.previous_value = context.website
+            context.website = value
         case "phone":
-            context.previous_value = context.change_event.phone
-            context.change_event.phone = value
+            context.previous_value = context.phone
+            context.phone = value
         case "odscode":
-            context.previous_value = context.change_event.odscode
-            context.change_event.odscode = value
+            context.previous_value = context.change_event["ODSCode"]
+            context.change_event["ODSCode"] = value
         case "postcode":
-            context.previous_value = context.change_event.postcode
-            context.change_event.postcode = value
+            context.previous_value = context.change_event["Postcode"]
+            context.change_event["Postcode"] = value
         case "address":
             context.previous_value = get_address_string(context.change_event)
-            context.change_event.address_line_1 = value
-            context.change_event.address_line_2 = None
-            context.change_event.address_line_3 = None
-            context.change_event.city = None
-            context.change_event.county = None
+            context.change_event["Address1"] = value
+            context.change_event["Address2"] = None
+            context.change_event["Address3"] = None
+            context.change_event["City"] = None
+            context.change_event["County"] = None
         case "organisationname":
-            context.change_event.organisation_name = value
+            context.change_event["OrganisationName"] = value
         case "organisationstatus":
-            context.change_event.organisation_status = value
+            context.change_event["OrganisationStatus"] = value
         case "organisationtypeid":
-            context.change_event.organisation_type_id = value
+            context.change_event["OrganisationTypeId"] = value
         case "organisationsubtype":
-            context.change_event.organisation_sub_type = value
+            context.change_event["OrganisationSubType"] = value
     return context
 
 
@@ -518,8 +518,8 @@ def current_ods_exists_in_ddb(context: Context):
 def a_changed_url_event_is_valid(url: str, context: Context):
     context.service_type = "pharmacy"
     build_same_as_dos_change_event(context)
-    context.change_event.website = url
-    context.change_event.postcode = "NG5 2JJ"
+    context.website = url
+    context.change_event["Postcode"] = "NG5 2JJ"
     return context
 
 
@@ -527,11 +527,11 @@ def a_changed_url_event_is_valid(url: str, context: Context):
 def a_changed_address_event_is_valid(address: str, context: Context):
     context.service_type = "pharmacy"
     build_same_as_dos_change_event(context)
-    context.change_event.address_line_1 = address
-    context.change_event.address_line_2 = None
-    context.change_event.address_line_3 = None
-    context.change_event.city = None
-    context.change_event.county = None
+    context.change_event["Address1"] = address
+    context.change_event["Address2"] = None
+    context.change_event["Address3"] = None
+    context.change_event["City"] = None
+    context.change_event["County"] = None
     return context
 
 
@@ -587,7 +587,7 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context: Conte
 def the_change_event_is_sent_for_processing(context: Context, valid_or_invalid):
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
-    context.response = process_payload(context.change_event, valid_or_invalid == "valid", context.correlation_id)
+    context.response = process_payload(context, valid_or_invalid == "valid", context.correlation_id)
     context.sequence_number = context.response.request.headers["sequence-number"]
     return context
 

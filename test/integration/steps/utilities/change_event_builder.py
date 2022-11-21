@@ -1,6 +1,7 @@
 from datetime import datetime
 from re import fullmatch, sub
-#from typing import Tuple
+
+# from typing import Tuple
 from uuid import uuid4
 
 from dateutil.relativedelta import relativedelta
@@ -296,6 +297,7 @@ from .utils import (
 #     )
 #     return change_event
 
+
 def build_change_event_from_default(context):
     context.change_event = {
         "odscode": get_default_random_odscode(),
@@ -495,15 +497,14 @@ def set_same_as_dos_address(context, address: str) -> ChangeEvent:
 
 
 def valid_change_event(context):
-    change_event = context.change_event
     """This function checks if the data stored in DoS would pass the change request
     validation within DoS API Gateway"""
-    if change_event.website is not None and not fullmatch(
+    if context.website is not None and not fullmatch(
         r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
-        change_event.website,
+        context.website,
     ):
         return False
-    if change_event.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", change_event.phone):
+    if context.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", context.phone):
         return False
     return True
 
@@ -515,16 +516,15 @@ def build_same_as_dos_change_event(context):
         match service_type.upper():
             case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
                 context.ods_code = random_dentist_odscode()
-                context.change_event["ODSCode"]
+                context.change_event["ODSCode"] = context.ods_code
             case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-                # Goes here and returns valid value
                 new_ods = get_single_service_pharmacy()
-                context.odscode = new_ods
-                context.change_event["ODSCode"]
+                context.ods_code = new_ods
+                context.change_event["ODSCode"] = new_ods
             case _:
                 raise ValueError(f"Service type {service_type} does not exist")
         build_same_as_dos_change_event_by_ods(context, context.ods_code)
-        if valid_change_event(context.change_event):
+        if valid_change_event(context):
             break
 
 
