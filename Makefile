@@ -686,3 +686,11 @@ undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended
 
 unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	make terraform-destroy-auto-approve STACKS=blue-green-link
+
+tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green environment - mandatory: COMMIT=[short commit hash]
+	tag="$(BUILD_TIMESTAMP)-blue-green-deployment"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+tag-commit-to-deploy-shared-resources: # Tags commit to deploy shared resources - mandatory: COMMIT=[short commit hash]
+	tag="$(BUILD_TIMESTAMP)-shared-resources-deployment"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)

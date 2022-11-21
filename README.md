@@ -35,7 +35,14 @@
     - [Branching Strategy](#branching-strategy)
     - [Branch Naming for Automatic Deployments](#branch-naming-for-automatic-deployments)
     - [Branch Naming to not automatically deploy](#branch-naming-to-not-automatically-deploy)
-      - [Quick Re-deploy](#quick-re-deploy)
+  - [Blue/Green Deployments](#bluegreen-deployments)
+    - [Blue/Green Deployment Strategy](#bluegreen-deployment-strategy)
+    - [Blue/Green Deployment Process](#bluegreen-deployment-process)
+    - [Useful Blue/Green Deployment Commands](#useful-bluegreen-deployment-commands)
+      - [Update shared resources](#update-shared-resources)
+      - [Trigger Blue/Green Deployment Pipeline](#trigger-bluegreen-deployment-pipeline)
+      - [Trigger Shared Resources Deployment Pipeline](#trigger-shared-resources-deployment-pipeline)
+    - [Quick Re-deploy](#quick-re-deploy)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
     - [Remove deployment on Pull Request merge](#remove-deployment-on-pull-request-merge)
@@ -64,7 +71,7 @@ The NHS.uk website, and the DoS (Directory of Services) service are separate ent
 The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
 
 ### DI Confluence Page
-https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home
+<https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home>
 
 ### Architecture
 
@@ -109,7 +116,7 @@ Clone the repository
 Please, ask one of your colleagues for the AWS account numbers used by the project. You will use these as roles which you will assume from your account.
 
 Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
-https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+<https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html>
 
 There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
 
@@ -129,7 +136,6 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 
     make devops-setup-aws-accounts
 
-
 ## Contributing
 
 Here is the list of the development practices that have to be followed by the team and the individual members:
@@ -146,7 +152,7 @@ Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTI
 
 ### Add IP Address to IP Allow List
 
-To find your public IP you can visit https://www.google.com/search?q=whats+my+ip
+To find your public IP you can visit <https://www.google.com/search?q=whats+my+ip>
 
 An IP Allowlist is kept in secrets manager for each environment (dev, demo, live, etc). The Secret Name for each is of the format
 
@@ -227,7 +233,6 @@ For coverage run
 The unit tests are run using pytest and coverage (both available to download via pip). If you want to run the unit tests without the setup, or want to target only certain files/folders you can run the tests in your own environment directly by going to the /application directory and running.
 
     python3 -m pytest --cov=. -vv
-
 
 #### Where are the unit tests run?
 
@@ -330,7 +335,6 @@ All `test`  CodeBuild automations can be found in the AWS CodePipeline app in th
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
-
 ### Deployment From the Command-line
 
     make build-and-deploy PROFILE=dev # Builds docker images, pushes them and deploys to lambda
@@ -341,7 +345,6 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 <img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
 
-
 ### Branch Naming for Automatic Deployments
 
 For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
@@ -351,8 +354,94 @@ Once a branch which meets this criteria has been pushed then it will run a build
 ### Branch Naming to not automatically deploy
 
 For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
+****
 
-#### Quick Re-deploy
+## Blue/Green Deployments
+
+### Blue/Green Deployment Strategy
+
+To deploy a new version of the application in a blue green way it uses multiple components. Such as resources that should persist between deployments, such as the database, and resources that should be recreated with each deployment, such as the lambda functions.
+
+<img src="./documentation/diagrams/DoS Integration-Blue-Green-Deployments.drawio.png" width="1024" /><br /><br />
+
+### Blue/Green Deployment Process
+
+This guide will walk you through the steps to deploy a new version of the application in a blue green way. It assumes you have already deployed the application once and have a blue environment.
+
+1. Create a new blue/green environment with the new version. This creates a new blue/green environment ready to be switched to.
+
+```bash
+make deploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[commit-hash] VERSION=[s3-file-version]
+
+# Example
+make deploy-blue-green-environment PROFILE=live ENVIRONMENT=gggggg VERSION=1.0.0
+```
+
+2. Unlink the current blue/green environment from the shared resources. This will remove any links between the blue/green environment and the shared resources.
+
+```bash
+make unlink-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment]
+
+# Example
+make unlink-blue-green-environment PROFILE=live ENVIRONMENT=live
+```
+
+3. Link the new blue/green environment to the shared resources. This will link the new blue/green environment to the shared resources.
+
+```bash
+make link-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[new-blue-green-environment]
+
+# Example
+make link-blue-green-environment PROFILE=live ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=gggggg
+```
+
+### Useful Blue/Green Deployment Commands
+
+#### Update shared resources
+
+To update the shared resources run the following command.
+Note: The shared environment must be unlinked from the blue/green environment before running this command. Then the blue/green environment must be linked to the shared environment after running this command.
+
+```bash
+make deploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] SHARED_ENVIRONMENT=[shared-resources-environment]
+
+# Example
+make deploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live
+```
+
+#### Trigger Blue/Green Deployment Pipeline
+
+
+
+This will trigger the blue/green deployment pipeline to deploy the commit hash to the blue/green environment in the mgmt account.
+The AWS CodePipeline name will be `uec-dos-int-dev-cicd-blue-green-deployment-pipeline`
+
+COMMIT should be the commit hash of the commit you want to deploy.
+This should only be done from main branch.
+
+```bash
+make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
+
+# Example
+make tag-commit-to-deploy-blue-green-environment COMMIT=gggggg
+```
+
+#### Trigger Shared Resources Deployment Pipeline
+
+This will trigger the shared resources deployment pipeline to deploy the commit hash to the shared resources environment in the mgmt account.
+The AWS CodePipeline name will be `uec-dos-int-dev-cicd-shared-resources-deployment-pipeline`
+
+COMMIT should be the commit hash of the commit you want to deploy.
+This should only be done from main branch.
+
+```bash
+make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
+
+# Example
+make tag-commit-to-deploy-shared-resources COMMIT=gggggg
+```
+
+### Quick Re-deploy
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
 
@@ -435,7 +524,6 @@ or
       DB_SECRET_KEY=DB_USER_PASSWORD \
       DB_SCHEMA=pathwaysdos
 
-
 These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
 
     python3 comparison_reporting/run_dentist_reports.py
@@ -480,7 +568,6 @@ What are the links of the supporting systems?
 
   The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
 
-
 ### Cloud Environments
 
 List all the profiles
@@ -498,7 +585,7 @@ List all the profiles
 ### Runbooks
 
 The runbooks for this project can be found on the DI confluence.
-https://nhsd-confluence.digital.nhs.uk/display/DI/Runbooks
+<https://nhsd-confluence.digital.nhs.uk/display/DI/Runbooks>
 
 ## Product
 

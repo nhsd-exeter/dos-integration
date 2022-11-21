@@ -10,7 +10,7 @@ resource "aws_codebuild_webhook" "build_cicd_blue_green_artefact_webhook" {
 
     filter {
       type    = "HEAD_REF"
-      pattern = "^refs/tags/.*-blue-green"
+      pattern = "^refs/tags/.*-blue-green-deployment"
     }
   }
   depends_on = [aws_codebuild_project.di_build_cicd_blue_green_artefact]

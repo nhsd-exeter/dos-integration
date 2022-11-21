@@ -10,7 +10,7 @@ resource "aws_codebuild_webhook" "build_cicd_shared_resources_artefact_webhook" 
 
     filter {
       type    = "HEAD_REF"
-      pattern = "^refs/tags/.*shared-resources"
+      pattern = "^refs/tags/.*-shared-resources-deployment"
     }
   }
   depends_on = [aws_codebuild_project.di_build_cicd_shared_resources_artefact]
