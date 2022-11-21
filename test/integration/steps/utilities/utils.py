@@ -916,7 +916,7 @@ def post_to_change_event_dlq(context: Context):
         MessageBody=dumps(sqs_body),
         MessageDeduplicationId=str(randint(10000, 99999)),
         MessageGroupId=str(randint(10000, 99999)),
-        MessageAttributes=get_sqs_message_attributes(context.change_event.odscode),
+        MessageAttributes=get_sqs_message_attributes(context.change_event["ODSCode"]),
     )
 
 

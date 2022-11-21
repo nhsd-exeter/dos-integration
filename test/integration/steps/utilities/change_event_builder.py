@@ -300,7 +300,7 @@ from .utils import (
 
 def build_change_event_from_default(context):
     context.change_event = {
-        "odscode": get_default_random_odscode(),
+        "odscode": get_default_random_odscode(context),
         "organisation_name": "Test Organisation",
         "organisation_type_id": get_organisation_type_id(context.service_type),
         "organisation_sub_type": get_organisation_sub_type(context.service_type),
