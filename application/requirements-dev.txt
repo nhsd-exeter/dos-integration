@@ -9,7 +9,7 @@ moto
 mutmut
 pandas
 pytest
-pytest-bdd==6.0.1
+pytest-bdd==6.1.1
 pytest-cov
 pytest-flakefinder
 pytest-html
