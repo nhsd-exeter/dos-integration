@@ -238,6 +238,9 @@ resource "aws_codebuild_project" "di_deploy_blue_green_environment_stage" {
     type      = "CODEPIPELINE"
     buildspec = data.template_file.deploy_blue_green_environment_buildspec.rendered
   }
+  depends_on = [
+    aws_codebuild_project.di_delete_blue_green_environment
+  ]
 }
 
 resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" {

@@ -28,7 +28,17 @@ variable "cicd_shared_resources_deployment_pipeline_name" {
 
 variable "pipeline_notification_name" {
   type        = string
-  description = ""
+  description = "Development pipeline notification name"
+}
+
+variable "cicd_blue_green_deployment_pipeline_nofitication_name" {
+  type        = string
+  description = "Blue-green deployment pipeline notification name"
+}
+
+variable "cicd_shared_resources_deployment_pipeline_nofitication_name" {
+  type        = string
+  description = "Shared resources deployment pipeline notification name"
 }
 
 variable "pipeline_chatbot_channel" {

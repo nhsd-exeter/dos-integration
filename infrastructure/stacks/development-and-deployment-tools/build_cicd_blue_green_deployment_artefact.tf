@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_cicd_blue_green_artefact_webhook" {
-  count        = var.environment == "di-618" ? 1 : 0
+  count        = var.environment == "dev" ? 1 : 0
   project_name = aws_codebuild_project.di_build_cicd_blue_green_artefact[0].name
   build_type   = "BUILD"
   filter_group {
@@ -17,7 +17,7 @@ resource "aws_codebuild_webhook" "build_cicd_blue_green_artefact_webhook" {
 }
 
 resource "aws_codebuild_project" "di_build_cicd_blue_green_artefact" {
-  count          = var.environment == "di-618" ? 1 : 0
+  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-build-cicd-blue-green-artefact"
   description    = "Builds artefacts based on tag for CI/CD Pipeline"
   build_timeout  = "30"
