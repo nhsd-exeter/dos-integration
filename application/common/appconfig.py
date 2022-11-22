@@ -15,10 +15,10 @@ class AppConfig:
             name (str): name of the application configuration profile
         """
         self.name = name
-        environment: str = getenv("ENV")
+        shared_environment: str = getenv("SHARED_ENVIRONMENT")
         self.app_config = AppConfigStore(
-            environment=environment,
-            application=f"uec-dos-int-{environment}-lambda-app-config",
+            environment=shared_environment,
+            application=f"uec-dos-int-{shared_environment}-lambda-app-config",
             name=name,
         )
 

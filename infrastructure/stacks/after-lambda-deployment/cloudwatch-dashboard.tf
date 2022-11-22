@@ -13,8 +13,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "UEC-DOS-INT", "QueueToMessageGrouperLatency", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.environment}" ],
+                    [ "UEC-DOS-INT", "QueueToMessageGrouperLatency", "ENV", "${var.blue_green_environment}" ],
+                    [ "UEC-DOS-INT", "QueueToDoSLatency", "ENV", "${var.blue_green_environment}" ],
                     [ "...", { "stat": "TM(0%:90%)" } ]
                 ],
                 "period": 60,
@@ -30,14 +30,15 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "type": "metric",
             "properties": {
                 "metrics": [
-                    [ "AWS/ApiGateway", "4XXError", "ApiName", "${var.di_endpoint_api_gateway_name}" ]
+                    [ "AWS/ApiGateway", "4XXError", "ApiName", "${var.di_endpoint_api_gateway_name}" ],
+                    [ "AWS/ApiGateway", "5XXError", "ApiName", "${var.di_endpoint_api_gateway_name}" ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
                 "region": "${var.aws_region}",
                 "stat": "Sum",
                 "period": 60,
-                "title": "NHS UK Endpoint 4xxError"
+                "title": "NHS UK Endpoint Errors"
             }
         },
         {
@@ -50,10 +51,10 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "sparkline": true,
                 "view": "singleValue",
                 "metrics": [
-                    [ "UEC-DOS-INT", "UpdateRequestFailed", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "UpdateRequestSuccess", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckSuccess", "ENV", "${var.environment}" ],
-                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckFailure", "ENV", "${var.environment}" ]
+                    [ "UEC-DOS-INT", "UpdateRequestFailed", "ENV", "${var.blue_green_environment}" ],
+                    [ "UEC-DOS-INT", "UpdateRequestSuccess", "ENV", "${var.blue_green_environment}" ],
+                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckSuccess", "ENV", "${var.blue_green_environment}" ],
+                    [ "UEC-DOS-INT", "ServiceSyncHealthCheckFailure", "ENV", "${var.blue_green_environment}" ]
                 ],
                 "stacked": false,
                 "region": "${var.aws_region}",
@@ -112,8 +113,9 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             "height": 6,
             "properties": {
                 "metrics": [
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.update_request_dlq}", { "label": "UR DLQ Message Count" } ],
-                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.change_event_dlq}", { "label": "CE DLQ Message Count" } ]
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.update_request_dlq}", { "label": "Update Request DLQ Message Count" } ],
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.holding_queue_dlq}", { "label": "Holding Queue DLQ Message Count" } ],
+                    [ "AWS/SQS", "NumberOfMessagesReceived", "QueueName", "${var.change_event_dlq}", { "label": "Change Event DLQ Message Count" } ]
                 ],
                 "view": "timeSeries",
                 "stacked": false,
@@ -171,9 +173,9 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
                 "view": "timeSeries",
                 "stacked": false,
                 "metrics": [
-                    [ "AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", "uec-core-dos-regression-db-12-replica-di" ]
+                    [ "AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", "${var.dos_db_replica_name}" ]
                 ],
-                "region": "eu-west-2"
+                "region": "${var.aws_region}"
             }
         },
         {

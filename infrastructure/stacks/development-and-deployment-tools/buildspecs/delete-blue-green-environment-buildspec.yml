@@ -1,0 +1,44 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - chown -R 999:999 $CODEBUILD_SRC_DIR
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - make docker-hub-signin
+      - make docker-pull NAME=serverless VERSION=latest
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - |
+        if [[ "$AWS_ACCOUNT" == "PROD" ]]; then
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        else
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        fi
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - aws sts get-caller-identity
+      - make -s clean > /dev/null 2>&1
+  build:
+    commands:
+      - echo "[Destroying Blue Green Environment]"
+      - export ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT
+      - echo PROFILE=$PROFILE
+      - echo BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT
+      - echo ENVIRONMENT=$ENVIRONMENT
+      - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+      # Find out if the environment exists
+      - export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$BLUE_GREEN_ENVIRONMENT'"))')
+      - echo $ENVIRONMENT_DEPLOYED
+      # Only destroy the environment if it exists
+      - |
+        if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
+          make undeploy-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT TF_CLI_ARGS="-parallelism=30";
+        fi
+      -

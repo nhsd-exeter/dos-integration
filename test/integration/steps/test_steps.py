@@ -55,7 +55,6 @@ from .utilities.utils import (
     post_to_change_event_dlq,
     post_ur_fifo,
     post_ur_sqs,
-    process_change_request_payload,
     process_payload,
     process_payload_with_sequence,
     re_process_payload,
@@ -450,7 +449,6 @@ def a_change_event_with_invalid_openingtimetype(context: Context):
     return context
 
 
-# set correlation id to contain "Bad Request"
 @given(parse('the correlation-id is "{custom_correlation}"'), target_fixture="context")
 def a_custom_correlation_id_is_set(context: Context, custom_correlation: str):
     context.correlation_id = generate_correlation_id(custom_correlation)
@@ -624,13 +622,6 @@ def the_change_event_is_sent_with_duplicate_sequence(context: Context):
     return context
 
 
-@when(parse('the change request is sent with "{valid_or_invalid}" api key'), target_fixture="context")
-def the_change_request_is_sent(context: Context, valid_or_invalid):
-    context.start_time = datetime.today().timestamp()
-    context.response = process_change_request_payload(context.change_request, valid_or_invalid == "valid")
-    return context
-
-
 @then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context: Context):
     odscode = context.change_event.odscode
@@ -663,25 +654,6 @@ def field_is_not_updated_in_dos(context: Context, plain_english_service_table_fi
     assert (
         field_data == context.previous_value
     ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data - It has changed from expected value, expected: {context.previous_value}, actual: {field_data}"  # noqa: E501
-
-
-@then("the processed Changed Request is sent to Dos", target_fixture="context")
-def processed_changed_request_sent_to_dos(context: Context):
-    cr_received_search_param = "Received change request"
-    cr_sent_search_param = "Successfully send change request to DoS"
-    cr_received_query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        f' | filter message like "{cr_received_search_param}"'
-    )
-    cr_sent_query = (
-        f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        f' | filter message like "{cr_sent_search_param}"'
-    )
-    cr_received_logs = get_logs(cr_received_query, "sender", context.start_time)
-    assert cr_received_logs != [], "ERROR!!.. Expected Sender logs not found."
-    cr_sent_logs = get_logs(cr_sent_query, "sender", context.start_time)
-    assert cr_sent_logs != [], "ERROR!!.. Expected sent event confirmation in service logs not found."
-    return context
 
 
 # This step doesn't actually do anything
@@ -881,7 +853,7 @@ def the_changed_event_is_not_sent_to_dos(context: Context):
     service_not_updated(context.service_id)
 
 
-@then(parse('the change request has status code "{status}"'))
+@then(parse('the change event response has status code "{status}"'))
 def step_then_should_transform_into(context: Context, status):
     message = context.response.json
     assert (
@@ -985,37 +957,6 @@ def opening_times_with_two_breaks_are_updated_in_dos(context: Context):
     assert current_standard_openings["Monday"][2]["start_time"] == third_open_time
     assert current_standard_openings["Monday"][2]["end_time"] == third_closing_time
     assert len(current_standard_openings["Monday"]) == 3, "Expected 3 opening times"
-
-
-@then("the Change Request with special characters is accepted by DOS")
-def the_changed_website_is_accepted_by_dos(context: Context):
-    #   the test env uses a 'prod-like' DOS endpoint which rejects these
-    current_env = getenv("ENVIRONMENT")
-    if "test" in current_env:
-        query = (
-            "fields response_status_code | sort @timestamp asc"
-            f' | filter correlation_id="{context.correlation_id}"'
-            ' | filter message like "Failed to send change request to DoS"'
-        )
-        logs = get_logs(query, "sender", context.start_time)
-        assert "400" in logs, "ERROR!!.. 400 response not received from DOS"
-    else:
-        #       the mock DOS currently accepts the invalid characters
-        uri_timestamp = context.uri_timestamp
-        complete_uri = f"https:\\\\/\\\\/www.rowlandspharmacy.co.uk\\\\/test?foo={uri_timestamp}"  # noqa: W605
-        query = (
-            "fields change_request_body.changes.website | sort @timestamp asc"
-            f' | filter correlation_id="{context.correlation_id}"'
-            ' | filter message like "Attempting to send change request to DoS"'
-        )
-        logs = get_logs(query, "sender", context.start_time)
-        assert complete_uri in logs, "ERROR!!.. website not found in CR."
-        success_query = (
-            f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-            ' | filter message like "Successfully send change request to DoS"'
-        )
-        logs = get_logs(success_query, "sender", context.start_time)
-        assert logs != [], "ERROR!!.. successful log messages not showing in cloudwatch."
 
 
 @then("DoS is updated with the new specified opening times", target_fixture="context")
@@ -1158,10 +1099,10 @@ def generic_lambda_log_negative_check_function(context: Context, lambda_name: st
     assert logs_found is True, f"ERROR!!.. error event processor did not detect the {field}: {message}."
 
 
-@then(parse('the Slack channel shows an alert saying "{message}"'))
-def slack_message_check(message):
+@then(parse('the Slack channel shows an alert saying "{message}" from "{environment_type}"'))
+def slack_message_check(message: str, environment_type: str):
     slack_entries = slack_retry(message)
-    current_environment = getenv("ENVIRONMENT")
+    current_environment = getenv(environment_type)
     assert_string = f"{current_environment} | {message}"
     assert assert_string in slack_entries
 

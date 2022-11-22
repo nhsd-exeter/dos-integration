@@ -66,7 +66,7 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/development-pipeline"
+    directory: "/infrastructure/stacks/development-and-deployment-tools"
     schedule:
       interval: "monthly"
     target-branch: "develop"

@@ -1,0 +1,53 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+# This buildspec works on the expectation that a full environment has already deploy has been done.
+# This buildspec will only deploy an incremental change to the shared resources.
+
+phases:
+  pre_build:
+    commands:
+      - chown -R 999:999 $CODEBUILD_SRC_DIR
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - make docker-hub-signin
+      - make docker-pull NAME=serverless VERSION=latest
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - |
+        if [[ "$AWS_ACCOUNT" == "PROD" ]]; then
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        else
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        fi
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - aws sts get-caller-identity
+      - make -s clean > /dev/null 2>&1
+  build:
+    commands:
+      - export ENVIRONMENT=$SHARED_ENVIRONMENT
+      - echo PROFILE=$PROFILE
+      - echo ENVIRONMENT=$ENVIRONMENT
+      - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+
+      # Retain the existing blue-green-link variables for later use
+      - echo "[Get versions from blue-green-link]"
+      - export CURRENT_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw connected_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+      - export PREVIOUS_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw previous_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+
+      # Remove the blue-green-link terraform stack to allow changes to be made to the shared resources
+      - echo "[Unlink Existing Version]"
+      - make unlink-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30"
+
+      # Deploy the shared resources Terraform stack
+      - echo "[Update Shared Resources]"
+      - make deploy-shared-resources ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+
+      # Link the shared resources to the environment back to the current version of the blue-green environment
+      - echo "[Link Back Existing Version]"
+      - make link-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30" TF_VAR_blue_green_environment=$CURRENT_VERSION TF_VAR_previous_blue_green_environment=$PREVIOUS_VERSION

@@ -11,6 +11,10 @@ TF_VAR_developer_role_name = UECPUSupportServiceDeveloper
 SYSTEM_EMAIL_KEY := DI_SYSTEM_MAILBOX_ADDRESS
 TEAM_EMAIL_KEY := DI_TEAM_MAILBOX_ADDRESS
 
+TF_VAR_texas_hosted_zone = $(TEXAS_HOSTED_ZONE)
+
+SERVERLESS_DISABLE_ROLLBACK := true
+
 # ==============================================================================
 
 include $(VAR_DIR)/platform-texas/platform-texas-v1.mk
