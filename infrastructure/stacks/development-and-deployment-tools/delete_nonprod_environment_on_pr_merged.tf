@@ -31,7 +31,6 @@ resource "aws_codebuild_project" "di_destroy_nonprod_environment_on_pr_merged" {
     modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
 
-
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
