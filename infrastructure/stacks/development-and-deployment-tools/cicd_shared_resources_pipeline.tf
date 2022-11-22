@@ -1,5 +1,5 @@
 resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
-  count    = var.environment == "di-618" ? 1 : 0 # Change this to "dev" when ready to deploy
+  count    = var.environment == "dev" ? 1 : 0 # Change this to "dev" when ready to deploy
   name     = var.cicd_shared_resources_deployment_pipeline_name
   role_arn = data.aws_iam_role.pipeline_role.arn
 

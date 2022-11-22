@@ -42,13 +42,6 @@ SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment = $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment = $(SHARED_ENVIRONMENT)
 
-
-# Performance Pipelines
-TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
-TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
-TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
-TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
-
 # AppConfig
 TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)
 
@@ -61,6 +54,12 @@ TF_VAR_cicd_shared_resources_deployment_pipeline_name := $(PROJECT_ID)-$(ENVIRON
 TF_VAR_blue_green_deployment_new_version_parameter_name := $(PROJECT_ID)-$(ENVIRONMENT)-blue-green-deployment-new-version
 TF_VAR_development_tools_encryption_key_alias := $(PROJECT_ID)-$(ENVIRONMENT)-development-tools-encryption-key
 TF_VAR_github_url := https://github.com/nhsd-exeter/dos-integration.git
+TF_VAR_pipeline_topic_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-topic
+TF_VAR_pipeline_notification_name := $(PROJECT_ID)-$(ENVIRONMENT)-pipeline-notification
+TF_VAR_cicd_blue_green_deployment_pipeline_nofitication_name := $(PROJECT_ID)-$(ENVIRONMENT)-blue-green-pipeline-notification
+TF_VAR_cicd_shared_resources_deployment_pipeline_nofitication_name := $(PROJECT_ID)-$(ENVIRONMENT)-shared-resources-pipeline-notification
+TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
+TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
 
 # ==============================================================================
 # Infrastructure variables (Terraform, Serverless, etc)
