@@ -664,7 +664,7 @@ deploy-blue-green-environment: # Deploys blue/green resources (Only intended to 
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment
 
-build-and-deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	make build-and-push VERSION=$(BUILD_TAG)
 	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
 

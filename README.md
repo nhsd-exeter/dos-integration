@@ -42,6 +42,8 @@
       - [Update shared resources](#update-shared-resources)
       - [Trigger Blue/Green Deployment Pipeline](#trigger-bluegreen-deployment-pipeline)
       - [Trigger Shared Resources Deployment Pipeline](#trigger-shared-resources-deployment-pipeline)
+      - [Undeploy Blue/Green Environment](#undeploy-bluegreen-environment)
+      - [Undeploy Shared Resources Environment](#undeploy-shared-resources-environment)
     - [Quick Re-deploy](#quick-re-deploy)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
@@ -368,22 +370,28 @@ To deploy a new version of the application in a blue green way it uses multiple 
 
 This guide will walk you through the steps to deploy a new version of the application in a blue green way. It assumes you have already deployed the application once and have a blue environment.
 
+This guide will use the following environment names:
+  Live - The Shared Environment
+  gggggg - Commit Hash for the Green New Blue/Green Environment.
+  bbbbbb - Commit Hash for the Blue Current Blue/Green Environment
+
+
 1. Create a new blue/green environment with the new version. This creates a new blue/green environment ready to be switched to.
 
 ```bash
-make deploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[commit-hash] VERSION=[s3-file-version]
+make deploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment(short-commit-hash)] VERSION=[s3-file-version] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)]
 
 # Example
-make deploy-blue-green-environment PROFILE=live ENVIRONMENT=gggggg VERSION=1.0.0
+make deploy-blue-green-environment PROFILE=live ENVIRONMENT=ggggggg VERSION=[s3-file-version] SHARED_ENVIRONMENT=[live] BLUE_GREEN_ENVIRONMENT=[ggggg]
 ```
 
 2. Unlink the current blue/green environment from the shared resources. This will remove any links between the blue/green environment and the shared resources.
 
 ```bash
-make unlink-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment]
+make unlink-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment]  SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)] TF_VAR_previous_blue_green_environment=[OPTIONAL: current-blue-green-environment(short-commit-hash)]
 
 # Example
-make unlink-blue-green-environment PROFILE=live ENVIRONMENT=live
+make unlink-blue-green-environment PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg TF_VAR_previous_blue_green_environment=bbbbbbb
 ```
 
 3. Link the new blue/green environment to the shared resources. This will link the new blue/green environment to the shared resources.
@@ -423,7 +431,7 @@ This should only be done from main branch.
 make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
 
 # Example
-make tag-commit-to-deploy-blue-green-environment COMMIT=gggggg
+make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
 ```
 
 #### Trigger Shared Resources Deployment Pipeline
@@ -438,7 +446,35 @@ This should only be done from main branch.
 make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
 
 # Example
-make tag-commit-to-deploy-shared-resources COMMIT=gggggg
+make tag-commit-to-deploy-shared-resources COMMIT=ggggggg
+```
+
+#### Undeploy Blue/Green Environment
+
+This will undeploy the blue/green environment and is intended to be used when the blue/green rollback environment is no longer needed.
+
+Note: If the blue/green environment is linked to the shared resources environment then it must be unlinked before running this command.
+
+```bash
+make undeploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
+
+# Example
+make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
+
+```
+
+#### Undeploy Shared Resources Environment
+
+This will undeploy the shared resources environment and is intended to be used when the shared resources environment is no longer needed.
+
+Note: No blue/green environments can exist for this shared resources environment when running this command.
+If they do the blue/green environments must be unlinked and undeployed first.
+
+```bash
+make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
+
+# Example
+make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
 ```
 
 ### Quick Re-deploy
@@ -478,9 +514,9 @@ MFA to the right AWS account using the following command
 
 ### Prerequisites
 
-The production pipeline terraform stack must be deployed
+The pipelines terraform stack must be deployed
 
-    make deploy-deployment-pipelines PROFILE=tools ENVIRONMENT=dev
+    make  deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
 
 ### How to deploy
 
