@@ -28,5 +28,5 @@ class Context:
         return (
             f"Context(correlation_id={self.correlation_id}, sequence_number={self.sequence_number}"
             f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event}"
-            f", other={self.other}, service_uid={self.service_uid})"
+            f", other={self.other}, service_uid={self.service_uid}, website={self.website}, phone={self.phone})"
         )

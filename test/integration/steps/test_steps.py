@@ -211,9 +211,7 @@ def change_table_entry_creation_for_service(context: Context):
 def dos_event_standard_opening_time_change(update_type: str, context: Context):
     match update_type:
         case "added":
-            context.standard_opening_times = add_new_standard_open_day(
-                context.standard_opening_times
-            )
+            context.standard_opening_times = add_new_standard_open_day(context.standard_opening_times)
         case "modified":
             context.standard_opening_times[0]["OpeningTime"] = "00:15"
             context.standard_opening_times[0]["ClosingTime"] = "00:45"
@@ -221,10 +219,7 @@ def dos_event_standard_opening_time_change(update_type: str, context: Context):
             context.standard_opening_times[0]["IsOpen"] = False
             context.standard_opening_times[0]["OpeningTime"] = ""
             context.standard_opening_times[0]["ClosingTime"] = ""
-            if (
-                context.standard_opening_times[0]["Weekday"]
-                == context.standard_opening_times[1]["Weekday"]
-            ):
+            if context.standard_opening_times[0]["Weekday"] == context.standard_opening_times[1]["Weekday"]:
                 del context.standard_opening_times[1]
         case _:
             raise ValueError("ERROR: Invalid standard opening time type defined")
@@ -492,9 +487,7 @@ def change_event_same_dual(context: Context, opening_type):
         context.specified_opening_times[0]["ClosingTime"] = "14:00"
         context.specified_opening_times[1]["OpeningTime"] = "14:00"
     else:
-        context.standard_opening_times = remove_opening_days(
-            context.standard_opening_times, "Monday"
-        )
+        context.standard_opening_times = remove_opening_days(context.standard_opening_times, "Monday")
         context.standard_opening_times.insert(0, copy(default_openings))
         context.standard_opening_times.insert(1, copy(default_openings))
         context.standard_opening_times[0]["ClosingTime"] = "14:00"
@@ -517,8 +510,8 @@ def current_ods_exists_in_ddb(context: Context):
 @given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
 def a_changed_url_event_is_valid(url: str, context: Context):
     context.service_type = "pharmacy"
-    build_same_as_dos_change_event(context)
     context.website = url
+    build_same_as_dos_change_event(context)
     context.change_event["Postcode"] = "NG5 2JJ"
     return context
 
@@ -723,6 +716,8 @@ def check_the_service_table_field_has_updated(context: Context, plain_english_se
 def check_the_service_history_has_updated(context: Context, plain_english_service_table_field: str):
     """TODO"""
     expected_data = get_expected_data(context, plain_english_service_table_field)
+    if context.previous_value in ["", "unknown"]:
+        context.previous_value = "unknown"
     check_service_history(
         service_id=context.service_id,
         plain_english_field_name=plain_english_service_table_field,
@@ -789,7 +784,15 @@ def check_service_history_not_updated(
 
 @then(parse('the service history shows change type is "{change_type}"'))
 def check_service_history_for_change_type(context: Context, change_type: str):
+    # This brings instability if more than one entry has been changed
     change_status = check_service_history_change_type(context.service_id, change_type)
+    assert change_status == "Change type matches", f"ERROR: Expected {change_type} but {change_status}"
+    return context
+
+
+@then(parse('the service history shows "{field_name}" change type is "{change_type}"'))
+def check_service_history_for_specific_change_type(context: Context, change_type: str, field_name: str):
+    change_status = check_service_history_change_type(context.service_id, change_type, field_name)
     assert change_status == "Change type matches", f"ERROR: Expected {change_type} but {change_status}"
     return context
 

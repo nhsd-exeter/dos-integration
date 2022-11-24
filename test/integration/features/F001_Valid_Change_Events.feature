@@ -1,13 +1,13 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches @kit
   Scenario: F001S001. A valid change event is processed and accepted by DOS
     Given a "pharmacy" Changed Event is aligned with DoS
     And the field "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
     And the service history is updated with the "Postcode"
-    And the service history shows change type is "modify"
+    And the service history shows "postalcode" change type is "modify"
 
   @complete @dev @pharmacy_cloudwatch_queries
   #Failures because of case sensitive addresses

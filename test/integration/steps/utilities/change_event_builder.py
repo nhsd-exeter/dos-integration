@@ -15,6 +15,7 @@ from .constants import (
     ServiceTypeAliases,
 )
 from .utils import (
+    add_single_opening_day,
     get_change_event_demographics,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
@@ -410,6 +411,8 @@ def build_same_as_dos_change_event_by_ods(context, ods_code: str):
     context.phone = demographics_data["publicphone"]
     set_same_as_dos_address(context, demographics_data["address"])
     standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
+    if opening_times_checker(standard_opening_times) is False:
+        add_single_opening_day(context)
     change_event["standard_opening_times"] = []
     change_event["specified_opening_times"] = []
     for day in standard_opening_times:
@@ -436,6 +439,15 @@ def build_same_as_dos_change_event_by_ods(context, ods_code: str):
                     "IsOpen": True,
                 }
             )
+
+
+def opening_times_checker(opening_times):
+    times_present = False
+    for day in opening_times:
+        if opening_times[day] != []:
+            times_present = True
+            break
+    return times_present
 
 
 def make_change_event_unique(context):
@@ -512,20 +524,20 @@ def valid_change_event(context):
 def build_same_as_dos_change_event(context):
     service_type = context.service_type
     blank_change_event(context)
-    while True:
-        match service_type.upper():
-            case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
-                context.ods_code = random_dentist_odscode()
-                context.change_event["ODSCode"] = context.ods_code
-            case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
-                new_ods = get_single_service_pharmacy()
-                context.ods_code = new_ods
-                context.change_event["ODSCode"] = new_ods
-            case _:
-                raise ValueError(f"Service type {service_type} does not exist")
-        build_same_as_dos_change_event_by_ods(context, context.ods_code)
-        if valid_change_event(context):
-            break
+    # while True:
+    match service_type.upper():
+        case ServiceTypeAliases.DENTIST_TYPE_ALIAS:
+            context.ods_code = random_dentist_odscode()
+            context.change_event["ODSCode"] = context.ods_code
+        case ServiceTypeAliases.PHARMACY_TYPE_ALIAS:
+            new_ods = get_single_service_pharmacy()
+            context.ods_code = new_ods
+            context.change_event["ODSCode"] = new_ods
+        case _:
+            raise ValueError(f"Service type {service_type} does not exist")
+    build_same_as_dos_change_event_by_ods(context, context.ods_code)
+    #    if valid_change_event(context):
+    #       break
 
 
 def set_opening_times_change_event(context):
@@ -581,24 +593,30 @@ def blank_change_event(context):
         "City": "",
         "County": "",
         "Postcode": "",
-        "OpeningTimes": "",
+        "OpeningTimes": [],
         "Contacts": build_contacts(context.website, context.phone),
         "UniqueKey": "",
     }
 
 
 def build_contacts(website, phone):
-    return [
-        {
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Website",
-            "ContactValue": website,
-        },
-        {
-            "ContactType": "Primary",
-            "ContactAvailabilityType": "Office hours",
-            "ContactMethodType": "Telephone",
-            "ContactValue": phone,
-        },
-    ]
+    contacts = []
+    if website != [] and website is not None:
+        contacts.append(
+            {
+                "ContactType": "Primary",
+                "ContactAvailabilityType": "Office hours",
+                "ContactMethodType": "Website",
+                "ContactValue": website,
+            }
+        )
+    if phone != [] and phone is not None:
+        contacts.append(
+            {
+                "ContactType": "Primary",
+                "ContactAvailabilityType": "Office hours",
+                "ContactMethodType": "Telephone",
+                "ContactValue": phone,
+            }
+        )
+    return contacts

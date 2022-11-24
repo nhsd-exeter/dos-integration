@@ -331,6 +331,36 @@ def get_pharmacy_ods_codes(type_id) -> Dict:
     return invoke_dos_db_handler_lambda(lambda_payload)
 
 
+def add_single_opening_day(context):
+    service_id = context.service_id
+    query = f"INSERT INTO servicedayopenings(serviceid, dayid) VALUES({service_id},1) RETURNING id"
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    response = loads(invoke_dos_db_handler_lambda(lambda_payload))
+    time_id = literal_eval(response)[0][0]
+    add_single_opening_time(context, time_id)
+
+
+def add_single_opening_time(context, time_id):
+    query = (
+        "INSERT INTO servicedayopeningtimes(starttime, endtime, servicedayopeningid) "
+        f"VALUES('09:00:00', '17:00:00', {time_id}) RETURNING id"
+    )
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    invoke_dos_db_handler_lambda(lambda_payload)
+    context.change_event["OpeningTimes"].append(
+        {
+            "AdditionalOpeningDate": "",
+            "ClosingTime": "17:00",
+            "IsOpen": True,
+            "OffsetClosingTime": 780,
+            "OffsetOpeningTime": 540,
+            "OpeningTime": "09:00",
+            "OpeningTimeType": "General",
+            "Weekday": "Monday",
+        }
+    )
+
+
 def get_odscode_with_contact_data() -> str:
     response = get_pharmacy_ods_codes(13)
     data = loads(response)
@@ -446,8 +476,8 @@ def check_service_history(
         expected_data == changes[change_key]["data"]
     ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa
 
-    if "previous" in changes[change_key]:
-        if previous_data not in ["unknown", ""]:
+    if "previous" in changes[change_key] and previous_data != "unknown":
+        if previous_data != "":
             (
                 changes[change_key]["previous"] == str(previous_data),
                 f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}",
@@ -472,12 +502,15 @@ def service_history_negative_check(service_id: str):
             return "Updated"
 
 
-def check_service_history_change_type(service_id: str, change_type: str):
+def check_service_history_change_type(service_id: str, change_type: str, field_name=None):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    change_status = service_history[first_key_in_service_history]["new"][
-        list(service_history[first_key_in_service_history]["new"].keys())[0]
-    ]["changetype"]
+    if field_name is None:
+        change_status = service_history[first_key_in_service_history]["new"][
+            list(service_history[first_key_in_service_history]["new"].keys())[0]
+        ]["changetype"]
+    else:
+        change_status = service_history[first_key_in_service_history]["new"][field_name]["changetype"]
     if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
