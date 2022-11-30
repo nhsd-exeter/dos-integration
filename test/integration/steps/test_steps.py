@@ -13,6 +13,7 @@ from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
 from .utilities.change_event_builder import (
+    build_contacts,
     build_same_as_dos_change_event,
     set_opening_times_change_event,
     valid_change_event,
@@ -66,6 +67,7 @@ from .utilities.utils import (
     wait_for_service_update,
     add_specified_opening_time,
 )
+from .utilities.generator import add_standard_openings_to_dos, commit_new_service_to_dos
 
 scenarios(
     "../features/F001_Valid_Change_Events.feature",
@@ -96,6 +98,62 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
                 raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
         validated = valid_change_event(context)
     return context
+
+
+@given("an entry is created in the services table", target_fixture="context")
+def a_service_table_entry_is_created(context: Context):
+    ods_code = str(randint(10000, 99999))
+    query_values = {
+        "id": str(randint(100000, 999999)),
+        "uid": f"test{str(randint(10000,99999))}",
+        "name": f"Test Pharmacy {str(randint(100,999))}",
+        "odscode": ods_code,
+        "address": f"{str(randint(100,999))} Test Address",
+        "town": "Test Town",
+        "postcode": "NG11GS",
+        "publicphone": f"{str(randint(10000000000, 99999999999))}",
+        "web": "www.google.com",
+    }
+    context.query = query_values
+    return context
+
+
+@given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
+def service_values_updated_in_context(field_name: str, values: str, context: Context):
+    context.query[field_name] = values
+    return context
+
+
+@given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
+def service_standard_opening_set(service_status: str, day: str, context: Context):
+    day_int = 0
+    match day.lower():
+        case "monday":
+            day_int = 1
+        case "tuesday":
+            day_int = 2
+        case _:
+            raise ValueError("Invalid day provided for dos")
+    times_obj = {}
+    if service_status.lower() == "open":
+        times_obj["open"] = True
+        times_obj["opening_time"] = "09:00"
+        times_obj["closing_time"] = "17:00"
+    else:
+        times_obj["open"] = False
+    if "standard_openings" not in context.query.keys():
+        context.query["standard_openings"] = {}
+    context.query["standard_openings"][day_int] = times_obj
+    # standard_openings: { 1: {open: True, opening_time: "09:00", closing_time: "17:00"}}
+    return context
+
+
+@given("the entry is committed to the services table", target_fixture="context")
+def service_table_entry_is_committed(context: Context):
+    service_id = commit_new_service_to_dos(context.query)
+    context.service_id = service_id
+    if "standard_openings" in context.query.keys():
+        add_standard_openings_to_dos(context)
 
 
 @given(parse('a Changed Event with a "{value}" value for "{field}"'), target_fixture="context")
@@ -271,7 +329,7 @@ def dos_event_with_past_date(org_type: str, future_past: str, context: Context):
             additional_date = specified_opening_time_difference(time)
         case "no":
             additional_date = ""
-    context.specified_opening_times.insert(0, additional_date)
+    context.change_event["OpeningTimes"].insert(0, additional_date)
     return context
 
 
@@ -503,7 +561,7 @@ def current_ods_exists_in_ddb(context: Context):
     if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
         context = the_change_event_is_sent_with_custom_sequence(context, 100)
         context.sequence_number = 100
-    context.change_event.unique_key = generate_random_int()
+    context.unique_key = generate_random_int()
     return context
 
 
@@ -578,6 +636,8 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context: Conte
     target_fixture="context",
 )
 def the_change_event_is_sent_for_processing(context: Context, valid_or_invalid):
+    if context.phone is not None or context.website is not None:
+        build_contacts(context)
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
     context.response = process_payload(context, valid_or_invalid == "valid", context.correlation_id)
@@ -593,7 +653,7 @@ def the_change_event_is_sent_for_processing(context: Context, valid_or_invalid):
 def the_change_event_is_sent_with_custom_sequence(context: Context, seqid):
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
-    context.response = process_payload_with_sequence(context.change_event, context.correlation_id, seqid)
+    context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
     return context
 
@@ -625,7 +685,7 @@ def the_change_event_is_sent_with_duplicate_sequence(context: Context):
         seqid = 100
     else:
         seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
-    context.response = process_payload_with_sequence(context.change_event, context.correlation_id, seqid)
+    context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
     return context
 

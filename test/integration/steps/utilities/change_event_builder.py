@@ -15,13 +15,17 @@ from .constants import (
     ServiceTypeAliases,
 )
 from .utils import (
-    add_single_opening_day,
     get_change_event_demographics,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_single_service_pharmacy,
     random_dentist_odscode,
     random_pharmacy_odscode,
+)
+
+from .generator import (
+    add_single_opening_day,
+    add_single_specified_day,
 )
 
 
@@ -413,32 +417,34 @@ def build_same_as_dos_change_event_by_ods(context, ods_code: str):
     standard_opening_times = get_change_event_standard_opening_times(demographics_data["id"])
     if opening_times_checker(standard_opening_times) is False:
         add_single_opening_day(context)
-    change_event["standard_opening_times"] = []
-    change_event["specified_opening_times"] = []
-    for day in standard_opening_times:
-        for opening_times in standard_opening_times[day]:
-            change_event["standard_opening_times"].append(
-                {
-                    "Weekday": day,
-                    "OpeningTime": opening_times["start_time"],
-                    "ClosingTime": opening_times["end_time"],
-                    "OpeningTimeType": "General",
-                    "IsOpen": True,
-                }
-            )
+    else:
+        for day in standard_opening_times:
+            for opening_times in standard_opening_times[day]:
+                change_event["OpeningTimes"].append(
+                    {
+                        "Weekday": day,
+                        "OpeningTime": opening_times["start_time"],
+                        "ClosingTime": opening_times["end_time"],
+                        "OpeningTimeType": "General",
+                        "IsOpen": True,
+                    }
+                )
     specified_opening_times = get_change_event_specified_opening_times(demographics_data["id"])
-    for date in specified_opening_times:
-        for opening_times in specified_opening_times[date]:
-            str_date = datetime.strptime(date, "%Y-%m-%d")
-            change_event["specified_opening_times"].append(
-                {
-                    "OpeningTime": opening_times["start_time"],
-                    "ClosingTime": opening_times["end_time"],
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
-                    "IsOpen": True,
-                }
-            )
+    if opening_times_checker(specified_opening_times) is False:
+        add_single_specified_day(context)
+    else:
+        for date in specified_opening_times:
+            for opening_times in specified_opening_times[date]:
+                str_date = datetime.strptime(date, "%Y-%m-%d")
+                change_event["OpeningTimes"].append(
+                    {
+                        "OpeningTime": opening_times["start_time"],
+                        "ClosingTime": opening_times["end_time"],
+                        "OpeningTimeType": "Additional",
+                        "AdditionalOpeningDate": str_date.strftime("%b %d %Y"),
+                        "IsOpen": True,
+                    }
+                )
 
 
 def opening_times_checker(opening_times):
@@ -594,29 +600,28 @@ def blank_change_event(context):
         "County": "",
         "Postcode": "",
         "OpeningTimes": [],
-        "Contacts": build_contacts(context.website, context.phone),
+        "Contacts": [],
         "UniqueKey": "",
     }
 
 
-def build_contacts(website, phone):
-    contacts = []
-    if website != [] and website is not None:
-        contacts.append(
-            {
-                "ContactType": "Primary",
-                "ContactAvailabilityType": "Office hours",
-                "ContactMethodType": "Website",
-                "ContactValue": website,
-            }
-        )
-    if phone != [] and phone is not None:
-        contacts.append(
-            {
-                "ContactType": "Primary",
-                "ContactAvailabilityType": "Office hours",
-                "ContactMethodType": "Telephone",
-                "ContactValue": phone,
-            }
-        )
-    return contacts
+def build_contacts(context):
+    if context.change_event["Contacts"] == [] or context.change_event["Contacts"] is None:
+        if context.website != "" and context.website is not None:
+            context.change_event["Contacts"].append(
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Website",
+                    "ContactValue": context.website,
+                }
+            )
+        if context.phone != "" and context.phone is not None:
+            context.change_event["Contacts"].append(
+                {
+                    "ContactType": "Primary",
+                    "ContactAvailabilityType": "Office hours",
+                    "ContactMethodType": "Telephone",
+                    "ContactValue": context.phone,
+                }
+            )

@@ -13,7 +13,6 @@ from boto3.dynamodb.types import TypeDeserializer
 from pytz import UTC
 from requests import get, post, Response
 
-from .change_event import ChangeEvent
 from .constants import SERVICE_TYPES
 from .context import Context
 from .secrets_manager import get_secret
@@ -49,7 +48,7 @@ def process_payload(context, valid_api_key: bool, correlation_id: str) -> Respon
     return output
 
 
-def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str, sequence_id: Any) -> Response:
+def process_payload_with_sequence(context, correlation_id: str, sequence_id: Any) -> Response:
     api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     headers = {
         "x-api-key": api_key,
@@ -58,7 +57,7 @@ def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str
     }
     if sequence_id is not None:
         headers["sequence-number"] = str(sequence_id)
-    payload = change_event.get_change_event()
+    payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if output.status_code != 200 and isinstance(sequence_id, int):
         raise ValueError(f"Unable to process change request payload. Error: {output.text}")
@@ -129,11 +128,16 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
 
 
 def get_single_service_pharmacy_odscode() -> Dict:
+    # query = (
+    #     "select left(odscode,5) from services where typeid = 13 AND statusid = 1 "
+    #     "AND odscode IS NOT null AND LENGTH(odscode) > 4 AND NOT address like '%$%' and odscode in ( "
+    #     "select odscode from (SELECT left(odscode,5) as odscode, COUNT(*) AS amount "
+    #     "FROM services GROUP BY left(odscode,5)) as subset where amount = 1 )"
+    # )
     query = (
-        "select left(odscode,5) from services where typeid = 13 AND statusid = 1 "
-        "AND odscode IS NOT null AND LENGTH(odscode) > 4 AND NOT address like '%$%' and odscode in ( "
-        "select odscode from (SELECT left(odscode,5) as odscode, COUNT(*) AS amount "
-        "FROM services GROUP BY left(odscode,5)) as subset where amount = 1 )"
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 AND LENGTH(odscode) > 4 "
+        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+        "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
     )
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return invoke_dos_db_handler_lambda(lambda_payload)
@@ -329,36 +333,6 @@ def get_pharmacy_ods_codes(type_id) -> Dict:
     query_vars = {"TYPE_ID": type_id}
     lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     return invoke_dos_db_handler_lambda(lambda_payload)
-
-
-def add_single_opening_day(context):
-    service_id = context.service_id
-    query = f"INSERT INTO servicedayopenings(serviceid, dayid) VALUES({service_id},1) RETURNING id"
-    lambda_payload = {"type": "read", "query": query, "query_vars": None}
-    response = loads(invoke_dos_db_handler_lambda(lambda_payload))
-    time_id = literal_eval(response)[0][0]
-    add_single_opening_time(context, time_id)
-
-
-def add_single_opening_time(context, time_id):
-    query = (
-        "INSERT INTO servicedayopeningtimes(starttime, endtime, servicedayopeningid) "
-        f"VALUES('09:00:00', '17:00:00', {time_id}) RETURNING id"
-    )
-    lambda_payload = {"type": "read", "query": query, "query_vars": None}
-    invoke_dos_db_handler_lambda(lambda_payload)
-    context.change_event["OpeningTimes"].append(
-        {
-            "AdditionalOpeningDate": "",
-            "ClosingTime": "17:00",
-            "IsOpen": True,
-            "OffsetClosingTime": 780,
-            "OffsetOpeningTime": 540,
-            "OpeningTime": "09:00",
-            "OpeningTimeType": "General",
-            "Weekday": "Monday",
-        }
-    )
 
 
 def get_odscode_with_contact_data() -> str:

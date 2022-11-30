@@ -22,6 +22,7 @@ class Context:
     other: dict | None = None
     standard_opening_times: dict | None = None
     specified_opening_times: dict | None = None
+    query: dict | None = None
     # Other used as a catch all for any other data that is not covered by the above and only used in a couple tests
 
     def __repr__(self) -> str:
