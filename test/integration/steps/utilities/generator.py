@@ -68,12 +68,19 @@ def commit_new_service_to_dos(qv: Dict) -> Any:
 
 # Generic Opening days and times to DOS
 def add_single_opening_day(context):
+    #This is a generic single Monday 9-5 opening time
     service_id = context.service_id
     query = f"INSERT INTO servicedayopenings(serviceid, dayid) VALUES({service_id},1) RETURNING id"
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0][0]
     add_single_opening_time(context, time_id)
+    # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
+    if context.query["standard_openings"] is None:
+        context.query["standard_openings"] == []
+    context.query["standard_openings"].append({
+        "day": "Monday", "open": True, "opening_time": "09:00", "closing_time": "17:00"
+    })
 
 
 def add_single_opening_time(context, time_id):
@@ -98,6 +105,7 @@ def add_single_opening_time(context, time_id):
 
 
 def add_single_specified_day(context):
+    #This is a generic single specified opening day
     service_id = context.service_id
     query = (
         'INSERT INTO servicespecifiedopeningdates("date", serviceid) '
@@ -107,6 +115,11 @@ def add_single_specified_day(context):
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0][0]
     add_single_specified_time(context, time_id)
+    if context.query["specified_openings"] is None:
+        context.query["specified_openings"] = []
+    context.query["specified_openings"].append({
+        "date": "Jan 02 2025", "open": True, "opening_time": "09:00", "closing_time": "17:00"
+    })
 
 
 def add_single_specified_time(context, time_id):
@@ -133,21 +146,21 @@ def add_single_specified_time(context, time_id):
 
 # Standard opening days with specified times to DOS
 def add_standard_openings_to_dos(context: Dict) -> Any:
-    for day in context.query["standard_openings"].keys():
+    for day in context.query["standard_openings"]:
         entry_id = randint(750000, 999999)
         query = (
             "INSERT INTO pathwaysdos.servicedayopenings VALUES "
-            f"({int(entry_id)}, {int(context.service_id)}, {int(day)}) RETURNING id"
+            f'({int(entry_id)}, {int(context.service_id)}, {day_lookup(day["day"])}) RETURNING id'
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         invoke_dos_db_handler_lambda(lambda_payload)
-        context.query["standard_openings"][day]["day_id"] = entry_id
-    for day in context.query["standard_openings"].keys():
-        if context.query["standard_openings"][day]["open"] is True:
+        day["dos_id"] = entry_id
+    for day in context.query["standard_openings"]:
+        if day["open"] is True:
             unique_id = randint(1000000, 1500000)
-            opening_time = context.query["standard_openings"][day]["opening_time"]
-            closing_time = context.query["standard_openings"][day]["closing_time"]
-            day_id = context.query["standard_openings"][day]["day_id"]
+            opening_time = day["opening_time"]
+            closing_time = day["closing_time"]
+            day_id = day["dos_id"]
             query = (
                 "INSERT INTO pathwaysdos.servicedayopeningtimes VALUES "
                 f"({int(unique_id)}, "
@@ -161,8 +174,6 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
 
 
 # Build change event for test
-
-
 def build_change_event(context):
     # query_values = {
     #     "id": str(randint(100000, 999999)),
@@ -221,4 +232,41 @@ def build_change_event_contacts(context) -> Dict:
 
 def build_change_event_opening_times(context) -> Dict:
     # This function will build the opening times for the CE
+    # Build standard opening times
+    for days in context.query["standard_openings"]:
+        context.change_event["OpeningTimes"].append({
+            "AdditionalOpeningDate": "",
+            "ClosingTime": days["closing_time"],
+            "IsOpen": days["open"],
+            "OffsetClosingTime": 780,
+            "OffsetOpeningTime": 540,
+            "OpeningTime": days["opening_time"],
+            "OpeningTimeType": "General",
+            "Weekday": days["day"],
+        })
+    # Build specified opening times
+    for days in context.query["specified_openings"]:
+        context.change_event["OpeningTimes"].append({
+            "AdditionalOpeningDate": days["date"],
+            "ClosingTime": days["closing_time"],
+            "IsOpen": days["open"],
+            "OffsetClosingTime": 780,
+            "OffsetOpeningTime": 540,
+            "OpeningTime": days["opening_time"],
+            "OpeningTimeType": "Additional",
+            "Weekday": "",
+        })
     return True
+
+#Other functions
+def day_lookup(day):
+    days = {
+        "monday": 1,
+        "tuesday": 2,
+        "wednesday": 3,
+        "thursday": 4,
+        "friday": 5,
+        "saturday": 6,
+        "sunday": 7
+    }
+    return days[day.lower()]

@@ -128,12 +128,6 @@ def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
 
 
 def get_single_service_pharmacy_odscode() -> Dict:
-    # query = (
-    #     "select left(odscode,5) from services where typeid = 13 AND statusid = 1 "
-    #     "AND odscode IS NOT null AND LENGTH(odscode) > 4 AND NOT address like '%$%' and odscode in ( "
-    #     "select odscode from (SELECT left(odscode,5) as odscode, COUNT(*) AS amount "
-    #     "FROM services GROUP BY left(odscode,5)) as subset where amount = 1 )"
-    # )
     query = (
         "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 AND LENGTH(odscode) > 4 "
         "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "

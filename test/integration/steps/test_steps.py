@@ -126,25 +126,23 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
 
 @given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
 def service_standard_opening_set(service_status: str, day: str, context: Context):
-    day_int = 0
-    match day.lower():
-        case "monday":
-            day_int = 1
-        case "tuesday":
-            day_int = 2
-        case _:
-            raise ValueError("Invalid day provided for dos")
+    if day.lower() not in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
+        raise ValueError("Selected day is not valid")
     times_obj = {}
     if service_status.lower() == "open":
+        times_obj["day"] = day.lower()
         times_obj["open"] = True
         times_obj["opening_time"] = "09:00"
         times_obj["closing_time"] = "17:00"
     else:
+        times_obj["day"] = day.lower()
         times_obj["open"] = False
+        times_obj["opening_time"] = ""
+        times_obj["closing_time"] = ""
     if "standard_openings" not in context.query.keys():
-        context.query["standard_openings"] = {}
-    context.query["standard_openings"][day_int] = times_obj
-    # standard_openings: { 1: {open: True, opening_time: "09:00", closing_time: "17:00"}}
+        context.query["standard_openings"] = []
+    context.query["standard_openings"].append(times_obj)
+    # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
     return context
 
 
