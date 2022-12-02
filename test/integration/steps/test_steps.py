@@ -67,7 +67,14 @@ from .utilities.utils import (
     wait_for_service_update,
     add_specified_opening_time,
 )
-from .utilities.generator import add_standard_openings_to_dos, commit_new_service_to_dos
+from .utilities.generator import (
+    add_single_opening_day,
+    add_specified_openings_to_dos,
+    add_standard_openings_to_dos,
+    build_change_event,
+    build_change_event_opening_times,
+    commit_new_service_to_dos,
+)
 
 scenarios(
     "../features/F001_Valid_Change_Events.feature",
@@ -109,7 +116,7 @@ def a_service_table_entry_is_created(context: Context):
         "name": f"Test Pharmacy {str(randint(100,999))}",
         "odscode": ods_code,
         "address": f"{str(randint(100,999))} Test Address",
-        "town": "Test Town",
+        "town": "Nottingham",
         "postcode": "NG11GS",
         "publicphone": f"{str(randint(10000000000, 99999999999))}",
         "web": "www.google.com",
@@ -146,12 +153,44 @@ def service_standard_opening_set(service_status: str, day: str, context: Context
     return context
 
 
+@given(parse('the service is "{service_status}" on date "{date}"'), target_fixture="context")
+def service_specified_opening_set(service_status: str, date: str, context: Context):
+    times_obj = {}
+    if service_status.lower() == "open":
+        times_obj["date"] = date
+        times_obj["open"] = True
+        times_obj["opening_time"] = "09:00"
+        times_obj["closing_time"] = "17:00"
+    else:
+        times_obj["date"] = date
+        times_obj["open"] = False
+        times_obj["opening_time"] = ""
+        times_obj["closing_time"] = ""
+    if "specified_openings" not in context.query.keys():
+        context.query["specified_openings"] = []
+    context.query["specified_openings"].append(times_obj)
+    # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
+    return context
+
+
 @given("the entry is committed to the services table", target_fixture="context")
 def service_table_entry_is_committed(context: Context):
     service_id = commit_new_service_to_dos(context.query)
     context.service_id = service_id
+    ce_state = False
     if "standard_openings" in context.query.keys():
         add_standard_openings_to_dos(context)
+        ce_state = True
+    if "specified_openings" in context.query.keys():
+        add_specified_openings_to_dos(context)
+        ce_state = True
+    if context.change_event is None:
+        build_change_event(context)
+    if ce_state:
+        build_change_event_opening_times(context)
+    else:
+        add_single_opening_day(context)
+    return context
 
 
 @given(parse('a Changed Event with a "{value}" value for "{field}"'), target_fixture="context")
@@ -380,7 +419,7 @@ def generic_event_config(context: Context, field: str, value: str):
             context.previous_value = context.change_event["ODSCode"]
             context.change_event["ODSCode"] = value
         case "postcode":
-            context.previous_value = context.change_event["Postcode"]
+            context.previous_value = context.query["postcode"]
             context.change_event["Postcode"] = value
         case "address":
             context.previous_value = get_address_string(context.change_event)

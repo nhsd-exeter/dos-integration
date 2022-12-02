@@ -173,11 +173,30 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-@complete @kit
+@complete
   Scenario: F001S016 To check creation of test data
     Given an entry is created in the services table
     And the service "address" is set to "blahblah"
     And the service "publicphone" is set to "blahblah"
     And the service is "open" on "Monday"
     And the service is "closed" on "Tuesday"
+    And the service is "open" on date "25 Dec 2025"
     And the entry is committed to the services table
+
+@complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  Scenario: F001SXX1. A valid change event is processed and accepted by DOS
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the field "Postcode" is set to "CT1 1AA"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "Postcode" is updated within the DoS DB
+    And the service history is updated with the "Postcode"
+    And the service history shows "postalcode" change type is "modify"
+
+@complete @dev @pharmacy_cloudwatch_queries @kit
+  Scenario: F001SXX2. A Changed event with aligned data does not save an update to DoS
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with message "No changes to save"
+    And the service history is not updated
