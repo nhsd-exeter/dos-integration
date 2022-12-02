@@ -1,7 +1,7 @@
 from ast import literal_eval
 from json import loads
 from os import getenv
-from random import randint, randrange
+from random import randrange
 from typing import Any, Dict
 from datetime import datetime
 
@@ -148,24 +148,22 @@ def add_single_specified_time(context, time_id):
 # Standard opening days with specified times to DOS
 def add_standard_openings_to_dos(context: Dict) -> Any:
     for day in context.query["standard_openings"]:
-        entry_id = randint(750000, 999999)
         query = (
-            "INSERT INTO pathwaysdos.servicedayopenings VALUES "
-            f'({int(entry_id)}, {int(context.service_id)}, {day_lookup(day["day"])}) RETURNING id'
+            "INSERT INTO pathwaysdos.servicedayopenings(serviceid, dayid) VALUES "
+            f'({int(context.service_id)}, {day_lookup(day["day"])}) RETURNING id'
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
-        invoke_dos_db_handler_lambda(lambda_payload)
+        response = invoke_dos_db_handler_lambda(lambda_payload)
+        entry_id = literal_eval(loads(response))[0][0]
         day["dos_id"] = entry_id
     for day in context.query["standard_openings"]:
         if day["open"] is True:
-            unique_id = randint(1000000, 1500000)
             opening_time = day["opening_time"]
             closing_time = day["closing_time"]
             day_id = day["dos_id"]
             query = (
-                "INSERT INTO pathwaysdos.servicedayopeningtimes VALUES "
-                f"({int(unique_id)}, "
-                f"'{opening_time}', "
+                "INSERT INTO pathwaysdos.servicedayopeningtimes(starttime, endtime, servicedayopeningid) VALUES "
+                f"('{opening_time}', "
                 f"'{closing_time}', "
                 f"{int(day_id)}) RETURNING id"
             )
@@ -178,17 +176,16 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
 def add_specified_openings_to_dos(context: Dict) -> Any:
     # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
     for day in context.query["specified_openings"]:
-        entry_id = randint(750000, 999999)
         date = datetime.strptime(day["date"], "%d %b %Y").strftime("%Y-%m-%d")
         query = (
-            "INSERT INTO pathwaysdos.servicespecifiedopeningdates "
-            f"VALUES({int(entry_id)},'{str(date)}', {int(context.service_id)}) RETURNING id"
+            'INSERT INTO pathwaysdos.servicespecifiedopeningdates("date", serviceid) '
+            f"VALUES('{str(date)}', {int(context.service_id)}) RETURNING id"
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
-        invoke_dos_db_handler_lambda(lambda_payload)
+        response = invoke_dos_db_handler_lambda(lambda_payload)
+        entry_id = literal_eval(loads(response))[0][0]
         day["dos_id"] = entry_id
     for day in context.query["specified_openings"]:
-        unique_id = randint(1000000, 1500000)
         opening_time = day["opening_time"]
         closing_time = day["closing_time"]
         day_id = day["dos_id"]
@@ -198,8 +195,9 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
         else:
             open_status = "false"
         query = (
-            "INSERT INTO pathwaysdos.servicespecifiedopeningtimes VALUES("
-            f"{int(unique_id)}, '{opening_time}', '{closing_time}', {open_status}, {int(day_id)}) RETURNING id"
+            "INSERT INTO pathwaysdos.servicespecifiedopeningtimes"
+            "(starttime, endtime, isclosed, servicespecifiedopeningdateid) VALUES("
+            f"'{opening_time}', '{closing_time}', {open_status}, {int(day_id)}) RETURNING id"
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         invoke_dos_db_handler_lambda(lambda_payload)

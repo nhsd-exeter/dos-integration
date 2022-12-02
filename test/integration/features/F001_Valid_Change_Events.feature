@@ -173,7 +173,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-@complete
+@complete @kit
   Scenario: F001S016 To check creation of test data
     Given an entry is created in the services table
     And the service "address" is set to "blahblah"
@@ -183,7 +183,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service is "open" on date "25 Dec 2025"
     And the entry is committed to the services table
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches
+@complete @pharmacy_smoke_test @pharmacy_no_log_searches @kit
   Scenario: F001SXX1. A valid change event is processed and accepted by DOS
     Given an entry is created in the services table
     And the entry is committed to the services table
