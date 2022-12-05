@@ -17,7 +17,7 @@ pytest-icdiff
 pytest-replay
 pytest-rerunfailures
 pytest-sugar
-pytest-xdist==2.5.0
+pytest-xdist==3.1.0
 requests
 responses
 testfixtures
