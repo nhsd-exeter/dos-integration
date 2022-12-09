@@ -191,9 +191,10 @@ def service_table_entry_is_committed(context: Context):
     if context.change_event is None:
         build_change_event(context)
     if ce_state:
-        build_change_event_opening_times(context)
+        context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     else:
         add_single_opening_day(context)
+        context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
 
@@ -246,37 +247,27 @@ def a_specific_change_event_is_valid(context: Context):
 
 @given(parse('the specified opening date is set to "{future_past}" date'), target_fixture="context")
 def future_set_specified_opening_date(future_past: str, context: Context):
+    year = 0
     match future_past:
         case "future":
-            next_year = dt.now().year + 1
-            context.specified_opening_times = [
-                {
-                    "Weekday": "",
-                    "OpeningTime": "08:00",
-                    "ClosingTime": "16:00",
-                    "OffsetOpeningTime": 0,
-                    "OffsetClosingTime": 0,
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": f"Jan 10 {next_year}",
-                    "IsOpen": True,
-                }
-            ]
+            year = dt.now().year + 1
         case "past":
-            last_year = dt.now().year - 1
-            context.specified_opening_times = [
-                {
-                    "Weekday": "",
-                    "OpeningTime": "08:00",
-                    "ClosingTime": "16:00",
-                    "OffsetOpeningTime": 0,
-                    "OffsetClosingTime": 0,
-                    "OpeningTimeType": "Additional",
-                    "AdditionalOpeningDate": f"Jan 10 {last_year}",
-                    "IsOpen": True,
-                }
-            ]
-        case "no":
-            context.specified_opening_times = []
+            year = dt.now().year - 1
+    if year != 0:
+        context.specified_opening_times = [
+            {
+                "Weekday": "",
+                "OpeningTime": "08:00",
+                "ClosingTime": "16:00",
+                "OffsetOpeningTime": 0,
+                "OffsetClosingTime": 0,
+                "OpeningTimeType": "Additional",
+                "AdditionalOpeningDate": f"Jan 10 {year}",
+                "IsOpen": True,
+            }
+        ]
+    else:
+        context.specified_opening_times = []
     return context
 
 

@@ -136,6 +136,16 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the s3 bucket contains an email file matching the service uid
     And the changes table shows change is now rejected
 
+  @complete @pharmacy_cloudwatch_queries @fails
+  #These tests 16 through 20 need a rethink. It should be possible to create a single scenario
+  Scenario: F001SX16 Past Specified Opening Times on Dos are removed and updated
+    Given an entry is created in the services table
+    And the service is "open" on date "25 Dec 2020"
+    And the entry is committed to the services table
+    And the specified opening date is set to "future" date
+    When the Changed Event is sent for processing with "valid" api key
+    Then the DoS service has been updated with the specified date and time is captured by DoS
+
   # @complete @broken @dentist_no_log_searches @dentist_smoke_test
   # Scenario: F001S004. A valid Dentist change event is processed into DOS
   #   Given a "dentist" Changed Event is aligned with DoS
