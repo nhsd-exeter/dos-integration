@@ -13,7 +13,6 @@ from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
 from .utilities.change_event_builder import (
-    build_contacts,
     build_same_as_dos_change_event,
     set_opening_times_change_event,
     valid_change_event,
@@ -51,7 +50,6 @@ from .utilities.utils import (
     get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
-    get_service_uid,
     get_services_table_location_data,
     get_stored_events_from_dynamo_db,
     post_to_change_event_dlq,
@@ -72,6 +70,7 @@ from .utilities.generator import (
     add_specified_openings_to_dos,
     add_standard_openings_to_dos,
     build_change_event,
+    build_change_event_contacts,
     build_change_event_opening_times,
     commit_new_service_to_dos,
 )
@@ -87,6 +86,7 @@ scenarios(
 FAKER = Faker("en_GB")
 
 
+# This is used for the change event, not services
 @given(parse('the "{contact}" is changed and is valid'), target_fixture="context")
 def a_changed_contact_event_is_valid(contact: str, context: Context):
     validated = False
@@ -95,9 +95,13 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
             case "website":
                 context.previous_value = context.website
                 context.website = FAKER.domain_word() + ".nhs.uk"
+                context.query["web"] = context.website
+                context.change_event["Contacts"] = build_change_event_contacts(context)
             case "phone_no":
                 context.previous_value = context.phone
                 context.phone = FAKER.phone_number()
+                context.query["publicphone"] = context.phone
+                context.change_event["Contacts"] = build_change_event_contacts(context)
             case "address":
                 context.previous_value = get_address_string(context)
                 context.change_event["Address1"] = FAKER.street_name()
@@ -190,6 +194,12 @@ def service_table_entry_is_committed(context: Context):
         build_change_event_opening_times(context)
     else:
         add_single_opening_day(context)
+    return context
+
+
+@given(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
+def ce_values_updated_in_context(field_name: str, values: str, context: Context):
+    context.change_event[field_name] = values
     return context
 
 
@@ -295,9 +305,9 @@ def a_standard_opening_time_change_event_is_valid(context: Context):
 
 @given("a pending entry exists in the changes table for this service", target_fixture="context")
 def change_table_entry_creation_for_service(context: Context):
-    service_id = get_service_id(context.change_event["ODSCode"])
-    service_uid = get_service_uid(service_id)
-    context.service_uid = service_uid[0][0]
+    service_id = context.query["id"]
+    service_uid = context.query["uid"]
+    context.service_uid = service_uid
     create_pending_change_for_service(service_id)
     return context
 
@@ -370,24 +380,29 @@ def dos_event_with_past_date(org_type: str, future_past: str, context: Context):
     return context
 
 
+@given(parse('the "{contact}" value has been unset'), target_fixture="context")
+def changed_event_contact_removed(contact: str, context: Context):
+    match contact.lower():
+        case "website":
+            context.previous_value = context.query["web"]
+            context.query["web"] = None
+            context.change_event["Contacts"] = build_change_event_contacts(context)
+        case "phone":
+            context.previous_value = context.query["publicphone"]
+            context.query["publicphone"] = None
+            context.change_event["Contacts"] = build_change_event_contacts(context)
+        case _:
+            raise ValueError(f"Invalid contact '{contact}' provided")
+    return context
+
+
+# Rewritten as this no longer should build from DOS
 @given(parse('a Changed Event to unset "{contact}"'), target_fixture="context")
 def a_change_event_is_valid_with_contact_set(contact: str, context: Context):
     for _ in range(5):
         context.service_type = "pharmacy"
         build_same_as_dos_change_event_by_ods(context, get_odscode_with_contact_data())
-        match contact.lower():
-            case "website":
-                if context.website is None or context.website == "":
-                    continue
-                context.previous_value = context.website
-                context.website = None
-            case "phone":
-                if context.phone is None or context.phone == "":
-                    continue
-                context.previous_value = context.phone
-                context.phone = None
-            case _:
-                raise ValueError(f"Invalid contact '{contact}' provided")
+
     return context
 
 
@@ -411,12 +426,15 @@ def generic_event_config(context: Context, field: str, value: str):
     match field.lower():
         case "website":
             context.previous_value = context.website
+            context.query["web"] = value
             context.website = value
         case "phone":
             context.previous_value = context.phone
+            context.query["publicphone"] = value
             context.phone = value
         case "odscode":
             context.previous_value = context.change_event["ODSCode"]
+            context.ods_code = value
             context.change_event["ODSCode"] = value
         case "postcode":
             context.previous_value = context.query["postcode"]
@@ -602,25 +620,34 @@ def current_ods_exists_in_ddb(context: Context):
     return context
 
 
+@given("the ODS has an entry in dynamodb", target_fixture="context")
+def create_ods_in_ddb(context: Context):
+    context = the_change_event_is_sent_with_custom_sequence(context, 100)
+    context.sequence_number = 100
+    context.unique_key = generate_random_int()
+    return context
+
+
 @given(parse('a Changed Event with changed "{url}" variations is valid'), target_fixture="context")
 def a_changed_url_event_is_valid(url: str, context: Context):
     context.service_type = "pharmacy"
     context.website = url
     build_same_as_dos_change_event(context)
+    # Why is this line below present?
     context.change_event["Postcode"] = "NG5 2JJ"
     return context
 
 
-@given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
-def a_changed_address_event_is_valid(address: str, context: Context):
-    context.service_type = "pharmacy"
-    build_same_as_dos_change_event(context)
-    context.change_event["Address1"] = address
-    context.change_event["Address2"] = None
-    context.change_event["Address3"] = None
-    context.change_event["City"] = None
-    context.change_event["County"] = None
-    return context
+# @given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
+# def a_changed_address_event_is_valid(address: str, context: Context):
+#     context.service_type = "pharmacy"
+#     build_same_as_dos_change_event(context)
+#     context.change_event["Address1"] = address
+#     context.change_event["Address2"] = None
+#     context.change_event["Address3"] = None
+#     context.change_event["City"] = None
+#     context.change_event["County"] = None
+#     return context
 
 
 @when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
@@ -674,7 +701,7 @@ def same_specified_opening_date_with_true_and_false_isopen_status(context: Conte
 )
 def the_change_event_is_sent_for_processing(context: Context, valid_or_invalid):
     if context.phone is not None or context.website is not None:
-        build_contacts(context)
+        context.change_event["Contacts"] = build_change_event_contacts(context)
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
     context.response = process_payload(context, valid_or_invalid == "valid", context.correlation_id)
@@ -715,13 +742,12 @@ def the_change_event_is_sent_with_no_sequence(context: Context):
 def the_change_event_is_sent_with_duplicate_sequence(context: Context):
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
-    context.website = "https://www.test.com"
-    odscode = context.change_event["ODSCode"]
+    context.change_event["Address1"] = "New Test Address Value"
     seqid = 0
     if context.sequence_number == 100:
         seqid = 100
     else:
-        seqid = get_latest_sequence_id_for_a_given_odscode(odscode)
+        seqid = get_latest_sequence_id_for_a_given_odscode(context.ods_code)
     context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
     return context
