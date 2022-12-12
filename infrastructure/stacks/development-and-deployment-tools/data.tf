@@ -73,6 +73,10 @@ data "template_file" "build_cicd_shared_resources_artefact_buildspec" {
   template = file("buildspecs/build-cicd-shared-resources-artefact-buildspec.yml")
 }
 
+data "template_file" "rollback_blue_green_deployment_buildspec" {
+  template = file("buildspecs/rollback-blue-green-deployment-buildspec.yml")
+}
+
 # ##############
 # # IAM
 # ##############

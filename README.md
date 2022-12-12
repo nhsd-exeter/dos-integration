@@ -44,6 +44,7 @@
       - [Trigger Shared Resources Deployment Pipeline](#trigger-shared-resources-deployment-pipeline)
       - [Undeploy Blue/Green Environment](#undeploy-bluegreen-environment)
       - [Undeploy Shared Resources Environment](#undeploy-shared-resources-environment)
+      - [Rollback Blue/Green Environment](#rollback-bluegreen-environment)
     - [Quick Re-deploy](#quick-re-deploy)
     - [Remove Deployment From the Command-line](#remove-deployment-from-the-command-line)
     - [Remove deployment with commit tag](#remove-deployment-with-commit-tag)
@@ -73,6 +74,7 @@ The NHS.uk website, and the DoS (Directory of Services) service are separate ent
 The DoS Integration project aims to keep any updates made on NHS.uk consistent with DoS by comparing any updates and creating any change requests needed to keep the information up to date.
 
 ### DI Confluence Page
+
 <https://nhsd-confluence.digital.nhs.uk/display/DI/DoS+Integration+Home>
 
 ### Architecture
@@ -98,7 +100,7 @@ A mac is no longer required for basic development since task branches are automa
 
 This project contains a macOS environment which can be installed and setup that gives the user a wide range of tools useful for development. More info on this is in the mac setup section.
 
-The main components you will need for *basic* development work, are your OS version of the below.
+The main components you will need for _basic_ development work, are your OS version of the below.
 
 - A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
@@ -197,7 +199,7 @@ To format all python files in the project run the following commands:
 ### Code Quality
 
 Code quality checks can be done with the pip installed 'flake8' module and run with the command.
-    python3 -m flake8 --max-line-length=120
+python3 -m flake8 --max-line-length=120
 
 This is also wrapped in a function:
 
@@ -330,7 +332,7 @@ Deployment images are instead tagged with the commit hash of the commit it was b
 
 <img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
 
-All `test`  CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
+All `test` CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
 
 - uec-dos-int-tools-stress-test-stage
 - uec-dos-int-tools-load-test-stage
@@ -356,7 +358,8 @@ Once a branch which meets this criteria has been pushed then it will run a build
 ### Branch Naming to not automatically deploy
 
 For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
-****
+
+---
 
 ## Blue/Green Deployments
 
@@ -371,10 +374,9 @@ To deploy a new version of the application in a blue green way it uses multiple 
 This guide will walk you through the steps to deploy a new version of the application in a blue green way. It assumes you have already deployed the application once and have a blue environment.
 
 This guide will use the following environment names:
-  Live - The Shared Environment
-  gggggg - Commit Hash for the Green New Blue/Green Environment.
-  bbbbbb - Commit Hash for the Blue Current Blue/Green Environment
-
+Live - The Shared Environment
+gggggg - Commit Hash for the Green New Blue/Green Environment.
+bbbbbb - Commit Hash for the Blue Current Blue/Green Environment
 
 1. Create a new blue/green environment with the new version. This creates a new blue/green environment ready to be switched to.
 
@@ -419,8 +421,6 @@ make deploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=li
 
 #### Trigger Blue/Green Deployment Pipeline
 
-
-
 This will trigger the blue/green deployment pipeline to deploy the commit hash to the blue/green environment in the mgmt account.
 The AWS CodePipeline name will be `uec-dos-int-dev-cicd-blue-green-deployment-pipeline`
 
@@ -460,7 +460,6 @@ make undeploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green
 
 # Example
 make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
-
 ```
 
 #### Undeploy Shared Resources Environment
@@ -475,6 +474,16 @@ make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-envir
 
 # Example
 make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
+```
+
+#### Rollback Blue/Green Environment
+
+This will rollback the blue/green environment to the previous version.
+
+```bash
+make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
+# Example
+make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMENT=cicd-test COMMIT=c951156
 ```
 
 ### Quick Re-deploy
@@ -598,11 +607,11 @@ What are the links of the supporting systems?
 
 #### Tracing Change events and requests Correlation Id
 
-  To be able to track a change event and the change requests it can become across systems a common id field is present on logs related to each event. The id is generated in `Profile Editor` (NHS UK) which is then assigned to the `correlation-id` header of the request send to our (DoS Integration) endpoint, for a given change event. The `correlation-id` header is then used throughout the handling of the change event in `DoS Integration`.
+To be able to track a change event and the change requests it can become across systems a common id field is present on logs related to each event. The id is generated in `Profile Editor` (NHS UK) which is then assigned to the `correlation-id` header of the request send to our (DoS Integration) endpoint, for a given change event. The `correlation-id` header is then used throughout the handling of the change event in `DoS Integration`.
 
-  If a change event does result in change requests being created for `DoS` then the change requests have a `reference` key with the value being the correlation id.
+If a change event does result in change requests being created for `DoS` then the change requests have a `reference` key with the value being the correlation id.
 
-  The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
+The events can be further investigated in DoS Integration process by using the X-Ray trace id that is associated with the log that has the correlation id.
 
 ### Cloud Environments
 
@@ -680,3 +689,7 @@ All of the above can be service, product, application or even team specific.
 - Ways of working
 
   <https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working>
+
+```
+
+```
