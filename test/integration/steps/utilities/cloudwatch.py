@@ -55,4 +55,4 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
 
 
 def get_log_group_name(lambda_name: str) -> str:
-    return f'/aws/lambda/uec-dos-int-{getenv("PROFILE")}-{getenv("BLUE_GREEN_ENVIRONMENT")}-{lambda_name}'
+    return f'/aws/lambda/uec-dos-int-{getenv("BLUE_GREEN_ENVIRONMENT")}-{lambda_name}'
