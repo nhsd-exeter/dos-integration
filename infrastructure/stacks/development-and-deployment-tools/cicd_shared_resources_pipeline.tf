@@ -121,6 +121,52 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
       }
     }
   }
+  stage {
+    name = "Approve"
+
+    action {
+      name     = "Approve_Live_Deployment"
+      category = "Approval"
+      owner    = "AWS"
+      provider = "Manual"
+      version  = "1"
+      configuration = {
+        CustomData = "Approve the deployment to the live environment"
+      }
+    }
+  }
+  stage {
+    name = "Deploy_Live_Environment"
+    action {
+      name            = "Deploy_Live"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = aws_codebuild_project.di_deploy_shared_resources_environment_stage.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "AWS_ACCOUNT"
+            value = "PROD"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "PROFILE"
+            value = "live"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "SHARED_ENVIRONMENT"
+            value = "live"
+            type  = "PLAINTEXT"
+          }
+        ])
+      }
+    }
+  }
   depends_on = [
     module.cicd_blue_green_deployment_pipeline_artefact_bucket,
     aws_codebuild_project.di_unit_tests_stage,
