@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" {
   alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Change events from NHS UK have been rejected"
-  alarm_name          = "${var.project_id} | ${var.profile} | ${var.shared_environment} | DI 4XX Endpoint Errors"
+  alarm_name          = "${var.project_id} | ${var.shared_environment} | DI 4XX Endpoint Errors"
   comparison_operator = "GreaterThanThreshold"
   datapoints_to_alarm = "1"
   dimensions = {
@@ -24,7 +24,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" 
 resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_5xx_errors_alert" {
   alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Change events from NHS UK have been rejected"
-  alarm_name          = "${var.project_id} | ${var.profile} | ${var.shared_environment} | DI 5XX Endpoint Errors"
+  alarm_name          = "${var.project_id} | ${var.shared_environment} | DI 5XX Endpoint Errors"
   comparison_operator = "GreaterThanThreshold"
   datapoints_to_alarm = "1"
   dimensions = {
@@ -47,7 +47,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_5xx_errors_alert" 
 resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dlq_alert" {
   alarm_actions             = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Change Event DLQ has recieved messages"
-  alarm_name                = "${var.project_id} | ${var.profile} | ${var.shared_environment} | Change Events DLQ'd"
+  alarm_name                = "${var.project_id} | ${var.shared_environment} | Change Events DLQ'd"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { QueueName = var.change_event_dlq }
@@ -63,7 +63,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_sqs_dlq_alert" {
 resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_waiting_alert" {
   alarm_actions             = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is waiting to process change events in service matcher"
-  alarm_name                = "${var.project_id} | ${var.profile} | ${var.shared_environment} | Change Events Waiting"
+  alarm_name                = "${var.project_id} | ${var.shared_environment} | Change Events Waiting"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "2"
   dimensions                = { ENV = var.change_event_queue_name }
@@ -83,7 +83,7 @@ resource "aws_cloudwatch_metric_alarm" "di_endpoint_health_check_alarm" {
   provider                  = aws.route53_health_check_alarm_region
   alarm_actions             = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   alarm_description         = "Alert for when DI endpoint is failing Route53 health checks"
-  alarm_name                = "${var.project_id} | ${var.profile} | ${var.shared_environment} | DI Endpoint Route 53 Health Checks Failing"
+  alarm_name                = "${var.project_id} | ${var.shared_environment} | DI Endpoint Route 53 Health Checks Failing"
   comparison_operator       = "LessThanThreshold"
   dimensions                = { HealthCheckId = aws_route53_health_check.di_endpoint_health_check.id }
   evaluation_periods        = "1"
