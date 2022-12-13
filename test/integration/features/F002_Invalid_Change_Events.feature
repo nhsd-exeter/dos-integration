@@ -66,7 +66,7 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002SXX7. Address changes are discarded when postcode is invalid
     Given an entry is created in the services table
     And the entry is committed to the services table
-    And the field "Postcode" is set to "FAKE"
+    And the change event "Postcode" is set to "FAKE"
     And the field "Website" is set to "https://www.test.com"
     And the field "Address" is set to "FAKE2"
     When the Changed Event is sent for processing with "valid" api key
@@ -77,65 +77,67 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002SXX8. Invalid Opening Times reported where Weekday is not identified
     Given an entry is created in the services table
     And the entry is committed to the services table
-    And the entry has no weekday present in opening times
+    And the change event has no weekday present in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
     And the Slack channel shows an alert saying "Invalid Opening Times" from "BLUE_GREEN_ENVIRONMENT"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S009. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
-    Given a Changed Event where OpeningTimeType is NOT defined correctly
+  Scenario: F002SXX9. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event has an invalid openingtimetype
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S010. IsOpen is true AND Times is blank
-    Given a "pharmacy" Changed Event is aligned with DoS
-    When the OpeningTimes Opening and Closing Times data are not defined
-    And the Changed Event is sent for processing with "valid" api key
+  Scenario: F002SX10. IsOpen is true AND Times is blank
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event has undefined opening and closing times
+    When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S011. IsOpen is false AND Times NOT blank
-    Given a Changed Event with the openingTimes IsOpen status set to false
+  Scenario: F002SX11. IsOpen is false AND Times NOT blank
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event has opening times open status set to false
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S012. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
-    Given a "pharmacy" Changed Event is aligned with DoS
-    When the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined
-    And the Changed Event is sent for processing with "valid" api key
+  Scenario: F002SX12. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event has an additional date with no specified date
+    When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S013. An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false
-    Given a "pharmacy" Changed Event is aligned with DoS
-    When an AdditionalOpeningDate contains data with both true and false IsOpen status
-    And the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
-
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S015. Pharmacy with overlapping opening times
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "OrganisationName" is set to "Test Pharmacy"
+  Scenario: F002SX15. Pharmacy with overlapping opening times
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "OrganisationName" is set to "Test Pharmacy"
     And the Changed Event has overlapping opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the attributes for invalid opening times report is identified in the logs
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S016. Pharmacy with non '13%' service type code prompts error.
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "ODSCode" is set to "TP68G"
+  Scenario: F002SX16. Pharmacy with non '13%' service type code prompts error.
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S017. Pharmacies with generic bank holidays are reported in logs.
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "ODSCode" is set to "FJQ49"
+  Scenario: F002SX17. Pharmacies with generic bank holidays are reported in logs.
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
 

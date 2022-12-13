@@ -286,6 +286,19 @@ def build_change_event_opening_times(context) -> Dict:
     return opening_times
 
 
+def return_opening_time_dict() -> Dict:
+    return {
+        "Weekday": "",
+        "OpeningTime": "",
+        "ClosingTime": "",
+        "OffsetOpeningTime": 0,
+        "OffsetClosingTime": 0,
+        "OpeningTimeType": "Additional",
+        "AdditionalOpeningDate": "",
+        "IsOpen": True,
+    }
+
+
 # Other functions
 def day_lookup(day):
     days = {"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}

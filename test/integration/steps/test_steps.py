@@ -17,7 +17,7 @@ from .utilities.change_event_builder import (
     set_opening_times_change_event,
     valid_change_event,
     build_same_as_dos_change_event_by_ods,
-    build_change_event_from_default,
+    #build_change_event_from_default,
 )
 from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
@@ -73,6 +73,7 @@ from .utilities.generator import (
     build_change_event_contacts,
     build_change_event_opening_times,
     commit_new_service_to_dos,
+    return_opening_time_dict,
 )
 
 scenarios(
@@ -453,9 +454,12 @@ def generic_event_config(context: Context, field: str, value: str):
 
 @given("the Changed Event has overlapping opening times", target_fixture="context")
 def change_event_with_overlapping_opening_times(context: Context):
-    context.standard_opening_times[0]["ClosingTime"] = "12:00"
-    context.standard_opening_times[1]["Weekday"] = "Monday"
-    context.standard_opening_times[1]["OpeningTime"] = "11:00"
+    new_entry = return_opening_time_dict()
+    new_entry["OpeningTimeType"] = "General"
+    new_entry["Weekday"] = "Monday"
+    new_entry["OpeningTime"] = "09:30"
+    new_entry["ClosingTime"] = "11:30"
+    context.change_event["OpeningTimes"].append(new_entry)
     return context
 
 
@@ -542,33 +546,55 @@ def bank_holiday_pharmacy_closed(context: Context):
 
 
 # Weekday NOT present on the Opening Time
-@given("the entry has no weekday present in opening times", target_fixture="context")
+@given("the change event has no weekday present in opening times", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday(context: Context):
     del context.change_event["OpeningTimes"][0]["Weekday"]
     return context
 
 
 # OpeningTimeType is NOT "General" or "Additional"
-@given("a Changed Event where OpeningTimeType is NOT defined correctly", target_fixture="context")
+@given("the change event has an invalid openingtimetype", target_fixture="context")
 def a_change_event_with_invalid_openingtimetype(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    context.standard_opening_times[0]["OpeningTimeType"] = "F8k3"
+    context.change_event["OpeningTimes"][0]["OpeningTimeType"] = "F8k3"
+    return context
+
+
+# IsOpen is true AND Times is blank
+@given("the change event has undefined opening and closing times", target_fixture="context")
+def no_times_data_within_openingtimes(context: Context):
+    context.change_event["OpeningTimes"][0]["OpeningTime"] = ""
+    context.change_event["OpeningTimes"][0]["ClosingTime"] = ""
+    return context
+
+
+# isOpen is false AND Times in NOT blank
+@given("the change event has opening times open status set to false", target_fixture="context")
+def a_change_event_with_isopen_status_set_to_false(context: Context):
+    context.change_event["OpeningTimes"][0]["IsOpen"] = False
+    return context
+
+
+# OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+@given("the change event has an additional date with no specified date", target_fixture="context")
+def specified_opening_date_not_defined(context: Context):
+    context.change_event["OpeningTimes"].append(
+        {
+            "AdditionalOpeningDate": "",
+            "ClosingTime": "12:00",
+            "IsOpen": True,
+            "OffsetClosingTime": 780,
+            "OffsetOpeningTime": 540,
+            "OpeningTime": "09:00",
+            "OpeningTimeType": "Additional",
+            "Weekday": "",
+        }
+    )
     return context
 
 
 @given(parse('the correlation-id is "{custom_correlation}"'), target_fixture="context")
 def a_custom_correlation_id_is_set(context: Context, custom_correlation: str):
     context.correlation_id = generate_correlation_id(custom_correlation)
-    return context
-
-
-# isOpen is false AND Times in NOT blank
-@given("a Changed Event with the openingTimes IsOpen status set to false", target_fixture="context")
-def a_change_event_with_isopen_status_set_to_false(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    context.standard_opening_times[0]["IsOpen"] = False
     return context
 
 
@@ -630,18 +656,6 @@ def a_changed_url_event_is_valid(url: str, context: Context):
     return context
 
 
-# @given(parse('a Changed Event with "{address}" is valid'), target_fixture="context")
-# def a_changed_address_event_is_valid(address: str, context: Context):
-#     context.service_type = "pharmacy"
-#     build_same_as_dos_change_event(context)
-#     context.change_event["Address1"] = address
-#     context.change_event["Address2"] = None
-#     context.change_event["Address3"] = None
-#     context.change_event["City"] = None
-#     context.change_event["County"] = None
-#     return context
-
-
 @when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
 def post_an_sqs_message(queue_type: str, context: Context):
     match queue_type.lower():
@@ -653,38 +667,6 @@ def post_an_sqs_message(queue_type: str, context: Context):
             post_ur_fifo()
         case _:
             raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
-
-
-# IsOpen is true AND Times is blank
-@when("the OpeningTimes Opening and Closing Times data are not defined", target_fixture="context")
-def no_times_data_within_openingtimes(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    context.standard_opening_times[0]["OpeningTime"] = ""
-    context.standard_opening_times[0]["ClosingTime"] = ""
-    return context
-
-
-# OpeningTimeType is Additional AND AdditionalOpening Date is Blank
-@when(
-    "the OpeningTimes OpeningTimeType is Additional and AdditionalOpeningDate is not defined",
-    target_fixture="context",
-)
-def specified_opening_date_not_defined(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    context.specified_opening_times[0]["AdditionalOpeningDate"] = ""
-    return context
-
-
-# An OpeningTime is received for the Day or Date where IsOpen is True and IsOpen is false.
-@when("an AdditionalOpeningDate contains data with both true and false IsOpen status", target_fixture="context")
-def same_specified_opening_date_with_true_and_false_isopen_status(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    context.specified_opening_times[0]["AdditionalOpeningDate"] = "Dec 25 2022"
-    context.specified_opening_times[0]["IsOpen"] = False
-    return context
 
 
 @when(
