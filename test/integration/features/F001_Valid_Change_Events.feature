@@ -18,7 +18,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "service-sync" lambda shows field "message" with message "No changes to save"
     And the service history is not updated
 
-  @complete @pharmacy_no_log_searches @fails
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX3. A valid change event with changed field is processed and captured by DOS
     Given an entry is created in the services table
     And the entry is committed to the services table
@@ -48,7 +48,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | website |
       | phone   |
 
-  @complete @pharmacy_cloudwatch_queries @fails
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SXX7. A duplicate sequence number is allowed
     Given an entry is created in the services table
     And the entry is committed to the services table
@@ -77,7 +77,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | https://www.rowlandspharmacy.co.uk/test?foo=test | https://www.rowlandspharmacy.co.uk/test?foo=test | website |
 
 
-  @complete @pharmacy_no_log_searches @fails
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX9 Changed Event with address line variations is title cased and accepted by Dos
     Given an entry is created in the services table
     And the entry is committed to the services table
@@ -124,7 +124,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the service history table has been updated with locations data
 
 
-@complete @pharmacy_no_log_searches @kit
+@complete @pharmacy_no_log_searches
   Scenario: F001SX15 To check the emails sending
     Given an entry is created in the services table
     And the entry is committed to the services table
@@ -136,11 +136,43 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the s3 bucket contains an email file matching the service uid
     And the changes table shows change is now rejected
 
-  @complete @pharmacy_cloudwatch_queries @fails
-  #These tests 16 through 20 need a rethink. It should be possible to create a single scenario
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX16 Past Specified Opening Times on Dos are removed and updated
     Given an entry is created in the services table
     And the service is "open" on date "25 Dec 2020"
+    And the entry is committed to the services table
+    And the specified opening date is set to "future" date
+    When the Changed Event is sent for processing with "valid" api key
+    Then the DoS service has been updated with the specified date and time is captured by DoS
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX17 All specified opening times are removed from DoS
+    Given an entry is created in the services table
+    And the service is "open" on date "25 Dec 2020"
+    And the entry is committed to the services table
+    And the specified opening date is set to "past" date
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX18 Empty Specified opening times results in no change and no error
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with message "No valid pending changes found"
+
+@complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX19 Empty CE Specified opening times removes all SP times in DoS
+    Given an entry is created in the services table
+    And the service is "open" on date "25 Dec 2022"
+    And the entry is committed to the services table
+    And the specified opening date is set to "no" date
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
+
+@complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX20 CE Specified Opening Times with future dates replaces empty Dos SP times
+    Given an entry is created in the services table
     And the entry is committed to the services table
     And the specified opening date is set to "future" date
     When the Changed Event is sent for processing with "valid" api key
@@ -168,40 +200,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   #     | website  | None  |
   #     | website  | ''    |
 
-@complete @pharmacy_cloudwatch_queries @fails
-  Scenario: F001S016 Past Specified Opening Times on Dos are removed and updated
-    Given a "pharmacy" Changed Event with "past" specified opening date is aligned with DoS
-    And the specified opening date is set to "future" date
-    When the Changed Event is sent for processing with "valid" api key
-    Then the DoS service has been updated with the specified date and time is captured by DoS
-
-@complete @pharmacy_cloudwatch_queries @fails
-  Scenario: F001S017 All specified opening times are removed from DoS
-    Given a "pharmacy" Changed Event with "future" specified opening date is aligned with DoS
-    And the specified opening date is set to "past" date
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
-
-@complete @pharmacy_cloudwatch_queries @fails
-  Scenario: F001S018 Empty Specified opening times results in no change and no error
-    Given a "pharmacy" Changed Event with "no" specified opening date is aligned with DoS
-    And the specified opening date is set to "no" date
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "No valid pending changes found"
-
-@complete @pharmacy_cloudwatch_queries @fails
-  Scenario: F001S019 Empty CE Specified opening times removes all SP times in DoS
-    Given a "pharmacy" Changed Event with "future" specified opening date is aligned with DoS
-    And the specified opening date is set to "no" date
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
-
-@complete @pharmacy_cloudwatch_queries @fails
-  Scenario: F001S020 CE Specified Opening Times with future dates replaces empty Dos SP times
-    Given a "pharmacy" Changed Event with "no" specified opening date is aligned with DoS
-    And the specified opening date is set to "future" date
-    When the Changed Event is sent for processing with "valid" api key
-    Then the DoS service has been updated with the specified date and time is captured by DoS
 
 @complete
   Scenario: F001S016 To check creation of test data

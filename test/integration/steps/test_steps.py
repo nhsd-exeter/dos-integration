@@ -187,7 +187,6 @@ def service_table_entry_is_committed(context: Context):
         ce_state = True
     if "specified_openings" in context.query.keys():
         add_specified_openings_to_dos(context)
-        ce_state = True
     if context.change_event is None:
         build_change_event(context)
     if ce_state:
@@ -254,7 +253,7 @@ def future_set_specified_opening_date(future_past: str, context: Context):
         case "past":
             year = dt.now().year - 1
     if year != 0:
-        context.specified_opening_times = [
+        context.change_event["OpeningTimes"].append(
             {
                 "Weekday": "",
                 "OpeningTime": "08:00",
@@ -265,9 +264,11 @@ def future_set_specified_opening_date(future_past: str, context: Context):
                 "AdditionalOpeningDate": f"Jan 10 {year}",
                 "IsOpen": True,
             }
-        ]
+        )
     else:
-        context.specified_opening_times = []
+        for days in context.change_event["OpeningTimes"]:
+            if days["OpeningTimeType"] == "Additional":
+                context.change_event["OpeningTimes"].remove(days)
     return context
 
 
@@ -958,9 +959,9 @@ def the_changed_contact_is_not_accepted_by_dos(context: Context, field: str):
 def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_captured_by_dos(context: Context):
     context.service_id = get_service_id(context.change_event["ODSCode"])
     wait_for_service_update(context.service_id)
-    opening_time = context.specified_opening_times[-1]["OpeningTime"]
-    closing_time = context.specified_opening_times[-1]["ClosingTime"]
-    changed_date = context.specified_opening_times[-1]["AdditionalOpeningDate"]
+    opening_time = context.change_event["OpeningTimes"][-1]["OpeningTime"]
+    closing_time = context.change_event["OpeningTimes"][-1]["ClosingTime"]
+    changed_date = context.change_event["OpeningTimes"][-1]["AdditionalOpeningDate"]
     current_specified_openings = get_change_event_specified_opening_times(context.service_id)
     expected_opening_date = dt.strptime(changed_date, "%b %d %Y").strftime("%Y-%m-%d")
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"

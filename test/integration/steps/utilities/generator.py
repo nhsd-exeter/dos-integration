@@ -268,19 +268,21 @@ def build_change_event_opening_times(context) -> Dict:
                 }
             )
     if "specified_openings" in context.query.keys():
+        present = datetime.now()
         for days in context.query["specified_openings"]:
-            opening_times.append(
-                {
-                    "AdditionalOpeningDate": days["date"],
-                    "ClosingTime": days["closing_time"],
-                    "IsOpen": days["open"],
-                    "OffsetClosingTime": 780,
-                    "OffsetOpeningTime": 540,
-                    "OpeningTime": days["opening_time"],
-                    "OpeningTimeType": "Additional",
-                    "Weekday": "",
-                }
-            )
+            if datetime.strptime(days["date"], "%d %b %Y").date() > present.date():
+                opening_times.append(
+                    {
+                        "AdditionalOpeningDate": days["date"],
+                        "ClosingTime": days["closing_time"],
+                        "IsOpen": days["open"],
+                        "OffsetClosingTime": 780,
+                        "OffsetOpeningTime": 540,
+                        "OpeningTime": days["opening_time"],
+                        "OpeningTimeType": "Additional",
+                        "Weekday": "",
+                    }
+                )
     return opening_times
 
 
