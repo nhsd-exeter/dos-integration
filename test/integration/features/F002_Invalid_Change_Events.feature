@@ -1,63 +1,83 @@
 Feature: F002. Invalid change event Exception handling
 
+@complete
+  Scenario: F001S016 To check creation of test data
+    Given an entry is created in the services table
+    And the service "address" is set to "blahblah"
+    And the service "publicphone" is set to "blahblah"
+    And the service is "open" on "Monday"
+    And the service is "closed" on "Tuesday"
+    And the service is "open" on date "25 Dec 2025"
+    And the entry is committed to the services table
+
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S001. Unmatched DOS services exception is logged
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "ODSCode" is set to "F8KE1"
+  Scenario: F002SXX1. Unmatched DOS services exception is logged
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "ODSCode" is set to "F8KE1"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "Found 0 services in DB"
     And the "service-matcher" lambda shows field "message" with message "No matching DOS services"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S002. Changed Event with Hidden Organisation status is reported
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "OrganisationStatus" is set to "Hidden"
+  Scenario: F002SXX2. Changed Event with Hidden Organisation status is reported
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "NHS Service marked as closed or hidden"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S003. Changed Event with Closed Organisation status is not processed
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "OrganisationStatus" is set to "Closed"
+  Scenario: F002SXX3. Changed Event with Closed Organisation status is not processed
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "HIDDEN_OR_CLOSED"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S004. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
-    Given a "pharmacy" Changed Event is aligned with DoS
+  Scenario: F002SXX4. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
+    Given an entry is created in the services table
+    And the entry is committed to the services table
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S005. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "OrganisationSubType" is set to "com"
+  Scenario: F002SXX5. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S006. A Changed Event with no postcode LAT Long Values is reported
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And the field "Postcode" is set to "BT4 2HU"
+  Scenario: F002SXX6. A Changed Event with no postcode LAT Long Values is reported
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the change event "Postcode" is set to "BT4 2HU"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "INVALID_POSTCODE"
 
   @complete @dev @pharmacy_no_log_searches
-  Scenario: F002S007. Address changes are discarded when postcode is invalid
-    Given a "pharmacy" Changed Event is aligned with DoS
+  Scenario: F002SXX7. Address changes are discarded when postcode is invalid
+    Given an entry is created in the services table
+    And the entry is committed to the services table
     And the field "Postcode" is set to "FAKE"
     And the field "Website" is set to "https://www.test.com"
     And the field "Address" is set to "FAKE2"
     When the Changed Event is sent for processing with "valid" api key
     Then the "address" has not been changed in DoS
 
+
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002S008. Invalid Opening Times reported where Weekday is not identified
-    Given a Changed Event with the Weekday NOT present in the Opening Times data
+  Scenario: F002SXX8. Invalid Opening Times reported where Weekday is not identified
+    Given an entry is created in the services table
+    And the entry is committed to the services table
+    And the entry has no weekday present in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
     And the Slack channel shows an alert saying "Invalid Opening Times" from "BLUE_GREEN_ENVIRONMENT"
@@ -175,6 +195,7 @@ Feature: F002. Invalid change event Exception handling
   #   And the "service-sync" lambda shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
 
   @complete @pharmacy_cloudwatch_queries
+  #This one is duplicated in it's functionality in F001
   Scenario Outline: F002S025. Pharmacy past specified opening time
     Given a "pharmacy" Changed Event is aligned with DoS
     And a specified opening time is set to "Jan 1 2022"

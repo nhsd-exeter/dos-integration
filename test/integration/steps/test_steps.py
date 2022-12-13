@@ -420,10 +420,12 @@ def generic_event_config(context: Context, field: str, value: str):
             context.previous_value = context.website
             context.query["web"] = value
             context.website = value
+            context.change_event["Contacts"] = build_change_event_contacts(context)
         case "phone":
             context.previous_value = context.phone
             context.query["publicphone"] = value
             context.phone = value
+            context.change_event["Contacts"] = build_change_event_contacts(context)
         case "odscode":
             context.previous_value = context.change_event["ODSCode"]
             context.ods_code = value
@@ -432,7 +434,7 @@ def generic_event_config(context: Context, field: str, value: str):
             context.previous_value = context.query["postcode"]
             context.change_event["Postcode"] = value
         case "address":
-            context.previous_value = get_address_string(context.change_event)
+            context.previous_value = get_address_string(context)
             context.change_event["Address1"] = value
             context.change_event["Address2"] = None
             context.change_event["Address3"] = None
@@ -540,11 +542,9 @@ def bank_holiday_pharmacy_closed(context: Context):
 
 
 # Weekday NOT present on the Opening Time
-@given("a Changed Event with the Weekday NOT present in the Opening Times data", target_fixture="context")
+@given("the entry has no weekday present in opening times", target_fixture="context")
 def a_change_event_with_no_openingtimes_weekday(context: Context):
-    context.service_type = "pharmacy"
-    build_change_event_from_default(context)
-    del context.standard_opening_times[0]["Weekday"]
+    del context.change_event["OpeningTimes"][0]["Weekday"]
     return context
 
 
