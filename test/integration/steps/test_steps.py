@@ -17,7 +17,7 @@ from .utilities.change_event_builder import (
     set_opening_times_change_event,
     valid_change_event,
     build_same_as_dos_change_event_by_ods,
-    #build_change_event_from_default,
+    # build_change_event_from_default,
 )
 from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
@@ -129,6 +129,12 @@ def a_service_table_entry_is_created(context: Context):
     context.query = query_values
     return context
 
+
+@given("a basic service is created", target_fixture="context")
+def create_basic_service_entry(context: Context):
+    context = a_service_table_entry_is_created(context)
+    context = service_table_entry_is_committed(context)
+    return context
 
 @given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
 def service_values_updated_in_context(field_name: str, values: str, context: Context):

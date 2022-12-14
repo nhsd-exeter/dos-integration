@@ -1,19 +1,8 @@
 Feature: F002. Invalid change event Exception handling
 
-@complete
-  Scenario: F001S016 To check creation of test data
-    Given an entry is created in the services table
-    And the service "address" is set to "blahblah"
-    And the service "publicphone" is set to "blahblah"
-    And the service is "open" on "Monday"
-    And the service is "closed" on "Tuesday"
-    And the service is "open" on date "25 Dec 2025"
-    And the entry is committed to the services table
-
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX1. Unmatched DOS services exception is logged
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "ODSCode" is set to "F8KE1"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "Found 0 services in DB"
@@ -21,8 +10,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX2. Changed Event with Hidden Organisation status is reported
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with message "NHS Service marked as closed or hidden"
@@ -30,8 +18,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX3. Changed Event with Closed Organisation status is not processed
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "HIDDEN_OR_CLOSED"
@@ -39,8 +26,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX4. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the field "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
@@ -48,24 +34,21 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX5. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX6. A Changed Event with no postcode LAT Long Values is reported
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "Postcode" is set to "BT4 2HU"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "INVALID_POSTCODE"
 
   @complete @dev @pharmacy_no_log_searches
   Scenario: F002SXX7. Address changes are discarded when postcode is invalid
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
     And the field "Website" is set to "https://www.test.com"
     And the field "Address" is set to "FAKE2"
@@ -75,8 +58,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX8. Invalid Opening Times reported where Weekday is not identified
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event has no weekday present in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
@@ -84,16 +66,14 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX9. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event has an invalid openingtimetype
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX10. IsOpen is true AND Times is blank
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event has undefined opening and closing times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
@@ -101,24 +81,21 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX11. IsOpen is false AND Times NOT blank
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event has opening times open status set to false
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX12. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event has an additional date with no specified date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX15. Pharmacy with overlapping opening times
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "OrganisationName" is set to "Test Pharmacy"
     And the Changed Event has overlapping opening times
     When the Changed Event is sent for processing with "valid" api key
@@ -126,8 +103,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX16. Pharmacy with non '13%' service type code prompts error.
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
@@ -135,8 +111,7 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX17. Pharmacies with generic bank holidays are reported in logs.
-    Given an entry is created in the services table
-    And the entry is committed to the services table
+    Given a basic service is created
     And the change event "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
@@ -195,12 +170,3 @@ Feature: F002. Invalid change event Exception handling
   #   When the Changed Event is sent for processing with "valid" api key
   #   Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
   #   And the "service-sync" lambda shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
-
-  @complete @pharmacy_cloudwatch_queries
-  #This one is duplicated in it's functionality in F001
-  Scenario Outline: F002S025. Pharmacy past specified opening time
-    Given a "pharmacy" Changed Event is aligned with DoS
-    And a specified opening time is set to "Jan 1 2022"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
-    And the "service-sync" lambda shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
