@@ -694,3 +694,7 @@ tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green 
 tag-commit-to-deploy-shared-resources: # Tags commit to deploy shared resources - mandatory: COMMIT=[short commit hash]
 	tag="$(BUILD_TIMESTAMP)-shared-resources-deployment"
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/green environment - mandatory: PROFILE=[name], SHARED_ENVIRONMENT=[name]
+	tag="$(BUILD_TIMESTAMP)_$(PROFILE)_$(SHARED_ENVIRONMENT)_blue_green_rollback"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
