@@ -910,7 +910,7 @@ def post_ur_fifo():
 
 def post_to_change_event_dlq(context: Context):
     queue_url = get_sqs_queue_name("changeevent")
-    sqs_body = context.change_event.get_change_event()
+    sqs_body = context.change_event
 
     SQS_CLIENT.send_message(
         QueueUrl=queue_url,
