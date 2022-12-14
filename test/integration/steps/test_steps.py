@@ -136,6 +136,7 @@ def create_basic_service_entry(context: Context):
     context = service_table_entry_is_committed(context)
     return context
 
+
 @given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
 def service_values_updated_in_context(field_name: str, values: str, context: Context):
     context.query[field_name] = values
@@ -206,7 +207,14 @@ def service_table_entry_is_committed(context: Context):
 
 @given(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
 def ce_values_updated_in_context(field_name: str, values: str, context: Context):
-    context.change_event[field_name] = values
+    if field_name.lower() == "website":
+        context.query["web"] = field_name
+        context.change_event["Contacts"] = build_change_event_contacts(context)
+    elif field_name.lower() == "phone":
+        context.query["publicphone"] = field_name
+        context.change_event["Contacts"] = build_change_event_contacts(context)
+    else:
+        context.change_event[field_name] = values
     return context
 
 
@@ -632,18 +640,6 @@ def change_event_same_dual(context: Context, opening_type):
     return context
 
 
-@given("an ODS has an entry in dynamodb", target_fixture="context")
-def current_ods_exists_in_ddb(context: Context):
-    context.service_type = "pharmacy"
-    build_same_as_dos_change_event(context)
-    odscode = context.ods_code
-    if get_latest_sequence_id_for_a_given_odscode(odscode) == 0:
-        context = the_change_event_is_sent_with_custom_sequence(context, 100)
-        context.sequence_number = 100
-    context.unique_key = generate_random_int()
-    return context
-
-
 @given("the ODS has an entry in dynamodb", target_fixture="context")
 def create_ods_in_ddb(context: Context):
     context = the_change_event_is_sent_with_custom_sequence(context, 100)
@@ -710,7 +706,7 @@ def the_change_event_is_sent_with_custom_sequence(context: Context, seqid):
 def the_change_event_is_sent_with_no_sequence(context: Context):
     context.start_time = dt.today().timestamp()
     context.correlation_id = generate_correlation_id()
-    context.response = process_payload_with_sequence(context.change_event, context.correlation_id, None)
+    context.response = process_payload_with_sequence(context, context.correlation_id, None)
     return context
 
 

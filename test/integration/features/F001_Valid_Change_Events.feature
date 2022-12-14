@@ -102,14 +102,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_no_log_searches
   Scenario: F001SX11 Locations update check for postcode change
     Given a basic service is created
-    And the field "Postcode" is set to "PR4 2BE"
+    And the change event "Postcode" is set to "PR4 2BE"
     When the Changed Event is sent for processing with "valid" api key
     Then the service table has been updated with locations data
 
   @complete @pharmacy_no_log_searches
   Scenario: F001SX12 Locations update check service history
     Given a basic service is created
-    And the field "Postcode" is set to "PR4 2BE"
+    And the change event "Postcode" is set to "PR4 2BE"
     When the Changed Event is sent for processing with "valid" api key
     Then the service history table has been updated with locations data
 
@@ -118,8 +118,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   Scenario: F001SX15 To check the emails sending
     Given a basic service is created
     And the correlation-id is "email"
-    #Didn't realise it functioned like this below
-    And the field "Address1" is set to "Test Address"
+    And the change event "Address1" is set to "Test Address"
     And a pending entry exists in the changes table for this service
     When the Changed Event is sent for processing with "valid" api key
     Then the s3 bucket contains an email file matching the service uid
