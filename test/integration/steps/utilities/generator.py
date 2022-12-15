@@ -270,7 +270,7 @@ def build_change_event_opening_times(context) -> Dict:
     if "specified_openings" in context.query.keys():
         present = datetime.now()
         for days in context.query["specified_openings"]:
-            if datetime.strptime(days["date"], "%d %b %Y").date() > present.date():
+            if datetime.strptime(days["date"], "%b %d %Y").date() > present.date():
                 opening_times.append(
                     {
                         "AdditionalOpeningDate": days["date"],
@@ -307,3 +307,39 @@ def day_lookup(day):
 
 def generate_unique_key(start_number: int = 1, stop_number: int = 1000) -> str:
     return str(randrange(start=start_number, stop=stop_number, step=1))
+
+
+def query_standard_opening_builder(context, service_status, day, open="09:00", close="17:00"):
+    times_obj = {}
+    if service_status.lower() == "open":
+        times_obj["day"] = day.lower()
+        times_obj["open"] = True
+        times_obj["opening_time"] = open
+        times_obj["closing_time"] = close
+    else:
+        times_obj["day"] = day.lower()
+        times_obj["open"] = False
+        times_obj["opening_time"] = ""
+        times_obj["closing_time"] = ""
+    if "standard_openings" not in context.query.keys():
+        context.query["standard_openings"] = []
+    context.query["standard_openings"].append(times_obj)
+    return context
+
+
+def query_specified_opening_builder(context, service_status, date, open="09:00", close="17:00"):
+    times_obj = {}
+    if service_status.lower() == "open":
+        times_obj["date"] = date
+        times_obj["open"] = True
+        times_obj["opening_time"] = open
+        times_obj["closing_time"] = close
+    else:
+        times_obj["date"] = date
+        times_obj["open"] = False
+        times_obj["opening_time"] = ""
+        times_obj["closing_time"] = ""
+    if "specified_openings" not in context.query.keys():
+        context.query["specified_openings"] = []
+    context.query["specified_openings"].append(times_obj)
+    return context
