@@ -199,6 +199,8 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
             "(starttime, endtime, isclosed, servicespecifiedopeningdateid) VALUES("
             f"'{opening_time}', '{closing_time}', {open_status}, {int(day_id)}) RETURNING id"
         )
+        if "'', ''" in query:
+            raise ValueError("Query has inserted null times into open specified date")
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         invoke_dos_db_handler_lambda(lambda_payload)
     # TO DO
