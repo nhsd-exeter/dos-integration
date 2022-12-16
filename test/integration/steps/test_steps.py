@@ -176,6 +176,17 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
+@given("the change event has no specified opening dates", target_fixture="context")
+def change_event_no_specified_opening_dates(context: Context):
+    date_vals = context.query["specified_openings"][0]
+    context.other = (
+        {"AdditionalOpeningDate": date_vals["date"],
+        "OpeningTime": date_vals["opening_time"],
+        "ClosingTime": date_vals["closing_time"]})
+    context.query["specified_openings"] = []
+    context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
+    return context
+
 
 @given("the entry is committed to the services table", target_fixture="context")
 def service_table_entry_is_committed(context: Context):
@@ -460,13 +471,14 @@ def change_event_with_overlapping_opening_times(context: Context):
 
 @given(parse('the Changed Event has "{amount}" break in opening times'), target_fixture="context")
 def change_event_with_break_in_opening_times(context: Context, amount):
+    context.query["standard_openings"] = []
     if amount in ["1", "2", "3"]:
-        query_standard_opening_builder(context, open, "monday", "09:00", "12:00")
-        query_standard_opening_builder(context, open, "monday", "12:30", "16:00")
+        query_standard_opening_builder(context, "open", "monday", "09:00", "12:00")
+        query_standard_opening_builder(context, "open", "monday", "12:30", "16:00")
     if amount in ["2", "3"]:
-        query_standard_opening_builder(context, open, "monday", "16:10", "16:30")
+        query_standard_opening_builder(context, "open", "monday", "16:10", "16:30")
     if amount in ["3"]:
-        query_standard_opening_builder(context, open, "monday", "16:40", "17:00")
+        query_standard_opening_builder(context, "open", "monday", "16:40", "17:00")
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
@@ -1028,16 +1040,12 @@ def verify_replayed_changed_event(context: Context):
 def opening_times_with_a_break_are_updated_in_dos(context: Context):
     context.service_id = get_service_id(context.change_event["ODSCode"])
     wait_for_service_update(context.service_id)
-    first_open_time = context.standard_opening_times[0]["OpeningTime"]
-    first_closing_time = context.standard_opening_times[0]["ClosingTime"]
-    second_open_time = context.standard_opening_times[1]["OpeningTime"]
-    second_closing_time = context.standard_opening_times[1]["ClosingTime"]
     current_standard_openings = get_change_event_standard_opening_times(context.service_id)
     assert "Monday" in current_standard_openings, "DoS not updated with standard opening time"
-    assert current_standard_openings["Monday"][0]["start_time"] == first_open_time
-    assert current_standard_openings["Monday"][0]["end_time"] == first_closing_time
-    assert current_standard_openings["Monday"][1]["start_time"] == second_open_time
-    assert current_standard_openings["Monday"][1]["end_time"] == second_closing_time
+    assert current_standard_openings["Monday"][0]["start_time"] == "09:00"
+    assert current_standard_openings["Monday"][0]["end_time"] == "12:00"
+    assert current_standard_openings["Monday"][1]["start_time"] == "12:30"
+    assert current_standard_openings["Monday"][1]["end_time"] == "16:00"
     assert len(current_standard_openings["Monday"]) == 2, "Expected 2 opening times"
 
 
@@ -1045,30 +1053,22 @@ def opening_times_with_a_break_are_updated_in_dos(context: Context):
 def opening_times_with_two_breaks_are_updated_in_dos(context: Context):
     context.service_id = get_service_id(context.change_event["ODSCode"])
     wait_for_service_update(context.service_id)
-    first_open_time = context.standard_opening_times[0]["OpeningTime"]
-    first_closing_time = context.standard_opening_times[0]["ClosingTime"]
-    second_open_time = context.standard_opening_times[1]["OpeningTime"]
-    second_closing_time = context.standard_opening_times[1]["ClosingTime"]
-    third_open_time = context.standard_opening_times[2]["OpeningTime"]
-    third_closing_time = context.standard_opening_times[2]["ClosingTime"]
     current_standard_openings = get_change_event_standard_opening_times(context.service_id)
     assert "Monday" in current_standard_openings, "DoS not updated with standard opening time"
-    assert current_standard_openings["Monday"][0]["start_time"] == first_open_time
-    assert current_standard_openings["Monday"][0]["end_time"] == first_closing_time
-    assert current_standard_openings["Monday"][1]["start_time"] == second_open_time
-    assert current_standard_openings["Monday"][1]["end_time"] == second_closing_time
-    assert current_standard_openings["Monday"][2]["start_time"] == third_open_time
-    assert current_standard_openings["Monday"][2]["end_time"] == third_closing_time
+    assert current_standard_openings["Monday"][0]["start_time"] == "09:00"
+    assert current_standard_openings["Monday"][0]["end_time"] == "12:00"
+    assert current_standard_openings["Monday"][1]["start_time"] == "12:30"
+    assert current_standard_openings["Monday"][1]["end_time"] == "16:00"
+    assert current_standard_openings["Monday"][2]["start_time"] == "16:10"
+    assert current_standard_openings["Monday"][2]["end_time"] == "16:30"
     assert len(current_standard_openings["Monday"]) == 3, "Expected 3 opening times"
 
 
-@then("DoS is updated with the new specified opening times", target_fixture="context")
-def the_changed_opening_time_is_accepted_by_dos(context: Context):
-    context.service_id = get_service_id(context.change_event["ODSCode"])
-    wait_for_service_update(context.service_id)
-    changed_date = context.specified_opening_times[-1]["AdditionalOpeningDate"]
-    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
-    expected_opening_date = dt.strptime(changed_date, "%b %d %Y").strftime("%Y-%m-%d")
+@then(parse('DoS is open on "{date}"'), target_fixture="context")
+def the_changed_opening_time_is_accepted_by_dos(context: Context, date):
+    wait_for_service_update(context.query["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.query["id"])
+    expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     return context
 
@@ -1086,15 +1086,15 @@ def change_event_is_replayed(context: Context):
     return context
 
 
-@then("the deleted specified date is confirmed removed from DoS")
-def specified_date_is_removed_from_dos(context: Context):
-    context.service_id = get_service_id(context.change_event["ODSCode"])
+@then(parse('there is no longer a specified opening on "{date}"'), target_fixture="context")
+def specified_date_is_removed_from_dos(context: Context, date):
     sleep(60)
-    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
-    expected_opening_date = dt.strptime(context.other["AdditionalOpeningDate"], "%b %d %Y").strftime("%Y-%m-%d")
+    current_specified_openings = get_change_event_specified_opening_times(context.query["id"])
+    expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
     assert (
         expected_opening_date not in current_specified_openings
     ), f"Specified date {expected_opening_date} not removed from DoS"
+    return context
 
 
 @then(parse('the Changed Event is replayed with the pharmacy now "{open_or_closed}"'))
@@ -1137,6 +1137,23 @@ def standard_day_confirmed_open(context: Context, open_or_closed: str):
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
 
+@then(parse('the pharmacy is confirmed "{open_or_closed}" on "{day}"'), target_fixture="context")
+def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day: str):
+    context.service_id = context.query["id"]
+    sleep(60)
+    opening_time_event = get_change_event_standard_opening_times(context.service_id)
+    match open_or_closed.upper():
+        case "CLOSED":
+            assert (
+                opening_time_event[day] == []
+            ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{day}"'
+        case "OPEN":
+            assert (
+                opening_time_event[day] != []
+            ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{day}"'
+        case _:
+            raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
+    return context
 
 # @then("the Dentist changes with service type id is captured by Dos")
 # def dentist_changes_confirmed_in_dos(context: Context):

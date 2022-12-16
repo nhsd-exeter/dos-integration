@@ -176,7 +176,7 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
 def add_specified_openings_to_dos(context: Dict) -> Any:
     # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
     for day in context.query["specified_openings"]:
-        date = datetime.strptime(day["date"], "%d %b %Y").strftime("%Y-%m-%d")
+        date = datetime.strptime(day["date"], "%b %d %Y").strftime("%Y-%m-%d")
         query = (
             'INSERT INTO pathwaysdos.servicespecifiedopeningdates("date", serviceid) '
             f"VALUES('{str(date)}', {int(context.service_id)}) RETURNING id"
@@ -310,6 +310,7 @@ def generate_unique_key(start_number: int = 1, stop_number: int = 1000) -> str:
 
 
 def query_standard_opening_builder(context, service_status, day, open="09:00", close="17:00"):
+    # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
     times_obj = {}
     if service_status.lower() == "open":
         times_obj["day"] = day.lower()
@@ -323,6 +324,12 @@ def query_standard_opening_builder(context, service_status, day, open="09:00", c
         times_obj["closing_time"] = ""
     if "standard_openings" not in context.query.keys():
         context.query["standard_openings"] = []
+    else:
+        #Make sure that a closed statement removes opening statements
+        for days in context.query["standard_openings"]:
+            if days["day"].lower() == day.lower():
+                if times_obj["open"] != days["open"]:
+                    context.query["standard_openings"].remove(days)
     context.query["standard_openings"].append(times_obj)
     return context
 
