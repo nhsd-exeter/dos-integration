@@ -127,7 +127,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX16 Past Specified Opening Times on Dos are removed and updated
     Given an entry is created in the services table
-    And the service is "open" on date "25 Dec 2020"
+    And the service is "open" on date "Dec 25 2020"
     And the entry is committed to the services table
     And the specified opening date is set to "future" date
     When the Changed Event is sent for processing with "valid" api key
@@ -136,7 +136,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX17 All specified opening times are removed from DoS
     Given an entry is created in the services table
-    And the service is "open" on date "25 Dec 2020"
+    And the service is "open" on date "Dec 25 2020"
     And the entry is committed to the services table
     And the specified opening date is set to "past" date
     When the Changed Event is sent for processing with "valid" api key
@@ -153,7 +153,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX19 Empty CE Specified opening times removes all SP times in DoS
     Given an entry is created in the services table
-    And the service is "open" on date "25 Dec 2022"
+    And the service is "open" on date "Dec 25 2022"
     And the entry is committed to the services table
     And the specified opening date is set to "no" date
     When the Changed Event is sent for processing with "valid" api key
@@ -187,14 +187,3 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   #     | phone_no | ''    |
   #     | website  | None  |
   #     | website  | ''    |
-
-
-@complete
-  Scenario: F001S016 To check creation of test data
-    Given an entry is created in the services table
-    And the service "address" is set to "blahblah"
-    And the service "publicphone" is set to "blahblah"
-    And the service is "open" on "Monday"
-    And the service is "closed" on "Tuesday"
-    And the service is "open" on date "25 Dec 2025"
-    And the entry is committed to the services table

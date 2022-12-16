@@ -1,15 +1,5 @@
 Feature: F006. Opening times
 
-@complete
-  Scenario: F001S016 To check creation of test data
-    Given an entry is created in the services table
-    And the service "address" is set to "blahblah"
-    And the service "publicphone" is set to "blahblah"
-    And the service is "open" on "Monday"
-    And the service is "closed" on "Tuesday"
-    And the service is "open" on date "25 Dec 2025"
-    And the entry is committed to the services table
-
   @complete @pharmacy_no_log_searches
   Scenario: F006SXX1. Confirm actual opening times change for specified date and time is captured by DoS
     Given a basic service is created
