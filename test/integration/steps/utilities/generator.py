@@ -325,7 +325,7 @@ def query_standard_opening_builder(context, service_status, day, open="09:00", c
     if "standard_openings" not in context.query.keys():
         context.query["standard_openings"] = []
     else:
-        #Make sure that a closed statement removes opening statements
+        # Make sure that a closed statement removes opening statements
         for days in context.query["standard_openings"]:
             if days["day"].lower() == day.lower():
                 if times_obj["open"] != days["open"]:

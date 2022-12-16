@@ -176,13 +176,15 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
+
 @given("the change event has no specified opening dates", target_fixture="context")
 def change_event_no_specified_opening_dates(context: Context):
     date_vals = context.query["specified_openings"][0]
-    context.other = (
-        {"AdditionalOpeningDate": date_vals["date"],
+    context.other = {
+        "AdditionalOpeningDate": date_vals["date"],
         "OpeningTime": date_vals["opening_time"],
-        "ClosingTime": date_vals["closing_time"]})
+        "ClosingTime": date_vals["closing_time"],
+    }
     context.query["specified_openings"] = []
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
@@ -1137,6 +1139,7 @@ def standard_day_confirmed_open(context: Context, open_or_closed: str):
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
 
+
 @then(parse('the pharmacy is confirmed "{open_or_closed}" on "{day}"'), target_fixture="context")
 def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day: str):
     context.service_id = context.query["id"]
@@ -1144,16 +1147,13 @@ def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day
     opening_time_event = get_change_event_standard_opening_times(context.service_id)
     match open_or_closed.upper():
         case "CLOSED":
-            assert (
-                opening_time_event[day] == []
-            ), f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{day}"'
+            assert opening_time_event[day] == [], f'ERROR!.. Pharmacy is CLOSED but expected to be OPEN for "{day}"'
         case "OPEN":
-            assert (
-                opening_time_event[day] != []
-            ), f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{day}"'
+            assert opening_time_event[day] != [], f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{day}"'
         case _:
             raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
     return context
+
 
 # @then("the Dentist changes with service type id is captured by Dos")
 # def dentist_changes_confirmed_in_dos(context: Context):
