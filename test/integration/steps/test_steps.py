@@ -79,12 +79,12 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
             case "website":
                 context.previous_value = context.website
                 context.website = FAKER.domain_word() + ".nhs.uk"
-                context.query["web"] = context.website
+                context.generator_data["web"] = context.website
                 context.change_event["Contacts"] = build_change_event_contacts(context)
             case "phone_no":
                 context.previous_value = context.phone
                 context.phone = FAKER.phone_number()
-                context.query["publicphone"] = context.phone
+                context.generator_data["publicphone"] = context.phone
                 context.change_event["Contacts"] = build_change_event_contacts(context)
             case "address":
                 context.previous_value = get_address_string(context)
@@ -109,7 +109,7 @@ def a_service_table_entry_is_created(context: Context):
         "publicphone": f"{str(randint(10000000000, 99999999999))}",
         "web": "www.google.com",
     }
-    context.query = query_values
+    context.generator_data = query_values
     return context
 
 
@@ -122,7 +122,7 @@ def create_basic_service_entry(context: Context):
 
 @given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
 def service_values_updated_in_context(field_name: str, values: str, context: Context):
-    context.query[field_name] = values
+    context.generator_data[field_name] = values
     return context
 
 
@@ -159,26 +159,26 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
 
 @given("the change event has no specified opening dates", target_fixture="context")
 def change_event_no_specified_opening_dates(context: Context):
-    date_vals = context.query["specified_openings"][0]
+    date_vals = context.generator_data["specified_openings"][0]
     context.other = {
         "AdditionalOpeningDate": date_vals["date"],
         "OpeningTime": date_vals["opening_time"],
         "ClosingTime": date_vals["closing_time"],
     }
-    context.query["specified_openings"] = []
+    context.generator_data["specified_openings"] = []
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
 
 @given("the entry is committed to the services table", target_fixture="context")
 def service_table_entry_is_committed(context: Context):
-    service_id = commit_new_service_to_dos(context.query)
+    service_id = commit_new_service_to_dos(context.generator_data)
     context.service_id = service_id
     ce_state = False
-    if "standard_openings" in context.query.keys():
+    if "standard_openings" in context.generator_data.keys():
         add_standard_openings_to_dos(context)
         ce_state = True
-    if "specified_openings" in context.query.keys():
+    if "specified_openings" in context.generator_data.keys():
         add_specified_openings_to_dos(context)
     if context.change_event is None:
         build_change_event(context)
@@ -193,10 +193,10 @@ def service_table_entry_is_committed(context: Context):
 @given(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
 def ce_values_updated_in_context(field_name: str, values: str, context: Context):
     if field_name.lower() == "website":
-        context.query["web"] = field_name
+        context.generator_data["web"] = field_name
         context.change_event["Contacts"] = build_change_event_contacts(context)
     elif field_name.lower() == "phone":
-        context.query["publicphone"] = field_name
+        context.generator_data["publicphone"] = field_name
         context.change_event["Contacts"] = build_change_event_contacts(context)
     else:
         context.change_event[field_name] = values
@@ -233,8 +233,8 @@ def future_set_specified_opening_date(future_past: str, context: Context):
 
 @given("a pending entry exists in the changes table for this service", target_fixture="context")
 def change_table_entry_creation_for_service(context: Context):
-    service_id = context.query["id"]
-    service_uid = context.query["uid"]
+    service_id = context.generator_data["id"]
+    service_uid = context.generator_data["uid"]
     context.service_uid = service_uid
     create_pending_change_for_service(service_id)
     return context
@@ -244,12 +244,12 @@ def change_table_entry_creation_for_service(context: Context):
 def changed_event_contact_removed(contact: str, context: Context):
     match contact.lower():
         case "website":
-            context.previous_value = context.query["web"]
-            context.query["web"] = None
+            context.previous_value = context.generator_data["web"]
+            context.generator_data["web"] = None
             context.change_event["Contacts"] = build_change_event_contacts(context)
         case "phone":
-            context.previous_value = context.query["publicphone"]
-            context.query["publicphone"] = None
+            context.previous_value = context.generator_data["publicphone"]
+            context.generator_data["publicphone"] = None
             context.change_event["Contacts"] = build_change_event_contacts(context)
         case _:
             raise ValueError(f"Invalid contact '{contact}' provided")
@@ -258,7 +258,7 @@ def changed_event_contact_removed(contact: str, context: Context):
 
 @given(parse('the Changed Event has "{amount}" break in opening times'), target_fixture="context")
 def change_event_with_break_in_opening_times(context: Context, amount):
-    context.query["standard_openings"] = []
+    context.generator_data["standard_openings"] = []
     if amount in ["1", "2", "3"]:
         query_standard_opening_builder(context, "open", "monday", "09:00", "12:00")
         query_standard_opening_builder(context, "open", "monday", "12:30", "16:00")
@@ -631,8 +631,8 @@ def opening_times_with_two_breaks_are_updated_in_dos(context: Context):
 
 @then(parse('DoS is open on "{date}"'), target_fixture="context")
 def the_changed_opening_time_is_accepted_by_dos(context: Context, date):
-    wait_for_service_update(context.query["id"])
-    current_specified_openings = get_change_event_specified_opening_times(context.query["id"])
+    wait_for_service_update(context.generator_data["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
     expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     return context
@@ -641,7 +641,7 @@ def the_changed_opening_time_is_accepted_by_dos(context: Context, date):
 @then(parse('there is no longer a specified opening on "{date}"'), target_fixture="context")
 def specified_date_is_removed_from_dos(context: Context, date):
     sleep(60)
-    current_specified_openings = get_change_event_specified_opening_times(context.query["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
     expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
     assert (
         expected_opening_date not in current_specified_openings
@@ -651,7 +651,7 @@ def specified_date_is_removed_from_dos(context: Context, date):
 
 @then(parse('the pharmacy is confirmed "{open_or_closed}" on "{day}"'), target_fixture="context")
 def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day: str):
-    context.service_id = context.query["id"]
+    context.service_id = context.generator_data["id"]
     sleep(60)
     opening_time_event = get_change_event_standard_opening_times(context.service_id)
     match open_or_closed.upper():

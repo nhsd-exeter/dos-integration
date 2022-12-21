@@ -78,9 +78,9 @@ def add_single_opening_day(context):
     time_id = literal_eval(response)[0][0]
     add_single_opening_time(context, time_id)
     # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
-    if "standard_openings" not in context.query.keys():
-        context.query["standard_openings"] = []
-    context.query["standard_openings"].append(
+    if "standard_openings" not in context.generator_data.keys():
+        context.generator_data["standard_openings"] = []
+    context.generator_data["standard_openings"].append(
         {"day": "Monday", "open": True, "opening_time": "09:00", "closing_time": "17:00"}
     )
 
@@ -117,9 +117,9 @@ def add_single_specified_day(context):
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0][0]
     add_single_specified_time(context, time_id)
-    if "specified_openings" not in context.query.keys():
-        context.query["specified_openings"] = []
-    context.query["specified_openings"].append(
+    if "specified_openings" not in context.generator_data.keys():
+        context.generator_data["specified_openings"] = []
+    context.generator_data["specified_openings"].append(
         {"date": "Jan 02 2025", "open": True, "opening_time": "09:00", "closing_time": "17:00"}
     )
 
@@ -148,7 +148,7 @@ def add_single_specified_time(context, time_id):
 
 # Standard opening days with specified times to DOS
 def add_standard_openings_to_dos(context: Dict) -> Any:
-    for day in context.query["standard_openings"]:
+    for day in context.generator_data["standard_openings"]:
         query = (
             "INSERT INTO pathwaysdos.servicedayopenings(serviceid, dayid) VALUES "
             f'({int(context.service_id)}, {day_lookup(day["day"])}) RETURNING id'
@@ -157,7 +157,7 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
         response = invoke_dos_db_handler_lambda(lambda_payload)
         entry_id = literal_eval(loads(response))[0][0]
         day["dos_id"] = entry_id
-    for day in context.query["standard_openings"]:
+    for day in context.generator_data["standard_openings"]:
         if day["open"] is True:
             opening_time = day["opening_time"]
             closing_time = day["closing_time"]
@@ -176,7 +176,7 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
 # Specified opening days with specified times to DOS
 def add_specified_openings_to_dos(context: Dict) -> Any:
     # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
-    for day in context.query["specified_openings"]:
+    for day in context.generator_data["specified_openings"]:
         date = datetime.strptime(day["date"], "%b %d %Y").strftime("%Y-%m-%d")
         query = (
             'INSERT INTO pathwaysdos.servicespecifiedopeningdates("date", serviceid) '
@@ -186,7 +186,7 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
         response = invoke_dos_db_handler_lambda(lambda_payload)
         entry_id = literal_eval(loads(response))[0][0]
         day["dos_id"] = entry_id
-    for day in context.query["specified_openings"]:
+    for day in context.generator_data["specified_openings"]:
         opening_time = day["opening_time"]
         closing_time = day["closing_time"]
         day_id = day["dos_id"]
@@ -211,16 +211,16 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
 # Build change event for test
 def build_change_event(context):
     change_event = {
-        "ODSCode": context.query["odscode"],
-        "Address1": context.query["address"],
+        "ODSCode": context.generator_data["odscode"],
+        "Address1": context.generator_data["address"],
         "Address2": None,
         "Address3": None,
-        "City": context.query["town"],
-        "Postcode": context.query["postcode"],
+        "City": context.generator_data["town"],
+        "Postcode": context.generator_data["postcode"],
         "Contacts": build_change_event_contacts(context),
         "County": None,
         "OpeningTimes": build_change_event_opening_times(context),
-        "OrganisationName": context.query["name"],
+        "OrganisationName": context.generator_data["name"],
         "OrganisationStatus": "Visible",
         "OrganisationSubType": "Community",
         "OrganisationType": "Pharmacy",
@@ -233,22 +233,22 @@ def build_change_event(context):
 def build_change_event_contacts(context) -> Dict:
     # This function will build the contacts for the CE
     contacts = []
-    if context.query["publicphone"] is not None:
+    if context.generator_data["publicphone"] is not None:
         contacts.append(
             {
                 "ContactType": "Primary",
                 "ContactAvailabilityType": "Office hours",
                 "ContactMethodType": "Telephone",
-                "ContactValue": context.query["publicphone"],
+                "ContactValue": context.generator_data["publicphone"],
             }
         )
-    if context.query["web"] is not None:
+    if context.generator_data["web"] is not None:
         contacts.append(
             {
                 "ContactType": "Primary",
                 "ContactAvailabilityType": "Office hours",
                 "ContactMethodType": "Website",
-                "ContactValue": context.query["web"],
+                "ContactValue": context.generator_data["web"],
             }
         )
     return contacts
@@ -256,8 +256,8 @@ def build_change_event_contacts(context) -> Dict:
 
 def build_change_event_opening_times(context) -> Dict:
     opening_times = []
-    if "standard_openings" in context.query.keys():
-        for days in context.query["standard_openings"]:
+    if "standard_openings" in context.generator_data.keys():
+        for days in context.generator_data["standard_openings"]:
             opening_times.append(
                 {
                     "AdditionalOpeningDate": "",
@@ -270,9 +270,9 @@ def build_change_event_opening_times(context) -> Dict:
                     "Weekday": days["day"],
                 }
             )
-    if "specified_openings" in context.query.keys():
+    if "specified_openings" in context.generator_data.keys():
         present = datetime.now()
-        for days in context.query["specified_openings"]:
+        for days in context.generator_data["specified_openings"]:
             if datetime.strptime(days["date"], "%b %d %Y").date() > present.date():
                 opening_times.append(
                     {
@@ -325,15 +325,15 @@ def query_standard_opening_builder(context, service_status, day, open="09:00", c
         times_obj["open"] = False
         times_obj["opening_time"] = ""
         times_obj["closing_time"] = ""
-    if "standard_openings" not in context.query.keys():
-        context.query["standard_openings"] = []
+    if "standard_openings" not in context.generator_data.keys():
+        context.generator_data["standard_openings"] = []
     else:
         # Make sure that a closed statement removes opening statements
-        for days in context.query["standard_openings"]:
+        for days in context.generator_data["standard_openings"]:
             if days["day"].lower() == day.lower():
                 if times_obj["open"] != days["open"]:
-                    context.query["standard_openings"].remove(days)
-    context.query["standard_openings"].append(times_obj)
+                    context.generator_data["standard_openings"].remove(days)
+    context.generator_data["standard_openings"].append(times_obj)
     return context
 
 
@@ -349,9 +349,9 @@ def query_specified_opening_builder(context, service_status, date, open="09:00",
         times_obj["open"] = False
         times_obj["opening_time"] = ""
         times_obj["closing_time"] = ""
-    if "specified_openings" not in context.query.keys():
-        context.query["specified_openings"] = []
-    context.query["specified_openings"].append(times_obj)
+    if "specified_openings" not in context.generator_data.keys():
+        context.generator_data["specified_openings"] = []
+    context.generator_data["specified_openings"].append(times_obj)
     return context
 
 
