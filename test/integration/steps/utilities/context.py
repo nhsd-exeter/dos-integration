@@ -2,12 +2,10 @@ from dataclasses import dataclass
 
 from requests import Response
 
-from .change_event import ChangeEvent
-
 
 @dataclass(init=True)
 class Context:
-    change_event: ChangeEvent | None = None
+    change_event: dict | None = None
     service_id: str | None = None
     service_uid: str | None = None
     correlation_id: str | None = None
