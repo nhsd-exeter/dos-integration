@@ -20,7 +20,7 @@ class Context:
     other: dict | None = None
     standard_opening_times: dict | None = None
     specified_opening_times: dict | None = None
-    query: dict | None = None
+    generator_data: dict | None = None
     # Other used as a catch all for any other data that is not covered by the above and only used in a couple tests
 
     def __repr__(self) -> str:
@@ -28,5 +28,5 @@ class Context:
             f"Context(correlation_id={self.correlation_id}, sequence_number={self.sequence_number}"
             f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event}"
             f", other={self.other}, service_uid={self.service_uid}, website={self.website}, phone={self.phone}"
-            f", query={self.query}"
+            f", query={self.generator_data}"
         )
