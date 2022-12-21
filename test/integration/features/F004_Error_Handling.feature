@@ -10,20 +10,6 @@ Feature: F004. Error Handling
     Then the Event "cr_dlq" shows field "error_msg_http_code" with message "400"
     And the Changed Event is stored in dynamo db
 
-  # # Refactor to read from DB
-  # @complete @dev @pharmacy_cloudwatch_queries
-  # Scenario: F004S003. A Changed Event where Specified opening date is set as closed is captured
-  #   Given a specific Changed Event is valid
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the date for the specified opening time returns an empty list
-
-  # # Refactor to read from DB
-  # @complete @dev @pharmacy_cloudwatch_queries
-  # Scenario: F004S004. A Changed Event where Standard opening day is set as closed is captured
-  #   Given a specific Changed Event is valid
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the day for the standard opening time returns an empty list
-
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F004SXX5. An exception is raised when Sequence number is not present in headers
     Given a basic service is created

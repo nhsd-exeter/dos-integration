@@ -56,7 +56,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX8 Changed Event with URL variations is formatted and accepted by Dos
     Given a basic service is created
-    And the field "website" is set to "<url>"
+    And the change event "website" is set to "<url>"
     When the Changed Event is sent for processing with "valid" api key
     Then DoS has "<expected_url>" in the "<field>" field
 
@@ -172,18 +172,3 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   #   When the Changed Event is sent for processing with "valid" api key
   #   Then the Change Request is accepted by Dos
   #   And the Dentist changes with service type id is captured by Dos
-
-
-  # This is broken as DoS fields are already null and therefore can't be set to null
-  # @complete @broken @pharmacy_no_log_searches @wip
-  # Scenario Outline: F001S006. No value means that the field is removed in DoS
-  #   Given a Changed Event with a "<value>" value for "<field>"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the "<field>" is updated within the DoS DB
-
-  #   Examples:
-  #     | field    | value |
-  #     | phone_no | None  |
-  #     | phone_no | ''    |
-  #     | website  | None  |
-  #     | website  | ''    |

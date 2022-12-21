@@ -27,7 +27,7 @@ Feature: F002. Invalid change event Exception handling
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX4. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
     Given a basic service is created
-    And the field "OrganisationTypeId" is set to "DEN"
+    And the change event "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
     And the service history is not updated
@@ -50,8 +50,8 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002SXX7. Address changes are discarded when postcode is invalid
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
-    And the field "Website" is set to "https://www.test.com"
-    And the field "Address" is set to "FAKE2"
+    And the change event "Website" is set to "https://www.test.com"
+    And the change event "Address1" is set to "FAKE2"
     When the Changed Event is sent for processing with "valid" api key
     Then the "address" has not been changed in DoS
 
@@ -92,14 +92,6 @@ Feature: F002. Invalid change event Exception handling
     And the change event has an additional date with no specified date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
-
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SX15. Pharmacy with overlapping opening times
-    Given a basic service is created
-    And the change event "OrganisationName" is set to "Test Pharmacy"
-    And the Changed Event has overlapping opening times
-    When the Changed Event is sent for processing with "valid" api key
-    Then the attributes for invalid opening times report is identified in the logs
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX16. Pharmacy with non '13%' service type code prompts error.

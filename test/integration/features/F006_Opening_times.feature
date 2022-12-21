@@ -105,16 +105,3 @@ Feature: F006. Opening times
     And the entry is committed to the services table
     When the Changed Event is sent for processing with "valid" api key
     Then the attributes for invalid opening times report is identified in the logs
-
-  # @complete @pharmacy_cloudwatch_queries
-  # Scenario Outline: F006S012. Service History checks for pharmacies
-  #   Given a "pharmacy" Changed Event is aligned with DoS
-  #   And the Changed Event has an "<update_type>" standard opening
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the service history is updated with the "<update_type>" standard opening times
-
-  #   Examples:
-  #     | update_type |
-  #     | added       |
-  #     | modified    |
-  #     | removed     |

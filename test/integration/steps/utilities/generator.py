@@ -4,6 +4,7 @@ from os import getenv
 from random import randrange
 from typing import Any, Dict
 from datetime import datetime
+from re import fullmatch
 
 from boto3 import client
 
@@ -352,3 +353,16 @@ def query_specified_opening_builder(context, service_status, date, open="09:00",
         context.query["specified_openings"] = []
     context.query["specified_openings"].append(times_obj)
     return context
+
+
+def valid_change_event(context):
+    """This function checks if the data stored in DoS would pass the change request
+    validation within DoS API Gateway"""
+    if context.website is not None and not fullmatch(
+        r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
+        context.website,
+    ):
+        return False
+    if context.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", context.phone):
+        return False
+    return True

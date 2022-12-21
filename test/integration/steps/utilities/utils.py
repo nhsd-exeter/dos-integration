@@ -195,38 +195,12 @@ def get_service_uid(service_id: str) -> list:
     return data
 
 
-def confirm_changes(correlation_id: str) -> list:
-    changes_loop_count = 0
-    data = []
-    while changes_loop_count < 10:
-        sleep(30)
-        data = get_changes(correlation_id)
-        if data != []:
-            break
-        changes_loop_count += 1
-    return data
-
-
 def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
     query = "SELECT modifiedtimestamp from changes where approvestatus = 'COMPLETE' and externalref = '%(CID)s'"
     query_vars = {"CID": correlation_id}
     lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return data
-
-
-def confirm_approver_status(
-    correlation_id: str, loop_count: int = 12, sleep_between_loops: int = 60
-) -> list[None] | list[Any]:
-    approver_loop_count = 0
-    data = []
-    while approver_loop_count < loop_count:
-        sleep(sleep_between_loops)
-        data = get_approver_status(correlation_id)
-        if data != []:
-            break
-        approver_loop_count += 1
     return data
 
 
@@ -329,14 +303,6 @@ def get_pharmacy_ods_codes(type_id) -> Dict:
     return invoke_dos_db_handler_lambda(lambda_payload)
 
 
-def get_odscode_with_contact_data() -> str:
-    response = get_pharmacy_ods_codes(13)
-    data = loads(response)
-    data = literal_eval(data)
-    odscode = sample(data, 1)[0][0]
-    return odscode
-
-
 def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     response_status = False
     response = None
@@ -379,19 +345,6 @@ def wait_for_service_update(service_id: str) -> Any:
             break
     else:
         raise ValueError(f"Service not updated, service_id: {service_id}")
-
-
-def service_not_updated(service_id: str):
-    """Assert Service not updated in last 2 mins"""
-    sleep(60)
-    two_mins_ago = datetime.now() - timedelta(minutes=2)
-    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
-    updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
-    updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
-    updated_date_time = updated_date_time.replace(tzinfo=UTC)
-    two_mins_ago = datetime.now() - timedelta(minutes=2)
-    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
-    assert updated_date_time < two_mins_ago, f"Service updated unexpectantly, service_id: {service_id}"
 
 
 def get_expected_data(context: Context, changed_data_name: str) -> Any:
@@ -605,28 +558,6 @@ def assert_standard_closing(dos_times, ce_times) -> int:
     return counter
 
 
-def add_new_standard_open_day(standard_opening_times: dict) -> dict:
-    week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    selected_day = "Monday"
-    open_days = [open_day["Weekday"] for open_day in standard_opening_times]
-    if len(open_days) == 0:
-        raise ValueError("ERROR: No available days to add")
-    for days in week:
-        if days not in open_days:
-            selected_day = days
-            break
-    standard_opening_times.append(
-        {
-            "Weekday": selected_day,
-            "OpeningTime": "09:00",
-            "ClosingTime": "17:00",
-            "OpeningTimeType": "General",
-            "IsOpen": True,
-        }
-    )
-    return standard_opening_times
-
-
 def time_to_seconds(time: str):
     times = time.split(":")
     hour_seconds = int(times[0]) * 3600
@@ -656,17 +587,6 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
         return loads(data[0][0])
     else:
         return data
-
-
-def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
-    """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = confirm_changes(corr_id)
-    for row in response:
-        change_value = dict(loads(row[0]))
-        for dos_change_key in change_value["new"]:
-            if dos_change_key == search_key and search_param in change_value["new"][dos_change_key]["data"]:
-                return True
-    return False
 
 
 def get_specified_opening_times(service_id: str):
@@ -792,16 +712,6 @@ def random_dentist_odscode() -> str:
     DENTIST_ODS_CODE_LIST.remove(odscode_list)
     odscode = odscode_list[0]
     return f"{odscode[0]}{odscode[1:]}"
-
-
-def remove_opening_days(opening_times, day) -> dict:
-    deletions = []
-    for count, times in enumerate(opening_times):
-        if times["Weekday"] == day:
-            deletions.insert(0, count)
-    for entries in deletions:
-        del opening_times[entries]
-    return opening_times
 
 
 def slack_retry(message: str) -> str:
