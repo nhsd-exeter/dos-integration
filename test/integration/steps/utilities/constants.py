@@ -17,9 +17,11 @@ SERVICE_TYPES = {
     },
 }
 
+
 class ServiceTypeAliases:
     DENTIST_TYPE_ALIAS = "DENTIST"
     PHARMACY_TYPE_ALIAS = "PHARMACY"
+
 
 # DoS Service Table Field Names
 DOS_POSTCODE_FIELD_NAME = "postcode"
