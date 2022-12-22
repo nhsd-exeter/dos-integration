@@ -3,11 +3,7 @@ from typing import Any, Dict
 
 from aws_lambda_powertools.logging import Logger
 
-from common.dos import (
-    get_specified_opening_times_from_db,
-    get_standard_opening_times_from_db,
-    SpecifiedOpeningTime,
-)
+from common.dos import get_specified_opening_times_from_db, get_standard_opening_times_from_db, SpecifiedOpeningTime
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.middlewares import unhandled_exception_logging
 
