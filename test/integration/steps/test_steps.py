@@ -193,12 +193,15 @@ def service_table_entry_is_committed(context: Context):
 @given(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
 def ce_values_updated_in_context(field_name: str, values: str, context: Context):
     if field_name.lower() == "website":
-        context.generator_data["web"] = field_name
+        context.previous_value = context.generator_data["web"]
+        context.generator_data["web"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
     elif field_name.lower() == "phone":
-        context.generator_data["publicphone"] = field_name
+        context.previous_value = context.generator_data["publicphone"]
+        context.generator_data["publicphone"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
     else:
+        context.previous_value = context.change_event[field_name]
         context.change_event[field_name] = values
     return context
 
@@ -418,11 +421,11 @@ def stored_dynamo_db_events_are_pulled(context: Context):
 
 @then(parse('the "{plain_english_service_table_field}" has not been changed in DoS'))
 def field_is_not_updated_in_dos(context: Context, plain_english_service_table_field: str):
-    sleep(120)
+    sleep(60)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
     assert (
-        field_data == context.previous_value
+        context.previous_value in field_data
     ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data - It has changed from expected value, expected: {context.previous_value}, actual: {field_data}"  # noqa: E501
 
 

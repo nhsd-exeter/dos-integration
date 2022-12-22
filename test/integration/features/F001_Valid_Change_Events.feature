@@ -133,7 +133,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-  @complete @pharmacy_cloudwatch_queries @kit
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX17 All specified opening times are removed from DoS
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2020"
