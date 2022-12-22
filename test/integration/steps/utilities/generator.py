@@ -230,7 +230,7 @@ def build_change_event(context):
     context.change_event = change_event
 
 
-def build_change_event_contacts(context) -> Dict:
+def build_change_event_contacts(context) -> list:
     # This function will build the contacts for the CE
     contacts = []
     if context.generator_data["publicphone"] is not None:
@@ -254,7 +254,7 @@ def build_change_event_contacts(context) -> Dict:
     return contacts
 
 
-def build_change_event_opening_times(context) -> Dict:
+def build_change_event_opening_times(context) -> list:
     opening_times = []
     if "standard_openings" in context.generator_data.keys():
         for days in context.generator_data["standard_openings"]:

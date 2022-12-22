@@ -664,23 +664,6 @@ def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day
     return context
 
 
-# @then("the Dentist changes with service type id is captured by Dos")
-# def dentist_changes_confirmed_in_dos(context: Context):
-#     change_event_service_type = get_service_type_data(context.change_event.organisation_type_id)["VALID_SERVICE_TYPES"] # noqa: E501
-#     change_request_service_type = get_service_type_from_cr(context.correlation_id)
-#     assert change_event_service_type[0] == change_request_service_type, "ERROR!.. Service type id mismatch"
-
-
-# @then(parse('the Changed Event finds a matching dentist with ods "{odscode}"'))
-# def check_logs_for_dentist_match(context: Context, odscode):
-#     query = (
-#         f'fields message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-#         ' | filter message like "services with typeid in allowlist"'
-#     )
-#     logs = get_logs(query, "processor", context.start_time)
-#     assert odscode in logs, "ERROR!!.. error processor does not have correct ods."
-
-
 @then(parse('the "{lambda_name}" lambda shows field "{field}" with message "{message}"'))
 def generic_lambda_log_check_function(context: Context, lambda_name: str, field, message):
     if "/" in context.correlation_id:
