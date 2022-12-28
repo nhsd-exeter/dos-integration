@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from json import dumps, load, loads
 from os import getenv, remove
-from random import randint, randrange, sample
+from random import randint, randrange
 from re import sub
 from time import sleep, time, time_ns
 from typing import Any, Dict, Tuple
@@ -13,8 +13,6 @@ from boto3.dynamodb.types import TypeDeserializer
 from pytz import UTC
 from requests import get, post, Response
 
-from .change_event import ChangeEvent
-from .constants import SERVICE_TYPES
 from .context import Context
 from .secrets_manager import get_secret
 from .translation import get_service_history_data_key
@@ -30,25 +28,26 @@ PHARMACY_ODS_CODE_LIST = None
 DENTIST_ODS_CODE_LIST = None
 
 
-def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_id: str) -> Response:
+# def process_payload(change_event: ChangeEvent, valid_api_key: bool, correlation_id: str) -> Response:
+def process_payload(context, valid_api_key: bool, correlation_id: str) -> Response:
     api_key = "invalid"
     if valid_api_key:
         api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
-    sequence_number = generate_unique_sequence_number(change_event.odscode)
+    sequence_number = generate_unique_sequence_number(context.change_event["ODSCode"])
     headers = {
         "x-api-key": api_key,
         "sequence-number": sequence_number,
         "correlation-id": correlation_id,
         "Content-Type": "application/json",
     }
-    payload = change_event.get_change_event()
+    payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if valid_api_key and output.status_code != 200:
         raise ValueError(f"Unable to process change request payload. Error: {output.text}")
     return output
 
 
-def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str, sequence_id: Any) -> Response:
+def process_payload_with_sequence(context, correlation_id: str, sequence_id: Any) -> Response:
     api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     headers = {
         "x-api-key": api_key,
@@ -57,7 +56,7 @@ def process_payload_with_sequence(change_event: ChangeEvent, correlation_id: str
     }
     if sequence_id is not None:
         headers["sequence-number"] = str(sequence_id)
-    payload = change_event.get_change_event()
+    payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if output.status_code != 200 and isinstance(sequence_id, int):
         raise ValueError(f"Unable to process change request payload. Error: {output.text}")
@@ -120,50 +119,14 @@ def generate_random_int(start_number: int = 1, stop_number: int = 1000) -> str:
     return str(randrange(start=start_number, stop=stop_number, step=1))
 
 
-def get_odscodes_list(lambda_payload: dict) -> list[list[str]]:
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(response)
-    data = literal_eval(data)
-    return data
-
-
 def get_single_service_pharmacy_odscode() -> Dict:
     query = (
-        "select left(odscode,5) from services where typeid = 13 AND statusid = 1 "
-        "AND odscode IS NOT null AND LENGTH(odscode) > 4 AND NOT address like '%$%' and odscode in ( "
-        "select odscode from (SELECT left(odscode,5) as odscode, COUNT(*) AS amount "
-        "FROM services GROUP BY left(odscode,5)) as subset where amount = 1 )"
+        "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 AND LENGTH(odscode) > 4 "
+        "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
+        "AND publicphone IS NOT NULL AND web IS NOT NULL GROUP BY LEFT(odscode,5) HAVING COUNT(odscode) = 1"
     )
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return invoke_dos_db_handler_lambda(lambda_payload)
-
-
-def get_pharmacy_odscode() -> str:
-    response = get_single_service_pharmacy_odscode()
-    data = loads(response)
-    data = literal_eval(data)
-    odscode = sample(tuple(data), 1)[0][0]
-    return odscode
-
-
-def get_single_service_pharmacy() -> str:
-    data = 0
-    while data != "1":
-        ods_code = get_pharmacy_odscode()
-        query = f"SELECT count(*) FROM services where odscode like '{ods_code}%'"
-        lambda_payload = {"type": "read", "query": query, "query_vars": None}
-        response = invoke_dos_db_handler_lambda(lambda_payload)
-        data = response[3]
-    return ods_code
-
-
-def get_changes(correlation_id: str) -> list:
-    query = "SELECT value from changes where externalref = '%(CID)s'"
-    query_vars = {"CID": correlation_id}
-    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
-    return data
 
 
 def get_locations_table_data(postcode: str) -> list:
@@ -184,50 +147,6 @@ def get_services_table_location_data(service_id: str) -> list:
     lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return data
-
-
-def get_service_uid(service_id: str) -> list:
-    query = "SELECT uid FROM services WHERE id = %(SERVICE_ID)s"
-    query_vars = {"SERVICE_ID": service_id}
-    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
-    return data
-
-
-def confirm_changes(correlation_id: str) -> list:
-    changes_loop_count = 0
-    data = []
-    while changes_loop_count < 10:
-        sleep(30)
-        data = get_changes(correlation_id)
-        if data != []:
-            break
-        changes_loop_count += 1
-    return data
-
-
-def get_approver_status(correlation_id: str) -> list[None] | list[Any]:
-    query = "SELECT modifiedtimestamp from changes where approvestatus = 'COMPLETE' and externalref = '%(CID)s'"
-    query_vars = {"CID": correlation_id}
-    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
-    return data
-
-
-def confirm_approver_status(
-    correlation_id: str, loop_count: int = 12, sleep_between_loops: int = 60
-) -> list[None] | list[Any]:
-    approver_loop_count = 0
-    data = []
-    while approver_loop_count < loop_count:
-        sleep(sleep_between_loops)
-        data = get_approver_status(correlation_id)
-        if data != []:
-            break
-        approver_loop_count += 1
     return data
 
 
@@ -293,22 +212,6 @@ def check_pending_service_is_rejected(service_id: str):
     return success_status
 
 
-def get_service_type_data(organisation_type_id: str) -> list[int]:
-    """Get the valid service types for the organisation type id"""
-    return SERVICE_TYPES[organisation_type_id]
-
-
-def get_change_event_demographics(odscode: str, organisation_type_id: str) -> Dict[str, Any]:
-    lambda_payload = {
-        "type": "change_event_demographics",
-        "odscode": odscode,
-        "organisation_type_id": organisation_type_id,
-    }
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(response)
-    return data
-
-
 def get_change_event_standard_opening_times(service_id: str) -> Any:
     lambda_payload = {"type": "change_event_standard_opening_times", "service_id": service_id}
     response = invoke_dos_db_handler_lambda(lambda_payload)
@@ -321,21 +224,6 @@ def get_change_event_specified_opening_times(service_id: str) -> Any:
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     return data
-
-
-def get_pharmacy_ods_codes(type_id) -> Dict:
-    query = "SELECT LEFT(odscode, 5) FROM services WHERE typeid = %(TYPE_ID)s AND statusid = 1 AND odscode IS NOT NULL"
-    query_vars = {"TYPE_ID": type_id}
-    lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
-    return invoke_dos_db_handler_lambda(lambda_payload)
-
-
-def get_odscode_with_contact_data() -> str:
-    response = get_pharmacy_ods_codes(13)
-    data = loads(response)
-    data = literal_eval(data)
-    odscode = sample(data, 1)[0][0]
-    return odscode
 
 
 def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
@@ -382,44 +270,31 @@ def wait_for_service_update(service_id: str) -> Any:
         raise ValueError(f"Service not updated, service_id: {service_id}")
 
 
-def service_not_updated(service_id: str):
-    """Assert Service not updated in last 2 mins"""
-    sleep(60)
-    two_mins_ago = datetime.now() - timedelta(minutes=2)
-    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
-    updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
-    updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
-    updated_date_time = updated_date_time.replace(tzinfo=UTC)
-    two_mins_ago = datetime.now() - timedelta(minutes=2)
-    two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
-    assert updated_date_time < two_mins_ago, f"Service updated unexpectantly, service_id: {service_id}"
-
-
 def get_expected_data(context: Context, changed_data_name: str) -> Any:
     """Get the previous data from the context"""
     match changed_data_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
-            changed_data = context.change_event.phone
+            changed_data = context.phone
         case "website" | "web":
-            changed_data = context.change_event.website
+            changed_data = context.website
         case "address":
-            changed_data = get_address_string(context.change_event)
+            changed_data = get_address_string(context)
         case "postcode":
-            changed_data = context.change_event.postcode
+            changed_data = context.change_event["Postcode"]
         case _:
             raise ValueError(f"Error!.. Input parameter '{changed_data_name}' not compatible")
     return changed_data
 
 
-def get_address_string(change_event: ChangeEvent) -> str:
+def get_address_string(context) -> str:
     address_lines = [
         line
         for line in [
-            change_event.address_line_1,
-            change_event.address_line_2,
-            change_event.address_line_3,
-            change_event.city,
-            change_event.county,
+            context.change_event["Address1"],
+            context.change_event["Address2"],
+            context.change_event["Address3"],
+            context.change_event["City"],
+            context.change_event["County"],
         ]
         if isinstance(line, str) and line.strip() != ""
     ]
@@ -445,8 +320,8 @@ def check_service_history(
         expected_data == changes[change_key]["data"]
     ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa
 
-    if "previous" in changes[change_key]:
-        if previous_data not in ["unknown", ""]:
+    if "previous" in changes[change_key] and previous_data != "unknown":
+        if previous_data != "":
             (
                 changes[change_key]["previous"] == str(previous_data),
                 f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}",
@@ -471,12 +346,15 @@ def service_history_negative_check(service_id: str):
             return "Updated"
 
 
-def check_service_history_change_type(service_id: str, change_type: str):
+def check_service_history_change_type(service_id: str, change_type: str, field_name=None):
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
-    change_status = service_history[first_key_in_service_history]["new"][
-        list(service_history[first_key_in_service_history]["new"].keys())[0]
-    ]["changetype"]
+    if field_name is None:
+        change_status = service_history[first_key_in_service_history]["new"][
+            list(service_history[first_key_in_service_history]["new"].keys())[0]
+        ]["changetype"]
+    else:
+        change_status = service_history[first_key_in_service_history]["new"][field_name]["changetype"]
     if check_recent_event(first_key_in_service_history):
         if change_status == change_type:
             return "Change type matches"
@@ -603,28 +481,6 @@ def assert_standard_closing(dos_times, ce_times) -> int:
     return counter
 
 
-def add_new_standard_open_day(standard_opening_times: dict) -> dict:
-    week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    selected_day = "Monday"
-    open_days = [open_day["Weekday"] for open_day in standard_opening_times]
-    if len(open_days) == 0:
-        raise ValueError("ERROR: No available days to add")
-    for days in week:
-        if days not in open_days:
-            selected_day = days
-            break
-    standard_opening_times.append(
-        {
-            "Weekday": selected_day,
-            "OpeningTime": "09:00",
-            "ClosingTime": "17:00",
-            "OpeningTimeType": "General",
-            "IsOpen": True,
-        }
-    )
-    return standard_opening_times
-
-
 def time_to_seconds(time: str):
     times = time.split(":")
     hour_seconds = int(times[0]) * 3600
@@ -656,77 +512,6 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
         return data
 
 
-def check_received_data_in_dos(corr_id: str, search_key: str, search_param: str) -> bool:
-    """NOT COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = confirm_changes(corr_id)
-    for row in response:
-        change_value = dict(loads(row[0]))
-        for dos_change_key in change_value["new"]:
-            if dos_change_key == search_key and search_param in change_value["new"][dos_change_key]["data"]:
-                return True
-    return False
-
-
-def get_specified_opening_times(service_id: str):
-    lambda_payload = {"type": "change_event_specified_opening_times", "service_id": service_id}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    data = loads(loads(response))
-    return loads(data[0][0])
-
-
-def add_specified_opening_time(service_id: str, date: str, start_time: str, end_time: str):
-    lambda_payload = {
-        "type": "add_specified_opening_time",
-        "service_id": service_id,
-        "date": date,
-        "start_time": start_time,
-        "end_time": end_time,
-    }
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    return response[0][0]
-
-
-def check_contact_delete_in_dos(corr_id: str, search_key: str):
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    row_found = False
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                if dict(loads(row[0]))["new"][k]["changetype"] == "delete":
-                    data = dict(loads(row[0]))["new"][k]["data"]
-                    if data == "":
-                        row_found = True
-    if row_found is True:
-        return True
-    else:
-        raise ValueError("Expected a 'delete' on the website but didn't find one")
-
-
-def check_standard_received_opening_times_time_in_dos(corr_id: str, search_key: str, search_param: str):
-    """ONLY COMPATIBLE WITH OPENING TIMES CHANGES"""
-    response = get_changes(corr_id)
-    if_value_not_in_string_raise_exception(search_key, str(response))
-    for row in response:
-        for k in dict(loads(row[0]))["new"]:
-            if k == search_key:
-                time_in_dos = dict(loads(row[0]))["new"][k]["data"]["add"][0]
-                if time_in_dos == search_param:
-                    return True
-                else:
-                    raise ValueError("Standard Opening-time time change not found in Dos changes... {response}")
-
-
-def if_value_not_in_string_raise_exception(value: str, string: str) -> None:
-    if value not in str(string):
-        raise ValueError(f"{value} not found..")
-
-
-def time_to_sec(t):
-    h, m = map(int, t.split(":"))
-    return (h * 3600) + (m * 60)
-
-
 def generate_correlation_id(suffix=None) -> str:
     name_no_space = getenv("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0].replace(" ", "_")
     run_id = getenv("RUN_ID")
@@ -747,59 +532,6 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
     )
     response_payload = response["Payload"].read().decode("utf-8")
     return response_payload
-
-
-def random_pharmacy_odscode() -> str:
-    global PHARMACY_ODS_CODE_LIST
-    if PHARMACY_ODS_CODE_LIST is None:
-        PHARMACY_ODS_CODE_LIST = loads(loads(get_pharmacy_ods_codes(13)))
-    odscode_list = sample(PHARMACY_ODS_CODE_LIST, 1)[0]
-    PHARMACY_ODS_CODE_LIST.remove(odscode_list)
-    odscode = odscode_list[0]
-    return odscode
-
-
-def generate_untaken_ods() -> str:
-    success = False
-    while success is False:
-        odscode = str(randint(10000, 99999))
-        if check_ods_list(odscode) is True:
-            return odscode
-
-
-def check_ods_list(odscode: str) -> str:
-    query = "SELECT LEFT(odscode, 5) FROM services"
-    lambda_payload = {"type": "read", "query": query, "query_vars": None}
-    ods_list = get_odscodes_list(lambda_payload)
-    if odscode not in ods_list:
-        return True
-    else:
-        return False
-
-
-def random_dentist_odscode() -> str:
-    global DENTIST_ODS_CODE_LIST
-    if DENTIST_ODS_CODE_LIST is None:
-        query = (
-            "SELECT odscode FROM services WHERE typeid = 12 "
-            "AND statusid = 1 AND odscode IS NOT NULL AND LENGTH(odscode) = 6 AND LEFT(odscode, 1)='V'"
-        )
-        lambda_payload = {"type": "read", "query": query, "query_vars": None}
-        DENTIST_ODS_CODE_LIST = get_odscodes_list(lambda_payload)
-    odscode_list = sample(DENTIST_ODS_CODE_LIST, 1)[0]
-    DENTIST_ODS_CODE_LIST.remove(odscode_list)
-    odscode = odscode_list[0]
-    return f"{odscode[0]}{odscode[1:]}"
-
-
-def remove_opening_days(opening_times, day) -> dict:
-    deletions = []
-    for count, times in enumerate(opening_times):
-        if times["Weekday"] == day:
-            deletions.insert(0, count)
-    for entries in deletions:
-        del opening_times[entries]
-    return opening_times
 
 
 def slack_retry(message: str) -> str:
@@ -908,14 +640,14 @@ def post_ur_fifo():
 
 def post_to_change_event_dlq(context: Context):
     queue_url = get_sqs_queue_name("changeevent")
-    sqs_body = context.change_event.get_change_event()
+    sqs_body = context.change_event
 
     SQS_CLIENT.send_message(
         QueueUrl=queue_url,
         MessageBody=dumps(sqs_body),
         MessageDeduplicationId=str(randint(10000, 99999)),
         MessageGroupId=str(randint(10000, 99999)),
-        MessageAttributes=get_sqs_message_attributes(context.change_event.odscode),
+        MessageAttributes=get_sqs_message_attributes(context.change_event["ODSCode"]),
     )
 
 
