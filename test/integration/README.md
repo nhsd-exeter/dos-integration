@@ -27,7 +27,7 @@ The integration test suite is contained within test/integration and comprises a 
     - [Then DoS has "value" in the "field" field](#then-dos-has-value-in-the-field-field)
 - [Data Generation](#data-generation)
   - [Data Generation variable contents](#data-generation-variable-contents)
-  - [Opening Times variable entries](#opening-times-variable-entries)
+    - [Opening Times variable entries](#opening-times-variable-entries)
   - [Supporting Steps](#supporting-steps)
     - [the service "{field\_name}" is set to "{values}"](#the-service-field_name-is-set-to-values)
     - [the service is "{service\_status}" on "{day}"](#the-service-is-service_status-on-day)
@@ -186,7 +186,7 @@ It's worth noting here that all variables are in string format, regardless of wh
 
 Once this variable is setup, values can be amended using a series of other test steps. New test steps can be setup to amend this value to, if the test requires it.
 
-## Opening Times variable entries
+### Opening Times variable entries
 
 There are 2 further keys in the data_generator dict that can be added later. These are the "specified_openings" and "standard_openings". These follow this format:
 `standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]`
