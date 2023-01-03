@@ -30,6 +30,7 @@ The integration test suite is contained within test/integration and comprises a 
     - [Opening Times variable entries](#opening-times-variable-entries)
   - [Supporting Steps](#supporting-steps)
     - [the service "{field\_name}" is set to "{values}"](#the-service-field_name-is-set-to-values)
+    - [a basic service is created](#a-basic-service-is-created)
     - [the service is "{service\_status}" on "{day}"](#the-service-is-service_status-on-day)
     - [the service is "{service\_status}" on date "{date}"](#the-service-is-service_status-on-date-date)
     - [the entry is committed to the services table](#the-entry-is-committed-to-the-services-table)
@@ -200,6 +201,10 @@ These get built in their own specified test steps, as they require separate logi
 ### the service "{field_name}" is set to "{values}"
 
 This step sets a variable in the data_generator variable to whatever was input. This can be used to setup custom entries for all the fields listed above. If a specific web or phone are needed, for example, or alternatively an invalid postcode, this step can be used to change the value.
+
+### a basic service is created
+
+This step creates a randomised entry in the services table with default values that can be used if the test case does not require any specific data setup. It will populate a single opening day so that opening times changes are valid, and it will generate a valid pharmacy change event containing all data necessary to run any test.
 
 ### the service is "{service_status}" on "{day}"
 
