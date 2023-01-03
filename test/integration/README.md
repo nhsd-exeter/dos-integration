@@ -1,3 +1,40 @@
+- [Integration Test Suite](#integration-test-suite)
+  - [Initial Setup](#initial-setup)
+  - [Running the test suite](#running-the-test-suite)
+    - [Tags](#tags)
+    - [Environment](#environment)
+    - [Running tests](#running-tests)
+  - [Adding a new test](#adding-a-new-test)
+    - [Creating the Feature file entry](#creating-the-feature-file-entry)
+    - [Creating a scenario](#creating-a-scenario)
+    - [Creating a Given/When/Then function](#creating-a-givenwhenthen-function)
+    - [Functions with no variable](#functions-with-no-variable)
+    - [Functions with one or more variables](#functions-with-one-or-more-variables)
+  - [Files of note when creating tests](#files-of-note-when-creating-tests)
+    - [Utilities](#utilities)
+    - [Generator](#generator)
+    - [Dos DB Handler](#dos-db-handler)
+  - [Generic Steps](#generic-steps)
+    - [Given a basic service is created](#given-a-basic-service-is-created)
+    - [Given an entry is created in the services table](#given-an-entry-is-created-in-the-services-table)
+    - [Given the change event field is set to value](#given-the-change-event-field-is-set-to-value)
+    - [When the Changed Event is sent for processing with "valid" api key](#when-the-changed-event-is-sent-for-processing-with-valid-api-key)
+    - [Then the "lambda" lambda shows field "field" with message "message"](#then-the-lambda-lambda-shows-field-field-with-message-message)
+    - [Then DoS has "value" in the "field" field](#then-dos-has-value-in-the-field-field)
+- [Data Generation](#data-generation)
+  - [Data Generation variable contents](#data-generation-variable-contents)
+  - [Opening Times variable entries](#opening-times-variable-entries)
+  - [Supporting Steps](#supporting-steps)
+    - [the service "{field\_name}" is set to "{values}"](#the-service-field_name-is-set-to-values)
+    - [the service is "{service\_status}" on "{day}"](#the-service-is-service_status-on-day)
+    - [the service is "{service\_status}" on date "{date}"](#the-service-is-service_status-on-date-date)
+    - [the entry is committed to the services table](#the-entry-is-committed-to-the-services-table)
+  - [Context Change Event Variable](#context-change-event-variable)
+  - [Notes](#notes)
+    - [Contact Information](#contact-information)
+    - [Opening Times](#opening-times)
+
+
 # Integration Test Suite
 
 The integration test suite is contained within test/integration and comprises a pytest suite covering various areas of the codebase. Setup is performed using the makefile in the root directory. This readme will cover at a high level the contents of the test suite and basic maintenance of it.
@@ -48,7 +85,7 @@ This feature file uses the Cucumber/Gherkin test syntax, where tests are written
 
 ### Creating a scenario
 
-The scenario creation uses Pytest BDD. Documentation for this can be found here: https://pytest-bdd.readthedocs.io/en/stable/#example
+The scenario creation uses Pytest BDD. Documentation for this can be found [here](https://pytest-bdd.readthedocs.io/en/stable/#example)
 
 ### Creating a Given/When/Then function
 
@@ -59,10 +96,10 @@ This file contains a series of functions that are called when the Scenario steps
 
 Many functions are just hard coded to perform a single task. These are setup with no input variables other than the test context and they look like this:
 
-`@then("the Changed Event is stored in dynamo db")
+```@then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context: Context):
     [function code]
-    return context`
+    return context```
 
 There is an @tag at the beginning that will determine which type of test step calls the function. The available tags are @given @when and @then. A unique function name also needs to be determined and the context should generally be returned at the end of the function to ensure that the test context is up to date at step completion.
 
@@ -70,10 +107,10 @@ There is an @tag at the beginning that will determine which type of test step ca
 
 It is also possible to have feature steps pass one or more variables through to the step function, too. This involves parsing the step text that's passed through by wrapping the readable text in a parse function. These steps look like this:
 
-`@then(parse('the test variable is "{test_var}"'))
+```@then(parse('the test variable is "{test_var}"'))
 def test_var_function(context: Context, test_var: str):
     [function code]
-    return context`
+    return context```
 
 We can see that a parse has been added, as well as a value within speech marks and curly brackets. The speech marks are not required, but formatting of the test suite means we use it to denote a variable being held within. Setting a test function up like this allows you to pass a variable in. These variables are always input as a string. Multiple variables can be added to a single step.
 
@@ -127,7 +164,7 @@ This is a generic DoS check to ensure a value is found in the DoS DB services ta
 ## Data Generation variable contents
 
 When creating data for a test step, a variable called generator_data is created in the function a_service_table_entry_is_created in test_steps.py. This variable is a dict with the following format:
-`{
+```{
         "id": A 6 digit generated numeric string,
         "uid": "test" + A 5 digit generated numeric string,
         "name": "Test Pharmacy" + a 3 digit number,
@@ -137,13 +174,13 @@ When creating data for a test step, a variable called generator_data is created 
         "postcode": "NG11GS",
         "publicphone": A randomly generated 11 digit number in string format,
         "web": "www.google.com",
-    }`
+    }```
 
 It's worth noting here that all variables are in string format, regardless of whether they're a numeric value or mixed characters.
 
 Once this variable is setup, values can be amended using a series of other test steps. New test steps can be setup to amend this value to, if the test requires it.
 
-### Opening Times variable entries
+## Opening Times variable entries
 
 There are 2 further keys in the data_generator dict that can be added later. These are the "specified_openings" and "standard_openings". These follow this format:
 `standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]`
