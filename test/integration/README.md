@@ -99,7 +99,8 @@ Many functions are just hard coded to perform a single task. These are setup wit
 ```@then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context: Context):
     [function code]
-    return context```
+    return context
+```
 
 There is an @tag at the beginning that will determine which type of test step calls the function. The available tags are @given @when and @then. A unique function name also needs to be determined and the context should generally be returned at the end of the function to ensure that the test context is up to date at step completion.
 
@@ -110,7 +111,8 @@ It is also possible to have feature steps pass one or more variables through to 
 ```@then(parse('the test variable is "{test_var}"'))
 def test_var_function(context: Context, test_var: str):
     [function code]
-    return context```
+    return context
+```
 
 We can see that a parse has been added, as well as a value within speech marks and curly brackets. The speech marks are not required, but formatting of the test suite means we use it to denote a variable being held within. Setting a test function up like this allows you to pass a variable in. These variables are always input as a string. Multiple variables can be added to a single step.
 
@@ -174,7 +176,8 @@ When creating data for a test step, a variable called generator_data is created 
         "postcode": "NG11GS",
         "publicphone": A randomly generated 11 digit number in string format,
         "web": "www.google.com",
-    }```
+    }
+```
 
 It's worth noting here that all variables are in string format, regardless of whether they're a numeric value or mixed characters.
 
