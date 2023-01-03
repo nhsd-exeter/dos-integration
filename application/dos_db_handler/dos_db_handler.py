@@ -2,6 +2,7 @@ from json import dumps
 from typing import Any, Dict
 
 from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.dos import get_specified_opening_times_from_db, get_standard_opening_times_from_db, SpecifiedOpeningTime
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
@@ -12,7 +13,7 @@ logger = Logger()
 
 @unhandled_exception_logging()
 @logger.inject_lambda_context(clear_state=True)
-def lambda_handler(event: Dict[str, Any]) -> str:
+def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     """Entrypoint handler for the lambda
 
     WARNING: This lambda is for TESTING PURPOSES ONLY.

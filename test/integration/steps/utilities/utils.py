@@ -563,7 +563,6 @@ def get_sqs_queue_name(queue_type: str) -> str:
     response = ""
     blue_green_environment = getenv("BLUE_GREEN_ENVIRONMENT")
     shared_environment = getenv("SHARED_ENVIRONMENT")
-    profile = getenv("PROFILE")
     match queue_type.lower():
         case "changeevent":
             response = SQS_CLIENT.get_queue_url(
@@ -571,11 +570,11 @@ def get_sqs_queue_name(queue_type: str) -> str:
             )
         case "updaterequest":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{profile}-{blue_green_environment}-update-request-dead-letter-queue.fifo",
+                QueueName=f"uec-dos-int-{blue_green_environment}-update-request-dead-letter-queue.fifo",
             )
         case "updaterequestfail":
             response = SQS_CLIENT.get_queue_url(
-                QueueName=f"uec-dos-int-{profile}-{blue_green_environment}-update-request-queue.fifo",
+                QueueName=f"uec-dos-int-{blue_green_environment}-update-request-queue.fifo",
             )
         case _:
             raise ValueError("Invalid SQS queue type specified")
@@ -654,8 +653,7 @@ def post_to_change_event_dlq(context: Context):
 def get_s3_email_file(context: Context) -> dict:
     sleep(45)
     shared_environment = getenv("SHARED_ENVIRONMENT")
-    profile = getenv("PROFILE")
-    bucket_name = f"uec-dos-int-{profile}-{shared_environment}-send-email-bucket"
+    bucket_name = f"uec-dos-int-{shared_environment}-send-email-bucket"
     response = S3_CLIENT.list_objects(Bucket=bucket_name)
     object_key = response["Contents"][-1]["Key"]
     S3_RESOURCE = resource("s3")
