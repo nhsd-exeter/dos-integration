@@ -1,4 +1,8 @@
-- [Integration Test Suite](#integration-test-suite)
+# DOS Integration Test Suite
+
+The integration test suite is contained within test/integration and comprises a pytest suite covering various areas of the codebase. Setup is performed using the makefile in the root directory. This readme will cover at a high level the contents of the test suite and basic maintenance of it.
+
+- [DOS Integration Test Suite](#dos-integration-test-suite)
   - [Initial Setup](#initial-setup)
   - [Running the test suite](#running-the-test-suite)
     - [Tags](#tags)
@@ -34,10 +38,6 @@
     - [Contact Information](#contact-information)
     - [Opening Times](#opening-times)
 
-
-# Integration Test Suite
-
-The integration test suite is contained within test/integration and comprises a pytest suite covering various areas of the codebase. Setup is performed using the makefile in the root directory. This readme will cover at a high level the contents of the test suite and basic maintenance of it.
 
 ## Initial Setup
 
