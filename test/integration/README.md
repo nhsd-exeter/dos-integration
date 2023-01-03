@@ -96,7 +96,8 @@ This file contains a series of functions that are called when the Scenario steps
 
 Many functions are just hard coded to perform a single task. These are setup with no input variables other than the test context and they look like this:
 
-```@then("the Changed Event is stored in dynamo db")
+```
+@then("the Changed Event is stored in dynamo db")
 def stored_dynamo_db_events_are_pulled(context: Context):
     [function code]
     return context
@@ -108,7 +109,8 @@ There is an @tag at the beginning that will determine which type of test step ca
 
 It is also possible to have feature steps pass one or more variables through to the step function, too. This involves parsing the step text that's passed through by wrapping the readable text in a parse function. These steps look like this:
 
-```@then(parse('the test variable is "{test_var}"'))
+```
+@then(parse('the test variable is "{test_var}"'))
 def test_var_function(context: Context, test_var: str):
     [function code]
     return context
@@ -166,7 +168,8 @@ This is a generic DoS check to ensure a value is found in the DoS DB services ta
 ## Data Generation variable contents
 
 When creating data for a test step, a variable called generator_data is created in the function a_service_table_entry_is_created in test_steps.py. This variable is a dict with the following format:
-```{
+```
+    {
         "id": A 6 digit generated numeric string,
         "uid": "test" + A 5 digit generated numeric string,
         "name": "Test Pharmacy" + a 3 digit number,
