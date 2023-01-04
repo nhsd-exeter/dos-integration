@@ -142,7 +142,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
     And the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
-    And the "service-sync" lambda shows field "all_nhs.0" with message "OPEN on 10-01-2021"
+    And the "service-sync" lambda shows field "all_nhs.0" with message "OPEN on 10-01-2022"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX18 Empty Specified opening times results in no change and no error
