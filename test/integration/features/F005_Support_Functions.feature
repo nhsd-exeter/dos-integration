@@ -26,7 +26,7 @@ Feature: F005. Support Functions
     When a "update request dlq" SQS message is added to the queue
     Then the Slack channel shows an alert saying "Update Requests DLQ" from "BLUE_GREEN_ENVIRONMENT"
 
-  @complete @broken @pharmacy_no_log_searches @kit
+  @complete @broken @pharmacy_no_log_searches
   Scenario: F005SXX5 SQS Message for DOS 404
     When a "update request failure" SQS message is added to the queue
     Then the Slack channel shows an alert saying "Update Requests DLQ" from "BLUE_GREEN_ENVIRONMENT"
