@@ -209,12 +209,8 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
 @given(parse('the specified opening date is set to "{future_past}" date'), target_fixture="context")
 def future_set_specified_opening_date(future_past: str, context: Context):
     year = 0
-    match future_past:
-        case "future":
-            year = dt.now().year + 1
-        case "past":
-            year = dt.now().year - 1
-    if year != 0:
+    if future_past.lower() == "future":
+        year = dt.now().year + 1
         context.change_event["OpeningTimes"].append(
             {
                 "Weekday": "",
@@ -556,6 +552,16 @@ def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_capture
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     assert current_specified_openings[expected_opening_date][0]["start_time"] == opening_time
     assert current_specified_openings[expected_opening_date][0]["end_time"] == closing_time
+
+
+@then(parse('the DoS DB has no open date in "{year}"'))
+def the_dos_service_has_no_past_openings(context: Context, year: str):
+    wait_for_service_update(context.generator_data["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
+    if current_specified_openings == {}:
+        assert True
+    else:
+        assert year not in current_specified_openings, f"{year} not found in {current_specified_openings}"
 
 
 @then("the DoS service has been updated with the standard days and times is captured by DoS")

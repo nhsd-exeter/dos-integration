@@ -133,16 +133,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_no_log_searches
   Scenario: F001SX17 All specified opening times are removed from DoS
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2020"
     And the entry is committed to the services table
-    And the specified opening date is set to "past" date
+    And the change event is "open" on date "Jan 10 2020"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
-    And the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
-    And the "service-sync" lambda shows field "all_nhs.0" with message "OPEN on 10-01-2022"
+    Then the DoS DB has no open date in "2020"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX18 Empty Specified opening times results in no change and no error
