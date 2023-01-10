@@ -9,6 +9,7 @@ moto
 mutmut
 pandas
 pytest
+pytest-bdd==6.0.1
 pytest-cov
 pytest-flakefinder
 pytest-html
@@ -16,9 +17,8 @@ pytest-icdiff
 pytest-replay
 pytest-rerunfailures
 pytest-sugar
-pytest-xdist
+pytest-xdist==2.5.0
 requests
 responses
 testfixtures
 vulture
-git+https://github.com/pytest-dev/pytest-bdd.git@master

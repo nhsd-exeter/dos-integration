@@ -1,0 +1,46 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      # Work out variables
+      - echo $CODEBUILD_WEBHOOK_HEAD_REF
+      - export TAG=$(echo $CODEBUILD_WEBHOOK_HEAD_REF | sed -e "s|^refs/tags||")
+      - export PROFILE="$(cut -d'_' -f2 <<<$TAG)"
+      - export SHARED_ENVIRONMENT="$(cut -d'_' -f3 <<<$TAG)"
+      - echo PROFILE=$PROFILE
+      - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+      # Sign into nonprod to access docker hub
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - make docker-hub-signin
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      # Sign into relevant account to for rollbacking environment
+      - |
+        if [[ "$PROFILE" == "live" ]] || [[ "$PROFILE" == "demo" ]]; then
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        else
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        fi
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - aws sts get-caller-identity
+  build:
+    commands:
+      # Get current and previous versions of the environment
+      - export CURRENT_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw connected_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+      - export PREVIOUS_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw previous_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+      # CURRENT_VERSION is the version of the environment that is currently linked to the environment at the start of the build
+      # PREVIOUS_VERSION is the version of the environment that was not linked to the environment at the start of the build
+      - echo CURRENT_VERSION=$CURRENT_VERSION
+      - echo PREVIOUS_VERSION=$PREVIOUS_VERSION
+      # Unlink environment from current version
+      - make unlink-blue-green-environment BLUE_GREEN_ENVIRONMENT=$PREVIOUS_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
+      # Rollback environment to previous version
+      - make link-blue-green-environment BLUE_GREEN_ENVIRONMENT=$PREVIOUS_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT TF_VAR_previous_blue_green_environment=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30"

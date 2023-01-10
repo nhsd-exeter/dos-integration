@@ -1,4 +1,4 @@
--include $(VAR_DIR)/profile/prod.mk
+-include $(VAR_DIR)/platform-texas/v1/account-live-k8s-prod.mk
 
 # ==============================================================================
 # Service variables
@@ -23,7 +23,7 @@ DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-demo/deployment
 DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-demo-ip-addresses-allowlist
-SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-$(PROFILE)/deployment
+SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-demo/deployment
 SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-dev-status
 

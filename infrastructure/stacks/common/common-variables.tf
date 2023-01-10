@@ -79,7 +79,17 @@ variable "project_id" {
 
 variable "environment" {
   type        = string
-  description = "Environment name"
+  description = "Environment name (don't use if application stack)"
+}
+
+variable "shared_environment" {
+  type        = string
+  description = "Environment name of the shared resources"
+}
+
+variable "blue_green_environment" {
+  type        = string
+  description = "Environment name of the blue/green resources"
 }
 
 variable "project_display_name" {

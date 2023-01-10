@@ -1,0 +1,76 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+# This buildspec works on the expectation that a full environment has already deploy has been done.
+# This buildspec will only deploy a new version of the blue-green environment and link it to the shared resources.
+
+phases:
+  pre_build:
+    commands:
+      - NEW_VERSION_COMMIT_HASH=$(aws ssm get-parameter --name $NEW_VERSION_PARAMETER_NAME --query "Parameter.Value" --output text)
+      - NEW_VERSION=$(echo $NEW_VERSION_COMMIT_HASH-$PROFILE)
+      - chown -R 999:999 $CODEBUILD_SRC_DIR
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSessionNonProd")
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - make docker-hub-signin
+      - make docker-pull NAME=serverless VERSION=latest
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - |
+        if [[ "$AWS_ACCOUNT" == "PROD" ]]; then
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        else
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECPUPipelineBuildRole" --role-session-name "CodeBuildSession")
+        fi
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - aws sts get-caller-identity
+      - make -s clean > /dev/null 2>&1
+  build:
+    commands:
+      # In this snippet, we are deploying the new blue-green environment
+      - echo "[Deploying New Version]"
+      - export ENVIRONMENT=$NEW_VERSION
+      - export BLUE_GREEN_ENVIRONMENT="$ENVIRONMENT"
+      - echo PROFILE=$PROFILE
+      - echo BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT
+      - echo ENVIRONMENT=$ENVIRONMENT
+      - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+      - echo VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - make deploy-blue-green-environment VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
+
+      # Getting the current and rollback blue-green environments to be used later.
+      - echo "[Get current and previous deployed blue-green versions]"
+      - export ENVIRONMENT="$SHARED_ENVIRONMENT"
+      - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
+      - export CURRENT_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw connected_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+      - export PREVIOUS_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw previous_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT | tail -n -1)
+
+      - echo "[Unlink Previous Version]"
+      - echo CURRENT_VERSION=$CURRENT_VERSION
+      - echo PREVIOUS_VERSION=$PREVIOUS_VERSION
+      - make unlink-blue-green-environment VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
+
+      - echo "[Linking New Version]"
+      - echo CURRENT_VERSION=$CURRENT_VERSION
+      - echo PREVIOUS_VERSION=$PREVIOUS_VERSION
+      - echo NEW_VERSION=$NEW_VERSION
+      - make link-blue-green-environment VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT TF_VAR_previous_blue_green_environment=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30"
+
+      - echo "[Destroy Previous Rollback Version]"
+      - export PREVIOUS_VERSION_COMMIT_HASH=$(echo $PREVIOUS_VERSION | cut -d'-' -f1)
+      # In this snippet, we are triggering the codebuild stage to destroy the previous rollback blue-green environment
+      - mkdir -p $CODEBUILD_SRC_DIR/git_repo
+      - cd $CODEBUILD_SRC_DIR/git_repo
+      - git clone $GIT_REPO_URL .
+      - git checkout $PREVIOUS_VERSION_COMMIT_HASH || true
+      - export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION_COMMIT_HASH) || true
+      - echo FULL_PREVIOUS_VERSION=$FULL_PREVIOUS_VERSION
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - aws codebuild start-build --project-name $DELETE_BLUE_GREEN_ENVIRONMENT_CODEBUILD_NAME --source-version $PREVIOUS_VERSION --environment-variables-override name=BLUE_GREEN_ENVIRONMENT,value=$PREVIOUS_VERSION,type=PLAINTEXT name=AWS_ACCOUNT,value=$AWS_ACCOUNT,type=PLAINTEXT name=PROFILE,value=$PROFILE,type=PLAINTEXT name=SHARED_ENVIRONMENT,value=$SHARED_ENVIRONMENT,type=PLAINTEXT

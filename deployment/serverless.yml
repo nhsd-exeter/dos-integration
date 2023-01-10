@@ -18,38 +18,41 @@ provider:
     sseKMSKeyId: ${env:TERRAFORM_KMS_KEY_ID}
   stackTags:
     BUILD_TIMESTAMP: ${env:VERSION}
+    BlueGreenEnvironment: ${env:BLUE_GREEN_ENVIRONMENT}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
-    Environment: ${env:ENVIRONMENT}
     EnvironmentType: ${env:AWS_ACCOUNT_NAME}
     Owner: ${env:PROJECT_DISTRIBUTION_LIST}
-    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
+    Profile: ${env:PROFILE}
     Programme: ${env:PROGRAMME}
     Project: ${env:PROJECT_DISPLAY_NAME}
     PublicFacing: "No"
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    SharedEnvironment: ${env:SHARED_ENVIRONMENT}
     TagVersion: "2.0"
     Tool: "Serverless Framework deployed by CloudFormation"
   tags:
     BUILD_TIMESTAMP: ${env:VERSION}
+    BlueGreenEnvironment: ${env:BLUE_GREEN_ENVIRONMENT}
     DataClassification: ${env:PROJECT_DATA_CLASSIFICATION}
-    Environment: ${env:ENVIRONMENT}
-    EnvironmentType: ${env:AWS_ACCOUNT_NAME}
+    Environment: ${env:AWS_ACCOUNT_NAME}
     Owner: ${env:PROJECT_DISTRIBUTION_LIST}
-    Profile: ${env:PROFILE}
     Product: ${env:PROJECT_ID}
+    Profile: ${env:PROFILE}
     Programme: ${env:PROGRAMME}
     Project: ${env:PROJECT_DISPLAY_NAME}
     PublicFacing: "No"
     Service: ${env:PROJECT_ID}
     ServiceCategory: ${env:PROJECT_SERVICE_CATEGORY}
+    SharedEnvironment: ${env:SHARED_ENVIRONMENT}
     TagVersion: "2.0"
     Tool: "Serverless Framework deployed by CloudFormation"
   environment:
     PROFILE: ${env:PROFILE}
-    ENV: ${env:ENVIRONMENT}
-    POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${sls:stage}
+    ENV: ${env:BLUE_GREEN_ENVIRONMENT}
+    SHARED_ENVIRONMENT: ${env:SHARED_ENVIRONMENT}
+    POWERTOOLS_SERVICE_NAME: ${env:PROGRAMME}-${env:TEAM_ID}-${env:PROFILE}-${sls:stage}
     POWERTOOLS_TRACER_CAPTURE_RESPONSE: true
     POWERTOOLS_TRACER_CAPTURE_ERROR: true
     POWERTOOLS_TRACE_MIDDLEWARES: true
@@ -60,7 +63,7 @@ provider:
       format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":"$context.status","responseLatency":"$context.responseLatency","xrayTraceId":"$context.xrayTraceId","integrationRequestId":"$context.integration.requestId","functionResponseStatus":"$context.integration.status","integrationLatency":"$context.integration.latency","integrationServiceStatus":"$context.integration.integrationStatus","ip":"$context.identity.sourceIp","userAgent":"$context.identity.userAgent"}'
   tracing:
     lambda: true
-  disableRollback: true
+  disableRollback: ${env:SERVERLESS_DISABLE_ROLLBACK}
 
 plugins:
   - serverless-vpc-discovery
@@ -74,9 +77,9 @@ custom:
 
 functions:
   change-event-dlq-handler:
-    image: ${env:DOCKER_REGISTRY}/change-event-dlq-handler:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/${env:CHANGE_EVENT_DLQ_HANDLER}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-change-event-dlq-handler
+    name: ${env:CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} Change Event DLQ Handler lambda
     memorySize: 128
     timeout: 30
@@ -85,10 +88,44 @@ functions:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
 
-  dos-db-update-dlq-handler:
-    image: ${env:DOCKER_REGISTRY}/dos-db-update-dlq-handler:${env:VERSION}
+  dos-db-handler:
+    image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_HANDLER}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-dos-db-update-dlq-handler
+    name: ${env:DOS_DB_HANDLER_LAMBDA_NAME}
+    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in Non-Live environments
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role_name}
+    environment:
+      DB_NAME: ${env:DB_NAME}
+      DB_PORT: ${env:DB_PORT}
+      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
+      DB_REPLICA_SECRET_KEY: ${env:DB_REPLICA_SECRET_KEY}
+      DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
+      DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
+      DB_SERVER: ${env:DB_SERVER}
+      DB_SCHEMA: ${env:DB_SCHEMA}
+      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
+      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
+      DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
+    maximumRetryAttempts: 0
+    vpcDiscovery:
+      vpcName: '${env:AWS_VPC_NAME}'
+      subnets:
+        - tagKey: Name
+          tagValues:
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
+            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+      securityGroups:
+        - tagKey: Name
+          tagValues:
+            - '${env:TF_VAR_lambda_security_group_name}'
+
+  dos-db-update-dlq-handler:
+    image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_UPDATE_DLQ_HANDLER}:${env:VERSION}
+    architecture: x86_64
+    name: ${env:DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} DoS DB Update DLQ Handler lambda
     memorySize: 128
     timeout: 30
@@ -96,9 +133,9 @@ functions:
     maximumRetryAttempts: 0
 
   event-replay:
-    image: ${env:DOCKER_REGISTRY}/event-replay:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/${env:EVENT_REPLAY}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-event-replay
+    name: ${env:EVENT_REPLAY_LAMBDA_NAME}
     description: ${sls:stage} Event Replay lambda
     memorySize: 128
     timeout: 30
@@ -108,10 +145,23 @@ functions:
       CHANGE_EVENT_SQS_NAME: ${env:TF_VAR_change_event_queue_name}
     maximumRetryAttempts: 0
 
-  orchestrator:
-    image: ${env:DOCKER_REGISTRY}/orchestrator:${env:VERSION}
+  ingest-change-event:
+    image: ${env:DOCKER_REGISTRY}/${env:INGEST_CHANGE_EVENT}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-orchestrator
+    name: ${env:INGEST_CHANGE_EVENT_LAMBDA_NAME}
+    description: ${sls:stage} Ingest Change Event lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_ingest_change_event_role_name}
+    environment:
+      HOLDING_QUEUE_URL: ${env:holding_queue_url}
+      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
+    maximumRetryAttempts: 2
+
+  orchestrator:
+    image: ${env:DOCKER_REGISTRY}/${env:ORCHESTRATOR}:${env:VERSION}
+    architecture: x86_64
+    name: ${env:ORCHESTRATOR_LAMBDA_NAME}
     description: ${sls:stage} Orchestrator
     memorySize: 128
     timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins)
@@ -125,14 +175,28 @@ functions:
       CIRCUIT: DOS_DATABASE
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
       DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
-      EVENT_SENDER_FUNCTION_NAME: ${env:PROJECT_ID}-${sls:stage}-service-sync
+      SERVICE_SYNC_FUNCTION_NAME: ${env:SERVICE_SYNC_LAMBDA_NAME}
       RUN_FOR: 280
       SLEEP_FOR_WHEN_OPEN: 2
 
-  service-matcher:
-    image: ${env:DOCKER_REGISTRY}/service-matcher:${env:VERSION}
+  send-email:
+    image: ${env:DOCKER_REGISTRY}/${env:SEND_EMAIL}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-service-matcher
+    name: ${env:SEND_EMAIL_LAMBDA_NAME}
+    description: ${sls:stage} Send Email lambda
+    memorySize: 128
+    timeout: 30
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
+    environment:
+      AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
+      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
+      EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
+    maximumRetryAttempts: 2
+
+  service-matcher:
+    image: ${env:DOCKER_REGISTRY}/${env:SERVICE_MATCHER}:${env:VERSION}
+    architecture: x86_64
+    name: ${env:SERVICE_MATCHER_LAMBDA_NAME}
     description: ${sls:stage} Service Matcher lambda
     memorySize: 192
     timeout: 10
@@ -162,9 +226,9 @@ functions:
             - '${env:TF_VAR_lambda_security_group_name}'
 
   service-sync:
-    image: ${env:DOCKER_REGISTRY}/service-sync:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/${env:SERVICE_SYNC}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-service-sync
+    name: ${env:SERVICE_SYNC_LAMBDA_NAME}
     description: ${sls:stage} Service Sync lambda
     memorySize: 512
     timeout: 20
@@ -203,9 +267,9 @@ functions:
             - '${env:TF_VAR_lambda_security_group_name}'
 
   slack-messenger:
-    image: ${env:DOCKER_REGISTRY}/slack-messenger:${env:VERSION}
+    image: ${env:DOCKER_REGISTRY}/${env:SLACK_MESSENGER}:${env:VERSION}
     architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-slack-messenger
+    name: ${env:SLACK_MESSENGER_LAMBDA_NAME}
     description: ${sls:stage} Slack Messenger lambda
     memorySize: 128
     timeout: 10
@@ -218,64 +282,3 @@ functions:
           arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_default_region}
       - sns:
           arn: arn:aws:sns:${env:TF_VAR_route53_health_check_alarm_region}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region}
-
-  send-email:
-    image: ${env:DOCKER_REGISTRY}/send-email:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-send-email
-    description: ${sls:stage} Send Email lambda
-    memorySize: 128
-    timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
-    environment:
-      AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
-      SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
-      EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
-    maximumRetryAttempts: 2
-
-  ingest-change-event:
-    image: ${env:DOCKER_REGISTRY}/ingest-change-event:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-ingest-change-event
-    description: ${sls:stage} Ingest Change Event lambda
-    memorySize: 128
-    timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_ingest_change_event_role_name}
-    environment:
-      HOLDING_QUEUE_URL: ${env:holding_queue_url}
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-    maximumRetryAttempts: 2
-
-  dos-db-handler:
-    image: ${env:DOCKER_REGISTRY}/dos-db-handler:${env:VERSION}
-    architecture: x86_64
-    name: ${env:PROJECT_ID}-${sls:stage}-dos-db-handler
-    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in NonProd
-    memorySize: 128
-    timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role_name}
-    environment:
-      DB_NAME: ${env:DB_NAME}
-      DB_PORT: ${env:DB_PORT}
-      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
-      DB_REPLICA_SECRET_KEY: ${env:DB_REPLICA_SECRET_KEY}
-      DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
-      DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
-      DB_SERVER: ${env:DB_SERVER}
-      DB_SCHEMA: ${env:DB_SCHEMA}
-      DB_SECRET_KEY: ${env:DB_SECRET_KEY}
-      DB_SECRET_NAME: ${env:DB_SECRET_NAME}
-      DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
-    maximumRetryAttempts: 0
-    vpcDiscovery:
-      vpcName: '${env:AWS_VPC_NAME}'
-      subnets:
-        - tagKey: Name
-          tagValues:
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
-      securityGroups:
-        - tagKey: Name
-          tagValues:
-            - '${env:TF_VAR_lambda_security_group_name}'

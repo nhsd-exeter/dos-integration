@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -113,7 +113,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
     {
       "Effect": "Allow",
       "Action": "lambda:InvokeFunction",
-      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.project_id}-${var.environment}-service-sync"
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.service_sync_lambda_name}"
     },
     {
       "Effect": "Allow",
@@ -151,7 +151,7 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -230,14 +230,14 @@ resource "aws_iam_role_policy" "slack_messenger_policy" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
       "Action": "sns:*",
       "Resource": [
-        "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:uec-dos-int-*",
-        "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:uec-dos-int-*"
+        "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${var.project_id}-*",
+        "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:${var.project_id}-*"
       ]
     }
   ]
@@ -283,7 +283,7 @@ module "service_matcher" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     }
   ]
 }
@@ -310,7 +310,7 @@ module "service_sync" {
         "kms:GenerateDataKey*",
         "kms:DescribeKey"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -369,7 +369,7 @@ module "change_event_dlq_handler" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -378,7 +378,10 @@ module "change_event_dlq_handler" {
         "sqs:GetQueueAttributes",
         "sqs:ReceiveMessage"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}"
+      "Resource": [
+        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_dlq}",
+        "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.holding_queue_dlq}"
+      ]
     },
     {
       "Effect": "Allow",
@@ -414,7 +417,7 @@ module "dos_db_update_dlq_handler" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -461,7 +464,7 @@ module "send_email" {
     {
       "Effect": "Allow",
       "Action": "kms:Decrypt",
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",
@@ -497,7 +500,7 @@ module "ingest_change_event" {
         "kms:DescribeKey",
         "kms:Decrypt"
       ],
-      "Resource": "${aws_kms_key.signing_key.arn}"
+      "Resource": "${data.aws_kms_key.signing_key.arn}"
     },
     {
       "Effect": "Allow",

@@ -31,17 +31,17 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources,before-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=after-lambda-deployment
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	make terraform-destroy-auto-approve STACKS=blue-green-link,after-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,appconfig
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -67,19 +67,19 @@ populate-deployment-variables:
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
 
 populate-serverless-variables:
-	echo "export TERRAFORM_KMS_KEY_ID=$$(make -s terraform-output STACKS=before-lambda-deployment OPTS='-raw kms_key_id' | tail -n1)"
+	echo "export TERRAFORM_KMS_KEY_ID=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)"
 
 unit-test-local:
 	pyenv local .venv
 	pip install -r application/requirements-dev.txt -r application/service_matcher/requirements.txt -r application/event_replay/requirements.txt -r application/service_sync/requirements.txt -r application/change_event_dlq_handler/requirements.txt
 	cd application
-	python -m pytest --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=. -vv
+	python -m pytest --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
 	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tools \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing  --cov-report xml:coverage.xml --cov=application -vv" \
+	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -149,6 +149,8 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
+		-e SHARED_ENVIRONMENT=$(SHARED_ENVIRONMENT) \
+		-e BLUE_GREEN_ENVIRONMENT=$(BLUE_GREEN_ENVIRONMENT) \
 		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
 		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
 		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
@@ -274,18 +276,18 @@ undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
 	make terraform-destroy-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
 
 # ==============================================================================
-# Pipelines
+# Development Tools
 
-deploy-development-pipeline:
-	make terraform-apply-auto-approve STACKS=development-pipeline PROFILE=tools
+deploy-development-and-deployment-tools:
+	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
 
-undeploy-development-pipeline:
-	make terraform-destroy-auto-approve STACKS=development-pipeline PROFILE=tools
+undeploy-development-and-deployment-tools:
+	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
 
-plan-development-pipeline:
+plan-development-and-deployment-tools:
 	if [ "$(PROFILE)" == "tools" ]; then
 		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=development-pipeline
+		make terraform-plan STACKS=development-and-deployment-tools
 	else
 		echo "Only tools profile supported at present"
 	fi
@@ -353,10 +355,10 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
 		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
 	else
-		echo This is for destroying old task environments PROFILE should not be equal to ENVIRONMENT
+		echo This is for destroying old dev environments PROFILE should not be equal to ENVIRONMENT
 	fi
 
-re-tag-images-for-deployment: # Re-tag images for deployment
+re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SOURCE=[tag], TARGET=[tag]
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_PROD_LIST) | tr "," "\n"); do
 		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
 		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)
@@ -387,10 +389,10 @@ aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g.
 		REPOSITORY_NAME=$$(echo $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$$REPOSITORY)
 		echo Repository is $$REPOSITORY_NAME
 		make remove-untagged-images REPOSITORY=$$REPOSITORY_NAME
-		make remove-task-images REPOSITORY=$$REPOSITORY_NAME DELETE_IMAGES_OLDER_THAN=$$DELETE_IMAGES_OLDER_THAN
+		make remove-dev-images REPOSITORY=$$REPOSITORY_NAME DELETE_IMAGES_OLDER_THAN=$$DELETE_IMAGES_OLDER_THAN
 	done
 
-remove-task-images: # Removes task ecr images in repository older than certain date, REPOSITORY=[$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/REPOSITORY_NAME], DELETE_IMAGES_OLDER_THAN=[date/time in epoch]
+remove-dev-images: # Removes dev ecr images in repository older than certain date, REPOSITORY=[$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/REPOSITORY_NAME], DELETE_IMAGES_OLDER_THAN=[date/time in epoch]
 	COUNTER=0
 	IMAGE_IDS=$$(aws ecr describe-images --registry-id $(AWS_ACCOUNT_ID_MGMT) --region $(AWS_REGION) --repository-name $(REPOSITORY) --filter "tagStatus=TAGGED" --max-items 1000 --output json | jq -r '.imageDetails[] | select (.imageTags[0] | contains("$(LAST_YEAR)") or contains ("$(THIS_YEAR)")) | select (.imagePushedAt < $(DELETE_IMAGES_OLDER_THAN)).imageDigest')
 	for DIGEST in $$(echo $$IMAGE_IDS | tr " " "\n"); do
@@ -498,7 +500,6 @@ send-performance-dashboard-slack-message:
 
 update-all-ip-allowlists: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
 	USERNAME=$$(git config user.name)
-	make -s update-ip-allowlist PROFILE=task USERNAME="$$USERNAME"
 	make -s update-ip-allowlist PROFILE=dev USERNAME="$$USERNAME"
 
 update-ip-allowlist: # Update your IP address in AWS secrets manager to acesss non-prod environments - mandatory: PROFILE, ENVIRONMENT, USERNAME
@@ -611,3 +612,89 @@ github-actions-best-practices:
 
 checkov-secret-scanning:
 	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
+
+# ==============================================================================
+# 6.0 Release targets
+
+deploy-release-6-pipeline:
+	make terraform-apply-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
+
+undeploy-release-6-pipeline:
+	make terraform-destroy-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
+
+blue-green-move-terraform-resources:
+# Init new shared resources state
+	make _terraform-initialise STACK=shared-resources
+# Import terraform resources
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_dynamodb_table.message-history-table' $(TF_VAR_change_events_table_name)"
+	SIGNING_KEY=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.signing_key' $$SIGNING_KEY"
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.signing_key' alias/$(TF_VAR_signing_key_alias)"
+	GLOBAL_REGION_SIGNING_KEY=$$(aws kms describe-key --region=$(TF_VAR_route53_health_check_alarm_region) --key-id alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias) --query KeyMetadata.KeyId --output text)
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.route53_health_check_alarm_region_signing_key' $$GLOBAL_REGION_SIGNING_KEY"
+	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.alarm_region_signing_key' alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias)"
+# Remove moved resources from current state
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_dynamodb_table.message-history-table'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.route53_health_check_alarm_region_signing_key'"
+	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.alarm_region_signing_key'"
+# Destroy non shared resources
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-destroy-auto-approve STACKS=after-lambda-deployment OPTS="-refresh=false"
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment OPTS="-refresh=false"
+	aws logs delete-log-group --log-group-name /aws/lambda/$(TF_VAR_orchestrator_lambda_name) 2> /dev/null ||:
+# Rebuild resources
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=shared-resources,before-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-deploy
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
+
+deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources
+
+deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=before-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-deploy
+	make terraform-apply-auto-approve STACKS=after-lambda-deployment
+
+build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make build-and-push VERSION=$(BUILD_TAG)
+	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
+
+link-blue-green-environment: # Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-apply-auto-approve STACKS=blue-green-link
+
+undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
+	if [ "$(PROFILE)" != "live" ]; then
+		make terraform-destroy-auto-approve STACKS=api-key
+	fi
+
+undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
+	eval "$$(make -s populate-serverless-variables)"
+	make serverless-remove VERSION="any"
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+
+unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	make terraform-destroy-auto-approve STACKS=blue-green-link
+
+tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green environment - mandatory: COMMIT=[short commit hash]
+	tag="$(BUILD_TIMESTAMP)-blue-green-deployment"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+tag-commit-to-deploy-shared-resources: # Tags commit to deploy shared resources - mandatory: COMMIT=[short commit hash]
+	tag="$(BUILD_TIMESTAMP)-shared-resources-deployment"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/green environment - mandatory: PROFILE=[name], SHARED_ENVIRONMENT=[name]
+	tag="$(BUILD_TIMESTAMP)_$(PROFILE)_$(SHARED_ENVIRONMENT)_blue_green_rollback"
+	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)

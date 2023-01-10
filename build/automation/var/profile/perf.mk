@@ -1,4 +1,4 @@
--include $(VAR_DIR)/profile/nonprd.mk
+-include $(VAR_DIR)/platform-texas/v1/account-live-k8s-nonprod.mk
 
 # ==============================================================================
 # Service variables
@@ -17,9 +17,9 @@ DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
 
 DB_REPLICA_SECRET_NAME := core-dos-dev/deployment
-DB_REPLICA_SECRET_KEY := DB_DI_READONLY_PASSWORD
+DB_REPLICA_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
-DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
+DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-dev/deployment

@@ -172,9 +172,13 @@ _terraform-stack: ### Set up infrastructure for a single stack - mandatory: STAC
 		make _terraform-remove-common STACK=$(STACK)
 	fi
 
-_terraform-reinitialise: ### Reinitialise infrastructure state - mandatory: STACK=[name]; optional: TERRAFORM_DO_NOT_REMOVE_STATE_FILE=true,PROFILE=[name]
+_terraform-reinitialise: ### Reinitialise infrastructure state - mandatory: STACK=[name]; optional: TERRAFORM_DO_NOT_REMOVE_STATE_FILE=true,PROFILE=[name],HIDE_OUTPUT=false
 	[ "$(TERRAFORM_DO_NOT_REMOVE_STATE_FILE)" != true ] && rm -rf $(DIR)/$(STACK)/*terraform.tfstate*
-	make _terraform-initialise STACK="$(STACK)"
+	if [[ "$(HIDE_INIT)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
+		make _terraform-initialise STACK="$(STACK)" > /dev/null 2>&1
+	else
+		make _terraform-initialise STACK="$(STACK)"
+	fi
 
 _terraform-initialise: ### Initialise infrastructure state - mandatory: STACK=[name]; optional: TERRAFORM_USE_STATE_STORE=false,PROFILE=[name]
 	if [[ "$(TERRAFORM_USE_STATE_STORE)" =~ ^(false|no|n|off|0|FALSE|NO|N|OFF)$$ ]]; then

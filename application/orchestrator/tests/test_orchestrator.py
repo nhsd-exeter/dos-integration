@@ -37,7 +37,7 @@ LAMBDA_INVOKE_RESPONSE = {
 @patch(f"{FILE_PATH}.lambda_client")
 def test_invoke_lambda(mock_lambda_client: MagicMock, lambda_context: LambdaContext):
     # Arrange
-    environ["EVENT_SENDER_FUNCTION_NAME"] = "MyFirstFunction"
+    environ["SERVICE_SYNC_FUNCTION_NAME"] = "MyFirstFunction"
     expected = LAMBDA_INVOKE_RESPONSE
     mock_lambda_client.invoke.return_value = expected
 
@@ -49,7 +49,7 @@ def test_invoke_lambda(mock_lambda_client: MagicMock, lambda_context: LambdaCont
         FunctionName="MyFirstFunction", InvocationType="Event", Payload=dumps(payload)
     )
     assert response == expected
-    del environ["EVENT_SENDER_FUNCTION_NAME"]
+    del environ["SERVICE_SYNC_FUNCTION_NAME"]
 
 
 EXAMPLE_ATTRIBUTES = {
