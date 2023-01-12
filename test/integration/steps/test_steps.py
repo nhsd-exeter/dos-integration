@@ -161,9 +161,7 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
     parse('the change event is "{service_status}" from "{open}" to "{close}" on date "{date}"'),
     target_fixture="context",
 )
-def change_event_specified_opening_set_times(
-        service_status: str, date: str, open: str, close: str, context: Context
-    ):
+def change_event_specified_opening_set_times(service_status: str, date: str, open: str, close: str, context: Context):
     query_specified_opening_builder(context, service_status, date, open, close)
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
