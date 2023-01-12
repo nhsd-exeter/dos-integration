@@ -190,17 +190,19 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
         opening_time = day["opening_time"]
         closing_time = day["closing_time"]
         day_id = day["dos_id"]
-        open_status = ""
+        closed_status = ""
         if day["open"] is True:
-            open_status = "true"
+            closed_status = "false"
         else:
-            open_status = "false"
+            closed_status = "true"
+            opening_time = "00:00:00"
+            closing_time = "00:00:00"
         query = (
             "INSERT INTO pathwaysdos.servicespecifiedopeningtimes"
             "(starttime, endtime, isclosed, servicespecifiedopeningdateid) VALUES("
-            f"'{opening_time}', '{closing_time}', {open_status}, {int(day_id)}) RETURNING id"
+            f"'{opening_time}', '{closing_time}', {closed_status}, {int(day_id)}) RETURNING id"
         )
-        if "'', ''" in query:
+        if "'', '', false" in query:
             raise ValueError("Query has inserted null times into open specified date")
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         invoke_dos_db_handler_lambda(lambda_payload)
@@ -351,6 +353,10 @@ def query_specified_opening_builder(context, service_status, date, open="09:00",
         times_obj["closing_time"] = ""
     if "specified_openings" not in context.generator_data.keys():
         context.generator_data["specified_openings"] = []
+    else:
+        for entry in context.generator_data["specified_openings"]:
+            if entry["date"] == date:
+                context.generator_data["specified_openings"].remove(entry)
     context.generator_data["specified_openings"].append(times_obj)
     return context
 

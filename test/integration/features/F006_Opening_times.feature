@@ -98,10 +98,19 @@ Feature: F006. Opening times
     Then the attributes for invalid opening times report is identified in the logs
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F006SX99. Same dual general opening times
+  Scenario: F006SX12. Additional date changes open to closed
     Given an entry is created in the services table
-    And the service is "open" on date "Jan 25 2024"
-    And the service is "open" on date "Jan 25 2024"
+    And the service is "open" on date "Jan 01 2025"
     And the entry is committed to the services table
+    And the change event is "closed" on date "Jan 01 2025"
     When the Changed Event is sent for processing with "valid" api key
-    Then the attributes for invalid opening times report is identified in the logs
+    Then DoS is closed on "Jan 01 2025"
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F006SX13. Additional date changes closed to open
+    Given an entry is created in the services table
+    And the service is "closed" on date "Jan 01 2025"
+    And the entry is committed to the services table
+    And the change event is "open" on date "Jan 01 2025"
+    When the Changed Event is sent for processing with "valid" api key
+    Then DoS is open on "Jan 01 2025"
