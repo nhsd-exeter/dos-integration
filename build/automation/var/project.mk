@@ -194,7 +194,7 @@ TF_VAR_service_sync_dos_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-
 TF_VAR_slack_messenger_subscription_filter_name := $(SLACK_MESSENGER_LAMBDA_NAME)-cw-logs-firehose-subscription
 
 # Cloudwatch monitoring dashboard
-TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-monitoring-dashboard
+TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-full-monitoring-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
