@@ -47,6 +47,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     record = next(event.records)
     change_event = extract_body(record.body)
     validate_change_event(change_event)
+    redact_staff_key_from_change_event(change_event)
     ods_code = change_event.get("ODSCode")
     add_change_event_received_metric(ods_code=ods_code)
     logger.append_keys(ods_code=ods_code)
@@ -89,6 +90,21 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         MessageBody=dumps(holding_queue_change_event_item),
         MessageGroupId=ods_code,
     )
+
+@logger.inject_lambda_context(
+    clear_state=True,
+    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue',
+)
+def redact_staff_key_from_change_event(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Remove the sensitive staff key from a change event
+    Args:
+        event (Dict[str, Any]): Lambda function invocation event
+    """
+
+    if event.pop('Staff', None) != None:
+        logger.info("Redacted 'Staff' key from Change Event payload")
+    return event
+
 
 
 @metric_scope
