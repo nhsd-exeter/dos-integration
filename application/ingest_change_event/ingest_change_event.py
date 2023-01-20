@@ -92,10 +92,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         MessageGroupId=ods_code,
     )
 
-@logger.inject_lambda_context(
-    clear_state=True,
-    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue',
-)
+
 def redact_staff_key_from_change_event(event: Dict[str, Any]) -> Dict[str, Any]:
     """Remove the sensitive staff key from a change event
     Args:
@@ -105,7 +102,6 @@ def redact_staff_key_from_change_event(event: Dict[str, Any]) -> Dict[str, Any]:
     if event.pop('Staff', None) != None:
         logger.info("Redacted 'Staff' key from Change Event payload")
     return event
-
 
 
 @metric_scope
