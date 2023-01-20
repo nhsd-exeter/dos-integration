@@ -2,6 +2,8 @@ name: "Check pull request title, branch name and commit message"
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
+    branches-ignore:
+      - "main"
 jobs:
   check-pull-request:
     runs-on: ubuntu-latest
