@@ -12,6 +12,16 @@ resource "aws_codebuild_webhook" "build_environment_webhook" {
       pattern = "refs/heads/task/DI-[0-9]*"
     }
   }
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PUSH"
+    }
+    filter {
+      type    = "HEAD_REF"
+      pattern = "refs/heads/task/DSUEC-[0-9]*"
+    }
+  }
   depends_on = [aws_codebuild_project.di_build_environment]
 }
 
