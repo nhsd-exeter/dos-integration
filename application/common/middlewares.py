@@ -1,6 +1,7 @@
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.middleware_factory import lambda_handler_decorator
 from aws_lambda_powertools.utilities.typing import LambdaContext
+from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from botocore.exceptions import ClientError
 
 from common.errors import ValidationException
@@ -10,6 +11,12 @@ logger = Logger(child=True)
 
 @lambda_handler_decorator(trace_execution=True)
 def unhandled_exception_logging(handler, event, context: LambdaContext):
+    if SQSEvent.isinstance(event):
+         if len(list(event.records)) > 0:
+            for record in event.records:
+                if record.pop('Staff', None) != None:
+                    logger.info("Redacted 'Staff' key from Change Event payload")
+
     try:
         response = handler(event, context)
         return response
