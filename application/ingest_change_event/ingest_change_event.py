@@ -12,7 +12,7 @@ from boto3 import client
 
 from .change_event_validation import validate_change_event
 from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
-from common.middlewares import unhandled_exception_logging
+from common.middlewares import unhandled_exception_logging, redact_staff_key_from_event
 from common.types import HoldingQueueChangeEventItem
 from common.utilities import extract_body, get_sequence_number, remove_given_keys_from_dict_by_msg_limit
 
@@ -20,7 +20,7 @@ logger = Logger()
 tracer = Tracer()
 sqs = client("sqs")
 
-
+@redact_staff_key_from_event()
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
