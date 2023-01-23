@@ -47,8 +47,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
     record = next(event.records)
     change_event = extract_body(record.body)
-    validate_change_event(change_event)
     redact_staff_key_from_change_event(change_event)
+    validate_change_event(change_event)
     ods_code = change_event.get("ODSCode")
     add_change_event_received_metric(ods_code=ods_code)
     logger.append_keys(ods_code=ods_code)
