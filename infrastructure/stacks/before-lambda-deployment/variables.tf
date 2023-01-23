@@ -7,6 +7,11 @@ variable "vpc_terraform_state_key" {
   description = "Texas Platform State store bucket key"
 }
 
+variable "aws_vpc_name" {
+  type        = string
+  description = "Name of the VPC"
+}
+
 # ############################
 # # SECRETS
 # ############################
