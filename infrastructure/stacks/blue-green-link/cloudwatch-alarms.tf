@@ -45,7 +45,7 @@ resource "aws_cloudwatch_metric_alarm" "message_latency_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "600"
   statistic                 = "Average"
-  threshold                 = "30000" # 30 Seconds
+  threshold                 = "1800000" # 30 Minutes
 }
 
 resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
@@ -158,7 +158,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "300"
   statistic                 = "Sum"
-  threshold                 = "800"
+  threshold                 = "1500"
   treat_missing_data        = "notBreaching"
 }
 
