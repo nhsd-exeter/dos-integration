@@ -12,24 +12,25 @@ logger = Logger(child=True)
 @lambda_handler_decorator(trace_execution=True)
 def unhandled_exception_logging(handler, event, context: LambdaContext):
     if SQSEvent.isinstance(event):
-         if len(list(event.records)) > 0:
+        if len(list(event.records)) > 0:
             for record in event.records:
                 if record.pop('Staff', None) != None:
                     logger.info("Redacted 'Staff' key from Change Event payload")
+        redact_event = event
 
     try:
-        response = handler(event, context)
+        response = handler(redact_event, context)
         return response
     except ValidationException as err:
-        logger.exception(f"Validation Error - {err}", extra={"error": err, "event": event})
+        logger.exception(f"Validation Error - {err}", extra={"error": err, "event": redact_event})
         return
     except ClientError as err:
         error_code = err.response["Error"]["Code"]
         error_msg = err.response["Error"]["Message"]
-        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err, "event": event})
+        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err, "event": redact_event})
         raise err
     except BaseException as err:
-        logger.exception(f"Something went wrong - {err}", extra={"error": err, "event": event})
+        logger.exception(f"Something went wrong - {err}", extra={"error": err, "event": redact_event})
         raise err
 
 
