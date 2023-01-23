@@ -20,7 +20,7 @@ resource "aws_api_gateway_domain_name" "api_gateway_domain_name" {
 resource "aws_route53_record" "uec_dos_integration_api_endpoint" {
   name    = "${var.dos_integration_sub_domain_name}.${var.texas_hosted_zone}"
   type    = "A"
-  zone_id = data.terraform_remote_state.route53.outputs.dns_zone_id
+  zone_id = data.aws_route53_zone.texas_hosted_zone.zone_id
   alias {
     name                   = aws_api_gateway_domain_name.api_gateway_domain_name.regional_domain_name
     zone_id                = aws_api_gateway_domain_name.api_gateway_domain_name.regional_zone_id
