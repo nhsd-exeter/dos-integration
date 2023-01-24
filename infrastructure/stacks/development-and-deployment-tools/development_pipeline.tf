@@ -133,33 +133,33 @@ resource "aws_codepipeline" "development_pipeline" {
       }
     }
   }
-  # stage {
-  #   name = "Deploy_Prod_Environments"
-  #   action {
-  #     name            = "Deploy_Demo"
-  #     category        = "Build"
-  #     owner           = "AWS"
-  #     run_order       = 1
-  #     provider        = "CodeBuild"
-  #     input_artifacts = ["source_output"]
-  #     version         = "1"
-  #     configuration = {
-  #       ProjectName = aws_codebuild_project.di_full_deploy_stage.name
-  #       EnvironmentVariables = jsonencode([
-  #         {
-  #           name  = "PROFILE"
-  #           value = "demo"
-  #           type  = "PLAINTEXT"
-  #         },
-  #         {
-  #           name  = "ENVIRONMENT"
-  #           value = "demo"
-  #           type  = "PLAINTEXT"
-  #         }
-  #       ])
-  #     }
-  #   }
-  # }
+  stage {
+    name = "Deploy_Prod_Environments"
+    action {
+      name            = "Deploy_Demo"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 1
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = aws_codebuild_project.di_full_deploy_stage.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "PROFILE"
+            value = "demo"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "ENVIRONMENT"
+            value = "demo"
+            type  = "PLAINTEXT"
+          }
+        ])
+      }
+    }
+  }
   depends_on = [
     module.development_pipeline_artefact_bucket,
     aws_codebuild_project.di_unit_tests_stage,
