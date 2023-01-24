@@ -103,5 +103,4 @@ resource "aws_codebuild_project" "di_build_image" {
     location        = var.github_url
     buildspec       = data.template_file.build_image_buildspec.rendered
   }
-
 }

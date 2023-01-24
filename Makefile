@@ -635,3 +635,12 @@ tag-commit-to-deploy-shared-resources: # Tags commit to deploy shared resources 
 tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/green environment - mandatory: PROFILE=[name], SHARED_ENVIRONMENT=[name]
 	tag="$(BUILD_TIMESTAMP)_$(PROFILE)_$(SHARED_ENVIRONMENT)_blue_green_rollback"
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+# ==============================================================================
+# DynamoDB Cleanup Job
+
+deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
+	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+
+undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
+	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
