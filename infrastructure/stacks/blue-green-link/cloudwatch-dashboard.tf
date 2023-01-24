@@ -237,7 +237,11 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             region : var.aws_region,
             title : "Lambda Error Rates (%) -> Above 0 is bad",
             period : 60
-            unit : "Percent"
+            yAxis : {
+              left : {
+                label : "Percentage",
+                showUnits : false
+            } }
           }
         },
         {

@@ -32,22 +32,6 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_al
   treat_missing_data        = "notBreaching"
 }
 
-resource "aws_cloudwatch_metric_alarm" "message_latency_alert" {
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Message Latency"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "2"
-  dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "3"
-  insufficient_data_actions = []
-  metric_name               = "QueueToDoSLatency"
-  namespace                 = "UEC-DOS-INT"
-  period                    = "600"
-  statistic                 = "Average"
-  threshold                 = "1800000" # 30 Minutes
-}
-
 resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Holding Queue Message DLQ has recieved messages"
@@ -223,4 +207,36 @@ resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
   period                    = "86400" # 1 Day
   statistic                 = "Sum"
   threshold                 = "2"
+}
+
+resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Average Message Latency"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "2"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "6"
+  insufficient_data_actions = []
+  metric_name               = "QueueToDoSLatency"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "300"
+  statistic                 = "Average"
+  threshold                 = "1800000" # 30 Minutes
+}
+
+resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when DI is taking longer than expected to process update requests"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Maximum Message Latency"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "2"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "6"
+  insufficient_data_actions = []
+  metric_name               = "QueueToDoSLatency"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "300"
+  statistic                 = "Maximum"
+  threshold                 = "7200000" # 2 Hours
 }
