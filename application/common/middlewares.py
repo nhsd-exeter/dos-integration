@@ -12,7 +12,7 @@ def redact_staff_key_from_event(handler, event, context: LambdaContext):
     logger.info("Checking if 'Staff' key needs removing from Change Event payload")
     if 'Records' in event and len(list(event['Records'])) > 0:
             for record in event['Records']:
-                if record.pop('Staff', None) != None:
+                if record['body'].pop('Staff', None) != None:
                     logger.info("Redacted 'Staff' key from Change Event payload")
     return handler(event, context)
 
