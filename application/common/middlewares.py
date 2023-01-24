@@ -5,6 +5,7 @@ from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
 from botocore.exceptions import ClientError
 
 from common.errors import ValidationException
+from common.utilities import extract_body, json_str_body
 
 logger = Logger(child=True)
 
@@ -13,7 +14,9 @@ def redact_staff_key_from_event(handler, event: SQSEvent, context: LambdaContext
     logger.info(f"Checking if 'Staff' key needs removing from Change Event payload {event}", extra={"event": event})
     if len(list(event.records)) > 0:
             for record in event.records:
-                if record.pop('Staff', None) != None:
+                change_event = extract_body(record)
+                if change_event.pop('Staff', None) != None:
+                    record = json_str_body(change_event)
                     logger.info("Redacted 'Staff' key from Change Event payload")
     return handler(event, context)
 
