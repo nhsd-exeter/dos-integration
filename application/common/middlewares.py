@@ -14,7 +14,7 @@ def redact_staff_key_from_event(handler, event: SQSEvent, context: LambdaContext
     logger.info(f"Checking if 'Staff' key needs removing from Change Event payload {event}", extra={"event": event})
     if len(list(event.records)) > 0:
             for record in event.records:
-                change_event = extract_body(record)
+                change_event = extract_body(record.body)
                 if change_event.pop('Staff', None) != None:
                     record = json_str_body(change_event)
                     logger.info("Redacted 'Staff' key from Change Event payload")
