@@ -6,14 +6,7 @@ from unittest.mock import patch
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
 from pytest import fixture, mark, raises
 
-from application.slack_messenger.slack_messenger import (
-    generate_aws_cloudwatch_log_insights_url,
-    get_message_for_cloudwatch_event,
-    lambda_handler,
-    send_msg_slack,
-)
-
-from common.constants import INVALID_POSTCODE_REPORT_ID, METRIC_REPORT_KEY_MAP
+from application.slack_messenger.slack_messenger import get_message_for_cloudwatch_event, lambda_handler, send_msg_slack
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
@@ -143,15 +136,13 @@ def test_send_message(mock_post, lambda_context):
 
 
 @mark.parametrize("new_state_value, colour", (("ALARM", "#e01e5a"), ("OK", "good"), ("INSUFFICIENT_DATA", "warning")))
-@patch(f"{FILE_PATH}.generate_aws_cloudwatch_log_insights_url")
-def test_get_message_from_event(mock_cloudwatch_url, new_state_value, colour):
+def test_get_message_from_event(new_state_value, colour):
     # Arrange
     sns_event_dict = SNS_EVENT.copy()
     message = MESSAGE.copy()
     message["NewStateValue"] = new_state_value
     sns_event_dict["Records"][0]["Sns"]["Message"] = dumps(message)
     sns_event = SNSEvent(sns_event_dict)
-    mock_cloudwatch_url.return_value = "https://test.com"
     # Act
     message = get_message_for_cloudwatch_event(sns_event)
     # Assert
@@ -180,7 +171,6 @@ def test_get_message_from_event(mock_cloudwatch_url, new_state_value, colour):
                         "title": "Trigger",
                         "value": "SUM InvalidPostcode GreaterThanThreshold 0.0 for 1 period(s)  of 300 seconds.",
                     },
-                    {"title": "", "value": "<https://test.com|View Logs>"},
                 ],
                 "ts": 1646393939.038,
             },
@@ -196,21 +186,3 @@ def test_get_message_from_event(mock_cloudwatch_url, new_state_value, colour):
             },
         ],
     }
-    mock_cloudwatch_url.assert_called_once()
-
-
-def test_generate_cloudwatch_url():
-    # Arrange
-    project_id = "test-service-name"
-    region = "eu-west-2"
-    metric_name = "InvalidPostcode"
-    report_key = METRIC_REPORT_KEY_MAP.get(metric_name, "")
-    log_groups = [f"{project_id}-service-matcher"]
-    filters = {"report_key": report_key}
-    expected_url = "https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#logsV2"
-    # Act
-    url = generate_aws_cloudwatch_log_insights_url(region, log_groups, filters, 10)
-    # Assert
-    assert report_key == INVALID_POSTCODE_REPORT_ID
-    assert log_groups == ["test-service-name-service-matcher"]
-    assert url.startswith(expected_url)

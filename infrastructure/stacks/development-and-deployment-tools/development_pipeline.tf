@@ -155,6 +155,11 @@ resource "aws_codepipeline" "development_pipeline" {
             name  = "ENVIRONMENT"
             value = "demo"
             type  = "PLAINTEXT"
+          },
+          {
+            name  = "AWS_ACCOUNT"
+            value = "PROD"
+            type  = "PLAINTEXT"
           }
         ])
       }
