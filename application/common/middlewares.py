@@ -9,7 +9,6 @@ logger = Logger(child=True)
 
 @lambda_handler_decorator(trace_execution=True)
 def redact_staff_key_from_event(handler, event, context: LambdaContext):
-
     if 'records' in event and len(list(event.records)) > 0:
             for record in event.records:
                 if record.pop('Staff', None) != None:
