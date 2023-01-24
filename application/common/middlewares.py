@@ -24,7 +24,8 @@ def redact_staff_key_from_event(handler, event: SQSEvent, context: LambdaContext
 @lambda_handler_decorator(trace_execution=True)
 def unhandled_exception_logging(handler, event, context: LambdaContext):
     if isinstance(event, SQSEvent):
-        raw_event = event.raw_event
+        # raw_event = event.raw_event
+        raw_event = str(event)
     else:
         raw_event = event
 
