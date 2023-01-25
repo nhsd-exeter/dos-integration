@@ -48,15 +48,11 @@ resource "aws_codebuild_project" "dynamo_db_clean_up_job" {
     }
 
     environment_variable {
-      name  = "PROFILE"
-      value = "Set me"
-    }
-    environment_variable {
-      name  = "ENVIRONMENT"
-      value = "Set me"
-    }
-    environment_variable {
       name  = "AWS_ACCOUNT"
+      value = "Set me"
+    }
+    environment_variable {
+      name  = "DYNAMO_DB_TABLE"
       value = "Set me"
     }
   }

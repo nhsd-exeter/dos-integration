@@ -2,13 +2,6 @@
 version: 0.2
 
 phases:
-  install:
-    install:
-    runtime-versions:
-      python: 3.9
-    commands:
-      - pip3 install --upgrade pip
-      - pip3 install -r scripts/dynamodb_clean_up/requirements.txt
   pre_build:
     commands:
       - echo PROFILE=$PROFILE
@@ -34,4 +27,4 @@ phases:
         fi
   build:
     commands:
-      - python3 scripts/dynamodb_clean_up/dynamodb_clean_up.py
+      - make run-dynamodb-cleanup-job DYNAMO_DB_TABLE=$DYNAMO_DB_TABLE

@@ -639,6 +639,16 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 # ==============================================================================
 # DynamoDB Cleanup Job
 
+run-dynamodb-cleanup-job: # Runs dynamodb cleanup job
+	results=$$(aws dynamodb execute-statement --no-paginate --statement 'SELECT * FROM "$(DYNAMO_DB_TABLE)" WHERE "Event"."Staff" is Not MISSING' --output json | jq -r '.Items')
+	echo $$results | jq length
+	for row in $$(echo $$results | jq -r '.[] | @base64'); do
+		id=$$(echo "$$row" | base64 --decode | jq -r '.Id.S');
+		ODSCode=$$(echo "$$row" | base64 --decode | jq -r '.ODSCode.S');
+		delete=$$(aws dynamodb execute-statement --no-paginate --statement "UPDATE \"$(DYNAMO_DB_TABLE)\" REMOVE \"Event\".\"Staff\" WHERE \"Id\" = '$$id' AND \"ODSCode\" = '$$ODSCode'";)
+		echo $$id Staff removed
+	done
+
 deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
 
