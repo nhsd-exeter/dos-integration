@@ -632,6 +632,7 @@ build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandat
 	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
 
 link-blue-green-environment: # Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=blue-green-link
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
