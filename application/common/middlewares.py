@@ -9,17 +9,27 @@ from common.utilities import extract_body, json_str_body
 
 logger = Logger(child=True)
 
+# @lambda_handler_decorator(trace_execution=True)
+# def redact_staff_key_from_event(handler, event: SQSEvent, context: LambdaContext):
+#     logger.info(f"Checking if 'Staff' key needs removing from Change Event payload {event}", extra={"event": event})
+#     if len(list(event.records)) > 0:
+#             for record in event.records:
+#                 change_event = extract_body(record.body)
+#                 if change_event.pop('Staff', None) != None:
+#                     record = json_str_body(change_event)
+#                     logger.info("Redacted 'Staff' key from Change Event payload")
+#     return handler(event, context)
+
 @lambda_handler_decorator(trace_execution=True)
-def redact_staff_key_from_event(handler, event: SQSEvent, context: LambdaContext):
+def redact_staff_key_from_event(handler, event, context: LambdaContext):
     logger.info(f"Checking if 'Staff' key needs removing from Change Event payload {event}", extra={"event": event})
-    if len(list(event.records)) > 0:
-            for record in event.records:
-                change_event = extract_body(record.body)
+    if 'Records' in event and len(list(event['Records'])) > 0:
+            for record in event['Records']:
+                change_event = extract_body(record['body'])
                 if change_event.pop('Staff', None) != None:
-                    record = json_str_body(change_event)
+                    record['body'] = json_str_body(change_event)
                     logger.info("Redacted 'Staff' key from Change Event payload")
     return handler(event, context)
-
 
 @lambda_handler_decorator(trace_execution=True)
 def unhandled_exception_logging(handler, event, context: LambdaContext):
