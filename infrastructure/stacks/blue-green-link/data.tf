@@ -38,3 +38,12 @@ data "aws_sns_topic" "shared_resources_sns_topic_app_alerts_for_slack_route53_he
   provider = aws.route53_health_check_alarm_region
   name     = var.shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region
 }
+
+data "aws_sns_topic" "sns_topic_app_alerts_for_slack_default_region" {
+  name = var.sns_topic_app_alerts_for_slack_default_region
+}
+
+data "aws_sns_topic" "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
+  provider = aws.route53_health_check_alarm_region
+  name     = var.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region
+}

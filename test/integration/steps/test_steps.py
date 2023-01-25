@@ -157,6 +157,16 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
     return context
 
 
+@given(
+    parse('the change event is "{service_status}" from "{open}" to "{close}" on date "{date}"'),
+    target_fixture="context",
+)
+def change_event_specified_opening_set_times(service_status: str, date: str, open: str, close: str, context: Context):
+    query_specified_opening_builder(context, service_status, date, open, close)
+    context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
+    return context
+
+
 @given("the change event has no specified opening dates", target_fixture="context")
 def change_event_no_specified_opening_dates(context: Context):
     date_vals = context.generator_data["specified_openings"][0]
@@ -644,6 +654,32 @@ def the_changed_opening_time_is_accepted_by_dos(context: Context, date):
     current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
     expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
+    assert current_specified_openings[expected_opening_date] != [], "Date is not open in DoS"
+    return context
+
+
+@then(parse('DoS is open from "{open}" until "{close}" on "{date}"'), target_fixture="context")
+def the_changed_opening_time_is_accepted_by_dos_specific(context: Context, date, open, close):
+    wait_for_service_update(context.generator_data["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
+    expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
+    assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
+    assert (
+        current_specified_openings[expected_opening_date][0]["start_time"] == open
+    ), "Date is not open at correct times"
+    assert (
+        current_specified_openings[expected_opening_date][0]["end_time"] == close
+    ), "Date is not closed at correct times"
+    return context
+
+
+@then(parse('DoS is closed on "{date}"'), target_fixture="context")
+def the_changed_closing_time_is_accepted_by_dos(context: Context, date):
+    wait_for_service_update(context.generator_data["id"])
+    current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
+    expected_opening_date = dt.strptime(date, "%b %d %Y").strftime("%Y-%m-%d")
+    assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
+    assert current_specified_openings[expected_opening_date] == [], "Date is not closed in DoS"
     return context
 
 
