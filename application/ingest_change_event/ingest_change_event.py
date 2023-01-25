@@ -92,18 +92,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
         MessageGroupId=ods_code,
     )
 
-
-def redact_staff_key_from_change_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Remove the sensitive staff key from a change event
-    Args:
-        event (Dict[str, Any]): Lambda function invocation event
-    """
-
-    if event.pop('Staff', None) != None:
-        logger.info("Redacted 'Staff' key from Change Event payload")
-    return event
-
-
 @metric_scope
 def add_change_event_received_metric(ods_code: str, metrics) -> None:  # type: ignore
     """Adds a success metric to the custom metrics collection
