@@ -43,7 +43,7 @@ def json_str_body(body: Dict[str, Any]) -> str:
         (str): A JSON string body
     """
     try:
-        return dumps(body).encode("utf-8")
+        return dumps(body)
     except ValueError as e:
         raise ValueError("Dict Change Event cannot be converted to a JSON string")
 
