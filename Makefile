@@ -657,7 +657,8 @@ run-dynamodb-cleanup-job: # Runs dynamodb cleanup job
 			echo $$id Staff removed
 		done
 		echo $$count items processed
-		echo Total: $$((Total+count))
+		Total=$$(($$Total+$$count))
+		echo Total: $$Total
 		NextToken=$$(echo "$$results" | jq -r '.NextToken');
 		echo NextToken: $$NextToken
 	done
