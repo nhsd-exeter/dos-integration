@@ -641,6 +641,7 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 
 run-dynamodb-cleanup-job: # Runs dynamodb cleanup job
 	NextToken="True"
+	Total=0
 	while [[ "$$NextToken" != "null" ]]; do
 		if [ "$$NextToken" == "True" ]; then
 			results=$$(aws dynamodb execute-statement --statement 'SELECT * FROM "$(DYNAMO_DB_TABLE)" WHERE "Event"."Staff" is Not MISSING' --output json )
@@ -656,6 +657,7 @@ run-dynamodb-cleanup-job: # Runs dynamodb cleanup job
 			echo $$id Staff removed
 		done
 		echo $$count items processed
+		echo Total: $$((Total+count))
 		NextToken=$$(echo "$$results" | jq -r '.NextToken');
 		echo NextToken: $$NextToken
 	done
