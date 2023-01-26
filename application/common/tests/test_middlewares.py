@@ -4,19 +4,34 @@ from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from botocore.exceptions import ClientError
 from pytest import raises
 
+from ..utilities import extract_body
 from ..middlewares import redact_staff_key_from_event, unhandled_exception_logging, unhandled_exception_logging_hidden_event
 
-
-def test_redact_staff_key_from_event():
+def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     @redact_staff_key_from_event()
     def dummy_handler(event, context):
         return event
 
     # Arrange
     event = SQS_EVENT.copy()
+    event["Records"][0]["body"] = SQS_EVENT_BODY_TOP + SQS_EVENT_BODY_BOTTOM
     # Act
-    dummy_handler(event, None)
+    result = dummy_handler(event, None)
+    assert "Redacted 'Staff' key from Change Event payload" not in caplog.text
+    assert "Staff" not in extract_body(event["Records"][0]["body"])
 
+def test_redact_staff_key_from_event(caplog):
+    @redact_staff_key_from_event()
+    def dummy_handler(event, context):
+        return event
+
+    # Arrange
+    event = SQS_EVENT.copy()
+    event['Records'][0]['body'] = SQS_EVENT_BODY_TOP + SQS_EVENT_BODY_STAFF + SQS_EVENT_BODY_BOTTOM
+    # Act
+    result = dummy_handler(event, None)
+    assert "Redacted 'Staff' key from Change Event payload" in caplog.text
+    assert "Staff" not in extract_body(event["Records"][0]["body"])
 
 def test_unhandled_exception_logging(caplog):
     @unhandled_exception_logging
@@ -72,7 +87,7 @@ def test_unhandled_exception_logging_hidden_event_no_error():
     # Act
     dummy_handler(event, None)
 
-SQS_EVENT_BODY = '''{"description": "Default valid schema payload","SearchKey": "X","ODSCode": "XX123",
+SQS_EVENT_BODY_TOP = '''{"description": "Default valid schema payload","SearchKey": "X","ODSCode": "XX123",
     "OrganisationName": "Generic Pharmacy","OrganisationTypeId": "PHA","OrganisationType": "Pharmacy",
     "OrganisationSubType": "Community","OrganisationStatus": "Visible",
     "Address1": "22 STUB STREET","Address2": null,"Address3": null,"City": "TESTON","County": null,
@@ -103,21 +118,20 @@ SQS_EVENT_BODY = '''{"description": "Default valid schema payload","SearchKey": 
         "ContactValue": "pharmacy.test@test.fake"},
         {"ContactType": "Primary", "ContactAvailabilityType": "Office hours", "ContactMethodType": "Telephone",
         "ContactValue": "0123 456 7891 2345 678 9"}
-    ],
-    "Staff": [
-        {"Title": "Mr", "GivenName": "Dave", "FamilyName": "Davies", "Role": "Stub", "Qualification": "Unit"},
-        {"Title": "Mr", "GivenName": "Dummy", "FamilyName": "Stubb", "Role": "Tester", "Qualification": ""}
-    ],
-    "Facilities": [{"Id": 1, "Value": "No"},{"Id": 2,"Value": "Yes"}],
+    ],'''
+SQS_EVENT_BODY_BOTTOM = '''"Facilities": [{"Id": 1, "Value": "No"},{"Id": 2,"Value": "Yes"}],
     "LastUpdatedDates": {"OpeningTimes": "2021-09-07T10:21:30+00:00", "Facilities": "2021-09-07T10:21:42+00:00",
     "Services": "2021-09-07T10:21:36+00:00","ContactDetails": "2017-10-23T14:06:46+00:00"}}'''
-
+SQS_EVENT_BODY_STAFF = '''"Staff": [
+        {"Title": "Mr", "GivenName": "Dave", "FamilyName": "Davies", "Role": "Stub", "Qualification": "Unit"},
+        {"Title": "Mr", "GivenName": "Dummy", "FamilyName": "Stubb", "Role": "Tester", "Qualification": ""}
+    ],'''
 SQS_EVENT = {
     "Records": [
         {
             "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
             "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
-            "body": SQS_EVENT_BODY,
+            "body": None,
             "attributes": {
                 "ApproximateReceiveCount": "1",
                 "SentTimestamp": "1642619743522",
