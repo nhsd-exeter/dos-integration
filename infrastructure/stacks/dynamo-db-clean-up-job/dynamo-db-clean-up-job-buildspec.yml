@@ -2,6 +2,12 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - pip3 install --upgrade pip
+      - pip3 install -r scripts/dynamodb_cleanup_job/requirements.txt
   pre_build:
     commands:
       - chown -R 999:999 $CODEBUILD_SRC_DIR

@@ -638,30 +638,8 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 
 # ==============================================================================
 # DynamoDB Cleanup Job
-
-run-dynamodb-cleanup-job: # Runs dynamodb cleanup job
-	NextToken="True"
-	Total=0
-	while [[ "$$NextToken" != "null" ]]; do
-		if [ "$$NextToken" == "True" ]; then
-			results=$$(aws dynamodb execute-statement --statement 'SELECT * FROM "$(DYNAMO_DB_TABLE)" WHERE "Event"."Staff" is Not MISSING' --output json )
-		else
-			results=$$(aws dynamodb execute-statement --statement 'SELECT * FROM "$(DYNAMO_DB_TABLE)" WHERE "Event"."Staff" is Not MISSING' --output json --next-token "$$NextToken")
-		fi
-		count=$$(echo $$results | jq '.Items | length')
-		echo $$count items found
-		for row in $$(echo $$results | jq -r '.Items[] | @base64'); do
-			id=$$(echo "$$row" | base64 --decode | jq -r '.Id.S');
-			ODSCode=$$(echo "$$row" | base64 --decode | jq -r '.ODSCode.S');
-			delete=$$(aws dynamodb execute-statement --statement "UPDATE \"$(DYNAMO_DB_TABLE)\" REMOVE \"Event\".\"Staff\" WHERE \"Id\" = '$$id' AND \"ODSCode\" = '$$ODSCode'";)
-			echo $$id Staff removed
-		done
-		echo $$count items processed
-		Total=$$(($$Total+$$count))
-		echo Total: $$Total
-		NextToken=$$(echo "$$results" | jq -r '.NextToken');
-		echo NextToken: $$NextToken
-	done
+run-dynamodb-cleanup-job:
+	python3 -m cProfile scripts/dynamodb_cleanup_job/script.py
 
 deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
