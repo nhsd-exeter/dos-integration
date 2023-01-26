@@ -4,12 +4,6 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo PROFILE=$PROFILE
-      - echo ENVIRONMENT=$ENVIRONMENT
-      - echo VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - echo AWS_ACCOUNT=$AWS_ACCOUNT
-      - echo If any of the above are wrong, you need to stop the build and set the correct values in the environment variables override section of the build
-      - sleep 20
       - chown -R 999:999 $CODEBUILD_SRC_DIR
       - |
         if [[ "$AWS_ACCOUNT" == "PROD" ]]; then
