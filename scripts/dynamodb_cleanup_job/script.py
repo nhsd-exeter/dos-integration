@@ -11,7 +11,7 @@ def dynamodb_cleanup_job():
     total = 0
     while next_token is not None:
         # Get the next group of offending items
-        select_sql = f'SELECT "Id", "ODSCode" FROM "{table_name}" WHERE "Event"."Staff" is Not MISSING'
+        select_sql = f'SELECT "Id", "ODSCode" FROM "{table_name}" WHERE "Event"."Staff" Is Not MISSING'
         if next_token == "Not None":
             results = run_partiql(select_sql)
         else:

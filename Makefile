@@ -639,7 +639,7 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 # ==============================================================================
 # DynamoDB Cleanup Job
 run-dynamodb-cleanup-job:
-	python3 -m cProfile scripts/dynamodb_cleanup_job/script.py
+	python3 scripts/dynamodb_cleanup_job/script.py
 
 deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
