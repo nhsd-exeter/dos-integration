@@ -15,6 +15,9 @@ STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json
 with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
+STD_EVENT_STAFF_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT_WITH_STAFF.json")
+with open(STD_EVENT_STAFF_PATH, "r", encoding="utf8") as file:
+    PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
 
 def get_std_event(**kwargs) -> dict:
     event = PHARMACY_STANDARD_EVENT.copy()
