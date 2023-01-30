@@ -46,7 +46,7 @@ def json_str_body(body: Dict[str, Any]) -> str:
     try:
         return dumps(body)
     except ValueError as e:
-        raise ValueError("Dict Change Event cannot be converted to a JSON string") from e
+        raise ValueError("Dict Change Event body cannot be converted to a JSON string") from e
 
 
 def get_sequence_number(record: SQSRecord) -> Union[int, None]:

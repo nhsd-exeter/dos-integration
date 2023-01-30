@@ -7,6 +7,7 @@ from pytest import mark, raises
 from ..utilities import (
     add_metric,
     extract_body,
+    json_str_body,
     get_sequence_number,
     get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
@@ -32,6 +33,23 @@ def test_extract_body_exception():
     # Act & Assert
     with raises(Exception):
         extract_body(expected_change_event)
+
+
+def test_json_str_body():
+    # Arrange
+    expected_json_str = '{"test": "test"}'
+    # Act
+    result = json_str_body({"test": "test"})
+    # Assert
+    assert (
+        result == expected_json_str
+    ), f"Change event body should be {expected_json_str} str but is {result}"
+
+
+def test_expected_json_str_exception():
+    # Act & Assert
+    with raises(Exception):
+        json_str_body(body={"not a json dict"})
 
 
 def test_get_sequence_number():
