@@ -129,8 +129,21 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 is_changes=changes_to_dos.specified_opening_times_changes,
                 specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
             )
+            is_palliative_care_changes: bool = save_palliative_care_into_db(
+                connection=connection,
+                service_id=service_id,
+                is_changes=changes_to_dos.palliative_care_changes,
+                palliative_care=changes_to_dos.nhs_entity.palliative_care,
+            )
             # If there are any changes, update the service history and commit the changes to the database
-            if any([is_demographic_changes, is_standard_opening_times_changes, is_specified_opening_times_changes]):
+            if any(
+                [
+                    is_demographic_changes,
+                    is_standard_opening_times_changes,
+                    is_specified_opening_times_changes,
+                    is_palliative_care_changes,
+                ]
+            ):
                 service_histories.save_service_histories(connection=connection)
                 connection.commit()
                 logger.info(f"Updates successfully committed to the DoS database for service id {service_id}")
@@ -330,4 +343,33 @@ def save_specified_opening_times_into_db(
         return True
     else:
         logger.info(f"No specified opening times changes to save for service id {service_id}")
+        return False
+
+
+def save_palliative_care_into_db(
+    connection: connection, service_id: int, is_changes: bool, palliative_care: bool
+) -> bool:
+    """Saves the palliative care changes to the DoS database
+
+    Args:
+        connection (connection): Connection to the DoS database
+        service_id (int): Id of the service to update
+        is_changes (bool): True if changes should be made to the database, False if no changes need to be made
+        palliative_care (bool): Changes to the palliative care
+
+    Returns:
+        bool: True if changes were made to the database, False if no changes were made
+    """
+
+    if is_changes:
+        logger.info(
+            f"Saving palliative care changes for service id {service_id}",
+            extra={"palliative_care_is_set_to": palliative_care},
+        )
+        return True
+    else:
+        logger.info(
+            f"No palliative care changes to save for service id {service_id}",
+            extra={"palliative_care_is_set_to": palliative_care},
+        )
         return False
