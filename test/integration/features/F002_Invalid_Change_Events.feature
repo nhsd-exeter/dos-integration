@@ -38,6 +38,8 @@ Feature: F002. Invalid change event Exception handling
     And the change event "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
+    And logs show staff data has been redacted
+    And error messages do not show Staff data
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX6. A Changed Event with no postcode LAT Long Values is reported

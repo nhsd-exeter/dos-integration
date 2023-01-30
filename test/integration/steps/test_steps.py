@@ -797,3 +797,21 @@ def show_service_sync_logs(context: Context):
     )
     logs = loads(get_logs(query, "service-sync", context.start_time))["results"][0][0]["value"]
     assert "service_uid" and "service_name" not in logs, "ERROR: service uid and service name found in logs"
+
+@then("logs show staff data has been redacted", target_fixture="context")
+def ingest_staff_redaction(context: Context):
+    query = (
+        f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        '|filter message like "Redacted \'Staff\' key from Change Event payload"'
+    )
+    logs = loads(get_logs(query, "ingest-change-event", context.start_time))
+    assert context.service_id in logs, "ERROR: Logs do not show redaction of staff field"
+
+@then("error messages do not show Staff data", target_fixture="context")
+def error_contains_no_staff(context: Context):
+    query = (
+        f'fields @event | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        '|filter message like "Validation Error - Unexpected Org Sub Type ID"'
+    )
+    logs = loads(get_logs(query, "ingest-change-event", context.start_time))
+    assert "Superintendent Pharmacist" not in logs, "ERROR: Logs output the staff field on error"

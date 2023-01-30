@@ -228,9 +228,28 @@ def build_change_event(context):
         "OrganisationType": "Pharmacy",
         "OrganisationTypeId": "PHA",
         "UniqueKey": generate_unique_key(),
+        "Staff": generate_staff()
     }
     context.change_event = change_event
 
+def generate_staff():
+    staff_value = [
+        {
+            "Title": "Mr",
+            "GivenName": "Dave",
+            "FamilyName": "Davies",
+            "Role": "Superintendent Pharmacist",
+            "Qualification": "Pharmacist"
+        },
+        {
+            "Title": "Mr",
+            "GivenName": "Tim",
+            "FamilyName": "Timothy",
+            "Role": "Locum Pharmacist",
+            "Qualification": ""
+        }
+    ]
+    return staff_value
 
 def build_change_event_contacts(context) -> list:
     # This function will build the contacts for the CE
