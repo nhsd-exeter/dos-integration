@@ -7,11 +7,11 @@ from pytest import mark, raises
 from ..utilities import (
     add_metric,
     extract_body,
-    json_str_body,
     get_sequence_number,
     get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
+    json_str_body,
     remove_given_keys_from_dict_by_msg_limit,
 )
 

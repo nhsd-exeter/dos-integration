@@ -10,8 +10,8 @@ from ..middlewares import (
     unhandled_exception_logging,
     unhandled_exception_logging_hidden_event,
 )
+from ..tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 from ..utilities import extract_body
-from .conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
 def test_redact_staff_key_from_event_with_no_staff_key(caplog):
