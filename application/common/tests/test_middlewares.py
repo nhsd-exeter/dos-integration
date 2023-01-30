@@ -2,10 +2,12 @@ import logging
 
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from botocore.exceptions import ClientError
+from json import dumps
 from pytest import raises
 
 from ..utilities import extract_body
 from ..middlewares import redact_staff_key_from_event, unhandled_exception_logging, unhandled_exception_logging_hidden_event
+from .conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     @redact_staff_key_from_event()
@@ -14,7 +16,7 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog):
 
     # Arrange
     event = SQS_EVENT.copy()
-    event["Records"][0]["body"] = SQS_EVENT_BODY_TOP + SQS_EVENT_BODY_BOTTOM
+    event["Records"][0]["body"] = dumps(PHARMACY_STANDARD_EVENT.copy())
     # Act
     result = dummy_handler(event, None)
     assert "Redacted 'Staff' key from Change Event payload" not in caplog.text
@@ -27,7 +29,7 @@ def test_redact_staff_key_from_event(caplog):
 
     # Arrange
     event = SQS_EVENT.copy()
-    event['Records'][0]['body'] = SQS_EVENT_BODY_TOP + SQS_EVENT_BODY_STAFF + SQS_EVENT_BODY_BOTTOM
+    event['Records'][0]['body'] = dumps(PHARMACY_STANDARD_EVENT_STAFF.copy())
     # Act
     result = dummy_handler(event, None)
     assert "Redacted 'Staff' key from Change Event payload" in caplog.text
@@ -87,45 +89,7 @@ def test_unhandled_exception_logging_hidden_event_no_error():
     # Act
     dummy_handler(event, None)
 
-SQS_EVENT_BODY_TOP = '''{"description": "Default valid schema payload","SearchKey": "X","ODSCode": "XX123",
-    "OrganisationName": "Generic Pharmacy","OrganisationTypeId": "PHA","OrganisationType": "Pharmacy",
-    "OrganisationSubType": "Community","OrganisationStatus": "Visible",
-    "Address1": "22 STUB STREET","Address2": null,"Address3": null,"City": "TESTON","County": null,
-    "Latitude": 53.3623793029785,"Longitude": -2.15734055519104,"Postcode": "ST1 0UB",
-    "ParentOrganisation": {"ODSCode": "XOP", "OrganisationName": "TESTON Stub services"},
-    "OpeningTimes": [
-        {"Weekday": "Monday", "OpeningTime": "07:30","ClosingTime": "23:30", "OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780, "OpeningTimeType": "General", "AdditionalOpeningDate": "", "IsOpen": true},
-        {"Weekday": "Tuesday","OpeningTime": "07:30","ClosingTime": "23:30","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "wednesday","OpeningTime": "07:30","ClosingTime": "23:30","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "Thursday","OpeningTime": "07:30","ClosingTime": "23:30","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "Friday","OpeningTime": "07:30","ClosingTime": "23:30","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "Saturday","OpeningTime": "07:32","ClosingTime": "23:00","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "Sunday","OpeningTime": "10:00","ClosingTime": "17:00","OffsetOpeningTime": 540,
-        "OffsetClosingTime": 780,"OpeningTimeType": "General","AdditionalOpeningDate": "","IsOpen": true},
-        {"Weekday": "", "OpeningTime": "10:00", "ClosingTime": "17:00", "OffsetOpeningTime": 0, "OffsetClosingTime": 0,
-        "OpeningTimeType": "Additional", "AdditionalOpeningDate": "Dec 26 2022", "IsOpen": true}
-    ],
-    "Contacts": [
-        {"ContactType": "Primary", "ContactAvailabilityType": "Office hours", "ContactMethodType": "Website",
-        "ContactValue": "http://www.test.co.uk/"},
-        {"ContactType": "Primary", "ContactAvailabilityType": "Office hours", "ContactMethodType": "Email",
-        "ContactValue": "pharmacy.test@test.fake"},
-        {"ContactType": "Primary", "ContactAvailabilityType": "Office hours", "ContactMethodType": "Telephone",
-        "ContactValue": "0123 456 7891 2345 678 9"}
-    ],'''
-SQS_EVENT_BODY_BOTTOM = '''"Facilities": [{"Id": 1, "Value": "No"},{"Id": 2,"Value": "Yes"}],
-    "LastUpdatedDates": {"OpeningTimes": "2021-09-07T10:21:30+00:00", "Facilities": "2021-09-07T10:21:42+00:00",
-    "Services": "2021-09-07T10:21:36+00:00","ContactDetails": "2017-10-23T14:06:46+00:00"}}'''
-SQS_EVENT_BODY_STAFF = '''"Staff": [
-        {"Title": "Mr", "GivenName": "Dave", "FamilyName": "Davies", "Role": "Stub", "Qualification": "Unit"},
-        {"Title": "Mr", "GivenName": "Dummy", "FamilyName": "Stubb", "Role": "Tester", "Qualification": ""}
-    ],'''
+
 SQS_EVENT = {
     "Records": [
         {
