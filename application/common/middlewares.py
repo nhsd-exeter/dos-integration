@@ -8,16 +8,18 @@ from common.utilities import extract_body, json_str_body
 
 logger = Logger(child=True)
 
+
 @lambda_handler_decorator(trace_execution=True)
 def redact_staff_key_from_event(handler, event, context: LambdaContext):
     logger.info("Checking if 'Staff' key needs removing from Change Event payload")
     if 'Records' in event and len(list(event['Records'])) > 0:
-            for record in event['Records']:
-                change_event = extract_body(record['body'])
-                if change_event.pop('Staff', None) != None:
-                    record['body'] = json_str_body(change_event)
-                    logger.info("Redacted 'Staff' key from Change Event payload")
+        for record in event['Records']:
+            change_event = extract_body(record['body'])
+            if change_event.pop('Staff', None) is not None:
+                record['body'] = json_str_body(change_event)
+                logger.info("Redacted 'Staff' key from Change Event payload")
     return handler(event, context)
+
 
 @lambda_handler_decorator(trace_execution=True)
 def unhandled_exception_logging(handler, event, context: LambdaContext):

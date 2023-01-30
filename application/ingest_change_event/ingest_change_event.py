@@ -1,7 +1,6 @@
 from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
-from typing import Any, Dict
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger

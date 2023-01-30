@@ -22,10 +22,12 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(PHARMACY_STANDARD_EVENT.copy())
+    assert "Staff" not in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
     assert "Redacted 'Staff' key from Change Event payload" not in caplog.text
-    assert "Staff" not in extract_body(event["Records"][0]["body"])
+    assert "Staff" not in extract_body(result["Records"][0]["body"])
+
 
 def test_redact_staff_key_from_event(caplog):
     @redact_staff_key_from_event()
@@ -35,10 +37,12 @@ def test_redact_staff_key_from_event(caplog):
     # Arrange
     event = SQS_EVENT.copy()
     event['Records'][0]['body'] = dumps(PHARMACY_STANDARD_EVENT_STAFF.copy())
+    assert "Staff" in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
     assert "Redacted 'Staff' key from Change Event payload" in caplog.text
-    assert "Staff" not in extract_body(event["Records"][0]["body"])
+    assert "Staff" not in extract_body(result["Records"][0]["body"])
+
 
 def test_unhandled_exception_logging(caplog):
     @unhandled_exception_logging

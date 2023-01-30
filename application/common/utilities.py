@@ -34,6 +34,7 @@ def extract_body(body: str) -> Dict[str, Any]:
         raise ValueError("Change Event unable to be extracted") from e
     return body
 
+
 def json_str_body(body: Dict[str, Any]) -> str:
     """Encode a Dict event body from the lambda function invocation event into a JSON string
 
@@ -45,7 +46,7 @@ def json_str_body(body: Dict[str, Any]) -> str:
     try:
         return dumps(body)
     except ValueError as e:
-        raise ValueError("Dict Change Event cannot be converted to a JSON string")
+        raise ValueError("Dict Change Event cannot be converted to a JSON string") from e
 
 
 def get_sequence_number(record: SQSRecord) -> Union[int, None]:
