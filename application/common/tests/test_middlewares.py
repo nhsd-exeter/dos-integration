@@ -40,7 +40,7 @@ def test_redact_staff_key_from_event(caplog):
     assert "Staff" in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
-    assert "Redacted 'Staff' key from Change Event payload" in caplog.text
+    assert "Redacted 'Staff' key from Change Event payload body" in caplog.text
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
 
