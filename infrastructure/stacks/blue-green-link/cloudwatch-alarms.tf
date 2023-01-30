@@ -33,6 +33,7 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_al
 }
 
 resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Holding Queue Message DLQ has recieved messages"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Holding Queue Message DLQ'd"
@@ -49,6 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Update Request DLQ has recieved messages"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests DLQ'd"
@@ -65,6 +67,7 @@ resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_db_connections_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DB has too many connections"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Connections"
@@ -78,9 +81,12 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_db_connections_alert" {
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "250"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_replica_db_connections_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DI Replica DB has too many connections"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Replica Connections"
@@ -94,9 +100,12 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_replica_db_connections_alert" {
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "250"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DB has too high CPU Utilisation"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB CPU Utilisation"
@@ -110,9 +119,12 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "70"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_replica_cpu_utilisation_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DI Replica DB has too high CPU Utilisation"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Replica CPU Utilisation"
@@ -126,10 +138,13 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_replica_cpu_utilisation_alert" {
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "70"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 
 resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DI has recieved a high number of change events"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Number of Change Events received"
@@ -147,6 +162,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is waiting to process update requests in service sync"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests Waiting"
@@ -163,6 +179,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
 }
 
 resource "aws_cloudwatch_metric_alarm" "health_check_failures_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DB or Replica is likely down or unaccessible and found by too many health check failures"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Health Check Failures"
@@ -176,6 +193,8 @@ resource "aws_cloudwatch_metric_alarm" "health_check_failures_alert" {
   period                    = "60" # 1 minute
   statistic                 = "Sum"
   threshold                 = "2"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
@@ -195,8 +214,9 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert for when DI is failing to send emails"
+  alarm_description         = "Alert for when DI is sending many emails"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Number of Emails Sent"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   dimensions                = { ENV = var.blue_green_environment }
@@ -210,6 +230,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Average Message Latency"
@@ -223,9 +244,12 @@ resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
   period                    = "300"
   statistic                 = "Average"
   threshold                 = "1800000" # 30 Minutes
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is taking longer than expected to process update requests"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Maximum Message Latency"
@@ -239,4 +263,6 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
   period                    = "300"
   statistic                 = "Maximum"
   threshold                 = "7200000" # 2 Hours
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
