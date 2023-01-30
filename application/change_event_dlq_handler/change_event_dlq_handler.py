@@ -6,12 +6,13 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.constants import FIFO_DLQ_HANDLER_REPORT_ID
 from common.dynamodb import add_change_event_to_dynamodb
-from common.middlewares import unhandled_exception_logging, redact_staff_key_from_event
+from common.middlewares import redact_staff_key_from_event, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, get_sqs_msg_attribute, handle_sqs_msg_attributes
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 tracer = Tracer()
 logger = Logger()
+
 
 @redact_staff_key_from_event()
 @unhandled_exception_logging()
