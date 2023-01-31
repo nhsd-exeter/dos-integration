@@ -50,7 +50,6 @@ resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Update Request DLQ has recieved messages"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests DLQ'd"
