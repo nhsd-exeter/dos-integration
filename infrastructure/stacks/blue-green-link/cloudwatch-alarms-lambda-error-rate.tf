@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "change_event_dlq_handler_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Change Event DLQ Handler error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Change Event DLQ Handler Error Rate"
@@ -6,6 +7,8 @@ resource "aws_cloudwatch_metric_alarm" "change_event_dlq_handler_error_rate_aler
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -44,6 +47,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_dlq_handler_error_rate_aler
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_update_dlq_handler_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "DoS DB Update DLQ Handler error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS DB Update DLQ Handler Error Rate"
@@ -51,6 +55,8 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_update_dlq_handler_error_rate_ale
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -89,6 +95,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_update_dlq_handler_error_rate_ale
 }
 
 resource "aws_cloudwatch_metric_alarm" "event_replay_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Event Replay error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Event Replay Error Rate"
@@ -96,6 +103,8 @@ resource "aws_cloudwatch_metric_alarm" "event_replay_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -134,6 +143,7 @@ resource "aws_cloudwatch_metric_alarm" "event_replay_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "ingest_change_event_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Ingest Change Event error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Ingest Change Event Error Rate"
@@ -141,6 +151,8 @@ resource "aws_cloudwatch_metric_alarm" "ingest_change_event_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -179,6 +191,7 @@ resource "aws_cloudwatch_metric_alarm" "ingest_change_event_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "orchestrator_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Orchestrator error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Orchestrator Error Rate"
@@ -186,6 +199,8 @@ resource "aws_cloudwatch_metric_alarm" "orchestrator_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -224,6 +239,7 @@ resource "aws_cloudwatch_metric_alarm" "orchestrator_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "send_email_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Send Email error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Send Email Error Rate"
@@ -231,6 +247,8 @@ resource "aws_cloudwatch_metric_alarm" "send_email_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -269,6 +287,7 @@ resource "aws_cloudwatch_metric_alarm" "send_email_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "service_matcher_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Service Matcher error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Service Matcher Error Rate"
@@ -276,6 +295,8 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -314,6 +335,7 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "service_sync_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Service Sync error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Service Sync Error Rate"
@@ -321,6 +343,8 @@ resource "aws_cloudwatch_metric_alarm" "service_sync_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
@@ -359,6 +383,7 @@ resource "aws_cloudwatch_metric_alarm" "service_sync_error_rate_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "slack_messenger_error_rate_alert" {
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Slack Messenger error rate has exceeded 10%"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Slack Messenger Error Rate"
@@ -366,6 +391,8 @@ resource "aws_cloudwatch_metric_alarm" "slack_messenger_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "10"
   insufficient_data_actions = []
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
     id          = "expression"
