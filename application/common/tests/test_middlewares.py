@@ -25,6 +25,7 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     assert "Staff" not in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
+    assert "Checking if 'Staff' key needs removing from Change Event payload" in caplog.text
     assert "Redacted 'Staff' key from Change Event payload" not in caplog.text
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
@@ -40,8 +41,24 @@ def test_redact_staff_key_from_event(caplog):
     assert "Staff" in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
+    assert "Checking if 'Staff' key needs removing from Change Event payload" in caplog.text
     assert "Redacted 'Staff' key from Change Event payload" in caplog.text
     assert "Staff" not in extract_body(result["Records"][0]["body"])
+
+
+def test_redact_staff_key_from_event_no_records(caplog):
+    @redact_staff_key_from_event()
+    def dummy_handler(event, context):
+        return event
+
+    # Arrange
+    event = SQS_EVENT.copy()
+    event["Records"] = []
+    # Act
+    result = dummy_handler(event, None)
+    assert "Checking if 'Staff' key needs removing from Change Event payload" in caplog.text
+    assert "Redacted 'Staff' key from Change Event payload" not in caplog.text
+    assert len(result["Records"]) == 0
 
 
 def test_unhandled_exception_logging(caplog):

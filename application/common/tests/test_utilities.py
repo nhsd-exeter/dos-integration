@@ -48,8 +48,9 @@ def test_json_str_body():
 
 def test_expected_json_str_exception():
     # Act & Assert
-    with raises(Exception):
+    with raises(Exception) as exception:
         json_str_body(body={"not a json dict"})
+        assert "Dict Change Event body cannot be converted to a JSON string" in str(exception.value)
 
 
 def test_get_sequence_number():
