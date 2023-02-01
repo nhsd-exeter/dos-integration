@@ -32,14 +32,15 @@ Feature: F002. Invalid change event Exception handling
     Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
     And the service history is not updated
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @dev @pharmacy_cloudwatch_queries @kit
   Scenario: F002SXX5. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
     Given a basic service is created
     And the change event "OrganisationSubType" is set to "com"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
-    And logs show staff data has been redacted
+    Then logs show staff data has been redacted
     And error messages do not show Staff data
+    And the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
+
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX6. A Changed Event with no postcode LAT Long Values is reported
