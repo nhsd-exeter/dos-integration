@@ -190,6 +190,7 @@ def test_get_dos_service_and_history_mutiple_matches(
 
 
 @patch(f"{FILE_PATH}.log_service_updates")
+@patch(f"{FILE_PATH}.save_palliative_care_into_db")
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_demographics_into_db")
@@ -199,6 +200,7 @@ def test_update_dos_data(
     mock_save_demographics_into_db: MagicMock,
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
+    mock_save_palliative_care_into_db: MagicMock,
     mock_log_service_updates: MagicMock,
 ):
     # Arrange
@@ -224,12 +226,19 @@ def test_update_dos_data(
         is_changes=changes_to_dos.specified_opening_times_changes,
         specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
     )
+    mock_save_palliative_care_into_db.assert_called_once_with(
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
+        is_changes=changes_to_dos.palliative_care_changes,
+        palliative_care=changes_to_dos.nhs_entity.palliative_care,
+    )
     service_histories.save_service_histories.assert_called_once_with(connection=mock_connect_to_dos_db().__enter__())
     mock_connect_to_dos_db.return_value.__enter__.return_value.commit.assert_called_once()
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
     mock_log_service_updates.assert_called_once_with(changes_to_dos=changes_to_dos, service_histories=service_histories)
 
 
+@patch(f"{FILE_PATH}.save_palliative_care_into_db")
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_demographics_into_db")
@@ -239,32 +248,40 @@ def test_update_dos_data_no_changes(
     mock_save_demographics_into_db: MagicMock,
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
+    mock_save_palliative_care_into_db: MagicMock,
 ):
     # Arrange
-    change_to_dos = MagicMock()
+    changes_to_dos = MagicMock()
     service_histories = MagicMock()
     service_id = 1
     mock_save_demographics_into_db.return_value = False
     mock_save_standard_opening_times_into_db.return_value = False
     mock_save_specified_opening_times_into_db.return_value = False
+    mock_save_palliative_care_into_db.return_value = False
     # Act
-    update_dos_data(change_to_dos, service_id, service_histories)
+    update_dos_data(changes_to_dos, service_id, service_histories)
     # Assert
     mock_save_demographics_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        demographics_changes=change_to_dos.demographic_changes,
+        demographics_changes=changes_to_dos.demographic_changes,
     )
     mock_save_standard_opening_times_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        standard_opening_times_changes=change_to_dos.standard_opening_times_changes,
+        standard_opening_times_changes=changes_to_dos.standard_opening_times_changes,
     )
     mock_save_specified_opening_times_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
         service_id=service_id,
-        is_changes=change_to_dos.specified_opening_times_changes,
-        specified_opening_times_changes=change_to_dos.new_specified_opening_times,
+        is_changes=changes_to_dos.specified_opening_times_changes,
+        specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
+    )
+    mock_save_palliative_care_into_db.assert_called_once_with(
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
+        is_changes=changes_to_dos.palliative_care_changes,
+        palliative_care=changes_to_dos.nhs_entity.palliative_care,
     )
     service_histories.save_service_histories.assert_not_called()
     mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
