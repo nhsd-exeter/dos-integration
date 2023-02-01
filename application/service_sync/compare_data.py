@@ -216,29 +216,6 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     return changes_to_dos
 
 
-def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
-    """Compares palliative care.
-
-    Args:
-        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
-
-    Returns:
-        ChangesToDoS: ChangesToDoS holder object
-    """
-
-    if (
-        changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
-        and changes_to_dos.check_palliative_care_for_change()
-    ):
-        changes_to_dos.palliative_care_changes = True
-        log_palliative_care_not_equal(
-            nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
-            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
-        )
-
-    return changes_to_dos
-
-
 def set_up_for_services_table_change(
     changes_to_dos: ChangesToDoS,
     change_key: str,
@@ -292,6 +269,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         and changes_to_dos.check_palliative_care_for_change()
         and skip_palliative_care_check is False
     ):
+        changes_to_dos.palliative_care_changes = True
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,

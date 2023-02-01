@@ -265,3 +265,21 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
+
+resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exist" {
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when the DoS Palliative Care Z Code does not exist"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Palliative Care Z Code Does Not Exist !!!"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DoSPalliativeCareZCodeDoesNotExist"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "0"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+}
