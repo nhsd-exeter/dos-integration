@@ -279,42 +279,15 @@ undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
 # Development Tools
 
 deploy-development-and-deployment-tools:
-	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
+	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
+	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
 undeploy-development-and-deployment-tools:
-	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
+	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token="any"
 
 plan-development-and-deployment-tools:
-	if [ "$(PROFILE)" == "tools" ]; then
-		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=development-and-deployment-tools
-	else
-		echo "Only tools profile supported at present"
-	fi
-
-deploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-apply-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
-
-undeploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-destroy-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
-
-plan-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
+	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
+	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
 deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
 	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
