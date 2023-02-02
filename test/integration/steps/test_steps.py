@@ -216,7 +216,8 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
         context.change_event[field_name] = values
     return context
 
-@given('the change event staff field is populated', target_fixture="context")
+
+@given("the change event staff field is populated", target_fixture="context")
 def ce_staff_field_populated(context: Context):
     context.change_event["Staff"] = generate_staff()
     return context
