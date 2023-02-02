@@ -164,6 +164,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
+@complete @pharmacy_cloudwatch_queries @kit
+  Scenario: F001SX21. No Staff field in CE doesn't cause errors
+    Given a basic service is created
+    And the change event "Postcode" is set to "CT1 1AA"
+    And the change event has no staff field
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "Postcode" is updated within the DoS DB
+
   # @complete @broken @dentist_no_log_searches @dentist_smoke_test
   # Scenario: F001S004. A valid Dentist change event is processed into DOS
   #   Given a "dentist" Changed Event is aligned with DoS

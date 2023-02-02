@@ -222,6 +222,10 @@ def ce_staff_field_populated(context: Context):
     context.change_event["Staff"] = generate_staff()
     return context
 
+@given("the change event has no staff field", target_fixture="context")
+def ce_staff_field_removed(context: Context):
+    del context.change_event["Staff"]
+    return context
 
 @given(parse('the specified opening date is set to "{future_past}" date'), target_fixture="context")
 def future_set_specified_opening_date(future_past: str, context: Context):
