@@ -36,6 +36,7 @@ Feature: F002. Invalid change event Exception handling
   Scenario: F002SXX5. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
     Given a basic service is created
     And the change event "OrganisationSubType" is set to "com"
+    And the change event staff field is populated
     When the Changed Event is sent for processing with "valid" api key
     Then logs show staff data has been redacted
     And error messages do not show Staff data

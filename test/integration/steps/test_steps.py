@@ -55,6 +55,7 @@ from .utilities.generator import (
     build_change_event_contacts,
     build_change_event_opening_times,
     commit_new_service_to_dos,
+    generate_staff,
     query_specified_opening_builder,
     query_standard_opening_builder,
     valid_change_event,
@@ -213,6 +214,11 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
     else:
         context.previous_value = context.change_event[field_name]
         context.change_event[field_name] = values
+    return context
+
+@given('the change event staff field is populated', target_fixture="context")
+def ce_staff_field_populated(context: Context):
+    context.change_event["Staff"] = generate_staff()
     return context
 
 

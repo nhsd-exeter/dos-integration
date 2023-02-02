@@ -228,7 +228,7 @@ def build_change_event(context):
         "OrganisationType": "Pharmacy",
         "OrganisationTypeId": "PHA",
         "UniqueKey": generate_unique_key(),
-        "Staff": generate_staff(),
+        "Staff": [],
     }
     context.change_event = change_event
 
