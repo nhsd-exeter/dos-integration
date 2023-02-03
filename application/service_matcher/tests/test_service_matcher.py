@@ -401,6 +401,98 @@ def test_lambda_handler_invalid_existing_dos_opening_times(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
+@patch(f"{FILE_PATH}.get_matching_services")
+@patch(f"{FILE_PATH}.send_update_requests")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+@patch.object(MetricsLogger, "put_metric")
+@patch.object(MetricsLogger, "set_dimensions")
+def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
+    mock_set_dimension,
+    mock_put_metric,
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_send_update_requests,
+    mock_get_matching_services,
+    mock_log_unexpected_pharmacy_profiling,
+    change_event,
+    lambda_context,
+    mock_metric_logger,
+):
+    # Arrange
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
+    mock_nhs_entity.return_value = mock_entity
+    service = dummy_dos_service()
+    service.typeid = 13
+    mock_get_matching_services.return_value = [service, service]
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    response = lambda_handler(sqs_event, lambda_context)
+    # Assert
+    assert response is None, f"Response should be None but is {response}"
+    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
+    mock_nhs_entity.assert_called_once_with(change_event)
+    mock_get_matching_services.assert_called_once_with(mock_entity)
+    mock_send_update_requests.assert_called()
+    mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
+        matching_services=[service, service], reason="Multiple pharmacy type services found"
+    )
+    # Clean up
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
+@patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
+@patch(f"{FILE_PATH}.get_matching_services")
+@patch(f"{FILE_PATH}.send_update_requests")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+@patch.object(MetricsLogger, "put_metric")
+@patch.object(MetricsLogger, "set_dimensions")
+def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
+    mock_set_dimension,
+    mock_put_metric,
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_send_update_requests,
+    mock_get_matching_services,
+    mock_log_unexpected_pharmacy_profiling,
+    change_event,
+    lambda_context,
+    mock_metric_logger,
+):
+    # Arrange
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
+    mock_nhs_entity.return_value = mock_entity
+    service = dummy_dos_service()
+    service.typeid = 131
+    mock_get_matching_services.return_value = [service, service]
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        environ[env] = "test"
+    # Act
+    response = lambda_handler(sqs_event, lambda_context)
+    # Assert
+    assert response is None, f"Response should be None but is {response}"
+    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
+    mock_nhs_entity.assert_called_once_with(change_event)
+    mock_get_matching_services.assert_called_once_with(mock_entity)
+    mock_send_update_requests.assert_called()
+    mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
+        matching_services=[service, service], reason="No pharmacy type services found"
+    )
+    # Clean up
+    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
+        del environ[env]
+
+
 HOLDING_QUEUE_CHANGE_EVENT_ITEM = HoldingQueueChangeEventItem(
     change_event=PHARMACY_STANDARD_EVENT.copy(),
     message_received=1234567890,

@@ -15,6 +15,7 @@ from ..report_logging import (
     log_palliative_care_not_equal,
     log_service_updated,
     log_service_with_generic_bank_holiday,
+    log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
     log_website_is_invalid,
@@ -28,10 +29,11 @@ from common.constants import (
     INVALID_POSTCODE_REPORT_ID,
     PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
+    UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
-from common.dos import VALID_STATUS_ID
+from common.dos import export_list_to_json, VALID_STATUS_ID
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 from common.tests.conftest import dummy_dos_service
@@ -396,5 +398,21 @@ def test_log_incorrect_palliative_stockholder_type(mock_logger: MagicMock):
             "dos_palliative_care": expected_dos_palliative_care,
             "nhsuk_palliative_care": expected_nhsuk_palliative_care,
             "dos_service_type_name": dos_service.servicename,
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
+    dos_service = dummy_dos_service()
+    reason = "reason 123"
+    log_unexpected_pharmacy_profiling([dos_service], reason)
+    assert UNEXPECTED_PHARMACY_PROFILING_REPORT_ID == "UNEXPECTED_PHARMACY_PROFILING"
+    mock_logger.assert_called_with(
+        "Pharmacy profiling is incorrect",
+        extra={
+            "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
+            "dos_matching_services": export_list_to_json([dos_service]),
+            "reason": reason,
         },
     )
