@@ -4,9 +4,12 @@ from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
 
+from application.common.constants import INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID
+
 from ..report_logging import (
     log_blank_standard_opening_times,
     log_closed_or_hidden_services,
+    log_incorrect_palliative_stockholder_type,
     log_invalid_nhsuk_postcode,
     log_invalid_open_times,
     log_palliative_care_not_equal,
@@ -360,17 +363,38 @@ def test_log_service_updated(mock_logger: MagicMock):
 @patch.object(Logger, "warning")
 def test_log_palliative_care_not_equal(mock_logger: MagicMock):
     # Arrange
-    expected_dos_pallitive_care = True
-    expected_nhsuk_pallitive_care = False
+    expected_dos_palliative_care = True
+    expected_nhsuk_palliative_care = False
     # Act
-    log_palliative_care_not_equal(expected_nhsuk_pallitive_care, expected_dos_pallitive_care)
+    log_palliative_care_not_equal(expected_nhsuk_palliative_care, expected_dos_palliative_care)
     # Assert
     assert PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID == "PALLIATIVE_CARE_NOT_EQUAL"
     mock_logger.assert_called_with(
         "Palliative care not equal",
         extra={
             "report_key": PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
-            "dos_palliative_care": expected_dos_pallitive_care,
-            "nhsuk_palliative_care": expected_nhsuk_pallitive_care,
+            "dos_palliative_care": expected_dos_palliative_care,
+            "nhsuk_palliative_care": expected_nhsuk_palliative_care,
+        },
+    )
+
+
+@patch.object(Logger, "warning")
+def test_log_incorrect_palliative_stockholder_type(mock_logger: MagicMock):
+    # Arrange
+    expected_dos_palliative_care = True
+    expected_nhsuk_palliative_care = False
+    dos_service = dummy_dos_service()
+    # Act
+    log_incorrect_palliative_stockholder_type(expected_nhsuk_palliative_care, expected_dos_palliative_care, dos_service)
+    # Assert
+    assert INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID == "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
+    mock_logger.assert_called_with(
+        "Palliative care on wrong service type",
+        extra={
+            "report_key": INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
+            "dos_palliative_care": expected_dos_palliative_care,
+            "nhsuk_palliative_care": expected_nhsuk_palliative_care,
+            "dos_service_type_name": dos_service.servicename,
         },
     )
