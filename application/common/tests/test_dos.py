@@ -15,10 +15,16 @@ from ..dos import (
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
     get_valid_dos_location,
+    has_palliative_care,
 )
 from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from .conftest import dummy_dos_service
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from common.constants import (
+    DENTIST_ORG_TYPE_ID,
+    DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+    DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+    PHARMACY_ORG_TYPE_ID,
+)
 
 OP = OpenPeriod.from_string
 FILE_PATH = "application.common.dos"
@@ -772,3 +778,39 @@ def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):
         "publicname": None,
         "servicename": "my service",
     }
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_has_palliative_care(mock_query_dos_db: MagicMock):
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 13
+    connection = MagicMock()
+    expected_sql_command = """SELECT sgsds.id as z_code from servicesgsds sgsds
+            WHERE sgsds.serviceid = %(SERVICE_ID)s
+            AND sgsds.sgid = %(PALIATIVE_CARE_SYMPTOM_GROUP)s
+            AND sgsds.sdid  = %(PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR)s
+            """
+    expected_named_args = {
+        "SERVICE_ID": dos_service.id,
+        "PALIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        "PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+    }
+    # Act
+    assert True is has_palliative_care(dos_service, connection)
+    # Assert
+    mock_query_dos_db.assert_called_once_with(
+        connection=connection, query=expected_sql_command, vars=expected_named_args
+    )
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock):
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 0
+    connection = MagicMock()
+    # Act
+    assert False is has_palliative_care(dos_service, connection)
+    # Assert
+    mock_query_dos_db.assert_not_called()

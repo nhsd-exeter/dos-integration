@@ -9,7 +9,12 @@ from psycopg2.sql import Identifier, Literal, SQL
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from .service_update_logging import log_service_updates
-from common.dos import DoSService, get_specified_opening_times_from_db, get_standard_opening_times_from_db
+from common.dos import (
+    DoSService,
+    get_specified_opening_times_from_db,
+    get_standard_opening_times_from_db,
+    has_palliative_care,
+)
 from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
 from common.dynamodb import put_circuit_is_open
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
@@ -86,6 +91,8 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
         service.specified_opening_times = get_specified_opening_times_from_db(
             connection=connection, service_id=service_id
         )
+        # Set up palliative care flag
+        service.palliative_care = has_palliative_care(service=service, connection=connection)
         # Set up service history
         service_histories = ServiceHistories(service_id=service_id)
         service_histories.get_service_history_from_db(connection)
