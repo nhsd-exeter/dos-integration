@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 from aws_lambda_powertools.logging import Logger
 
-from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
+from common.constants import DENTIST_SERVICE_TYPE_IDS, NHS_UK_PALLIATIVE_CARE_SERVICE_CODE, PHARMACY_SERVICE_TYPE_IDS
 from common.dos import DoSService
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes, WEEKDAYS
 
@@ -34,6 +34,7 @@ class NHSEntity:
     phone: str
     standard_opening_times: Optional[StandardOpeningTimes]
     specified_opening_times: Optional[List[SpecifiedOpeningTime]]
+    palliative_care: bool
     CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
 
     def __init__(self, entity_data: dict):
@@ -58,6 +59,7 @@ class NHSEntity:
         self.specified_opening_times = self._get_specified_opening_times()
         self.phone = self.extract_contact("Telephone")
         self.website = self.extract_contact("Website")
+        self.palliative_care = self.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
 
     def __repr__(self) -> str:
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
@@ -76,6 +78,17 @@ class NHSEntity:
 
                 return item.get("ContactValue")
         return None
+
+    def extract_uec_service(self, service_code: str) -> bool:
+        """Extracts the UEC service from the payload (e.g. Palliative Care)
+
+        Args:
+            service_code (str): NHS UK Service Code of the UEC service to extract if exists
+
+        Returns:
+            bool: True if the service exists, False otherwise
+        """
+        return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening

@@ -246,3 +246,31 @@ def test_changes_to_dos_check_public_phone_for_change_no_change():
     response = changes_to_dos.check_public_phone_for_change()
     # Assert
     assert False is response
+
+
+def test_changes_to_dos_check_palliative_care_for_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = changes_to_dos.check_palliative_care_for_change()
+    # Assert
+    assert True is response
+
+
+def test_changes_to_dos_check_palliative_care_for_change_no_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.palliative_care = False
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = changes_to_dos.check_palliative_care_for_change()
+    # Assert
+    assert False is response

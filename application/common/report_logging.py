@@ -12,6 +12,7 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
+    PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
@@ -246,5 +247,16 @@ def log_service_updated(
             "service_name": service_name,
             "service_uid": service_uid,
             "type_id": type_id,
+        },
+    )
+
+
+def log_palliative_care_not_equal(nhs_uk_palliative_care: bool, dos_palliative_care: bool) -> None:
+    logger.warning(
+        "Palliative care not equal",
+        extra={
+            "report_key": PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
+            "dos_palliative_care": dos_palliative_care,
+            "nhsuk_palliative_care": nhs_uk_palliative_care,
         },
     )

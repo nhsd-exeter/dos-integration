@@ -6,7 +6,13 @@ from typing import Dict, Iterable, List, Optional, Set, Union
 from aws_lambda_powertools.logging import Logger
 from psycopg2.extensions import connection
 
-from .constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from .constants import (
+    DENTIST_ORG_TYPE_ID,
+    DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+    DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+    DOS_PALLIATIVE_CARE_TYPE_ID,
+    PHARMACY_ORG_TYPE_ID,
+)
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -53,6 +59,7 @@ class DoSService:
 
         self.standard_opening_times = None
         self.specified_opening_times = None
+        self.palliative_care = False
 
     def __repr__(self) -> str:
         """Returns a string representation of this object"""
@@ -322,3 +329,30 @@ def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, Standard
         serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_times(db_rows)
 
     return serviceid_stdopentimes_map
+
+
+def has_palliative_care(service: DoSService, connection: connection) -> bool:
+    """Checks if a service has palliative care
+
+    Args:
+        service: The service to check
+        connection: The database connection to use
+
+    Returns:
+        True if the service has palliative care, False otherwise
+    """
+    if service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID:
+        sql_command = """SELECT sgsds.id as z_code from servicesgsds sgsds
+            WHERE sgsds.serviceid = %(SERVICE_ID)s
+            AND sgsds.sgid = %(PALIATIVE_CARE_SYMPTOM_GROUP)s
+            AND sgsds.sdid  = %(PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR)s
+            """
+        named_args = {
+            "SERVICE_ID": service.id,
+            "PALIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+            "PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+        }
+        cursor = query_dos_db(connection=connection, query=sql_command, vars=named_args)
+        cursor.fetchall()
+        return cursor.rowcount != 0
+    return False

@@ -12,6 +12,7 @@ from common.constants import (
     DOS_ADDRESS_CHANGE_KEY,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
+    DOS_PALLIATIVE_CARE_TYPE_ID,
     DOS_POSTAL_TOWN_CHANGE_KEY,
     DOS_POSTCODE_CHANGE_KEY,
     DOS_PUBLIC_PHONE_CHANGE_KEY,
@@ -22,6 +23,7 @@ from common.dos import DoSService
 from common.dos_location import DoSLocation
 from common.nhs import NHSEntity
 from common.opening_times import DAY_IDS, WEEKDAYS
+from common.report_logging import log_palliative_care_not_equal
 
 logger = Logger(child=True)
 
@@ -50,6 +52,8 @@ def compare_nhs_uk_and_dos_data(
     changes_to_dos = compare_location_data(changes_to_dos=changes_to_dos)
     # Compare and validate all opening_times
     changes_to_dos = compare_opening_times(changes_to_dos=changes_to_dos)
+    # Compare palliative care
+    changes_to_dos = compare_palliative_care(changes_to_dos=changes_to_dos)
 
     return changes_to_dos
 
@@ -242,4 +246,26 @@ def set_up_for_services_table_change(
                 change_key=change_key,
             ),
         )
+    return changes_to_dos
+
+
+def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares palliative care.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
+
+    if (
+        changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
+        and changes_to_dos.check_palliative_care_for_change()
+    ):
+        log_palliative_care_not_equal(
+            nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
+            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
+        )
+
     return changes_to_dos
