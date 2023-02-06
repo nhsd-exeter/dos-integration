@@ -10,6 +10,7 @@ from common.constants import (
     GENERIC_BANK_HOLIDAY_REPORT_ID,
     GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
     HIDDEN_OR_CLOSED_REPORT_ID,
+    INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
     PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
@@ -258,5 +259,19 @@ def log_palliative_care_not_equal(nhs_uk_palliative_care: bool, dos_palliative_c
             "report_key": PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
             "dos_palliative_care": dos_palliative_care,
             "nhsuk_palliative_care": nhs_uk_palliative_care,
+        },
+    )
+
+
+def log_incorrect_palliative_stockholder_type(
+    nhs_uk_palliative_care: bool, dos_palliative_care: bool, dos_service: DoSService
+) -> None:
+    logger.warning(
+        "Palliative care on wrong service type",
+        extra={
+            "report_key": INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
+            "dos_palliative_care": dos_palliative_care,
+            "nhsuk_palliative_care": nhs_uk_palliative_care,
+            "dos_service_type_name": dos_service.servicename,
         },
     )

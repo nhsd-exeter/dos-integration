@@ -80,6 +80,7 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
             service = DoSService(rows[0])
             logger.append_keys(service_name=service.name)
             logger.append_keys(service_uid=service.uid)
+            logger.append_keys(type_id=service.typeid)
         elif not rows:
             raise ValueError(f"Service ID {service_id} not found")
         else:

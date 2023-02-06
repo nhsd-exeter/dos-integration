@@ -10,8 +10,8 @@ from .constants import (
     DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
-    DOS_PALLIATIVE_CARE_TYPE_ID,
     PHARMACY_ORG_TYPE_ID,
+    PHARMACY_SERVICE_TYPE_IDS,
 )
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
 from .dos_location import DoSLocation
@@ -341,7 +341,7 @@ def has_palliative_care(service: DoSService, connection: connection) -> bool:
     Returns:
         True if the service has palliative care, False otherwise
     """
-    if service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID:
+    if service.typeid in PHARMACY_SERVICE_TYPE_IDS:
         sql_command = """SELECT sgsds.id as z_code from servicesgsds sgsds
             WHERE sgsds.serviceid = %(SERVICE_ID)s
             AND sgsds.sgid = %(PALIATIVE_CARE_SYMPTOM_GROUP)s

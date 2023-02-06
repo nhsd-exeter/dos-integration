@@ -235,6 +235,6 @@ class ChangesToDoS:
         else:
             logger.debug(
                 f"Palliative Care is equal, DoS='{self.current_palliative_care}' == "
-                + "NHS UK='{self.new_palliative_care}'"
+                + f"NHSUK='{self.new_palliative_care}'"
             )
             return False
