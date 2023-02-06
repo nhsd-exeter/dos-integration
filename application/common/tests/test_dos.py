@@ -1,5 +1,4 @@
 from datetime import date, datetime, time, timezone
-from json import dumps
 from random import choices
 from unittest.mock import MagicMock, patch
 
@@ -106,8 +105,6 @@ def test__init__no_name():
     dos_service.name = None
     # Assert
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
-
-
 
 
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")

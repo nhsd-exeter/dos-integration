@@ -1,7 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, fields
 from itertools import groupby
-from json import dumps
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 from aws_lambda_powertools.logging import Logger
