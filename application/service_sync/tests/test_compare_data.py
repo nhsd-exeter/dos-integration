@@ -21,9 +21,9 @@ from application.service_sync.compare_data import (
     compare_location_data,
     compare_nhs_uk_and_dos_data,
     compare_opening_times,
+    compare_palliative_care,
     compare_website,
     set_up_for_services_table_change,
-    compare_palliative_care,
 )
 
 FILE_PATH = "application.service_sync.compare_data"
