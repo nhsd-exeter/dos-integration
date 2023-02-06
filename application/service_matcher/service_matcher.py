@@ -89,10 +89,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     logger.debug(f"Matching service types: {dos_matching_service_types}")
     if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
         log_unexpected_pharmacy_profiling(
-            matching_services=matching_services, reason="Multiple pharmacy type services found"
+            matching_services=matching_services, reason="Multiple 'Pharmacist' type services found (type 13)"
         )
     elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
-        log_unexpected_pharmacy_profiling(matching_services=matching_services, reason="No pharmacy type services found")
+        log_unexpected_pharmacy_profiling(
+            matching_services=matching_services, reason="No 'Pharmacist' type services found (type 13)"
+        )
 
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
