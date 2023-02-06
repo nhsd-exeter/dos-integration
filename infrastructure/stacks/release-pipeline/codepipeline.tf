@@ -17,7 +17,7 @@ resource "aws_codepipeline" "release_codepipeline" {
       version          = "1"
       output_artifacts = ["source_output"]
       configuration = {
-        ConnectionArn    = data.terraform_remote_state.development_pipeline.outputs.codestarconnection_arn
+        ConnectionArn    = data.aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.release_pipeline_branch
         DetectChanges    = true
@@ -89,7 +89,7 @@ resource "aws_codepipeline" "release_codepipeline" {
   stage {
     name = "Integration_Test"
     dynamic "action" {
-      for_each = data.terraform_remote_state.development_pipeline.outputs.integration_test_make_targets
+      for_each = local.integration_make_targets
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"

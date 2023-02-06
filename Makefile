@@ -279,42 +279,15 @@ undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
 # Development Tools
 
 deploy-development-and-deployment-tools:
-	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
+	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
+	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
 undeploy-development-and-deployment-tools:
-	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools
+	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token="any"
 
 plan-development-and-deployment-tools:
-	if [ "$(PROFILE)" == "tools" ]; then
-		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=development-and-deployment-tools
-	else
-		echo "Only tools profile supported at present"
-	fi
-
-deploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-apply-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
-
-undeploy-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-destroy-auto-approve STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
-
-plan-deployment-pipelines:
-	if [ "$(PROFILE)" == "tools" ] && [ "$(ENVIRONMENT)" == "dev" ]; then
-		TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=deployment-pipelines TF_VAR_github_token=$$TF_VAR_github_token
-	else
-		echo "PROFILE must be tools and ENVIRONMENT must be dev"
-	fi
+	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
+	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
 deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
 	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
@@ -614,44 +587,7 @@ checkov-secret-scanning:
 	make docker-run-checkov CHECKOV_OPTS="--framework secrets"
 
 # ==============================================================================
-# 6.0 Release targets
-
-deploy-release-6-pipeline:
-	make terraform-apply-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
-
-undeploy-release-6-pipeline:
-	make terraform-destroy-auto-approve STACKS=release-6-0 PROFILE=tools ENVIRONMENT=dev
-
-blue-green-move-terraform-resources:
-# Init new shared resources state
-	make _terraform-initialise STACK=shared-resources
-# Import terraform resources
-	make _terraform-stacks STACK=shared-resources CMD="import 'aws_dynamodb_table.message-history-table' $(TF_VAR_change_events_table_name)"
-	SIGNING_KEY=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)
-	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.signing_key' $$SIGNING_KEY"
-	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.signing_key' alias/$(TF_VAR_signing_key_alias)"
-	GLOBAL_REGION_SIGNING_KEY=$$(aws kms describe-key --region=$(TF_VAR_route53_health_check_alarm_region) --key-id alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias) --query KeyMetadata.KeyId --output text)
-	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_key.route53_health_check_alarm_region_signing_key' $$GLOBAL_REGION_SIGNING_KEY"
-	make _terraform-stacks STACK=shared-resources CMD="import 'aws_kms_alias.alarm_region_signing_key' alias/$(TF_VAR_route53_health_check_alarm_region_signing_key_alias)"
-# Remove moved resources from current state
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_dynamodb_table.message-history-table'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_key.route53_health_check_alarm_region_signing_key'"
-	make _terraform-stacks STACK=before-lambda-deployment CMD="state rm 'aws_kms_alias.alarm_region_signing_key'"
-# Destroy non shared resources
-	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=after-lambda-deployment OPTS="-refresh=false"
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment OPTS="-refresh=false"
-	aws logs delete-log-group --log-group-name /aws/lambda/$(TF_VAR_orchestrator_lambda_name) 2> /dev/null ||:
-# Rebuild resources
-	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=shared-resources,before-lambda-deployment
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
+# Blue/Green Deployment Targets
 
 deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
@@ -669,6 +605,7 @@ build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandat
 	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
 
 link-blue-green-environment: # Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=blue-green-link
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT

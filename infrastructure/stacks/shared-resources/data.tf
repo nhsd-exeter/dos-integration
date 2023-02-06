@@ -93,14 +93,8 @@ data "aws_iam_role" "di_firehose_role" {
 # ##############
 # # ROUTE 53
 # ##############
-
-data "terraform_remote_state" "route53" {
-  backend = "s3"
-  config = {
-    bucket = var.terraform_platform_state_store
-    key    = var.route53_terraform_state_key
-    region = var.aws_region
-  }
+data "aws_route53_zone" "texas_hosted_zone" {
+  name = var.texas_hosted_zone
 }
 
 data "aws_acm_certificate" "issued" {

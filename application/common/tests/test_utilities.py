@@ -11,6 +11,7 @@ from ..utilities import (
     get_sqs_msg_attribute,
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
+    json_str_body,
     remove_given_keys_from_dict_by_msg_limit,
 )
 
@@ -32,6 +33,24 @@ def test_extract_body_exception():
     # Act & Assert
     with raises(Exception):
         extract_body(expected_change_event)
+
+
+def test_json_str_body():
+    # Arrange
+    expected_json_str = '{"test": "test"}'
+    # Act
+    result = json_str_body({"test": "test"})
+    # Assert
+    assert (
+        result == expected_json_str
+    ), f"Change event body should be {expected_json_str} str but is {result}"
+
+
+def test_expected_json_str_exception():
+    # Act & Assert
+    with raises(Exception) as exception:
+        json_str_body(body={"not a json dict"})
+        assert "Dict Change Event body cannot be converted to a JSON string" in str(exception.value)
 
 
 def test_get_sequence_number():

@@ -89,6 +89,12 @@ variable "developer_role_name" {
   description = "The name of the developer role"
 }
 
+
+variable "github_token" {
+  type        = string
+  description = "GitHub token for the CodeBuild projects"
+}
+
 # ##############
 # # KMS
 # ##############

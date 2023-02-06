@@ -55,6 +55,7 @@ from .utilities.generator import (
     build_change_event_contacts,
     build_change_event_opening_times,
     commit_new_service_to_dos,
+    generate_staff,
     query_specified_opening_builder,
     query_standard_opening_builder,
     valid_change_event,
@@ -213,6 +214,18 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
     else:
         context.previous_value = context.change_event[field_name]
         context.change_event[field_name] = values
+    return context
+
+
+@given("the change event staff field is populated", target_fixture="context")
+def ce_staff_field_populated(context: Context):
+    context.change_event["Staff"] = generate_staff()
+    return context
+
+
+@given("the change event has no staff field", target_fixture="context")
+def ce_staff_field_removed(context: Context):
+    del context.change_event["Staff"]
     return context
 
 
@@ -797,3 +810,22 @@ def show_service_sync_logs(context: Context):
     )
     logs = loads(get_logs(query, "service-sync", context.start_time))["results"][0][0]["value"]
     assert "service_uid" and "service_name" not in logs, "ERROR: service uid and service name found in logs"
+
+
+@then("logs show staff data has been redacted", target_fixture="context")
+def ingest_staff_redaction(context: Context):
+    query = "fields @message | sort @timestamp asc" '|filter message like "key from Change Event payload"'
+    logs = loads(get_logs(query, "ingest-change-event", context.start_time))
+    assert logs != [], "ERROR: Logs do not show redaction of staff field"
+    return context
+
+
+@then("error messages do not show Staff data", target_fixture="context")
+def error_contains_no_staff(context: Context):
+    query = (
+        f'fields @event | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
+        '|filter message like "Validation Error - Unexpected Org Sub Type ID"'
+    )
+    logs = loads(get_logs(query, "ingest-change-event", context.start_time))
+    assert "Superintendent Pharmacist" not in logs, "ERROR: Logs output the staff field on error"
+    return context
