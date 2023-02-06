@@ -19,7 +19,7 @@ from common.constants import (
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
-from common.dos import DoSService, export_list_to_json, VALID_STATUS_ID
+from common.dos import DoSService, VALID_STATUS_ID
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 
@@ -279,11 +279,13 @@ def log_incorrect_palliative_stockholder_type(
 
 
 def log_unexpected_pharmacy_profiling(matching_services: List[DoSService], reason: str) -> None:
-    logger.warning(
-        "Pharmacy profiling is incorrect",
-        extra={
-            "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
-            "dos_matching_services": export_list_to_json(matching_services),
-            "reason": reason,
-        },
-    )
+    for service in matching_services:
+        logger.warning(
+            "Pharmacy profiling is incorrect",
+            extra={
+                "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
+                "dos_service_uid": service.uid,
+                "dos_service_name": service.name,
+                "reason": reason,
+            },
+        )

@@ -83,24 +83,6 @@ class DoSService:
         return len(self.standard_opening_times.generic_bankholiday) > 0
 
 
-def export_list_to_json(list: list[DoSService]) -> str:
-    """Exports a list of DoSService objects to a JSON string"""
-
-    services_dict = [
-        {
-            "service_id": dos_service.id,
-            "service_name": dos_service.name,
-            "service_uid": dos_service.uid,
-            "ods_code": dos_service.odscode,
-            "type_id": dos_service.typeid,
-            "status_id": dos_service.statusid,
-            "type_name": dos_service.servicename,
-        }
-        for dos_service in list
-    ]
-    return dumps(services_dict)
-
-
 def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService]:
     """Retrieves DoS Services from DoS database
 

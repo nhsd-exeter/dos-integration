@@ -9,7 +9,6 @@ from ..dos import (
     db_rows_to_std_open_times,
     db_rows_to_std_open_times_map,
     DoSService,
-    export_list_to_json,
     get_all_valid_dos_postcodes,
     get_dos_locations,
     get_matching_dos_services,
@@ -109,30 +108,6 @@ def test__init__no_name():
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
-def test_export_list_to_json():
-    # Arrange & Act
-    dos_service = dummy_dos_service()
-    dos_service.id = 1
-    dos_service.uid = 1
-    dos_service.odscode = "FXXX1"
-    dos_service.typeid = 1
-    dos_service.statusid = 1
-    dos_service.name = "Test Name"
-    dos_service.servicename = "Test Service Name"
-    expected_json = dumps(
-        [
-            {
-                "service_id": dos_service.id,
-                "service_name": dos_service.name,
-                "service_uid": dos_service.uid,
-                "ods_code": dos_service.odscode,
-                "type_id": dos_service.typeid,
-                "status_id": dos_service.statusid,
-                "type_name": dos_service.servicename,
-            }
-        ]
-    )
-    assert expected_json == export_list_to_json([dos_service])
 
 
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")

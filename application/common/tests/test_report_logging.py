@@ -33,7 +33,7 @@ from common.constants import (
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
-from common.dos import export_list_to_json, VALID_STATUS_ID
+from common.dos import VALID_STATUS_ID
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 from common.tests.conftest import dummy_dos_service
@@ -412,7 +412,8 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
         "Pharmacy profiling is incorrect",
         extra={
             "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
-            "dos_matching_services": export_list_to_json([dos_service]),
+            "dos_service_uid": dos_service.uid,
+            "dos_service_name": dos_service.name,
             "reason": reason,
         },
     )
