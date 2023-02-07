@@ -4,7 +4,7 @@ from pytest import mark, raises
 
 from ..service_histories_change import ServiceHistoriesChange
 from common.constants import (
-    DOS_DEMOGRAPHICS_CHANGE_TYPE,
+    DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
@@ -32,7 +32,7 @@ def test_service_histories_change_demographics_change(mock_get_demographics_chan
     # Assert
     assert DATA == service_histories_change.data
     assert PREVIOUS_VALUE == service_histories_change.previous_value
-    assert DOS_DEMOGRAPHICS_CHANGE_TYPE == service_histories_change.area
+    assert DOS_DEMOGRAPHICS_AREA_TYPE == service_histories_change.area
     mock_get_demographics_change_action.assert_called_once_with()
 
 
@@ -58,7 +58,7 @@ def test_service_histories_change_opening_times_change(mock_get_opening_times_ch
     # Assert
     assert DATA == service_histories_change.data
     assert PREVIOUS_VALUE == service_histories_change.previous_value
-    assert DOS_DEMOGRAPHICS_CHANGE_TYPE == service_histories_change.area
+    assert DOS_DEMOGRAPHICS_AREA_TYPE == service_histories_change.area
     mock_get_opening_times_change_action.assert_called_once_with()
 
 
@@ -122,7 +122,7 @@ def test_service_histories_change_get_change(mock_get_demographics_change_action
     assert {
         "changetype": change_action,
         "data": DATA,
-        "area": DOS_DEMOGRAPHICS_CHANGE_TYPE,
+        "area": DOS_DEMOGRAPHICS_AREA_TYPE,
         "previous": PREVIOUS_VALUE,
     } == response
 
@@ -140,5 +140,5 @@ def test_service_histories_change_get_change_add(mock_get_demographics_change_ac
     assert {
         "changetype": change_action,
         "data": DATA,
-        "area": DOS_DEMOGRAPHICS_CHANGE_TYPE,
+        "area": DOS_DEMOGRAPHICS_AREA_TYPE,
     } == response

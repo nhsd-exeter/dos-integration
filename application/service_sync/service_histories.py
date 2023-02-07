@@ -10,7 +10,13 @@ from psycopg.rows import dict_row
 from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
-from common.constants import DOS_INTEGRATION_USER_NAME, DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
+from common.constants import (
+    DOS_INTEGRATION_USER_NAME,
+    DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+    DOS_PALLIATIVE_CARE_SGSDID,
+    DOS_SGSDID_CHANGE_KEY,
+    DOS_DEMOGRAPHICS_AREA_TYPE,
+)
 from common.dos_db_connection import query_dos_db
 from common.opening_times import SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -145,6 +151,32 @@ class ServiceHistories:
         # Add the change to the service history
         self.add_change(
             dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+            change=change,
+        )
+        return change
+
+    def add_sgsdid_change(self, sgsdid: str, new_value: bool) -> ServiceHistoriesChange:
+        """Adds a change to the updated service_histories json
+
+        Args:
+            sgsdid (str): The sgsdid for the change
+            new_value (bool): The new value for the sgsdid
+
+        Returns:
+            ServiceHistoriesChange: The change that was added to the service history
+        """
+        # Get the previous value
+        add_or_remove = "add" if new_value else "remove"
+        previous_value = ""
+        # Add the change to the service history
+        change = ServiceHistoriesChange(
+            change_key=DOS_SGSDID_CHANGE_KEY,
+            previous_value=previous_value,
+            data={add_or_remove: [sgsdid]},
+            area=DOS_DEMOGRAPHICS_AREA_TYPE,
+        )
+        self.add_change(
+            dos_change_key=DOS_SGSDID_CHANGE_KEY,
             change=change,
         )
         return change

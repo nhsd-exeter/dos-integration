@@ -7,6 +7,7 @@ from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
 from .validation import validate_opening_times
 from common.constants import (
+    DOS_PALLIATIVE_CARE_SGSDID,
     DI_LATITUDE_CHANGE_KEY,
     DI_LONGITUDE_CHANGE_KEY,
     DOS_ADDRESS_CHANGE_KEY,
@@ -273,6 +274,9 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
+        )
+        changes_to_dos.service_histories.add_sgsdid_change(
+            sgsdid=DOS_PALLIATIVE_CARE_SGSDID, new_value=changes_to_dos.nhs_entity.palliative_care
         )
     elif (
         changes_to_dos.dos_service.typeid in DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES

@@ -13,6 +13,7 @@ from application.service_sync.dos_data import (
     save_specified_opening_times_into_db,
     save_standard_opening_times_into_db,
     update_dos_data,
+    save_palliative_care_into_db,
 )
 
 FILE_PATH = "application.service_sync.dos_data"
@@ -360,5 +361,16 @@ def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMoc
     specified_opening_time_list = [SpecifiedOpeningTime(open_period_list, date(2022, 12, 24), False)]
     # Act
     response = save_specified_opening_times_into_db(mock_connection, service_id, True, specified_opening_time_list)
+    # Assert
+    assert True is response
+
+
+def test_save_palliative_care_into_db():
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    palliative_care = True
+    # Act
+    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
     # Assert
     assert True is response

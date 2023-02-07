@@ -5,7 +5,7 @@ from aws_lambda_powertools.logging import Logger
 
 from common.constants import (
     DI_CHANGE_KEYS_LIST,
-    DOS_DEMOGRAPHICS_CHANGE_TYPE,
+    DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
@@ -24,11 +24,11 @@ class ServiceHistoriesChange:
     change_action: str
     area: str
 
-    def __init__(self, data: Any, previous_value: Any, change_key: str) -> None:
+    def __init__(self, data: Any, previous_value: Any, change_key: str, area=DOS_DEMOGRAPHICS_AREA_TYPE) -> None:
         self.data = data
         self.previous_value = previous_value
         self.change_key = change_key
-        self.area = DOS_DEMOGRAPHICS_CHANGE_TYPE
+        self.area = area
         if self.change_key in DOS_SERVICES_TABLE_CHANGE_TYPE_LIST or self.change_key in DI_CHANGE_KEYS_LIST:
             self.change_action = self.get_demographics_change_action()
         elif (
@@ -36,6 +36,7 @@ class ServiceHistoriesChange:
             or self.change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
         ):
             self.change_action = self.get_opening_times_change_action()
+
         else:
             logger.error(f"Unknown change key {self.change_key}")
             raise ValueError("Unknown change key")
