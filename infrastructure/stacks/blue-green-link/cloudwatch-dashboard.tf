@@ -23,14 +23,19 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             view : "timeSeries",
             stacked : false,
             metrics : [
-              [{ "expression" : "m1/60000", "label" : "QueueToDoSLatency Average in Minutes", "id" : "e1" }],
-              [{ "expression" : "m2/60000", "label" : "QueueToDoSLatency Maximum in Minutes", "id" : "e2" }],
+              [{ "expression" : "m1/60000", "label" : "QueueToDoSLatency Average", "id" : "e1" }],
+              [{ "expression" : "m2/60000", "label" : "QueueToDoSLatency Maximum", "id" : "e2" }],
               ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "id" : "m1", "visible" : false }],
               [".", ".", ".", var.blue_green_environment, { "stat" : "Maximum", "id" : "m2", "visible" : false }]
             ],
             period : 60,
             region : var.aws_region,
             title : "System Latency"
+            yAxis : {
+              left : {
+                label : "Minutes",
+                showUnits : false
+            } }
           }
         },
         {
@@ -67,7 +72,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             stacked : false,
             metrics : [
               ["AWS/SQS", "NumberOfMessagesSent", "QueueName", var.change_event_queue_name],
-              [".", "NumberOfMessagesReceived", ".", "."]
+              [".", "NumberOfMessagesReceived", ".", "."],
+              [".", "ApproximateNumberOfMessagesVisible", ".", "."]
             ],
             stat : "Sum",
             period : 60,
@@ -86,7 +92,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             stacked : false,
             metrics : [
               ["AWS/SQS", "NumberOfMessagesSent", "QueueName", var.update_request_queue_name],
-              [".", "NumberOfMessagesReceived", ".", "."]
+              [".", "NumberOfMessagesReceived", ".", "."],
+              [".", "ApproximateNumberOfMessagesVisible", ".", "."],
             ],
             stat : "Sum",
             period : 60,
