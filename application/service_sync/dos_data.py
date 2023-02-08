@@ -392,7 +392,8 @@ def save_palliative_care_into_db(
     elif is_changes and not validate_dos_palliative_care_z_code_exists(connection=connection):
         add_metric("DoSPalliativeCareZCodeDoesNotExist")
         logger.error(
-            f"Unable to save palliative care changes for service id {service_id} as the palliative care Z code does not exist in the DoS database",
+            f"Unable to save palliative care changes for service id {service_id} as the "
+            "palliative care Z code does not exist in the DoS database",
             extra={"palliative_care_is_set_to": palliative_care},
         )
         return False

@@ -13,7 +13,6 @@ from .service_histories_change import ServiceHistoriesChange
 from common.constants import (
     DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_INTEGRATION_USER_NAME,
-    DOS_PALLIATIVE_CARE_SGSDID,
     DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
 )
