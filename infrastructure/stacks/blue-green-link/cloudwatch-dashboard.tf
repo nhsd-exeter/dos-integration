@@ -63,7 +63,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
           height : 6,
-          width : 7,
+          width : 8,
           y : 6,
           x : 0,
           type : "metric",
@@ -83,9 +83,29 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
           type : "metric",
-          x : 7,
+          x : 8,
           y : 6,
-          width : 7,
+          width : 8,
+          height : 6,
+          properties : {
+            view : "timeSeries",
+            stacked : false,
+            metrics : [
+              ["AWS/SQS", "NumberOfMessagesSent", "QueueName", var.holding_queue_name],
+              [".", "NumberOfMessagesReceived", ".", "."],
+              [".", "ApproximateNumberOfMessagesVisible", ".", "."],
+            ],
+            stat : "Sum",
+            period : 60,
+            region : var.aws_region,
+            title : "Holding Queue"
+          }
+        },
+        {
+          type : "metric",
+          x : 16,
+          y : 6,
+          width : 8,
           height : 6,
           properties : {
             view : "timeSeries",
@@ -99,45 +119,6 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             period : 60,
             region : var.aws_region,
             title : "Update Request Queue"
-          }
-        },
-        {
-          height : 6,
-          width : 4,
-          y : 6,
-          x : 14,
-          type : "metric",
-          properties : {
-            metrics : [
-              ["AWS/ApiGateway", "4XXError", "ApiName", var.di_endpoint_api_gateway_name],
-              [".", "5XXError", ".", var.di_endpoint_api_gateway_name]
-            ],
-            view : "timeSeries",
-            stacked : false,
-            region : var.aws_region,
-            stat : "Sum",
-            period : 60,
-            title : "NHS UK Endpoint Errors"
-          }
-        },
-        {
-          type : "metric",
-          x : 18,
-          y : 6,
-          width : 6,
-          height : 6,
-          properties : {
-            metrics : [
-              ["AWS/SQS", "NumberOfMessagesReceived", "QueueName", var.update_request_dlq, { "label" : "Update Request DLQ Message Count" }],
-              [".", ".", ".", var.holding_queue_dlq, { "label" : "Holding Queue DLQ Message Count" }],
-              [".", ".", ".", var.change_event_dlq, { "label" : "Change Event DLQ Message Count" }]
-            ],
-            view : "timeSeries",
-            stacked : false,
-            region : var.aws_region,
-            stat : "Sum",
-            period : 60,
-            title : "Dead Letter Queue messages"
           }
         },
         {
@@ -304,6 +285,45 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             region : var.aws_region
           }
         },
+        {
+          height : 6,
+          width : 6,
+          y : 18,
+          x : 12,
+          type : "metric",
+          properties : {
+            metrics : [
+              ["AWS/ApiGateway", "4XXError", "ApiName", var.di_endpoint_api_gateway_name],
+              [".", "5XXError", ".", var.di_endpoint_api_gateway_name]
+            ],
+            view : "timeSeries",
+            stacked : false,
+            region : var.aws_region,
+            stat : "Sum",
+            period : 60,
+            title : "NHS UK Endpoint Errors"
+          }
+        },
+        {
+          type : "metric",
+          x : 18,
+          y : 18,
+          width : 6,
+          height : 6,
+          properties : {
+            metrics : [
+              ["AWS/SQS", "NumberOfMessagesReceived", "QueueName", var.update_request_dlq, { "label" : "Update Request DLQ Message Count" }],
+              [".", ".", ".", var.holding_queue_dlq, { "label" : "Holding Queue DLQ Message Count" }],
+              [".", ".", ".", var.change_event_dlq, { "label" : "Change Event DLQ Message Count" }]
+            ],
+            view : "timeSeries",
+            stacked : false,
+            region : var.aws_region,
+            stat : "Sum",
+            period : 60,
+            title : "Dead Letter Queue messages"
+          }
+        }
       ]
     }
   )
