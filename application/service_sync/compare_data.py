@@ -7,12 +7,12 @@ from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
 from .validation import validate_opening_times
 from common.constants import (
-    DOS_PALLIATIVE_CARE_SGSDID,
     DI_LATITUDE_CHANGE_KEY,
     DI_LONGITUDE_CHANGE_KEY,
     DOS_ADDRESS_CHANGE_KEY,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
+    DOS_PALLIATIVE_CARE_SGSDID,
     DOS_PALLIATIVE_CARE_TYPE_ID,
     DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES,
     DOS_POSTAL_TOWN_CHANGE_KEY,

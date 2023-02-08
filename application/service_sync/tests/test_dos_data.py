@@ -10,10 +10,10 @@ from application.service_sync.dos_data import (
     get_dos_service_and_history,
     run_db_health_check,
     save_demographics_into_db,
+    save_palliative_care_into_db,
     save_specified_opening_times_into_db,
     save_standard_opening_times_into_db,
     update_dos_data,
-    save_palliative_care_into_db,
 )
 
 FILE_PATH = "application.service_sync.dos_data"
@@ -365,12 +365,81 @@ def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMoc
     assert True is response
 
 
-def test_save_palliative_care_into_db():
+@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_palliative_care_into_db_insert(
+    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock
+):
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
     palliative_care = True
+    mock_validate_dos_palliative_care_z_code_exists.return_value = True
     # Act
     response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
     # Assert
     assert True is response
+    mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
+        query="INSERT INTO servicesgsds (serviceid, sdid, sgid) VALUES (%(SERVICE_ID)s, %(SDID)s, %(SGID)s);",
+        vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+    )
+
+
+@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_palliative_care_into_db_delete(
+    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock
+):
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    palliative_care = False
+    mock_validate_dos_palliative_care_z_code_exists.return_value = True
+    # Act
+    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
+    # Assert
+    assert True is response
+    mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
+        query="DELETE FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sdid=%(SDID)s AND sgid=%(SGID)s;",
+        vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+    )
+
+
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_palliative_care_into_db_no_z_code(
+    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock, mock_add_metric: MagicMock
+):
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    palliative_care = True
+    mock_validate_dos_palliative_care_z_code_exists.return_value = False
+    # Act
+    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
+    # Assert
+    assert False is response
+    mock_add_metric.assert_called_once_with("DoSPalliativeCareZCodeDoesNotExist")
+    mock_query_dos_db.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_palliative_care_into_db_no_change(
+    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock, mock_add_metric: MagicMock
+):
+    # Arrange
+    mock_connection = MagicMock()
+    service_id = 1
+    palliative_care = True
+    mock_validate_dos_palliative_care_z_code_exists.return_value = True
+    # Act
+    response = save_palliative_care_into_db(mock_connection, service_id, False, palliative_care)
+    # Assert
+    assert False is response
+    mock_add_metric.assert_not_called()
+    mock_query_dos_db.assert_not_called()
