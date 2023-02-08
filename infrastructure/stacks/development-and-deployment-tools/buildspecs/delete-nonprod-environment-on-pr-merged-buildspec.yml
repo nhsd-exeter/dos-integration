@@ -27,7 +27,7 @@ phases:
       - export ENVIRONMENT=$(make -s get-environment-from-pr PR_NUMBER=$PR_NUMBER)
       - echo $ENVIRONMENT
       - |
-        if [[ "$ENVIRONMENT" =~ .*"di-".* ]]; then
+        if [[ "$ENVIRONMENT" =~ .*"dsuec-".* ]]; then
           export ENVIRONMENT_DEPLOYED=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE UPDATE_COMPLETE --max-items 1000 | jq --raw-output '.StackSummaries[] | select(.StackName | contains("'$ENVIRONMENT'"))')
           echo $ENVIRONMENT_DEPLOYED
           if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
