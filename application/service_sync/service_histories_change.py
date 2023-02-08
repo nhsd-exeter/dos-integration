@@ -7,6 +7,7 @@ from common.constants import (
     DI_CHANGE_KEYS_LIST,
     DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
+    DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
 )
@@ -36,7 +37,8 @@ class ServiceHistoriesChange:
             or self.change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
         ):
             self.change_action = self.get_opening_times_change_action()
-
+        elif self.change_key == DOS_SGSDID_CHANGE_KEY:
+            self.change_action = self.get_sgsd_change_action()
         else:
             logger.error(f"Unknown change key {self.change_key}")
             raise ValueError("Unknown change key")
@@ -55,6 +57,16 @@ class ServiceHistoriesChange:
             return "delete"
         else:
             return "modify"
+
+    def get_sgsd_change_action(self) -> str:
+        """Gets the change action for a sgsd change
+
+        Returns:
+            str: Change action - add, delete
+        """
+        new_value: dict[list[str]] = self.data
+        value = list(new_value.keys())[0]
+        return "add" if value == "add" else "delete"
 
     def get_opening_times_change_action(self) -> str:
         """Gets the change action for a opening times (specified or standard) change
