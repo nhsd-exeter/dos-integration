@@ -9,7 +9,7 @@ LOG_LEVEL:= INFO
 DB_SERVER_NAME := uec-core-dos-put-db-12
 DB_REPLICA_SERVER_NAME := uec-core-dos-put-db-12-replica-di
 DB_PORT := 5432
-DB_NAME := pathwaysdos_uat1
+DB_NAME := pathwaysdos_uat2
 DB_SCHEMA := pathwaysdos
 
 DB_SECRET_NAME := core-dos-uet-database-upgrade/deployment
