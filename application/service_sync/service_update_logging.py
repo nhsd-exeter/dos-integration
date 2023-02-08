@@ -254,7 +254,7 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 new_value=changes_to_dos.nhs_entity.standard_opening_times,
                 weekday=change_key.removeprefix("cmsopentime"),
             )
-        elif change_key in DOS_SGSDID_CHANGE_KEY:
+        elif change_key == DOS_SGSDID_CHANGE_KEY:
             service_update_logger.log_sgsdid_service_update(
                 action=change_values.get("changetype", "UNKOWN"), new_value=DOS_PALLIATIVE_CARE_SGSDID
             )
