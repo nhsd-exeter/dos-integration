@@ -425,6 +425,8 @@ The AWS CodePipeline name will be `uec-dos-int-dev-cicd-blue-green-deployment-pi
 COMMIT should be the commit hash of the commit you want to deploy.
 This should only be done from main branch.
 
+An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
+
 ```bash
 make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
 
@@ -439,6 +441,8 @@ The AWS CodePipeline name will be `uec-dos-int-dev-cicd-shared-resources-deploym
 
 COMMIT should be the commit hash of the commit you want to deploy.
 This should only be done from main branch.
+
+An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
 
 ```bash
 make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
@@ -476,7 +480,7 @@ make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=
 
 #### Rollback Blue/Green Environment
 
-This will rollback the blue/green environment to the previous version.
+This will rollback the blue/green environment to the previous version. It's best to use the commit of the version you are intending to rollback to ensure the Terraform works correctly together.
 
 ```bash
 make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
