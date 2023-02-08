@@ -14,6 +14,7 @@ from application.service_sync.dos_data import (
     save_specified_opening_times_into_db,
     save_standard_opening_times_into_db,
     update_dos_data,
+    validate_dos_palliative_care_z_code_exists,
 )
 
 FILE_PATH = "application.service_sync.dos_data"
@@ -443,3 +444,53 @@ def test_save_palliative_care_into_db_no_change(
     assert False is response
     mock_add_metric.assert_not_called()
     mock_query_dos_db.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock):
+    # Arrange
+    mock_connection = MagicMock()
+    mock_query_dos_db.return_value.rowcount = 1
+    # Act
+    response = validate_dos_palliative_care_z_code_exists(mock_connection)
+    # Assert
+    assert True is response
+    mock_query_dos_db.assert_has_calls(
+        calls=[
+            call(
+                connection=mock_connection,
+                query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
+                vars={"SDID": 14167},
+            ),
+            call().close(),
+            call(
+                connection=mock_connection, query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;", vars={"SGID": 360}
+            ),
+            call().close(),
+        ]
+    )
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_validate_dos_palliative_care_z_code_exists_does_not_exist(mock_query_dos_db: MagicMock):
+    # Arrange
+    mock_connection = MagicMock()
+    mock_query_dos_db.return_value.rowcount = 0
+    # Act
+    response = validate_dos_palliative_care_z_code_exists(mock_connection)
+    # Assert
+    assert False is response
+    mock_query_dos_db.assert_has_calls(
+        calls=[
+            call(
+                connection=mock_connection,
+                query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
+                vars={"SDID": 14167},
+            ),
+            call().close(),
+            call(
+                connection=mock_connection, query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;", vars={"SGID": 360}
+            ),
+            call().close(),
+        ]
+    )

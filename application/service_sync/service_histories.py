@@ -11,7 +11,7 @@ from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
 from common.constants import (
-    DOS_DEMOGRAPHICS_AREA_TYPE,
+    DOS_CLINICAL_AREA_TYPE,
     DOS_INTEGRATION_USER_NAME,
     DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -172,7 +172,7 @@ class ServiceHistories:
             change_key=DOS_SGSDID_CHANGE_KEY,
             previous_value=previous_value,
             data={add_or_remove: [sgsdid]},
-            area=DOS_DEMOGRAPHICS_AREA_TYPE,
+            area=DOS_CLINICAL_AREA_TYPE,
         )
         self.add_change(
             dos_change_key=DOS_SGSDID_CHANGE_KEY,

@@ -432,5 +432,12 @@ def validate_dos_palliative_care_z_code_exists(connection: connection) -> bool:
 
     if symptom_discriminator_rowcount == 1 and symptom_group_rowcount == 1:
         return True
-    else:
-        return False
+
+    logger.error(
+        "Palliative care Z code does not exist in the DoS database",
+        extra={
+            "symptom_discriminator_rowcount": symptom_discriminator_rowcount,
+            "symptom_group_rowcount": symptom_group_rowcount,
+        },
+    )
+    return False
