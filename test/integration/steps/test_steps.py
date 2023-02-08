@@ -55,6 +55,8 @@ from .utilities.generator import (
     build_change_event_contacts,
     build_change_event_opening_times,
     commit_new_service_to_dos,
+    create_palliative_care_entry_ce,
+    create_palliative_care_entry_dos,
     generate_staff,
     query_specified_opening_builder,
     query_standard_opening_builder,
@@ -102,6 +104,8 @@ def a_service_table_entry_is_created(context: Context):
     query_values = {
         "id": str(randint(100000, 999999)),
         "uid": f"test{str(randint(10000,99999))}",
+        "service_type": 13,
+        "service_status": 1,
         "name": f"Test Pharmacy {str(randint(100,999))}",
         "odscode": ods_code,
         "address": f"{str(randint(100,999))} Test Address",
@@ -109,8 +113,21 @@ def a_service_table_entry_is_created(context: Context):
         "postcode": "NG11GS",
         "publicphone": f"{str(randint(10000000000, 99999999999))}",
         "web": "www.google.com",
+        "palliative": False
     }
     context.generator_data = query_values
+    return context
+
+@given("the service in DoS supports palliative care", target_fixture="context")
+def add_palliative_care_to_dos(context: Context):
+    pal_id = create_palliative_care_entry_dos(context)
+    context.other = pal_id
+    return context
+
+
+@given("the change event has a palliative care entry", target_fixture="context")
+def add_palliative_care_to_ce(context: Context):
+    create_palliative_care_entry_ce(context)
     return context
 
 
@@ -183,7 +200,7 @@ def change_event_no_specified_opening_dates(context: Context):
 
 @given("the entry is committed to the services table", target_fixture="context")
 def service_table_entry_is_committed(context: Context):
-    service_id = commit_new_service_to_dos(context.generator_data)
+    service_id = commit_new_service_to_dos(context)
     context.service_id = service_id
     ce_state = False
     if "standard_openings" in context.generator_data.keys():
