@@ -15,6 +15,7 @@ from common.constants import (
     INVALID_POSTCODE_REPORT_ID,
     PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
+    UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
@@ -275,3 +276,18 @@ def log_incorrect_palliative_stockholder_type(
             "dos_service_type_name": dos_service.servicename,
         },
     )
+
+
+def log_unexpected_pharmacy_profiling(matching_services: List[DoSService], reason: str) -> None:
+    for service in matching_services:
+        logger.warning(
+            "Pharmacy profiling is incorrect",
+            extra={
+                "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
+                "dos_service_uid": service.uid,
+                "dos_service_name": service.name,
+                "dos_service_address": service.address,
+                "dos_service_postcode": service.postcode,
+                "reason": reason,
+            },
+        )
