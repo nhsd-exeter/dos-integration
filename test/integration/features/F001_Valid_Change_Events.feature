@@ -202,7 +202,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
 
 @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX25. Palliative Care. Non-pharmacy no check message
+  Scenario: F001SX25. Palliative Care. Non primary pharmacy service no check message
     Given an entry is created in the services table
     And the service "service_type" is set to "131"
     And the entry is committed to the services table
