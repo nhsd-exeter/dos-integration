@@ -113,10 +113,11 @@ def a_service_table_entry_is_created(context: Context):
         "postcode": "NG11GS",
         "publicphone": f"{str(randint(10000000000, 99999999999))}",
         "web": "www.google.com",
-        "palliative": False
+        "palliative": False,
     }
     context.generator_data = query_values
     return context
+
 
 @given("the service in DoS supports palliative care", target_fixture="context")
 def add_palliative_care_to_dos(context: Context):

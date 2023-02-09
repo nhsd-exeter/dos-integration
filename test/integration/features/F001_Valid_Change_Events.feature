@@ -185,25 +185,27 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service in DoS supports palliative care
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "Postcode" is updated within the DoS DB
+    Then the "service-sync" lambda shows field "message" with message "Palliative Care is equal"
 
 @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX23. Palliative Care Service with changed data flagged (removed)
     Given a basic service is created
     And the service in DoS supports palliative care
     When the Changed Event is sent for processing with "valid" api key
-    Then the "Postcode" is updated within the DoS DB
+    Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
 
 @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX24. Palliative Care Service with changed data flagged (added)
     Given a basic service is created
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "Postcode" is updated within the DoS DB
+    Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
 
 @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX25. Palliative Care. Non-pharmacy no check message
-    Given a basic service is created
+    Given an entry is created in the services table
+    And the service "service_type" is set to "131"
+    And the entry is committed to the services table
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "Postcode" is updated within the DoS DB
+    Then the "service-sync" lambda shows field "message" with message "Not suitable for palliative care comparison"

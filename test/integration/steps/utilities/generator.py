@@ -389,18 +389,16 @@ def valid_change_event(context) -> bool:
         return False
     return True
 
+
 def create_palliative_care_entry_dos(context) -> int:
     """This function creates an entry in DOS DB that will flag the service as having a
     palliative care service within it"""
-    if context.generator_data["palliative"] is False:
-        return 0
     srv = context.service_id
-    query = (
-        f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"
-    )
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     return response
+
 
 def create_palliative_care_entry_ce(context) -> None:
     """This function creates an entry in the Change Event containing a palliative care service"""
@@ -412,6 +410,6 @@ def create_palliative_care_entry_ce(context) -> None:
             "Contacts": [],
             "Treatments": [],
             "OpeningTimes": [],
-            "AgeRange": []
+            "AgeRange": [],
         }
     ]
