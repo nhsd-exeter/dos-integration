@@ -113,7 +113,6 @@ def a_service_table_entry_is_created(context: Context):
         "postcode": "NG11GS",
         "publicphone": f"{str(randint(10000000000, 99999999999))}",
         "web": "www.google.com",
-        "palliative": False,
     }
     context.generator_data = query_values
     return context
