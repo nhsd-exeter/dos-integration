@@ -19,7 +19,8 @@ S3_CLIENT = client("s3", region_name="eu-west-2")
 
 
 # Commit new services to DOS
-def commit_new_service_to_dos(qv: Dict) -> Any:
+def commit_new_service_to_dos(context) -> Any:
+    qv = context.generator_data
     query_vars = (
         f"{qv['id']}",
         f"{qv['uid']}",
@@ -46,10 +47,10 @@ def commit_new_service_to_dos(qv: Dict) -> Any:
         "2022-09-06 11:00:00.000 +0100",
         "0",
         None,
-        13,
+        f"{qv['service_type']}",
         None,
         None,
-        1,
+        f"{qv['service_status']}",
         None,
         None,
         "0",
@@ -233,7 +234,7 @@ def build_change_event(context):
     context.change_event = change_event
 
 
-def generate_staff():
+def generate_staff() -> list:
     staff_value = [
         {
             "Title": "Mr",
@@ -320,7 +321,7 @@ def return_opening_time_dict() -> Dict:
 
 
 # Other functions
-def day_lookup(day):
+def day_lookup(day) -> str:
     days = {"monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "sunday": 7}
     return days[day.lower()]
 
@@ -329,7 +330,7 @@ def generate_unique_key(start_number: int = 1, stop_number: int = 1000) -> str:
     return str(randrange(start=start_number, stop=stop_number, step=1))
 
 
-def query_standard_opening_builder(context, service_status, day, open="09:00", close="17:00"):
+def query_standard_opening_builder(context, service_status, day, open="09:00", close="17:00") -> dict:
     # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
     times_obj = {}
     if service_status.lower() == "open":
@@ -354,7 +355,7 @@ def query_standard_opening_builder(context, service_status, day, open="09:00", c
     return context
 
 
-def query_specified_opening_builder(context, service_status, date, open="09:00", close="17:00"):
+def query_specified_opening_builder(context, service_status, date, open="09:00", close="17:00") -> dict:
     times_obj = {}
     if service_status.lower() == "open":
         times_obj["date"] = date
@@ -376,7 +377,7 @@ def query_specified_opening_builder(context, service_status, date, open="09:00",
     return context
 
 
-def valid_change_event(context):
+def valid_change_event(context) -> bool:
     """This function checks if the data stored in DoS would pass the change request
     validation within DoS API Gateway"""
     if context.website is not None and not fullmatch(
@@ -387,3 +388,28 @@ def valid_change_event(context):
     if context.phone is not None and not fullmatch(r"[+0][0-9 ()]{9,}", context.phone):
         return False
     return True
+
+
+def create_palliative_care_entry_dos(context) -> int:
+    """This function creates an entry in DOS DB that will flag the service as having a
+    palliative care service within it"""
+    srv = context.service_id
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    response = loads(invoke_dos_db_handler_lambda(lambda_payload))
+    return response
+
+
+def create_palliative_care_entry_ce(context) -> None:
+    """This function creates an entry in the Change Event containing a palliative care service"""
+    context.change_event["UecServices"] = [
+        {
+            "ServiceName": "Pharmacy palliative care medication stockholder",
+            "ServiceDescription": None,
+            "ServiceCode": "SRV0559",
+            "Contacts": [],
+            "Treatments": [],
+            "OpeningTimes": [],
+            "AgeRange": [],
+        }
+    ]
