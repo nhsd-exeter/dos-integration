@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check pull request title
-        if: ${{ github.event_name == 'pull_request' && github.head_ref != **'release'**}}
+        if: ${{ github.event_name == 'pull_request' && !contains(github.head_ref, 'release') }}
         run: |
           [ $(make git-check-if-pull-request-title-is-correct BUILD_BRANCH="${{ github.head_ref }}" PULL_REQUEST_TITLE="${{ github.event.pull_request.title }}") = true ] && \
             exit 0 || make show-configuration | grep -E 'GIT_COMMIT_MESSAGE_|GIT_PULL_REQUEST_' && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
