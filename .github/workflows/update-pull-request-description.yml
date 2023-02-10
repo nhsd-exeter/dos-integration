@@ -1,9 +1,15 @@
 name: "Update Pull Request description with Template"
+
 on:
   pull_request:
     types: [opened]
     branches-ignore:
       - 'dependabot/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   update-pull-request:
     runs-on: ubuntu-latest

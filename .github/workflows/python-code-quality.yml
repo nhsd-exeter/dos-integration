@@ -1,9 +1,14 @@
 name: "Check Python code format and quality"
+
 on:
   push:
     branches: [develop, main]
   pull_request:
     types: [opened, ready_for_review, synchronize, reopened]
+
+permissions:
+  contents: read
+
 jobs:
   check-code-quality:
     runs-on: ubuntu-latest
