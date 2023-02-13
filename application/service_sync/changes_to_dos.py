@@ -35,6 +35,7 @@ class ChangesToDoS:
     new_public_phone: Optional[str] = None
     new_specified_opening_times: Optional[List[SpecifiedOpeningTime]] = None
     new_website: Optional[str] = None
+    new_palliative_care: Optional[bool] = None
 
     # Existing DoS data for use building service history
     current_address: Optional[str] = None
@@ -42,6 +43,7 @@ class ChangesToDoS:
     current_public_phone: Optional[str] = None
     current_specified_opening_times: Optional[List[SpecifiedOpeningTime]] = None
     current_website: Optional[str] = None
+    current_palliative_care: Optional[bool] = None
 
     # Each day that has changed will have a current and new value in the format below
     # new_day_opening_times e.g. new_monday_opening_times
@@ -213,7 +215,26 @@ class ChangesToDoS:
             )
             return True
         else:
+            logger.info(f"Public Phone is equal, DoS='{self.current_public_phone}' == NHS UK='{self.new_public_phone}'")
+            return False
+
+    def check_palliative_care_for_change(self) -> bool:
+        """Compares the palliative care of from the dos_service and nhs_entity
+
+        Returns:
+            bool: True if the palliative care is different, False if not
+        """
+        self.current_palliative_care = self.dos_service.palliative_care
+        self.new_palliative_care = self.nhs_entity.palliative_care
+        if self.current_palliative_care != self.new_palliative_care:
+            logger.info(
+                f"Palliative Care is not equal, DoS='{self.current_palliative_care}' "
+                + "!= NHS UK='{self.new_palliative_care}'"
+            )
+            return True
+        else:
             logger.debug(
-                f"Public Phone is equal, DoS='{self.current_public_phone}' == NHS UK='{self.new_public_phone}'"
+                f"Palliative Care is equal, DoS='{self.current_palliative_care}' == "
+                + f"NHSUK='{self.new_palliative_care}'"
             )
             return False

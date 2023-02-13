@@ -21,6 +21,7 @@ from application.service_sync.compare_data import (
     compare_location_data,
     compare_nhs_uk_and_dos_data,
     compare_opening_times,
+    compare_palliative_care,
     compare_website,
     set_up_for_services_table_change,
 )
@@ -362,3 +363,53 @@ def test_set_up_for_services_table_change_no_service_history_update(mock_service
     assert changes_to_dos.demographic_changes == {service_table_field_name: new_value}
     mock_service_histories_change.assert_not_called()
     changes_to_dos.service_histories.add_change.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
+@patch(f"{FILE_PATH}.log_palliative_care_not_equal")
+def test_compare_palliative_care_unequal(
+    mock_log_palliative_care_not_equal: MagicMock, mock_log_incorrect_palliative_stockholder_type: MagicMock
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.typeid = 13
+    dos_service.palliative_care = dos_palliative_care = True
+    nhs_entity.palliative_care = nhs_palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+
+    # Act
+    response = compare_palliative_care(changes_to_dos)
+    # Assert
+    assert response == changes_to_dos
+    mock_log_palliative_care_not_equal.assert_called_once_with(
+        nhs_uk_palliative_care=nhs_palliative_care, dos_palliative_care=dos_palliative_care
+    )
+    mock_log_incorrect_palliative_stockholder_type.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
+@patch(f"{FILE_PATH}.log_palliative_care_not_equal")
+def test_compare_palliative_care_invalid(
+    mock_log_palliative_care_not_equal: MagicMock, mock_log_incorrect_palliative_stockholder_type: MagicMock
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.typeid = 131
+    dos_service.palliative_care = dos_palliative_care = True
+    nhs_entity.palliative_care = nhs_palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+
+    # Act
+    response = compare_palliative_care(changes_to_dos)
+    # Assert
+    assert response == changes_to_dos
+    mock_log_palliative_care_not_equal.assert_not_called()
+    mock_log_incorrect_palliative_stockholder_type.assert_called_once_with(
+        nhs_uk_palliative_care=nhs_palliative_care,
+        dos_palliative_care=dos_palliative_care,
+        dos_service=dos_service,
+    )

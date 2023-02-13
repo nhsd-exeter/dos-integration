@@ -1,6 +1,7 @@
 from datetime import datetime
 from hashlib import sha256
 from json import dumps
+from operator import countOf
 from os import environ
 from typing import Any, Dict, List
 
@@ -11,7 +12,7 @@ from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services, VALID_STATUS_ID
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
@@ -19,6 +20,7 @@ from common.report_logging import (
     log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
@@ -81,6 +83,18 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     if nhs_entity.standard_opening_times.fully_closed() and len(matching_services) > 0:
         # Also requires valid type/subtype, but this condition is already met in code by this point
         log_blank_standard_opening_times(nhs_entity, matching_services)
+
+    # Check for correct pharmacy profiling
+    dos_matching_service_types = [service.typeid for service in matching_services]
+    logger.debug(f"Matching service types: {dos_matching_service_types}")
+    if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
+        log_unexpected_pharmacy_profiling(
+            matching_services=matching_services, reason="Multiple 'Pharmacist' type services found (type 13)"
+        )
+    elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
+        log_unexpected_pharmacy_profiling(
+            matching_services=matching_services, reason="No 'Pharmacist' type services found (type 13)"
+        )
 
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services

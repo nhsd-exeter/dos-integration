@@ -349,13 +349,13 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 ### Branch Naming for Automatic Deployments
 
-For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DI-123_My_feature_branch`
+For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DSUEC-123_My_feature_branch`
 
 Once a branch which meets this criteria has been pushed then it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
 
 ### Branch Naming to not automatically deploy
 
-For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DI-123_My_fix_branch`
+For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DSUEC-123_My_fix_branch`
 
 ---
 
@@ -425,6 +425,8 @@ The AWS CodePipeline name will be `uec-dos-int-dev-cicd-blue-green-deployment-pi
 COMMIT should be the commit hash of the commit you want to deploy.
 This should only be done from main branch.
 
+An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
+
 ```bash
 make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
 
@@ -439,6 +441,8 @@ The AWS CodePipeline name will be `uec-dos-int-dev-cicd-shared-resources-deploym
 
 COMMIT should be the commit hash of the commit you want to deploy.
 This should only be done from main branch.
+
+An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
 
 ```bash
 make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
@@ -476,7 +480,7 @@ make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=
 
 #### Rollback Blue/Green Environment
 
-This will rollback the blue/green environment to the previous version.
+This will rollback the blue/green environment to the previous version. It's best to use the commit of the version you are intending to rollback to ensure the Terraform works correctly together.
 
 ```bash
 make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
@@ -488,7 +492,7 @@ make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMEN
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
 
-    make quick-build-and-deploy PROFILE=dev ENVIRONMENT=di-123 # Environment is optional if your branch is prefixed with task/DI-xxx
+    make quick-build-and-deploy PROFILE=dev ENVIRONMENT=dsuec-123 # Environment is optional if your branch is prefixed with task/DSUEC-xxx
 
 ### Remove Deployment From the Command-line
 
@@ -499,7 +503,7 @@ To quick update the lambdas run the following command. Note this only updates th
 You can remove a dev deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
-    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=di-363 COMMIT=2bc43dd // This destroys the di-363 dev environment
+    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=dsuec-363 COMMIT=2bc43dd // This destroys the dsuec-363 dev environment
 
 ### Remove deployment on Pull Request merge
 

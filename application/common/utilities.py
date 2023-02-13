@@ -72,8 +72,8 @@ def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str
 
 
 def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
-    attributes = {"error_msg": "", "error_msg_http_code": ""}
     if msg_attributes is not None:
+        attributes = {"error_msg": "", "error_msg_http_code": ""}
         if "error_msg_http_code" in msg_attributes:
             attributes["error_msg_http_code"] = msg_attributes["error_msg_http_code"]["stringValue"]
         if "error_msg" in msg_attributes:
@@ -83,7 +83,7 @@ def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, msg_limit: int = 10000):
-    """Removing given keys from the dictionary if the dictonary size is morethan message limit
+    """Removing given keys from the dictionary if the dictionary size is more than message limit
     Args:
         event Dict[str, Any]: Message body as a dictionary
         keys list: keys to be removed

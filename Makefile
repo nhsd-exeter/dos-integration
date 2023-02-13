@@ -323,7 +323,7 @@ tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=
 		echo Recommended: you run this command from the main branch
 	fi
 
-tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[di-number], COMMIT=[short commit hash]
+tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[dsuec-number], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" != "$(ENVIRONMENT)" ]; then
 		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
 		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
@@ -339,7 +339,7 @@ re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SO
 	done
 
 get-environment-from-pr:
-	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DI-(?<x>.[0-9]*).*"; "di-\(.x)") ')
+	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DSUEC-(?<x>.[0-9]*).*"; "dsuec-\(.x)") ')
 	echo $$ENVIRONMENT
 
 is-environment-deployed:
@@ -635,3 +635,14 @@ tag-commit-to-deploy-shared-resources: # Tags commit to deploy shared resources 
 tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/green environment - mandatory: PROFILE=[name], SHARED_ENVIRONMENT=[name]
 	tag="$(BUILD_TIMESTAMP)_$(PROFILE)_$(SHARED_ENVIRONMENT)_blue_green_rollback"
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
+
+# ==============================================================================
+# DynamoDB Cleanup Job
+run-dynamodb-cleanup-job:
+	python3 scripts/dynamodb_cleanup_job/script.py
+
+deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
+	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+
+undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
+	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev

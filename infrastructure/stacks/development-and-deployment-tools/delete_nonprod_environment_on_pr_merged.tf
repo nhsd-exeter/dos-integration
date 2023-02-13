@@ -40,7 +40,7 @@ resource "aws_codebuild_project" "di_destroy_nonprod_environment_on_pr_merged" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "nonprod"
+      value = "dev"
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
