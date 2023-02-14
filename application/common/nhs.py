@@ -88,7 +88,10 @@ class NHSEntity:
         Returns:
             bool: True if the service exists, False otherwise
         """
-        return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
+        uec_services = (
+            self.entity_data.get("UecServices", []) if isinstance(self.entity_data.get("UecServices", []), list) else []
+        )
+        return any(item.get("ServiceCode") == service_code for item in uec_services)
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening
