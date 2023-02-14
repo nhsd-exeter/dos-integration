@@ -12,6 +12,7 @@ from .constants import (
     DOS_TOWN_NORTHING_NAME,
     DOS_WEB_FIELD_NAME,
     DOS_WEB_SERVICE_HISTORY_KEY,
+    DOS_ZCODE_SERVICE_HISTORY_KEY,
 )
 
 
@@ -52,6 +53,8 @@ def get_service_history_data_key(plain_english_field_name: str) -> str:
             field_name = DOS_ADDRESS_SERVICE_HISTORY_KEY
         case "postcode":
             field_name = DOS_POSTCODE_SERVICE_HISTORY_KEY
+        case "zcode" | "z-code" | "z code":
+            field_name = DOS_ZCODE_SERVICE_HISTORY_KEY
         case _:
             raise ValueError(f"Error!.. Input parameter '{plain_english_field_name}' not compatible")
     return field_name
