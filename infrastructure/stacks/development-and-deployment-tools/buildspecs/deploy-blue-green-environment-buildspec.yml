@@ -62,15 +62,17 @@ phases:
       - make link-blue-green-environment VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT TF_VAR_previous_blue_green_environment=$CURRENT_VERSION TF_CLI_ARGS="-parallelism=30"
 
       - echo "[Destroy Previous Rollback Version]"
-      - export PREVIOUS_VERSION_COMMIT_HASH=$(echo $PREVIOUS_VERSION | cut -d'-' -f1)
-      # In this snippet, we are triggering the codebuild stage to destroy the previous rollback blue-green environment
-      - mkdir -p $CODEBUILD_SRC_DIR/git_repo
-      - cd $CODEBUILD_SRC_DIR/git_repo
-      - git clone $GIT_REPO_URL .
-      - git checkout $PREVIOUS_VERSION_COMMIT_HASH || true
-      - export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION_COMMIT_HASH) || true
-      - echo FULL_PREVIOUS_VERSION=$FULL_PREVIOUS_VERSION
-      - unset AWS_ACCESS_KEY_ID
-      - unset AWS_SECRET_ACCESS_KEY
-      - unset AWS_SESSION_TOKEN
-      - aws codebuild start-build --project-name $DELETE_BLUE_GREEN_ENVIRONMENT_CODEBUILD_NAME --source-version $PREVIOUS_VERSION --environment-variables-override name=BLUE_GREEN_ENVIRONMENT,value=$PREVIOUS_VERSION,type=PLAINTEXT name=AWS_ACCOUNT,value=$AWS_ACCOUNT,type=PLAINTEXT name=PROFILE,value=$PROFILE,type=PLAINTEXT name=SHARED_ENVIRONMENT,value=$SHARED_ENVIRONMENT,type=PLAINTEXT
+      - | # In this snippet, we are triggering the codebuild stage to destroy the previous rollback blue-green environment
+        if [  ]; then
+          export PREVIOUS_VERSION_COMMIT_HASH=$(echo $PREVIOUS_VERSION | cut -d'-' -f1)
+          mkdir -p $CODEBUILD_SRC_DIR/git_repo
+          cd $CODEBUILD_SRC_DIR/git_repo
+          git clone $GIT_REPO_URL .
+          git checkout $PREVIOUS_VERSION_COMMIT_HASH || true
+          export FULL_PREVIOUS_VERSION=$(git rev-parse $PREVIOUS_VERSION_COMMIT_HASH) || true
+          echo FULL_PREVIOUS_VERSION=$FULL_PREVIOUS_VERSION
+          unset AWS_ACCESS_KEY_ID
+          unset AWS_SECRET_ACCESS_KEY
+          unset AWS_SESSION_TOKEN
+          aws codebuild start-build --project-name $DELETE_BLUE_GREEN_ENVIRONMENT_CODEBUILD_NAME --source-version $PREVIOUS_VERSION --environment-variables-override name=BLUE_GREEN_ENVIRONMENT,value=$PREVIOUS_VERSION,type=PLAINTEXT name=AWS_ACCOUNT,value=$AWS_ACCOUNT,type=PLAINTEXT name=PROFILE,value=$PROFILE,type=PLAINTEXT name=SHARED_ENVIRONMENT,value=$SHARED_ENVIRONMENT,type=PLAINTEXT
+        fi

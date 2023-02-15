@@ -36,7 +36,7 @@ resource "aws_security_group_rule" "database_allow_in_from_lambda" {
   to_port                  = 5432
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
-  security_group_id        = data.aws_db_instance.dos_db.vpc_security_groups[0]
+  security_group_id        = data.aws_security_group.dos_db_sg.id
   description              = "Allow access in from UEC DI lambda to DoS Postgres DB"
 }
 
@@ -47,6 +47,6 @@ resource "aws_security_group_rule" "database_replica_allow_in_from_lambda" {
   to_port                  = 5432
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
-  security_group_id        = data.aws_db_instance.dos_db_replica.vpc_security_groups[0]
+  security_group_id        = data.aws_security_group.dos_db_replica_sg.id
   description              = "Allow access in from UEC DI lambda to DoS Replica Postgres DB"
 }
