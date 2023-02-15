@@ -663,3 +663,27 @@ def test_match_nhs_entities_to_services():
     actual_result = match_nhs_entities_to_services(nhs_entities, dos_services)
 
     assert actual_result == expected_result
+
+
+@pytest.mark.parametrize(
+    "input_value, output_value",
+    [
+        ("", False),
+        (None, False),
+        ([], False),
+        ({}, False),
+        (
+            [
+                {
+                    "ServiceName": "Pharmacy palliative care medication stockholder",
+                    "ServiceDescription": None,
+                    "ServiceCode": "SRV0559",
+                }
+            ],
+            True,
+        ),
+    ],
+)
+def test_extract_uec_service(input_value, output_value):
+    entity = NHSEntity({"ODSCode": "V012345", "UecServices": input_value})
+    assert entity.extract_uec_service("SRV0559") == output_value
