@@ -6,7 +6,7 @@
 LOG_LEVEL:= DEBUG
 
 DB_SERVER_NAME := uec-core-dos-regression-db-12
-DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
+DB_REPLICA_SERVER_NAME := uec-core-dos-dev-db-replica-di.dos-db-rds
 DOS_DB_SG_NAME  := live-lk8s-nonprod-core-dos-db-rds-postgres-sg
 DOS_DB_REPLICA_SG_NAME := live-lk8s-nonprod-core-dos-pu-replica-rds-postgres-pu
 DB_PORT := 5432
