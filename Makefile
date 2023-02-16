@@ -51,8 +51,8 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
-	echo "export DB_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
-# echo "export DB_REPLICA_SERVER=$$(make -s aws-rds-describe-instance-value DB_INSTANCE=$(DB_REPLICA_SERVER_NAME) KEY_DOT_PATH=Endpoint.Address)"
+	echo "export DB_SERVER=$(R53_DB_SERVER_NAME)"
+	echo "export DB_REPLICA_SERVER=$(R53_DB_REPLICA_SERVER_NAME)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
 	echo "export DB_READ_AND_WRITE_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
 	echo "export DB_READ_ONLY_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
