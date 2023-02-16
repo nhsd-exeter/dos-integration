@@ -12,7 +12,7 @@ DB_REPLICA_SERVER_NAME := uec-core-dos-integration-cluster-14-two
 DOS_DB_SG_NAME  := uec-core-dos-integration-di-sg
 DOS_DB_REPLICA_SG_NAME := uec-core-dos-integration-di-sg
 DB_PORT := 5432
-DB_NAME := pathwaysdos_regressiondi
+DB_NAME := pathwaysdos_aurora
 DB_SCHEMA := pathwaysdos
 
 DB_SECRET_NAME := core-dos-dev/deployment
