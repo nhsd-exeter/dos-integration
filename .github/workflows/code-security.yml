@@ -1,9 +1,14 @@
 name: "Check code for Security Vulnerabilities"
+
 on:
   push:
     branches: [develop, master]
   pull_request:
     types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
 jobs:
   check-code-security:
     runs-on: ubuntu-latest

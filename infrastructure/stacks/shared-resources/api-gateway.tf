@@ -47,6 +47,7 @@ resource "aws_api_gateway_resource" "di_endpoint_change_event_path" {
 }
 
 resource "aws_api_gateway_method" "di_endpoint_method" {
+  #checkov:skip=CKV2_AWS_53:Event is validated by lambda
   http_method      = "POST"
   resource_id      = aws_api_gateway_resource.di_endpoint_change_event_path.id
   rest_api_id      = aws_api_gateway_rest_api.di_endpoint.id
@@ -116,6 +117,7 @@ resource "aws_cloudwatch_log_group" "di_endpoint_access_logs" {
 
 resource "aws_api_gateway_stage" "di_endpoint_stage" {
   #checkov:skip=CKV2_AWS_4:Logs setting are set in the method
+  #checkov:skip=CKV2_AWS_51:No need for client certificate authentication
   deployment_id        = aws_api_gateway_deployment.di_endpoint_deployment.id
   rest_api_id          = aws_api_gateway_rest_api.di_endpoint.id
   stage_name           = var.di_endpoint_api_gateway_stage

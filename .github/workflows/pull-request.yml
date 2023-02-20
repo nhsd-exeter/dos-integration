@@ -1,10 +1,16 @@
 name: "Check pull request title, branch name and commit message"
+
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
     branches-ignore:
-      - "dependabot/**"
-      - "release/**"
+      - 'dependabot/**'
+      - 'release/**'
+      - 'main'
+
+permissions:
+  contents: read
+
 jobs:
   check-pull-request:
     runs-on: ubuntu-latest
@@ -13,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check pull request title
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && !contains(github.head_ref, 'release') }}
         run: |
           [ $(make git-check-if-pull-request-title-is-correct BUILD_BRANCH="${{ github.head_ref }}" PULL_REQUEST_TITLE="${{ github.event.pull_request.title }}") = true ] && \
             exit 0 || make show-configuration | grep -E 'GIT_COMMIT_MESSAGE_|GIT_PULL_REQUEST_' && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1

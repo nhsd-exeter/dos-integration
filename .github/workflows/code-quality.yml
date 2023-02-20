@@ -1,9 +1,14 @@
 name: "Check code format and quality"
+
 on:
   push:
     branches: [develop, main]
   pull_request:
     types: [opened, ready_for_review, synchronize, reopened]
+
+permissions:
+  contents: read
+
 jobs:
   check-code-quality:
     runs-on: ubuntu-latest
@@ -28,7 +33,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.sources=application,deployment,infrastructure,scripts,test
+            -Dsonar.sources=application,deployment,infrastructure,scripts,test,build/docker
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
             -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/dos_db_handler/**,test/**,scripts/**
