@@ -40,6 +40,7 @@ jobs:
           [ $(make git-check-if-commit-msg-is-correct BUILD_BRANCH="${{ github.head_ref }}" BUILD_COMMIT_MESSAGE="${{ env.BUILD_COMMIT_MESSAGE }}") = true ] && \
             exit 0 || make show-configuration | grep GIT_COMMIT_MESSAGE_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
       - name: Check branch name
+        if: ${{ github.event_name == 'pull_request' && !contains(github.head_ref, 'release') }}
         run: |
           [ $(make git-check-if-branch-name-is-correct BUILD_BRANCH="${{ github.head_ref }}") = true ] && \
             exit 0 || make show-configuration | grep GIT_BRANCH_ && printf "\nPlease, for more details see the 'build/automation/test/git.test.mk' file.\n" && exit 1
