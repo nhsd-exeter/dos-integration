@@ -54,7 +54,7 @@ Feature: F006. Opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda does not show "report_key" with message "INVALID_OPEN_TIMES"
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @wip
   Scenario: F006SXX8. Confirm recently added specified opening date can be removed from Dos
     Given a basic service is created
     And the change event is "open" on date "Jan 01 2025"

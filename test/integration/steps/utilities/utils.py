@@ -131,7 +131,7 @@ def get_single_service_pharmacy_odscode() -> Dict:
 
 def get_locations_table_data(postcode: str) -> list:
     query = (
-        "SELECT postaltown, postcode, easting, northing, latitude, longitude "
+        "SELECT postaltown as town, postcode, easting, northing, latitude, longitude "
         "FROM locations WHERE postcode = %(POSTCODE)s"
     )
     query_vars = {"POSTCODE": postcode}
@@ -163,8 +163,7 @@ def get_service_id(odscode: str) -> str:
         sleep(30)
     else:
         raise ValueError("Error!.. Service Id not found")
-
-    return data[0][0]
+    return data[0]["id"]
 
 
 def create_pending_change_for_service(service_id: str):
@@ -252,7 +251,7 @@ def get_service_table_field(service_id: str, field_name: str) -> Any:
     lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(loads(response))
-    return data[0][0]
+    return data[0][field_name]
 
 
 def wait_for_service_update(service_id: str) -> Any:
@@ -507,7 +506,7 @@ def get_service_history(service_id: str) -> Dict[str, Any]:
         retrycounter += 1
         sleep(30)
     if data != []:
-        return loads(data[0][0])
+        return loads(data[0]["history"])
     else:
         return data
 

@@ -803,7 +803,7 @@ def services_location_history_update_assertion(context: Context):
     history_list.append(history_data["cmseastings"]["data"])
     history_list.append(history_data["cmsnorthings"]["data"])
     location_data = get_locations_table_data(context.change_event["Postcode"])
-    location_data = location_data[0][:-2]
+    location_data = list(location_data[0].values())[:-2]
     assert history_list == location_data, "ERROR: Service History and Location data does not match"
 
 
