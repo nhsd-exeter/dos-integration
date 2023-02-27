@@ -44,7 +44,7 @@ class ServiceHistories:
         # Get the history json from the database for the service
         cursor.execute(
             query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
-            vars={"SERVICE_ID": self.service_id},
+            params={"SERVICE_ID": self.service_id},
         )
         results: List[Any] = cursor.fetchall()
         if results != []:

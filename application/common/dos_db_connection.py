@@ -4,7 +4,9 @@ from time import time_ns
 from typing import Any, Dict, Generator, Optional
 
 from aws_lambda_powertools.logging import Logger
-from psycopg import connect, Connection, rows
+from psycopg import connect, Connection, Cursor, rows
+from psycopg.rows import DictRow
+from typing_extensions import LiteralString
 
 from common.secretsmanager import get_secret
 
@@ -95,8 +97,8 @@ def connection_to_db(
 
 
 def query_dos_db(
-    connection: Connection, query: str, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True
-) -> rows.DictRow:
+    connection: Connection, query: LiteralString, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True
+) -> Cursor[DictRow]:
     """Queries the database given in the connection object
 
     Args:
@@ -109,13 +111,9 @@ def query_dos_db(
     """
     cursor = connection.cursor(row_factory=rows.dict_row)
 
-    logger.debug("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
-    query_string_log = cursor.mogrify(query, vars) if log_vars else query
-    if len(query_string_log) > 1000:
-        query_string_log = f"{query_string_log[:490]}...  ...{query_string_log[-490:]}"
-    logger.info(f"Running SQL command: {query_string_log}")
+    logger.info("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
 
     time_start = time_ns() // 1000000
-    cursor.execute(query, vars)
+    cursor.execute(query=query, params=vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
     return cursor
