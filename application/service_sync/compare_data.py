@@ -23,7 +23,7 @@ from common.constants import (
 )
 from common.dos import DoSService
 from common.dos_location import DoSLocation
-from common.nhs import NHSEntity, skip_if_key_is_none, get_palliative_care_log_value
+from common.nhs import get_palliative_care_log_value, NHSEntity, skip_if_key_is_none
 from common.opening_times import DAY_IDS, WEEKDAYS
 from common.report_logging import log_incorrect_palliative_stockholder_type, log_palliative_care_not_equal
 

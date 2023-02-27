@@ -1,6 +1,6 @@
 import json
 from os import environ
-from typing import List
+from typing import List, Union
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
@@ -265,7 +265,7 @@ def log_palliative_care_not_equal(nhs_uk_palliative_care: bool, dos_palliative_c
 
 
 def log_incorrect_palliative_stockholder_type(
-    nhs_uk_palliative_care: bool | str, dos_palliative_care: bool, dos_service: DoSService
+    nhs_uk_palliative_care: Union[bool, str], dos_palliative_care: bool, dos_service: DoSService
 ) -> None:
     logger.warning(
         "Palliative care on wrong service type",

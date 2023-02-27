@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from aws_lambda_powertools.logging import Logger
 
