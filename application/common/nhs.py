@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from aws_lambda_powertools.logging import Logger
 
@@ -260,3 +260,20 @@ def match_nhs_entities_to_services(
         f"{len(nhs_entities) - len(servicelist_map)} not matched."
     )
     return dict(servicelist_map)
+
+
+def skip_if_key_is_none(key: Any) -> bool:
+    """If the key is None, skip the item"""
+    return key is None
+
+
+def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool) -> bool | str:
+    """Get the value to log for palliative care
+
+    Args:
+        palliative_care (bool): The value of palliative care
+        skip_palliative_care (bool): Whether to skip palliative care
+
+    Returns:
+        bool | str: The value to log"""
+    return "Never been updated on Profile Manager" if skip_palliative_care else palliative_care

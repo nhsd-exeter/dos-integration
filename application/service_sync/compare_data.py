@@ -19,10 +19,11 @@ from common.constants import (
     DOS_PUBLIC_PHONE_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
     DOS_WEBSITE_CHANGE_KEY,
+    NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
 )
 from common.dos import DoSService
 from common.dos_location import DoSLocation
-from common.nhs import NHSEntity
+from common.nhs import NHSEntity, skip_if_key_is_none, get_palliative_care_log_value
 from common.opening_times import DAY_IDS, WEEKDAYS
 from common.report_logging import log_incorrect_palliative_stockholder_type, log_palliative_care_not_equal
 
@@ -259,10 +260,13 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
-
+    skip_palliative_care_check = skip_if_key_is_none(
+        changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+    )
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and changes_to_dos.check_palliative_care_for_change()
+        and skip_palliative_care_check
     ):
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
@@ -272,11 +276,22 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         changes_to_dos.dos_service.typeid in DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES
         and changes_to_dos.dos_service.palliative_care is True
     ):
+        nhs_uk_palliative_care = get_palliative_care_log_value(
+            changes_to_dos.nhs_entity.palliative_care, skip_palliative_care_check
+        )
         log_incorrect_palliative_stockholder_type(
-            nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
+            nhs_uk_palliative_care=nhs_uk_palliative_care,
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
             dos_service=changes_to_dos.dos_service,
         )
     else:
-        logger.info("Not suitable for palliative care comparison")
+        logger.info(
+            "Not suitable for palliative care comparison",
+            extra={
+                "nhs_uk_palliative_care": get_palliative_care_log_value(
+                    changes_to_dos.nhs_entity.palliative_care, skip_palliative_care_check
+                ),
+                "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
+            },
+        )
     return changes_to_dos
