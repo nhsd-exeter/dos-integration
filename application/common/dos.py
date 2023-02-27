@@ -131,11 +131,9 @@ def get_dos_locations(postcode: Union[str, None] = None, try_cache: bool = True)
     # Search for any variation of whitespace in postcode
     postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode IN %(pc_variations)s"
+    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode = ANY(%(pc_variations)s)"
     with connect_to_dos_db_replica() as connection:
-        cursor = query_dos_db(
-            connection=connection, query=sql_command, vars={"pc_variations": tuple(postcode_variations)}
-        )
+        cursor = query_dos_db(connection=connection, query=sql_command, vars={"pc_variations": postcode_variations})
         dos_locations = [DoSLocation(**row) for row in cursor.fetchall()]
         cursor.close()
     dos_location_cache[norm_pc] = dos_locations

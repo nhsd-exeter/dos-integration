@@ -215,7 +215,7 @@ def save_standard_opening_times_into_db(
                     vars={"SERVICE_ID": service_id, "DAY_ID": dayid},
                 )
                 # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
-                service_day_opening_id = cursor.fetchone()[0]
+                service_day_opening_id = cursor.fetchone()["id"]
                 cursor.close()
 
                 open_period: OpenPeriod  # Type hint for the for loop
@@ -281,7 +281,7 @@ def save_specified_opening_times_into_db(
                 vars={"SPECIFIED_OPENING_TIMES_DATE": specified_opening_times_day.date, "SERVICE_ID": service_id},
             )
             # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
-            service_specified_opening_date_id = cursor.fetchone()[0]
+            service_specified_opening_date_id = cursor.fetchone()["id"]
             cursor.close()
             if specified_opening_times_day.is_open:
                 # If the day is open, save the potentially mutiple opening times
