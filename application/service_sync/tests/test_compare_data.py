@@ -389,10 +389,13 @@ def test_compare_palliative_care_unequal(
     mock_log_incorrect_palliative_stockholder_type.assert_not_called()
 
 
+@patch(f"{FILE_PATH}.get_palliative_care_log_value")
 @patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
 @patch(f"{FILE_PATH}.log_palliative_care_not_equal")
 def test_compare_palliative_care_invalid(
-    mock_log_palliative_care_not_equal: MagicMock, mock_log_incorrect_palliative_stockholder_type: MagicMock
+    mock_log_palliative_care_not_equal: MagicMock,
+    mock_log_incorrect_palliative_stockholder_type: MagicMock,
+    mock_get_palliative_care_log_value: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -401,6 +404,7 @@ def test_compare_palliative_care_invalid(
     dos_service.typeid = 131
     dos_service.palliative_care = dos_palliative_care = True
     nhs_entity.palliative_care = nhs_palliative_care = False
+    mock_get_palliative_care_log_value.return_value = nhs_palliative_care
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
 
     # Act

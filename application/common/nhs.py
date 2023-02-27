@@ -264,7 +264,7 @@ def match_nhs_entities_to_services(
 
 def skip_if_key_is_none(key: Any) -> bool:
     """If the key is None, skip the item"""
-    return key is None
+    return key is not None
 
 
 def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool) -> bool | str:
@@ -276,4 +276,8 @@ def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: b
 
     Returns:
         bool | str: The value to log"""
-    return "Never been updated on Profile Manager" if skip_palliative_care else palliative_care
+    return (
+        "Never been updated on Profile Manager, skipped palliative care checks"
+        if skip_palliative_care
+        else palliative_care
+    )
