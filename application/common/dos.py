@@ -4,7 +4,7 @@ from itertools import groupby
 from typing import Dict, Iterable, List, Optional, Set, Union
 
 from aws_lambda_powertools.logging import Logger
-from psycopg2.extensions import connection
+from psycopg import Connection
 
 from .constants import (
     DENTIST_ORG_TYPE_ID,
@@ -105,7 +105,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
         conditions = "odscode = %(ODS)s"
         named_args = {"ODS": f"{odscode}%"}
 
-    sql_query = (  # nosec - Safe as conditional is configurable but variables is inputed to psycopg2 as variables
+    sql_query = (  # nosec - Safe as conditional is configurable but variables is inputed to psycopg as variables
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
         "statusid, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
@@ -219,8 +219,9 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
     return services
 
 
-def get_specified_opening_times_from_db(connection: connection, service_id: int) -> List[SpecifiedOpeningTime]:
+def get_specified_opening_times_from_db(connection: Connection, service_id: int) -> List[SpecifiedOpeningTime]:
     """Retrieves specified opening times from  DoS database
+
     Args:
         serviceid (int): serviceid to match on
 
@@ -245,7 +246,7 @@ def get_specified_opening_times_from_db(connection: connection, service_id: int)
     return specified_opening_times
 
 
-def get_standard_opening_times_from_db(connection: connection, service_id: int) -> StandardOpeningTimes:
+def get_standard_opening_times_from_db(connection: Connection, service_id: int) -> StandardOpeningTimes:
     """Retrieves standard opening times from DoS database. If ther service id does not even match any service this
     function will still return a blank StandardOpeningTime with no opening periods."""
 
@@ -331,7 +332,7 @@ def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> Dict[str, Standard
     return serviceid_stdopentimes_map
 
 
-def has_palliative_care(service: DoSService, connection: connection) -> bool:
+def has_palliative_care(service: DoSService, connection: Connection) -> bool:
     """Checks if a service has palliative care
 
     Args:

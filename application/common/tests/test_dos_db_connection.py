@@ -1,7 +1,7 @@
 from os import environ
 from unittest.mock import MagicMock, patch
 
-from psycopg2.extras import DictCursor
+from psycopg import rows
 
 from ..dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, connection_to_db, query_dos_db
 
@@ -115,7 +115,7 @@ def test_connection_to_db(mock_connect):
         password=DB_PASSWORD,
         connect_timeout=2,
         options=f"-c search_path=dbo,{DB_SCHEMA}",
-        application_name="DOS INTEGRATION <psycopg2>",
+        application_name="DOS INTEGRATION <psycopg>",
     )
 
 
@@ -127,5 +127,5 @@ def test_query_dos_db():
     result = query_dos_db(connection, query)
     # Assert
     assert result == connection.cursor.return_value
-    connection.cursor.assert_called_once_with(cursor_factory=DictCursor)
+    connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
     connection.cursor.return_value.execute.assert_called_once_with(query, None)
