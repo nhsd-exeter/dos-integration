@@ -2,7 +2,14 @@ from datetime import date, time
 
 import pytest
 
-from ..nhs import is_spec_opening_json, is_std_opening_json, match_nhs_entities_to_services, NHSEntity
+from ..nhs import (
+    is_spec_opening_json,
+    is_std_opening_json,
+    match_nhs_entities_to_services,
+    NHSEntity,
+    skip_if_key_is_none,
+    get_palliative_care_log_value,
+)
 from .conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -553,7 +560,6 @@ def test_is_spec_opening_json(open_time_json, expected):
 
 
 def test_is_matching_dos_service():
-
     nhs_entity = NHSEntity({})
     dos_service = dummy_dos_service()
 
@@ -632,7 +638,6 @@ def test_is_matching_dos_service():
 
 
 def test_match_nhs_entities_to_services():
-
     nhs1 = NHSEntity({"ODSCode": "V012345"})
     nhs2 = NHSEntity({"ODSCode": "FA912"})
 
@@ -687,3 +692,23 @@ def test_match_nhs_entities_to_services():
 def test_extract_uec_service(input_value, output_value):
     entity = NHSEntity({"ODSCode": "V012345", "UecServices": input_value})
     assert entity.extract_uec_service("SRV0559") == output_value
+
+
+@pytest.mark.parametrize(
+    "input_value,output_value", [(None, True), ("", False), ("V012345", False), (False, False), ("V012345", False)]
+)
+def test_skip_if_key_is_none(input_value, output_value):
+    assert output_value == skip_if_key_is_none(input_value)
+
+
+@pytest.mark.parametrize(
+    "palliative_care,skip_palliative_care,output_value",
+    [
+        (True, False, True),
+        (False, False, False),
+        (True, True, "Never been updated on Profile Manager, skipped palliative care checks"),
+        (False, True, "Never been updated on Profile Manager, skipped palliative care checks"),
+    ],
+)
+def test_get_palliative_care_log_value(palliative_care, skip_palliative_care, output_value):
+    assert get_palliative_care_log_value(palliative_care, skip_palliative_care) == output_value

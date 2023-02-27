@@ -266,7 +266,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and changes_to_dos.check_palliative_care_for_change()
-        and skip_palliative_care_check
+        and not skip_palliative_care_check
     ):
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
