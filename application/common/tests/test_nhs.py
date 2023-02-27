@@ -3,12 +3,12 @@ from datetime import date, time
 import pytest
 
 from ..nhs import (
+    get_palliative_care_log_value,
     is_spec_opening_json,
     is_std_opening_json,
     match_nhs_entities_to_services,
     NHSEntity,
     skip_if_key_is_none,
-    get_palliative_care_log_value,
 )
 from .conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
