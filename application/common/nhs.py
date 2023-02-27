@@ -79,19 +79,19 @@ class NHSEntity:
                 return item.get("ContactValue")
         return None
 
-    def extract_uec_service(self, service_code: str) -> bool:
+    def extract_uec_service(self, service_code: str) -> Union[bool, None]:
         """Extracts the UEC service from the payload (e.g. Palliative Care)
 
         Args:
             service_code (str): NHS UK Service Code of the UEC service to extract if exists
 
         Returns:
-            bool: True if the service exists, False otherwise
+            Union[bool, None]: True if the service exists, False otherwise
         """
-        uec_services = (
-            self.entity_data.get("UecServices", []) if isinstance(self.entity_data.get("UecServices", []), list) else []
-        )
-        return any(item.get("ServiceCode") == service_code for item in uec_services)
+        if isinstance(self.entity_data.get("UecServices", []), list):
+            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
+        else:
+            return None
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening
@@ -264,6 +264,7 @@ def match_nhs_entities_to_services(
 
 def skip_if_key_is_none(key: Any) -> bool:
     """If the key is None, skip the item"""
+
     return key is None
 
 

@@ -263,10 +263,11 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     skip_palliative_care_check = skip_if_key_is_none(
         changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
     )
+    logger.debug(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and changes_to_dos.check_palliative_care_for_change()
-        and not skip_palliative_care_check
+        and skip_palliative_care_check is False
     ):
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,

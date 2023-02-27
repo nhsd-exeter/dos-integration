@@ -673,10 +673,10 @@ def test_match_nhs_entities_to_services():
 @pytest.mark.parametrize(
     "input_value, output_value",
     [
-        ("", False),
-        (None, False),
+        ("", None),
+        (None, None),
         ([], False),
-        ({}, False),
+        ({}, None),
         (
             [
                 {
