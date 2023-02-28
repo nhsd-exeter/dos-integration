@@ -3,10 +3,9 @@ from itertools import chain
 from json import loads
 from time import time
 from typing import Any, List
-
+from json import dumps
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection, rows
-from psycopg.types.json import Jsonb
 from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
@@ -50,7 +49,7 @@ class ServiceHistories:
         if results != []:
             # Change History exists in the database
             logger.debug(f"Service history exists in the database for serviceid {self.service_id}")
-            service_history = results[0][0]
+            service_history = results[0]["history"]
             self.existing_service_history = loads(service_history)
             self.history_already_exists = True
         else:
@@ -175,13 +174,14 @@ class ServiceHistories:
         # Get local datetime and format it to DoS date/time format
         current_date_time = datetime.now(timezone("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
         # Rename the new_change key to the current epoch time
+
         self.service_history[current_epoch_time] = self.service_history.pop("new_change")
         # Add the current time to the service_histories json
         self.service_history[current_epoch_time]["initiator"]["timestamp"] = current_date_time
         self.service_history[current_epoch_time]["approver"]["timestamp"] = current_date_time
         # Merge the new history changes into the existing history changes
-        self.service_history |= self.existing_service_history
-        logger.debug(f"Service history to be saved: {self.service_history}")
+        json_service_history = dumps(self.service_history | self.existing_service_history)
+        logger.debug("Service history to be saved", extra={"service_history": json_service_history})
         cursor = query_dos_db(
             connection=connection,
             query=(
@@ -203,7 +203,7 @@ class ServiceHistories:
                 query=(
                     """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
-                vars={"SERVICE_HISTORY": Jsonb(self.service_history), "SERVICE_ID": self.service_id},
+                vars={"SERVICE_HISTORY": json_service_history, "SERVICE_ID": self.service_id},
                 log_vars=False,
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
@@ -216,7 +216,7 @@ class ServiceHistories:
                     """INSERT INTO servicehistories (serviceid, history) """
                     """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
-                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": Jsonb(self.service_history)},
+                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": json_service_history},
                 log_vars=False,
             )
             cursor.close()
