@@ -5,13 +5,13 @@
 
 LOG_LEVEL:= DEBUG
 
-DB_SERVER_NAME := uec-core-dos-performance-db-12
-DB_REPLICA_SERVER_NAME := uec-core-dos-performance-db-12-replica-di
+DB_SERVER_NAME := uec-core-dos-performance2-db-12
+DB_REPLICA_SERVER_NAME := uec-core-dos-performance2-db-12-replica-di
 DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 DOS_DB_SG_NAME := live-lk8s-nonprod-core-dos-db-rds-postgres-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-perf-db-12-replica-di-sg
+DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance2-db-12-replica-di-sg
 
 DB_SECRET_NAME := core-dos-dev/deployment
 DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
