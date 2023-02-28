@@ -2,7 +2,8 @@ from os import environ
 from typing import Dict, List, Tuple
 
 from aws_lambda_powertools.logging import Logger
-from psycopg import Connection, rows
+from psycopg import Connection
+from psycopg.rows import DictRow
 from psycopg.sql import Identifier, Literal, SQL
 
 from .changes_to_dos import ChangesToDoS
@@ -28,7 +29,7 @@ def run_db_health_check() -> None:
         logger.info("Running health check")
         with connect_to_dos_db() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            response_rows: List[rows.DictRow] = cursor.fetchall()
+            response_rows: List[DictRow] = cursor.fetchall()
             if len(response_rows) > 0:
                 logger.info("DoS database is running")
             else:
@@ -37,7 +38,7 @@ def run_db_health_check() -> None:
                 return
         with connect_to_dos_db_replica() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            response_rows: List[rows.DictRow] = cursor.fetchall()
+            response_rows: List[DictRow] = cursor.fetchall()
             if len(response_rows) > 0:
                 logger.info("DoS database replica is running")
             else:
@@ -73,7 +74,7 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
     with connect_to_dos_db() as connection:
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
-        rows: List[rows.DictRow] = cursor.fetchall()
+        rows: List[DictRow] = cursor.fetchall()
         if len(rows) == 1:
             # Select first row (service) and create DoSService object
             service = DoSService(rows[0])

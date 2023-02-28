@@ -4,8 +4,8 @@ from time import time_ns
 from typing import Any, Dict, Generator, Optional
 
 from aws_lambda_powertools.logging import Logger
-from psycopg import connect, Connection, Cursor, rows
-from psycopg.rows import DictRow
+from psycopg import connect, Connection, Cursor
+from psycopg.rows import dict_row, DictRow
 from typing_extensions import LiteralString
 
 from common.secretsmanager import get_secret
@@ -44,7 +44,7 @@ def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
 
 
 @contextmanager
-def connect_to_dos_db() -> Generator[Connection[rows.DictRow], None, None]:
+def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
     """Creates a new connection to the DoS DB
 
     Yields:
@@ -107,9 +107,9 @@ def query_dos_db(
         vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
 
     Returns:
-        rows.DictRow: Cursor to the query results
+        DictRow: Cursor to the query results
     """
-    cursor = connection.cursor(row_factory=rows.dict_row)
+    cursor = connection.cursor(row_factory=dict_row)
 
     logger.info("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
 

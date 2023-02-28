@@ -1,7 +1,7 @@
 from os import environ
 from unittest.mock import MagicMock, patch
 
-from psycopg import rows
+from psycopg.rows import dict_row
 
 from ..dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, connection_to_db, query_dos_db
 
@@ -127,5 +127,5 @@ def test_query_dos_db():
     result = query_dos_db(connection, query)
     # Assert
     assert result == connection.cursor.return_value
-    connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
+    connection.cursor.assert_called_once_with(row_factory=dict_row)
     connection.cursor.return_value.execute.assert_called_once_with(query=query, params=None)

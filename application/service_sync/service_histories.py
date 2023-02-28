@@ -1,11 +1,12 @@
 from datetime import datetime
 from itertools import chain
-from json import loads
+from json import dumps, loads
 from time import time
 from typing import Any, List
-from json import dumps
+
 from aws_lambda_powertools.logging import Logger
-from psycopg import Connection, rows
+from psycopg import Connection
+from psycopg.rows import dict_row
 from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
@@ -39,7 +40,7 @@ class ServiceHistories:
         Args:
             connection (Connection): The connection to the database
         """
-        cursor = connection.cursor(row_factory=rows.dict_row)
+        cursor = connection.cursor(row_factory=dict_row)
         # Get the history json from the database for the service
         cursor.execute(
             query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",

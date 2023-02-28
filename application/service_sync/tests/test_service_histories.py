@@ -2,7 +2,7 @@ from datetime import date, time
 from json import dumps
 from unittest.mock import MagicMock, patch
 
-from psycopg import rows
+from psycopg.rows import dict_row
 
 from application.common.constants import (
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -43,7 +43,7 @@ def test_service_histories_get_service_history_from_db_rows_returned():
     # Assert
     assert True is service_history.history_already_exists
     assert change == service_history.existing_service_history
-    mock_connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
+    mock_connection.cursor.assert_called_once_with(row_factory=dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
         query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
     )
@@ -60,7 +60,7 @@ def test_service_histories_get_service_history_from_db_no_rows_returned():
     # Assert
     assert False is service_history.history_already_exists
     assert {} == service_history.existing_service_history
-    mock_connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
+    mock_connection.cursor.assert_called_once_with(row_factory=dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
         query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
     )

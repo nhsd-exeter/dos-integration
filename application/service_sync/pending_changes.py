@@ -7,7 +7,8 @@ from typing import List, Optional
 
 from aws_lambda_powertools.logging import Logger
 from boto3 import client
-from psycopg import Connection, rows
+from psycopg import Connection
+from psycopg.rows import DictRow
 from pytz import timezone
 
 from .service_update_logging import ServiceUpdateLogger
@@ -113,7 +114,7 @@ def get_pending_changes(connection: Connection, service_id: str) -> Optional[Lis
     )
     query_vars = {"SERVICE_ID": service_id}
     cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
-    response_rows: List[rows.DictRow] = cursor.fetchall()
+    response_rows: List[DictRow] = cursor.fetchall()
     cursor.close()
     if len(response_rows) < 1:
         return None
