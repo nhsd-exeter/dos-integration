@@ -35,16 +35,17 @@ def test_service_histories_get_service_history_from_db_rows_returned():
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     mock_connection = MagicMock()
-    service_history_data = {"history": "service_history_data"}
-    mock_connection.cursor.return_value.fetchall.return_value = [[dumps(service_history_data)]]
+    change = {"new_change": 123}
+    service_history_data = {"history": dumps(change)}
+    mock_connection.cursor.return_value.fetchall.return_value = [service_history_data]
     # Act
     service_history.get_service_history_from_db(mock_connection)
     # Assert
     assert True is service_history.history_already_exists
-    assert service_history_data == service_history.existing_service_history
+    assert change == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", vars={"SERVICE_ID": SERVICE_ID}
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
     )
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
@@ -61,7 +62,7 @@ def test_service_histories_get_service_history_from_db_no_rows_returned():
     assert {} == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", vars={"SERVICE_ID": SERVICE_ID}
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
     )
 
     mock_connection.cursor.return_value.fetchall.assert_called_once()

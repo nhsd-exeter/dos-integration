@@ -128,4 +128,4 @@ def test_query_dos_db():
     # Assert
     assert result == connection.cursor.return_value
     connection.cursor.assert_called_once_with(row_factory=rows.dict_row)
-    connection.cursor.return_value.execute.assert_called_once_with(query, None)
+    connection.cursor.return_value.execute.assert_called_once_with(query=query, params=None)
