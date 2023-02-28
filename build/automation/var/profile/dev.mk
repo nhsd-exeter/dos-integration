@@ -10,7 +10,7 @@ DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
 DB_PORT := 5432
 DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
-DOS_DB_SG_NAME := uec-core-dos-performance-datastore-sg
+DOS_DB_SG_NAME := uec-core-dos-regression-datastore-sg
 DOS_DB_REPLICA_SG_NAME := live-lk8s-nonprod-core-dos-db-rds-postgres-sg
 
 DB_SECRET_NAME := core-dos-dev/deployment
