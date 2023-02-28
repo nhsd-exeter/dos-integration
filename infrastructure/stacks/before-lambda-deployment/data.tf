@@ -57,3 +57,15 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_regi
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   }
 }
+
+# ##############
+# # RDS SG
+# ##############
+
+data "aws_security_group" "dos_db_sg" {
+  name = var.dos_db_sg_name
+}
+
+data "aws_security_group" "dos_db_replica_sg" {
+  name = var.dos_db_replica_sg_name
+}
