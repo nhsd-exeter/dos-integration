@@ -1,12 +1,12 @@
 from datetime import datetime
 from itertools import chain
-from json import loads
+from json import dumps, loads
 from time import time
 from typing import Any, List
 
 from aws_lambda_powertools.logging import Logger
-from psycopg2.extensions import connection
-from psycopg2.extras import DictCursor, Json
+from psycopg import Connection
+from psycopg.rows import dict_row
 from pytz import timezone
 
 from .service_histories_change import ServiceHistoriesChange
@@ -34,23 +34,23 @@ class ServiceHistories:
         self.service_history = {}
         self.NEW_CHANGE_KEY = "new_change"
 
-    def get_service_history_from_db(self, connection: connection) -> None:
+    def get_service_history_from_db(self, connection: Connection) -> None:
         """Gets the service_histories json from the database
 
         Args:
-            connection (connection): The connection to the database
+            connection (Connection): The connection to the database
         """
-        cursor = connection.cursor(cursor_factory=DictCursor)
+        cursor = connection.cursor(row_factory=dict_row)
         # Get the history json from the database for the service
         cursor.execute(
             query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
-            vars={"SERVICE_ID": self.service_id},
+            params={"SERVICE_ID": self.service_id},
         )
         results: List[Any] = cursor.fetchall()
         if results != []:
             # Change History exists in the database
             logger.debug(f"Service history exists in the database for serviceid {self.service_id}")
-            service_history = results[0][0]
+            service_history = results[0]["history"]
             self.existing_service_history = loads(service_history)
             self.history_already_exists = True
         else:
@@ -164,7 +164,7 @@ class ServiceHistories:
         ]  # type: ignore
         return list(chain.from_iterable(opening_times))
 
-    def save_service_histories(self, connection: connection) -> None:
+    def save_service_histories(self, connection: Connection) -> None:
         """Saves the service_histories json to the database
 
         Args:
@@ -175,13 +175,14 @@ class ServiceHistories:
         # Get local datetime and format it to DoS date/time format
         current_date_time = datetime.now(timezone("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
         # Rename the new_change key to the current epoch time
+
         self.service_history[current_epoch_time] = self.service_history.pop("new_change")
         # Add the current time to the service_histories json
         self.service_history[current_epoch_time]["initiator"]["timestamp"] = current_date_time
         self.service_history[current_epoch_time]["approver"]["timestamp"] = current_date_time
         # Merge the new history changes into the existing history changes
-        self.service_history |= self.existing_service_history
-        logger.debug(f"Service history to be saved: {self.service_history}")
+        json_service_history = dumps(self.service_history | self.existing_service_history)
+        logger.debug("Service history to be saved", extra={"service_history": json_service_history})
         cursor = query_dos_db(
             connection=connection,
             query=(
@@ -203,7 +204,7 @@ class ServiceHistories:
                 query=(
                     """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
-                vars={"SERVICE_HISTORY": Json(self.service_history), "SERVICE_ID": self.service_id},
+                vars={"SERVICE_HISTORY": json_service_history, "SERVICE_ID": self.service_id},
                 log_vars=False,
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
@@ -216,7 +217,7 @@ class ServiceHistories:
                     """INSERT INTO servicehistories (serviceid, history) """
                     """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
-                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": Json(self.service_history)},
+                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": json_service_history},
                 log_vars=False,
             )
             cursor.close()

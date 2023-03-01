@@ -432,8 +432,8 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="SELECT id, postcode, easting, northing, postaltown, latitude, longitude "
-        "FROM locations WHERE postcode IN %(pc_variations)s",
-        vars={"pc_variations": tuple(postcode_variations)},
+        "FROM locations WHERE postcode = ANY(%(pc_variations)s)",
+        vars={"pc_variations": postcode_variations},
     )
 
 
