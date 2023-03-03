@@ -6,7 +6,9 @@
 LOG_LEVEL:= DEBUG
 
 DB_SERVER_NAME := uec-core-dos-performance2-db-12
+DB_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
 DB_REPLICA_SERVER_NAME := uec-core-dos-performance2-db-12-replica-di
+DB_REPLICA_53 := uec-core-dos-performance2-di-ro.dos-db-sync-rds
 DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
