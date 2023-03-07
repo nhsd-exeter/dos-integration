@@ -127,6 +127,9 @@ data "aws_iam_policy_document" "kms_policy" {
   }
 }
 
+data "aws_iam_role" "new_pipeline_role" {
+  name = "UECDoSINTPipelineRole"
+}
 
 data "aws_iam_role" "pipeline_role" {
   name = "UECPUPipelineRole"
