@@ -21,7 +21,7 @@ resource "aws_codebuild_project" "di_build_environment" {
   description    = "Builds environment based on push to task branches"
   build_timeout  = "30"
   queued_timeout = "5"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
