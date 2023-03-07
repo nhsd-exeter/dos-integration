@@ -1,7 +1,7 @@
 resource "aws_codepipeline" "development_pipeline" {
   count    = var.environment == "dev" ? 1 : 0
   name     = "${var.project_id}-${var.environment}-development-pipeline"
-  role_arn = data.aws_iam_role.pipeline_role.arn
+  role_arn = data.aws_iam_role.new_pipeline_role.arn
 
   artifact_store {
     location = "${var.project_id}-${var.environment}-development-pipeline-artefact-bucket"
