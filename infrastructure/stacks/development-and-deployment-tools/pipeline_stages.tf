@@ -3,7 +3,7 @@ resource "aws_codebuild_project" "di_unit_tests_stage" {
   description    = "Runs the unit tests for the DI Project"
   build_timeout  = "5"
   queued_timeout = "5"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -64,7 +64,7 @@ resource "aws_codebuild_project" "di_build_image_stage" {
   description    = "Builds docker container image"
   build_timeout  = "5"
   queued_timeout = "5"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -121,7 +121,7 @@ resource "aws_codebuild_project" "di_full_deploy_stage" {
   description    = "Deploy a full DI environment"
   build_timeout  = "30"
   queued_timeout = "60"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -178,7 +178,7 @@ resource "aws_codebuild_project" "di_deploy_blue_green_environment_stage" {
   description    = "Deploy a blue/green environment"
   build_timeout  = "30"
   queued_timeout = "10"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -248,7 +248,7 @@ resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" 
   description    = "Deploy a shared resources environment"
   build_timeout  = "30"
   queued_timeout = "10"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
@@ -302,7 +302,7 @@ resource "aws_codebuild_project" "di_integration_tests_autoflags" {
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
   queued_timeout = "10"
-  service_role   = data.aws_iam_role.pipeline_role.arn
+  service_role   = data.aws_iam_role.new_pipeline_role.arn
 
   artifacts {
     type = "CODEPIPELINE"
