@@ -176,7 +176,7 @@ def change_event_specified_opening_set(service_status: str, date: str, context: 
 
 
 @given(
-    parse('the change event is "{service_status}" from "{open}" to "{close}" on date "{date}"'),
+    parse('the change event specified opening is "{service_status}" from "{open}" to "{close}" on date "{date}"'),
     target_fixture="context",
 )
 def change_event_specified_opening_set_times(service_status: str, date: str, open: str, close: str, context: Context):

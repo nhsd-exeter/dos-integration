@@ -120,6 +120,6 @@ Feature: F006. Opening times
     Given an entry is created in the services table
     And the service is "open" on date "Jan 01 2025"
     And the entry is committed to the services table
-    And the change event is "open" from "10:00" to "16:00" on date "Jan 01 2025"
+    And the change event specified opening is "open" from "10:00" to "16:00" on date "Jan 01 2025"
     When the Changed Event is sent for processing with "valid" api key
     Then DoS is open from "10:00" until "16:00" on "Jan 01 2025"
