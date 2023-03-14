@@ -9,7 +9,7 @@ resource "aws_cloudwatch_event_target" "delete_ecr_images_trigger" {
   count    = var.environment == "dev" ? 1 : 0
   rule     = aws_cloudwatch_event_rule.delete_ecr_images_rule[0].name
   arn      = aws_codebuild_project.di_delete_ecr_images[0].arn
-  role_arn = data.aws_iam_role.new_pipeline_role.arn
+  role_arn = data.aws_iam_role.pipeline_role.arn
 }
 
 resource "aws_codebuild_project" "di_delete_ecr_images" {
@@ -18,7 +18,7 @@ resource "aws_codebuild_project" "di_delete_ecr_images" {
   description    = "Deletes ECR images"
   build_timeout  = "30"
   queued_timeout = "5"
-  service_role   = data.aws_iam_role.new_pipeline_role.arn
+  service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
