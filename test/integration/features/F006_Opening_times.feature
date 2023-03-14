@@ -115,7 +115,7 @@ Feature: F006. Opening times
     When the Changed Event is sent for processing with "valid" api key
     Then DoS is open on "Jan 01 2025"
 
-  @complete @pharmacy_cloudwatch_queries @kit
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F006SX14. Additional date changes times changed
     Given an entry is created in the services table
     And the service is "open" on date "Jan 01 2025"
