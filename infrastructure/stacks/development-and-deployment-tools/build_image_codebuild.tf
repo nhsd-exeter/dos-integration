@@ -31,7 +31,7 @@ resource "aws_codebuild_project" "di_build_image" {
   description    = "Builds ${each.key} docker container image"
   build_timeout  = "10"
   queued_timeout = "5"
-  service_role   = data.aws_iam_role.new_pipeline_role.arn
+  service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
