@@ -35,7 +35,7 @@ resource "aws_codebuild_project" "di_build_environment" {
   environment {
     compute_type                = "BUILD_GENERAL1_LARGE"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
-    type                        = "ARM_CONTAINER"
+    type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
 
