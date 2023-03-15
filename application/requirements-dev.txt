@@ -1,6 +1,6 @@
 Faker
 aws-lambda-context
-bandit==1.7.4
+bandit==1.7.5
 boto3
 coverage
 isort
