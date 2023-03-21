@@ -123,3 +123,15 @@ Feature: F006. Opening times
     And the change event specified opening is "open" from "10:00" to "16:00" on date "Jan 01 2025"
     When the Changed Event is sent for processing with "valid" api key
     Then DoS is open from "10:00" until "16:00" on "Jan 01 2025"
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F006SX15. A service with multiple entries as pharmacies raises alerts
+    Given "<count>" basic services are created
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows "<count>" of "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
+
+    Examples:
+      |count|
+      |  2  |
+      |  4  |
+
