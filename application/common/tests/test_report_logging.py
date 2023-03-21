@@ -416,6 +416,7 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
             "dos_service_name": dos_service.name,
             "dos_service_address": dos_service.address,
             "dos_service_postcode": dos_service.postcode,
+            "dos_service_type_id": dos_service.typeid,
             "reason": reason,
         },
     )
