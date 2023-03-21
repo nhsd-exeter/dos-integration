@@ -99,13 +99,13 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
 
 
 @given("an entry is created in the services table", target_fixture="context")
-def a_service_table_entry_is_created(context: Context, ods_code=0):
+def a_service_table_entry_is_created(context: Context, ods_code=0, service_type=13):
     if ods_code == 0:
         ods_code = str(randint(10000, 99999))
     query_values = {
         "id": str(randint(100000, 999999)),
         "uid": f"test{str(randint(10000,99999))}",
-        "service_type": 13,
+        "service_type": service_type,
         "service_status": 1,
         "name": f"Test Pharmacy {str(randint(100,999))}",
         "odscode": ods_code,
