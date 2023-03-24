@@ -114,6 +114,7 @@ def send_msg_slack(message: Dict[str, Any]) -> None:
         url=url,
         headers=headers,
         json=message,
+        timeout=5,
     )
     logger.info(
         "Message sent to slack",

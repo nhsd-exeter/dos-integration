@@ -269,7 +269,7 @@ def test_reject_pending_changes_single_rejection(mock_query_dos_db: MagicMock, m
     mock_query_dos_db.assert_called_once_with(
         connection=connection,
         query=(
-            "UPDATE changes SET approvestatus='REJECTED',"
+            "UPDATE changes SET approvestatus='REJECTED', "
             f"modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s WHERE id='{pending_change.id}'"
         ),
         vars={"USER_NAME": "DOS_INTEGRATION", "TIMESTAMP": mock_datetime.now.return_value},
@@ -296,7 +296,7 @@ def test_reject_pending_changes_multiple_rejections(mock_query_dos_db: MagicMock
     mock_query_dos_db.assert_called_once_with(
         connection=connection,
         query=(
-            "UPDATE changes SET approvestatus='REJECTED',"
+            "UPDATE changes SET approvestatus='REJECTED', "
             f"modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s "
             f"WHERE id in ('{pending_change1.id}','{pending_change2.id}','{pending_change3.id}')"
         ),
