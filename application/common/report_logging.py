@@ -288,6 +288,7 @@ def log_unexpected_pharmacy_profiling(matching_services: List[DoSService], reaso
                 "dos_service_name": service.name,
                 "dos_service_address": service.address,
                 "dos_service_postcode": service.postcode,
+                "dos_service_type_id": service.typeid,
                 "reason": reason,
             },
         )
