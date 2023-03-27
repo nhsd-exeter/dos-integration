@@ -166,3 +166,23 @@ Feature: F002. Invalid change event Exception handling
 #   When the Changed Event is sent for processing with "valid" api key
 #   Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
 #   And the "service-sync" lambda shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F002SX18. A service with multiple entries as pharmacies raises alerts
+    Given "<count>" basic services are created
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows "<count>" of "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
+
+    Examples:
+      |count|
+      |  2  |
+      |  4  |
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F002SX19. No service type 13 for entry
+    Given an entry is created in the services table
+    And the service "service_type" is set to "131"
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
+    And the "service-matcher" lambda shows field "reason" with message "No 'Pharmacy' type services found (type 13)"

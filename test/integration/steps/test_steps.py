@@ -99,12 +99,13 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
 
 
 @given("an entry is created in the services table", target_fixture="context")
-def a_service_table_entry_is_created(context: Context):
-    ods_code = str(randint(10000, 99999))
+def a_service_table_entry_is_created(context: Context, ods_code=0, service_type=13):
+    if ods_code == 0:
+        ods_code = str(randint(10000, 99999))
     query_values = {
         "id": str(randint(100000, 999999)),
         "uid": f"test{str(randint(10000,99999))}",
-        "service_type": 13,
+        "service_type": service_type,
         "service_status": 1,
         "name": f"Test Pharmacy {str(randint(100,999))}",
         "odscode": ods_code,
@@ -128,6 +129,17 @@ def add_palliative_care_to_dos(context: Context):
 @given("the change event has a palliative care entry", target_fixture="context")
 def add_palliative_care_to_ce(context: Context):
     create_palliative_care_entry_ce(context)
+    return context
+
+
+@given(parse('"{count}" basic services are created'), target_fixture="context")
+def create_multiple_basic_service_entry(context: Context, count):
+    context = a_service_table_entry_is_created(context)
+    context = service_table_entry_is_committed(context)
+    ods_code = context.generator_data["odscode"]
+    for x in range(int(count) - 1):
+        context = a_service_table_entry_is_created(context, ods_code)
+        context = service_table_entry_is_committed(context)
     return context
 
 
@@ -749,6 +761,19 @@ def generic_lambda_log_check_function(context: Context, lambda_name: str, field,
     )
     logs = get_logs(query, lambda_name, context.start_time)
     assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+
+
+@then(parse('the "{lambda_name}" lambda shows "{count}" of "{field}" with message "{message}"'))
+def generic_lambda_multiple_log_check_function(context: Context, lambda_name: str, count: str, field, message):
+    if "/" in context.correlation_id:
+        context.correlation_id = context.correlation_id.replace("/", r"\/")
+    query = (
+        f"fields {field} | sort @timestamp asc"
+        f' | filter correlation_id="{context.correlation_id}" | filter {field} like "{message}"'
+    )
+    logs = get_logs(query, lambda_name, context.start_time)
+    assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
+    assert len(loads(logs)["results"]) == int(count), "ERROR!!.. Incorrect number of log entries"
 
 
 @then(parse('the "{lambda_name}" lambda does not show "{field}" with message "{message}"'))
