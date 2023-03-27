@@ -2,9 +2,9 @@ from os import environ
 from typing import Dict, List, Tuple
 
 from aws_lambda_powertools.logging import Logger
-from psycopg2.extensions import connection
-from psycopg2.extras import DictCursor
-from psycopg2.sql import Identifier, Literal, SQL
+from psycopg import Connection
+from psycopg.rows import DictRow
+from psycopg.sql import Identifier, Literal, SQL
 
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
@@ -29,8 +29,8 @@ def run_db_health_check() -> None:
         logger.info("Running health check")
         with connect_to_dos_db() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            rows: List[DictCursor] = cursor.fetchall()
-            if len(rows) > 0:
+            response_rows: List[DictRow] = cursor.fetchall()
+            if len(response_rows) > 0:
                 logger.info("DoS database is running")
             else:
                 logger.error("Health check failed - No services found in DoS DB")
@@ -38,8 +38,8 @@ def run_db_health_check() -> None:
                 return
         with connect_to_dos_db_replica() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            rows: List[DictCursor] = cursor.fetchall()
-            if len(rows) > 0:
+            response_rows: List[DictRow] = cursor.fetchall()
+            if len(response_rows) > 0:
                 logger.info("DoS database replica is running")
             else:
                 logger.error("Health check failed - No services found in DoS DB Replica")
@@ -74,7 +74,7 @@ def get_dos_service_and_history(service_id: int) -> Tuple[DoSService, ServiceHis
     with connect_to_dos_db() as connection:
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
-        rows: List[DictCursor] = cursor.fetchall()
+        rows: List[DictRow] = cursor.fetchall()
         if len(rows) == 1:
             # Select first row (service) and create DoSService object
             service = DoSService(rows[0])
@@ -144,7 +144,7 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
             connection.close()
 
 
-def save_demographics_into_db(connection: connection, service_id: int, demographics_changes: dict) -> bool:
+def save_demographics_into_db(connection: Connection, service_id: int, demographics_changes: dict) -> bool:
     """Saves the demographic changes to the DoS database
 
     Args:
@@ -181,7 +181,7 @@ def save_demographics_into_db(connection: connection, service_id: int, demograph
 
 
 def save_standard_opening_times_into_db(
-    connection: connection, service_id: int, standard_opening_times_changes: Dict[int, List[OpenPeriod]]
+    connection: Connection, service_id: int, standard_opening_times_changes: Dict[int, List[OpenPeriod]]
 ) -> bool:
     """Saves the standard opening times changes to the DoS database
 
@@ -216,7 +216,7 @@ def save_standard_opening_times_into_db(
                     vars={"SERVICE_ID": service_id, "DAY_ID": dayid},
                 )
                 # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
-                service_day_opening_id = cursor.fetchone()[0]
+                service_day_opening_id = cursor.fetchone()["id"]
                 cursor.close()
 
                 open_period: OpenPeriod  # Type hint for the for loop
@@ -244,7 +244,7 @@ def save_standard_opening_times_into_db(
 
 
 def save_specified_opening_times_into_db(
-    connection: connection,
+    connection: Connection,
     service_id: int,
     is_changes: bool,
     specified_opening_times_changes: List[SpecifiedOpeningTime],
@@ -282,7 +282,7 @@ def save_specified_opening_times_into_db(
                 vars={"SPECIFIED_OPENING_TIMES_DATE": specified_opening_times_day.date, "SERVICE_ID": service_id},
             )
             # Get the id of the newly created servicedayopenings entry by using the RETURNING clause
-            service_specified_opening_date_id = cursor.fetchone()[0]
+            service_specified_opening_date_id = cursor.fetchone()["id"]
             cursor.close()
             if specified_opening_times_day.is_open:
                 # If the day is open, save the potentially mutiple opening times

@@ -61,7 +61,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "sqs:SendMessage",
         "sqs:GetQueueUrl"
       ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue_name}"
+      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.project_id}*"
     },
     {
       "Effect": "Allow",
@@ -70,12 +70,12 @@ resource "aws_iam_role_policy" "event_replay_policy" {
         "dynamodb:Query",
         "dynamodb:Scan"
       ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
     },
     {
       "Effect": "Allow",
       "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
     }
   ]
 }
@@ -164,12 +164,12 @@ resource "aws_iam_role_policy" "orchestrator_policy" {
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
     },
     {
       "Effect": "Allow",
       "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
     }
   ]
 }
@@ -336,12 +336,12 @@ module "service_sync" {
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
     },
     {
       "Effect": "Allow",
       "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
     },
     {
       "Effect": "Allow",
@@ -394,12 +394,12 @@ module "change_event_dlq_handler" {
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
     },
     {
       "Effect": "Allow",
       "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
     }
   ]
 }
@@ -539,12 +539,12 @@ module "ingest_change_event" {
         "dynamodb:PutItem",
         "dynamodb:UpdateItem"
       ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
     },
     {
       "Effect": "Allow",
       "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence"
+      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
     }
   ]
 }

@@ -1,4 +1,4 @@
-FROM amazon/aws-lambda-python:3.9
+FROM amazon/aws-lambda-python:3.10
 # Update all packages
 RUN yum update -y
 # Update Pip

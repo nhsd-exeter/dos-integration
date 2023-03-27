@@ -45,6 +45,16 @@ variable "dos_db_replica_name" {
   description = "Name of db dos read replica instance to connect to"
 }
 
+variable "dos_db_sg_name" {
+  type        = string
+  description = "Name of db dos security group to connect to"
+}
+
+variable "dos_db_replica_sg_name" {
+  type        = string
+  description = "Name of db dos replica security group to connect to"
+}
+
 # ############################
 # # IAM
 # ############################

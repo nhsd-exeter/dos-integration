@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from aws_lambda_powertools.logging import Logger
 
@@ -79,19 +79,19 @@ class NHSEntity:
                 return item.get("ContactValue")
         return None
 
-    def extract_uec_service(self, service_code: str) -> bool:
+    def extract_uec_service(self, service_code: str) -> Union[bool, None]:
         """Extracts the UEC service from the payload (e.g. Palliative Care)
 
         Args:
             service_code (str): NHS UK Service Code of the UEC service to extract if exists
 
         Returns:
-            bool: True if the service exists, False otherwise
+            Union[bool, None]: True if the service exists, False otherwise
         """
-        uec_services = (
-            self.entity_data.get("UecServices", []) if isinstance(self.entity_data.get("UecServices", []), list) else []
-        )
-        return any(item.get("ServiceCode") == service_code for item in uec_services)
+        if isinstance(self.entity_data.get("UecServices", []), list):
+            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
+        else:
+            return None
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
         """Filters the raw opening times data for standard weekly opening
@@ -260,3 +260,25 @@ def match_nhs_entities_to_services(
         f"{len(nhs_entities) - len(servicelist_map)} not matched."
     )
     return dict(servicelist_map)
+
+
+def skip_if_key_is_none(key: Any) -> bool:
+    """If the key is None, skip the item"""
+
+    return key is None
+
+
+def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool) -> Union[bool, str]:
+    """Get the value to log for palliative care
+
+    Args:
+        palliative_care (bool): The value of palliative care
+        skip_palliative_care (bool): Whether to skip palliative care
+
+    Returns:
+        bool | str: The value to log"""
+    return (
+        "Never been updated on Profile Manager, skipped palliative care checks"
+        if skip_palliative_care
+        else palliative_care
+    )

@@ -8,10 +8,14 @@ DEPLOYMENT_SECRETS = $(PROJECT_ID)-live/deployment # Move to project.mk when non
 LOG_LEVEL:= INFO
 
 DB_SERVER_NAME := uec-core-dos-live-db-12
+DB_ROUTE_53 := uec-core-dos-live-primary.dos-db-sync-rds
 DB_REPLICA_SERVER_NAME := uec-core-dos-live-db-12-replica-di
+DB_REPLICA_53 := uec-core-dos-live-db-replica-di.dos-db-sync-rds
 DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
+DOS_DB_SG_NAME := live-lk8s-prod-core-dos-db-rds-postgres-sg
+DOS_DB_REPLICA_SG_NAME := uec-core-dos-live-db-12-replica-di-sg
 
 DB_SECRET_NAME := core-dos/deployment
 DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD

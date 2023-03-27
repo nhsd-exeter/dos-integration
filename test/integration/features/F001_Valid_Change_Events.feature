@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-@complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
   Scenario: F001SXX1. A valid change event is processed and accepted by DOS
     Given a basic service is created
     And the change event "Postcode" is set to "CT1 1AA"
@@ -9,7 +9,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service history is updated with the "Postcode"
     And the service history shows "postalcode" change type is "modify"
 
-@complete @dev @pharmacy_cloudwatch_queries
+  @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001SXX2. A Changed event with aligned data does not save an update to DoS
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
@@ -113,8 +113,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the service history table has been updated with locations data
 
-
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F001SX15 To check the emails sending
     Given a basic service is created
     And the correlation-id is "email"
@@ -148,7 +147,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "No valid pending changes found"
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX19 Empty CE Specified opening times removes all SP times in DoS
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2022"
@@ -157,14 +156,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX20 CE Specified Opening Times with future dates replaces empty Dos SP times
     Given a basic service is created
     And the specified opening date is set to "future" date
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX21. No Staff field in CE doesn't cause errors
     Given a basic service is created
     And the change event "Postcode" is set to "CT1 1AA"
@@ -179,7 +178,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   #   Then the Change Request is accepted by Dos
   #   And the Dentist changes with service type id is captured by Dos
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX22. Palliative Care Service with unchanged data not flagged
     Given a basic service is created
     And the service in DoS supports palliative care
@@ -187,21 +186,21 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with message "Palliative Care is equal"
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX23. Palliative Care Service with changed data flagged (removed)
     Given a basic service is created
     And the service in DoS supports palliative care
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX24. Palliative Care Service with changed data flagged (added)
     Given a basic service is created
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
 
-@complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX25. Palliative Care. Non primary pharmacy service no check message
     Given an entry is created in the services table
     And the service "service_type" is set to "131"

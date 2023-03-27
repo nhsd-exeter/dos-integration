@@ -19,7 +19,7 @@ S3_CLIENT = client("s3", region_name="eu-west-2")
 
 
 # Commit new services to DOS
-def commit_new_service_to_dos(context) -> Any:
+def commit_new_service_to_dos(context) -> str:
     qv = context.generator_data
     query_vars = (
         f"{qv['id']}",
@@ -66,7 +66,7 @@ def commit_new_service_to_dos(context) -> Any:
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
-    return data[0][0]
+    return data[0]["id"]
 
 
 # Generic Opening days and times to DOS
@@ -76,7 +76,7 @@ def add_single_opening_day(context):
     query = f"INSERT INTO servicedayopenings(serviceid, dayid) VALUES({service_id},1) RETURNING id"
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
-    time_id = literal_eval(response)[0][0]
+    time_id = literal_eval(response)[0]["id"]
     add_single_opening_time(context, time_id)
     # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
     if "standard_openings" not in context.generator_data.keys():
@@ -116,7 +116,7 @@ def add_single_specified_day(context):
     )
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
-    time_id = literal_eval(response)[0][0]
+    time_id = literal_eval(response)[0]["id"]
     add_single_specified_time(context, time_id)
     if "specified_openings" not in context.generator_data.keys():
         context.generator_data["specified_openings"] = []
@@ -156,7 +156,7 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         response = invoke_dos_db_handler_lambda(lambda_payload)
-        entry_id = literal_eval(loads(response))[0][0]
+        entry_id = literal_eval(loads(response))[0]["id"]
         day["dos_id"] = entry_id
     for day in context.generator_data["standard_openings"]:
         if day["open"] is True:
@@ -185,7 +185,7 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         response = invoke_dos_db_handler_lambda(lambda_payload)
-        entry_id = literal_eval(loads(response))[0][0]
+        entry_id = literal_eval(loads(response))[0]["id"]
         day["dos_id"] = entry_id
     for day in context.generator_data["specified_openings"]:
         opening_time = day["opening_time"]

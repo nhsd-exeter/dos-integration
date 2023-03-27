@@ -4,9 +4,9 @@ from time import time_ns
 from typing import Any, Dict, Generator, Optional
 
 from aws_lambda_powertools.logging import Logger
-from psycopg2 import connect
-from psycopg2.extensions import connection
-from psycopg2.extras import DictCursor
+from psycopg import connect, Connection, Cursor
+from psycopg.rows import dict_row, DictRow
+from typing_extensions import LiteralString
 
 from common.secretsmanager import get_secret
 
@@ -15,7 +15,7 @@ db_connection = None
 
 
 @contextmanager
-def connect_to_dos_db_replica() -> Generator[connection, None, None]:
+def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
     """Creates a new connection to the DoS DB Replica
 
     Yields:
@@ -35,7 +35,7 @@ def connect_to_dos_db_replica() -> Generator[connection, None, None]:
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
         db_user=environ["DB_READ_ONLY_USER_NAME"],
-        db_password=db_password
+        db_password=db_password,
     )
     # Yield the connection object to the context manager
     yield db_connection
@@ -44,7 +44,7 @@ def connect_to_dos_db_replica() -> Generator[connection, None, None]:
 
 
 @contextmanager
-def connect_to_dos_db() -> Generator[connection, None, None]:
+def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
     """Creates a new connection to the DoS DB
 
     Yields:
@@ -68,7 +68,7 @@ def connect_to_dos_db() -> Generator[connection, None, None]:
 
 def connection_to_db(
     server: str, port: str, db_name: str, db_schema: str, db_user: str, db_password: str
-) -> connection:
+) -> Connection:
     """Creates a new connection to a database
 
     Args:
@@ -92,34 +92,28 @@ def connection_to_db(
         password=db_password,
         connect_timeout=2,
         options=f"-c search_path=dbo,{db_schema}",
-        application_name="DOS INTEGRATION <psycopg2>",
+        application_name="DOS INTEGRATION <psycopg>",
     )
 
 
 def query_dos_db(
-        connection: connection,
-        query: str,
-        vars: Optional[Dict[str, Any]] = None,
-        log_vars: bool = True) -> DictCursor:
+    connection: Connection, query: LiteralString, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True
+) -> Cursor[DictRow]:
     """Queries the database given in the connection object
 
     Args:
-        connection (connection): Connection to the database
+        connection (Connection): Connection to the database
         query (str): Query to execute
         vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
 
     Returns:
-        DictCursor: Cursor to the query results
+        DictRow: Cursor to the query results
     """
-    cursor = connection.cursor(cursor_factory=DictCursor)
+    cursor = connection.cursor(row_factory=dict_row)
 
-    logger.debug("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
-    query_string_log = cursor.mogrify(query, vars) if log_vars else query
-    if len(query_string_log) > 1000:
-        query_string_log = f"{query_string_log[:490]}...  ...{query_string_log[-490:]}"
-    logger.info(f"Running SQL command: {query_string_log}")
+    logger.info("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
 
     time_start = time_ns() // 1000000
-    cursor.execute(query, vars)
+    cursor.execute(query=query, params=vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
     return cursor

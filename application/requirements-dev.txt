@@ -1,6 +1,6 @@
 Faker
 aws-lambda-context
-bandit
+bandit==1.7.4
 boto3
 coverage
 isort
@@ -9,7 +9,7 @@ moto
 mutmut
 pandas
 pytest
-pytest-bdd==6.0.1
+pytest-bdd
 pytest-cov
 pytest-flakefinder
 pytest-html
@@ -17,7 +17,7 @@ pytest-icdiff
 pytest-replay
 pytest-rerunfailures
 pytest-sugar
-pytest-xdist==2.5.0
+pytest-xdist
 requests
 responses
 testfixtures

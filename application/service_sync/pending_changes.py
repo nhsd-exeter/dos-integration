@@ -7,8 +7,8 @@ from typing import List, Optional
 
 from aws_lambda_powertools.logging import Logger
 from boto3 import client
-from psycopg2.extensions import connection
-from psycopg2.extras import DictCursor
+from psycopg import Connection
+from psycopg.rows import DictRow
 from pytz import timezone
 
 from .service_update_logging import ServiceUpdateLogger
@@ -96,7 +96,7 @@ def check_and_remove_pending_dos_changes(service_id: str) -> None:
             logger.info("No valid pending changes found")
 
 
-def get_pending_changes(connection: connection, service_id: str) -> Optional[List[PendingChange]]:
+def get_pending_changes(connection: Connection, service_id: str) -> Optional[List[PendingChange]]:
     """Gets pending changes for a service ID
 
     Args:
@@ -114,13 +114,13 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     )
     query_vars = {"SERVICE_ID": service_id}
     cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
-    rows: List[DictCursor] = cursor.fetchall()
+    response_rows: List[DictRow] = cursor.fetchall()
     cursor.close()
-    if len(rows) < 1:
+    if len(response_rows) < 1:
         return None
     logger.info(f"Pending changes found for Service ID {service_id}")
     pending_changes: List[PendingChange] = []
-    for row in rows:
+    for row in response_rows:
         pending_change = PendingChange(row)
         logger.info(f"Pending change found: {pending_change}", extra={"pending_change": pending_change})
         if pending_change.is_valid():
@@ -132,7 +132,7 @@ def get_pending_changes(connection: connection, service_id: str) -> Optional[Lis
     return pending_changes
 
 
-def reject_pending_changes(connection: connection, pending_changes: List[PendingChange]) -> None:
+def reject_pending_changes(connection: Connection, pending_changes: List[PendingChange]) -> None:
     """Rejects pending changes from the database
 
     Args:

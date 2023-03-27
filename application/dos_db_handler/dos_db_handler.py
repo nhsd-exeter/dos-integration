@@ -70,4 +70,5 @@ def run_query(query, query_vars) -> list:
         query_result = cursor.fetchall()
         connection.commit()
         cursor.close()
+        logger.warning("Query result", extra={"query_result": query_result})
     return query_result
