@@ -20,4 +20,4 @@ TERRAFORM_NHSD_IDENTITIES_ACCOUNT_ID = $(AWS_ACCOUNT_ID_IDENTITIES)
 TF_VAR_service_state_bucket = $(TERRAFORM_STATE_STORE)
 TF_VAR_development_pipeline_state = $(PROJECT_GROUP_SHORT)-$(PROJECT_NAME_SHORT)/dev/development-pipeline/terraform.state
 TF_VAR_mgmt_vpc_name := mgmt.texasplatform.uk
-TF_VAR_developer_role_name = UECPUServiceDeveloper
+TF_VAR_developer_role_name = UECDoSINTServiceDeveloper
