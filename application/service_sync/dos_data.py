@@ -348,7 +348,7 @@ def save_specified_opening_times_into_db(
 
 
 def save_palliative_care_into_db(
-    connection: connection, service_id: int, is_changes: bool, palliative_care: bool
+    connection: Connection, service_id: int, is_changes: bool, palliative_care: bool
 ) -> bool:
     """Saves the palliative care changes to the DoS database
 
@@ -406,7 +406,7 @@ def save_palliative_care_into_db(
         return False
 
 
-def validate_dos_palliative_care_z_code_exists(connection: connection) -> bool:
+def validate_dos_palliative_care_z_code_exists(connection: Connection) -> bool:
     """Validates that the palliative care Z code exists in the DoS database
 
     Args:
