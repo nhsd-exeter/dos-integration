@@ -9,6 +9,7 @@ from psycopg.sql import Identifier, Literal, SQL
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from .service_update_logging import log_service_updates
+from common.constants import DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR, DOS_PALLIATIVE_CARE_SYMPTOM_GROUP
 from common.dos import (
     DoSService,
     get_specified_opening_times_from_db,
@@ -129,8 +130,21 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 is_changes=changes_to_dos.specified_opening_times_changes,
                 specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
             )
+            is_palliative_care_changes: bool = save_palliative_care_into_db(
+                connection=connection,
+                service_id=service_id,
+                is_changes=changes_to_dos.palliative_care_changes,
+                palliative_care=changes_to_dos.nhs_entity.palliative_care,
+            )
             # If there are any changes, update the service history and commit the changes to the database
-            if any([is_demographic_changes, is_standard_opening_times_changes, is_specified_opening_times_changes]):
+            if any(
+                [
+                    is_demographic_changes,
+                    is_standard_opening_times_changes,
+                    is_specified_opening_times_changes,
+                    is_palliative_care_changes,
+                ]
+            ):
                 service_histories.save_service_histories(connection=connection)
                 connection.commit()
                 logger.info(f"Updates successfully committed to the DoS database for service id {service_id}")
@@ -331,3 +345,99 @@ def save_specified_opening_times_into_db(
     else:
         logger.info(f"No specified opening times changes to save for service id {service_id}")
         return False
+
+
+def save_palliative_care_into_db(
+    connection: Connection, service_id: int, is_changes: bool, palliative_care: bool
+) -> bool:
+    """Saves the palliative care changes to the DoS database
+
+    Args:
+        connection (connection): Connection to the DoS database
+        service_id (int): Id of the service to update
+        is_changes (bool): True if changes should be made to the database, False if no changes need to be made
+        palliative_care (bool): Set palliative care in db to true or false
+
+    Returns:
+        bool: True if changes were made to the database, False if no changes were made
+    """
+
+    def save_palliative_care_update() -> None:
+        """Saves the palliative care update to the DoS database"""
+        query_vars = {
+            "SERVICE_ID": service_id,
+            "SDID": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+            "SGID": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        }
+
+        # If palliative care is true, insert into servicessgsds table
+        if palliative_care:
+            query = "INSERT INTO servicesgsds (serviceid, sdid, sgid) VALUES (%(SERVICE_ID)s, %(SDID)s, %(SGID)s);"
+            logger.debug(f"Setting palliative care to true for service id {service_id}")
+        else:
+            query = "DELETE FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sdid=%(SDID)s AND sgid=%(SGID)s;"
+            logger.debug(f"Setting palliative care to false for service id {service_id}")
+        cursor = query_dos_db(connection=connection, query=query, vars=query_vars)
+        cursor.close()
+        logger.info(
+            f"Saving palliative care changes for service id {service_id}",
+            extra={"palliative_care_is_set_to": palliative_care},
+        )
+
+    # If no changes, return false
+    if is_changes and validate_dos_palliative_care_z_code_exists(connection=connection):
+        save_palliative_care_update()
+        return True
+    # If palliative care should be changed but the Z code does not exist, log an error
+    elif is_changes and not validate_dos_palliative_care_z_code_exists(connection=connection):
+        add_metric("DoSPalliativeCareZCodeDoesNotExist")
+        logger.error(
+            f"Unable to save palliative care changes for service id {service_id} as the "
+            "palliative care Z code does not exist in the DoS database",
+            extra={"palliative_care_is_set_to": palliative_care},
+        )
+        return False
+    # If no changes, return false
+    else:
+        logger.info(
+            f"No palliative care changes to save for service id {service_id}",
+            extra={"palliative_care_is_set_to": palliative_care},
+        )
+        return False
+
+
+def validate_dos_palliative_care_z_code_exists(connection: Connection) -> bool:
+    """Validates that the palliative care Z code exists in the DoS database
+
+    Args:
+        connection (connection): Connection to the DoS database
+
+    Returns:
+        bool: True if the palliative care Z code exists, False if it does not
+    """
+    cursor = query_dos_db(
+        connection=connection,
+        query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
+        vars={"SDID": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR},
+    )
+    symptom_discriminator_rowcount = cursor.rowcount
+    cursor.close()
+    cursor = query_dos_db(
+        connection=connection,
+        query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;",
+        vars={"SGID": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP},
+    )
+    symptom_group_rowcount = cursor.rowcount
+    cursor.close()
+
+    if symptom_discriminator_rowcount == 1 and symptom_group_rowcount == 1:
+        return True
+
+    logger.error(
+        "Palliative care Z code does not exist in the DoS database",
+        extra={
+            "symptom_discriminator_rowcount": symptom_discriminator_rowcount,
+            "symptom_group_rowcount": symptom_group_rowcount,
+        },
+    )
+    return False
