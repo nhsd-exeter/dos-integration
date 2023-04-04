@@ -7,7 +7,7 @@ provider:
   name: aws
   deploymentMethod: direct
   lambdaHashingVersion: 20201221
-  architecture: x86_64
+  architecture: arm64
   region: ${env:AWS_REGION}
   versionFunctions: false
   deploymentBucket:
@@ -78,7 +78,7 @@ custom:
 functions:
   change-event-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:CHANGE_EVENT_DLQ_HANDLER}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} Change Event DLQ Handler lambda
     memorySize: 128
@@ -90,7 +90,7 @@ functions:
 
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_HANDLER}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:DOS_DB_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in Non-Live environments
     memorySize: 128
@@ -124,7 +124,7 @@ functions:
 
   dos-db-update-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_UPDATE_DLQ_HANDLER}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} DoS DB Update DLQ Handler lambda
     memorySize: 128
@@ -134,7 +134,7 @@ functions:
 
   event-replay:
     image: ${env:DOCKER_REGISTRY}/${env:EVENT_REPLAY}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:EVENT_REPLAY_LAMBDA_NAME}
     description: ${sls:stage} Event Replay lambda
     memorySize: 128
@@ -147,7 +147,7 @@ functions:
 
   ingest-change-event:
     image: ${env:DOCKER_REGISTRY}/${env:INGEST_CHANGE_EVENT}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:INGEST_CHANGE_EVENT_LAMBDA_NAME}
     description: ${sls:stage} Ingest Change Event lambda
     memorySize: 128
@@ -160,7 +160,7 @@ functions:
 
   orchestrator:
     image: ${env:DOCKER_REGISTRY}/${env:ORCHESTRATOR}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:ORCHESTRATOR_LAMBDA_NAME}
     description: ${sls:stage} Orchestrator
     memorySize: 128
@@ -181,7 +181,7 @@ functions:
 
   send-email:
     image: ${env:DOCKER_REGISTRY}/${env:SEND_EMAIL}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:SEND_EMAIL_LAMBDA_NAME}
     description: ${sls:stage} Send Email lambda
     memorySize: 128
@@ -195,7 +195,7 @@ functions:
 
   service-matcher:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_MATCHER}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:SERVICE_MATCHER_LAMBDA_NAME}
     description: ${sls:stage} Service Matcher lambda
     memorySize: 192
@@ -227,7 +227,7 @@ functions:
 
   service-sync:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_SYNC}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:SERVICE_SYNC_LAMBDA_NAME}
     description: ${sls:stage} Service Sync lambda
     memorySize: 512
@@ -268,7 +268,7 @@ functions:
 
   slack-messenger:
     image: ${env:DOCKER_REGISTRY}/${env:SLACK_MESSENGER}:${env:VERSION}
-    architecture: x86_64
+    architecture: arm64
     name: ${env:SLACK_MESSENGER_LAMBDA_NAME}
     description: ${sls:stage} Slack Messenger lambda
     memorySize: 128

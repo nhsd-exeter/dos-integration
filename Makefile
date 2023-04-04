@@ -13,6 +13,9 @@ build: # Build lambdas
 		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
 	done
 
+commit-date-hash-tag:
+	echo "$(BUILD_COMMIT_DATETIME)-$(BUILD_COMMIT_HASH)"
+
 build-lambda: ### Build lambda docker image - mandatory: NAME
 	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
 	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
@@ -20,7 +23,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests $$UNDERSCORE_LAMBDA_NAME common/*.py __init__.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler BUILD_OPTS="--platform=linux/arm64 --output type=docker"
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 build-and-push: # Build lambda docker images and pushes them to ECR
@@ -646,3 +649,9 @@ deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 
 undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+
+
+# ==============================================================================
+
+.SILENT: \
+commit-date-hash-tag

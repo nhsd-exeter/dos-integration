@@ -9,6 +9,10 @@ data "template_file" "build_buildspec" {
   template = file("buildspecs/build-buildspec.yml")
 }
 
+data "template_file" "build_arm_buildspec" {
+  template = file("buildspecs/build-arm-buildspec.yml")
+}
+
 data "template_file" "build_image_buildspec" {
   template = file("buildspecs/build-image-buildspec.yml")
 }
