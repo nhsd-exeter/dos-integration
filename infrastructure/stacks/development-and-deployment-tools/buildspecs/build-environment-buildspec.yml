@@ -24,7 +24,9 @@ phases:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - echo Branch = $BUILD_BRANCH
       - if [ -n "$BUILD_BRANCH" ]; then
-          make deploy VERSION=$(make commit-date-hash-tag) BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1 OPTS="-parallelism=50";
+          export BUILD_VERSION=$(make commit-date-hash-tag)
+          make wait-for-ecr-lambda-images-to-exist-for-tag TAG=$BUILD_VERSION
+          make deploy VERSION=$BUILD_VERSION BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1 OPTS="-parallelism=50";
         fi
     finally:
       - |

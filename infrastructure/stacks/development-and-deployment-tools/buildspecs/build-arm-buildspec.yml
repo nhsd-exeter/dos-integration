@@ -21,11 +21,15 @@ phases:
       - make docker-hub-signin
   build:
     commands:
-      - echo "[Building docker containers]"
-      - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$(make commit-date-hash-tag) DOCKER_BUILDKIT=1
-      - echo "[Pushing images to ECR]"
-      - unset AWS_ACCESS_KEY_ID
-      - unset AWS_SECRET_ACCESS_KEY
-      - unset AWS_SESSION_TOKEN
-      - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+      - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
+      - echo Branch = $BUILD_BRANCH
+      - if [ -n "$BUILD_BRANCH" ]; then
+          echo "[Building branch lambda images]"
+          make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$(make commit-date-hash-tag) DOCKER_BUILDKIT=1
+          echo "[Pushing images to ECR]"
+          unset AWS_ACCESS_KEY_ID
+          unset AWS_SECRET_ACCESS_KEY
+          unset AWS_SESSION_TOKEN
+          make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+          make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+        fi

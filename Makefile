@@ -16,6 +16,40 @@ build: # Build lambdas
 commit-date-hash-tag:
 	echo "$(BUILD_COMMIT_DATETIME)-$(BUILD_COMMIT_HASH)"
 
+check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: REPO=[repository name],TAG=[string to match tag of an image]
+	if [ $$(aws ecr batch-get-image --repository-name $(REPO) \
+					--image-ids imageTag=$(TAG) | jq '.images | length') == 1 ];
+	then
+		echo true
+	else
+		echo false
+	fi
+
+check-ecr-lambda-images-exist-for-tag:
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+	  IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
+		if [[ "$$IMAGE_STATUS" == "false" ]]; then
+			echo false
+			exit
+		fi
+	done
+	echo true
+
+wait-for-ecr-lambda-images-to-exist-for-tag:
+	TIMEOUT=300
+	START_TS=$$(date +%s)
+	echo "Checking lambda images are ready.."
+	while [ $$(make check-ecr-lambda-images-exist-for-tag) == "false" ]; do
+		ELAPSED_TIME=$$(expr $$(date +%s) - $$START_TS )
+		if [ "$$ELAPSED_TIME" -gt "$$TIMEOUT" ]; then
+				echo "Failed to find Lambda images in given timeout $$TIMEOUT secs"
+				exit 1
+		fi
+		echo "..Lambda images not ready, waiting 10 second before checking again.."
+		sleep 10
+	done
+			echo "..Lambda images ready"
+
 build-lambda: ### Build lambda docker image - mandatory: NAME
 	UNDERSCORE_LAMBDA_NAME=$$(echo $(NAME) | tr '-' '_')
 	cp -f $(APPLICATION_DIR)/$$UNDERSCORE_LAMBDA_NAME/requirements.txt $(DOCKER_DIR)/lambda/assets/requirements.txt
@@ -654,4 +688,7 @@ undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 # ==============================================================================
 
 .SILENT: \
-commit-date-hash-tag
+commit-date-hash-tag \
+check-ecr-image-tag-exist \
+check-ecr-lambda-images-exist-for-tag \
+wait-for-ecr-lambda-images-to-exist-for-tag
