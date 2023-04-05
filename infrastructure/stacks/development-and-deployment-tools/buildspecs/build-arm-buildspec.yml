@@ -23,7 +23,8 @@ phases:
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - echo Branch = $BUILD_BRANCH
-      - if [ -z "$BUILD_BRANCH" ]; then
+      - |
+        if [ -z "$BUILD_BRANCH" ]; then
           echo "Not trigged by branch will stop deploying"
           exit
         fi
@@ -35,3 +36,14 @@ phases:
       - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+    finally:
+      - |
+        if [ -n "$BUILD_BRANCH" ]; then
+          if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
+            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Deploy Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed Please investigate";
+          else
+            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Deploy Codebuild Stage" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Succeeded";
+          fi
+        else
+          make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Deploy Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed due to incorrect naming of branch. Please check the branch name.";
+        fi

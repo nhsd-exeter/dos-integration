@@ -23,7 +23,8 @@ phases:
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - echo Branch = $BUILD_BRANCH
-      - if [ -z "$BUILD_BRANCH" ]; then
+      - |
+        if [ -z "$BUILD_BRANCH" ]; then
           echo "Not trigged by branch will stop deploying"
           exit
         fi
