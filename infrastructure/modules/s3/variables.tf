@@ -87,3 +87,17 @@ variable "server_side_encryption_configuration" {
     }
   }
 }
+
+variable "logging" {
+  type    = map(string)
+  default = {}
+}
+
+variable "attach_policy" {
+  description = "Attach a policy to the bucket"
+  default     = false
+}
+variable "policy" {
+  description = "The policy to attach to the bucket"
+  default     = ""
+}

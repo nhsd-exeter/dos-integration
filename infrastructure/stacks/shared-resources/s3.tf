@@ -5,6 +5,12 @@ module "di_send_email_bucket" {
   acl                = "private"
   versioning_enabled = "true"
   force_destroy      = "true"
+
+  logging = {
+    target_bucket = module.di_logs_bucket.s3_bucket_id
+    target_prefix = "s3/send_email_bucket/"
+  }
+
   server_side_encryption_configuration = {
     rule = [{
       apply_server_side_encryption_by_default = {
@@ -15,4 +21,27 @@ module "di_send_email_bucket" {
   }
   lifecycle_days_to_expiration = "90"
   lifecycle_expiration_enabled = "true"
+
+  depends_on = [
+    module.di_logs_bucket
+  ]
+}
+
+module "di_logs_bucket" {
+  source             = "../../modules/s3"
+  name               = var.logs_bucket_name
+  project_id         = var.project_id
+  acl                = "log-delivery-write"
+  versioning_enabled = "true"
+  force_destroy      = "true"
+  attach_policy      = true
+  policy = jsonencode(
+    {
+      Action = "s3:PutObject"
+      Effect = "Allow"
+      Principal = {
+        Service = "logging.s3.amazonaws.com"
+      }
+      Resource = "arn:aws:s3:::${var.logs_bucket_name}/*"
+  })
 }

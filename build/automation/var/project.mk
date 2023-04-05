@@ -122,6 +122,7 @@ TF_VAR_route53_health_check_alarm_region_signing_key_alias := $(PROJECT_ID)-$(SH
 # S3
 SEND_EMAIL_BUCKET_NAME := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-send-email-bucket
 TF_VAR_send_email_bucket_name := $(SEND_EMAIL_BUCKET_NAME)
+TF_VAR_logs_bucket_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-logs-bucket
 
 # Cloudwatch monitoring dashboard
 TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-shared-resources-topic-app-alerts-for-slack-default-region
