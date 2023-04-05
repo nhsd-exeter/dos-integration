@@ -27,7 +27,7 @@ check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: R
 
 check-ecr-lambda-images-exist-for-tag:
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
-	  IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
+		IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
 		if [[ "$$IMAGE_STATUS" == "false" ]]; then
 			echo false
 			exit
