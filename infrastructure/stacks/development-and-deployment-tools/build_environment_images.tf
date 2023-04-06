@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_environment_image_webhook" {
-  for_each     = var.environment == "dev" ? local.to_build : {}
+  for_each     = var.environment == "dev" ? local.to_build : toset([])
   project_name = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
   build_type   = "BUILD"
   filter_group {
@@ -16,7 +16,7 @@ resource "aws_codebuild_webhook" "build_environment_image_webhook" {
 }
 
 resource "aws_codebuild_project" "di_build_environment_image" {
-  for_each       = var.environment == "dev" ? local.to_build : {}
+  for_each       = var.environment == "dev" ? local.to_build : toset([])
   name           = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
   description    = "Builds environment images based on push to task branches"
   build_timeout  = "30"
