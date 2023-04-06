@@ -1,21 +1,4 @@
 resource "aws_codebuild_webhook" "build_environment_image_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_build_environment_image[0].name
-  build_type   = "BUILD"
-  filter_group {
-    filter {
-      type    = "EVENT"
-      pattern = "PUSH"
-    }
-    filter {
-      type    = "HEAD_REF"
-      pattern = "refs/heads/task/DSUEC-[0-9]*"
-    }
-  }
-  depends_on = [aws_codebuild_project.di_build_environment_image]
-}
-
-resource "aws_codebuild_webhook" "build_image_webhook" {
   for_each     = var.environment == "dev" ? local.to_build : {}
   project_name = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
   build_type   = "BUILD"
