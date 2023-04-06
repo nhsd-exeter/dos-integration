@@ -18,7 +18,7 @@ commit-date-hash-tag:
 
 check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: REPO=[repository name],TAG=[string to match tag of an image]
 	if [ $$(aws ecr batch-get-image --repository-name $(REPO) \
-					--image-ids imageTag=$(TAG) | jq '.images | length') == 1 ];
+					--image-ids imageTag=$(TAG) --registry-id=$(AWS_ACCOUNT_ID_MGMT) | jq '.images | length') == 1 ];
 	then
 		echo true
 	else

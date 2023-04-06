@@ -15,9 +15,26 @@ resource "aws_codebuild_webhook" "build_environment_image_webhook" {
   depends_on = [aws_codebuild_project.di_build_environment_image]
 }
 
+resource "aws_codebuild_webhook" "build_image_webhook" {
+  for_each     = var.environment == "dev" ? local.to_build : {}
+  project_name = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
+  build_type   = "BUILD"
+  filter_group {
+    filter {
+      type    = "EVENT"
+      pattern = "PUSH"
+    }
+    filter {
+      type    = "HEAD_REF"
+      pattern = "refs/heads/task/DSUEC-[0-9]*"
+    }
+  }
+  depends_on = [aws_codebuild_project.di_build_environment_image]
+}
+
 resource "aws_codebuild_project" "di_build_environment_image" {
-  count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-build-environment-image-stage"
+  for_each       = var.environment == "dev" ? local.to_build : {}
+  name           = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
   description    = "Builds environment images based on push to task branches"
   build_timeout  = "30"
   queued_timeout = "5"
@@ -45,9 +62,16 @@ resource "aws_codebuild_project" "di_build_environment_image" {
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-environment-image-stage"
+      value = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
     }
-
+    environment_variable {
+      name  = "BUILD_TARGET"
+      value = "${each.key}-build"
+    }
+    environment_variable {
+      name  = "BUILD_ITEM_NAME"
+      value = each.key
+    }
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
@@ -71,7 +95,7 @@ resource "aws_codebuild_project" "di_build_environment_image" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-environment-image-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
       stream_name = ""
     }
   }
