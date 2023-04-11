@@ -29,6 +29,7 @@ phases:
           exit
         fi
       - echo "[Building branch lambda images]"
+      - echo VERSION = $(make commit-date-hash-tag)
       - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$(make commit-date-hash-tag) DOCKER_BUILDKIT=1
       - echo "[Pushing images to ECR]"
       - unset AWS_ACCESS_KEY_ID
