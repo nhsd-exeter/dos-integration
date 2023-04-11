@@ -40,9 +40,9 @@ phases:
     finally:
       - |
         if [ -n "$BUILD_BRANCH" ]; then
-          - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
-          - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
-          - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+          export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+          export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+          export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
           if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
             make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Deploy Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed Please investigate";
           else
