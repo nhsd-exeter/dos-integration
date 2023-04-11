@@ -35,8 +35,8 @@ phases:
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
-      - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+      - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$(make commit-date-hash-tag)
+      - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
     finally:
       - |
         if [ -n "$BUILD_BRANCH" ]; then
