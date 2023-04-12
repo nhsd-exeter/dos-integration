@@ -36,7 +36,7 @@ check-ecr-lambda-images-exist-for-tag:
 	echo true
 
 wait-for-ecr-lambda-images-to-exist-for-tag:
-	TIMEOUT=300
+	TIMEOUT=600
 	START_TS=$$(date +%s)
 	echo "Checking lambda images are ready.."
 	while [ $$(make check-ecr-lambda-images-exist-for-tag) == "false" ]; do
