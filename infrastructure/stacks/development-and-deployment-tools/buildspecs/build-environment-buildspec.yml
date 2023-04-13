@@ -19,8 +19,9 @@ phases:
           exit
         fi
       - export BUILD_VERSION=$(make commit-date-hash-tag)
+      - echo version = $BUILD_VERSION
       - make wait-for-ecr-lambda-images-to-exist-for-tag TAG=$BUILD_VERSION
-      - make deploy VERSION=$BUILD_VERSION BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1 OPTS="-parallelism=50";
+      - make deploy VERSION=$BUILD_VERSION BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE TF_CLI_ARGS="-parallelism=30"
     finally:
       - |
         if [ -n "$BUILD_BRANCH" ]; then
