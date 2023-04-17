@@ -418,7 +418,6 @@ def create_palliative_care_entry_ce(context) -> None:
 def set_up_palliative_care_in_db() -> None:
     """This function sets up the palliative care symptom discriminator
     in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table"""
-    print("Setting up palliative care in DB")
     invoke_dos_db_handler_lambda(
         {
             "type": "insert",
@@ -426,7 +425,6 @@ def set_up_palliative_care_in_db() -> None:
             "query_vars": None,
         }
     )
-    print("Palliative care symptom discriminator set up in DB")
     invoke_dos_db_handler_lambda(
         {
             "type": "insert",
@@ -434,4 +432,3 @@ def set_up_palliative_care_in_db() -> None:
             "query_vars": None,
         }
     )
-    print("Palliative care symptom discriminator set up in symptomgroupsymptomdiscriminators table")

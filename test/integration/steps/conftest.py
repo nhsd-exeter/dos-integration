@@ -30,6 +30,4 @@ def pytest_sessionstart(session):
     Called after the Session object has been created and
     before performing collection and entering the run test loop.
     """
-    print("Session start")
     set_up_palliative_care_in_db()
-    raise Exception("Test")
