@@ -1,5 +1,6 @@
 from pytest import fixture
 
+from .utilities.generator import set_up_palliative_care_in_db
 from .utilities.context import Context
 
 
@@ -22,3 +23,11 @@ def pytest_bdd_after_step(request, feature, scenario, step, step_func, step_func
 @fixture
 def context(autouse=True):
     yield Context()
+
+
+def pytest_sessionstart(session):
+    """
+    Called after the Session object has been created and
+    before performing collection and entering the run test loop.
+    """
+    set_up_palliative_care_in_db()

@@ -12,10 +12,12 @@ module "s3_bucket" {
   restrict_public_buckets               = true
   attach_deny_insecure_transport_policy = true
 
-
   force_destroy = var.force_destroy
 
-  attach_policy = false
+  attach_policy = var.attach_policy
+  policy        = var.policy
+
+  logging = var.logging
 
   versioning = {
     enabled = var.versioning_enabled

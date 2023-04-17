@@ -122,6 +122,7 @@ TF_VAR_route53_health_check_alarm_region_signing_key_alias := $(PROJECT_ID)-$(SH
 # S3
 SEND_EMAIL_BUCKET_NAME := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-send-email-bucket
 TF_VAR_send_email_bucket_name := $(SEND_EMAIL_BUCKET_NAME)
+TF_VAR_logs_bucket_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-logs-bucket
 
 # Cloudwatch monitoring dashboard
 TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-shared-resources-topic-app-alerts-for-slack-default-region
@@ -201,3 +202,9 @@ TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DoS DB Handler (Non-Prod Only)
+
+DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
+DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_RELEASE_USER_PASSWORD
