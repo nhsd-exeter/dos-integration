@@ -20,7 +20,9 @@ phases:
   build:
     commands:
       - echo "[Building docker containers]"
-      - make $BUILD_TARGET VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo VERSION = $(make commit-date-hash-tag)
+      - export VERSION=$(make commit-date-hash-tag)
+      - make $BUILD_TARGET VERSION=$VERSION
       - echo "[Pushing images to ECR]"
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
