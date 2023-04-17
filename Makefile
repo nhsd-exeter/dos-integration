@@ -25,7 +25,7 @@ check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: R
 		echo false
 	fi
 
-check-ecr-lambda-images-exist-for-tag:
+check-ecr-lambda-images-exist-for-tag: ### Check all lambda images with given tag exist in ECR - mandatory: TAG=[string to match tag of an image]
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
 		IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
 		if [[ "$$IMAGE_STATUS" == "false" ]]; then
@@ -35,7 +35,7 @@ check-ecr-lambda-images-exist-for-tag:
 	done
 	echo true
 
-wait-for-ecr-lambda-images-to-exist-for-tag:
+wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist with given tag in ECR or timeout - mandatory: TAG=[string to match tag of an image]
 	TIMEOUT=600
 	START_TS=$$(date +%s)
 	echo "Checking lambda images are ready.."
