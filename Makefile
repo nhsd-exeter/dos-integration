@@ -501,7 +501,7 @@ trigger-dos-deployment-pipeline:
 	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
 	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
 	-F "TARGET=\"regressiondi\"" \
-	-F "IMAGE_TAG=\"7.12.1_8659599\"" \
+	-F "IMAGE_TAG=\"8.4.1_6618c47\"" \
 	-F "REFRESH=\"true\""
 	echo Jenkins Job has started
 	echo Sleeping for 3 minutes
