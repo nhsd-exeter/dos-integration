@@ -19,6 +19,7 @@ from common.dos import (
 from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
 from common.dynamodb import put_circuit_is_open
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from common.report_logging import log_palliative_care_z_code_does_not_exist
 from common.utilities import add_metric
 
 logger = Logger(child=True)
@@ -417,27 +418,20 @@ def validate_dos_palliative_care_z_code_exists(connection: Connection) -> bool:
     """
     cursor = query_dos_db(
         connection=connection,
-        query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
-        vars={"SDID": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR},
+        query=(
+            "SELECT id FROM symptomgroupsymptomdiscriminators "
+            "WHERE symptomgroupid=%(SGID)s AND symptomdiscriminatorid=%(SDID)s;"
+        ),
+        vars={"SGID": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP, "SDID": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR},
     )
-    symptom_discriminator_rowcount = cursor.rowcount
-    cursor.close()
-    cursor = query_dos_db(
-        connection=connection,
-        query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;",
-        vars={"SGID": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP},
-    )
-    symptom_group_rowcount = cursor.rowcount
+    symptom_group_symptom_discriminator_combo_rowcount = cursor.rowcount
     cursor.close()
 
-    if symptom_discriminator_rowcount == 1 and symptom_group_rowcount == 1:
+    if symptom_group_symptom_discriminator_combo_rowcount == 1:
+        logger.debug("Palliative care Z code exists in the DoS database")
         return True
 
-    logger.error(
-        "Palliative care Z code does not exist in the DoS database",
-        extra={
-            "symptom_discriminator_rowcount": symptom_discriminator_rowcount,
-            "symptom_group_rowcount": symptom_group_rowcount,
-        },
+    log_palliative_care_z_code_does_not_exist(
+        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount,
     )
     return False

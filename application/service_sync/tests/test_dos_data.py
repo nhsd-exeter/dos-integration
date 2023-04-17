@@ -459,12 +459,11 @@ def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock
         calls=[
             call(
                 connection=mock_connection,
-                query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
-                vars={"SDID": 14167},
-            ),
-            call().close(),
-            call(
-                connection=mock_connection, query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;", vars={"SGID": 360}
+                query=(
+                    "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
+                    "AND symptomdiscriminatorid=%(SDID)s;"
+                ),
+                vars={"SGID": 360, "SDID": 14167},
             ),
             call().close(),
         ]
@@ -484,12 +483,11 @@ def test_validate_dos_palliative_care_z_code_exists_does_not_exist(mock_query_do
         calls=[
             call(
                 connection=mock_connection,
-                query="SELECT * FROM symptomdiscriminators WHERE id=%(SDID)s;",
-                vars={"SDID": 14167},
-            ),
-            call().close(),
-            call(
-                connection=mock_connection, query="SELECT * FROM symptomgroups WHERE id=%(SGID)s;", vars={"SGID": 360}
+                query=(
+                    "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
+                    "AND symptomdiscriminatorid=%(SDID)s;"
+                ),
+                vars={"SGID": 360, "SDID": 14167},
             ),
             call().close(),
         ]
