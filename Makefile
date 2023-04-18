@@ -57,7 +57,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests $$UNDERSCORE_LAMBDA_NAME common/*.py __init__.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler BUILD_OPTS="--platform=linux/arm64 --output type=docker"
+	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler BUILD_OPTS="--platform=linux/arm64"
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 build-and-push: # Build lambda docker images and pushes them to ECR

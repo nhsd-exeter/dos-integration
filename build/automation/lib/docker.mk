@@ -108,6 +108,7 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 		--build-arg BUILD_BRANCH=$(BUILD_BRANCH) \
 		--build-arg BUILD_COMMIT_HASH=$(BUILD_COMMIT_HASH) \
 		--build-arg BUILD_COMMIT_DATE=$(BUILD_COMMIT_DATE) \
+		--output type=docker \
 		--label name=$$IMAGE \
 		--label version=$$VERSION \
 		--label build-id=$(BUILD_ID) \
