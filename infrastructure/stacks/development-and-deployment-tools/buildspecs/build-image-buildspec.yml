@@ -22,7 +22,7 @@ phases:
       - echo "[Building docker containers]"
       - echo VERSION = $(make commit-date-hash-tag)
       - export VERSION=$(make commit-date-hash-tag)
-      - make $BUILD_TARGET VERSION=$VERSION
+      - make $BUILD_TARGET VERSION=$VERSION DOCKER_BUILDKIT=1
       - echo "[Pushing images to ECR]"
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
