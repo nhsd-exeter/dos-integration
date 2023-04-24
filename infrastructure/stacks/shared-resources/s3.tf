@@ -22,9 +22,9 @@ module "di_send_email_bucket" {
   lifecycle_days_to_expiration = "90"
   lifecycle_expiration_enabled = "true"
 
-  depends_on = [
-    module.di_logs_bucket
-  ]
+  # depends_on = [
+  #   module.di_logs_bucket
+  # ]
 }
 
 # module "di_logs_bucket" {
