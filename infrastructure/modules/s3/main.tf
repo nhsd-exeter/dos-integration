@@ -17,7 +17,9 @@ module "s3_bucket" {
   attach_policy = var.attach_policy
   policy        = var.policy
 
-  logging = var.logging
+  logging                  = var.logging
+  control_object_ownership = var.control_object_ownership
+  object_ownership         = var.object_ownership
 
   versioning = {
     enabled = var.versioning_enabled

@@ -4,9 +4,8 @@ variable "name" {
 
 variable "acl" {
   description = "The access control list assigned to this bucket"
-  default     = "private"
+  default     = null
 }
-
 
 variable "project_id" {
   description = "Project ID"
@@ -100,4 +99,14 @@ variable "attach_policy" {
 variable "policy" {
   description = "The policy to attach to the bucket"
   default     = ""
+}
+
+variable "control_object_ownership" {
+  description = "Specifies whether Amazon S3 should require object ownership for requests to this bucket. If you specify this element in the request, Amazon S3 ignores it."
+  default     = false
+}
+
+variable "object_ownership" {
+  description = "Specifies whether Amazon S3 should require object ownership for requests to this bucket. If you specify this element in the request, Amazon S3 ignores it."
+  default     = "BucketOwnerPreferred"
 }
