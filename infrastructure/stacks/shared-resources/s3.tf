@@ -2,9 +2,9 @@ module "di_send_email_bucket" {
   source             = "../../modules/s3"
   name               = var.send_email_bucket_name
   project_id         = var.project_id
-  acl                = "private"
   versioning_enabled = "true"
   force_destroy      = "true"
+  object_ownership   = "ObjectWriter"
 
   logging = {
     target_bucket = module.di_logs_bucket.s3_bucket_id
@@ -28,13 +28,16 @@ module "di_send_email_bucket" {
 }
 
 module "di_logs_bucket" {
-  source             = "../../modules/s3"
-  name               = var.logs_bucket_name
-  project_id         = var.project_id
-  acl                = "log-delivery-write"
-  versioning_enabled = "true"
-  force_destroy      = "true"
-  attach_policy      = true
+  source                   = "../../modules/s3"
+  name                     = var.logs_bucket_name
+  project_id               = var.project_id
+  acl                      = "log-delivery-write"
+  versioning_enabled       = "true"
+  force_destroy            = "true"
+  control_object_ownership = true
+  object_ownership         = "BucketOwnerPreferred"
+
+  attach_policy = true
   policy = jsonencode(
     {
       Action = "s3:PutObject"
