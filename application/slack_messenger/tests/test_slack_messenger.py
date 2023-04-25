@@ -47,7 +47,7 @@ MESSAGE = {
         "StatisticType": "Statistic",
         "Statistic": "SUM",
         "Unit": None,
-        "Dimensions": [{"value": "dsuec-259", "name": "ENV"}],
+        "Dimensions": [{"value": "ds-259", "name": "ENV"}],
         "Period": 300,
         "EvaluationPeriods": 1,
         "DatapointsToAlarm": 1,
@@ -66,7 +66,7 @@ SNS_EVENT = {
             "Sns": {
                 "Type": "Notification",
                 "MessageId": "be6ed8fb-6ca6-5ecb-ba78-82609035c3ad",
-                "TopicArn": "arn:aws:sns:eu-west-2:000000000000:uec-dos-int-dsuec-259-topic-app-alerts-for-slack",
+                "TopicArn": "arn:aws:sns:eu-west-2:000000000000:uec-dos-int-ds-259-topic-app-alerts-for-slack",
                 "Subject": 'ALARM: "Invalid Postcodes Test" in EU (London)',
                 "Message": dumps(MESSAGE),
                 "Timestamp": "2022-03-04T11:38:59.038Z",

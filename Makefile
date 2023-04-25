@@ -323,7 +323,7 @@ tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=
 		echo Recommended: you run this command from the main branch
 	fi
 
-tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[dsuec-number], COMMIT=[short commit hash]
+tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[ds-number], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" != "$(ENVIRONMENT)" ]; then
 		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
 		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
@@ -339,7 +339,7 @@ re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SO
 	done
 
 get-environment-from-pr:
-	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DSUEC-(?<x>.[0-9]*).*"; "dsuec-\(.x)") ')
+	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DS-(?<x>.[0-9]*).*"; "ds-\(.x)") ')
 	echo $$ENVIRONMENT
 
 is-environment-deployed:
