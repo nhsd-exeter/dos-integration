@@ -12,6 +12,7 @@ from common.constants import (
     DOS_ADDRESS_CHANGE_KEY,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
+    DOS_PALLIATIVE_CARE_SGSDID,
     DOS_PALLIATIVE_CARE_TYPE_ID,
     DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES,
     DOS_POSTAL_TOWN_CHANGE_KEY,
@@ -269,9 +270,13 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         and changes_to_dos.check_palliative_care_for_change()
         and skip_palliative_care_check is False
     ):
+        changes_to_dos.palliative_care_changes = True
         log_palliative_care_not_equal(
             nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
+        )
+        changes_to_dos.service_histories.add_sgsdid_change(
+            sgsdid=DOS_PALLIATIVE_CARE_SGSDID, new_value=changes_to_dos.nhs_entity.palliative_care
         )
     elif (
         changes_to_dos.dos_service.typeid in DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES

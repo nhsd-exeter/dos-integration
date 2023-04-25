@@ -9,6 +9,8 @@ from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
 from common.constants import (
     DOS_INTEGRATION_USER_NAME,
+    DOS_PALLIATIVE_CARE_SGSDID,
+    DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
 )
@@ -201,6 +203,19 @@ class ServiceUpdateLogger:
             extra={"environment": self.environment},
         )
 
+    def log_sgsdid_service_update(
+        self,
+        action: str,
+        new_value: str,
+    ):
+        add_or_remove = "add" if action == "add" else "remove"
+        self.log_service_update(
+            data_field_modified=DOS_SGSDID_CHANGE_KEY,
+            action=action,
+            previous_value="",
+            new_value=f"cmssgsdid_update={add_or_remove}={new_value}",
+        )
+
 
 def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: ServiceHistories) -> None:
     """Logs all service updates to DI Splunk and DoS Splunk.
@@ -239,11 +254,15 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 new_value=changes_to_dos.nhs_entity.standard_opening_times,
                 weekday=change_key.removeprefix("cmsopentime"),
             )
+        elif change_key == DOS_SGSDID_CHANGE_KEY:
+            service_update_logger.log_sgsdid_service_update(
+                action=change_values.get("changetype", "UNKOWN"), new_value=DOS_PALLIATIVE_CARE_SGSDID
+            )
         else:
-            logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
             service_update_logger.log_service_update(
                 data_field_modified=change_key,
                 action=change_values["changetype"],
                 previous_value=change_values.get("previous", ""),
                 new_value=change_values["data"],
             )
+        logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})

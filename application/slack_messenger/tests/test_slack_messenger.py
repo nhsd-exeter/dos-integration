@@ -130,6 +130,7 @@ def test_send_message(mock_post, lambda_context):
         url=WEBHOOK_URL,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
         json={"text": "hello dave", "channel": "channel5", "icon_emoji": ""},
+        timeout=5,
     )
     # Clean Up
     del environ["SLACK_WEBHOOK_URL"]

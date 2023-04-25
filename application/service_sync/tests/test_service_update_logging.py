@@ -6,6 +6,8 @@ from pytest import fixture
 
 from application.common.constants import (
     DOS_INTEGRATION_USER_NAME,
+    DOS_PALLIATIVE_CARE_SGSDID,
+    DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
 )
@@ -304,4 +306,42 @@ def test_log_service_updates_specified_opening_times_change(mock_service_update_
         action=EXAMPLE_ACTION,
         previous_value=changes_to_dos.current_specified_opening_times,
         new_value=changes_to_dos.new_specified_opening_times,
+    )
+
+
+@patch(f"{FILE_PATH}.ServiceUpdateLogger")
+def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock):
+    # Arrange
+    changes_to_dos = MagicMock()
+    service_histories = MagicMock()
+    time_stamp = "1661499176"
+    change_key = DOS_SGSDID_CHANGE_KEY
+    service_history = {
+        time_stamp: {
+            "new": {
+                change_key: {
+                    "changetype": DOS_SGSDID_CHANGE_KEY,
+                    "data": {"remove": [DOS_PALLIATIVE_CARE_SGSDID]},
+                    "area": "clinical",
+                    "previous": "",
+                },
+            }
+        }
+    }
+    service_histories.service_history.keys.return_value = [time_stamp]
+    service_histories.service_history.__getitem__.return_value.__getitem__.return_value = service_history[time_stamp][
+        "new"
+    ]
+    # Act
+    log_service_updates(changes_to_dos, service_histories)
+    # Assert
+    mock_service_update_logger.assert_called_once_with(
+        service_uid=str(changes_to_dos.dos_service.uid),
+        service_name=changes_to_dos.dos_service.name,
+        type_id=str(changes_to_dos.dos_service.typeid),
+        odscode=str(changes_to_dos.nhs_entity.odscode),
+    )
+
+    mock_service_update_logger.return_value.log_sgsdid_service_update.assert_called_once_with(
+        action="cmssgsdid", new_value=DOS_PALLIATIVE_CARE_SGSDID
     )

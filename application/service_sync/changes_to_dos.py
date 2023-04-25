@@ -24,10 +24,11 @@ class ChangesToDoS:
     dos_service: DoSService
     nhs_entity: NHSEntity
     service_histories: ServiceHistories
-    # Varible to know if fields need to be changed
+    # Variable to know if fields need to be changed
     demographic_changes: Dict[Optional[str], Any] = field(default_factory=dict)
     standard_opening_times_changes: Dict[Optional[int], Any] = field(default_factory=dict)
     specified_opening_times_changes: bool = False
+    palliative_care_changes: bool = False
 
     # New value to be saved to the database
     new_address: Optional[str] = None

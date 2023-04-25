@@ -5,10 +5,12 @@ from unittest.mock import MagicMock, patch
 from psycopg.rows import dict_row
 
 from application.common.constants import (
+    DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from application.service_sync.service_histories_change import ServiceHistoriesChange
 
 from ..service_histories import ServiceHistories
 
@@ -303,6 +305,25 @@ def test_service_histories_add_specified_opening_times_change_no_change(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
         previous_value=[],
         data={},
+    )
+
+
+def test_service_histories_add_sgsdid_change():
+    # Arrange
+    service_history = ServiceHistories(service_id=SERVICE_ID)
+    service_history.add_change = mock_add_change = MagicMock()
+    sgsdid = "123=456"
+    # Act
+    service_history.add_sgsdid_change(sgsdid, True)
+    # Assert
+    mock_add_change.assert_called_once_with(
+        dos_change_key=DOS_SGSDID_CHANGE_KEY,
+        change=ServiceHistoriesChange(
+            data={"add": ["123=456"]},
+            previous_value="",
+            change_key="cmssgsdid",
+            area="clinical",
+        ),
     )
 
 

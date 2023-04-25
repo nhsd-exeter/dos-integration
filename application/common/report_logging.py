@@ -228,6 +228,19 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
     )
 
 
+def log_palliative_care_z_code_does_not_exist(symptom_group_symptom_discriminator_combo_rowcount: int) -> None:
+    logger.warning(
+        "Palliative care Z code does not exist in the DoS database",
+        extra={
+            "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
+            "error_reason": "Palliative care Z code does not exist",
+            "error_info": (
+                f"symptom_group_symptom_discriminator={bool(symptom_group_symptom_discriminator_combo_rowcount)}"
+            ),
+        },
+    )
+
+
 def log_service_updated(
     action: str,
     data_field_modified: str,
@@ -288,6 +301,7 @@ def log_unexpected_pharmacy_profiling(matching_services: List[DoSService], reaso
                 "dos_service_name": service.name,
                 "dos_service_address": service.address,
                 "dos_service_postcode": service.postcode,
+                "dos_service_type_id": service.typeid,
                 "reason": reason,
             },
         )

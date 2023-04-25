@@ -1,5 +1,5 @@
 data "aws_iam_role" "pipeline_role" {
-  name = "UECPUPipelineRole"
+  name = "UECDoSINTPipelineRole"
 }
 
 data "aws_sns_topic" "development_pipeline_topic" {

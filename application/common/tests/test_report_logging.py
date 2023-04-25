@@ -13,6 +13,7 @@ from ..report_logging import (
     log_invalid_nhsuk_postcode,
     log_invalid_open_times,
     log_palliative_care_not_equal,
+    log_palliative_care_z_code_does_not_exist,
     log_service_updated,
     log_service_with_generic_bank_holiday,
     log_unexpected_pharmacy_profiling,
@@ -325,6 +326,30 @@ def test_log_website_is_invalid(mock_logger: MagicMock):
 
 
 @patch.object(Logger, "warning")
+def test_log_palliative_care_z_code_does_not_exist(mock_logger: MagicMock):
+    # Arrange
+    symptom_group_symptom_discriminator_combo_rowcount = 1
+    # Act
+    log_palliative_care_z_code_does_not_exist(
+        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount
+    )
+    # Assert
+    assert (
+        UNMATCHED_SERVICE_TYPE_REPORT_ID == "UNMATCHED_SERVICE_TYPE"
+    ), f"Log ID should be UNMATCHED_SERVICE_TYPE but was {UNMATCHED_SERVICE_TYPE_REPORT_ID}"
+    mock_logger.assert_called_with(
+        "Palliative care Z code does not exist in the DoS database",
+        extra={
+            "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
+            "error_reason": "Palliative care Z code does not exist",
+            "error_info": (
+                f"symptom_group_symptom_discriminator={bool(symptom_group_symptom_discriminator_combo_rowcount)}"
+            ),
+        },
+    )
+
+
+@patch.object(Logger, "warning")
 def test_log_service_updated(mock_logger: MagicMock):
     # Arrange
     action = "action"
@@ -416,6 +441,7 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
             "dos_service_name": dos_service.name,
             "dos_service_address": dos_service.address,
             "dos_service_postcode": dos_service.postcode,
+            "dos_service_type_id": dos_service.typeid,
             "reason": reason,
         },
     )

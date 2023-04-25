@@ -3,7 +3,7 @@ data "template_file" "perf_buildspec" {
 }
 
 data "aws_iam_role" "pipeline_role" {
-  name = "UECPUPipelineRole"
+  name = "UECDoSINTPipelineRole"
 }
 
 locals {

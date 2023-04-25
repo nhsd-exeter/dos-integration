@@ -440,7 +440,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        matching_services=[service, service], reason="Multiple 'Pharmacist' type services found (type 13)"
+        matching_services=[service, service], reason="Multiple 'Pharmacy' type services found (type 13)"
     )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
@@ -486,7 +486,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        matching_services=[service, service], reason="No 'Pharmacist' type services found (type 13)"
+        matching_services=[service, service], reason="No 'Pharmacy' type services found (type 13)"
     )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:

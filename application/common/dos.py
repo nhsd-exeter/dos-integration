@@ -104,9 +104,9 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> List[DoSService
     else:
         conditions = "odscode = %(ODS)s"
         named_args = {"ODS": f"{odscode}%"}
-
-    sql_query = (  # nosec - Safe as conditional is configurable but variables is inputed to psycopg as variables
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+    # Safe as conditional is configurable but variables is inputed to psycopg as variables
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # nosec B608
         "statusid, publicphone, publicname, st.name servicename"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
         f" WHERE {conditions}"
@@ -131,7 +131,11 @@ def get_dos_locations(postcode: Union[str, None] = None, try_cache: bool = True)
     # Search for any variation of whitespace in postcode
     postcode_variations = [norm_pc] + [f"{norm_pc[:i]} {norm_pc[i:]}" for i in range(1, len(norm_pc))]
     db_column_names = [f.name for f in fields(DoSLocation)]
-    sql_command = f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode = ANY(%(pc_variations)s)"
+    sql_command = (
+        f"SELECT {', '.join(db_column_names)} FROM locations WHERE postcode = ANY(%(pc_variations)s)"  # nosec B608
+        # Safe as conditional is configurable but variables is inputted to psycopg as variables
+    )
+
     with connect_to_dos_db_replica() as connection:
         cursor = query_dos_db(connection=connection, query=sql_command, vars={"pc_variations": postcode_variations})
         dos_locations = [DoSLocation(**row) for row in cursor.fetchall()]
@@ -171,8 +175,8 @@ def get_valid_dos_location(postcode: str) -> Optional[DoSLocation]:
 def get_services_from_db(typeids: Iterable) -> List[DoSService]:
     """VUNERABLE TO SQL INJECTION: DO NOT USE IN LAMBDA"""
     # Find base services
-    sql_query = (  # nosec - Not for use within lambda
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "
+    sql_query = (
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "  # nosec B608 - Not for use within lambda
         "statusid, publicphone, publicname, st.name servicename "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
         f"WHERE typeid IN ({','.join(map(str, typeids))}) "
@@ -185,8 +189,8 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         service_id_strings = set(str(s.id) for s in services)
 
         # Collect and apply all std open times to services
-        sql_query = (  # nosec - Not for use within lambda
-            "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
+        sql_query = (
+            "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "  # nosec - Not used within lambda
             "FROM servicedayopenings sdo "
             "INNER JOIN servicedayopeningtimes sdot "
             "ON sdo.id = sdot.servicedayopeningid "
@@ -201,8 +205,9 @@ def get_services_from_db(typeids: Iterable) -> List[DoSService]:
         cursor.close()
 
         # Collect and apply all spec open times to services
-        sql_query = (  # nosec - Not for use within lambda
-            "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
+        # Not used within lambda
+        sql_query = (
+            "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "  # nosec
             "FROM servicespecifiedopeningdates ssod "
             "INNER JOIN servicespecifiedopeningtimes ssot "
             "ON ssod.id = ssot.servicespecifiedopeningdateid "

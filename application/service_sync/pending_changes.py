@@ -144,8 +144,10 @@ def reject_pending_changes(connection: Connection, pending_changes: List[Pending
         if len(pending_changes) == 1
         else f"""id in ({",".join(f"'{change.id}'" for change in pending_changes)})"""
     )
-    sql_query = (  # nosec - SQL Injection is prevented by the query only using data from DoS DB
-        "UPDATE changes SET approvestatus='REJECTED',modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s"
+    # SQL Injection is prevented by the query only using data from DoS DB
+    sql_query = (
+        "UPDATE changes SET approvestatus='REJECTED', "  # nosec B608
+        "modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s"
         f""" WHERE {conditions}"""
     )
     query_vars = {

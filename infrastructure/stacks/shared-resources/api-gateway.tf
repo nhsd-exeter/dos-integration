@@ -170,3 +170,22 @@ resource "aws_api_gateway_usage_plan_key" "di_endpoint_api_key_on_usage_plan" {
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.di_endpoint_usage_plan.id
 }
+
+resource "aws_api_gateway_model" "default_model" {
+  rest_api_id  = aws_api_gateway_rest_api.di_endpoint.id
+  name         = "Default"
+  description  = "Default model for the API Gateway responses"
+  content_type = "application/json"
+
+  schema = <<EOF
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "type" : "object",
+  "title" : "Default",
+  "description" : "Default model for the API Gateway responses",
+  "properties" : {
+    "message" : { "type" : "string" }
+  }
+}
+EOF
+}
