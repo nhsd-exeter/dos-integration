@@ -292,7 +292,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         )
     else:
         logger.info(
-            "Not suitable for palliative care comparison",
+            "No change / Not suitable for palliative care comparison",
             extra={
                 "nhs_uk_palliative_care": get_palliative_care_log_value(
                     changes_to_dos.nhs_entity.palliative_care, skip_palliative_care_check
