@@ -102,10 +102,11 @@ def add_metric(metric_name: str, metrics) -> None:  # type: ignore
     """Adds a metric to the custom metrics collection
 
     Args:
-        metric_name (str): Name of the metric to be added to cloudwatch
-        metrics (_type_): Metrics class
+        metric_name (str): Name of the metric to be added to CloudWatch
+        metrics (Class): Metrics class
     """
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
+    metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.put_metric(metric_name, 1, "Count")
     metrics.set_dimensions({"ENV": environ["ENV"]})
