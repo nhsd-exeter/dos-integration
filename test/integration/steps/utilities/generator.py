@@ -1,10 +1,10 @@
 from ast import literal_eval
+from datetime import datetime
 from json import loads
 from os import getenv
 from random import randrange
-from typing import Any, Dict
-from datetime import datetime
 from re import fullmatch
+from typing import Any
 
 from boto3 import client
 
@@ -78,11 +78,10 @@ def add_single_opening_day(context):
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0]["id"]
     add_single_opening_time(context, time_id)
-    # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
     if "standard_openings" not in context.generator_data.keys():
         context.generator_data["standard_openings"] = []
     context.generator_data["standard_openings"].append(
-        {"day": "Monday", "open": True, "opening_time": "09:00", "closing_time": "17:00"}
+        {"day": "Monday", "open": True, "opening_time": "09:00", "closing_time": "17:00"},
     )
 
 
@@ -103,7 +102,7 @@ def add_single_opening_time(context, time_id):
             "OpeningTime": "09:00",
             "OpeningTimeType": "General",
             "Weekday": "Monday",
-        }
+        },
     )
 
 
@@ -121,7 +120,7 @@ def add_single_specified_day(context):
     if "specified_openings" not in context.generator_data.keys():
         context.generator_data["specified_openings"] = []
     context.generator_data["specified_openings"].append(
-        {"date": "Jan 02 2025", "open": True, "opening_time": "09:00", "closing_time": "17:00"}
+        {"date": "Jan 02 2025", "open": True, "opening_time": "09:00", "closing_time": "17:00"},
     )
 
 
@@ -143,12 +142,12 @@ def add_single_specified_time(context, time_id):
             "OpeningTime": "09:00",
             "OpeningTimeType": "Additional",
             "Weekday": "",
-        }
+        },
     )
 
 
 # Standard opening days with specified times to DOS
-def add_standard_openings_to_dos(context: Dict) -> Any:
+def add_standard_openings_to_dos(context: dict) -> Any:
     for day in context.generator_data["standard_openings"]:
         query = (
             "INSERT INTO pathwaysdos.servicedayopenings(serviceid, dayid) VALUES "
@@ -175,8 +174,7 @@ def add_standard_openings_to_dos(context: Dict) -> Any:
 
 
 # Specified opening days with specified times to DOS
-def add_specified_openings_to_dos(context: Dict) -> Any:
-    # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
+def add_specified_openings_to_dos(context: dict) -> Any:
     for day in context.generator_data["specified_openings"]:
         date = datetime.strptime(day["date"], "%b %d %Y").strftime("%Y-%m-%d")
         query = (
@@ -204,7 +202,8 @@ def add_specified_openings_to_dos(context: Dict) -> Any:
             f"'{opening_time}', '{closing_time}', {closed_status}, {int(day_id)}) RETURNING id"
         )
         if "'', '', false" in query:
-            raise ValueError("Query has inserted null times into open specified date")
+            msg = "Query has inserted null times into open specified date"
+            raise ValueError(msg)
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         invoke_dos_db_handler_lambda(lambda_payload)
     # TO DO
@@ -258,7 +257,7 @@ def build_change_event_contacts(context) -> list:
                 "ContactAvailabilityType": "Office hours",
                 "ContactMethodType": "Telephone",
                 "ContactValue": context.generator_data["publicphone"],
-            }
+            },
         )
     if context.generator_data["web"] is not None:
         contacts.append(
@@ -267,14 +266,14 @@ def build_change_event_contacts(context) -> list:
                 "ContactAvailabilityType": "Office hours",
                 "ContactMethodType": "Website",
                 "ContactValue": context.generator_data["web"],
-            }
+            },
         )
     return contacts
 
 
 def build_change_event_opening_times(context) -> list:
     opening_times = []
-    if "standard_openings" in context.generator_data.keys():
+    if "standard_openings" in context.generator_data:
         for days in context.generator_data["standard_openings"]:
             opening_times.append(
                 {
@@ -286,9 +285,9 @@ def build_change_event_opening_times(context) -> list:
                     "OpeningTime": days["opening_time"],
                     "OpeningTimeType": "General",
                     "Weekday": days["day"],
-                }
+                },
             )
-    if "specified_openings" in context.generator_data.keys():
+    if "specified_openings" in context.generator_data:
         present = datetime.now()
         for days in context.generator_data["specified_openings"]:
             if datetime.strptime(days["date"], "%b %d %Y").date() > present.date():
@@ -302,12 +301,12 @@ def build_change_event_opening_times(context) -> list:
                         "OpeningTime": days["opening_time"],
                         "OpeningTimeType": "Additional",
                         "Weekday": "",
-                    }
+                    },
                 )
     return opening_times
 
 
-def return_opening_time_dict() -> Dict:
+def return_opening_time_dict() -> dict:
     return {
         "Weekday": "",
         "OpeningTime": "",
@@ -331,7 +330,6 @@ def generate_unique_key(start_number: int = 1, stop_number: int = 1000) -> str:
 
 
 def query_standard_opening_builder(context, service_status, day, open="09:00", close="17:00") -> dict:
-    # specified_openings: [{date: "25 Dec 2025", open: True, opening_time: "09:00", closing_time: "17:00"}]
     times_obj = {}
     if service_status.lower() == "open":
         times_obj["day"] = day.lower()
@@ -348,9 +346,8 @@ def query_standard_opening_builder(context, service_status, day, open="09:00", c
     else:
         # Make sure that a closed statement removes opening statements
         for days in context.generator_data["standard_openings"]:
-            if days["day"].lower() == day.lower():
-                if times_obj["open"] != days["open"]:
-                    context.generator_data["standard_openings"].remove(days)
+            if days["day"].lower() == day.lower() and times_obj["open"] != days["open"]:
+                context.generator_data["standard_openings"].remove(days)
     context.generator_data["standard_openings"].append(times_obj)
     return context
 
@@ -379,7 +376,8 @@ def query_specified_opening_builder(context, service_status, date, open="09:00",
 
 def valid_change_event(context) -> bool:
     """This function checks if the data stored in DoS would pass the change request
-    validation within DoS API Gateway"""
+    validation within DoS API Gateway.
+    """
     if context.website is not None and not fullmatch(
         r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
         context.website,
@@ -392,7 +390,8 @@ def valid_change_event(context) -> bool:
 
 def create_palliative_care_entry_dos(context) -> int:
     """This function creates an entry in DOS DB that will flag the service as having a
-    palliative care service within it"""
+    palliative care service within it.
+    """
     srv = context.service_id
     query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
@@ -401,7 +400,7 @@ def create_palliative_care_entry_dos(context) -> int:
 
 
 def create_palliative_care_entry_ce(context) -> None:
-    """This function creates an entry in the Change Event containing a palliative care service"""
+    """This function creates an entry in the Change Event containing a palliative care service."""
     context.change_event["UecServices"] = [
         {
             "ServiceName": "Pharmacy palliative care medication stockholder",
@@ -411,24 +410,25 @@ def create_palliative_care_entry_ce(context) -> None:
             "Treatments": [],
             "OpeningTimes": [],
             "AgeRange": [],
-        }
+        },
     ]
 
 
 def set_up_palliative_care_in_db() -> None:
     """This function sets up the palliative care symptom discriminator
-    in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table"""
+    in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
+    """
     invoke_dos_db_handler_lambda(
         {
             "type": "insert",
             "query": "INSERT INTO pathwaysdos.symptomdiscriminators (id, description) VALUES (14167, 'Pharmacy Palliative Care Medication Stockholder') ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
             "query_vars": None,
-        }
+        },
     )
     invoke_dos_db_handler_lambda(
         {
             "type": "insert",
             "query": "INSERT INTO pathwaysdos.symptomgroupsymptomdiscriminators (id, symptomgroupid, symptomdiscriminatorid) VALUES (10000, 360, 14167) ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
             "query_vars": None,
-        }
+        },
     )

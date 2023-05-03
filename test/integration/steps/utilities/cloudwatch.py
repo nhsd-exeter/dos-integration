@@ -10,7 +10,7 @@ LAMBDA_CLIENT_LOGS = client("logs")
 
 
 def get_logs(
-    query: str, lambda_name: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20
+    query: str, lambda_name: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20,
 ) -> str:
     log_group_name = get_log_group_name(lambda_name)
     logs_found = False
@@ -31,7 +31,8 @@ def get_logs(
         if response["results"] != []:
             logs_found = True
         elif counter == retry_count:
-            raise ValueError("Log search retries exceeded.. no logs found")
+            msg = "Log search retries exceeded.. no logs found"
+            raise ValueError(msg)
     return dumps(response, indent=2)
 
 
@@ -51,7 +52,8 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
     if response["results"] == []:
         return True
     else:
-        raise ValueError("Matching logs have been found")
+        msg = "Matching logs have been found"
+        raise ValueError(msg)
 
 
 def get_log_group_name(lambda_name: str) -> str:

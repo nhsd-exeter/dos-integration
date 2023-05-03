@@ -6,12 +6,12 @@ from os import getenv, remove
 from random import randint, randrange
 from re import sub
 from time import sleep, time, time_ns
-from typing import Any, Dict, Tuple
+from typing import Any
 
 from boto3 import client, resource
 from boto3.dynamodb.types import TypeDeserializer
 from pytz import UTC
-from requests import get, post, Response
+from requests import Response, get, post
 
 from .context import Context
 from .secrets_manager import get_secret
@@ -43,7 +43,8 @@ def process_payload(context, valid_api_key: bool, correlation_id: str) -> Respon
     payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if valid_api_key and output.status_code != 200:
-        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
+        msg = f"Unable to process change request payload. Error: {output.text}"
+        raise ValueError(msg)
     return output
 
 
@@ -59,7 +60,8 @@ def process_payload_with_sequence(context, correlation_id: str, sequence_id: Any
     payload = context.change_event
     output = post(url=URL, headers=headers, data=dumps(payload))
     if output.status_code != 200 and isinstance(sequence_id, int):
-        raise ValueError(f"Unable to process change request payload. Error: {output.text}")
+        msg = f"Unable to process change request payload. Error: {output.text}"
+        raise ValueError(msg)
     return output
 
 
@@ -81,7 +83,8 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
         ScanIndexForward=False,
     )
     if len(resp["Items"]) == 0:
-        raise ValueError(f"No event found in dynamodb for ODSCode {odscode} and SequenceNumber {sequence_number}")
+        msg = f"No event found in dynamodb for ODSCode {odscode} and SequenceNumber {sequence_number}"
+        raise ValueError(msg)
     item = resp["Items"][0]
     deserializer = TypeDeserializer()
     deserialized = {k: deserializer.deserialize(v) for k, v in item.items()}
@@ -89,7 +92,7 @@ def get_stored_events_from_dynamo_db(odscode: str, sequence_number: Decimal) -> 
 
 
 def get_latest_sequence_id_for_a_given_odscode(odscode: str) -> int:
-    """Get latest sequence id for a given odscode from dynamodb"""
+    """Get latest sequence id for a given odscode from dynamodb."""
     try:
         resp = DYNAMO_CLIENT.query(
             TableName=DYNAMO_DB_TABLE,
@@ -119,7 +122,7 @@ def generate_random_int(start_number: int = 1, stop_number: int = 1000) -> str:
     return str(randrange(start=start_number, stop=stop_number, step=1))
 
 
-def get_single_service_pharmacy_odscode() -> Dict:
+def get_single_service_pharmacy_odscode() -> dict:
     query = (
         "SELECT LEFT(odscode,5) FROM services WHERE typeid = 13 AND LENGTH(odscode) > 4 "
         "AND statusid = 1 AND odscode IS NOT NULL AND RIGHT(address, 1) != '$' "
@@ -162,7 +165,8 @@ def get_service_id(odscode: str) -> str:
             break
         sleep(30)
     else:
-        raise ValueError("Error!.. Service Id not found")
+        msg = "Error!.. Service Id not found"
+        raise ValueError(msg)
     return data[0]["id"]
 
 
@@ -240,9 +244,11 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
             return response_payload
 
         if retries > 6:
-            raise ValueError(f"Unable to run test db checker lambda successfully after {retries} retries")
+            msg = f"Unable to run test db checker lambda successfully after {retries} retries"
+            raise ValueError(msg)
         retries += 1
         sleep(10)
+    return None
 
 
 def get_service_table_field(service_id: str, field_name: str) -> Any:
@@ -255,7 +261,7 @@ def get_service_table_field(service_id: str, field_name: str) -> Any:
 
 
 def wait_for_service_update(service_id: str) -> Any:
-    """Wait for the service to be updated by checking modifiedtime"""
+    """Wait for the service to be updated by checking modifiedtime."""
     for _ in range(12):
         sleep(10)
         updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
@@ -266,11 +272,12 @@ def wait_for_service_update(service_id: str) -> Any:
         if updated_date_time > two_mins_ago:
             break
     else:
-        raise ValueError(f"Service not updated, service_id: {service_id}")
+        msg = f"Service not updated, service_id: {service_id}"
+        raise ValueError(msg)
 
 
 def get_expected_data(context: Context, changed_data_name: str) -> Any:
-    """Get the previous data from the context"""
+    """Get the previous data from the context."""
     match changed_data_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
             changed_data = context.phone
@@ -281,7 +288,8 @@ def get_expected_data(context: Context, changed_data_name: str) -> Any:
         case "postcode":
             changed_data = context.change_event["Postcode"]
         case _:
-            raise ValueError(f"Error!.. Input parameter '{changed_data_name}' not compatible")
+            msg = f"Error!.. Input parameter '{changed_data_name}' not compatible"
+            raise ValueError(msg)
     return changed_data
 
 
@@ -305,15 +313,16 @@ def get_address_string(context) -> str:
 
 
 def check_service_history(
-    service_id: str, plain_english_field_name: str, expected_data: Any, previous_data: Any
+    service_id: str, plain_english_field_name: str, expected_data: Any, previous_data: Any,
 ) -> None:
-    """Check the service history for the expected data and previous data is removed"""
+    """Check the service history for the expected data and previous data is removed."""
     service_history = get_service_history(service_id)
     first_key_in_service_history = list(service_history.keys())[0]
     changes = service_history[first_key_in_service_history]["new"]
     change_key = get_service_history_data_key(plain_english_field_name)
     if change_key not in changes:
-        raise ValueError(f"DoS Change key '{change_key}' not found in latest service history entry")
+        msg = f"DoS Change key '{change_key}' not found in latest service history entry"
+        raise ValueError(msg)
 
     assert (
         expected_data == changes[change_key]["data"]
@@ -330,7 +339,8 @@ def check_service_history(
                 changes[change_key]["previous"] is None
             ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
         else:
-            raise ValueError(f"Input parameter '{previous_data}' not compatible")
+            msg = f"Input parameter '{previous_data}' not compatible"
+            raise ValueError(msg)
 
 
 def service_history_negative_check(service_id: str):
@@ -366,26 +376,26 @@ def check_service_history_change_type(service_id: str, change_type: str, field_n
 
 
 def get_service_history_specified_opening_times(service_id: str) -> dict:
-    """This function grabs the latest cmsopentimespecified object for a service id and returns it"""
+    """This function grabs the latest cmsopentimespecified object for a service id and returns it."""
     service_history = get_service_history(service_id)
     specified_open_times = service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
     return specified_open_times
 
 
 def get_service_history_standard_opening_times(service_id: str):
-    """This function grabs the latest standard opening times changes from service history"""
+    """This function grabs the latest standard opening times changes from service history."""
     service_history = get_service_history(service_id)
     standard_opening_times_from_service_history = []
     for entry in service_history[list(service_history.keys())[0]]["new"]:
         if entry.endswith("day"):
             standard_opening_times_from_service_history.append(
-                {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
+                {entry: service_history[list(service_history.keys())[0]]["new"][entry]},
             )
     return standard_opening_times_from_service_history
 
 
 def convert_specified_opening(specified_date, closed_status=False) -> str:
-    """Converts opening times from CE format to DOS format
+    """Converts opening times from CE format to DOS format.
 
     Args:
         specified_date (dict): Specified opening dates from change event
@@ -423,7 +433,7 @@ def convert_standard_opening(standard_times) -> list[dict]:
     Args:
         standard_times (Dict): Standard Opening times pulled from Change Event
     Returns:
-        return_list (List): List of Dicts containing name of the day in cms format and times in seconds
+        return_list (List): List of Dicts containing name of the day in cms format and times in seconds.
     """
     return_list = []
     for entry in standard_times:
@@ -438,14 +448,15 @@ def convert_standard_opening(standard_times) -> list[dict]:
 
 
 def assert_standard_openings(change_type, dos_times, ce_times, strict=False) -> int:
-    """Function to assert standard opening times changes. Added to remove complexity for sonar
+    """Function to assert standard opening times changes. Added to remove complexity for sonar.
 
     Args:
         changetype (Str): The type of change being asserted
         dos_times (Dict): The times pulled from DOS
         ce_times (Dict): The times pulled from the change event to compare too
     Returns:
-        counter (Int): The amount of assertions made"""
+    counter (Int): The amount of assertions made
+    """
     counter = 0
     valid_change_types = ["add", "modify"]
     for entry in dos_times:
@@ -488,13 +499,10 @@ def time_to_seconds(time: str):
 
 
 def check_recent_event(event_time: str, time_difference=600) -> bool:
-    if int(time() - int(event_time)) <= int(time_difference):
-        return True
-    else:
-        return False
+    return int(time() - int(event_time)) <= int(time_difference)
 
 
-def get_service_history(service_id: str) -> Dict[str, Any]:
+def get_service_history(service_id: str) -> dict[str, Any]:
     data = []
     retrycounter = 0
     while data == [] and retrycounter < 2:
@@ -540,10 +548,11 @@ def slack_retry(message: str) -> str:
         response_value = check_slack(slack_channel, slack_oauth)
         if message in response_value:
             return response_value
-    raise ValueError(f"Slack alert message not found, message: {message}")
+    msg = f"Slack alert message not found, message: {message}"
+    raise ValueError(msg)
 
 
-def slack_secrets() -> Tuple[str, str]:
+def slack_secrets() -> tuple[str, str]:
     slack_secrets = loads(get_secret("uec-dos-int-dev/deployment"))
     return slack_secrets["SLACK_CHANNEL"], slack_secrets["SLACK_OAUTH"]
 
@@ -576,7 +585,8 @@ def get_sqs_queue_name(queue_type: str) -> str:
                 QueueName=f"uec-dos-int-{blue_green_environment}-update-request-queue.fifo",
             )
         case _:
-            raise ValueError("Invalid SQS queue type specified")
+            msg = "Invalid SQS queue type specified"
+            raise ValueError(msg)
 
     return response["QueueUrl"]
 
@@ -657,6 +667,6 @@ def get_s3_email_file(context: Context) -> dict:
     object_key = response["Contents"][-1]["Key"]
     S3_RESOURCE = resource("s3")
     S3_RESOURCE.meta.client.download_file(bucket_name, object_key, "email_file.json")
-    context.other = load(open("email_file.json", "r"))
+    context.other = load(open("email_file.json"))
     remove("email_file.json")
     return context

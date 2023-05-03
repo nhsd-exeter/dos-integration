@@ -3,13 +3,13 @@ from json import load, loads
 from os import getenv
 from random import choice
 from time import time_ns
-from typing import Any, Optional, Tuple
+from typing import Any
 
 from aws import get_secret
 
 
 def setup_change_event_request() -> dict[str, Any]:
-    """Setup the request headers and json payload for the change event endpoint"""
+    """Setup the request headers and json payload for the change event endpoint."""
     payload = load(open("resources/change_event.json", "r+"))
     payload = make_change_event_unique(payload)
     return payload
@@ -31,18 +31,18 @@ def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 class OdsCodes:
-    invalid_ods_codes: Optional[list[list[str]]] = None
-    valid_ods_codes: Optional[list[list[str]]] = None
+    invalid_ods_codes: list[list[str]] | None = None
+    valid_ods_codes: list[list[str]] | None = None
 
     def get_ods_codes_from_file(self, ods_code_file: str) -> list[list[str]]:
-        file = open(f"resources/{ods_code_file}", "r")
+        file = open(f"resources/{ods_code_file}")
         csv_reader = reader(file)
         return list(csv_reader)
 
     def generic_get_ods_code(
-        self, ods_code_file_name: str, odscode_list: Optional[list[list[str]]]
-    ) -> Tuple[str, list[list[str]]]:
-        """Get a random ods code from list or file if list is empty
+        self, ods_code_file_name: str, odscode_list: list[list[str]] | None,
+    ) -> tuple[str, list[list[str]]]:
+        """Get a random ods code from list or file if list is empty.
 
         Args:
             ods_code_file_name (str): The name of the file to get the ods codes from if the list is empty
@@ -75,7 +75,7 @@ def send_valid_change_event(change_event_class):
     change_event_class.headers = setup_headers()
     change_event_class.headers["x-api-key"] = change_event_class.api_key
     change_event_class.client.post(
-        "", headers=change_event_class.headers, json=change_event_class.payload, name="AllChangesChangeEvent"
+        "", headers=change_event_class.headers, json=change_event_class.payload, name="AllChangesChangeEvent",
     )
     return change_event_class
 
@@ -86,6 +86,6 @@ def send_invalid_change_event(change_event_class):
     change_event_class.headers = setup_headers()
     change_event_class.headers["x-api-key"] = change_event_class.api_key
     change_event_class.client.post(
-        "", headers=change_event_class.headers, json=change_event_class.payload, name="OdscodeDoesNotExistInDoS"
+        "", headers=change_event_class.headers, json=change_event_class.payload, name="OdscodeDoesNotExistInDoS",
     )
     return change_event_class

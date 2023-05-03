@@ -649,7 +649,7 @@ undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 # ==============================================================================
 # Ruff
 
-docker-run-ruff:
+docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 	make -s docker-run \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
-		CMD="ruff check ."
+		CMD="ruff check . $(RUFF_OPTS)"

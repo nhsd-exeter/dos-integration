@@ -9,8 +9,24 @@ from time import sleep
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
+
 from .utilities.cloudwatch import get_logs, negative_log_check
 from .utilities.context import Context
+from .utilities.generator import (
+    add_single_opening_day,
+    add_specified_openings_to_dos,
+    add_standard_openings_to_dos,
+    build_change_event,
+    build_change_event_contacts,
+    build_change_event_opening_times,
+    commit_new_service_to_dos,
+    create_palliative_care_entry_ce,
+    create_palliative_care_entry_dos,
+    generate_staff,
+    query_specified_opening_builder,
+    query_standard_opening_builder,
+    valid_change_event,
+)
 from .utilities.translation import get_service_table_field_name
 from .utilities.utils import (
     assert_standard_closing,
@@ -47,21 +63,6 @@ from .utilities.utils import (
     slack_retry,
     wait_for_service_update,
 )
-from .utilities.generator import (
-    add_single_opening_day,
-    add_specified_openings_to_dos,
-    add_standard_openings_to_dos,
-    build_change_event,
-    build_change_event_contacts,
-    build_change_event_opening_times,
-    commit_new_service_to_dos,
-    create_palliative_care_entry_ce,
-    create_palliative_care_entry_dos,
-    generate_staff,
-    query_specified_opening_builder,
-    query_standard_opening_builder,
-    valid_change_event,
-)
 
 scenarios(
     "../features/F001_Valid_Change_Events.feature",
@@ -93,7 +94,8 @@ def a_changed_contact_event_is_valid(contact: str, context: Context):
                 context.previous_value = get_address_string(context)
                 context.change_event["Address1"] = FAKER.street_name()
             case _:
-                raise ValueError(f"ERROR!.. Input parameter '{contact}' not compatible")
+                msg = f"ERROR!.. Input parameter '{contact}' not compatible"
+                raise ValueError(msg)
         validated = valid_change_event(context)
     return context
 
@@ -137,7 +139,7 @@ def create_multiple_basic_service_entry(context: Context, count):
     context = a_service_table_entry_is_created(context)
     context = service_table_entry_is_committed(context)
     ods_code = context.generator_data["odscode"]
-    for x in range(int(count) - 1):
+    for _x in range(int(count) - 1):
         context = a_service_table_entry_is_created(context, ods_code)
         context = service_table_entry_is_committed(context)
     return context
@@ -159,7 +161,8 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
 @given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
 def service_standard_opening_set(service_status: str, day: str, context: Context):
     if day.lower() not in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
-        raise ValueError("Selected day is not valid")
+        msg = "Selected day is not valid"
+        raise ValueError(msg)
     query_standard_opening_builder(context, service_status, day)
     return context
 
@@ -167,10 +170,10 @@ def service_standard_opening_set(service_status: str, day: str, context: Context
 @given(parse('the change event is "{service_status}" on "{day}"'), target_fixture="context")
 def change_event_standard_opening_set(service_status: str, day: str, context: Context):
     if day.lower() not in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
-        raise ValueError("Selected day is not valid")
+        msg = "Selected day is not valid"
+        raise ValueError(msg)
     query_standard_opening_builder(context, service_status, day)
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
-    # standard_openings: [{day: "Monday", open: True, opening_time: "09:00", closing_time: "17:00"}]
     return context
 
 
@@ -215,10 +218,10 @@ def service_table_entry_is_committed(context: Context):
     service_id = commit_new_service_to_dos(context)
     context.service_id = service_id
     ce_state = False
-    if "standard_openings" in context.generator_data.keys():
+    if "standard_openings" in context.generator_data:
         add_standard_openings_to_dos(context)
         ce_state = True
-    if "specified_openings" in context.generator_data.keys():
+    if "specified_openings" in context.generator_data:
         add_specified_openings_to_dos(context)
     if context.change_event is None:
         build_change_event(context)
@@ -273,7 +276,7 @@ def future_set_specified_opening_date(future_past: str, context: Context):
                 "OpeningTimeType": "Additional",
                 "AdditionalOpeningDate": f"Jan 10 {year}",
                 "IsOpen": True,
-            }
+            },
         )
     else:
         for days in context.change_event["OpeningTimes"]:
@@ -303,7 +306,8 @@ def changed_event_contact_removed(contact: str, context: Context):
             context.generator_data["publicphone"] = None
             context.change_event["Contacts"] = build_change_event_contacts(context)
         case _:
-            raise ValueError(f"Invalid contact '{contact}' provided")
+            msg = f"Invalid contact '{contact}' provided"
+            raise ValueError(msg)
     return context
 
 
@@ -363,7 +367,7 @@ def specified_opening_date_not_defined(context: Context):
             "OpeningTime": "09:00",
             "OpeningTimeType": "Additional",
             "Weekday": "",
-        }
+        },
     )
     return context
 
@@ -392,7 +396,8 @@ def post_an_sqs_message(queue_type: str, context: Context):
         case "update request failure":
             post_ur_fifo()
         case _:
-            raise ValueError(f"ERROR!.. queue type '{queue_type}' is not valid")
+            msg = f"ERROR!.. queue type '{queue_type}' is not valid"
+            raise ValueError(msg)
 
 
 @when(
@@ -444,10 +449,7 @@ def the_change_event_is_sent_with_duplicate_sequence(context: Context):
     context.correlation_id = generate_correlation_id()
     context.change_event["Address1"] = "New Test Address Value"
     seqid = 0
-    if context.sequence_number == 100:
-        seqid = 100
-    else:
-        seqid = get_latest_sequence_id_for_a_given_odscode(context.ods_code)
+    seqid = 100 if context.sequence_number == 100 else get_latest_sequence_id_for_a_given_odscode(context.ods_code)
     context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
     return context
@@ -479,7 +481,7 @@ def field_is_not_updated_in_dos(context: Context, plain_english_service_table_fi
 
 @then(parse('DoS has "{expected_data}" in the "{plain_english_service_table_field}" field'))
 def expected_data_is_within_dos(context: Context, expected_data: str, plain_english_service_table_field: str):
-    """Assert DoS demographics data is updated"""
+    """Assert DoS demographics data is updated."""
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
@@ -494,7 +496,7 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
 
 @then(parse('the "{plain_english_service_table_field}" is updated within the DoS DB'))
 def check_the_service_table_field_has_updated(context: Context, plain_english_service_table_field: str):
-    """TODO"""
+    """TODO."""
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
@@ -509,7 +511,7 @@ def check_the_service_table_field_has_updated(context: Context, plain_english_se
 
 @then(parse('the service history is updated with the "{plain_english_service_table_field}"'))
 def check_the_service_history_has_updated(context: Context, plain_english_service_table_field: str):
-    """TODO"""
+    """TODO."""
     expected_data = get_expected_data(context, plain_english_service_table_field)
     if context.previous_value in ["", "unknown"]:
         context.previous_value = "unknown"
@@ -532,7 +534,8 @@ def check_service_history_specified_times(context: Context, added_or_removed):
         case "closed":
             change_type = "add"
         case _:
-            raise ValueError("Invalid change type has been provided")
+            msg = "Invalid change type has been provided"
+            raise ValueError(msg)
     if change_type == "add":
         openingtimes = context.change_event["OpeningTimes"][-1]
     if change_type == "remove":
@@ -564,7 +567,8 @@ def check_service_history_standard_times(context: Context, added_or_removed):
     else:
         counter = assert_standard_closing(dos_times, expected_dates)
     if counter == 0:
-        raise ValueError("ERROR: No Assertions have been made")
+        msg = "ERROR: No Assertions have been made"
+        raise ValueError(msg)
     return context
 
 
@@ -747,7 +751,8 @@ def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day
         case "OPEN":
             assert opening_time_event[day] != [], f'ERROR!.. Pharmacy is OPEN but expected to be CLOSED for "{day}"'
         case _:
-            raise ValueError(f'Invalid status input parameter: "{open_or_closed}"')
+            msg = f'Invalid status input parameter: "{open_or_closed}"'
+            raise ValueError(msg)
     return context
 
 
