@@ -10,7 +10,11 @@ LAMBDA_CLIENT_LOGS = client("logs")
 
 
 def get_logs(
-    query: str, lambda_name: str, start_time: Timestamp, retry_count: int = 32, sleep_per_loop: int = 20,
+    query: str,
+    lambda_name: str,
+    start_time: Timestamp,
+    retry_count: int = 32,
+    sleep_per_loop: int = 20,
 ) -> str:
     log_group_name = get_log_group_name(lambda_name)
     logs_found = False

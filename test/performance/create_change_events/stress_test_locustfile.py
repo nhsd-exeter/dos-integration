@@ -12,11 +12,13 @@ class AllChangesChangeEvent(FastHttpUser):
     headers: dict[str, str] | None = None
     payload: dict[str, Any] | None = None
 
-    def on_start(self):
+    def on_start(self) -> None:
+        """Get the api key before starting the test."""
         self.api_key = get_api_key()
 
     @task
-    def change_event(self):
+    def change_event(self) -> None:
+        """Send a change event."""
         self = send_valid_change_event(self)
 
 
@@ -28,9 +30,11 @@ class OdscodeDoesNotExistInDoS(FastHttpUser):
     headers: dict[str, str] | None = None
     payload: dict[str, Any] | None = None
 
-    def on_start(self):
+    def on_start(self) -> None:
+        """Get the api key before starting the test."""
         self.api_key = get_api_key()
 
     @task
-    def change_event(self):
+    def change_event(self) -> None:
+        """Send a change event."""
         self = send_invalid_change_event(self)

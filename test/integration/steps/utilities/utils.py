@@ -313,7 +313,10 @@ def get_address_string(context) -> str:
 
 
 def check_service_history(
-    service_id: str, plain_english_field_name: str, expected_data: Any, previous_data: Any,
+    service_id: str,
+    plain_english_field_name: str,
+    expected_data: Any,
+    previous_data: Any,
 ) -> None:
     """Check the service history for the expected data and previous data is removed."""
     service_history = get_service_history(service_id)

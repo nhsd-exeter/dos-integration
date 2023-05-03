@@ -653,3 +653,6 @@ docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 	make -s docker-run \
 	IMAGE=$$(make _docker-get-reg)/tester:latest \
 		CMD="ruff check . $(RUFF_OPTS)"
+
+ruff-auto-fix: # Auto fixes ruff warnings
+	make docker-run-ruff RUFF_OPTS="--fix"
