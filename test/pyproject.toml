@@ -1,0 +1,18 @@
+[tool.ruff]
+extend = "../pyproject.toml"
+
+ignore = [
+  "D100", # Missing docstring in public module
+  "D104", # Missing docstring in public package
+  "PTH123", # Use `pathlib.Path` instead of `os.path`,
+]
+
+# Set python version to 3.11.
+target-version = "py311"
+
+[tool.ruff.per-file-ignores]
+"**test_*.py" = ["S101"] # Allow `assert` in tests.
+"integration**.py" = ["S101"] # Allow `assert` in tests.
+
+[tool.ruff.pydocstyle]
+convention = "google" # Use Google docstring convention.
