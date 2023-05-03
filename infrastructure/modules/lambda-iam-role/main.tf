@@ -31,7 +31,16 @@ resource "aws_iam_role_policy" "lambda_generic_policy" {
         "xray:PutTelemetryRecords"
       ],
       "Resource": ["*"]
+    },
+    {
+      "Effect" : "Allow",
+      "Action" : [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource" : "arn:aws:logs:*:*:log-group:/aws/lambda-insights:*"
     }
+
   ]
 }
 EOF
