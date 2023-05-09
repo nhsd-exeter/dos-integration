@@ -141,3 +141,31 @@ fields correlation_id
 | filter email_correlation_id == "ADD_EMAIL_CORRELATION_ID"
 EOF
 }
+
+resource "aws_cloudwatch_query_definition" "search_by_update_request_success" {
+  name = "${var.project_id}/${var.blue_green_environment}/update-request-success"
+
+  log_group_names = [
+    "/aws/lambda/${var.service_sync_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp, correlation_id
+| filter ServiceUpdateSuccess == 1
+| sort @timestamp
+EOF
+}
+
+resource "aws_cloudwatch_query_definition" "search_by_update_request_failed" {
+  name = "${var.project_id}/${var.blue_green_environment}/update-request-failed"
+
+  log_group_names = [
+    "/aws/lambda/${var.service_sync_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp, correlation_id
+| filter ServiceUpdateFailed == 1
+| sort @timestamp
+EOF
+}

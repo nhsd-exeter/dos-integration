@@ -99,5 +99,6 @@ def add_success_metric(event: UpdateRequestQueueItem, metrics) -> None:  # type:
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("level", "INFO")
     metrics.set_property("message", f"Recording change event latency of {diff}")
+    metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
     metrics.set_dimensions({"ENV": environ["ENV"]})
