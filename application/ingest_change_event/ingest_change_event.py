@@ -100,7 +100,6 @@ def add_change_event_received_metric(ods_code: str, metrics) -> None:  # type: i
         event (UpdateRequestQueueItem): Lambda function invocation event
     """
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
     metrics.set_property("message", f"Change Event Received for ODSCode: {ods_code}")
     metrics.put_metric("ChangeEventReceived", 1, "Count")
     metrics.set_dimensions({"ENV": environ["ENV"]})

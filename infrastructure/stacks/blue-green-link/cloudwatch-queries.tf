@@ -152,7 +152,7 @@ resource "aws_cloudwatch_query_definition" "search_by_update_request_success" {
   query_string = <<EOF
 fields @timestamp, correlation_id
 | filter ServiceUpdateSuccess == 1
-| sort @timestamp
+| sort @timestamp desc
 EOF
 }
 
@@ -166,6 +166,22 @@ resource "aws_cloudwatch_query_definition" "search_by_update_request_failed" {
   query_string = <<EOF
 fields @timestamp, correlation_id
 | filter ServiceUpdateFailed == 1
-| sort @timestamp
+| sort @timestamp desc
+EOF
+}
+
+resource "aws_cloudwatch_query_definition" "search_by_dos_data_item_updates" {
+  name = "${var.project_id}/${var.blue_green_environment}/dos-data-item-updates"
+
+  log_group_names = [
+    "/aws/lambda/${var.service_sync_lambda_name}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp, correlation_id
+| filter DoSUpdate == 1
+| filter ENV == '${var.blue_green_environment}'
+| filter field == 'REPLACE'
+| sort @timestamp desc
 EOF
 }
