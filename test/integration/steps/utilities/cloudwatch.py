@@ -5,6 +5,7 @@ from sqlite3 import Timestamp
 from time import sleep
 
 from boto3 import client
+from pytz import timezone
 
 LAMBDA_CLIENT_LOGS = client("logs")
 
@@ -16,14 +17,26 @@ def get_logs(
     retry_count: int = 32,
     sleep_per_loop: int = 20,
 ) -> str:
+    """Get logs from cloudwatch.
+
+    Args:
+        query (str): CloudWatch Logs Insights query
+        lambda_name (str): Lambda logs to search
+        start_time (Timestamp): Start time for the query
+        retry_count (int, optional): Retries for the query. Defaults to 32.
+        sleep_per_loop (int, optional): Sleep time between retries. Defaults to 20.
+
+    Returns:
+        str: CloudWatch Logs Insights query response
+    """
     log_group_name = get_log_group_name(lambda_name)
     logs_found = False
     counter = 0
-    while logs_found is False:
+    while not logs_found:
         start_query_response = LAMBDA_CLIENT_LOGS.start_query(
             logGroupName=log_group_name,
             startTime=int(start_time),
-            endTime=int(datetime.now().timestamp()),
+            endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
             queryString=query,
         )
         query_id = start_query_response["queryId"]
@@ -40,12 +53,22 @@ def get_logs(
     return dumps(response, indent=2)
 
 
-def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> str:
+def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> bool:
+    """Check logs don't exist.
+
+    Args:
+        query (str): CloudWatch Logs Insights query
+        event_lambda (str): Lambda logs to search
+        start_time (Timestamp): Start time for the query
+
+    Returns:
+        bool: True if no logs found
+    """
     log_group_name = get_log_group_name(event_lambda)
     start_query_response = LAMBDA_CLIENT_LOGS.start_query(
         logGroupName=log_group_name,
         startTime=int(start_time),
-        endTime=int(datetime.now().timestamp()),
+        endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
         queryString=query,
     )
 
@@ -55,10 +78,18 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
 
     if response["results"] == []:
         return True
-    else:
-        msg = "Matching logs have been found"
-        raise ValueError(msg)
+
+    msg = "Matching logs have been found"
+    raise ValueError(msg)
 
 
 def get_log_group_name(lambda_name: str) -> str:
+    """Get the log group name for a lambda.
+
+    Args:
+        lambda_name (str): Lambda name
+
+    Returns:
+        str: Log group name
+    """
     return f'/aws/lambda/uec-dos-int-{getenv("BLUE_GREEN_ENVIRONMENT")}-{lambda_name}'

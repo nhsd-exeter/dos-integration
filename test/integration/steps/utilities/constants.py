@@ -19,6 +19,8 @@ SERVICE_TYPES = {
 
 
 class ServiceTypeAliases:
+    """Service Type Aliases for DoS Service Type Codes."""
+
     DENTIST_TYPE_ALIAS = "DENTIST"
     PHARMACY_TYPE_ALIAS = "PHARMACY"
 
