@@ -50,6 +50,11 @@ variable "cloudwatch_monitoring_dashboard_name" {
   description = "Name of the dashboard to see the various performance metrics in AWS"
 }
 
+variable "cloudwatch_data_dashboard_name" {
+  type        = string
+  description = "Name of the dashboard to see the various data metrics in AWS"
+}
+
 variable "dos_db_name" {
   type        = string
   description = "Name of db dos instance to connect to"

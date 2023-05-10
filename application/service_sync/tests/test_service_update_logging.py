@@ -1,5 +1,6 @@
 from datetime import date, time
 from logging import INFO
+from os import environ
 from unittest.mock import MagicMock, patch
 
 from pytest import fixture
@@ -92,6 +93,7 @@ def test_service_update_logger_log_service_update(
     mock_log_service_update: MagicMock, service_update_logger: ServiceUpdateLogger
 ):
     # Arrange
+    environ["ENV"] = "UNKNOWN"
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     # Act
     service_update_logger.log_service_update(
@@ -118,6 +120,8 @@ def test_service_update_logger_log_service_update(
         f"correlationId=correlation_id|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
         extra={"environment": "UNKNOWN"},
     )
+    # Cleanup
+    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger.log_service_update")

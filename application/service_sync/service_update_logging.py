@@ -1,8 +1,9 @@
 from itertools import chain
 from logging import Formatter, INFO, Logger, StreamHandler
-from os import getenv
+from os import environ, getenv
 from typing import Any, Dict, List, Optional, Union
 
+from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
 from .changes_to_dos import ChangesToDoS
@@ -96,6 +97,7 @@ class ServiceUpdateLogger:
             service_uid=self.service_uid,
             type_id=self.type_id,
         )
+        add_service_updated_metric(data_field_modified=data_field_modified)  # type: ignore
 
         self.dos_logger.info(
             msg=(
@@ -266,3 +268,11 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 new_value=change_values["data"],
             )
         logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
+
+
+@metric_scope
+def add_service_updated_metric(data_field_modified: str, metrics: Any) -> None:
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.put_dimensions({"ENV": environ["ENV"], "field": data_field_modified})
+    metrics.put_metric("DoSUpdate", 1, "Count")
