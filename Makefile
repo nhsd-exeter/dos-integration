@@ -511,13 +511,12 @@ trigger-dos-deployment-pipeline:
 
 python-linting:
 	make python-code-check FILES=application
-	make python-code-check FILES=test
+	make docker-run-ruff
 
 python-code-checks:
 	make python-check-dead-code
 	make python-check-imports
 	make python-code-check FILES=application
-	make python-code-check FILES=test
 	make unit-test
 	echo "Python code checks completed"
 
@@ -646,3 +645,14 @@ deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 
 undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+
+# ==============================================================================
+# Ruff
+
+docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
+	make -s docker-run \
+	IMAGE=$$(make _docker-get-reg)/tester:latest \
+		CMD="ruff check . $(RUFF_OPTS)"
+
+ruff-auto-fix: # Auto fixes ruff warnings
+	make docker-run-ruff RUFF_OPTS="--fix"

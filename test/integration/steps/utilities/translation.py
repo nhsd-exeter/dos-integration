@@ -17,7 +17,7 @@ from .constants import (
 
 
 def get_service_table_field_name(plain_english_field_name: str) -> str:
-    """Convert a plain English field name to the name of the field in the services table"""
+    """Convert a plain English field name to the name of the field in the services table."""
     match plain_english_field_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
             field_name = DOS_PUBLIC_PHONE_FIELD_NAME
@@ -38,12 +38,13 @@ def get_service_table_field_name(plain_english_field_name: str) -> str:
         case "longitude":
             field_name = DOS_TOWN_LONGITUDE_NAME
         case _:
-            raise ValueError(f"Error!.. Input parameter '{plain_english_field_name}' not compatible")
+            msg = f"Error!.. Input parameter '{plain_english_field_name}' not compatible"
+            raise ValueError(msg)
     return field_name
 
 
 def get_service_history_data_key(plain_english_field_name: str) -> str:
-    """Convert a plain English field name to the name of the field in the services table"""
+    """Convert a plain English field name to the name of the field in the services table."""
     match plain_english_field_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
             field_name = DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY
@@ -56,5 +57,6 @@ def get_service_history_data_key(plain_english_field_name: str) -> str:
         case "zcode" | "z-code" | "z code":
             field_name = DOS_ZCODE_SERVICE_HISTORY_KEY
         case _:
-            raise ValueError(f"Error!.. Input parameter '{plain_english_field_name}' not compatible")
+            msg = f"Error!.. Input parameter '{plain_english_field_name}' not compatible"
+            raise ValueError(msg)
     return field_name

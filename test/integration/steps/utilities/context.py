@@ -5,6 +5,8 @@ from requests import Response
 
 @dataclass(init=True)
 class Context:
+    """Test context object for storing data between steps."""
+
     change_event: dict | None = None
     service_id: str | None = None
     service_uid: str | None = None
@@ -21,6 +23,11 @@ class Context:
     # Other used as a catch all for any other data that is not covered by the above and only used in a couple tests
 
     def __repr__(self) -> str:
+        """Return a string representation of the object.
+
+        Returns:
+            str: String representation of the object.
+        """
         return (
             f"Context(correlation_id={self.correlation_id}, sequence_number={self.sequence_number}"
             f", service_id={self.service_id}, previous_value={self.previous_value}, change_event={self.change_event}"
