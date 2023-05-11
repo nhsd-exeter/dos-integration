@@ -91,12 +91,12 @@ def a_changed_contact_event_is_valid(contact: str, context: Context) -> Context:
     while not validated:
         match contact.lower():
             case "website":
-                context.previous_value = context.website
+                context.previous_value = context.change_event["Contacts"][1]["ContactValue"]
                 context.website = f"{FAKER.domain_word()}.nhs.uk"
                 context.generator_data["web"] = context.website
                 context.change_event["Contacts"] = build_change_event_contacts(context)
             case "phone_no":
-                context.previous_value = context.phone
+                context.previous_value = context.change_event["Contacts"][0]["ContactValue"]
                 context.phone = FAKER.phone_number()
                 context.generator_data["publicphone"] = context.phone
                 context.change_event["Contacts"] = build_change_event_contacts(context)

@@ -467,10 +467,9 @@ def check_service_history(
     # WTF is this? Why is this here? Why is this not a simple assert?
     if "previous" in changes[change_key] and previous_data != "unknown":
         if previous_data != "":  # noqa: PLC1901
-            (
-                changes[change_key]["previous"] == str(previous_data),
-                f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}",
-            )
+            assert changes[change_key]["previous"] == str(
+                previous_data,
+            ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
         elif previous_data == "":  # noqa: PLC1901
             assert (
                 changes[change_key]["previous"] is None
