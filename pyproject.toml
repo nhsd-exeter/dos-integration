@@ -1,11 +1,12 @@
 [tool.ruff]
-select = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+select = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TID", "TRY", "UP", "YTT"]
 ignore = [
   "D100", # Missing docstring in public module
   "D104", # Missing docstring in public package
   "PTH123", # Use `pathlib.Path` instead of `os.path`
   "G004", # Logging statement uses f-string
-  "ANN101", # Missing type annotation for self in method
+  "ANN101", # Missing type annotation for self in method,
+  "DTZ007", # Allow Datetime used as timezone in tests.
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
@@ -34,8 +35,11 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
-    "application", # Ignore application folder temporarily.
-    "scripts" # Ignore scripts folder temporarily.
+    "scripts", # Ignore scripts folder
+    "application/orchestrator",  # Ignore orchestrator folder as it will be removed soon.
+    "application/service_sync/changes_to_dos.py",
+    "application/service_sync/compare_data.py",
+    "application/service_sync/dos_data.py",
 ]
 
 # Same as Black.
@@ -48,11 +52,25 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 target-version = "py310"
 
 [tool.ruff.per-file-ignores]
-"**test_*.py" = [
+"application/**test_*.py" = [
   "S101", # Allow `assert` in tests.
   "S105",# Allow fake secrets in tests.
   "SLF001", # Allow `_function` in tests.
   "PLR0913", # Allow many arrguments in tests.
+  "ANN001", # Allow missing type annotation in tests.
+  "ARG001", # Allow missing type annotation in tests.
+  "ANN201", # Allow missing type annotation in tests.
+  "D101", # Allow Missing docstring in public class
+  "D103", # Allow missing docstring in tests.
+  "S311", # Allow Standard pseudo-random generators are not suitable for cryptographic purposes in tests.
+  "PLR2004" , # Allow Magic value used in comparison, consider replacing 20 with a constant variable in tests.
+  "S608", # Allow Possible SQL injection vector through string concatenation in tests.
+  "DTZ001", # The use of `datetime.datetime.now()` without `tz` argument is not allowed in tests.
+  "DTZ005", # The use of `datetime.datetime.now()` without `tz` argument is not allowed in tests.
+
+  ]
+"application/**conftest.py" = [
+  "S311", # Allow Standard pseudo-random generators are not suitable for cryptographic purposes in tests.
 ]
 
 [tool.ruff.pydocstyle]

@@ -126,15 +126,15 @@ def a_service_table_entry_is_created(context: Context, ods_code: int = 0, servic
         ods_code = str(randint(10000, 99999))
     query_values = {
         "id": str(randint(100000, 999999)),
-        "uid": f"test{str(randint(10000,99999))}",
+        "uid": f"test{randint(10000, 99999)!s}",
         "service_type": service_type,
         "service_status": 1,
-        "name": f"Test Pharmacy {str(randint(100,999))}",
+        "name": f"Test Pharmacy {randint(100, 999)!s}",
         "odscode": ods_code,
-        "address": f"{str(randint(100,999))} Test Address",
+        "address": f"{randint(100, 999)!s} Test Address",
         "town": "Nottingham",
         "postcode": "NG11GS",
-        "publicphone": f"{str(randint(10000000000, 99999999999))}",
+        "publicphone": f"{randint(10000000000, 99999999999)!s}",
         "web": "www.google.com",
     }
     context.generator_data = query_values

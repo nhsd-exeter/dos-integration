@@ -1,7 +1,7 @@
 from json import dumps
 from os import environ, getenv
 from time import gmtime, sleep, strftime, time
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
@@ -23,8 +23,8 @@ lambda_client = client("lambda")
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(clear_state=True)
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
-    """Entrypoint handler for the orchestrator lambda
+def lambda_handler(event: dict[str, Any], context: LambdaContext) -> None:
+    """Entrypoint handler for the orchestrator lambda.
 
     Args:
         event (Dict[str, Any]): Lambda function invocation event
@@ -40,10 +40,14 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
             # Wait then continue
             sleep(int(environ["SLEEP_FOR_WHEN_OPEN"]))
             update_request_queue_item = UpdateRequestQueueItem(
-                is_health_check=True, update_request=None, recipient_id=None, metadata=None
+                is_health_check=True,
+                update_request=None,
+                recipient_id=None,
+                metadata=None,
             )
             logger.info(
-                "Sending health check to try and re-open the circuit", extra={"request": update_request_queue_item}
+                "Sending health check to try and re-open the circuit",
+                extra={"request": update_request_queue_item},
             )
             invoke_lambda(update_request_queue_item)
             continue
@@ -100,9 +104,9 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> None:
         loop = loop + 1
 
 
-def invoke_lambda(payload: Dict[str, Any]) -> Dict[str, Any]:
+def invoke_lambda(payload: dict[str, Any]) -> dict[str, Any]:
     return lambda_client.invoke(
         FunctionName=getenv("SERVICE_SYNC_FUNCTION_NAME"),
         InvocationType="Event",
         Payload=dumps(payload),
-    )  # type: ignore
+    )

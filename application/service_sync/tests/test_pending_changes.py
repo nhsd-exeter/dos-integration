@@ -1,17 +1,17 @@
 from json import dumps
 from os import environ
 from random import choices
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
-from pytest import CaptureFixture
+import pytest
 from pytz import timezone
 
 from application.service_sync.pending_changes import (
+    PendingChange,
     build_change_rejection_email_contents,
     check_and_remove_pending_dos_changes,
     get_pending_changes,
     log_rejected_changes,
-    PendingChange,
     reject_pending_changes,
     send_rejection_emails,
 )
@@ -118,7 +118,8 @@ def test_check_and_remove_pending_dos_changes(
     assert None is response
     mock_connect_to_dos_db.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value, service_id=service_id
+        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        service_id=service_id,
     )
     mock_reject_pending_changes.assert_called_once_with(
         connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
@@ -149,7 +150,8 @@ def test_check_and_remove_pending_dos_changes_no_pending_changes(
     assert None is response
     mock_connect_to_dos_db.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value, service_id=service_id
+        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        service_id=service_id,
     )
     mock_reject_pending_changes.assert_not_called()
     mock_log_rejected_changes.assert_not_called()
@@ -177,7 +179,8 @@ def test_check_and_remove_pending_dos_changes_invalid_changes(
     assert None is response
     mock_connect_to_dos_db.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value, service_id=service_id
+        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        service_id=service_id,
     )
     mock_reject_pending_changes.assert_not_called()
     mock_log_rejected_changes.assert_not_called()
@@ -188,7 +191,9 @@ def test_check_and_remove_pending_dos_changes_invalid_changes(
 @patch(f"{FILE_PATH}.PendingChange.is_valid")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_get_pending_changes_is_pending_changes_valid_changes(
-    mock_query_dos_db: MagicMock, mock_is_valid: MagicMock, mock_repr: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_is_valid: MagicMock,
+    mock_repr: MagicMock,
 ):
     # Arrange
     connection = MagicMock()
@@ -202,7 +207,7 @@ def test_get_pending_changes_is_pending_changes_valid_changes(
     mock_query_dos_db.assert_called_once_with(
         connection=connection,
         query=EXPECTED_QUERY,
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
     assert mock_repr.call_count == 2
     mock_is_valid.assert_called_once()
@@ -213,7 +218,9 @@ def test_get_pending_changes_is_pending_changes_valid_changes(
 @patch(f"{FILE_PATH}.PendingChange.is_valid")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_get_pending_changes_is_pending_changes_invalid_changes(
-    mock_query_dos_db: MagicMock, mock_is_valid: MagicMock, mock_repr: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_is_valid: MagicMock,
+    mock_repr: MagicMock,
 ):
     # Arrange
     connection = MagicMock()
@@ -227,7 +234,7 @@ def test_get_pending_changes_is_pending_changes_invalid_changes(
     mock_query_dos_db.assert_called_once_with(
         connection=connection,
         query=EXPECTED_QUERY,
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
     assert mock_repr.call_count == 3
     mock_is_valid.assert_called_once()
@@ -248,7 +255,7 @@ def test_get_pending_changes_no_changes(mock_query_dos_db: MagicMock, mock_is_va
     mock_query_dos_db.assert_called_once_with(
         connection=connection,
         query=EXPECTED_QUERY,
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
     mock_is_valid.assert_not_called()
     assert None is response
@@ -272,7 +279,7 @@ def test_reject_pending_changes_single_rejection(mock_query_dos_db: MagicMock, m
             "UPDATE changes SET approvestatus='REJECTED', "
             f"modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s WHERE id='{pending_change.id}'"
         ),
-        vars={"USER_NAME": "DOS_INTEGRATION", "TIMESTAMP": mock_datetime.now.return_value},
+        query_vars={"USER_NAME": "DOS_INTEGRATION", "TIMESTAMP": mock_datetime.now.return_value},
     )
 
 
@@ -300,11 +307,11 @@ def test_reject_pending_changes_multiple_rejections(mock_query_dos_db: MagicMock
             f"modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s "
             f"WHERE id in ('{pending_change1.id}','{pending_change2.id}','{pending_change3.id}')"
         ),
-        vars={"USER_NAME": "DOS_INTEGRATION", "TIMESTAMP": mock_datetime.now.return_value},
+        query_vars={"USER_NAME": "DOS_INTEGRATION", "TIMESTAMP": mock_datetime.now.return_value},
     )
 
 
-def test_log_rejected_changes(capsys: CaptureFixture):
+def test_log_rejected_changes(capsys: pytest.CaptureFixture):
     # Arrange
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
@@ -355,10 +362,10 @@ def test_send_rejection_emails(
                     "user_id": pending_change.user_id,
                     "email_body": mock_build_change_rejection_email_contents.return_value,
                     "email_subject": expected_subject,
-                }
+                },
             ),
             call(mock_email_message.return_value),
-        ]
+        ],
     )
     mock_put_content_to_s3.assert_called_once_with(
         content=mock_dumps.return_value,

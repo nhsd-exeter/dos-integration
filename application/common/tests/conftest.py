@@ -3,24 +3,27 @@ from dataclasses import dataclass
 from os import environ, path
 from pathlib import Path
 from random import choices, randint, uniform
+from typing import Any
 
+import pytest
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import Session
 from moto import mock_dynamodb
-from pytest import fixture
 
-from ..dos import DoSLocation, DoSService
-from ..opening_times import StandardOpeningTimes
+from application.common.dos import DoSLocation, DoSService
+from application.common.opening_times import StandardOpeningTimes
 
 STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
-with open(STD_EVENT_PATH, "r", encoding="utf8") as file:
+with open(STD_EVENT_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
 STD_EVENT_STAFF_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT_WITH_STAFF.json")
-with open(STD_EVENT_STAFF_PATH, "r", encoding="utf8") as file:
+with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
 
 
-def get_std_event(**kwargs) -> dict:
+def get_std_event(**kwargs: Any) -> dict:  # noqa: ANN401
+    """Creates a standard event with random data for the unit testing."""
     event = PHARMACY_STANDARD_EVENT.copy()
     for name, value in kwargs.items():
         if value is not None:
@@ -28,8 +31,8 @@ def get_std_event(**kwargs) -> dict:
     return event
 
 
-def dummy_dos_service(**kwargs) -> DoSService:
-    """Creates a DoSService Object with random data for the unit testing"""
+def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
+    """Creates a DoSService Object with random data for the unit testing."""
     test_data = {}
     for col in DoSService.field_names():
         random_str = "".join(choices("ABCDEFGHIJKLM", k=8))
@@ -45,8 +48,8 @@ def dummy_dos_service(**kwargs) -> DoSService:
     return dos_service
 
 
-def blank_dos_service(**kwargs) -> DoSService:
-    """Creates a DoSService Object with blank str data for the unit testing"""
+def blank_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
+    """Creates a DoSService Object with blank str data for the unit testing."""
     test_data = {}
     for col in DoSService.field_names():
         test_data[col] = ""
@@ -60,7 +63,7 @@ def blank_dos_service(**kwargs) -> DoSService:
 
 
 def dummy_dos_location() -> DoSLocation:
-    """Creates a DoSLocation Object with random data for the unit testing"""
+    """Creates a DoSLocation Object with random data for the unit testing."""
     return DoSLocation(
         id=randint(1111, 9999),
         postcode="".join(choices("01234567890ABCDEFGHIJKLM", k=6)),
@@ -72,42 +75,46 @@ def dummy_dos_location() -> DoSLocation:
     )
 
 
-@fixture
-def change_event():
-    change_event = PHARMACY_STANDARD_EVENT.copy()
-    yield change_event
+@pytest.fixture()
+def change_event() -> dict:
+    """Generate a change event for testing."""
+    return PHARMACY_STANDARD_EVENT.copy()
 
 
-@fixture
-def aws_credentials():
+@pytest.fixture()
+def _aws_credentials() -> None:
     """Mocked AWS Credentials for moto."""
     environ["AWS_ACCESS_KEY_ID"] = "testing"
-    environ["AWS_SECRET_ACCESS_KEY"] = "testing"
-    environ["AWS_SECURITY_TOKEN"] = "testing"
-    environ["AWS_SESSION_TOKEN"] = "testing"
+    environ["AWS_SECRET_ACCESS_KEY"] = "testing"  # noqa: S105
+    environ["AWS_SECURITY_TOKEN"] = "testing"  # noqa: S105
+    environ["AWS_SESSION_TOKEN"] = "testing"  # noqa: S105
     environ["CHANGE_EVENTS_TABLE_NAME"] = "CHANGE_EVENTS_TABLE"
     environ["AWS_REGION"] = "us-east-2"
 
 
-@fixture
-def dynamodb_client(boto_session):
-    yield boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
+@pytest.fixture()
+def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401
+    """DynamoDB Client Class."""
+    return boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
 
 
-@fixture
-def dynamodb_resource(boto_session):
-    yield boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
+@pytest.fixture()
+def dynamodb_resource(boto_session: Any) -> Any:  # noqa: ANN401
+    """DynamoDB Resource Class."""
+    return boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
 
 
-@fixture
-def boto_session(aws_credentials):
+@pytest.fixture()
+def boto_session(_aws_credentials: Any) -> Any:  # noqa: ANN401
+    """Mocked AWS Credentials for moto."""
     with mock_dynamodb():
         yield Session()
 
 
-@fixture
-def dead_letter_message():
-    yield {
+@pytest.fixture()
+def dead_letter_message() -> dict:
+    """Generate a dead letter message for testing."""
+    return {
         "Records": [
             {
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
@@ -149,13 +156,15 @@ def dead_letter_message():
                 "eventSource": "aws:sqs",
                 "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:cr-fifo-dlq-queue",
                 "awsRegion": "us-east-2",
-            }
-        ]
+            },
+        ],
     }
 
 
-@fixture
-def lambda_context():
+@pytest.fixture()
+def lambda_context() -> LambdaContext:
+    """Generate a lambda context for testing."""
+
     @dataclass
     class LambdaContext:
         function_name: str = "service-matcher"

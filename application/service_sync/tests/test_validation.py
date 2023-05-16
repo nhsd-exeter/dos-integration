@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 from aws_lambda_powertools.logging import Logger
-from pytest import mark
 
 from application.common.nhs import NHSEntity
 from application.service_sync.validation import validate_opening_times, validate_website
@@ -12,7 +12,8 @@ FILE_PATH = "application.service_sync.validation"
 @patch(f"{FILE_PATH}.log_service_with_generic_bank_holiday")
 @patch.object(Logger, "warning")
 def test_validate_opening_times_sucessful(
-    mock_warning_logger: MagicMock, mock_log_service_with_generic_bank_holiday: MagicMock
+    mock_warning_logger: MagicMock,
+    mock_log_service_with_generic_bank_holiday: MagicMock,
 ):
     # Arrange
     nhs_entity = MagicMock()
@@ -31,7 +32,8 @@ def test_validate_opening_times_sucessful(
 @patch(f"{FILE_PATH}.log_service_with_generic_bank_holiday")
 @patch.object(Logger, "warning")
 def test_validate_opening_times_failure(
-    mock_warning_logger: MagicMock, mock_log_service_with_generic_bank_holiday: MagicMock
+    mock_warning_logger: MagicMock,
+    mock_log_service_with_generic_bank_holiday: MagicMock,
 ):
     # Arrange
     nhs_entity = MagicMock()
@@ -44,15 +46,13 @@ def test_validate_opening_times_failure(
     # Assert
     assert result is False
     mock_warning_logger.assert_called_once_with(
-        (
-            f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found "
-            "to be invalid or illogical. Skipping change."
-        )
+        f"Opening Times for NHS Entity '{nhs_entity.odscode}' were previously found "
+        "to be invalid or illogical. Skipping change.",
     )
     mock_log_service_with_generic_bank_holiday.assert_called_once_with(nhs_entity, dos_service)
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "website",
     [
         "www.test.com",
@@ -68,7 +68,7 @@ def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website
     mock_log_website_is_invalid.assert_not_called()
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "website",
     [
         "https://testpharmacy@gmail.com",

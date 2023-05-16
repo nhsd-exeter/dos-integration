@@ -6,13 +6,15 @@ def format_address(address: str) -> str:
     """Formats an address line to title case and removes apostrophes. As well it replaces any '&' symbols with and.
 
     Args:
-        value (str): Address line to format
+        address (str): Address line to format
 
     Returns:
         str: Formatted address line
     """
     address = sub(
-        r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address
+        r"[A-Za-z]+('[A-Za-z]+)?",
+        lambda word: word.group(0).capitalize(),
+        address,
     )  # Capitalise first letter of each word
     address = address.replace("'", "")  # Remove apostrophes
     address = address.replace("&", "and")  # Replace '&' with 'and'
@@ -29,7 +31,7 @@ def format_website(website: str) -> str:
         str: Formatted website
     """
     nhs_uk_website = urlparse(website)
-    if nhs_uk_website.netloc == "":  # handle website like www.test.com
+    if not nhs_uk_website.netloc:  # handle website like www.test.com
         if "/" in website:
             nhs_uk_website = website.split("/")
             nhs_uk_website[0] = nhs_uk_website[0].lower()

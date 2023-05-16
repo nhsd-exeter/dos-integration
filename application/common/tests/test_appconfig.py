@@ -1,7 +1,7 @@
 from os import environ
 from unittest.mock import MagicMock, patch
 
-from ..appconfig import AppConfig
+from application.common.appconfig import AppConfig
 
 FILE_PATH = "application.common.appconfig"
 
@@ -16,7 +16,7 @@ def test_app_config(mock_app_config_store):
     AppConfig(feature_flags_name)
     # Assert
     mock_app_config_store.assert_called_once_with(
-        environment=environment, application=f"uec-dos-int-{environment}-lambda-app-config", name=feature_flags_name
+        environment=environment, application=f"uec-dos-int-{environment}-lambda-app-config", name=feature_flags_name,
     )
     # Clean up
     del environ["SHARED_ENVIRONMENT"]

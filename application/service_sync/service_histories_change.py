@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 
@@ -17,7 +17,7 @@ logger = Logger(child=True)
 
 @dataclass(repr=True)
 class ServiceHistoriesChange:
-    """A change to be added to the servicehistories table"""
+    """A change to be added to the servicehistories table."""
 
     data: str
     previous_value: Any
@@ -25,7 +25,22 @@ class ServiceHistoriesChange:
     change_action: str
     area: str
 
-    def __init__(self, data: Any, previous_value: Any, change_key: str, area=DOS_DEMOGRAPHICS_AREA_TYPE) -> None:
+    def __init__(
+        self,
+        data: Any,  # noqa: ANN401
+        previous_value: Any,  # noqa: ANN401
+        change_key: str,
+        area: str = DOS_DEMOGRAPHICS_AREA_TYPE,
+    ) -> None:
+        """Initialises the ServiceHistoriesChange object.
+
+        Args:
+            data (Any): The data to be added to the servicehistories table.
+            previous_value (Any): The previous value of the data to be added to the servicehistories table.
+            change_key (str): The change key for the data to be added to the servicehistories table.
+            area (str, optional): The area of the data to be added to the servicehistories table.
+            Defaults to DOS_DEMOGRAPHICS_AREA_TYPE.
+        """
         self.data = data
         self.previous_value = previous_value
         self.change_key = change_key
@@ -41,10 +56,11 @@ class ServiceHistoriesChange:
             self.change_action = self.get_sgsd_change_action()
         else:
             logger.error(f"Unknown change key {self.change_key}")
-            raise ValueError("Unknown change key")
+            msg = "Unknown change key"
+            raise ValueError(msg)
 
     def get_demographics_change_action(self) -> str:
-        """Gets the change action for a demographics change
+        """Gets the change action for a demographics change.
 
         Returns:
             str: Change action - add, delete, modify
@@ -53,13 +69,13 @@ class ServiceHistoriesChange:
         previous_value = self.previous_value
         if previous_value is None or previous_value == "None" and new_value is not None:
             return "add"
-        elif new_value is None:
+        elif new_value is None:  # noqa: RET505
             return "delete"
         else:
             return "modify"
 
     def get_sgsd_change_action(self) -> str:
-        """Gets the change action for a sgsd change
+        """Gets the change action for a sgsd change.
 
         Returns:
             str: Change action - add, delete
@@ -69,23 +85,24 @@ class ServiceHistoriesChange:
         return "add" if value == "add" else "delete"
 
     def get_opening_times_change_action(self) -> str:
-        """Gets the change action for a opening times (specified or standard) change
+        """Gets the change action for a opening times (specified or standard) change.
 
         Returns:
             str: Change action - add, delete, modify
         """
         if "remove" in self.data and "add" in self.data:
             return "modify"
-        elif "remove" in self.data:
+        elif "remove" in self.data:  # noqa: RET505
             return "delete"
         elif "add" in self.data:
             return "add"
         else:
             logger.error(f"Unknown change action from {self.data}")
-            raise ValueError("Unknown change action")
+            msg = "Unknown change action"
+            raise ValueError(msg)
 
-    def get_change(self) -> Dict[str, Any]:
-        """Gets the change to be added to the servicehistories table
+    def get_change(self) -> dict[str, Any]:
+        """Gets the change to be added to the servicehistories table.
 
         Returns:
             Dict[str, Any]: Change to be added to the servicehistories table

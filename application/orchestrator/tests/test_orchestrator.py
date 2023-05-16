@@ -7,17 +7,16 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from pytest import approx, fixture
 
 from application.orchestrator.orchestrator import invoke_lambda, lambda_handler
-
 from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
 
 FILE_PATH = "application.orchestrator.orchestrator"
 
 
-@fixture
+@fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "orchestrator"
         memory_limit_in_mb: int = 128
@@ -46,7 +45,9 @@ def test_invoke_lambda(mock_lambda_client: MagicMock, lambda_context: LambdaCont
     response = invoke_lambda(payload)
     # Assert
     mock_lambda_client.invoke.assert_called_once_with(
-        FunctionName="MyFirstFunction", InvocationType="Event", Payload=dumps(payload)
+        FunctionName="MyFirstFunction",
+        InvocationType="Event",
+        Payload=dumps(payload),
     )
     assert response == expected
     del environ["SERVICE_SYNC_FUNCTION_NAME"]
@@ -128,20 +129,20 @@ def test_orchestrator_circuit_closed_single_loop(
         "Messages": [
             {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_1), "ReceiptHandle": "H1"},
             {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_2), "ReceiptHandle": "H2"},
-        ]
+        ],
     }
 
     # Act
     lambda_handler({}, lambda_context)
 
     # Assert
-    assert 2 == mock_invoke.call_count
-    assert 2 == mock_sleep.call_count
+    assert mock_invoke.call_count == 2
+    assert mock_sleep.call_count == 2
 
     c0_args, c0_kwargs = mock_sleep.call_args_list[0]
     c1_args, c1_kwargs = mock_sleep.call_args_list[1]
-    assert 0.4 == approx(c0_args[0])
-    assert 0.3 == approx(c1_args[0])
+    assert approx(c0_args[0]) == 0.4
+    assert approx(c1_args[0]) == 0.3
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
@@ -184,12 +185,12 @@ def test_orchestrator_circuit_closed_double_loop(
             "Messages": [
                 {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_1), "ReceiptHandle": "H1"},
                 {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_2), "ReceiptHandle": "H2"},
-            ]
+            ],
         },
         {
             "Messages": [
                 {"MessageAttributes": EXAMPLE_ATTRIBUTES, "Body": dumps(EXAMPLE_MESSAGE_3), "ReceiptHandle": "H3"},
-            ]
+            ],
         },
     ]
 
@@ -197,15 +198,15 @@ def test_orchestrator_circuit_closed_double_loop(
     lambda_handler({}, lambda_context)
 
     # Assert
-    assert 3 == mock_invoke.call_count
-    assert 3 == mock_sleep.call_count
+    assert mock_invoke.call_count == 3
+    assert mock_sleep.call_count == 3
 
     c0_args, c0_kwargs = mock_sleep.call_args_list[0]
     c1_args, c1_kwargs = mock_sleep.call_args_list[1]
     c2_args, c2_kwargs = mock_sleep.call_args_list[2]
-    assert 0.4 == approx(c0_args[0])
-    assert 0.3 == approx(c1_args[0])
-    assert 0 == approx(c2_args[0])
+    assert approx(c0_args[0]) == 0.4
+    assert approx(c1_args[0]) == 0.3
+    assert approx(c2_args[0]) == 0
 
 
 @patch(f"{FILE_PATH}.get_circuit_is_open", return_value=False)
@@ -233,9 +234,9 @@ def test_orchestrator_circuit_closed_single_loop_no_messages(
     lambda_handler({}, lambda_context)
 
     # Assert
-    assert 3 == mock_time.call_count
-    assert 0 == mock_invoke.call_count
-    assert 1 == mock_sleep.call_count
+    assert mock_time.call_count == 3
+    assert mock_invoke.call_count == 0
+    assert mock_sleep.call_count == 1
 
     mock_sleep.assert_called_once_with(1)
 
@@ -266,8 +267,8 @@ def test_orchestrator_circuit_closed_single_loop_circuit_open(
     lambda_handler({}, lambda_context)
 
     # Assert
-    assert 3 == mock_time.call_count
-    assert 1 == mock_invoke.call_count
-    assert 1 == mock_sleep.call_count
+    assert mock_time.call_count == 3
+    assert mock_invoke.call_count == 1
+    assert mock_sleep.call_count == 1
     mock_invoke.assert_called_once_with(EXPECTED_HEALTH_CHECK)
     mock_sleep.assert_called_once_with(5)

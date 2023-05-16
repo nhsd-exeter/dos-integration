@@ -3,10 +3,10 @@ from json import dumps
 from os import environ
 from unittest.mock import MagicMock, patch
 
+import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from pytest import fixture, raises
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.ingest_change_event.ingest_change_event import add_change_event_received_metric, lambda_handler
@@ -14,34 +14,37 @@ from application.ingest_change_event.ingest_change_event import add_change_event
 FILE_PATH = "application.ingest_change_event.ingest_change_event"
 
 
-@fixture
-def mock_metric_logger():
+@pytest.fixture(autouse=True)
+def _mock_metric_logger() -> None:
     InvocationTracker.reset()
 
-    async def flush(self):
-        print("flush called")
+    async def flush(self) -> None:
         InvocationTracker.record()
 
     MetricsLogger.flush = flush
 
 
-class InvocationTracker(object):
+class InvocationTracker:
+    """Tracks the number of times a function has been invoked."""
+
     invocations = 0
 
     @staticmethod
-    def record():
+    def record() -> None:
+        """Record an invocation."""
         InvocationTracker.invocations += 1
 
     @staticmethod
-    def reset():
+    def reset() -> None:
+        """Reset the invocation count."""
         InvocationTracker.invocations = 0
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "ingest-change-event"
         memory_limit_in_mb: int = 128
@@ -91,7 +94,7 @@ def test_lambda_handler(
         dynamo_record_id=None,
         correlation_id=None,
         sequence_number=None,
-        message_received=None,  # type: ignore
+        message_received=None,
     )
     # Act
     response = lambda_handler(event, lambda_context)
@@ -102,7 +105,9 @@ def test_lambda_handler(
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event, ["Facilities", "Metrics"], 10000
+        change_event,
+        ["Facilities", "Metrics"],
+        10000,
     )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
@@ -161,7 +166,7 @@ def test_lambda_handler_with_sensitive_staff_key(
         dynamo_record_id=None,
         correlation_id=None,
         sequence_number=None,
-        message_received=None,  # type: ignore
+        message_received=None,
     )
     # Act
     response = lambda_handler(event, lambda_context)
@@ -171,7 +176,9 @@ def test_lambda_handler_with_sensitive_staff_key(
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event, ["Facilities", "Metrics"], 10000
+        change_event,
+        ["Facilities", "Metrics"],
+        10000,
     )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
@@ -234,7 +241,7 @@ def test_lambda_handler_no_sequence_number(
         dynamo_record_id=None,
         correlation_id=None,
         sequence_number=None,
-        message_received=None,  # type: ignore
+        message_received=None,
     )
     # Act
     response = lambda_handler(event, lambda_context)
@@ -245,7 +252,9 @@ def test_lambda_handler_no_sequence_number(
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event, ["Facilities", "Metrics"], 10000
+        change_event,
+        ["Facilities", "Metrics"],
+        10000,
     )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
@@ -299,7 +308,7 @@ def test_lambda_handler_less_than_latest_sequence_number(
         dynamo_record_id=None,
         correlation_id=None,
         sequence_number=None,
-        message_received=None,  # type: ignore
+        message_received=None,
     )
     # Act
     response = lambda_handler(event, lambda_context)
@@ -310,7 +319,9 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event, ["Facilities", "Metrics"], 10000
+        change_event,
+        ["Facilities", "Metrics"],
+        10000,
     )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
@@ -366,10 +377,10 @@ def test_lambda_handler_mutiple_records(
         dynamo_record_id=None,
         correlation_id=None,
         sequence_number=None,
-        message_received=None,  # type: ignore
+        message_received=None,
     )
     # Act
-    with raises(ValueError):
+    with pytest.raises(ValueError, match="3 records found in event. Expected 1."):
         lambda_handler(event, lambda_context)
     # Assert
     mock_time_ns.assert_called_once()
@@ -386,7 +397,7 @@ def test_lambda_handler_mutiple_records(
     del environ["HOLDING_QUEUE_URL"]
 
 
-def test_add_change_event_received_metric(mock_metric_logger):
+def test_add_change_event_received_metric():
     # Arrange
     odscode = "V12345"
     environ["ENV"] = "test"
@@ -419,6 +430,6 @@ SQS_EVENT = {
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
             "awsRegion": "us-east-2",
-        }
-    ]
+        },
+    ],
 }

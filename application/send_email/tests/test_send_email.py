@@ -3,11 +3,10 @@ from os import environ
 from smtplib import SMTPException
 from unittest.mock import MagicMock, patch
 
+import pytest
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from pytest import fixture, raises
 
 from application.send_email.send_email import lambda_handler, send_email
-
 from common.types import EmailMessage
 
 FILE_PATH = "application.send_email.send_email"
@@ -28,11 +27,11 @@ EVENT = EmailMessage(
 )
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "send-email"
         memory_limit_in_mb: int = 128
@@ -63,7 +62,10 @@ def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContex
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
 def test_send_email(
-    mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock, add_metric: MagicMock
+    mock_get_secret: MagicMock,
+    mock_smtp: MagicMock,
+    mock_mime_multipart: MagicMock,
+    add_metric: MagicMock,
 ):
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
@@ -129,7 +131,10 @@ def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mo
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
 def test_send_email_exception(
-    mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock, add_metric: MagicMock
+    mock_get_secret: MagicMock,
+    mock_smtp: MagicMock,
+    mock_mime_multipart: MagicMock,
+    add_metric: MagicMock,
 ):
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
@@ -144,7 +149,7 @@ def test_send_email_exception(
     }
     mock_smtp.return_value.ehlo.side_effect = SMTPException()
     # Act
-    with raises(SMTPException, match="An error occurred while sending the email"):
+    with pytest.raises(SMTPException, match="An error occurred while sending the email"):
         send_email(
             email_address=RECIPIENT_EMAIL_ADDRESS,
             html_content=EMAIL_BODY,

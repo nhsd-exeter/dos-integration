@@ -19,8 +19,8 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging_hidden_event
 @logger.inject_lambda_context(clear_state=True, correlation_id_path="correlation_id")
-def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
-    """Entrypoint handler for the service_sync lambda
+def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:  # noqa: ARG001
+    """Entrypoint handler for the service_sync lambda.
 
     Args:
         event (EmailMessage): Lambda function invocation event
@@ -37,7 +37,7 @@ def lambda_handler(event: EmailMessage, context: LambdaContext) -> None:
 
 
 def send_email(email_address: str, html_content: str, subject: str, correlation_id: str) -> None:
-    """Send an email to the specified email address
+    """Send an email to the specified email address.
 
     Args:
         email_address (str): Email address to send the email to
@@ -45,7 +45,6 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
         subject (str): Subject of the email
         correlation_id (str): Correlation ID of the email
     """
-
     aws_account_name = environ["AWS_ACCOUNT_NAME"]
     if aws_account_name != "nonprod" or "email" in correlation_id:
         logger.info("Preparing to send email")
@@ -71,8 +70,9 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
             logger.info("Sent email")
             smtp.quit()
             logger.info("Disconnected from SMTP server")
-            add_metric("EmailSent")  # type: ignore
-        except BaseException as exception:
-            add_metric("EmailFailed")  # type: ignore
-            logger.error("Email failed", extra={"error_name": type(exception).__name__})
-            raise SMTPException("An error occurred while sending the email")
+            add_metric("EmailSent")
+        except BaseException:
+            add_metric("EmailFailed")
+            logger.exception("Email failed")
+            msg = "An error occurred while sending the email"
+            raise SMTPException(msg) from None

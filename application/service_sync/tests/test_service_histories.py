@@ -10,9 +10,8 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from application.service_sync.service_histories import ServiceHistories
 from application.service_sync.service_histories_change import ServiceHistoriesChange
-
-from ..service_histories import ServiceHistories
 
 FILE_PATH = "application.service_sync.service_histories"
 SERVICE_ID = 1
@@ -28,7 +27,7 @@ def test_service_histories(mock_time: MagicMock):
     assert "new_change" == service_histories.NEW_CHANGE_KEY
     assert {} == service_histories.service_history
     assert {} == service_histories.existing_service_history
-    assert SERVICE_ID == service_histories.service_id
+    assert service_histories.service_id == SERVICE_ID
     assert time == service_histories.current_epoch_time
     mock_time.assert_called_once()
 
@@ -47,7 +46,8 @@ def test_service_histories_get_service_history_from_db_rows_returned():
     assert change == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(row_factory=dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
+        params={"SERVICE_ID": SERVICE_ID},
     )
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
@@ -64,7 +64,8 @@ def test_service_histories_get_service_history_from_db_no_rows_returned():
     assert {} == service_history.existing_service_history
     mock_connection.cursor.assert_called_once_with(row_factory=dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
-        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s", params={"SERVICE_ID": SERVICE_ID}
+        query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
+        params={"SERVICE_ID": SERVICE_ID},
     )
 
     mock_connection.cursor.return_value.fetchall.assert_called_once()
@@ -81,7 +82,7 @@ def test_service_histories_create_service_histories_entry_no_history_already_exi
             "new": {},
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
-        }
+        },
     } == service_history.service_history
 
 
@@ -100,7 +101,7 @@ def test_service_histories_add_change():
             "new": {change_key: change},
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
-        }
+        },
     } == service_history.service_history
     mock_service_history_change.get_change.assert_called_once_with()
 
@@ -112,7 +113,7 @@ def test_service_histories_add_standard_opening_times_change(mock_service_histor
     service_history.add_change = mock_add_change = MagicMock()
     current_opening_times = MagicMock()
     current_opening_times.export_opening_times_in_seconds_for_day.return_value = current_opening_times_in_seconds = [
-        "456-789"
+        "456-789",
     ]
     current_opening_times.export_opening_times_for_day.return_value = (
         current_opening_times_for_day
@@ -130,7 +131,8 @@ def test_service_histories_add_standard_opening_times_change(mock_service_histor
     )
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     current_opening_times.export_opening_times_in_seconds_for_day.assert_called_once_with(weekday)
     new_opening_times.export_opening_times_in_seconds_for_day.assert_called_once_with(weekday)
@@ -165,7 +167,8 @@ def test_service_histories_add_standard_opening_times_change_no_change(mock_serv
     )
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     current_opening_times.export_opening_times_in_seconds_for_day.assert_called_once_with(weekday)
     new_opening_times.export_opening_times_in_seconds_for_day.assert_called_once_with(weekday)
@@ -180,7 +183,8 @@ def test_service_histories_add_standard_opening_times_change_no_change(mock_serv
 @patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 def test_service_histories_add_specified_opening_times_change_modify(
-    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+    mock_service_histories_change: MagicMock,
+    mock_get_formatted_specified_opening_times: MagicMock,
 ):
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
@@ -206,7 +210,8 @@ def test_service_histories_add_specified_opening_times_change_modify(
     service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     mock_service_histories_change.assert_called_once_with(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -218,7 +223,8 @@ def test_service_histories_add_specified_opening_times_change_modify(
 @patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 def test_service_histories_add_specified_opening_times_change_add(
-    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+    mock_service_histories_change: MagicMock,
+    mock_get_formatted_specified_opening_times: MagicMock,
 ):
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
@@ -239,7 +245,8 @@ def test_service_histories_add_specified_opening_times_change_add(
     service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     mock_service_histories_change.assert_called_once_with(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -251,7 +258,8 @@ def test_service_histories_add_specified_opening_times_change_add(
 @patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 def test_service_histories_add_specified_opening_times_change_remove(
-    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+    mock_service_histories_change: MagicMock,
+    mock_get_formatted_specified_opening_times: MagicMock,
 ):
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
@@ -272,7 +280,8 @@ def test_service_histories_add_specified_opening_times_change_remove(
     service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     mock_service_histories_change.assert_called_once_with(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -286,7 +295,8 @@ def test_service_histories_add_specified_opening_times_change_remove(
 @patch(f"{FILE_PATH}.ServiceHistories.get_formatted_specified_opening_times")
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 def test_service_histories_add_specified_opening_times_change_no_change(
-    mock_service_histories_change: MagicMock, mock_get_formatted_specified_opening_times: MagicMock
+    mock_service_histories_change: MagicMock,
+    mock_get_formatted_specified_opening_times: MagicMock,
 ):
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
@@ -299,7 +309,8 @@ def test_service_histories_add_specified_opening_times_change_no_change(
     service_history.add_specified_opening_times_change(current_opening_times, new_opening_times)
     # Assert
     mock_add_change.assert_called_once_with(
-        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY, change=mock_service_histories_change_variable
+        dos_change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
+        change=mock_service_histories_change_variable,
     )
     mock_service_histories_change.assert_called_once_with(
         change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
@@ -338,7 +349,7 @@ def test_service_histories_get_formatted_specified_opening_times():
     specified_opening_times = [SpecifiedOpeningTime(open_periods, date(2022, 12, 26), True)]
     # Act
     formatted_specified_opening_times = service_history.get_formatted_specified_opening_times(
-        opening_times=specified_opening_times
+        opening_times=specified_opening_times,
     )
     # Assert
     assert [
@@ -365,11 +376,11 @@ def test_service_histories_save_service_histories_insert(mock_query_dos_db: Magi
                     "data": "52 Green Lane$Southgate",
                     "area": "demographic",
                     "previous": "51 Green Lane$Southgate",
-                }
+                },
             },
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
-        }
+        },
     }
     # Act
     service_history.save_service_histories(mock_connection)
@@ -394,11 +405,11 @@ def test_service_histories_save_service_histories_update(mock_query_dos_db: Magi
                     "data": "52 Green Lane$Southgate",
                     "area": "demographic",
                     "previous": "51 Green Lane$Southgate",
-                }
+                },
             },
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
-        }
+        },
     }
     # Act
     service_history.save_service_histories(mock_connection)

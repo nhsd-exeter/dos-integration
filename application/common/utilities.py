@@ -1,6 +1,6 @@
 from json import dumps, loads
 from os import environ
-from typing import Any, Dict, Union
+from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
@@ -9,10 +9,11 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 logger = Logger()
 
 
-def is_val_none_or_empty(val: Any) -> bool:
-    """Checks if the value is None or empty
+def is_val_none_or_empty(val: Any) -> bool:  # noqa: ANN401
+    """Checks if the value is None or empty.
+
     Args:
-        val Any: Value to be checked
+        val (Any): Value to check
 
     Returns:
         bool: True if the value is None or empty, False otherwise
@@ -20,47 +21,62 @@ def is_val_none_or_empty(val: Any) -> bool:
     return not (val and not val.isspace())
 
 
-def extract_body(body: str) -> Dict[str, Any]:
-    """Extracts the event body from the lambda function invocation event
+def extract_body(body: str) -> dict[str, Any]:
+    """Extracts the event body from the lambda function invocation event.
 
     Args:
-        message_body (str): A JSON string body
+        body (str): Lambda function invocation event body
+
     Returns:
         Dict[str, Any]: Message body as a dictionary
     """
     try:
         body = loads(body)
     except ValueError as e:
-        raise ValueError("Change Event unable to be extracted") from e
+        msg = "Change Event unable to be extracted"
+        raise ValueError(msg) from e
     return body
 
 
-def json_str_body(body: Dict[str, Any]) -> str:
-    """Encode a Dict event body from the lambda function invocation event into a JSON string
+def json_str_body(body: dict[str, Any]) -> str:
+    """Encode a Dict event body from the lambda function invocation event into a JSON string.
 
     Args:
-        body Dict[str, Any]: body as a dictionary
+        body (Dict[str, Any]): A Dict body
+
     Returns:
         (str): A JSON string body
     """
     try:
         return dumps(body)
     except ValueError as e:
-        raise ValueError("Dict Change Event body cannot be converted to a JSON string") from e
+        msg = "Dict Change Event body cannot be converted to a JSON string"
+        raise ValueError(msg) from e
 
 
-def get_sequence_number(record: SQSRecord) -> Union[int, None]:
-    """Gets the sequence number from the SQS record sent by NHS UK
+def get_sequence_number(record: SQSRecord) -> int | None:
+    """Gets the sequence number from the SQS record sent by NHS UK.
+
     Args:
         record (SQSRecord): SQS record
+
     Returns:
-        Optional[int]: Sequence number of the message or None if not present
+        Optional[int]: Sequence number of the message or None if not present.
     """
     seq_num_str = record.message_attributes.get("sequence-number", {}).get("stringValue")
     return None if seq_num_str is None else int(seq_num_str)
 
 
-def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str, float, None]:
+def get_sqs_msg_attribute(msg_attributes: dict[str, Any], key: str) -> str | float | None:
+    """Gets the value of the given key from the SQS message attributes.
+
+    Args:
+        msg_attributes (dict[str, Any]): Message attributes
+        key (str): Key to get the value for
+
+    Returns:
+        str | float | None: Value of the given key or None if not present.
+    """
     attribute = msg_attributes.get(key)
     if attribute is None:
         return None
@@ -69,9 +85,18 @@ def get_sqs_msg_attribute(msg_attributes: Dict[str, Any], key: str) -> Union[str
         return attribute.get("stringValue")
     if data_type == "Number":
         return float(attribute.get("stringValue"))
+    return None
 
 
-def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
+def handle_sqs_msg_attributes(msg_attributes: dict[str, Any]) -> dict[str, Any] | None:
+    """Extracts the error message and error message http code from the SQS message attributes.
+
+    Args:
+        msg_attributes (dict[str, Any]): Message attributes
+
+    Returns:
+        dict[str, Any]: Dictionary with error message and error message http code or None if not present.
+    """
     if msg_attributes is not None:
         attributes = {"error_msg": "", "error_msg_http_code": ""}
         if "error_msg_http_code" in msg_attributes:
@@ -80,16 +105,23 @@ def handle_sqs_msg_attributes(msg_attributes: Dict[str, Any]) -> Dict[str, Any]:
             attributes["error_msg"] = msg_attributes["error_msg"]["stringValue"]
 
         return attributes
+    return None
 
 
-def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, msg_limit: int = 10000):
-    """Removing given keys from the dictionary if the dictionary size is more than message limit
+def remove_given_keys_from_dict_by_msg_limit(
+    event: dict[str, Any],
+    keys: list,
+    msg_limit: int = 10000,
+) -> dict[str, Any]:
+    """Removing given keys from the dictionary if the dictionary size is more than message limit.
+
     Args:
-        event Dict[str, Any]: Message body as a dictionary
-        keys list: keys to be removed
-        msg_limit int: message limit in char length
+        event (Dict[str, Any]): Message body as a dictionary
+        keys (list): List of keys to be removed from the dictionary
+        msg_limit (int): Message limit in characters
+
     Returns:
-        Dict[str, Any]: Message body as a dictionary
+        Dict[str, Any]: Message body as a dictionary.
     """
     msg_length = len(dumps(event).encode("utf-8"))
     if msg_length > msg_limit:
@@ -98,8 +130,8 @@ def remove_given_keys_from_dict_by_msg_limit(event: Dict[str, Any], keys: list, 
 
 
 @metric_scope
-def add_metric(metric_name: str, metrics) -> None:  # type: ignore
-    """Adds a metric to the custom metrics collection
+def add_metric(metric_name: str, metrics: Any) -> None:  # noqa: ANN401
+    """Adds a metric to the custom metrics collection.
 
     Args:
         metric_name (str): Name of the metric to be added to CloudWatch

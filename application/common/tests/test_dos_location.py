@@ -1,52 +1,51 @@
 import pytest
 
-from application.common.dos_location import DoSLocation
-
 from .conftest import dummy_dos_location
+from application.common.dos_location import DoSLocation
 
 
 @pytest.mark.parametrize(
-    "dos_location, expected_result",
+    ("dos_location", "expected_result"),
     [
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=None, longitude=None
+                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=None, longitude=None,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=1, postaltown="TOWN", latitude=1.1, longitude=1.1
+                id=1, postcode="TE57ER", easting=None, northing=1, postaltown="TOWN", latitude=1.1, longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1
+                id=1, postcode="TE57ER", easting=1, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=1.1
+                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=1.1, longitude=None
+                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=1.1, longitude=None,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1
+                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=None
+                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=None,
             ),
             False,
         ),
@@ -64,7 +63,7 @@ def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
 
 
 @pytest.mark.parametrize(
-    "input_postcode, expected_result",
+    ("input_postcode", "expected_result"),
     [
         ("TE57ER", "TE57ER"),
         ("TE5 7ER", "TE57ER"),

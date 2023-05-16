@@ -1,10 +1,10 @@
 from json import loads
 from os import environ
 
+import pytest
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
-from pytest import mark, raises
 
-from ..utilities import (
+from application.common.utilities import (
     add_metric,
     extract_body,
     get_sequence_number,
@@ -31,7 +31,7 @@ def test_extract_body_exception():
     # Arrange
     expected_change_event = "test"
     # Act & Assert
-    with raises(Exception):
+    with pytest.raises(ValueError, match="Change Event unable to be extracted"):
         extract_body(expected_change_event)
 
 
@@ -41,16 +41,13 @@ def test_json_str_body():
     # Act
     result = json_str_body({"test": "test"})
     # Assert
-    assert (
-        result == expected_json_str
-    ), f"Change event body should be {expected_json_str} str but is {result}"
+    assert result == expected_json_str, f"Change event body should be {expected_json_str} str but is {result}"
 
 
 def test_expected_json_str_exception():
     # Act & Assert
-    with raises(Exception) as exception:
+    with pytest.raises(TypeError, match="Object of type set is not JSON serializable"):
         json_str_body(body={"not a json dict"})
-        assert "Dict Change Event body cannot be converted to a JSON string" in str(exception.value)
 
 
 def test_get_sequence_number():
@@ -120,13 +117,13 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
     assert attributes["error_msg_http_code"] == "400"
 
 
-@mark.parametrize("val,expected", [("", True), ("    ", True), (None, True), ("True val", False)])
+@pytest.mark.parametrize(("val", "expected"), [("", True), ("    ", True), (None, True), ("True val", False)])
 def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
 
 
-@mark.parametrize(
-    "input_dict,keys_tobe_removed,msg_limit,expected",
+@pytest.mark.parametrize(
+    ("input_dict", "keys_tobe_removed", "msg_limit", "expected"),
     [
         ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
         ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
@@ -168,6 +165,6 @@ SQS_EVENT = {
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
             "awsRegion": "us-east-2",
-        }
-    ]
+        },
+    ],
 }

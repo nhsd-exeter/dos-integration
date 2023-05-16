@@ -2,20 +2,25 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 
-from common.constants import DENTIST_SERVICE_TYPE_IDS, NHS_UK_PALLIATIVE_CARE_SERVICE_CODE, PHARMACY_SERVICE_TYPE_IDS
+from common.constants import (
+    CLOSED_AND_HIDDEN_STATUSES,
+    DENTIST_SERVICE_TYPE_IDS,
+    NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
+    PHARMACY_SERVICE_TYPE_IDS,
+)
 from common.dos import DoSService
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes, WEEKDAYS
+from common.opening_times import WEEKDAYS, OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 logger = Logger(child=True)
 
 
 @dataclass
 class NHSEntity:
-    """This is an object to store an NHS Entity data
+    """This is an object to store an NHS Entity data.
 
     Some fields are pulled straight from the payload while others are processed first. So attribute
     names differ from payload format for consistency within object.
@@ -28,16 +33,16 @@ class NHSEntity:
     org_type: str
     org_sub_type: str
     org_status: str
-    address_lines: List[str]
+    address_lines: list[str]
     postcode: str
     website: str
     phone: str
-    standard_opening_times: Optional[StandardOpeningTimes]
-    specified_opening_times: Optional[List[SpecifiedOpeningTime]]
+    standard_opening_times: StandardOpeningTimes | None
+    specified_opening_times: list[SpecifiedOpeningTime] | None
     palliative_care: bool
-    CLOSED_AND_HIDDEN_STATUSES = ["HIDDEN", "CLOSED"]
 
-    def __init__(self, entity_data: dict):
+    def __init__(self, entity_data: dict) -> None:
+        """Initialise the object with the entity data."""
         self.entity_data = entity_data
 
         self.odscode = entity_data.get("ODSCode")
@@ -52,7 +57,7 @@ class NHSEntity:
         self.address_lines = [
             line
             for line in [entity_data.get(x) for x in [f"Address{i}" for i in range(1, 5)] + ["City", "County"]]
-            if isinstance(line, str) and line.strip() != ""
+            if isinstance(line, str) and line.strip()
         ]
 
         self.standard_opening_times = self._get_standard_opening_times()
@@ -62,25 +67,26 @@ class NHSEntity:
         self.palliative_care = self.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
 
     def __repr__(self) -> str:
+        """Returns a string representation of the object."""
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
 
-    def normal_postcode(self):
+    def normal_postcode(self) -> str:
+        """Returns the postcode in a normalised format."""
         return self.postcode.replace(" ", "").upper()
 
-    def extract_contact(self, contact_type: str) -> Optional[str]:
-        """Returns the nested contact value within the input payload"""
+    def extract_contact(self, contact_type: str) -> str | None:
+        """Returns the nested contact value within the input payload."""
         for item in self.entity_data.get("Contacts", []):
             if (
                 item.get("ContactMethodType", "").upper() == contact_type.upper()
                 and item.get("ContactType", "").upper() == "PRIMARY"
                 and item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"
             ):
-
                 return item.get("ContactValue")
         return None
 
-    def extract_uec_service(self, service_code: str) -> Union[bool, None]:
-        """Extracts the UEC service from the payload (e.g. Palliative Care)
+    def extract_uec_service(self, service_code: str) -> bool | None:
+        """Extracts the UEC service from the payload (e.g. Palliative Care).
 
         Args:
             service_code (str): NHS UK Service Code of the UEC service to extract if exists
@@ -90,11 +96,12 @@ class NHSEntity:
         """
         if isinstance(self.entity_data.get("UecServices", []), list):
             return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
-        else:
-            return None
+        return None
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:
-        """Filters the raw opening times data for standard weekly opening
+        """Get the standard opening times.
+
+        Filters the raw opening times data for standard weekly opening
         times and returns it in a StandardOpeningTimes object.
 
         Args:
@@ -116,8 +123,8 @@ class NHSEntity:
 
         return std_opening_times
 
-    def _get_specified_opening_times(self) -> List[SpecifiedOpeningTime]:
-        """Get all the Specified Opening Times
+    def _get_specified_opening_times(self) -> list[SpecifiedOpeningTime]:
+        """Get all the Specified Opening Times.
 
         Args:
             opening_time_type (str): OpeningTimeType to filter the data, General for pharmacy
@@ -146,16 +153,15 @@ class NHSEntity:
         return specified_opening_times
 
     def is_status_hidden_or_closed(self) -> bool:
-        """Check if the status is hidden or closed. If so, return True
+        """Check if the status is hidden or closed. If so, return True.
 
         Returns:
             bool: True if status is hidden or closed, False otherwise
         """
-        return self.org_status.upper() in self.CLOSED_AND_HIDDEN_STATUSES
+        return self.org_status.upper() in CLOSED_AND_HIDDEN_STATUSES
 
     def all_times_valid(self) -> bool:
-        """Does checks on all opening times for correct format, business rules, overlaps"""
-
+        """Does checks on all opening times for correct format, business rules, overlaps."""
         # Check format matches either spec or std format
         for item in self.entity_data.get("OpeningTimes", []):
             if not (is_std_opening_json(item) or is_spec_opening_json(item)):
@@ -165,16 +171,26 @@ class NHSEntity:
         return self.standard_opening_times.is_valid() and SpecifiedOpeningTime.valid_list(self.specified_opening_times)
 
     def is_matching_dos_service(self, dos_service: DoSService) -> bool:
+        """Check if the entity matches the DoS service.
+
+        Args:
+            dos_service (DoSService): DoS service to check against
+
+        Returns:
+            bool: True if the entity matches the DoS service, False otherwise
+        """
         if None in (self.odscode, dos_service.odscode):
             return False
 
         if dos_service.typeid in PHARMACY_SERVICE_TYPE_IDS:
             return (
-                len(dos_service.odscode) >= 5 and len(self.odscode) >= 5 and dos_service.odscode[:5] == self.odscode[:5]
+                len(dos_service.odscode) >= 5  # noqa: PLR2004
+                and len(self.odscode) >= 5  # noqa: PLR2004
+                and dos_service.odscode[:5] == self.odscode[:5]
             )
 
         if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
-            if not (len(dos_service.odscode) >= 6 and len(self.odscode) >= 7):
+            if not (len(dos_service.odscode) >= 6 and len(self.odscode) >= 7):  # noqa: PLR2004
                 return False
             odscode_extra_0 = f"{dos_service.odscode[0]}0{dos_service.odscode[1:]}"
             return self.odscode[:7] in (dos_service.odscode[:7], odscode_extra_0[:7])
@@ -184,15 +200,13 @@ class NHSEntity:
 
 
 def is_std_opening_json(item: dict) -> bool:
-    """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object"""
-
+    """Checks EXACT match to definition of General/Standard opening time for NHS Open time payload object."""
     # Check values
     if (
         str(item.get("OpeningTimeType")).upper() != "GENERAL"
         or str(item.get("Weekday")).lower() not in WEEKDAYS
         or item.get("AdditionalOpeningDate") not in [None, ""]
     ):
-
         return False
 
     is_open = item.get("IsOpen")
@@ -214,8 +228,7 @@ def is_std_opening_json(item: dict) -> bool:
 
 
 def is_spec_opening_json(item: dict) -> bool:
-    """Checks EXACT match to definition of Additional/Spec opening time for NHS Open time payload object"""
-
+    """Checks EXACT match to definition of Additional/Spec opening time for NHS Open time payload object."""
     if str(item.get("OpeningTimeType")).upper() != "ADDITIONAL":
         return False
 
@@ -243,11 +256,14 @@ def is_spec_opening_json(item: dict) -> bool:
 
 
 def match_nhs_entities_to_services(
-    nhs_entities: List[NHSEntity], services: List[DoSService]
-) -> Dict[str, List[DoSService]]:
-    """Takes lists of NHS Entities and DoS Services and creates a dict where the keys are NHS odscodes
-    and the values are the corresponding lists of services that match that code."""
+    nhs_entities: list[NHSEntity],
+    services: list[DoSService],
+) -> dict[str, list[DoSService]]:
+    """Match NHS Entities to corresponding list of services.
 
+    Takes lists of NHS Entities and DoS Services and creates a dict where the keys are NHS odscodes
+    and the values are the corresponding lists of services that match that code.
+    """
     logger.info("Matching all NHS Entities to corresponding list of services.")
     servicelist_map = defaultdict(list)
     for nhs_entity in nhs_entities:
@@ -257,26 +273,26 @@ def match_nhs_entities_to_services(
 
     logger.info(
         f"{len(servicelist_map)}/{len(nhs_entities)} nhs entities matches with at least 1 service. "
-        f"{len(nhs_entities) - len(servicelist_map)} not matched."
+        f"{len(nhs_entities) - len(servicelist_map)} not matched.",
     )
     return dict(servicelist_map)
 
 
-def skip_if_key_is_none(key: Any) -> bool:
-    """If the key is None, skip the item"""
-
+def skip_if_key_is_none(key: Any) -> bool:  # noqa: ANN401
+    """If the key is None, skip the item."""
     return key is None
 
 
-def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool) -> Union[bool, str]:
-    """Get the value to log for palliative care
+def get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool) -> bool | str:
+    """Get the value to log for palliative care.
 
     Args:
         palliative_care (bool): The value of palliative care
         skip_palliative_care (bool): Whether to skip palliative care
 
     Returns:
-        bool | str: The value to log"""
+    bool | str: The value to log
+    """
     return (
         "Never been updated on Profile Manager, skipped palliative care checks"
         if skip_palliative_care

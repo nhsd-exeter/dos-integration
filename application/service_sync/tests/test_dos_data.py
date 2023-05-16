@@ -1,9 +1,9 @@
 from datetime import date, time
 from os import environ
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
+import pytest
 from aws_lambda_powertools.logging import Logger
-from pytest import raises
 
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from application.service_sync.dos_data import (
@@ -41,7 +41,7 @@ def test_run_db_health_check_success(
     run_db_health_check()
     # Assert
     mock_logger.assert_has_calls(
-        [call("Running health check"), call("DoS database is running"), call("DoS database replica is running")]
+        [call("Running health check"), call("DoS database is running"), call("DoS database replica is running")],
     )
     mock_connect_to_dos_db.assert_called_once()
     mock_connect_to_dos_db_replica.assert_called_once()
@@ -149,14 +149,16 @@ def test_get_dos_service_and_history(
     # Assert
     assert mock_dos_service() == dos_service
     mock_get_standard_opening_times_from_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(), service_id=service_id
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
     )
     mock_get_specified_opening_times_from_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(), service_id=service_id
+        connection=mock_connect_to_dos_db().__enter__(),
+        service_id=service_id,
     )
     assert mock_service_histories() == service_history
     mock_service_histories.return_value.get_service_history_from_db.assert_called_once_with(
-        mock_connect_to_dos_db().__enter__()
+        mock_connect_to_dos_db().__enter__(),
     )
     mock_service_histories.return_value.create_service_histories_entry.assert_called_once_with()
 
@@ -171,7 +173,7 @@ def test_get_dos_service_and_history_no_match(
     service_id = 12345
     mock_query_dos_db.return_value.fetchall.return_value = []
     # Act
-    with raises(ValueError, match=f"Service ID {service_id} not found"):
+    with pytest.raises(ValueError, match=f"Service ID {service_id} not found"):
         get_dos_service_and_history(service_id)
     mock_connect_to_dos_db.assert_called_once()
 
@@ -186,7 +188,7 @@ def test_get_dos_service_and_history_mutiple_matches(
     service_id = 12345
     mock_query_dos_db.return_value.fetchall.return_value = [["Test"], ["Test"]]
     # Act
-    with raises(ValueError, match=f"Multiple services found for Service Id: {service_id}"):
+    with pytest.raises(ValueError, match=f"Multiple services found for Service Id: {service_id}"):
         get_dos_service_and_history(service_id)
     mock_connect_to_dos_db.assert_called_once()
 
@@ -304,7 +306,7 @@ def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: Magic
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=query,
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
 
 
@@ -369,7 +371,8 @@ def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMoc
 @patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_insert(
-    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -383,14 +386,15 @@ def test_save_palliative_care_into_db_insert(
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="INSERT INTO servicesgsds (serviceid, sdid, sgid) VALUES (%(SERVICE_ID)s, %(SDID)s, %(SGID)s);",
-        vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+        query_vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
     )
 
 
 @patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_delete(
-    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -404,7 +408,7 @@ def test_save_palliative_care_into_db_delete(
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="DELETE FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sdid=%(SDID)s AND sgid=%(SGID)s;",
-        vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+        query_vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
     )
 
 
@@ -412,7 +416,9 @@ def test_save_palliative_care_into_db_delete(
 @patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_no_z_code(
-    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock, mock_add_metric: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -431,7 +437,9 @@ def test_save_palliative_care_into_db_no_z_code(
 @patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_no_change(
-    mock_query_dos_db: MagicMock, mock_validate_dos_palliative_care_z_code_exists: MagicMock, mock_add_metric: MagicMock
+    mock_query_dos_db: MagicMock,
+    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -463,10 +471,10 @@ def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock
                     "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
                     "AND symptomdiscriminatorid=%(SDID)s;"
                 ),
-                vars={"SGID": 360, "SDID": 14167},
+                query_vars={"SGID": 360, "SDID": 14167},
             ),
             call().close(),
-        ]
+        ],
     )
 
 
@@ -487,8 +495,8 @@ def test_validate_dos_palliative_care_z_code_exists_does_not_exist(mock_query_do
                     "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
                     "AND symptomdiscriminatorid=%(SDID)s;"
                 ),
-                vars={"SGID": 360, "SDID": 14167},
+                query_vars={"SGID": 360, "SDID": 14167},
             ),
             call().close(),
-        ]
+        ],
     )

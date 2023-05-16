@@ -17,7 +17,7 @@ def test_put_content_to_s3(mock_client):
     # Assert
     mock_client.assert_called_once_with("s3")
     mock_client.return_value.put_object.assert_called_once_with(
-        Body=content, Bucket=bucket_name, Key=s3_filename, ServerSideEncryption="AES256"
+        Body=content, Bucket=bucket_name, Key=s3_filename, ServerSideEncryption="AES256",
     )
     # Cleanup
     del environ["SEND_EMAIL_BUCKET_NAME"]

@@ -2,12 +2,13 @@ from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
 
-from ..dos import (
+from .conftest import dummy_dos_service
+from application.common.dos import (
+    DoSService,
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
     db_rows_to_std_open_times,
     db_rows_to_std_open_times_map,
-    DoSService,
     get_all_valid_dos_postcodes,
     get_dos_locations,
     get_matching_dos_services,
@@ -17,8 +18,7 @@ from ..dos import (
     get_valid_dos_location,
     has_palliative_care,
 )
-from ..opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from .conftest import dummy_dos_service
+from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from common.constants import (
     DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
@@ -53,9 +53,6 @@ def test_field_names():
 
 
 def test__init__():
-    """Pass in random list of values as a mock database row then make sure
-    they're correctly set as the attributes of the created object.
-    """
     # Arrange
     test_db_row = {}
     for column in DoSService.field_names():
@@ -134,7 +131,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
             "statusid, publicphone, publicname, st.name servicename FROM services s "
             "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
-        vars={"ODS": f"{odscode[:5]}%"},
+        query_vars={"ODS": f"{odscode[:5]}%"},
     )
     mock_cursor.fetchall.assert_called_with()
     mock_cursor.close.assert_called_with()
@@ -200,7 +197,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, 
             "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
             "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
-        vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
+        query_vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
     )
     mock_cursor.fetchall.assert_called_with()
     mock_cursor.close.assert_called_with()
@@ -228,7 +225,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
             "publicphone, publicname, st.name servicename FROM services s LEFT JOIN servicetypes"
             " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
-        vars={"ODS": f"{odscode[:5]}%"},
+        query_vars={"ODS": f"{odscode[:5]}%"},
     )
     mock_cursor.fetchall.assert_called_with()
     mock_cursor.close.assert_called_with()
@@ -302,7 +299,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, m
             "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00, 21:00:00-22:00:00]>",
             "<SpecifiedOpenTime: 20-09-2019 open=False []>",
             "<SpecifiedOpenTime: 21-09-2019 open=False []>",
-        ]
+        ],
     )
     # Act
     responses = get_specified_opening_times_from_db(connection=mock_connection, service_id=service_id)
@@ -319,7 +316,7 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, m
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.id = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(SERVICE_ID)s",
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
 
 
@@ -358,7 +355,7 @@ def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mo
         "LEFT JOIN openingtimedays otd "
         "ON sdo.dayid = otd.id "
         "WHERE sdo.serviceid = %(SERVICE_ID)s",
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
 
 
@@ -389,7 +386,7 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
         "INNER JOIN servicespecifiedopeningtimes ssot "
         "ON ssod.id = ssot.servicespecifiedopeningdateid "
         "WHERE ssod.serviceid = %(SERVICE_ID)s",
-        vars={"SERVICE_ID": service_id},
+        query_vars={"SERVICE_ID": service_id},
     )
 
 
@@ -410,7 +407,7 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
             "postaltown": "town",
             "latitude": 4.0,
             "longitude": 2.0,
-        }
+        },
     ]
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
@@ -433,7 +430,7 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
         connection=mock_connection,
         query="SELECT id, postcode, easting, northing, postaltown, latitude, longitude "
         "FROM locations WHERE postcode = ANY(%(pc_variations)s)",
-        vars={"pc_variations": postcode_variations},
+        query_vars={"pc_variations": postcode_variations},
     )
 
 
@@ -548,7 +545,7 @@ def test_get_services_from_db(mock_query_dos_db, mock_connect_to_dos_db_replica)
             "friday=[13:00:00-15:30:00], saturday=[], sunday=[]>"
             "<SpecifiedOpenTime: 06-05-2019 open=True [06:00:00-07:00:00]>"
             "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>",
-        ]
+        ],
     )
 
     # Act
@@ -755,7 +752,7 @@ def test_db_rows_to_std_open_times_map():
     assert actual_std_open_times_map == expcted_std_open_times_map
 
 
-def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):
+def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa: A002
     return {
         "id": id,
         "uid": "159514725",
@@ -800,7 +797,9 @@ def test_has_palliative_care(mock_query_dos_db: MagicMock):
     assert True is has_palliative_care(dos_service, connection)
     # Assert
     mock_query_dos_db.assert_called_once_with(
-        connection=connection, query=expected_sql_command, vars=expected_named_args
+        connection=connection,
+        query=expected_sql_command,
+        query_vars=expected_named_args,
     )
 
 

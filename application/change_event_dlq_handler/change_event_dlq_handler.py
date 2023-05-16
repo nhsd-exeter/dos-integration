@@ -1,7 +1,9 @@
+from typing import Any
+
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.constants import FIFO_DLQ_HANDLER_REPORT_ID
@@ -20,8 +22,8 @@ logger = Logger()
 @event_source(data_class=SQSEvent)
 @logger.inject_lambda_context(clear_state=True)
 @metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
-    """Entrypoint handler for the change event dlq handler lambda
+def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ARG001, ANN401
+    """Entrypoint handler for the change event dlq handler lambda.
 
     Messages are sent to the change event dlq handler lambda when a message
     fails in either the change event queue or holding queue
@@ -29,6 +31,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
         context (LambdaContext): Lambda function context object
+        metrics (Metrics): CloudWatch embedded metrics object
     """
     record = next(event.records)
     handle_sqs_msg_attributes(record.message_attributes)

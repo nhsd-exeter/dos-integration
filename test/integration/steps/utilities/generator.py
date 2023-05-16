@@ -223,7 +223,7 @@ def add_specified_openings_to_dos(context: Context) -> Any:
         date = datetime.strptime(day["date"], "%b %d %Y").strftime("%Y-%m-%d")
         query = (
             'INSERT INTO pathwaysdos.servicespecifiedopeningdates("date", serviceid) '
-            f"VALUES('{str(date)}', {int(context.service_id)}) RETURNING id"
+            f"VALUES('{date!s}', {int(context.service_id)}) RETURNING id"
         )
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         response = invoke_dos_db_handler_lambda(lambda_payload)

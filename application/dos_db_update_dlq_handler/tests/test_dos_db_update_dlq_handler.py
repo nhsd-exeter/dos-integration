@@ -2,19 +2,19 @@ from dataclasses import dataclass
 from os import environ
 from unittest.mock import patch
 
+import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
-from pytest import fixture
 
-from ..dos_db_update_dlq_handler import lambda_handler
+from application.dos_db_update_dlq_handler.dos_db_update_dlq_handler import lambda_handler
 
 FILE_PATH = "application.dos_db_update_dlq_handler.dos_db_update_dlq_handler"
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "dos-db-update-dlq-handler"
         memory_limit_in_mb: int = 128
@@ -67,8 +67,8 @@ def test_lambda_handler(mock_put_metric, mock_set_dimentions, mock_extract_body,
                         "dataType": "String",
                     },
                 },
-            }
-        ]
+            },
+        ],
     }
     environ["ENV"] = "test"
     mock_extract_body.return_value = extracted_body

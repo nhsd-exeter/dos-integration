@@ -1,7 +1,9 @@
+from typing import Any
+
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.constants import DLQ_HANDLER_REPORT_ID
@@ -17,15 +19,17 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
 @logger.inject_lambda_context(
-    clear_state=True, correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue'
+    clear_state=True,
+    correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue',
 )
 @metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
-    """Entrypoint handler for the lambda
+def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ANN401, ARG001
+    """Entrypoint handler for the lambda.
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
         context (LambdaContext): Lambda function context object
+        metrics (Any): Embedded metrics object
     """
     record = next(event.records)
     message = record.body
