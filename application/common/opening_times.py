@@ -414,7 +414,7 @@ class StandardOpeningTimes:
         return OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day))
 
     def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:
-        """Adds a formatted open period to the specified weekda.
+        """Adds a formatted open period to the specified weekday.
 
         Args:
             open_period (OpenPeriod): The open period to add
