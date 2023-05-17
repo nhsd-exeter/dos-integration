@@ -1,4 +1,4 @@
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from application.common.constants import (
     DOS_ADDRESS_CHANGE_KEY,
@@ -49,7 +49,9 @@ def test_compare_nhs_uk_and_dos_data(
     response = compare_nhs_uk_and_dos_data(dos_service, nhs_entity, service_histories)
     # Assert
     mock_changes_to_dos.assert_called_once_with(
-        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories
+        dos_service=dos_service,
+        nhs_entity=nhs_entity,
+        service_histories=service_histories,
     )
     mock_compare_website.assert_called_once_with(changes_to_dos=mock_changes_to_dos.return_value)
     mock_compare_public_phone.assert_called_once_with(changes_to_dos=mock_compare_website.return_value)
@@ -155,7 +157,7 @@ def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock)
                 update_service_history=False,
             ),
             call().__eq__(mock_set_up_for_services_table_change.return_value),
-        ]  # type: ignore
+        ],
     )
 
 
@@ -246,10 +248,11 @@ def test_compare_opening_times(
                 dos_weekday_change_key=DOS_STANDARD_OPENING_TIMES_SUNDAY_CHANGE_KEY,
                 weekday="sunday",
             ),
-        ]
+        ],
     )
     changes_to_dos.service_histories.add_specified_opening_times_change.assert_called_once_with(
-        current_opening_times=None, new_opening_times=None
+        current_opening_times=None,
+        new_opening_times=None,
     )
 
 
@@ -334,7 +337,8 @@ def test_set_up_for_services_table_change(mock_service_histories_change: MagicMo
         change_key=change_key,
     )
     changes_to_dos.service_histories.add_change.assert_called_once_with(
-        dos_change_key=change_key, change=mock_service_histories_change.return_value
+        dos_change_key=change_key,
+        change=mock_service_histories_change.return_value,
     )
 
 
@@ -368,7 +372,8 @@ def test_set_up_for_services_table_change_no_service_history_update(mock_service
 @patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
 @patch(f"{FILE_PATH}.log_palliative_care_not_equal")
 def test_compare_palliative_care_unequal(
-    mock_log_palliative_care_not_equal: MagicMock, mock_log_incorrect_palliative_stockholder_type: MagicMock
+    mock_log_palliative_care_not_equal: MagicMock,
+    mock_log_incorrect_palliative_stockholder_type: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -384,7 +389,8 @@ def test_compare_palliative_care_unequal(
     # Assert
     assert response == changes_to_dos
     mock_log_palliative_care_not_equal.assert_called_once_with(
-        nhs_uk_palliative_care=nhs_palliative_care, dos_palliative_care=dos_palliative_care
+        nhs_uk_palliative_care=nhs_palliative_care,
+        dos_palliative_care=dos_palliative_care,
     )
     mock_log_incorrect_palliative_stockholder_type.assert_not_called()
 

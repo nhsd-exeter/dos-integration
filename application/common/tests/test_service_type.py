@@ -1,13 +1,13 @@
 import pytest
 
-from ..constants import SERVICE_TYPES, VALID_SERVICE_TYPES_KEY
-from ..service_type import get_valid_service_types
+from application.common.constants import SERVICE_TYPES, VALID_SERVICE_TYPES_KEY
+from application.common.service_type import get_valid_service_types
 
 FILE_PATH = "application.common.service_type"
 
 
 @pytest.mark.parametrize(
-    "org_type, expected_valid_service_types",
+    ("org_type", "expected_valid_service_types"),
     [
         (
             "Dentist",

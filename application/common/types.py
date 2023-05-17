@@ -1,10 +1,10 @@
-from typing import Any, Dict, Optional, TypedDict
+from typing import Any, TypedDict
 
 
 class HoldingQueueChangeEventItem(TypedDict):
-    """Represents a change event sent to the service matcher lambda via the holding queue"""
+    """Represents a change event sent to the service matcher lambda via the holding queue."""
 
-    change_event: Dict[str, Any]
+    change_event: dict[str, Any]
     dynamo_record_id: str
     correlation_id: str
     sequence_number: int
@@ -12,14 +12,14 @@ class HoldingQueueChangeEventItem(TypedDict):
 
 
 class UpdateRequest(TypedDict):
-    """Class to represent the update request payload"""
+    """Class to represent the update request payload."""
 
-    change_event: Dict[str, Any]
+    change_event: dict[str, Any]
     service_id: str
 
 
 class UpdateRequestMetadata(TypedDict):
-    """Class to represent the update request metadata"""
+    """Class to represent the update request metadata."""
 
     dynamo_record_id: str
     correlation_id: str
@@ -30,17 +30,20 @@ class UpdateRequestMetadata(TypedDict):
 
 
 class UpdateRequestQueueItem(TypedDict):
-    """Class to represent the update request queue item containing the payload and metadata
-    Optional fields are for the health check as it does not have a payload or metadata"""
+    """Update Request Queue Item.
 
-    update_request: Optional[UpdateRequest]
-    recipient_id: Optional[str]
-    metadata: Optional[UpdateRequestMetadata]
+    Class to represent the update request queue item containing the payload and metadata
+    Optional fields are for the health check as it does not have a payload or metadata.
+    """
+
+    update_request: UpdateRequest | None
+    recipient_id: str | None
+    metadata: UpdateRequestMetadata | None
     is_health_check: bool
 
 
 class EmailFile(TypedDict):
-    """Class to represent the email file saved to S3"""
+    """Class to represent the email file saved to S3."""
 
     correlation_id: str
     email_body: str
@@ -49,7 +52,7 @@ class EmailFile(TypedDict):
 
 
 class EmailMessage(TypedDict):
-    """Class to represent the email message for the send email lambda"""
+    """Class to represent the email message for the send email lambda."""
 
     change_id: str
     correlation_id: str

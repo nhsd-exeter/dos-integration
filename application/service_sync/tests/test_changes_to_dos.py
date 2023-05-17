@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from pytest import mark
+import pytest
 
 from application.common.opening_times import WEEKDAYS
 from application.service_sync.changes_to_dos import ChangesToDoS
@@ -34,7 +34,7 @@ def test_changes_to_dos():
     assert None is changes_to_dos.current_website
 
 
-@mark.parametrize("weekday", WEEKDAYS)
+@pytest.mark.parametrize("weekday", WEEKDAYS)
 def test_changes_to_dos_check_for_standard_opening_times_day_changes(weekday: str):
     # Arrange
     dos_service = MagicMock()
@@ -49,7 +49,7 @@ def test_changes_to_dos_check_for_standard_opening_times_day_changes(weekday: st
     assert hasattr(changes_to_dos, f"new_{weekday}_opening_times")
 
 
-@mark.parametrize("weekday", WEEKDAYS)
+@pytest.mark.parametrize("weekday", WEEKDAYS)
 def test_changes_to_dos_check_for_standard_opening_times_day_changes_no_changes(weekday: str):
     # Arrange
     dos_service = MagicMock()
@@ -120,7 +120,8 @@ def test_changes_to_dos_check_for_address_and_postcode_for_changes(mock_get_vali
 @patch(f"{FILE_PATH}.log_invalid_nhsuk_postcode")
 @patch(f"{FILE_PATH}.get_valid_dos_location")
 def test_changes_to_dos_check_for_address_and_postcode_for_changes_postcode_invalid(
-    mock_get_valid_dos_location: MagicMock, mock_log_invalid_nhsuk_postcode: MagicMock
+    mock_get_valid_dos_location: MagicMock,
+    mock_log_invalid_nhsuk_postcode: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -144,7 +145,8 @@ def test_changes_to_dos_check_for_address_and_postcode_for_changes_postcode_inva
 @patch(f"{FILE_PATH}.is_val_none_or_empty")
 @patch(f"{FILE_PATH}.format_website")
 def test_changes_to_dos_check_website_for_change_remove_website(
-    mock_format_website: MagicMock, mock_is_val_none_or_empty: MagicMock
+    mock_format_website: MagicMock,
+    mock_is_val_none_or_empty: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()

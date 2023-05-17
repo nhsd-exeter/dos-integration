@@ -23,10 +23,8 @@ def validate_opening_times(dos_service: DoSService, nhs_entity: NHSEntity) -> bo
         log_service_with_generic_bank_holiday(nhs_entity, dos_service)
     if not nhs_entity.all_times_valid():
         logger.warning(
-            (
-                f"Opening Times for NHS Entity '{nhs_entity.odscode}' "
-                "were previously found to be invalid or illogical. Skipping change."
-            )
+            f"Opening Times for NHS Entity '{nhs_entity.odscode}' "
+            "were previously found to be invalid or illogical. Skipping change.",
         )
         return False
     return True

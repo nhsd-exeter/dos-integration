@@ -22,12 +22,6 @@ jobs:
       - name: Check Python Formatting
         run: |
           make python-linting
-      - name: Check Python Imports
-        run: |
-          make python-check-imports
       - name: Check for Python Dead Code
         run: |
           make python-check-dead-code
-      - name: Check Python Security
-        run: |
-          make python-check-security

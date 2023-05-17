@@ -2,15 +2,16 @@ from datetime import date, time
 
 import pytest
 
-from ..nhs import (
+from .conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
+from application.common.constants import CLOSED_AND_HIDDEN_STATUSES
+from application.common.nhs import (
+    NHSEntity,
     get_palliative_care_log_value,
     is_spec_opening_json,
     is_std_opening_json,
     match_nhs_entities_to_services,
-    NHSEntity,
     skip_if_key_is_none,
 )
-from .conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -102,8 +103,8 @@ def test_get_specified_opening_times():
                     "AdditionalOpeningDate": "Jan 20 2023",
                     "IsOpen": False,
                 },
-            ]
-        }
+            ],
+        },
     )
     # Act
     # Assert
@@ -124,7 +125,7 @@ def test_get_specified_opening_times():
         ), f"NHS entity should contain {exp_spec_open_time} but can't be found in list {actual_spec_open_times}"
 
     assert len(actual_spec_open_times) == len(
-        expected
+        expected,
     ), f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
 
 
@@ -173,8 +174,8 @@ def test_get_standard_opening_times():
                     "AdditionalOpeningDate": "",
                     "IsOpen": False,
                 },
-            ]
-        }
+            ],
+        },
     )
     # Act
     expected_std_open_times = StandardOpeningTimes()
@@ -201,7 +202,7 @@ def test_is_status_hidden_or_closed_open_service(organisation_status: str):
     assert not result
 
 
-@pytest.mark.parametrize("organisation_status", NHSEntity.CLOSED_AND_HIDDEN_STATUSES)
+@pytest.mark.parametrize("organisation_status", CLOSED_AND_HIDDEN_STATUSES)
 def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
     # Arrange
     test_data = {"OrganisationStatus": organisation_status}
@@ -213,7 +214,7 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
 
 
 @pytest.mark.parametrize(
-    "open_time_json, expected",
+    ("open_time_json", "expected"),
     [
         ({}, False),
         (
@@ -380,7 +381,7 @@ def test_is_std_opening_json(open_time_json, expected):
 
 
 @pytest.mark.parametrize(
-    "open_time_json, expected",
+    ("open_time_json", "expected"),
     [
         ({}, False),
         (
@@ -559,7 +560,7 @@ def test_is_spec_opening_json(open_time_json, expected):
     assert actual == expected, f"Spec time should be valid={expected} but wasn't. open_time={open_time_json}"
 
 
-def test_is_matching_dos_service():
+def test_is_matching_dos_service():  # noqa: PLR0915
     nhs_entity = NHSEntity({})
     dos_service = dummy_dos_service()
 
@@ -671,7 +672,7 @@ def test_match_nhs_entities_to_services():
 
 
 @pytest.mark.parametrize(
-    "input_value, output_value",
+    ("input_value", "output_value"),
     [
         ("", None),
         (None, None),
@@ -683,7 +684,7 @@ def test_match_nhs_entities_to_services():
                     "ServiceName": "Pharmacy palliative care medication stockholder",
                     "ServiceDescription": None,
                     "ServiceCode": "SRV0559",
-                }
+                },
             ],
             True,
         ),
@@ -695,14 +696,21 @@ def test_extract_uec_service(input_value, output_value):
 
 
 @pytest.mark.parametrize(
-    "input_value,output_value", [(None, True), ("", False), ("V012345", False), (False, False), ("V012345", False)]
+    ("input_value", "output_value"),
+    [
+        (None, True),
+        ("", False),
+        ("V012345", False),
+        (False, False),
+        ("V012345", False),
+    ],
 )
 def test_skip_if_key_is_none(input_value, output_value):
     assert output_value == skip_if_key_is_none(input_value)
 
 
 @pytest.mark.parametrize(
-    "palliative_care,skip_palliative_care,output_value",
+    ("palliative_care", "skip_palliative_care", "output_value"),
     [
         (True, False, True),
         (False, False, False),

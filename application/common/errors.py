@@ -1,6 +1,6 @@
-class ValidationException(Exception):
-    pass
+class ValidationError(Exception):
+    """Exception raised for errors in the input."""
 
 
-class DynamoDBException(Exception):
-    pass
+class DynamoDBError(Exception):
+    """Exception raised for all DynamoDB errors."""

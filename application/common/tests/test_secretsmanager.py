@@ -1,8 +1,8 @@
 from json import dumps
 
 import boto3
+import pytest
 from moto import mock_secretsmanager
-from pytest import raises
 
 FILE_PATH = "application.common.secretsmanager"
 
@@ -26,5 +26,5 @@ def test_get_secret():
 def test_get_secret_resource_not_found():
     from application.common.secretsmanager import get_secret
 
-    with raises(Exception, match="Failed getting secret 'fake_secret_name' from secrets manager"):
+    with pytest.raises(Exception, match="Failed getting secret 'fake_secret_name' from secrets manager"):
         get_secret("fake_secret_name")

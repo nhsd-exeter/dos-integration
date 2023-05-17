@@ -24,7 +24,7 @@ from common.constants import (
 )
 from common.dos import DoSService
 from common.dos_location import DoSLocation
-from common.nhs import get_palliative_care_log_value, NHSEntity, skip_if_key_is_none
+from common.nhs import NHSEntity, get_palliative_care_log_value, skip_if_key_is_none
 from common.opening_times import DAY_IDS, WEEKDAYS
 from common.report_logging import log_incorrect_palliative_stockholder_type, log_palliative_care_not_equal
 
@@ -32,7 +32,9 @@ logger = Logger(child=True)
 
 
 def compare_nhs_uk_and_dos_data(
-    dos_service: DoSService, nhs_entity: NHSEntity, service_histories: ServiceHistories
+    dos_service: DoSService,
+    nhs_entity: NHSEntity,
+    service_histories: ServiceHistories,
 ) -> ChangesToDoS:
     """Compares the data of the dos_service and nhs_entity and returns a ChangesToDoS object.
 
@@ -110,7 +112,7 @@ def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         - longitude
         - town
         - easting
-        - northing
+        - northing.
 
     Args:
         changes_to_dos (ChangesToDoS): ChangesToDoS holder object
@@ -191,7 +193,8 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
             if changes_to_dos.check_for_standard_opening_times_day_changes(weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
-                    changes_to_dos, f"new_{weekday}_opening_times"
+                    changes_to_dos,
+                    f"new_{weekday}_opening_times",
                 )
                 changes_to_dos.service_histories.add_standard_opening_times_change(
                     current_opening_times=changes_to_dos.dos_service.standard_opening_times,
@@ -262,7 +265,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         ChangesToDoS: ChangesToDoS holder object
     """
     skip_palliative_care_check = skip_if_key_is_none(
-        changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+        changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
     )
     logger.debug(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
@@ -276,14 +279,16 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
         )
         changes_to_dos.service_histories.add_sgsdid_change(
-            sgsdid=DOS_PALLIATIVE_CARE_SGSDID, new_value=changes_to_dos.nhs_entity.palliative_care
+            sgsdid=DOS_PALLIATIVE_CARE_SGSDID,
+            new_value=changes_to_dos.nhs_entity.palliative_care,
         )
     elif (
         changes_to_dos.dos_service.typeid in DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES
         and changes_to_dos.dos_service.palliative_care is True
     ):
         nhs_uk_palliative_care = get_palliative_care_log_value(
-            changes_to_dos.nhs_entity.palliative_care, skip_palliative_care_check
+            changes_to_dos.nhs_entity.palliative_care,
+            skip_palliative_care_check,
         )
         log_incorrect_palliative_stockholder_type(
             nhs_uk_palliative_care=nhs_uk_palliative_care,
@@ -295,7 +300,8 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
             "No change / Not suitable for palliative care comparison",
             extra={
                 "nhs_uk_palliative_care": get_palliative_care_log_value(
-                    changes_to_dos.nhs_entity.palliative_care, skip_palliative_care_check
+                    changes_to_dos.nhs_entity.palliative_care,
+                    skip_palliative_care_check,
                 ),
                 "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
             },

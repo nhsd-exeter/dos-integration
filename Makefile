@@ -510,13 +510,11 @@ trigger-dos-deployment-pipeline:
 	rm -rf jenkins.cookies
 
 python-linting:
-	make python-code-check FILES=application
 	make docker-run-ruff
 
 python-code-checks:
 	make python-check-dead-code
-	make python-check-imports
-	make python-code-check FILES=application
+	make python-linting
 	make unit-test
 	echo "Python code checks completed"
 
@@ -525,32 +523,6 @@ python-check-dead-code:
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		DIR=$(APPLICATION_DIR) \
 		CMD="python -m vulture"
-
-python-format:
-	make python-code-format FILES=application
-	make python-code-format FILES=test
-
-python-check-imports:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m isort . -l=120 --check-only --profile=black \
-			--force-alphabetical-sort-within-sections --known-local-folder=common \
-			"
-
-python-fix-imports:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
-			--known-local-folder=common \
-			"
-
-python-check-security:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m bandit -r . -c pyproject.toml"
 
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler
@@ -651,8 +623,10 @@ undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 
 docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 	make -s docker-run \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="ruff check . $(RUFF_OPTS)"
 
-ruff-auto-fix: # Auto fixes ruff warnings
+python-ruff-fix: # Auto fixes ruff warnings
 	make docker-run-ruff RUFF_OPTS="--fix"
+
+.SILENT: docker-run-ruff

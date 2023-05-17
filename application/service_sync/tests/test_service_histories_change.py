@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
-from pytest import mark, raises
+import pytest
 
-from ..service_histories_change import ServiceHistoriesChange
+from application.service_sync.service_histories_change import ServiceHistoriesChange
 from common.constants import (
     DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
@@ -22,21 +22,23 @@ DATA = "New value to be added to db"
 PREVIOUS_VALUE = "Old value to be removed from db"
 
 
-@mark.parametrize("demographics_change_key", (DOS_SERVICES_TABLE_CHANGE_TYPE_LIST))
+@pytest.mark.parametrize("demographics_change_key", (DOS_SERVICES_TABLE_CHANGE_TYPE_LIST))
 @patch(f"{FILE_PATH}.ServiceHistoriesChange.get_demographics_change_action")
 def test_service_histories_change_demographics_change(mock_get_demographics_change_action, demographics_change_key):
     # Act
     service_histories_change = ServiceHistoriesChange(
-        data=DATA, previous_value=PREVIOUS_VALUE, change_key=demographics_change_key
+        data=DATA,
+        previous_value=PREVIOUS_VALUE,
+        change_key=demographics_change_key,
     )
     # Assert
-    assert DATA == service_histories_change.data
-    assert PREVIOUS_VALUE == service_histories_change.previous_value
-    assert DOS_DEMOGRAPHICS_AREA_TYPE == service_histories_change.area
+    assert service_histories_change.data == DATA
+    assert service_histories_change.previous_value == PREVIOUS_VALUE
+    assert service_histories_change.area == DOS_DEMOGRAPHICS_AREA_TYPE
     mock_get_demographics_change_action.assert_called_once_with()
 
 
-@mark.parametrize(
+@pytest.mark.parametrize(
     "opening_times_change_key",
     [
         DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
@@ -53,12 +55,14 @@ def test_service_histories_change_demographics_change(mock_get_demographics_chan
 def test_service_histories_change_opening_times_change(mock_get_opening_times_change_action, opening_times_change_key):
     # Act
     service_histories_change = ServiceHistoriesChange(
-        data=DATA, previous_value=PREVIOUS_VALUE, change_key=opening_times_change_key
+        data=DATA,
+        previous_value=PREVIOUS_VALUE,
+        change_key=opening_times_change_key,
     )
     # Assert
-    assert DATA == service_histories_change.data
-    assert PREVIOUS_VALUE == service_histories_change.previous_value
-    assert DOS_DEMOGRAPHICS_AREA_TYPE == service_histories_change.area
+    assert service_histories_change.data == DATA
+    assert service_histories_change.previous_value == PREVIOUS_VALUE
+    assert service_histories_change.area == DOS_DEMOGRAPHICS_AREA_TYPE
     mock_get_opening_times_change_action.assert_called_once_with()
 
 
@@ -66,28 +70,30 @@ def test_service_histories_change_opening_times_change(mock_get_opening_times_ch
 @patch(f"{FILE_PATH}.ServiceHistoriesChange.get_demographics_change_action")
 def test_service_histories_change_no_change(demographics_change_key, mock_get_opening_times_change_action):
     # Act
-    with raises(ValueError, match="Unknown change key"):
+    with pytest.raises(ValueError, match="Unknown change key"):
         ServiceHistoriesChange(data=DATA, previous_value=PREVIOUS_VALUE, change_key="ANY")
     # Assert
     demographics_change_key.assert_not_called()
     mock_get_opening_times_change_action.assert_not_called()
 
 
-@mark.parametrize(
-    "data, previous_value, expected_action",
+@pytest.mark.parametrize(
+    ("data", "previous_value", "expected_action"),
     [(DATA, PREVIOUS_VALUE, "modify"), (None, PREVIOUS_VALUE, "delete"), (DATA, None, "add")],
 )
 def test_service_histories_change_get_demographics_change_action(data, previous_value, expected_action):
     # Act
     service_histories_change = ServiceHistoriesChange(
-        data=data, previous_value=previous_value, change_key=DOS_WEBSITE_CHANGE_KEY
+        data=data,
+        previous_value=previous_value,
+        change_key=DOS_WEBSITE_CHANGE_KEY,
     )  # get_demographics_change_action should be called by __init__ function
     # Assert
     assert expected_action == service_histories_change.change_action
 
 
-@mark.parametrize(
-    "data, expected_action",
+@pytest.mark.parametrize(
+    ("data", "expected_action"),
     [
         ({"remove": "TO_REMOVE", "add": "TO_ADD"}, "modify"),
         ({"remove": "TO_REMOVE"}, "delete"),
@@ -97,7 +103,9 @@ def test_service_histories_change_get_demographics_change_action(data, previous_
 def test_service_histories_change_get_opening_times_change_action(data, expected_action):
     # Act
     service_histories_change = ServiceHistoriesChange(
-        data=data, previous_value=None, change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY
+        data=data,
+        previous_value=None,
+        change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     )  # get_opening_times_change_action should be called by __init__ function
     # Assert
     assert expected_action == service_histories_change.change_action
@@ -105,7 +113,7 @@ def test_service_histories_change_get_opening_times_change_action(data, expected
 
 def test_service_histories_change_get_opening_times_change_action_error():
     # Act & Assert
-    with raises(ValueError, match="Unknown change action"):
+    with pytest.raises(ValueError, match="Unknown change action"):
         ServiceHistoriesChange(data={}, previous_value=None, change_key=DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY)
 
 
@@ -114,7 +122,9 @@ def test_service_histories_change_get_change(mock_get_demographics_change_action
     # Arrange
     mock_get_demographics_change_action.return_value = change_action = "Change Action"
     service_histories_change = ServiceHistoriesChange(
-        data=DATA, previous_value=PREVIOUS_VALUE, change_key=DOS_WEBSITE_CHANGE_KEY
+        data=DATA,
+        previous_value=PREVIOUS_VALUE,
+        change_key=DOS_WEBSITE_CHANGE_KEY,
     )
     # Act
     response = service_histories_change.get_change()
@@ -132,7 +142,9 @@ def test_service_histories_change_get_change_add(mock_get_demographics_change_ac
     # Arrange
     mock_get_demographics_change_action.return_value = change_action = "add"
     service_histories_change = ServiceHistoriesChange(
-        data=DATA, previous_value=PREVIOUS_VALUE, change_key=DOS_WEBSITE_CHANGE_KEY
+        data=DATA,
+        previous_value=PREVIOUS_VALUE,
+        change_key=DOS_WEBSITE_CHANGE_KEY,
     )
     # Act
     response = service_histories_change.get_change()

@@ -1,12 +1,17 @@
 from dataclasses import dataclass
 from os import environ
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
+import pytest
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from pytest import fixture
 
-from ..service_sync import add_success_metric, lambda_handler, remove_sqs_message_from_queue, set_up_logging
+from application.service_sync.service_sync import (
+    add_success_metric,
+    lambda_handler,
+    remove_sqs_message_from_queue,
+    set_up_logging,
+)
 from common.types import UpdateRequest, UpdateRequestMetadata, UpdateRequestQueueItem
 
 FILE_PATH = "application.service_sync.service_sync"
@@ -29,11 +34,11 @@ UPDATE_REQUEST_QUEUE_ITEM = UpdateRequestQueueItem(
 )
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "service-sync"
         memory_limit_in_mb: int = 128
@@ -116,12 +121,14 @@ def test_lambda_handler_no_healthcheck(
     # Assert
     mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
     mock_check_and_remove_pending_dos_changes.assert_called_once_with(
-        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"]
+        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"],
     )
     mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
     mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
     mock_compare_nhs_uk_and_dos_data.assert_called_once_with(
-        dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories
+        dos_service=dos_service,
+        nhs_entity=nhs_entity,
+        service_histories=service_histories,
     )
     mock_update_dos_data.assert_called_once_with(
         changes_to_dos=mock_compare_nhs_uk_and_dos_data(),
@@ -174,7 +181,7 @@ def test_lambda_handler_no_healthcheck_exception(
     # Assert
     mock_set_up_logging.assert_called_once_with(UPDATE_REQUEST_QUEUE_ITEM)
     mock_check_and_remove_pending_dos_changes.assert_called_once_with(
-        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"]
+        UPDATE_REQUEST_QUEUE_ITEM["update_request"]["service_id"],
     )
     mock_nhs_entity.assert_called_once_with(CHANGE_EVENT)
     mock_get_dos_service_and_history.assert_called_once_with(service_id=SERVICE_ID)
@@ -209,7 +216,8 @@ def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info:
     # Assert
     mock_client.assert_called_once_with("sqs")
     mock_client.return_value.delete_message.assert_called_once_with(
-        QueueUrl=update_request_queue_url, ReceiptHandle=RECIPIENT_ID
+        QueueUrl=update_request_queue_url,
+        ReceiptHandle=RECIPIENT_ID,
     )
     mock_logger_info.assert_called_once_with("Removed SQS message from queue", extra={"receipt_handle": RECIPIENT_ID})
     # Cleanup

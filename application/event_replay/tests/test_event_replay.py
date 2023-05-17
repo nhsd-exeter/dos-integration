@@ -2,12 +2,12 @@ from dataclasses import dataclass
 from decimal import Decimal
 from json import dumps
 from os import environ
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
+import pytest
 from aws_lambda_powertools.logging import Logger
 from boto3.dynamodb.types import TypeSerializer
-from pytest import fixture, raises
 
 from application.event_replay.event_replay import (
     build_correlation_id,
@@ -20,16 +20,16 @@ from application.event_replay.event_replay import (
 FILE_PATH = "application.event_replay.event_replay"
 
 
-@fixture
-def event() -> Dict[str, Any]:
+@pytest.fixture()
+def event() -> dict[str, Any]:
     return {"odscode": "FXXX1", "sequence_number": "1"}
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "event-replay"
         memory_limit_in_mb: int = 128
@@ -39,7 +39,7 @@ def lambda_context():
     return LambdaContext()
 
 
-@fixture
+@pytest.fixture()
 def change_event():
     return {
         "Address1": "Flat 619",
@@ -72,14 +72,17 @@ def test_lambda_handler(
     response = lambda_handler(event, lambda_context)
     # Assert
     assert response == dumps(
-        {"message": "The change event has been re-sent successfully", "correlation_id": correlation_id}
+        {"message": "The change event has been re-sent successfully", "correlation_id": correlation_id},
     )
     mock_append_keys.assert_any_call(ods_code=event["odscode"])
     mock_append_keys.assert_any_call(sequence_number=event["sequence_number"])
     mock_build_correlation_id.assert_called_once_with()
     mock_get_change_event.assert_called_once_with(event["odscode"], Decimal(event["sequence_number"]))
     mock_send_change_event.assert_called_once_with(
-        change_event, event["odscode"], int(event["sequence_number"]), correlation_id
+        change_event,
+        event["odscode"],
+        int(event["sequence_number"]),
+        correlation_id,
     )
 
 
@@ -92,7 +95,7 @@ def test_validate_event_no_odscode(event):
     # Arrange
     del event["odscode"]
     # Act & Assert
-    with raises(Exception):
+    with pytest.raises(ValueError, match="odscode"):
         validate_event(event)
 
 
@@ -100,7 +103,7 @@ def test_validate_event_no_sequence_number(event):
     # Arrange
     del event["sequence_number"]
     # Act & Assert
-    with raises(Exception):
+    with pytest.raises(ValueError, match="sequence_number"):
         validate_event(event)
 
 
@@ -155,7 +158,7 @@ def test_get_change_event_no_change_event_in_dynamodb(mock_client, event, change
     environ["AWS_REGION"] = "eu-west-1"
     mock_client.return_value.query.return_value = {"Items": []}
     # Act
-    with raises(Exception):
+    with pytest.raises(ValueError, match="No change event found for ods code FXXX1 and sequence number 1"):
         get_change_event(event["odscode"], Decimal(event["sequence_number"]))
     # Assert
     mock_client.assert_called_with("dynamodb")

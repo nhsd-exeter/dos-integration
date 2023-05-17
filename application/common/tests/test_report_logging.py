@@ -5,8 +5,7 @@ from unittest.mock import MagicMock, patch
 from aws_lambda_powertools.logging import Logger
 
 from application.common.constants import INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID
-
-from ..report_logging import (
+from application.common.report_logging import (
     log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_incorrect_palliative_stockholder_type,
@@ -115,7 +114,7 @@ def test_log_unmatched_nhsuk_service(mock_logger):
             "City": "city",
             "County": "country",
             "Postcode": "MK2 4AX",
-        }
+        },
     )
     # Act
     log_unmatched_nhsuk_service(nhs_entity)
@@ -150,7 +149,7 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
     county = "county"
     city = "city"
     nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": city, "County": county}
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": city, "County": county},
     )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
@@ -267,7 +266,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
 def test_log_unmatched_service_types(mock_logger):
     # Arrange
     nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"},
     )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
@@ -331,7 +330,7 @@ def test_log_palliative_care_z_code_does_not_exist(mock_logger: MagicMock):
     symptom_group_symptom_discriminator_combo_rowcount = 1
     # Act
     log_palliative_care_z_code_does_not_exist(
-        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount
+        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount,
     )
     # Assert
     assert (

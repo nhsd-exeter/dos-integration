@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.validation import validate
@@ -13,56 +13,62 @@ from common.constants import (
     SERVICE_TYPES,
     SERVICE_TYPES_ALIAS_KEY,
 )
-from common.errors import ValidationException
+from common.errors import ValidationError
 
 logger = Logger(child=True)
 
 
-def validate_change_event(event: Dict[str, Any]) -> None:
-    """Validate event using business rules
+def validate_change_event(event: dict[str, Any]) -> None:
+    """Validate event using business rules.
+
     Args:
-        event (Dict[str, Any]): Lambda function invocation event
+        event (Dict[str, Any]): Lambda function invocation event.
     """
     logger.info(f"Attempting to validate event payload: {event}")
     try:
         validate(event=event, schema=INPUT_SCHEMA)
     except SchemaValidationError as exception:
-        raise ValidationException(exception) from exception
+        raise ValidationError(exception) from exception
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
     check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][ODSCODE_LENGTH_KEY])
     logger.info("Event has been validated")
 
 
 def check_ods_code_length(odscode: str, odscode_length: int) -> None:
-    """Check ODS code length as expected, exception raise if error
+    """Check ODS code length as expected, exception raise if error.
+
     Note: ods code type is checked by schema validation
+
     Args:
-        odscode (str): odscode of NHS UK service
+        odscode (str): odscode of NHS UK service.
+        odscode_length (int): expected length of odscode.
     """
     logger.debug(f"Checking ODSCode {odscode} length")
     if len(odscode) != odscode_length:
-        raise ValidationException(f"ODSCode Wrong Length, '{odscode}' is not length {odscode_length}.")
+        msg = f"ODSCode Wrong Length, '{odscode}' is not length {odscode_length}."
+        raise ValidationError(msg)
 
 
 def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
-    """Validate the organisation type id and organisation sub type
+    """Validate the organisation type id and organisation sub type.
 
     Args:
         org_type_id (str): organisation type id
         org_sub_type (str): organisation sub type
 
     Raises:
-        ValidationException: Either Org Type ID or Org Sub Type is not part of the valid list
+        ValidationError: Either Org Type ID or Org Sub Type is not part of the valid list
     """
     validate_organisation_type_id(org_type_id)
     if org_sub_type in SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]:
         logger.info(f"Subtype type id: {org_sub_type} validated")
     else:
-        raise ValidationException(f"Unexpected Org Sub Type ID: '{org_sub_type}'")
+        msg = f"Unexpected Org Sub Type ID: '{org_sub_type}'"
+        raise ValidationError(msg)
 
 
 def validate_organisation_type_id(org_type_id: str) -> None:
-    """Check if the organisation type id is valid
+    """Check if the organisation type id is valid.
 
     Args:
         org_type_id (str): organisation type id
@@ -70,8 +76,10 @@ def validate_organisation_type_id(org_type_id: str) -> None:
     app_config = AppConfig("ingest-change-event")
     feature_flags = app_config.get_feature_flags()
     in_accepted_org_types: bool = feature_flags.evaluate(
-        name="accepted_org_types", context={"org_type": org_type_id}, default=False
-    )  # type: ignore
+        name="accepted_org_types",
+        context={"org_type": org_type_id},
+        default=False,
+    )
     logger.debug(f"Accepted org types: {in_accepted_org_types}")
     if (
         org_type_id == PHARMACY_ORG_TYPE_ID
@@ -86,7 +94,8 @@ def validate_organisation_type_id(org_type_id: str) -> None:
         )
     else:
         logger.append_keys(in_accepted_org_types=in_accepted_org_types, app_config=app_config.get_raw_configuration())
-        raise ValidationException(f"Unexpected Org Type ID: '{org_type_id}'")
+        msg = f"Unexpected Org Type ID: '{org_type_id}'"
+        raise ValidationError(msg)
 
 
 INPUT_SCHEMA = {
