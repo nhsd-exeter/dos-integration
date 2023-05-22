@@ -323,6 +323,21 @@ def change_event_specified_opening_set_times(
     return context
 
 
+@given("the change event has no standard opening times", target_fixture="context")
+def _(context: Context) -> Context:
+    """Remove the specified opening dates from the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    context.generator_data["standard_openings"] = []
+    context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
+    return context
+
+
 @given("the change event has no specified opening dates", target_fixture="context")
 def change_event_no_specified_opening_dates(context: Context) -> Context:
     """Remove the specified opening dates from the change event.
