@@ -12,6 +12,7 @@ from application.common.dos import (
     get_all_valid_dos_postcodes,
     get_dos_locations,
     get_matching_dos_services,
+    get_region,
     get_services_from_db,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
@@ -103,6 +104,29 @@ def test__init__no_name():
     dos_service.name = None
     # Assert
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
+
+
+def test_dos_service_get_region():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.region = "Test Region"
+    # Act
+    region = dos_service.get_region()
+    # Assert
+    assert region == "Test Region"
+
+
+@patch(f"{FILE_PATH}.get_region")
+def test_dos_service_get_region_if_none(mock_get_region: MagicMock) -> None:
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.region = ""
+    mock_get_region.return_value = region_value = "Test Region"
+    # Act
+    region = dos_service.get_region()
+    # Assert
+    assert region == region_value
+    mock_get_region.assert_called_once()
 
 
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")
@@ -814,3 +838,39 @@ def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock):
     assert False is has_palliative_care(dos_service, connection)
     # Assert
     mock_query_dos_db.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+def test_get_region(mock_connect_to_dos_db_replica: MagicMock, mock_query_dos_db: MagicMock) -> None:
+    # Arrange
+    mock_connect_to_dos_db_replica.return_value = mock_connection = MagicMock()
+    mock_query_dos_db.return_value.fetchone.return_value = {"region": "South East"}
+    service_id = 123
+    # Act
+    region = get_region(service_id)
+    # Assert
+    assert region == "South East"
+    mock_connect_to_dos_db_replica.assert_called_once()
+    mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection.__enter__.return_value,
+        query="""WITH
+RECURSIVE servicetree as
+(SELECT ser.parentid, ser.id, ser.uid, ser.name, 1 AS lvl
+FROM services ser where ser.id = '47991'
+UNION ALL
+SELECT ser.parentid, st.id, ser.uid, ser.name, lvl+1 AS lvl
+FROM services ser
+INNER JOIN servicetree st ON ser.id = st.parentid),
+serviceregion as
+(SELECT st.*, ROW_NUMBER() OVER (PARTITION BY st.id ORDER BY st.lvl desc) rn
+FROM servicetree st)
+SELECT sr.name region
+FROM serviceregion sr
+INNER JOIN services ser ON sr.id = ser.id
+LEFT OUTER JOIN services par ON ser.parentid = par.id
+WHERE sr.rn=1
+ORDER BY ser.name
+    """,
+        query_vars={"SERVICE_ID": service_id},
+    )
