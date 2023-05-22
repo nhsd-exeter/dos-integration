@@ -18,7 +18,6 @@ from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.report_logging import (
-    log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_unexpected_pharmacy_profiling,
@@ -84,10 +83,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 
     if not nhs_entity.all_times_valid():
         log_invalid_open_times(nhs_entity, matching_services)
-
-    if nhs_entity.standard_opening_times.fully_closed() and len(matching_services) > 0:
-        # Also requires valid type/subtype, but this condition is already met in code by this point
-        log_blank_standard_opening_times(nhs_entity, matching_services)
 
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]

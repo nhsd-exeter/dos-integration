@@ -49,6 +49,7 @@ def test_field_names():
         "northing",
         "latitude",
         "longitude",
+        "region",
     ]
 
 

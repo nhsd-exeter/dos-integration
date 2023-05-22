@@ -26,7 +26,11 @@ from common.dos import DoSService
 from common.dos_location import DoSLocation
 from common.nhs import NHSEntity, get_palliative_care_log_value, skip_if_key_is_none
 from common.opening_times import DAY_IDS, WEEKDAYS
-from common.report_logging import log_incorrect_palliative_stockholder_type, log_palliative_care_not_equal
+from common.report_logging import (
+    log_incorrect_palliative_stockholder_type,
+    log_palliative_care_not_equal,
+    log_blank_standard_opening_times,
+)
 
 logger = Logger(child=True)
 
@@ -187,6 +191,11 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
+    if changes_to_dos.nhs_entity.standard_opening_times.fully_closed():
+        log_blank_standard_opening_times(nhs_entity=changes_to_dos.nhs_entity, dos_service=changes_to_dos.dos_service)
+    else:
+        logger.debug("Standard opening times are not blank")
+
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
         logger.info("Opening times are valid")
