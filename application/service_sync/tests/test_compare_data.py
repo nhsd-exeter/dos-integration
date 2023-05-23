@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from application.common.constants import (
     DOS_ADDRESS_CHANGE_KEY,
     DOS_EASTING_CHANGE_KEY,
@@ -15,9 +17,16 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_WEDNESDAY_CHANGE_KEY,
     DOS_WEBSITE_CHANGE_KEY,
 )
+from application.common.opening_times import WEEKDAYS
 from application.common.tests.conftest import dummy_dos_location
 from application.service_sync.changes_to_dos import ChangesToDoS
 from application.service_sync.compare_data import (
+    check_for_address_and_postcode_for_changes,
+    check_for_specified_opening_times_changes,
+    check_for_standard_opening_times_day_changes,
+    check_palliative_care_for_change,
+    check_public_phone_for_change,
+    check_website_for_change,
     compare_location_data,
     compare_nhs_uk_and_dos_data,
     compare_opening_times,
@@ -25,6 +34,7 @@ from application.service_sync.compare_data import (
     compare_website,
     set_up_for_services_table_change,
 )
+from common.dos_location import DoSLocation
 
 FILE_PATH = "application.service_sync.compare_data"
 
@@ -60,16 +70,80 @@ def test_compare_nhs_uk_and_dos_data(
     assert response == mock_compare_opening_times.return_value
 
 
+# @patch(f"{FILE_PATH}.validate_website")
+# def test_changes_to_dos_compare_and_validate_website_same_value(mock_validate_website: MagicMock):
+#     # Arrange
+#     # Act
+#     # Assert
+#     assert True is response
+
+
+# @patch(f"{FILE_PATH}.validate_website")
+# def test_changes_to_dos_compare_and_validate_website_different_value(mock_validate_website: MagicMock):
+#     # Arrange
+#     # Act
+#     # Assert
+#     assert False is response
+
+@patch(f"{FILE_PATH}.is_val_none_or_empty")
+@patch(f"{FILE_PATH}.format_website")
+def test_changes_to_dos_check_website_for_change_remove_website(
+    mock_format_website: MagicMock,
+    mock_is_val_none_or_empty: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    mock_is_val_none_or_empty.side_effect = [True, False]
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_website_for_change(changes=changes_to_dos)
+    # Assert
+    assert True is response
+    mock_format_website.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.validate_website")
+@patch(f"{FILE_PATH}.format_website")
+@patch(f"{FILE_PATH}.is_val_none_or_empty")
+@patch(f"{FILE_PATH}.format_website")
+def test_changes_to_dos_check_website_for_change_add_website(
+    mock_format_website: MagicMock,
+    mock_is_val_none_or_empty: MagicMock,
+    format_website: MagicMock,
+    mock_validate_website: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    format_website.return_value = nhs_website = "www.example2.com"
+    service_histories = MagicMock()
+    mock_is_val_none_or_empty.side_effect = [False, False]
+    mock_validate_website.return_value = True
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_website_for_change(changes=changes_to_dos)
+    # Assert
+    assert True is response
+    assert dos_service.web == changes_to_dos.current_website
+    assert nhs_website == changes_to_dos.new_website
+    mock_format_website.assert_not_called()
+    mock_validate_website.assert_called_once_with(nhs_entity, nhs_website)
+
+
+@patch(f"{FILE_PATH}.check_website_for_change")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_website(mock_set_up_for_services_table_change: MagicMock):
+def test_compare_website(mock_set_up_for_services_table_change: MagicMock,
+                        mock_check_website_for_change: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
-    changes_to_dos.check_website_for_change.return_value = True
+    mock_check_website_for_change.return_value = True
     # Act
     response = compare_website(changes_to_dos)
     # Assert
     assert response == mock_set_up_for_services_table_change.return_value
-    changes_to_dos.check_website_for_change.assert_called_once_with()
+    mock_check_website_for_change.assert_called_once_with(changes=changes_to_dos)
     mock_set_up_for_services_table_change.assert_called_once_with(
         changes_to_dos=changes_to_dos,
         change_key=DOS_WEBSITE_CHANGE_KEY,
@@ -79,30 +153,81 @@ def test_compare_website(mock_set_up_for_services_table_change: MagicMock):
     )
 
 
+@patch(f"{FILE_PATH}.check_website_for_change")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_website_no_change(mock_set_up_for_services_table_change: MagicMock):
+def test_compare_website_no_change(mock_set_up_for_services_table_change: MagicMock,
+                                mock_check_website_for_change: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
-    changes_to_dos.check_website_for_change.return_value = False
+    mock_check_website_for_change.return_value = False
     # Act
     response = compare_website(changes_to_dos)
     # Assert
     assert response == changes_to_dos
-    changes_to_dos.check_website_for_change.assert_called_once_with()
+    mock_check_website_for_change.assert_called_once_with(changes=changes_to_dos)
     mock_set_up_for_services_table_change.assert_not_called()
 
 
+@patch(f"{FILE_PATH}.get_valid_dos_location")
+def test_changes_to_dos_check_for_address_and_postcode_for_changes(mock_get_valid_dos_location: MagicMock):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dummy_dos_location = DoSLocation(id=0, postcode="DUMMY", easting=0, northing=0, postaltown="STUB",
+                                    latitude=0, longitude=0)
+    mock_get_valid_dos_location.return_value = dummy_dos_location
+    # Act
+    address_response, postcode_response, dos_location = check_for_address_and_postcode_for_changes(changes_to_dos)
+    # Assert
+    assert True is address_response
+    assert True is postcode_response
+    assert None is not changes_to_dos.new_address
+    assert None is not changes_to_dos.new_postcode
+    assert None is not changes_to_dos.current_address
+    assert None is not changes_to_dos.current_postcode
+    mock_get_valid_dos_location.assert_called_once()
+    assert dummy_dos_location == dos_location
+
+
+@patch(f"{FILE_PATH}.log_invalid_nhsuk_postcode")
+@patch(f"{FILE_PATH}.get_valid_dos_location")
+def test_changes_to_dos_check_for_address_and_postcode_for_changes_postcode_invalid(
+    mock_get_valid_dos_location: MagicMock,
+    mock_log_invalid_nhsuk_postcode: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    mock_get_valid_dos_location.return_value = None
+    # Act
+    address_response, postcode_response, dos_location = check_for_address_and_postcode_for_changes(changes_to_dos)
+    # Assert
+    assert False is address_response
+    assert False is postcode_response
+    assert None is changes_to_dos.new_address
+    assert None is changes_to_dos.new_postcode
+    assert None is changes_to_dos.current_address
+    assert None is changes_to_dos.current_postcode
+    mock_get_valid_dos_location.assert_called_once()
+    assert mock_get_valid_dos_location.return_value == dos_location
+
+@patch(f"{FILE_PATH}.check_for_address_and_postcode_for_changes")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock):
+def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock,
+                            mock_check_for_address_and_postcode_for_changes: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
     dos_location = dummy_dos_location()
-    changes_to_dos.check_for_address_and_postcode_for_changes.return_value = True, True, dos_location
+    mock_check_for_address_and_postcode_for_changes.return_value = [True, True, dos_location]
     # Act
     response = compare_location_data(changes_to_dos)
     # Assert
     assert response == mock_set_up_for_services_table_change.return_value
-    changes_to_dos.check_for_address_and_postcode_for_changes.assert_called_once_with()
+    mock_check_for_address_and_postcode_for_changes.assert_called_once_with(changes=changes_to_dos)
     mock_set_up_for_services_table_change.assert_has_calls(
         calls=[
             call(
@@ -160,22 +285,83 @@ def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock)
         ],
     )
 
-
+@patch(f"{FILE_PATH}.check_for_address_and_postcode_for_changes")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_location_data_no_changes(mock_set_up_for_services_table_change: MagicMock):
+def test_compare_location_data_no_changes(mock_set_up_for_services_table_change: MagicMock,
+                                        mock_check_for_address_and_postcode_for_changes: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
-    changes_to_dos.check_for_address_and_postcode_for_changes.return_value = False, False, None
+    mock_check_for_address_and_postcode_for_changes.return_value = False, False, None
     # Act
     response = compare_location_data(changes_to_dos)
     # Assert
     assert response == changes_to_dos
-    changes_to_dos.check_for_address_and_postcode_for_changes.assert_called_once_with()
+    mock_check_for_address_and_postcode_for_changes.assert_called_once_with(changes=changes_to_dos)
     mock_set_up_for_services_table_change.assert_not_called()
 
+@pytest.mark.parametrize("weekday", WEEKDAYS)
+def test_changes_to_dos_check_for_standard_opening_times_day_changes(weekday: str):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_service.standard_opening_times.same_openings.return_value = False
+    # Act
+    check_for_standard_opening_times_day_changes(changes_to_dos,weekday)
+    # Assert
+    assert hasattr(changes_to_dos, f"current_{weekday}_opening_times")
+    assert hasattr(changes_to_dos, f"new_{weekday}_opening_times")
 
-@patch(f"{FILE_PATH}.ChangesToDoS.check_for_specified_opening_times_changes")
-@patch(f"{FILE_PATH}.ChangesToDoS.check_for_standard_opening_times_day_changes")
+
+@pytest.mark.parametrize("weekday", WEEKDAYS)
+def test_changes_to_dos_check_for_standard_opening_times_day_changes_no_changes(weekday: str):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    dos_service.standard_opening_times.same_openings.return_value = True
+    # Act
+    check_for_standard_opening_times_day_changes(changes_to_dos, weekday)
+    # Assert
+    assert False is hasattr(changes_to_dos, f"current_{weekday}_opening_times")
+    assert False is hasattr(changes_to_dos, f"new_{weekday}_opening_times")
+
+@patch(f"{FILE_PATH}.SpecifiedOpeningTime")
+def test_changes_to_dos_check_for_specified_opening_times_changes(mock_specified_opening_time: MagicMock):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    mock_specified_opening_time.equal_lists.return_value = False
+    mock_specified_opening_time.remove_past_dates.return_value = ["2020-01-01"]
+    # Act
+    response = check_for_specified_opening_times_changes(changes=changes_to_dos)
+    # Assert
+    assert True is response
+    assert None is not changes_to_dos.new_specified_opening_times
+    assert None is not changes_to_dos.current_specified_opening_times
+
+
+@patch(f"{FILE_PATH}.SpecifiedOpeningTime")
+def test_changes_to_dos_check_for_specified_opening_times_changes_no_change(mock_specified_opening_time: MagicMock):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    mock_specified_opening_time.equal_lists.return_value = True
+    # Act
+    response = check_for_specified_opening_times_changes(changes=changes_to_dos)
+    # Assert
+    assert False is response
+    assert None is changes_to_dos.new_specified_opening_times
+    assert None is changes_to_dos.current_specified_opening_times
+
+@patch(f"{FILE_PATH}.check_for_specified_opening_times_changes")
+@patch(f"{FILE_PATH}.check_for_standard_opening_times_day_changes")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.validate_opening_times")
 def test_compare_opening_times(
@@ -294,8 +480,8 @@ def test_compare_opening_times_blank_opening_times(
     changes_to_dos.service_histories.add_specified_opening_times_change.assert_not_called()
 
 
-@patch(f"{FILE_PATH}.ChangesToDoS.check_for_specified_opening_times_changes")
-@patch(f"{FILE_PATH}.ChangesToDoS.check_for_standard_opening_times_day_changes")
+@patch(f"{FILE_PATH}.check_for_specified_opening_times_changes")
+@patch(f"{FILE_PATH}.check_for_standard_opening_times_day_changes")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.validate_opening_times")
 def test_compare_opening_times_no_change(
@@ -387,6 +573,63 @@ def test_set_up_for_services_table_change_no_service_history_update(mock_service
     assert changes_to_dos.demographic_changes == {service_table_field_name: new_value}
     mock_service_histories_change.assert_not_called()
     changes_to_dos.service_histories.add_change.assert_not_called()
+
+
+def test_changes_to_dos_check_public_phone_for_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.publicphone = "0123456789"
+    nhs_entity.publicphone = "012345678"
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_public_phone_for_change(changes=changes_to_dos)
+    # Assert
+    assert True is response
+
+
+def test_changes_to_dos_check_public_phone_for_change_no_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.publicphone = "0123456789"
+    nhs_entity.phone = "0123456789"
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_public_phone_for_change(changes=changes_to_dos)
+    # Assert
+    assert False is response
+
+#TODO add test cover functions that uses check_public_phone_for_change
+
+def test_changes_to_dos_check_palliative_care_for_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_palliative_care_for_change(changes=changes_to_dos)
+    # Assert
+    assert True is response
+
+
+def test_changes_to_dos_check_palliative_care_for_change_no_change():
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.palliative_care = False
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_palliative_care_for_change(changes=changes_to_dos)
+    # Assert
+    assert False is response
 
 
 @patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
