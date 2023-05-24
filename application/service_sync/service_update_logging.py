@@ -294,15 +294,26 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
         logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
 
 
-@metric_scope
-def add_service_updated_metric(data_field_modified: str, metrics: Any) -> None:  # noqa: ANN401
+def add_service_updated_metric(data_field_modified: str) -> None:
     """Adds a metric to the service updated metric.
 
     Args:
         data_field_modified (str): The data field modified
-        metrics (Any): The metrics object
     """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.put_dimensions({"ENV": environ["ENV"], "field": data_field_modified})
-    metrics.put_metric("DoSUpdate", 1, "Count")
+
+    @metric_scope
+    def service_update_metric_field(metrics: Any) -> None:  # noqa: ANN401
+        metrics.set_namespace("UEC-DOS-INT")
+        metrics.set_property("correlation_id", logger.get_correlation_id())
+        metrics.set_dimensions({"ENV": environ["ENV"], "field": data_field_modified})
+        metrics.put_metric("DoSServiceUpdate", 1, "Count")
+
+    @metric_scope
+    def service_update_metric_all(metrics: Any) -> None:  # noqa: ANN401
+        metrics.set_namespace("UEC-DOS-INT")
+        metrics.set_property("correlation_id", logger.get_correlation_id())
+        metrics.set_dimensions({"ENV": environ["ENV"]})
+        metrics.put_metric("DoSAllServiceUpdates", 1, "Count")
+
+    service_update_metric_field()
+    service_update_metric_all()
