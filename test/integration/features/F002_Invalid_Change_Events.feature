@@ -119,63 +119,14 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with message "BLANK_STANDARD_OPENINGS"
 
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario: F002S018. Dentist Hidden uses correct report key
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And the field "OrganisationStatus" is set to "Hidden"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "report_key" with message "HIDDEN_OR_CLOSED"
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario: F002S019. Dentist Invalid Postcode uses correct report key
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And the field "Postcode" is set to "AAAA 123"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "report_key" with message "INVALID_POSTCODE"
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario: F002S020. Dentist Invalid Opening Times uses correct report key
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And a Changed Event where OpeningTimeType is NOT defined correctly
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "report_key" with message "INVALID_OPEN_TIMES"
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario Outline: F002S021. Dentist Unmatched Pharmacy and Service report keys
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And the field "ODSCode" is set to "<ods_code>"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "report_key" with message "<report_key>"
-
-  # Examples:
-  #   | ods_code | report_key             |
-  #   | FQG8101  | UNMATCHED_SERVICE_TYPE |
-  #   | V00393b  | UNMATCHED_PHARMACY     |
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario Outline: F002S023. Dentists with Invalid ODS Lengths.
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And the field "ODSCode" is set to "<ods_code>"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the "service-sync" lambda shows field "error" with message "ODSCode Wrong Length"
-  #   And the "service-matcher" lambda does not show "message" with message "Getting matching DoS Services for odscode"
-
-  # Examples:
-  #   | ods_code  |
-  #   | V00393    |
-  #   | V00393abc |
-
-  # @complete @broken @dentist_cloudwatch_queries
-  # Scenario Outline: F002S024. Dentist past specified opening time
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   And a specified opening time is set to "Jan 1 2022"
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the "service-sync" lambda shows field "message" with message "Removing Specified opening times that occur in the past"
-  #   And the "service-sync" lambda shows field "all_nhs.0" with message "CLOSED on 01-01-2022"
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario: F002SX19. Pharmacies with blank standard opening times are reported in logs.
+    Given a basic service is created
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda does not show "report_key" with message "BLANK_STANDARD_OPENINGS"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F002SX19. A service with multiple entries as pharmacies raises alerts
+  Scenario Outline: F002SX20. A service with multiple entries as pharmacies raises alerts
     Given "<count>" basic services are created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows "<count>" of "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
@@ -186,7 +137,7 @@ Feature: F002. Invalid change event Exception handling
       | 4     |
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F002SX20. No service type 13 for entry
+  Scenario: F002SX21. No service type 13 for entry
     Given an entry is created in the services table
     And the service "service_type" is set to "131"
     And the entry is committed to the services table
