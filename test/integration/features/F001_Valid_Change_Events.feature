@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F001SXX1. A valid change event is processed and accepted by DOS
     Given a basic service is created
     And the change event "Postcode" is set to "CT1 1AA"
@@ -31,7 +31,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | website  |
       | address  |
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX5. A valid CE without a contact field
     Given a basic service is created
     And the "<field>" value has been unset
