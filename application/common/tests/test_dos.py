@@ -857,7 +857,7 @@ def test_get_region(mock_connect_to_dos_db_replica: MagicMock, mock_query_dos_db
         query="""WITH
 RECURSIVE servicetree as
 (SELECT ser.parentid, ser.id, ser.uid, ser.name, 1 AS lvl
-FROM services ser where ser.id = '47991'
+FROM services ser where ser.id = %(SERVICE_ID)s
 UNION ALL
 SELECT ser.parentid, st.id, ser.uid, ser.name, lvl+1 AS lvl
 FROM services ser
