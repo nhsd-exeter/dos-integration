@@ -120,7 +120,7 @@ Feature: F002. Invalid change event Exception handling
     Then the "service-sync" lambda shows field "report_key" with message "BLANK_STANDARD_OPENINGS"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SX19. Pharmacies with blank standard opening times are reported in logs.
+  Scenario: F002SX19. Pharmacies without blank standard opening times are not reported in logs.
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda does not show "report_key" with message "BLANK_STANDARD_OPENINGS"
