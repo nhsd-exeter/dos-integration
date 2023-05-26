@@ -17,7 +17,7 @@ from .context import Context
 from .secrets_manager import get_secret
 from .translation import get_service_history_data_key
 
-URL = getenv("URL")
+URL = getenv("HTTPS_DOS_INTEGRATION_URL")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
@@ -351,7 +351,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     retries = 0
     while not response_status:
         response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-            FunctionName=getenv("DOS_DB_HANDLER"),
+            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA_NAME"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )

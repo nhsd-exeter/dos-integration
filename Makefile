@@ -127,23 +127,8 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
-		-e SHARED_ENVIRONMENT=$(SHARED_ENVIRONMENT) \
-		-e BLUE_GREEN_ENVIRONMENT=$(BLUE_GREEN_ENVIRONMENT) \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e SERVICE_MATCHER=$(TF_VAR_service_matcher_lambda_name) \
-		-e SERVICE_SYNC=$(TF_VAR_service_sync_lambda_name) \
-		-e DOS_DB_HANDLER=$(TF_VAR_dos_db_handler_lambda_name) \
-		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
 		-e RUN_ID=$$RUN_ID \
-		-e CR_FIFO_DLQ=$(TF_VAR_dos_db_update_dlq_handler_lambda_name) \
 		"
 
 clean: # Runs whole project clean
@@ -398,30 +383,25 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
-			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
 			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
-			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 PERFORMANCE_TEST_DIR_AND_ARGS= \
-	DIR=./test/performance/create_change_events \
-	ARGS="\
-		-p 8089:8089 \
-		-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-		-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-		"
+	DIR=./test/performance \
+	ARGS="-p 8089:8089 --env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 
 performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
-	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
+	rm -rf $(PROJECT_DIR)/test/performance/results/*.csv
 
 stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)

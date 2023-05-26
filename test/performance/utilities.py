@@ -24,8 +24,8 @@ def setup_headers() -> dict[str, str]:
 
 def get_api_key() -> str:
     """Get the api key from AWS secrets manager."""
-    api_key_json = get_secret(getenv("API_KEY_SECRET_NAME"))
-    return loads(api_key_json)[getenv("API_KEY_SECRET_KEY")]
+    api_key_json = get_secret(getenv("API_KEY_SECRET"))
+    return loads(api_key_json)[getenv("NHS_UK_API_KEY")]
 
 
 def make_change_event_unique(payload: dict[str, Any]) -> dict[str, Any]:
@@ -59,7 +59,7 @@ class OdsCodes:
         """
         with open(f"resources/{ods_code_file}") as file:
             csv_reader = reader(file)
-        return list(csv_reader)
+            return list(csv_reader)
 
     def generic_get_ods_code(
         self,
