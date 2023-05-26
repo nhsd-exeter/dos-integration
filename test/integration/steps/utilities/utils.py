@@ -464,19 +464,15 @@ def check_service_history(
         expected_data == changes[change_key]["data"]
     ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa: E501
 
-    # WTF is this? Why is this here? Why is this not a simple assert?
     if "previous" in changes[change_key] and previous_data != "unknown":
         if previous_data != "":  # noqa: PLC1901
             assert changes[change_key]["previous"] == str(
                 previous_data,
             ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
-        elif previous_data == "":  # noqa: PLC1901
+        else:
             assert (
                 changes[change_key]["previous"] is None
             ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
-        else:
-            msg = f"Input parameter '{previous_data}' not compatible"
-            raise ValueError(msg)
 
 
 def service_history_negative_check(service_id: str) -> str:
@@ -547,13 +543,11 @@ def get_service_history_standard_opening_times(service_id: str) -> list:
         standard_opening_times_from_service_history (list): List of standard opening times from service history
     """
     service_history = get_service_history(service_id)
-    standard_opening_times_from_service_history = []
-    for entry in service_history[list(service_history.keys())[0]]["new"]:
-        if entry.endswith("day"):
-            standard_opening_times_from_service_history.append(
-                {entry: service_history[list(service_history.keys())[0]]["new"][entry]},
-            )
-    return standard_opening_times_from_service_history
+    return [
+        {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
+        for entry in service_history[list(service_history.keys())[0]]["new"]
+        if entry.endswith("day")
+    ]
 
 
 def convert_specified_opening(specified_date: dict, closed_status: bool = False) -> str:
@@ -582,13 +576,11 @@ def convert_specified_opening(specified_date: dict, closed_status: bool = False)
     }
     split_date = specified_date["AdditionalOpeningDate"].split(" ")
     selected_month = months[split_date[0]]
-    if closed_status is False:
-        opening_time = time_to_seconds(specified_date["OpeningTime"])
-        closing_time = time_to_seconds(specified_date["ClosingTime"])
-        return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-{opening_time}-{closing_time}"
-    else:
-        return_string = f"{split_date[2]}-{selected_month}-{split_date[1]}-closed"
-    return return_string
+    if closed_status:
+        return f"{split_date[2]}-{selected_month}-{split_date[1]}-closed"
+    opening_time = time_to_seconds(specified_date["OpeningTime"])
+    closing_time = time_to_seconds(specified_date["ClosingTime"])
+    return f"{split_date[2]}-{selected_month}-{split_date[1]}-{opening_time}-{closing_time}"
 
 
 def convert_standard_opening(standard_times: list[dict]) -> list[dict]:
