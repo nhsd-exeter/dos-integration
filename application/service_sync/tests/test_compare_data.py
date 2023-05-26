@@ -225,7 +225,33 @@ def test_has_location_changed_postcode_invalid(
     assert None is changes_to_dos.current_address
     assert None is changes_to_dos.current_postcode
     mock_get_valid_dos_location.assert_called_once()
+    mock_log_invalid_nhsuk_postcode.assert_called_once()
     assert mock_get_valid_dos_location.return_value == dos_location
+
+
+@patch(f"{FILE_PATH}.get_valid_dos_location")
+def test_has_location_changed_no_change(mock_get_valid_dos_location: MagicMock):
+    # Arrange
+    dos_service = MagicMock()
+    dos_service.address = "1 Dummy Stub"
+    dos_service.normal_postcode.return_value = "DUMMY"
+    nhs_entity = MagicMock()
+    nhs_entity.address_lines = {dos_service.address}
+    nhs_entity.normal_postcode.return_value = "DUMMY"
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+
+    # Act
+    address_response, postcode_response, dos_location = has_location_changed(changes_to_dos)
+    # Assert
+    assert False is address_response
+    assert False is postcode_response
+    assert None is changes_to_dos.new_address
+    assert None is changes_to_dos.new_postcode
+    assert None is changes_to_dos.current_address
+    assert None is changes_to_dos.current_postcode
+    mock_get_valid_dos_location.assert_not_called()
+
 
 @patch(f"{FILE_PATH}.has_location_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
