@@ -65,7 +65,7 @@ def compare_nhs_uk_and_dos_data(
     return changes_to_dos
 
 
-def check_website_for_change(changes: ChangesToDoS) -> bool:
+def has_website_changed(changes: ChangesToDoS) -> bool:
     """Compares the website of from the dos_service and nhs_entity."""
     if is_val_none_or_empty(changes.nhs_entity.website) and not is_val_none_or_empty(changes.dos_service.web):
         # Deleting the existing website
@@ -94,7 +94,7 @@ def compare_website(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
-    if check_website_for_change(changes=changes_to_dos):
+    if has_website_changed(changes=changes_to_dos):
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
             change_key=DOS_WEBSITE_CHANGE_KEY,
@@ -105,27 +105,7 @@ def compare_website(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     return changes_to_dos
 
 
-def check_public_phone_for_change(changes: ChangesToDoS) -> bool:
-    """Compares the public phone of from the dos_service and nhs_entity.
-
-    Returns:
-        bool: True if the public phone has changed, False if not
-    """
-    changes.current_public_phone = changes.dos_service.publicphone
-    changes.new_public_phone = changes.nhs_entity.phone
-    if str(changes.current_public_phone) != str(changes.new_public_phone) and (
-        not is_val_none_or_empty(changes.current_public_phone) or not is_val_none_or_empty(changes.new_public_phone)
-    ):
-        logger.info(
-            f"Public Phone is not equal, DoS='{changes.current_public_phone}' != NHS UK='{changes.new_public_phone}'",
-        )
-        return True
-    else:
-        logger.info(f"Public Phone is equal, DoS='{changes.current_public_phone}' == NHS UK='{changes.new_public_phone}'")
-        return False
-
-
-def check_public_phone_for_change(changes: ChangesToDoS) -> bool:
+def has_public_phone_changed(changes: ChangesToDoS) -> bool:
     """Compares the public phone of from the dos_service and nhs_entity.
 
     Returns:
@@ -154,7 +134,7 @@ def compare_public_phone(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
-    if check_public_phone_for_change(changes=changes_to_dos):
+    if has_public_phone_changed(changes=changes_to_dos):
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
             change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
@@ -165,7 +145,7 @@ def compare_public_phone(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     return changes_to_dos
 
 
-def check_for_address_and_postcode_for_changes(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation | None]:
+def has_location_changed(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation | None]:
     """Check if address and postcode have changed between dos_service and nhs_entity,
     Postcode changes are validated against the DoS locations table.
 
@@ -232,7 +212,7 @@ def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
-    address_change, postcode_change, dos_location = check_for_address_and_postcode_for_changes(changes=changes_to_dos)
+    address_change, postcode_change, dos_location = has_location_changed(changes=changes_to_dos)
     if address_change:
         changes_to_dos = set_up_for_services_table_change(
             changes_to_dos=changes_to_dos,
@@ -289,7 +269,7 @@ def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         )
     return changes_to_dos
 
-def check_for_standard_opening_times_day_changes(changes: ChangesToDoS, weekday: str) -> bool:
+def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> bool:
     """Check if the standard opening times have changed for a specific day.
 
     Args:
@@ -320,7 +300,7 @@ def check_for_standard_opening_times_day_changes(changes: ChangesToDoS, weekday:
         )
         return False
 
-def check_for_specified_opening_times_changes(changes: ChangesToDoS) -> bool:
+def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
     """Check if the specified opening times have changed
     Also past specified opening times are removed from the comparison.
 
@@ -368,7 +348,7 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         # Compare standard opening times
         logger.info("Opening times are valid")
         for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
-            if check_for_standard_opening_times_day_changes(changes=changes_to_dos, weekday=weekday):
+            if has_standard_opening_times_changed(changes=changes_to_dos, weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
                     changes_to_dos,
                     f"new_{weekday}_opening_times",
@@ -380,7 +360,7 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
                     weekday=weekday,
                 )
 
-        if check_for_specified_opening_times_changes(changes=changes_to_dos):
+        if has_specified_opening_times_changed(changes=changes_to_dos):
             changes_to_dos.specified_opening_times_changes = True
             changes_to_dos.service_histories.add_specified_opening_times_change(
                 current_opening_times=changes_to_dos.current_specified_opening_times,
@@ -432,7 +412,7 @@ def set_up_for_services_table_change(
     return changes_to_dos
 
 
-def check_palliative_care_for_change(changes: ChangesToDoS) -> bool:
+def has_palliative_care_changed(changes: ChangesToDoS) -> bool:
     """Compares the palliative care of from the dos_service and nhs_entity.
 
     Returns:
@@ -468,7 +448,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     logger.debug(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
-        and check_palliative_care_for_change(changes=changes_to_dos)
+        and has_palliative_care_changed(changes=changes_to_dos)
         and skip_palliative_care_check is False
     ):
         changes_to_dos.palliative_care_changes = True
