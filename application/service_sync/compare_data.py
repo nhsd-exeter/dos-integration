@@ -26,7 +26,12 @@ from common.dos import DoSService, get_valid_dos_location
 from common.dos_location import DoSLocation
 from common.nhs import NHSEntity, get_palliative_care_log_value, skip_if_key_is_none
 from common.opening_times import DAY_IDS, WEEKDAYS, StandardOpeningTimes, SpecifiedOpeningTime, opening_period_times_from_list
-from common.report_logging import log_incorrect_palliative_stockholder_type, log_palliative_care_not_equal, log_invalid_nhsuk_postcode
+from common.report_logging import (
+    log_incorrect_palliative_stockholder_type,
+    log_palliative_care_not_equal,
+    log_blank_standard_opening_times,
+    log_invalid_nhsuk_postcode
+)
 from common.utilities import is_val_none_or_empty
 from .format import format_address, format_website
 
