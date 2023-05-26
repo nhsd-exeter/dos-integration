@@ -118,6 +118,31 @@ def test_has_website_changed_add_website(
     mock_format_website.assert_not_called()
     mock_validate_website.assert_called_once_with(nhs_entity, nhs_website)
 
+@patch(f"{FILE_PATH}.validate_website")
+@patch(f"{FILE_PATH}.is_val_none_or_empty")
+@patch(f"{FILE_PATH}.format_website")
+def test_has_website_changed_no_change(
+    mock_format_website: MagicMock,
+    mock_is_val_none_or_empty: MagicMock,
+    mock_validate_website,
+):
+    # Arrange
+    dos_service = MagicMock()
+    dos_service.web = "www.example2.com"
+    nhs_entity = MagicMock()
+    nhs_entity.website = dos_service.web
+    mock_format_website.return_value = dos_service.web
+    service_histories = MagicMock()
+    mock_is_val_none_or_empty.side_effect = [True, True]
+    mock_validate_website.return_value = True
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = has_website_changed(changes=changes_to_dos)
+    # Assert
+    assert False is response
+    mock_format_website.assert_called_once_with(nhs_entity.website)
+    mock_validate_website.assert_not_called()
+
 
 @patch(f"{FILE_PATH}.has_website_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
