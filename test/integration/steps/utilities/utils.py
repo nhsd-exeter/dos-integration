@@ -753,7 +753,7 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
     """
     lambda_payload = {"odscode": odscode, "sequence_number": seq_number}
     response = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("EVENT_REPLAY"),
+        FunctionName=getenv("EVENT_REPLAY_LAMBDA_NAME"),
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )

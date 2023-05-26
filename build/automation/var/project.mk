@@ -98,8 +98,8 @@ SLACK_MESSENGER := slack-messenger
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-api-key
 TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
-API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name)
-NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key)
+API_KEY_SECRET := $(TF_VAR_api_gateway_api_key_name)
+NHS_UK_API_KEY := $(TF_VAR_nhs_uk_api_key_key)
 
 # DI Endpoint API Gateway Route53 & SQS
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(SHARED_ENVIRONMENT)
@@ -114,7 +114,7 @@ TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-events
-DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name)
+DYNAMO_DB_TABLE := $(TF_VAR_change_events_table_name)
 
 # Log Group Filters for Firehose
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
