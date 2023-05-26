@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DOS
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario: F001SXX1. A valid change event is processed and accepted by DOS
     Given a basic service is created
     And the change event "Postcode" is set to "CT1 1AA"
@@ -31,7 +31,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | website  |
       | address  |
 
-  @complete @pharmacy_smoke_test @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX5. A valid CE without a contact field
     Given a basic service is created
     And the "<field>" value has been unset
@@ -170,13 +170,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the change event has no staff field
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
-
-  # @complete @broken @dentist_no_log_searches @dentist_smoke_test
-  # Scenario: F001S004. A valid Dentist change event is processed into DOS
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Change Request is accepted by Dos
-  #   And the Dentist changes with service type id is captured by Dos
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX22. Palliative Care Service with unchanged data not flagged

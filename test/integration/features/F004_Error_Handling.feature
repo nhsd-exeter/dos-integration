@@ -36,43 +36,6 @@ Feature: F004. Error Handling
       | 1     |
       | -1234 |
 
-  # @pharmacy_dentist_off_smoke_test @broken
-  # Scenario Outline: F004S008. Dentist and Pharmacy org types not accepted
-  #   Given a "<org_type>" Changed Event is aligned with DoS
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "message" with message "Validation Error"
-
-  #   Examples: Organisation types
-  #     | org_type |
-  #     | dentist  |
-  #     | pharmacy |
-
-
-  # @complete @broken @pharmacy_dentist_smoke_test
-  # Scenario Outline: F004S09. Dentist and Pharmacy org types accepted
-  #   Given a "<org_type>" Changed Event is aligned with DoS
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the processed Changed Request is sent to Dos
-
-  #   Examples: Organisation types
-  #     | org_type |
-  #     | pharmacy |
-  #     | dentist  |
-
-
-  # @complete @broken @dev @dentist_cloudwatch_queries
-  # Scenario Outline: F004S010. A Changed Event with Dentist org type is accepted
-  #   Given a "dentist" Changed Event is aligned with DoS
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the processed Changed Request is sent to Dos
-
-
-  # @dev @dentist_cloudwatch_queries
-  # Scenario Outline: F004S011. Exception is raised when unaccepted Pharmacy org type CE is processed
-  #   Given a "pharmacy" Changed Event is aligned with DoS
-  #   When the Changed Event is sent for processing with "valid" api key
-  #   Then the Event "processor" shows field "message" with message "Validation Error"
-
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F004SX14 Exception raised and CR created for Changed Event with invalid URL
     Given a basic service is created

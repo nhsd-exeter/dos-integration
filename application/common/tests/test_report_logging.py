@@ -44,9 +44,9 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
-    matching_services = [dos_service]
+    dos_service.region = "London"
     # Act
-    log_blank_standard_opening_times(nhs_entity, matching_services)
+    log_blank_standard_opening_times(nhs_entity, dos_service)
     # Assert
     assert (
         BLANK_STANDARD_OPENINGS_REPORT_ID == "BLANK_STANDARD_OPENINGS"
@@ -58,13 +58,14 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
             "nhsuk_odscode": nhs_entity.odscode,
             "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
-            "dos_service_publicname": dos_service.name,
+            "dos_service_name": dos_service.name,
             "nhsuk_service_status": nhs_entity.org_status,
             "nhsuk_service_type": nhs_entity.org_type,
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": dos_service.statusid,
             "dos_service_type": dos_service.typeid,
             "dos_service_type_name": dos_service.servicename,
+            "dos_region": dos_service.region,
         },
     )
 

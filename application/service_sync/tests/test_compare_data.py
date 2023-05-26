@@ -266,6 +266,26 @@ def test_compare_opening_times_invalid_opening_times(
     service_histories = MagicMock()
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     mock_validate_opening_times.return_value = False
+    changes_to_dos.nhs_entity.standard_opening_times.fully_closed.return_value = False
+    # Act
+    response = compare_opening_times(changes_to_dos)
+    # Assert
+    assert response == changes_to_dos
+    changes_to_dos.service_histories.add_standard_opening_times_change.assert_not_called()
+    changes_to_dos.service_histories.add_specified_opening_times_change.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.validate_opening_times")
+def test_compare_opening_times_blank_opening_times(
+    mock_validate_opening_times: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    changes_to_dos.nhs_entity.standard_opening_times.fully_closed.return_value = True
+    mock_validate_opening_times.return_value = False
     # Act
     response = compare_opening_times(changes_to_dos)
     # Assert

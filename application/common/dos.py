@@ -43,6 +43,7 @@ class DoSService:
     northing: int
     latitude: float
     longitude: float
+    region: str = ""
 
     @staticmethod
     def field_names() -> list[str]:
@@ -84,6 +85,12 @@ class DoSService:
         """Returns True if any of the opening times are generic bank holiday opening times."""
         return len(self.standard_opening_times.generic_bankholiday) > 0
 
+    def get_region(self) -> str:
+        """Returns the region of the service."""
+        if not self.region:
+            self.region = get_region(self.id)
+        return self.region
+
 
 def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService]:
     """Retrieves DoS Services from DoS database.
@@ -107,7 +114,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     else:
         conditions = "odscode = %(ODS)s"
         named_args = {"ODS": f"{odscode}%"}
-    # Safe as conditional is configurable but variables is inputed to psycopg as variables
+    # Safe as conditional is configurable but variables is inputted to psycopg as variables
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
         "statusid, publicphone, publicname, st.name servicename"
@@ -150,7 +157,9 @@ def get_dos_locations(postcode: str | None = None, try_cache: bool = True) -> li
 
     with connect_to_dos_db_replica() as connection:
         cursor = query_dos_db(
-            connection=connection, query=sql_command, query_vars={"pc_variations": postcode_variations},
+            connection=connection,
+            query=sql_command,
+            query_vars={"pc_variations": postcode_variations},
         )
         dos_locations = [DoSLocation(**row) for row in cursor.fetchall()]
         cursor.close()
@@ -385,3 +394,41 @@ def has_palliative_care(service: DoSService, connection: Connection) -> bool:
         cursor.fetchall()
         return cursor.rowcount != 0
     return False
+
+
+def get_region(dos_service_id: str) -> str:
+    """Returns the region of the service.
+
+    Args:
+        dos_service_id: The id of the service
+
+    Returns:
+        The region of the service
+    """
+    with connect_to_dos_db_replica() as connection:
+        logger.debug("Getting region for service")
+        sql_command = """WITH
+RECURSIVE servicetree as
+(SELECT ser.parentid, ser.id, ser.uid, ser.name, 1 AS lvl
+FROM services ser where ser.id = %(SERVICE_ID)s
+UNION ALL
+SELECT ser.parentid, st.id, ser.uid, ser.name, lvl+1 AS lvl
+FROM services ser
+INNER JOIN servicetree st ON ser.id = st.parentid),
+serviceregion as
+(SELECT st.*, ROW_NUMBER() OVER (PARTITION BY st.id ORDER BY st.lvl desc) rn
+FROM servicetree st)
+SELECT sr.name region
+FROM serviceregion sr
+INNER JOIN services ser ON sr.id = ser.id
+LEFT OUTER JOIN services par ON ser.parentid = par.id
+WHERE sr.rn=1
+ORDER BY ser.name
+    """
+        named_args = {"SERVICE_ID": dos_service_id}
+        cursor = query_dos_db(connection=connection, query=sql_command, query_vars=named_args)
+        region_response = cursor.fetchone()
+        region_name = region_response["region"] if region_response else "Region not found"
+        logger.debug("Got region for service", region_name=region_name)
+        cursor.close()
+    return region_name

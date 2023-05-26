@@ -114,32 +114,10 @@ UNIT_TEST_ARGS=" \
 		"
 
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration ingest-change-event --client-id test-id test_tmp.txt
-	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
-	if [[ $$VALUE =~ .*"PHA".* ]]; then
-		echo "PHA"
-		NO_LOG_TAG="pharmacy_no_log_searches"
-	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
-		echo "Dentist"
-		NO_LOG_TAG="dentist_no_log_searches"
-	fi
-	rm -rf test_tmp.txt
-	make integration-test TAGS=$$NO_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+	make integration-test TAGS="pharmacy_no_log_searches" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration ingest-change-event --client-id test-id test_tmp.txt
-	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
-	if [[ $$VALUE =~ .*"PHA".* ]]; then
-		echo "PHA"
-		COULDWATCH_LOG_TAG="pharmacy_cloudwatch_queries"
-	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
-		echo "Dentist"
-		COULDWATCH_LOG_TAG="dentist_cloudwatch_queries"
-	fi
-	rm -rf test_tmp.txt
-	make integration-test TAGS=$$COULDWATCH_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+	make integration-test TAGS="pharmacy_cloudwatch_queries" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
