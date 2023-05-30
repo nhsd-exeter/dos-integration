@@ -65,8 +65,6 @@ def test_open_period_eq_hash():
     assert hash(c) != hash(d)
 
     assert d == d
-    assert hash(d) == hash(d)
-
     b.end = time(17, 0, 0)
     assert a == b
     assert hash(a) == hash(b)

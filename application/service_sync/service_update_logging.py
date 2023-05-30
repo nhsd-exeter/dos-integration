@@ -142,14 +142,12 @@ class ServiceUpdateLogger:
             weekday (str): The weekday to log the update for e.g monday
         """
         previous_value = (
-            opening_period_times_from_list(open_periods=previous_value.get_openings(weekday), with_space=False)
-            if not isinstance(previous_value, str)
-            else previous_value
+            previous_value if isinstance(previous_value, str)
+            else opening_period_times_from_list(open_periods=previous_value.get_openings(weekday), with_space=False)
         )
         new_value = (
-            opening_period_times_from_list(open_periods=new_value.get_openings(weekday), with_space=False)
-            if not isinstance(new_value, str)
-            else new_value
+            new_value if isinstance(new_value, str)
+            else opening_period_times_from_list(open_periods=new_value.get_openings(weekday), with_space=False)
         )
         existing_value, updated_value = self.get_opening_times_change(data_field_modified, previous_value, new_value)
 

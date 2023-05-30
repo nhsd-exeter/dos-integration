@@ -12,7 +12,7 @@ logger = Logger(child=True)
 
 
 @lambda_handler_decorator(trace_execution=True)
-def redact_staff_key_from_event(handler, event, context: LambdaContext) -> Any:  # noqa: ANN001, ANN401
+def redact_staff_key_from_event(handler, event, context: LambdaContext) -> Any:    # noqa: ANN001, ANN401
     """Lambda middleware to remove the 'Staff' key from the Change Event payload.
 
     Args:
@@ -24,7 +24,7 @@ def redact_staff_key_from_event(handler, event, context: LambdaContext) -> Any: 
         Any: Lambda handler response
     """
     logger.info("Checking if 'Staff' key needs removing from Change Event payload")
-    if "Records" in event and len(list(event["Records"])) > 0:
+    if "Records" in event and list(event["Records"]):
         for record in event["Records"]:
             change_event = extract_body(record["body"])
             if change_event.pop("Staff", None) is not None:

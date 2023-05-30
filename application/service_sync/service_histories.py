@@ -58,8 +58,7 @@ class ServiceHistories:
             query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
             params={"SERVICE_ID": self.service_id},
         )
-        results: list[Any] = cursor.fetchall()
-        if results != []:
+        if results := cursor.fetchall():
             # Change History exists in the database
             logger.debug(f"Service history exists in the database for serviceid {self.service_id}")
             service_history = results[0]["history"]

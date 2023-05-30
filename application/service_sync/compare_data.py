@@ -3,6 +3,7 @@ from typing import Any
 from aws_lambda_powertools.logging import Logger
 
 from .changes_to_dos import ChangesToDoS
+from .format import format_address, format_website
 from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
 from .validation import validate_opening_times, validate_website
@@ -25,15 +26,20 @@ from common.constants import (
 from common.dos import DoSService, get_valid_dos_location
 from common.dos_location import DoSLocation
 from common.nhs import NHSEntity, get_palliative_care_log_value, skip_if_key_is_none
-from common.opening_times import DAY_IDS, WEEKDAYS, StandardOpeningTimes, SpecifiedOpeningTime, opening_period_times_from_list
+from common.opening_times import (
+    DAY_IDS,
+    WEEKDAYS,
+    SpecifiedOpeningTime,
+    StandardOpeningTimes,
+    opening_period_times_from_list,
+)
 from common.report_logging import (
-    log_incorrect_palliative_stockholder_type,
-    log_palliative_care_not_equal,
     log_blank_standard_opening_times,
-    log_invalid_nhsuk_postcode
+    log_incorrect_palliative_stockholder_type,
+    log_invalid_nhsuk_postcode,
+    log_palliative_care_not_equal,
 )
 from common.utilities import is_val_none_or_empty
-from .format import format_address, format_website
 
 logger = Logger(child=True)
 
@@ -77,7 +83,7 @@ def has_website_changed(changes: ChangesToDoS) -> bool:
         changes.current_website = changes.dos_service.web
         changes.new_website = None
         return True
-    elif changes.nhs_entity.website is not None and changes.nhs_entity.website != "":
+    elif changes.nhs_entity.website is not None and changes.nhs_entity.website:  # noqa: RET505
         changes.current_website = changes.dos_service.web
         # Adding a new website
         nhs_uk_website = format_website(changes.nhs_entity.website)
@@ -85,8 +91,7 @@ def has_website_changed(changes: ChangesToDoS) -> bool:
         if changes.dos_service.web != nhs_uk_website:
             logger.info(f"Website is not equal, {changes.dos_service.web=} != {nhs_uk_website=}")
             return validate_website(changes.nhs_entity, nhs_uk_website)
-        else:
-            logger.info(f"Website is equal, {changes.dos_service.web=} == {nhs_uk_website=}")
+        logger.info(f"Website is equal, {changes.dos_service.web=} == {nhs_uk_website=}")
     return False
 
 
@@ -125,9 +130,8 @@ def has_public_phone_changed(changes: ChangesToDoS) -> bool:
             f"Public Phone is not equal, DoS='{changes.current_public_phone}' != NHS UK='{changes.new_public_phone}'",
         )
         return True
-    else:
-        logger.info(f"Public Phone is equal, DoS='{changes.current_public_phone}' == NHS UK='{changes.new_public_phone}'")
-        return False
+    logger.info(f"Public Phone is equal, DoS='{changes.current_public_phone}' == NHS UK='{changes.new_public_phone}'")
+    return False
 
 
 def compare_public_phone(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
@@ -151,7 +155,8 @@ def compare_public_phone(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
 
 
 def has_location_changed(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation | None]:
-    """Check if address and postcode have changed between dos_service and nhs_entity,
+    """Check if address and postcode have changed between dos_service and nhs_entity.
+
     Postcode changes are validated against the DoS locations table.
 
     Returns:
@@ -183,7 +188,7 @@ def has_location_changed(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation
         valid_dos_location = get_valid_dos_location(nhs_postcode)
         valid_dos_postcode = valid_dos_location.postcode if valid_dos_location else None
         if valid_dos_postcode is None:
-            log_invalid_nhsuk_postcode(changes.nhs_entity, changes.dos_service)  # type: ignore
+            log_invalid_nhsuk_postcode(changes.nhs_entity, changes.dos_service)
             if not is_address_same:
                 is_address_same = True
                 changes.new_address = None
@@ -202,6 +207,7 @@ def has_location_changed(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation
 
 def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     """Compares and creates changes individually for location data items if needed.
+
     Location data covers the following fields:
         - address
         - postcode
@@ -278,6 +284,7 @@ def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> b
     """Check if the standard opening times have changed for a specific day.
 
     Args:
+        changes (ChangesToDoS): ChangesToDoS holder object
         weekday (str): The day of the week lowercase to check  (e.g. "monday")
 
     Returns:
@@ -297,20 +304,20 @@ def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> b
         setattr(changes, f"current_{weekday}_opening_times", dos_opening_times)
         setattr(changes, f"new_{weekday}_opening_times", nhs_opening_times)
         return True
-    else:
-        logger.info(
-            f"{weekday.title()} opening times are equal, so no change. "
-            f"dos={opening_period_times_from_list(dos_opening_times)} "
-            f"nhs={opening_period_times_from_list(nhs_opening_times)}",
-        )
-        return False
+    logger.info(
+        f"{weekday.title()} opening times are equal, so no change. "
+        f"dos={opening_period_times_from_list(dos_opening_times)} "
+        f"nhs={opening_period_times_from_list(nhs_opening_times)}",
+    )
+    return False
 
 def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
-    """Check if the specified opening times have changed
+    """Check if the specified opening times have changed.
+
     Also past specified opening times are removed from the comparison.
 
     Returns:
-        bool: If there are changes to the specified opening times (not valiated)
+        bool: If there are changes to the specified opening times (not validated)
     """
     dos_spec_open_dates = changes.dos_service.specified_opening_times
     nhs_spec_open_dates = changes.nhs_entity.specified_opening_times
@@ -326,14 +333,14 @@ def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
             extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
         )
         return False
-    else:
-        logger.info(
-            "Specified opening times not equal",
-            extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
-        )
-        changes.current_specified_opening_times = dos_spec_open_dates
-        changes.new_specified_opening_times = future_nhs_spec_open_dates
-        return True
+
+    logger.info(
+        "Specified opening times not equal",
+        extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+    )
+    changes.current_specified_opening_times = dos_spec_open_dates
+    changes.new_specified_opening_times = future_nhs_spec_open_dates
+    return True
 
 def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     """Compares and creates changes individually for all opening times if needed.
@@ -352,7 +359,7 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
         logger.info("Opening times are valid")
-        for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):
+        for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):  # noqa: B905, E501
             if has_standard_opening_times_changed(changes=changes_to_dos, weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
                     changes_to_dos,
@@ -382,15 +389,16 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     return changes_to_dos
 
 
-def set_up_for_services_table_change(
+def set_up_for_services_table_change(  # noqa: PLR0913
     changes_to_dos: ChangesToDoS,
     change_key: str,
-    new_value: Any,
-    previous_value: Any,
+    new_value: Any,  # noqa: ANN401
+    previous_value: Any,  # noqa: ANN401
     service_table_field_name: str,
     update_service_history: bool = True,
 ) -> ChangesToDoS:
     """Runs the prerequisites for a change to the services table.
+
     Including adding the change to the change object, and updating the service history.
 
     Args:
@@ -427,15 +435,13 @@ def has_palliative_care_changed(changes: ChangesToDoS) -> bool:
     changes.new_palliative_care = changes.nhs_entity.palliative_care
     if changes.current_palliative_care != changes.new_palliative_care:
         logger.info(
-            f"Palliative Care is not equal, DoS='{changes.current_palliative_care}' "
-            + f"!= NHS UK='{changes.new_palliative_care}'",
+            f"Palliative Care is not equal, DoS='{changes.current_palliative_care}' != NHS UK='{changes.new_palliative_care}'",  # noqa: E501
         )
         return True
-    else:
-        logger.info(
-            f"Palliative Care is equal, DoS='{changes.current_palliative_care}' == NHSUK='{changes.new_palliative_care}'",
-        )
-        return False
+    logger.info(
+        f"Palliative Care is equal, DoS='{changes.current_palliative_care}' == NHSUK='{changes.new_palliative_care}'",  # noqa: E501
+    )
+    return False
 
 
 def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:

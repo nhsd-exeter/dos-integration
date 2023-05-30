@@ -76,14 +76,20 @@ class NHSEntity:
 
     def extract_contact(self, contact_type: str) -> str | None:
         """Returns the nested contact value within the input payload."""
-        for item in self.entity_data.get("Contacts", []):
-            if (
-                item.get("ContactMethodType", "").upper() == contact_type.upper()
-                and item.get("ContactType", "").upper() == "PRIMARY"
-                and item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"
-            ):
-                return item.get("ContactValue")
-        return None
+        return next(
+            (
+                item.get("ContactValue")
+                for item in self.entity_data.get("Contacts", [])
+                if (
+                    item.get("ContactMethodType", "").upper()
+                    == contact_type.upper()
+                    and item.get("ContactType", "").upper() == "PRIMARY"
+                    and item.get("ContactAvailabilityType", "").upper()
+                    == "OFFICE HOURS"
+                )
+            ),
+            None,
+        )
 
     def extract_uec_service(self, service_code: str) -> bool | None:
         """Extracts the UEC service from the payload (e.g. Palliative Care).
@@ -190,7 +196,7 @@ class NHSEntity:
             )
 
         if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
-            if not (len(dos_service.odscode) >= 6 and len(self.odscode) >= 7):  # noqa: PLR2004
+            if len(dos_service.odscode) < 6 or len(self.odscode) < 7:  # noqa: PLR2004
                 return False
             odscode_extra_0 = f"{dos_service.odscode[0]}0{dos_service.odscode[1:]}"
             return self.odscode[:7] in (dos_service.odscode[:7], odscode_extra_0[:7])
@@ -221,10 +227,10 @@ def is_std_opening_json(item: dict) -> bool:
         return False
 
     # If marked as closed, ensure open time values are not present
-    if not is_open and (any(value not in ["", None] for value in (open_time, close_time))):
-        return False
-
-    return True
+    return bool(
+        is_open
+        or all(value in ["", None] for value in (open_time, close_time)),
+    )
 
 
 def is_spec_opening_json(item: dict) -> bool:
@@ -249,10 +255,10 @@ def is_spec_opening_json(item: dict) -> bool:
         return False
 
     # If marked as closed, ensure open time values are not present
-    if not is_open and (any(value not in ["", None] for value in (open_time, close_time))):
-        return False
-
-    return True
+    return bool(
+        is_open
+        or all(value in ["", None] for value in (open_time, close_time)),
+    )
 
 
 def match_nhs_entities_to_services(

@@ -30,8 +30,7 @@ def run_db_health_check() -> None:
         logger.info("Running health check")
         with connect_to_dos_db() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            response_rows: list[DictRow] = cursor.fetchall()
-            if len(response_rows) > 0:
+            if cursor.fetchall():
                 logger.info("DoS database is running")
             else:
                 logger.error("Health check failed - No services found in DoS DB")
@@ -39,8 +38,7 @@ def run_db_health_check() -> None:
                 return
         with connect_to_dos_db_replica() as connection:
             cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            response_rows: list[DictRow] = cursor.fetchall()
-            if len(response_rows) > 0:
+            if cursor.fetchall():
                 logger.info("DoS database replica is running")
             else:
                 logger.error("Health check failed - No services found in DoS DB Replica")
@@ -193,10 +191,10 @@ def save_demographics_into_db(connection: Connection, service_id: int, demograph
         )
         cursor.close()
         return True
-    else:
-        # No demographic changes found so no need to update the service
-        logger.info(f"No demographic changes found for service id {service_id}")
-        return False
+
+    # No demographic changes found so no need to update the service
+    logger.info(f"No demographic changes found for service id {service_id}")
+    return False
 
 
 def save_standard_opening_times_into_db(
@@ -259,9 +257,8 @@ def save_standard_opening_times_into_db(
             else:
                 logger.info(f"No standard opening times to add for dayid: {dayid}")
         return True
-    else:
-        logger.info(f"No standard opening times changes to save for service id {service_id}")
-        return False
+    logger.info(f"No standard opening times changes to save for service id {service_id}")
+    return False
 
 
 def save_specified_opening_times_into_db(
@@ -346,9 +343,8 @@ def save_specified_opening_times_into_db(
                 cursor.close()
 
         return True
-    else:
-        logger.info(f"No specified opening times changes to save for service id {service_id}")
-        return False
+    logger.info(f"No specified opening times changes to save for service id {service_id}")
+    return False
 
 
 def save_palliative_care_into_db(
@@ -396,7 +392,7 @@ def save_palliative_care_into_db(
         save_palliative_care_update()
         return True
     # If palliative care should be changed but the Z code does not exist, log an error
-    elif is_changes and not validate_dos_palliative_care_z_code_exists(connection=connection):
+    elif is_changes and not validate_dos_palliative_care_z_code_exists(connection=connection):  # noqa: RET505
         add_metric("DoSPalliativeCareZCodeDoesNotExist")
         logger.error(
             f"Unable to save palliative care changes for service id {service_id} as the "

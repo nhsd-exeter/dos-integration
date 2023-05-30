@@ -215,7 +215,7 @@ def test_log_invalid_open_times(mock_logger):
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
 
-    dos_services = [dummy_dos_service() for i in range(3)]
+    dos_services = [dummy_dos_service() for _ in range(3)]
     # Act
     log_invalid_open_times(nhs_entity, dos_services)
     # Assert

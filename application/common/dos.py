@@ -329,11 +329,10 @@ def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> dict[str, list[Sp
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
 
-    serviceid_specopentimes_map = {}
-    for service_id, db_rows in serviceid_dbrows_map.items():
-        serviceid_specopentimes_map[service_id] = db_rows_to_spec_open_times(db_rows)
-
-    return serviceid_specopentimes_map
+    return {
+        service_id: db_rows_to_spec_open_times(db_rows)
+        for service_id, db_rows in serviceid_dbrows_map.items()
+    }
 
 
 def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
@@ -362,11 +361,10 @@ def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> dict[str, Standard
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
 
-    serviceid_stdopentimes_map = {}
-    for service_id, db_rows in serviceid_dbrows_map.items():
-        serviceid_stdopentimes_map[service_id] = db_rows_to_std_open_times(db_rows)
-
-    return serviceid_stdopentimes_map
+    return {
+        service_id: db_rows_to_std_open_times(db_rows)
+        for service_id, db_rows in serviceid_dbrows_map.items()
+    }
 
 
 def has_palliative_care(service: DoSService, connection: Connection) -> bool:
