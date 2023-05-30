@@ -41,16 +41,8 @@ data "template_file" "delete_ecr_images_buildspec" {
   template = file("buildspecs/delete-ecr-images-buildspec.yml")
 }
 
-data "template_file" "build_release_buildspec" {
-  template = file("buildspecs/build-release-buildspec.yml")
-}
-
-data "template_file" "delete_release_environment_and_pipeline_on_pr_merged_buildspec" {
-  template = file("buildspecs/delete-release-environment-and-pipeline-on-pr-merged-buildspec.yml")
-}
-
-data "template_file" "tag_release_images_on_branch_delete_buildspec" {
-  template = file("buildspecs/tag-release-images-on-branch-delete-buildspec.yml")
+data "template_file" "build_deploy_test_release_buildspec" {
+  template = file("buildspecs/build-deploy-test-release-buildspec.yml")
 }
 
 data "template_file" "build_cicd_blue_green_deployment_artefact_buildspec" {
