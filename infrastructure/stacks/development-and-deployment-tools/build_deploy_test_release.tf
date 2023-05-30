@@ -44,6 +44,11 @@ resource "aws_codebuild_project" "build_deploy_test_release" {
       name  = "PROFILE"
       value = "dev"
     }
+
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "release"
+    }
     environment_variable {
       name  = "CB_PROJECT_NAME"
       value = "${var.project_id}-${var.environment}-build-deploy-test-release-stage"
