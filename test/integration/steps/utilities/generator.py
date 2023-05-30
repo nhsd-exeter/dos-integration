@@ -12,7 +12,7 @@ from pytz import timezone
 from .context import Context
 from .utils import invoke_dos_db_handler_lambda
 
-URL = getenv("URL")
+URL = getenv("HTTPS_DOS_INTEGRATION_URL")
 DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
 LAMBDA_CLIENT_FUNCTIONS = client("lambda")
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
@@ -342,35 +342,35 @@ def build_change_event_opening_times(context: Context) -> list:
     """
     opening_times = []
     if "standard_openings" in context.generator_data:
-        for days in context.generator_data["standard_openings"]:
-            opening_times.append(
-                {
-                    "AdditionalOpeningDate": "",
-                    "ClosingTime": days["closing_time"],
-                    "IsOpen": days["open"],
-                    "OffsetClosingTime": 780,
-                    "OffsetOpeningTime": 540,
-                    "OpeningTime": days["opening_time"],
-                    "OpeningTimeType": "General",
-                    "Weekday": days["day"],
-                },
-            )
+        opening_times.extend(
+            {
+                "AdditionalOpeningDate": "",
+                "ClosingTime": days["closing_time"],
+                "IsOpen": days["open"],
+                "OffsetClosingTime": 780,
+                "OffsetOpeningTime": 540,
+                "OpeningTime": days["opening_time"],
+                "OpeningTimeType": "General",
+                "Weekday": days["day"],
+            }
+            for days in context.generator_data["standard_openings"]
+        )
     if "specified_openings" in context.generator_data:
         present = datetime.now(timezone("Europe/London"))
-        for days in context.generator_data["specified_openings"]:
-            if datetime.strptime(days["date"], "%b %d %Y").date() > present.date():
-                opening_times.append(
-                    {
-                        "AdditionalOpeningDate": days["date"],
-                        "ClosingTime": days["closing_time"],
-                        "IsOpen": days["open"],
-                        "OffsetClosingTime": 780,
-                        "OffsetOpeningTime": 540,
-                        "OpeningTime": days["opening_time"],
-                        "OpeningTimeType": "Additional",
-                        "Weekday": "",
-                    },
-                )
+        opening_times.extend(
+            {
+                "AdditionalOpeningDate": days["date"],
+                "ClosingTime": days["closing_time"],
+                "IsOpen": days["open"],
+                "OffsetClosingTime": 780,
+                "OffsetOpeningTime": 540,
+                "OpeningTime": days["opening_time"],
+                "OpeningTimeType": "Additional",
+                "Weekday": "",
+            }
+            for days in context.generator_data["specified_openings"]
+            if datetime.strptime(days["date"], "%b %d %Y").date() > present.date()
+        )
     return opening_times
 
 
@@ -543,17 +543,16 @@ def valid_change_event(context: Context) -> bool:
     Returns:
         bool: True if the data is valid, False if not.
     """
-    if (
-        context.website is not None
-        and not fullmatch(
-            r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
-            context.website,
+    return bool(
+        (
+            context.website is None
+            or fullmatch(
+                r"(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?",
+                context.website,
+            )
         )
-        or context.phone is not None
-        and not fullmatch(r"[+0][0-9 ()]{9,}", context.phone)
-    ):
-        return False
-    return True
+        and (context.phone is None or fullmatch(r"[+0][0-9 ()]{9,}", context.phone)),
+    )
 
 
 def create_palliative_care_entry_dos(context: Context) -> int:

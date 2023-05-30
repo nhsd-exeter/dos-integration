@@ -379,11 +379,9 @@ def service_table_entry_is_committed(context: Context) -> Context:
         add_specified_openings_to_dos(context)
     if context.change_event is None:
         build_change_event(context)
-    if ce_state:
-        context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
-    else:
+    if not ce_state:
         add_single_opening_day(context)
-        context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
+    context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
 
 
@@ -529,12 +527,12 @@ def change_event_with_break_in_opening_times(context: Context, amount: str) -> C
         Context: The context object.
     """
     context.generator_data["standard_openings"] = []
-    if amount in ["1", "2", "3"]:
+    if amount in {"1", "2", "3"}:
         query_standard_opening_builder(context, "open", "monday", "09:00", "12:00")
         query_standard_opening_builder(context, "open", "monday", "12:30", "16:00")
-    if amount in ["2", "3"]:
+    if amount in {"2", "3"}:
         query_standard_opening_builder(context, "open", "monday", "16:10", "16:30")
-    if amount in ["3"]:
+    if amount in {"3"}:
         query_standard_opening_builder(context, "open", "monday", "16:40", "17:00")
     context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
     return context
@@ -817,9 +815,9 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
-    if plain_english_service_table_field in ["easting", "northing"]:
+    if plain_english_service_table_field in {"easting", "northing"}:
         expected_data = int(expected_data)
-    elif plain_english_service_table_field in ["latitude", "longitude"]:
+    elif plain_english_service_table_field in {"latitude", "longitude"}:
         expected_data = float(expected_data)
     assert (
         field_data == expected_data
@@ -895,7 +893,7 @@ def check_service_history_specified_times(context: Context, added_or_removed: st
             raise ValueError(msg)
     if change_type == "add":
         openingtimes = context.change_event["OpeningTimes"][-1]
-    if change_type == "remove":
+    elif change_type == "remove":
         openingtimes = context.other
     dos_times = get_service_history_specified_opening_times(context.service_id)
     changed_dates = dos_times["data"][change_type]
@@ -923,9 +921,7 @@ def check_service_history_standard_times(context: Context, added_or_removed: str
     dos_times = get_service_history_standard_opening_times(context.service_id)
     expected_dates = convert_standard_opening(openingtimes)
     counter = 0
-    strict_checks = False
-    if "f006s012" in environ.get("PYTEST_CURRENT_TEST"):
-        strict_checks = True
+    strict_checks = "f006s012" in environ.get("PYTEST_CURRENT_TEST")
     if added_or_removed == "added":
         counter = assert_standard_openings("add", dos_times, expected_dates, strict_checks)
     elif added_or_removed == "modified":
@@ -1019,9 +1015,7 @@ def the_dos_service_has_no_past_openings(context: Context, year: str) -> None:
     """
     wait_for_service_update(context.generator_data["id"])
     current_specified_openings = get_change_event_specified_opening_times(context.generator_data["id"])
-    if current_specified_openings == {}:
-        assert True
-    else:
+    if current_specified_openings != {}:
         assert year not in current_specified_openings, f"{year} not found in {current_specified_openings}"
 
 
@@ -1366,11 +1360,12 @@ def services_location_history_update_assertion(context: Context) -> None:
     sleep(10)
     history_data = get_service_history(context.service_id)
     history_data = history_data[list(history_data.keys())[0]]["new"]
-    history_list = []
-    history_list.append(history_data["cmsorgtown"]["data"])
-    history_list.append(history_data["postalcode"]["data"])
-    history_list.append(history_data["cmseastings"]["data"])
-    history_list.append(history_data["cmsnorthings"]["data"])
+    history_list = [
+        history_data["cmsorgtown"]["data"],
+        history_data["postalcode"]["data"],
+        history_data["cmseastings"]["data"],
+        history_data["cmsnorthings"]["data"],
+    ]
     location_data = get_locations_table_data(context.change_event["Postcode"])
     location_data = list(location_data[0].values())[:-2]
     assert history_list == location_data, "ERROR: Service History and Location data does not match"
