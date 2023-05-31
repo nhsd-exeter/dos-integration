@@ -145,7 +145,7 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
                 matching_services.append(service)
             else:
                 non_matching_services.append(service)
-    if len(non_matching_services) > 0:
+    if non_matching_services:
         log_unmatched_service_types(nhs_entity, non_matching_services)
 
     if nhs_entity.org_type_id == PHARMACY_ORG_TYPE_ID:

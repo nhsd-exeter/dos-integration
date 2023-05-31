@@ -37,9 +37,6 @@ exclude = [
     "venv",
     "scripts", # Ignore scripts folder
     "application/orchestrator",  # Ignore orchestrator folder as it will be removed soon.
-    "application/service_sync/changes_to_dos.py",
-    "application/service_sync/compare_data.py",
-    "application/service_sync/dos_data.py",
 ]
 
 # Same as Black.

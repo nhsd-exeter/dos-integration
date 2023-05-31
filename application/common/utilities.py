@@ -83,9 +83,7 @@ def get_sqs_msg_attribute(msg_attributes: dict[str, Any], key: str) -> str | flo
     data_type = attribute.get("dataType")
     if data_type == "String":
         return attribute.get("stringValue")
-    if data_type == "Number":
-        return float(attribute.get("stringValue"))
-    return None
+    return float(attribute.get("stringValue")) if data_type == "Number" else None
 
 
 def handle_sqs_msg_attributes(msg_attributes: dict[str, Any]) -> dict[str, Any] | None:

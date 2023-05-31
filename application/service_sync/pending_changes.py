@@ -116,7 +116,7 @@ def get_pending_changes(connection: Connection, service_id: str) -> list[Pending
     cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
     response_rows: list[DictRow] = cursor.fetchall()
     cursor.close()
-    if len(response_rows) < 1:
+    if not response_rows:
         return None
     logger.info(f"Pending changes found for Service ID {service_id}")
     pending_changes: list[PendingChange] = []

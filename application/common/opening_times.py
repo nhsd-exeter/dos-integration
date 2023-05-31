@@ -316,11 +316,7 @@ class SpecifiedOpeningTime:
         """Removes any SpecifiedOpeningTime objects from the list that are in the past."""
         if date_now is None:
             date_now = datetime.now().date()  # noqa: DTZ005
-        future_dates = []
-        for item in times_list:
-            if item.date >= date_now:
-                future_dates.append(item)
-        return future_dates
+        return [item for item in times_list if item.date >= date_now]
 
     def export_test_format(self) -> dict:
         """Exports Specified opening time into a test format that can be used in the tests."""
@@ -334,7 +330,7 @@ class SpecifiedOpeningTime:
         opening_dates_cr_format = {}
         for spec_open_date in spec_opening_dates:
             spec_open_date_payload = spec_open_date.export_test_format()
-            opening_dates_cr_format.update(spec_open_date_payload)
+            opening_dates_cr_format |= spec_open_date_payload
         return opening_dates_cr_format
 
 
@@ -370,7 +366,7 @@ class StandardOpeningTimes:
 
     def __len__(self) -> int:
         """Returns the number of OpenPeriods in the StandardOpeningTimes object."""
-        return sum([len(getattr(self, day)) for day in WEEKDAYS])
+        return sum(len(getattr(self, day)) for day in WEEKDAYS)
 
     def __eq__(self, other: "StandardOpeningTimes") -> bool:
         """Check equality of 2 StandardOpeningTimes (generic bankholiday values are ignored)."""

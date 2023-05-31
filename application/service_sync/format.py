@@ -31,14 +31,13 @@ def format_website(website: str) -> str:
         str: Formatted website
     """
     nhs_uk_website = urlparse(website)
-    if not nhs_uk_website.netloc:  # handle website like www.test.com
-        if "/" in website:
-            nhs_uk_website = website.split("/")
-            nhs_uk_website[0] = nhs_uk_website[0].lower()
-            nhs_uk_website = "/".join(nhs_uk_website)
-        else:
-            nhs_uk_website = urlunparse(nhs_uk_website).lower()
-    else:  # handle website like https://www.test.com
+    if nhs_uk_website.netloc: # handle websites like https://www.test.com
         nhs_uk_website = nhs_uk_website._replace(netloc=nhs_uk_website.netloc.lower())
         nhs_uk_website = urlunparse(nhs_uk_website)
+    elif "/" in website:
+        nhs_uk_website = website.split("/")
+        nhs_uk_website[0] = nhs_uk_website[0].lower()
+        nhs_uk_website = "/".join(nhs_uk_website)
+    else: # handle website like www.test.com
+        nhs_uk_website = urlunparse(nhs_uk_website).lower()
     return nhs_uk_website

@@ -48,11 +48,9 @@ def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     return dos_service
 
 
-def blank_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
+def blank_dos_service(**kwargs: Any) -> DoSService:    # noqa: ANN401
     """Creates a DoSService Object with blank str data for the unit testing."""
-    test_data = {}
-    for col in DoSService.field_names():
-        test_data[col] = ""
+    test_data = {col: "" for col in DoSService.field_names()}
     dos_service = DoSService(test_data)
 
     for name, value in kwargs.items():

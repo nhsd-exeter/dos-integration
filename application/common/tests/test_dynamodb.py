@@ -95,7 +95,7 @@ def test_add_change_event_to_dynamodb(dynamodb_table_create, change_event, dynam
     expected = loads(dumps(change_event), parse_float=Decimal)
 
     assert response_id == change_id
-    assert deserialized["EventReceived"] == int(event_received_time)
+    assert deserialized["EventReceived"] == event_received_time
     assert deserialized["TTL"] == int(event_received_time + TTL)
     assert deserialized["Id"] == change_id
     assert deserialized["SequenceNumber"] == 1

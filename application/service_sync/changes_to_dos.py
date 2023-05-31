@@ -3,15 +3,10 @@ from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 
-from .format import format_address, format_website
 from .service_histories import ServiceHistories
-from .validation import validate_website
-from common.dos import DoSService, get_valid_dos_location
-from common.dos_location import DoSLocation
+from common.dos import DoSService
 from common.nhs import NHSEntity
-from common.opening_times import SpecifiedOpeningTime, StandardOpeningTimes, opening_period_times_from_list
-from common.report_logging import log_invalid_nhsuk_postcode
-from common.utilities import is_val_none_or_empty
+from common.opening_times import SpecifiedOpeningTime
 
 logger = Logger(child=True)
 
