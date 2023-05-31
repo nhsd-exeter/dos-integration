@@ -30,6 +30,7 @@ resource "aws_security_group_rule" "allow_postgres_out" {
   security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
   description       = "Allow all Postgres outbound traffic"
 }
+
 resource "aws_security_group_rule" "database_allow_in_from_lambda" {
   type                     = "ingress"
   from_port                = 5432
@@ -37,7 +38,7 @@ resource "aws_security_group_rule" "database_allow_in_from_lambda" {
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
   security_group_id        = data.aws_security_group.dos_db_sg.id
-  description              = "Allow access in from UEC DI lambda to DoS Postgres DB - ${var.environment}}"
+  description              = "Allow access in from UEC DI lambda to DoS Postgres DB - ${var.environment}"
 }
 
 resource "aws_security_group_rule" "database_replica_allow_in_from_lambda" {
@@ -47,5 +48,5 @@ resource "aws_security_group_rule" "database_replica_allow_in_from_lambda" {
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.uec_dos_int_lambda_sg.id
   security_group_id        = data.aws_security_group.dos_db_replica_sg.id
-  description              = "Allow access in from UEC DI lambda to DoS Replica Postgres DB"
+  description              = "Allow access in from UEC DI lambda to DoS Replica Postgres DB - ${var.environment}"
 }
