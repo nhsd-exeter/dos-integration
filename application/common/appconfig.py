@@ -1,15 +1,15 @@
 from os import getenv
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.utilities.feature_flags.appconfig import AppConfigStore
 from aws_lambda_powertools.utilities.feature_flags.feature_flags import FeatureFlags
 
 
 class AppConfig:
-    """Application configuration"""
+    """Application configuration."""
 
     def __init__(self, name: str) -> None:
-        """Initialise the application configuration
+        """Initialise the application configuration.
 
         Args:
             name (str): name of the application configuration profile
@@ -22,8 +22,8 @@ class AppConfig:
             name=name,
         )
 
-    def get_raw_configuration(self) -> Dict[str, Any]:
-        """Get the raw configuration
+    def get_raw_configuration(self) -> dict[str, Any]:
+        """Get the raw configuration.
 
         Returns:
             dict: raw configuration
@@ -31,7 +31,7 @@ class AppConfig:
         return self.app_config.get_raw_configuration
 
     def get_feature_flags(self) -> FeatureFlags:
-        """Get the feature flags for the given name
+        """Get the feature flags for the given name.
 
         Returns:
             FeatureFlags: feature flags class

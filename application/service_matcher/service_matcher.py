@@ -3,21 +3,21 @@ from hashlib import sha256
 from json import dumps
 from operator import countOf
 from os import environ
-from typing import Any, Dict, List
+from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
+from pytz import timezone
 
 from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, PHARMACY_SERVICE_TYPE_ID
-from common.dos import DoSService, get_matching_dos_services, VALID_STATUS_ID
+from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.report_logging import (
-    log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_unexpected_pharmacy_profiling,
@@ -38,13 +38,14 @@ sqs = client("sqs")
 @logger.inject_lambda_context(clear_state=True)
 @event_source(data_class=SQSEvent)
 @metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
-    """Entrypoint handler for the service_matcher lambda
+def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ANN401
+    """Entrypoint handler for the service_matcher lambda.
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
             Change Event has been validate by the ingest change event lambda
         context (LambdaContext): Lambda function context object
+        metrics (Any): Embedded metrics object
 
     Event: The event payload should contain a NHS Entity (Service)
     """
@@ -58,7 +59,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     metrics.set_property("function_name", context.function_name)
 
     # Get Datetime from milliseconds
-    date_time = datetime.fromtimestamp(holding_queue_change_event_item["message_received"] // 1000.0)
+    date_time = datetime.fromtimestamp(
+        holding_queue_change_event_item["message_received"] // 1000.0,
+        tz=timezone("Europe/London"),
+    )
     metrics.set_property("message_received", date_time.strftime("%m/%d/%Y, %H:%M:%S"))
 
     nhs_entity = NHSEntity(change_event)
@@ -80,10 +84,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     if not nhs_entity.all_times_valid():
         log_invalid_open_times(nhs_entity, matching_services)
 
-    if nhs_entity.standard_opening_times.fully_closed() and len(matching_services) > 0:
-        # Also requires valid type/subtype, but this condition is already met in code by this point
-        log_blank_standard_opening_times(nhs_entity, matching_services)
-
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]
     logger.debug(f"Matching service types: {dos_matching_service_types}")
@@ -92,11 +92,13 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
             service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
         ]
         log_unexpected_pharmacy_profiling(
-            matching_services=type_13_matching_services, reason="Multiple 'Pharmacy' type services found (type 13)"
+            matching_services=type_13_matching_services,
+            reason="Multiple 'Pharmacy' type services found (type 13)",
         )
     elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
         log_unexpected_pharmacy_profiling(
-            matching_services=matching_services, reason="No 'Pharmacy' type services found (type 13)"
+            matching_services=matching_services,
+            reason="No 'Pharmacy' type services found (type 13)",
         )
 
     update_requests: list[UpdateRequest] = [
@@ -111,15 +113,25 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     )
 
 
-def divide_chunks(to_chunk, chunk_size):
+def divide_chunks(to_chunk: list, chunk_size: int) -> Any:  # noqa: ANN401
+    """Yield successive n-sized chunks from l."""
     # looping till length l
     for i in range(0, len(to_chunk), chunk_size):
-        yield to_chunk[i : i + chunk_size]  # noqa: E203
+        yield to_chunk[i : i + chunk_size]
 
 
-def get_matching_services(nhs_entity: NHSEntity) -> List[DoSService]:
-    """Using the nhs entity attributed to this object, it finds the
-    matching DoS services from the db and filters the results"""
+def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
+    """Gets the matching DoS services for the given nhs entity.
+
+    Using the nhs entity attributed to this object, it finds the
+    matching DoS services from the db and filters the results.
+
+    Args:
+        nhs_entity (NHSEntity): The nhs entity to match against.
+
+    Returns:
+        list[DoSService]: The list of matching DoS services.
+    """
     # Check database for services with same first 5 digits of ODSCode
     logger.info(f"Getting matching DoS Services for odscode '{nhs_entity.odscode}'.")
     matching_dos_services = get_matching_dos_services(nhs_entity.odscode, nhs_entity.org_type_id)
@@ -133,29 +145,32 @@ def get_matching_services(nhs_entity: NHSEntity) -> List[DoSService]:
                 matching_services.append(service)
             else:
                 non_matching_services.append(service)
-    if len(non_matching_services) > 0:
+    if non_matching_services:
         log_unmatched_service_types(nhs_entity, non_matching_services)
 
     if nhs_entity.org_type_id == PHARMACY_ORG_TYPE_ID:
         logger.info(
             f"Found {len(matching_dos_services)} services in DB with "
-            f"matching first 5 chars of ODSCode: {matching_dos_services}"
+            f"matching first 5 chars of ODSCode: {matching_dos_services}",
         )
     elif nhs_entity.org_type_id == DENTIST_ORG_TYPE_ID:
         logger.info(f"Found {len(matching_dos_services)} services in DB with matching ODSCode: {matching_dos_services}")
     logger.info(
         f"Found {len(matching_services)} services with typeid in "
         f"allowlist {valid_service_types} and status id = "
-        f"{VALID_STATUS_ID}: {matching_services}"
+        f"{VALID_STATUS_ID}: {matching_services}",
     )
 
     return matching_services
 
 
 def send_update_requests(
-    update_requests: List[Dict[str, Any]], message_received: int, record_id: str, sequence_number: int
+    update_requests: list[dict[str, Any]],
+    message_received: int,
+    record_id: str,
+    sequence_number: int,
 ) -> None:
-    """Sends update request payload off to next part of workflow"""
+    """Sends update request payload off to next part of workflow."""
     messages = []
     for update_request in update_requests:
         service_id = update_request.get("service_id")
@@ -193,7 +208,7 @@ def send_update_requests(
                     "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
                     "message_group_id": {"DataType": "String", "StringValue": message_group_id},
                 },
-            }
+            },
         )
     chunks = list(divide_chunks(messages, 10))
     for i, chunk in enumerate(chunks):

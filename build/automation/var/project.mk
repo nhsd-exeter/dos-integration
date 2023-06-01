@@ -98,10 +98,13 @@ SLACK_MESSENGER := slack-messenger
 # DI Endpoint API Gateway API Keys
 TF_VAR_api_gateway_api_key_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-api-key
 TF_VAR_nhs_uk_api_key_key := NHS_UK_API_KEY
+API_KEY_SECRET := $(TF_VAR_api_gateway_api_key_name)
+NHS_UK_API_KEY := $(TF_VAR_nhs_uk_api_key_key)
 
 # DI Endpoint API Gateway Route53 & SQS
 TF_VAR_dos_integration_sub_domain_name := $(PROGRAMME)-$(TEAM_ID)-$(SHARED_ENVIRONMENT)
 DOS_INTEGRATION_URL = $(TF_VAR_dos_integration_sub_domain_name).$(TEXAS_HOSTED_ZONE)/v1/change-event
+HTTPS_DOS_INTEGRATION_URL = https://$(DOS_INTEGRATION_URL)
 TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-di-endpoint
 TF_VAR_di_endpoint_api_gateway_stage := $(SHARED_ENVIRONMENT)
 
@@ -111,6 +114,7 @@ TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead
 
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-events
+DYNAMO_DB_TABLE := $(TF_VAR_change_events_table_name)
 
 # Log Group Filters for Firehose
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
@@ -196,8 +200,9 @@ TF_VAR_service_sync_di_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-d
 TF_VAR_service_sync_dos_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-dos-cw-logs-firehose-subscription
 TF_VAR_slack_messenger_subscription_filter_name := $(SLACK_MESSENGER_LAMBDA_NAME)-cw-logs-firehose-subscription
 
-# Cloudwatch monitoring dashboard
+# Cloudwatch dashboards
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-full-monitoring-dashboard
+TF_VAR_cloudwatch_data_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-data-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region

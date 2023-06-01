@@ -1,12 +1,12 @@
 from datetime import datetime
 from json import loads
 from os import environ
-from typing import Any, Dict, List
+from typing import Any
 from urllib.parse import quote
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities.data_classes import event_source, SNSEvent
+from aws_lambda_powertools.utilities.data_classes import SNSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from requests import post
 
@@ -16,7 +16,16 @@ logger = Logger()
 tracer = Tracer()
 
 
-def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
+def get_message_for_cloudwatch_event(event: SNSEvent) -> dict[str, Any]:
+    """Get message for cloudwatch event.
+
+    Args:
+        event (SNSEvent): SNS event
+
+    Returns:
+        dict[str, Any]: Message for slack
+    """
+
     def is_expression_alarm() -> bool:
         logger.debug(
             "Checking if alarm is an expression alarm",
@@ -28,7 +37,7 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
         )
         return "Expression" in str(trigger)
 
-    def get_attachments_fields() -> List[Dict[str, Any]]:
+    def get_attachments_fields() -> list[dict[str, Any]]:
         fields = [
             {
                 "title": "Alarm Name",
@@ -52,10 +61,10 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                 {
                     "title": "Trigger",
                     "value": f"{trigger['Statistic']} {metric_name} {trigger['ComparisonOperator']} "
-                    f"{str(trigger['Threshold'])} for {str(trigger['EvaluationPeriods'])} period(s) "
-                    f" of {str(trigger['Period'])} seconds.",
+                    f"{trigger['Threshold']!s} for {trigger['EvaluationPeriods']!s} period(s) "
+                    f" of {trigger['Period']!s} seconds.",
                     "short": False,
-                }
+                },
             )
         return fields
 
@@ -90,22 +99,27 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> Dict[str, Any]:
                     "type": "mrkdwn",
                     "text": f":rotating_light:  *<{link}|{alarm_name}>*",
                 },
-            }
+            },
         ],
         "attachments": [
             {
                 "color": colour,
                 "fields": get_attachments_fields(),
                 "ts": timestamp,
-            }
+            },
         ],
     }
 
 
-def send_msg_slack(message: Dict[str, Any]) -> None:
+def send_msg_slack(message: dict[str, Any]) -> None:
+    """Send message to slack.
+
+    Args:
+        message (dict[str, Any]): Message to send to slack
+    """
     url = environ["SLACK_WEBHOOK_URL"]
     channel = environ["SLACK_ALERT_CHANNEL"]
-    headers: Dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
+    headers: dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
 
     message["channel"] = channel
     message["icon_emoji"] = ""
@@ -126,18 +140,17 @@ def send_msg_slack(message: Dict[str, Any]) -> None:
 @tracer.capture_lambda_handler()
 @event_source(data_class=SNSEvent)
 @logger.inject_lambda_context(clear_state=True)
-def lambda_handler(event: SNSEvent, context: LambdaContext) -> None:
-    """Entrypoint handler for the slack_messenger lambda
+def lambda_handler(event: SNSEvent, _context: LambdaContext) -> None:
+    """Entrypoint handler for the slack_messenger lambda.
 
     Args:
-        event (SNSEvent):
+        event (SNSEvent): SNS event
         context (LambdaContext): Lambda function context object
 
     Event: The event payload
 
     Some code may need to be changed if the exact input format is changed.
     """
-
     message = get_message_for_cloudwatch_event(event)
     logger.info("Sending alert to slack.", extra={"slack_message": message})
     send_msg_slack(message)

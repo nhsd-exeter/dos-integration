@@ -3,19 +3,19 @@ from json import dumps
 from os import environ
 from unittest.mock import patch
 
+import pytest
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
-from pytest import fixture, mark, raises
 
 from application.slack_messenger.slack_messenger import get_message_for_cloudwatch_event, lambda_handler, send_msg_slack
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "slack-messenger"
         memory_limit_in_mb: int = 128
@@ -47,7 +47,7 @@ MESSAGE = {
         "StatisticType": "Statistic",
         "Statistic": "SUM",
         "Unit": None,
-        "Dimensions": [{"value": "dsuec-259", "name": "ENV"}],
+        "Dimensions": [{"value": "ds-259", "name": "ENV"}],
         "Period": 300,
         "EvaluationPeriods": 1,
         "DatapointsToAlarm": 1,
@@ -66,7 +66,7 @@ SNS_EVENT = {
             "Sns": {
                 "Type": "Notification",
                 "MessageId": "be6ed8fb-6ca6-5ecb-ba78-82609035c3ad",
-                "TopicArn": "arn:aws:sns:eu-west-2:000000000000:uec-dos-int-dsuec-259-topic-app-alerts-for-slack",
+                "TopicArn": "arn:aws:sns:eu-west-2:000000000000:uec-dos-int-ds-259-topic-app-alerts-for-slack",
                 "Subject": 'ALARM: "Invalid Postcodes Test" in EU (London)',
                 "Message": dumps(MESSAGE),
                 "Timestamp": "2022-03-04T11:38:59.038Z",
@@ -76,8 +76,8 @@ SNS_EVENT = {
                 "UnsubscribeUrl": "whocares",
                 "MessageAttributes": {},
             },
-        }
-    ]
+        },
+    ],
 }
 
 WEBHOOK_URL = "https://hooks.slack.com/services/1/2/3"
@@ -102,7 +102,7 @@ def test_lambda_handler_slack_messenger(mock_send, mock_get, lambda_context):
 def test_send_message_missing_url(lambda_context):
     message = {}
     # Act
-    with raises(KeyError):
+    with pytest.raises(KeyError):
         send_msg_slack(message)
 
 
@@ -111,7 +111,7 @@ def test_send_message_url_no_channel(lambda_context):
     message = {}
     environ["SLACK_WEBHOOK_URL"] = WEBHOOK_URL
     # Act & Assert
-    with raises(KeyError):
+    with pytest.raises(KeyError):
         send_msg_slack(message)
     # Clean Up
     del environ["SLACK_WEBHOOK_URL"]
@@ -136,7 +136,10 @@ def test_send_message(mock_post, lambda_context):
     del environ["SLACK_WEBHOOK_URL"]
 
 
-@mark.parametrize("new_state_value, colour", (("ALARM", "#e01e5a"), ("OK", "good"), ("INSUFFICIENT_DATA", "warning")))
+@pytest.mark.parametrize(
+    ("new_state_value", "colour"),
+    [("ALARM", "#e01e5a"), ("OK", "good"), ("INSUFFICIENT_DATA", "warning")],
+)
 def test_get_message_from_event(new_state_value, colour):
     # Arrange
     sns_event_dict = SNS_EVENT.copy()

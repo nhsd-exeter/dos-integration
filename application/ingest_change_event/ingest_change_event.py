@@ -1,11 +1,12 @@
 from json import dumps
 from os import environ
 from time import gmtime, strftime, time_ns
+from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities.data_classes import event_source, SQSEvent
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 
@@ -29,8 +30,8 @@ sqs = client("sqs")
     correlation_id_path='Records[0].messageAttributes."correlation-id".stringValue',
 )
 @metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
-    """Entrypoint handler for the ingest change event lambda
+def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ANN401, ARG001
+    """Entrypoint handler for the ingest change event lambda.
 
     This lambda runs the change event validation, puts the change event on the dynamodb table
     and then sends the validated change event to the delay queue.
@@ -38,12 +39,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     Args:
         event (SQSEvent): Lambda function invocation event
         context (LambdaContext): Lambda function context object
+        metrics (Any): Embedded metrics object
 
     Event: The event payload should contain an Update Request
     """
     time_start_ns = time_ns()
     if len(list(event.records)) != 1:
-        raise ValueError(f"{len(list(event.records))} records found in event. Expected 1.")
+        msg = f"{len(list(event.records))} records found in event. Expected 1."
+        raise ValueError(msg)
 
     record = next(event.records)
     change_event = extract_body(record.body)
@@ -71,7 +74,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
     if sequence_number is None:
         logger.error("No sequence number provided, so message will be ignored.")
         return
-    elif sequence_number < db_latest_sequence_number:
+    elif sequence_number < db_latest_sequence_number:  # noqa: RET505
         logger.error(
             "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
             extra={"incoming_sequence_number": sequence_number, "db_latest_sequence_number": db_latest_sequence_number},
@@ -93,14 +96,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics) -> None:
 
 
 @metric_scope
-def add_change_event_received_metric(ods_code: str, metrics) -> None:  # type: ignore
-    """Adds a success metric to the custom metrics collection
+def add_change_event_received_metric(ods_code: str, metrics: Any) -> None:  # noqa: ANN401
+    """Adds a success metric to the custom metrics collection.
 
     Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
+        ods_code (str): ODS Code of the change event
+        metrics (Any): Embedded metrics object
     """
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
     metrics.set_property("message", f"Change Event Received for ODSCode: {ods_code}")
     metrics.put_metric("ChangeEventReceived", 1, "Count")
     metrics.set_dimensions({"ENV": environ["ENV"]})

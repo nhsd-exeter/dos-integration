@@ -1,6 +1,6 @@
 from os import environ
 from time import time_ns
-from typing import Any, Dict
+from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
@@ -24,8 +24,8 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
 @logger.inject_lambda_context(clear_state=True, correlation_id_path="metadata.correlation_id")
-def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> None:
-    """Entrypoint handler for the service_sync lambda
+def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> None:  # noqa: ARG001
+    """Entrypoint handler for the service_sync lambda.
 
     Args:
         event (UpdateRequestQueueItem): Lambda function invocation event
@@ -41,7 +41,7 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
         service_id: int = event["update_request"]["service_id"]
         check_and_remove_pending_dos_changes(service_id)
         # Set up NHS UK Service
-        change_event: Dict[str, Any] = event["update_request"]["change_event"]
+        change_event: dict[str, Any] = event["update_request"]["change_event"]
         nhs_entity = NHSEntity(change_event)
         # Get current DoS state
         dos_service, service_histories = get_dos_service_and_history(service_id=service_id)
@@ -58,16 +58,21 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
         # Delete the message from the queue
         remove_sqs_message_from_queue(event=event)
         # Log custom metrics
-        add_success_metric(event=event)  # type: ignore
+        add_success_metric(event=event)
         add_metric("UpdateRequestSuccess")
         add_metric("ServiceUpdateSuccess")
     except Exception:
         put_circuit_is_open(environ["CIRCUIT"], True)
-        add_metric("UpdateRequestFailed")  # type: ignore
+        add_metric("UpdateRequestFailed")
         logger.exception("Error processing change event")
 
 
 def set_up_logging(event: UpdateRequestQueueItem) -> None:
+    """Sets up the logger with the ODS code and service ID.
+
+    Args:
+        event (UpdateRequestQueueItem): Lambda function invocation event
+    """
     logger.append_keys(
         ods_code=event["update_request"]["change_event"].get("ODSCode"),
         service_id=event["update_request"]["service_id"],
@@ -75,7 +80,7 @@ def set_up_logging(event: UpdateRequestQueueItem) -> None:
 
 
 def remove_sqs_message_from_queue(event: UpdateRequestQueueItem) -> None:
-    """Removes the SQS message from the queue
+    """Removes the SQS message from the queue.
 
     Args:
         event (UpdateRequestQueueItem): Lambda function invocation event
@@ -86,18 +91,19 @@ def remove_sqs_message_from_queue(event: UpdateRequestQueueItem) -> None:
 
 
 @metric_scope
-def add_success_metric(event: UpdateRequestQueueItem, metrics) -> None:  # type: ignore
-    """Adds a success metric to the custom metrics collection
+def add_success_metric(event: UpdateRequestQueueItem, metrics: Any) -> None:  # noqa: ANN401
+    """Adds a success metric to the custom metrics collection.
 
     Args:
         event (UpdateRequestQueueItem): Lambda function invocation event
+        metrics (Any): Custom metrics collection
     """
     after = time_ns() // 1000000
     metadata: UpdateRequestMetadata = event["metadata"]
     message_received = metadata["message_received"]
     diff = after - message_received
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
     metrics.set_property("message", f"Recording change event latency of {diff}")
+    metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
     metrics.set_dimensions({"ENV": environ["ENV"]})

@@ -2,7 +2,7 @@ from datetime import datetime
 from itertools import chain
 from json import dumps, loads
 from time import time
-from typing import Any, List
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
@@ -23,6 +23,8 @@ logger = Logger(child=True)
 
 
 class ServiceHistories:
+    """A service to be added to the servicehistories table."""
+
     NEW_CHANGE_KEY: str
     service_history: dict[str, Any]
     existing_service_history: dict[str, Any]
@@ -30,6 +32,11 @@ class ServiceHistories:
     history_already_exists: bool
 
     def __init__(self, service_id: int) -> None:
+        """Initialises the ServiceHistories object.
+
+        Args:
+            service_id (int): The service id of the service to be added to the servicehistories table.
+        """
         # Epoch time in seconds rounded down to the nearest second
         self.current_epoch_time = int(time())
         # Use same date/time from epoch time and format it to DoS date/time format
@@ -40,7 +47,7 @@ class ServiceHistories:
         self.NEW_CHANGE_KEY = "new_change"
 
     def get_service_history_from_db(self, connection: Connection) -> None:
-        """Gets the service_histories json from the database
+        """Gets the service_histories json from the database.
 
         Args:
             connection (Connection): The connection to the database
@@ -51,8 +58,7 @@ class ServiceHistories:
             query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
             params={"SERVICE_ID": self.service_id},
         )
-        results: List[Any] = cursor.fetchall()
-        if results != []:
+        if results := cursor.fetchall():
             # Change History exists in the database
             logger.debug(f"Service history exists in the database for serviceid {self.service_id}")
             service_history = results[0]["history"]
@@ -65,7 +71,7 @@ class ServiceHistories:
             self.history_already_exists = False
 
     def create_service_histories_entry(self) -> None:
-        """Creates a new entry in the service_histories json for any changes that will be made to the service"""
+        """Creates a new entry in the service_histories json for any changes that will be made to the service."""
         self.service_history[self.NEW_CHANGE_KEY] = {
             "new": {},
             "initiator": {"userid": DOS_INTEGRATION_USER_NAME, "timestamp": "TBD"},
@@ -73,7 +79,7 @@ class ServiceHistories:
         }  # Timestamp will be created when the change is sent to db for it to be realtime
 
     def add_change(self, dos_change_key: str, change: ServiceHistoriesChange) -> None:
-        """Adds a change to the updated service_histories json"""
+        """Adds a change to the updated service_histories json."""
         self.service_history[self.NEW_CHANGE_KEY]["new"][dos_change_key] = change.get_change()
 
     def add_standard_opening_times_change(
@@ -83,7 +89,7 @@ class ServiceHistories:
         weekday: str,
         dos_weekday_change_key: str,
     ) -> ServiceHistoriesChange:
-        """Adds a standard opening times change to the updated service_histories json
+        """Adds a standard opening times change to the updated service_histories json.
 
         Args:
             current_opening_times (StandardOpeningTimes): The current standard opening times
@@ -115,10 +121,10 @@ class ServiceHistories:
 
     def add_specified_opening_times_change(
         self,
-        current_opening_times: List[SpecifiedOpeningTime],
-        new_opening_times: List[SpecifiedOpeningTime],
+        current_opening_times: list[SpecifiedOpeningTime],
+        new_opening_times: list[SpecifiedOpeningTime],
     ) -> ServiceHistoriesChange:
-        """Adds a change to the updated service_histories json
+        """Adds a change to the updated service_histories json.
 
         Args:
             current_opening_times (List[SpecifiedOpeningTime]): The current specified opening times
@@ -155,7 +161,7 @@ class ServiceHistories:
         return change
 
     def add_sgsdid_change(self, sgsdid: str, new_value: bool) -> ServiceHistoriesChange:
-        """Adds a change to the updated service_histories json
+        """Adds a change to the updated service_histories json.
 
         Args:
             sgsdid (str): The sgsdid for the change
@@ -180,8 +186,8 @@ class ServiceHistories:
         )
         return change
 
-    def get_formatted_specified_opening_times(self, opening_times: List[SpecifiedOpeningTime]) -> list[str]:
-        """Returns the specified opening times in the format that is expected by the DoS Service History
+    def get_formatted_specified_opening_times(self, opening_times: list[SpecifiedOpeningTime]) -> list[str]:
+        """Returns the specified opening times in the format that is expected by the DoS Service History.
 
         Args:
             opening_times (List[SpecifiedOpeningTime]): The specified opening times to be formatted
@@ -192,11 +198,11 @@ class ServiceHistories:
         # Get the opening times in the format that is expected by the DoS Service History Table
         opening_times = [
             specified_opening_time.export_service_history_format() for specified_opening_time in opening_times
-        ]  # type: ignore
+        ]
         return list(chain.from_iterable(opening_times))
 
     def save_service_histories(self, connection: Connection) -> None:
-        """Saves the service_histories json to the database
+        """Saves the service_histories json to the database.
 
         Args:
             connection (connection): The database connection
@@ -220,7 +226,7 @@ class ServiceHistories:
                 """UPDATE services SET modifiedby=%(USER_NAME)s, """
                 """modifiedtime=%(CURRENT_DATE_TIME)s WHERE id = %(SERVICE_ID)s;"""
             ),
-            vars={
+            query_vars={
                 "USER_NAME": DOS_INTEGRATION_USER_NAME,
                 "CURRENT_DATE_TIME": current_date_time,
                 "SERVICE_ID": self.service_id,
@@ -235,7 +241,7 @@ class ServiceHistories:
                 query=(
                     """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
-                vars={"SERVICE_HISTORY": json_service_history, "SERVICE_ID": self.service_id},
+                query_vars={"SERVICE_HISTORY": json_service_history, "SERVICE_ID": self.service_id},
                 log_vars=False,
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
@@ -248,7 +254,7 @@ class ServiceHistories:
                     """INSERT INTO servicehistories (serviceid, history) """
                     """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
-                vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": json_service_history},
+                query_vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": json_service_history},
                 log_vars=False,
             )
             cursor.close()

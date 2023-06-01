@@ -1,15 +1,17 @@
-from pytest import raises
+import pytest
 
-from ..errors import DynamoDBException, ValidationException
+from application.common.errors import DynamoDBError, ValidationError
 
 
 def test_validation_exception():
     # Arrange & Act
-    with raises(ValidationException):
-        raise ValidationException("Test")
+    with pytest.raises(ValidationError):  # noqa: PT012
+        msg = "Test"
+        raise ValidationError(msg)
 
 
 def test_dynamodb_exception():
     # Arrange & Act
-    with raises(DynamoDBException):
-        raise DynamoDBException("Test")
+    with pytest.raises(DynamoDBError):  # noqa: PT012
+        msg = "Test"
+        raise DynamoDBError(msg)

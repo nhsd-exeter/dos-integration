@@ -1,22 +1,23 @@
-from pytest import fixture
+import pytest
 from testfixtures import LogCapture
 
 from common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
-@fixture()
-def log_capture():
+@pytest.fixture()
+def log_capture() -> LogCapture:
+    """LogCapture fixture for lambda functions."""
     with LogCapture(names="lambda") as capture:
         yield capture
 
 
-@fixture
-def change_event():
-    change_event = PHARMACY_STANDARD_EVENT.copy()
-    yield change_event
+@pytest.fixture()
+def change_event() -> dict:
+    """Get a standard change event."""
+    return PHARMACY_STANDARD_EVENT.copy()
 
 
-@fixture
-def change_event_staff():
-    change_event_staff = PHARMACY_STANDARD_EVENT_STAFF.copy()
-    yield change_event_staff
+@pytest.fixture()
+def change_event_staff() -> dict:
+    """Get a standard change event with staff."""
+    return PHARMACY_STANDARD_EVENT_STAFF.copy()

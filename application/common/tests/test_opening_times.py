@@ -2,29 +2,28 @@ from datetime import date, datetime, time, timedelta
 
 import pytest
 
-from ..opening_times import (
-    opening_period_times_from_list,
+from application.common.opening_times import (
+    WEEKDAYS,
     OpenPeriod,
     SpecifiedOpeningTime,
     StandardOpeningTimes,
-    WEEKDAYS,
+    opening_period_times_from_list,
 )
 
 OP = OpenPeriod.from_string
 
 
-def test_open_period_repr(capsys):
+def test_open_period_repr():
     # Arrange
     open_period = OpenPeriod(time(8, 0), time(12, 0))
     # Act
-    print(open_period)
+    value = repr(open_period)
     # Assert
-    captured = capsys.readouterr()
-    assert captured.out == "08:00:00-12:00:00\n"
+    assert value == "OpenPeriod(08:00:00-12:00:00)"
 
 
 @pytest.mark.parametrize(
-    "start, end, other_start, other_end, expected",
+    ("start", "end", "other_start", "other_end", "expected"),
     [
         (time(8, 0), time(12, 0), time(8, 0), time(12, 0), True),
         (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False),
@@ -66,8 +65,6 @@ def test_open_period_eq_hash():
     assert hash(c) != hash(d)
 
     assert d == d
-    assert hash(d) == hash(d)
-
     b.end = time(17, 0, 0)
     assert a == b
     assert hash(a) == hash(b)
@@ -77,7 +74,10 @@ def test_open_period_eq_hash():
     assert hash(a) != hash(a2)
 
 
-@pytest.mark.parametrize("start, end, expected", [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)])
+@pytest.mark.parametrize(
+    ("start", "end", "expected"),
+    [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)],
+)
 def test_open_period_start_before_end(start, end, expected):
     # Arrange
     open_period = OpenPeriod(start, end)
@@ -229,7 +229,7 @@ def test_open_period_hash(opening_period_2: OpenPeriod):
 
     assert open_period_1 == opening_period_2, f"{open_period_1} not found to be equal to {opening_period_2}"
     assert hash(open_period_1) == hash(
-        opening_period_2
+        opening_period_2,
     ), f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
@@ -480,7 +480,7 @@ def test_specifiedopentimes_remove_past_dates():
     future2 = SpecifiedOpeningTime([a, b, c], (now_date + timedelta(weeks=5)))
     past = SpecifiedOpeningTime([b], (now_date - timedelta(weeks=4)))
 
-    assert SpecifiedOpeningTime.remove_past_dates(list=[future1, future2, past]) == [future1, future2]
+    assert SpecifiedOpeningTime.remove_past_dates(times_list=[future1, future2, past]) == [future1, future2]
 
 
 def test_specifiedopentime_export_service_history_format_open():
@@ -511,7 +511,9 @@ def test_specifiedopentime_export_service_history_format_closed():
 def test_specifiedopentime_export_dos_log_format_open():
     # Arrange
     specified_opening_time = SpecifiedOpeningTime(
-        [OpenPeriod(time(9, 0, 0), time(11, 0, 0))], date(2021, 12, 24), is_open=True
+        [OpenPeriod(time(9, 0, 0), time(11, 0, 0))],
+        date(2021, 12, 24),
+        is_open=True,
     )
     # Act
     result = specified_opening_time.export_dos_log_format()
@@ -529,7 +531,7 @@ def test_specifiedopentime_export_dos_log_format_closed():
 
 
 @pytest.mark.parametrize(
-    "expected, actual",
+    ("expected", "actual"),
     [
         ({"2021-12-25": []}, SpecifiedOpeningTime([], date(2021, 12, 25))),
         (
@@ -541,7 +543,7 @@ def test_specifiedopentime_export_dos_log_format_closed():
                 "2039-12-30": [
                     {"start_time": "02:00", "end_time": "09:30"},
                     {"start_time": "11:45", "end_time": "18:00"},
-                ]
+                ],
             },
             SpecifiedOpeningTime(
                 [OpenPeriod(time(2, 0, 0), time(9, 30, 0)), OpenPeriod(time(11, 45, 0), time(18, 0, 0))],
@@ -554,7 +556,7 @@ def test_specifiedopentime_export_dos_log_format_closed():
                     {"start_time": "05:00", "end_time": "09:30"},
                     {"start_time": "11:45", "end_time": "18:00"},
                     {"start_time": "20:45", "end_time": "22:00"},
-                ]
+                ],
             },
             SpecifiedOpeningTime(
                 [
@@ -681,7 +683,6 @@ def test_stdopeningtimes_export_opening_times_in_seconds_for_day():
 
 
 def test_standard_opening_times_export_test_format():
-
     # Start with empty
     std_opening_times = StandardOpeningTimes()
     expected = {
@@ -723,7 +724,7 @@ def test_opening_period_times_from_list():
     # Act
     response = opening_period_times_from_list(times)
     # Assert
-    assert "08:00-09:00, 09:00-10:00" == response
+    assert response == "08:00-09:00, 09:00-10:00"
 
 
 def test_std_open_times_fully_closed():

@@ -1,6 +1,6 @@
 import json
 from os import environ
-from typing import List, Union
+from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
@@ -19,41 +19,47 @@ from common.constants import (
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
 )
-from common.dos import DoSService, VALID_STATUS_ID
+from common.dos import VALID_STATUS_ID, DoSService
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod
 
 logger = Logger(child=True)
 
 
-def log_blank_standard_opening_times(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
-    """Log events where matches services are found but no std opening times exist
+def log_blank_standard_opening_times(
+    nhs_entity: NHSEntity,
+    dos_service: DoSService,
+) -> None:
+    """Log events where matches services are found but no std opening times exist.
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
-        matching_services (List[DoSService]): The list of DoS matching services
+        dos_service (DoSService): The list of DoS matching services
     """
-    for dos_service in matching_services:
-        logger.warning(
-            "NHS Service has matching DoS services but no given standard opening times.",
-            extra={
-                "report_key": BLANK_STANDARD_OPENINGS_REPORT_ID,
-                "nhsuk_odscode": nhs_entity.odscode,
-                "dos_service_id": dos_service.id,
-                "dos_service_uid": dos_service.uid,
-                "dos_service_publicname": dos_service.name,
-                "nhsuk_service_status": nhs_entity.org_status,
-                "nhsuk_service_type": nhs_entity.org_type,
-                "nhsuk_sector": nhs_entity.org_sub_type,
-                "dos_service_status": dos_service.statusid,
-                "dos_service_type": dos_service.typeid,
-                "dos_service_type_name": dos_service.servicename,
-            },
-        )
+    logger.warning(
+        "NHS Service has matching DoS services but no given standard opening times.",
+        extra={
+            "report_key": BLANK_STANDARD_OPENINGS_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "dos_service_id": dos_service.id,
+            "dos_service_uid": dos_service.uid,
+            "dos_service_name": dos_service.name,
+            "nhsuk_service_status": nhs_entity.org_status,
+            "nhsuk_service_type": nhs_entity.org_type,
+            "nhsuk_sector": nhs_entity.org_sub_type,
+            "dos_service_status": dos_service.statusid,
+            "dos_service_type": dos_service.typeid,
+            "dos_service_type_name": dos_service.servicename,
+            "dos_region": dos_service.get_region(),
+        },
+    )
 
 
-def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List[DoSService]) -> None:
-    """Log closed or hidden NHS UK services
+def log_closed_or_hidden_services(
+    nhs_entity: NHSEntity,
+    matching_services: list[DoSService],
+) -> None:
+    """Log closed or hidden NHS UK services.
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
@@ -79,11 +85,11 @@ def log_closed_or_hidden_services(nhs_entity: NHSEntity, matching_services: List
 
 
 def log_unmatched_nhsuk_service(nhs_entity: NHSEntity) -> None:
-    """Log unmatched NHS Services
-    Args:
-        nhs_entity (NHSEntity): NHS entity to log
-    """
+    """Log unmatched NHS Services.
 
+    Args:
+        nhs_entity (NHSEntity): NHS entity to log.
+    """
     logger.warning(
         f"No matching DOS services found that fit all criteria for ODSCode '{nhs_entity.odscode}'",
         extra={
@@ -105,11 +111,17 @@ def log_unmatched_nhsuk_service(nhs_entity: NHSEntity) -> None:
 
 
 @metric_scope
-def log_invalid_nhsuk_postcode(nhs_entity: NHSEntity, dos_service: DoSService, metrics) -> None:
-    """Log invalid NHS pharmacy postcode
+def log_invalid_nhsuk_postcode(
+    nhs_entity: NHSEntity,
+    dos_service: DoSService,
+    metrics: Any,  # noqa: ANN401
+) -> None:
+    """Log invalid NHS pharmacy postcode.
+
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
-        dos_service (List[DoSService]): The list of DoS matching services
+        dos_service (List[DoSService]): The list of DoS matching services.
+        metrics (Any): The metrics object to report to.
     """
     error_msg = f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
     logger.warning(
@@ -141,12 +153,17 @@ def log_invalid_nhsuk_postcode(nhs_entity: NHSEntity, dos_service: DoSService, m
 
 
 @metric_scope
-def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSService], metrics) -> None:
-    """Report invalid open times for nhs entity
+def log_invalid_open_times(
+    nhs_entity: NHSEntity,
+    matching_services: list[DoSService],
+    metrics: Any,  # noqa: ANN401
+) -> None:
+    """Report invalid open times for nhs entity.
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         matching_services (List[DoSService]): The list of DoS matching services
+        metrics (Any): The metrics object to report to.
     """
     error_msg = f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times."
     logger.warning(
@@ -155,9 +172,15 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
             "report_key": INVALID_OPEN_TIMES_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
             "nhsuk_organisation_name": nhs_entity.org_name,
-            "nhsuk_open_times_payload": json.dumps(nhs_entity.entity_data["OpeningTimes"]),
-            "dos_service_type_name": ", ".join(str(service.servicename) for service in matching_services),
-            "dos_services": ", ".join(str(service.uid) for service in matching_services),
+            "nhsuk_open_times_payload": json.dumps(
+                nhs_entity.entity_data["OpeningTimes"],
+            ),
+            "dos_service_type_name": ", ".join(
+                str(service.servicename) for service in matching_services
+            ),
+            "dos_services": ", ".join(
+                str(service.uid) for service in matching_services
+            ),
         },
     )
     metrics.set_namespace("UEC-DOS-INT")
@@ -167,11 +190,15 @@ def log_invalid_open_times(nhs_entity: NHSEntity, matching_services: List[DoSSer
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
 
 
-def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[DoSService]) -> None:
-    """Log unmatched DOS service types
+def log_unmatched_service_types(
+    nhs_entity: NHSEntity,
+    unmatched_services: list[DoSService],
+) -> None:
+    """Log unmatched DOS service types.
+
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
-        unmatched_services (List[DoSService]): The list of DoS unmatched services
+        unmatched_services (List[DoSService]): The list of DoS unmatched services.
     """
     for unmatched_service in unmatched_services:
         logger.warning(
@@ -194,10 +221,19 @@ def log_unmatched_service_types(nhs_entity: NHSEntity, unmatched_services: List[
         )
 
 
-def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: DoSService) -> None:
-    """Log a service found to have a generic bank holiday open times set in DoS."""
+def log_service_with_generic_bank_holiday(
+    nhs_entity: NHSEntity,
+    dos_service: DoSService,
+) -> None:
+    """Log a service found to have a generic bank holiday open times set in DoS.
 
-    open_periods_str = OpenPeriod.list_string(dos_service.standard_opening_times.generic_bankholiday)
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        dos_service (DoSService): The DoS service to report
+    """
+    open_periods_str = OpenPeriod.list_string(
+        dos_service.standard_opening_times.generic_bankholiday,
+    )
 
     logger.warning(
         f"DoS Service uid={dos_service.uid} has a generic BankHoliday Standard opening time set in DoS",
@@ -216,6 +252,12 @@ def log_service_with_generic_bank_holiday(nhs_entity: NHSEntity, dos_service: Do
 
 
 def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
+    """Log a service found to have an invalid website.
+
+    Args:
+        nhs_uk_entity (NHSEntity): The NHS entity to report
+        nhs_website (str): The NHS website to report
+    """
     logger.warning(
         f"Website is not valid, {nhs_website=}",
         extra={
@@ -228,7 +270,14 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
     )
 
 
-def log_palliative_care_z_code_does_not_exist(symptom_group_symptom_discriminator_combo_rowcount: int) -> None:
+def log_palliative_care_z_code_does_not_exist(
+    symptom_group_symptom_discriminator_combo_rowcount: int,
+) -> None:
+    """Log a service found to have an invalid website.
+
+    Args:
+        symptom_group_symptom_discriminator_combo_rowcount (int): The number of rows returned from the database query
+    """
     logger.warning(
         "Palliative care Z code does not exist in the DoS database",
         extra={
@@ -241,7 +290,7 @@ def log_palliative_care_z_code_does_not_exist(symptom_group_symptom_discriminato
     )
 
 
-def log_service_updated(
+def log_service_updated(  # noqa: PLR0913
     action: str,
     data_field_modified: str,
     new_value: str,
@@ -250,6 +299,17 @@ def log_service_updated(
     service_uid: str,
     type_id: str,
 ) -> None:
+    """Log a service update.
+
+    Args:
+        action (str): The action performed
+        data_field_modified (str): The data field modified
+        new_value (str): The new value
+        previous_value (str): The previous value
+        service_name (str): The service name
+        service_uid (str): The service uid
+        type_id (str): The type id
+    """
     logger.warning(
         "Service update complete",
         extra={
@@ -266,7 +326,16 @@ def log_service_updated(
     )
 
 
-def log_palliative_care_not_equal(nhs_uk_palliative_care: bool, dos_palliative_care: bool) -> None:
+def log_palliative_care_not_equal(
+    nhs_uk_palliative_care: bool,
+    dos_palliative_care: bool,
+) -> None:
+    """Log a service found to have an invalid website.
+
+    Args:
+        nhs_uk_palliative_care (bool): The NHS website to report
+        dos_palliative_care (bool): The NHS entity to report
+    """
     logger.warning(
         "Palliative care not equal",
         extra={
@@ -278,8 +347,17 @@ def log_palliative_care_not_equal(nhs_uk_palliative_care: bool, dos_palliative_c
 
 
 def log_incorrect_palliative_stockholder_type(
-    nhs_uk_palliative_care: Union[bool, str], dos_palliative_care: bool, dos_service: DoSService
+    nhs_uk_palliative_care: bool | str,
+    dos_palliative_care: bool,
+    dos_service: DoSService,
 ) -> None:
+    """Log a service found to have an invalid website.
+
+    Args:
+        nhs_uk_palliative_care (bool): The NHS website to report
+        dos_palliative_care (bool): The NHS entity to report
+        dos_service (DoSService): The DoS service to report
+    """
     logger.warning(
         "Palliative care on wrong service type",
         extra={
@@ -291,7 +369,16 @@ def log_incorrect_palliative_stockholder_type(
     )
 
 
-def log_unexpected_pharmacy_profiling(matching_services: List[DoSService], reason: str) -> None:
+def log_unexpected_pharmacy_profiling(
+    matching_services: list[DoSService],
+    reason: str,
+) -> None:
+    """Log a service found to have an invalid website.
+
+    Args:
+        matching_services (list[DoSService]): The DoS services to report
+        reason (str): The reason for the report
+    """
     for service in matching_services:
         logger.warning(
             "Pharmacy profiling is incorrect",

@@ -1,5 +1,4 @@
 from json import loads
-from typing import Dict
 
 from aws_lambda_powertools.logging import Logger
 from boto3 import client
@@ -10,8 +9,8 @@ logger = Logger()
 secrets_manager = client(service_name="secretsmanager")
 
 
-def get_secret(secret_name: str) -> Dict[str, str]:
-    """Get the secret from AWS Secrets Manager
+def get_secret(secret_name: str) -> dict[str, str]:
+    """Get the secret from AWS Secrets Manager.
 
     Args:
         secret_name (str): Secret name to get
@@ -25,7 +24,7 @@ def get_secret(secret_name: str) -> Dict[str, str]:
     try:
         secret_value_response = secrets_manager.get_secret_value(SecretId=secret_name)
     except ClientError as err:
-        raise Exception(f"Failed getting secret '{secret_name}' from secrets manager") from err
+        msg = f"Failed getting secret '{secret_name}' from secrets manager"
+        raise Exception(msg) from err  # noqa: TRY002
     secrets_json_str = secret_value_response["SecretString"]
-    secrets = loads(secrets_json_str)
-    return secrets
+    return loads(secrets_json_str)

@@ -5,8 +5,7 @@ from unittest.mock import MagicMock, patch
 from aws_lambda_powertools.logging import Logger
 
 from application.common.constants import INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID
-
-from ..report_logging import (
+from application.common.report_logging import (
     log_blank_standard_opening_times,
     log_closed_or_hidden_services,
     log_incorrect_palliative_stockholder_type,
@@ -45,9 +44,9 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
-    matching_services = [dos_service]
+    dos_service.region = "London"
     # Act
-    log_blank_standard_opening_times(nhs_entity, matching_services)
+    log_blank_standard_opening_times(nhs_entity, dos_service)
     # Assert
     assert (
         BLANK_STANDARD_OPENINGS_REPORT_ID == "BLANK_STANDARD_OPENINGS"
@@ -59,13 +58,14 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
             "nhsuk_odscode": nhs_entity.odscode,
             "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
-            "dos_service_publicname": dos_service.name,
+            "dos_service_name": dos_service.name,
             "nhsuk_service_status": nhs_entity.org_status,
             "nhsuk_service_type": nhs_entity.org_type,
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": dos_service.statusid,
             "dos_service_type": dos_service.typeid,
             "dos_service_type_name": dos_service.servicename,
+            "dos_region": dos_service.region,
         },
     )
 
@@ -115,7 +115,7 @@ def test_log_unmatched_nhsuk_service(mock_logger):
             "City": "city",
             "County": "country",
             "Postcode": "MK2 4AX",
-        }
+        },
     )
     # Act
     log_unmatched_nhsuk_service(nhs_entity)
@@ -150,7 +150,7 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
     county = "county"
     city = "city"
     nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": city, "County": county}
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": city, "County": county},
     )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
@@ -215,7 +215,7 @@ def test_log_invalid_open_times(mock_logger):
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
 
-    dos_services = [dummy_dos_service() for i in range(3)]
+    dos_services = [dummy_dos_service() for _ in range(3)]
     # Act
     log_invalid_open_times(nhs_entity, dos_services)
     # Assert
@@ -267,7 +267,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
 def test_log_unmatched_service_types(mock_logger):
     # Arrange
     nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"}
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"},
     )
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
@@ -331,7 +331,7 @@ def test_log_palliative_care_z_code_does_not_exist(mock_logger: MagicMock):
     symptom_group_symptom_discriminator_combo_rowcount = 1
     # Act
     log_palliative_care_z_code_does_not_exist(
-        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount
+        symptom_group_symptom_discriminator_combo_rowcount=symptom_group_symptom_discriminator_combo_rowcount,
     )
     # Assert
     assert (

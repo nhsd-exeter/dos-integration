@@ -3,7 +3,12 @@ from unittest.mock import MagicMock, patch
 
 from psycopg.rows import dict_row
 
-from ..dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, connection_to_db, query_dos_db
+from application.common.dos_db_connection import (
+    connect_to_dos_db,
+    connect_to_dos_db_replica,
+    connection_to_db,
+    query_dos_db,
+)
 
 FILE_PATH = "application.common.dos_db_connection"
 

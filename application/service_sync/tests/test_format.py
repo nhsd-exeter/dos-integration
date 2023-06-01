@@ -1,10 +1,10 @@
-from pytest import mark
+import pytest
 
 from application.service_sync.format import format_address, format_website
 
 
-@mark.parametrize(
-    "address, formatted_address",
+@pytest.mark.parametrize(
+    ("address", "formatted_address"),
     [
         ("3rd Floor", "3Rd Floor"),
         ("24 Hour Road", "24 Hour Road"),
@@ -29,8 +29,8 @@ def test_format_address(address: str, formatted_address: str):
     assert formatted_address == format_address(address)
 
 
-@mark.parametrize(
-    "website, formatted_website",
+@pytest.mark.parametrize(
+    ("website", "formatted_website"),
     [
         ("www.test.com", "www.test.com"),
         ("www.test.com", "www.test.com"),

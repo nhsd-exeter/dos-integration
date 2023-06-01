@@ -1,8 +1,9 @@
 from datetime import date, time
 from logging import INFO
+from os import environ
 from unittest.mock import MagicMock, patch
 
-from pytest import fixture
+import pytest
 
 from application.common.constants import (
     DOS_INTEGRATION_USER_NAME,
@@ -12,7 +13,7 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from application.service_sync.service_update_logging import log_service_updates, ServiceUpdateLogger
+from application.service_sync.service_update_logging import ServiceUpdateLogger, log_service_updates
 
 SERVICE_UID = "12345"
 SERVICE_NAME = "Test Service"
@@ -26,9 +27,9 @@ NULL_VALUE = "NULL"
 FILE_PATH = "application.service_sync.service_update_logging"
 
 
-@fixture
+@pytest.fixture()
 def service_update_logger():
-    yield ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE)
+    return ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE)
 
 
 def test_dos_logger(service_update_logger: ServiceUpdateLogger):
@@ -52,7 +53,9 @@ def test_service_update_logger_get_opening_times_change_modify(service_update_lo
     data_field_modified = "test_field"
     # Act
     response = service_update_logger.get_opening_times_change(
-        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+        data_field_modified=data_field_modified,
+        previous_value=previous_value,
+        new_value=new_value,
     )
     assert (
         f"{data_field_modified}_existing={previous_value}",
@@ -67,7 +70,9 @@ def test_service_update_logger_get_opening_times_change_remove(service_update_lo
     data_field_modified = "test_field"
     # Act
     response = service_update_logger.get_opening_times_change(
-        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+        data_field_modified=data_field_modified,
+        previous_value=previous_value,
+        new_value=new_value,
     )
     assert (
         f"{data_field_modified}_existing={previous_value}",
@@ -82,16 +87,20 @@ def test_service_update_logger_get_opening_times_change_add(service_update_logge
     data_field_modified = "test_field"
     # Act
     response = service_update_logger.get_opening_times_change(
-        data_field_modified=data_field_modified, previous_value=previous_value, new_value=new_value
+        data_field_modified=data_field_modified,
+        previous_value=previous_value,
+        new_value=new_value,
     )
     assert ("", f"{data_field_modified}_update=add={new_value}") == response
 
 
 @patch(f"{FILE_PATH}.log_service_updated")
 def test_service_update_logger_log_service_update(
-    mock_log_service_update: MagicMock, service_update_logger: ServiceUpdateLogger
+    mock_log_service_update: MagicMock,
+    service_update_logger: ServiceUpdateLogger,
 ):
     # Arrange
+    environ["ENV"] = "UNKNOWN"
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     # Act
     service_update_logger.log_service_update(
@@ -118,6 +127,8 @@ def test_service_update_logger_log_service_update(
         f"correlationId=correlation_id|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
         extra={"environment": "UNKNOWN"},
     )
+    # Cleanup
+    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger.log_service_update")
@@ -143,7 +154,9 @@ def test_service_update_logger_log_standard_opening_times_service_update_for_wee
     # Assert
     mock_opening_period_times_from_list.assert_not_called()
     mock_get_opening_times_change.assert_called_once_with(
-        EXAMPLE_DATA_FIELD_MODIFIED, EXAMPLE_PREVIOUS_VALUE, EXAMPLE_NEW_VALUE
+        EXAMPLE_DATA_FIELD_MODIFIED,
+        EXAMPLE_PREVIOUS_VALUE,
+        EXAMPLE_NEW_VALUE,
     )
     mock_log_service_update.assert_called_once_with(
         data_field_modified=EXAMPLE_DATA_FIELD_MODIFIED,
@@ -161,7 +174,10 @@ def test_service_update_logger_log_specified_opening_times_service_update(
 ):
     # Arrange
     service_update_logger = ServiceUpdateLogger(
-        service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE
+        service_uid=SERVICE_UID,
+        service_name=SERVICE_NAME,
+        type_id=TYPE_ID,
+        odscode=ODSCODE,
     )
     open_periods = [
         OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
@@ -205,8 +221,8 @@ def test_log_service_updates_demographics_change(mock_service_update_logger: Mag
                     "area": "demographics",
                     "previous": EXAMPLE_PREVIOUS_VALUE,
                 },
-            }
-        }
+            },
+        },
     }
     service_histories.service_history.keys.return_value = [time_stamp]
     service_histories.service_history.__getitem__.return_value.__getitem__.return_value = service_history[time_stamp][
@@ -245,8 +261,8 @@ def test_log_service_updates_standard_opening_times_change(mock_service_update_l
                     "area": "demographics",
                     "previous": EXAMPLE_PREVIOUS_VALUE,
                 },
-            }
-        }
+            },
+        },
     }
     service_histories.service_history.keys.return_value = [time_stamp]
     service_histories.service_history.__getitem__.return_value.__getitem__.return_value = service_history[time_stamp][
@@ -286,8 +302,8 @@ def test_log_service_updates_specified_opening_times_change(mock_service_update_
                     "area": "demographics",
                     "previous": EXAMPLE_PREVIOUS_VALUE,
                 },
-            }
-        }
+            },
+        },
     }
     service_histories.service_history.keys.return_value = [time_stamp]
     service_histories.service_history.__getitem__.return_value.__getitem__.return_value = service_history[time_stamp][
@@ -325,8 +341,8 @@ def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock
                     "area": "clinical",
                     "previous": "",
                 },
-            }
-        }
+            },
+        },
     }
     service_histories.service_history.keys.return_value = [time_stamp]
     service_histories.service_history.__getitem__.return_value.__getitem__.return_value = service_history[time_stamp][
@@ -343,5 +359,6 @@ def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock
     )
 
     mock_service_update_logger.return_value.log_sgsdid_service_update.assert_called_once_with(
-        action="cmssgsdid", new_value=DOS_PALLIATIVE_CARE_SGSDID
+        action="cmssgsdid",
+        new_value=DOS_PALLIATIVE_CARE_SGSDID,
     )

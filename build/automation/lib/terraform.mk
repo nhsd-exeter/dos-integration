@@ -149,7 +149,7 @@ _terraform-stacks: ### Set up infrastructure for a given list of stacks - mandat
 	eval "$$(make terraform-export-variables)"
 	# run stacks
 	for stack in $$(echo $(or $(STACK), $(or $(STACKS), $(INFRASTRUCTURE_STACKS))) | tr "," "\n"); do
-		make _terraform-stack STACK="$$stack" CMD="$(CMD)"
+		make _terraform-stack STACK="$$stack" CMD="$(CMD)" AWS_PROFILE=""
 	done
 
 _terraform-stack: ### Set up infrastructure for a single stack - mandatory: STACK=[name],CMD=[Terraform command]; optional: TERRAFORM_REINIT=false,PROFILE=[name]

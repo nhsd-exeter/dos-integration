@@ -349,13 +349,13 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 ### Branch Naming for Automatic Deployments
 
-For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DSUEC-123_My_feature_branch`
+For a branch to be automatically deployed on every push the branch must be prefixed with `task`. This will then be run on an AWS CodeBuild stage to deploy the code to a task environment. e.g `task/DS-123_My_feature_branch`
 
 Once a branch which meets this criteria has been pushed then it will run a build and deployment for the environment and notify the dos-integration-dev-status channel with the status of your deployment.
 
 ### Branch Naming to not automatically deploy
 
-For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DSUEC-123_My_fix_branch`
+For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DS-123_My_fix_branch`
 
 ---
 
@@ -492,7 +492,7 @@ make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMEN
 
 To quick update the lambdas run the following command. Note this only updates the lambdas
 
-    make quick-build-and-deploy PROFILE=dev ENVIRONMENT=dsuec-123 # Environment is optional if your branch is prefixed with task/DSUEC-xxx
+    make quick-build-and-deploy PROFILE=dev ENVIRONMENT=ds-123 # Environment is optional if your branch is prefixed with task/DS-xxx
 
 ### Remove Deployment From the Command-line
 
@@ -503,7 +503,7 @@ To quick update the lambdas run the following command. Note this only updates th
 You can remove a dev deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
-    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=dsuec-363 COMMIT=2bc43dd // This destroys the dsuec-363 dev environment
+    e.g. make tag-commit-to-destroy-environment ENVIRONMENT=ds-363 COMMIT=2bc43dd // This destroys the ds-363 dev environment
 
 ### Remove deployment on Pull Request merge
 

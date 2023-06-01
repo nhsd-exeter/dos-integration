@@ -142,5 +142,4 @@ dmypy.json
 cython_debug/
 
 # Other
-valid_ods_codes*.csv
-invalid_ods_codes*.csv
+resources/*.csv

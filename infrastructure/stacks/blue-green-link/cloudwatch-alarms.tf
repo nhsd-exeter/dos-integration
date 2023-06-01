@@ -177,25 +177,6 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
   threshold                 = "30000" # 30 Seconds
 }
 
-resource "aws_cloudwatch_metric_alarm" "health_check_failures_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS DB or Replica is likely down or unaccessible and found by too many health check failures"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Health Check Failures"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "ServiceSyncHealthCheckFailure"
-  namespace                 = "UEC-DOS-INT"
-  period                    = "60" # 1 minute
-  statistic                 = "Sum"
-  threshold                 = "2"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-}
-
 resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is failing to send emails"
@@ -267,7 +248,7 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exist" {
-  # count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the DoS Palliative Care SymptomGroupSymptomDiscriminator does not exist"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Palliative Care Z Code Does Not Exist !!!"

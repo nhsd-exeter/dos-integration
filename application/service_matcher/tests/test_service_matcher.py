@@ -5,38 +5,36 @@ from json import dumps
 from os import environ
 from unittest.mock import patch
 
+import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
-from pytest import fixture, raises
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
-
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.tests.conftest import dummy_dos_service, PHARMACY_STANDARD_EVENT
+from common.tests.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
 SERVICE_MATCHER_ENVIRONMENT_VARIABLES = ["ENV"]
 
 
-@fixture
-def mock_metric_logger():
+@pytest.fixture(autouse=True)
+def _mock_metric_logger() -> None:
     InvocationTracker.reset()
 
-    async def flush(self):
-        print("flush called")
+    async def flush(self) -> None:
         InvocationTracker.record()
 
     MetricsLogger.flush = flush
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "service-matcher"
         memory_limit_in_mb: int = 128
@@ -110,7 +108,6 @@ def test_lambda_handler_unmatched_service(
     mock_get_matching_services,
     change_event,
     lambda_context,
-    mock_metric_logger,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
@@ -162,47 +159,6 @@ def test_lambda_handler_no_matching_dos_services(
     # Assert
     mock_log_unmatched_nhsuk_service.assert_called_once()
     mock_send_update_requests.assert_not_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.log_blank_standard_opening_times")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_blank_std_opening_report_log(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_log_blank_standard_opening_times,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    service = dummy_dos_service()
-    service.id = 1
-    service.uid = 101
-    service.odscode = "SLC4501"
-    service.web = "www.fakesite.com"
-    service.publicphone = "01462622435"
-    service.postcode = "S45 1AB"
-    change_event["OpeningTimes"] = []
-
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    mock_get_matching_services.return_value = [service]
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    lambda_handler(sqs_event, lambda_context)
-    # Assert
-    mock_log_blank_standard_opening_times.assert_called_once()
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
@@ -317,9 +273,10 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
     sqs_event["Records"] = []
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
-
-    with raises(Exception):
+    # Act / Assert
+    with pytest.raises(StopIteration):
         lambda_handler(sqs_event, lambda_context)
+    # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
 
@@ -353,7 +310,12 @@ def test_send_update_requests(mock_logger, get_correlation_id_mockm, mock_sqs):
         "MessageDeduplicationId": f"1-{hashed_payload}",
         "MessageGroupId": "1",
         "MessageAttributes": get_message_attributes(
-            "1", message_received, record_id, odscode, f"1-{hashed_payload}", "1"
+            "1",
+            message_received,
+            record_id,
+            odscode,
+            f"1-{hashed_payload}",
+            "1",
         ),
     }
     mock_sqs.send_message_batch.assert_called_with(
@@ -418,7 +380,6 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_log_unexpected_pharmacy_profiling,
     change_event,
     lambda_context,
-    mock_metric_logger,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
@@ -440,7 +401,8 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        matching_services=[service, service], reason="Multiple 'Pharmacy' type services found (type 13)"
+        matching_services=[service, service],
+        reason="Multiple 'Pharmacy' type services found (type 13)",
     )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
@@ -464,7 +426,6 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_log_unexpected_pharmacy_profiling,
     change_event,
     lambda_context,
-    mock_metric_logger,
 ):
     # Arrange
     mock_entity = NHSEntity(change_event)
@@ -486,7 +447,8 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        matching_services=[service, service], reason="No 'Pharmacy' type services found (type 13)"
+        matching_services=[service, service],
+        reason="No 'Pharmacy' type services found (type 13)",
     )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
@@ -520,18 +482,22 @@ SQS_EVENT = {
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
             "awsRegion": "us-east-2",
-        }
-    ]
+        },
+    ],
 }
 
 
-class InvocationTracker(object):
+class InvocationTracker:
+    """Tracks the number of times a function has been invoked."""
+
     invocations = 0
 
     @staticmethod
-    def record():
+    def record() -> None:
+        """Record an invocation."""
         InvocationTracker.invocations += 1
 
     @staticmethod
-    def reset():
+    def reset() -> None:
+        """Reset the invocation count."""
         InvocationTracker.invocations = 0

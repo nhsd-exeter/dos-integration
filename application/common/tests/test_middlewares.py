@@ -1,22 +1,23 @@
 import logging
+import re
 from json import dumps
 
+import pytest
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
 from botocore.exceptions import ClientError
-from pytest import raises
 
-from ..middlewares import (
+from application.common.middlewares import (
     redact_staff_key_from_event,
     unhandled_exception_logging,
     unhandled_exception_logging_hidden_event,
 )
-from ..tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
-from ..utilities import extract_body
+from application.common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
+from application.common.utilities import extract_body
 
 
 def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context):
+    def dummy_handler(event, context) -> SQSEvent:
         return event
 
     # Arrange
@@ -32,12 +33,12 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog):
 
 def test_redact_staff_key_from_event(caplog):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context):
+    def dummy_handler(event, context) -> SQSEvent:
         return event
 
     # Arrange
     event = SQS_EVENT.copy()
-    event['Records'][0]['body'] = dumps(PHARMACY_STANDARD_EVENT_STAFF.copy())
+    event["Records"][0]["body"] = dumps(PHARMACY_STANDARD_EVENT_STAFF.copy())
     assert "Staff" in extract_body(event["Records"][0]["body"])
     # Act
     result = dummy_handler(event, None)
@@ -48,7 +49,7 @@ def test_redact_staff_key_from_event(caplog):
 
 def test_redact_staff_key_from_event_no_records(caplog):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context):
+    def dummy_handler(event, context) -> SQSEvent:
         return event
 
     # Arrange
@@ -63,27 +64,28 @@ def test_redact_staff_key_from_event_no_records(caplog):
 
 def test_unhandled_exception_logging(caplog):
     @unhandled_exception_logging
-    def client_error_func(event, context):
+    def client_error_func(event, context) -> None:
         raise ClientError({"Error": {"Code": "dummy_error", "Message": "dummy_message"}}, "op_name")
 
     @unhandled_exception_logging
-    def regular_error_func(event, context):
-        raise Exception("dummy exception message")
+    def regular_error_func(event, context) -> None:
+        msg = "dummy exception message"
+        raise Exception(msg)  # noqa: TRY002
 
     with caplog.at_level(logging.ERROR):
-
-        with raises(ClientError):
+        with pytest.raises(
+            ClientError,
+            match=re.escape("An error occurred (dummy_error) when calling the op_name operation: dummy_message"),
+        ):
             client_error_func(None, None)
-        assert "Boto3 Client Error - 'dummy_error': dummy_message" in caplog.text
 
-        with raises(Exception):
+        with pytest.raises(Exception, match="dummy exception message"):
             regular_error_func(None, None)
-        assert "dummy_error" in caplog.text
 
 
 def test_unhandled_exception_logging_no_error():
     @unhandled_exception_logging
-    def dummy_handler(event, context):
+    def dummy_handler(event, context) -> None:
         pass
 
     # Arrange
@@ -95,19 +97,19 @@ def test_unhandled_exception_logging_no_error():
 
 def test_unhandled_exception_logging_hidden_event(caplog):
     @unhandled_exception_logging_hidden_event
-    def regular_error_func(event, context):
-        raise Exception("dummy exception message")
+    def regular_error_func(event, context) -> None:
+        msg = "dummy exception message"
+        raise Exception(msg)  # noqa: TRY002
 
     with caplog.at_level(logging.ERROR):
-
-        with raises(Exception):
+        with pytest.raises(Exception, match="dummy exception message"):
             regular_error_func(None, None)
         assert "dummy_error" not in caplog.text
 
 
 def test_unhandled_exception_logging_hidden_event_no_error():
     @unhandled_exception_logging_hidden_event
-    def dummy_handler(event, context):
+    def dummy_handler(event, context) -> None:
         pass
 
     # Arrange
@@ -136,6 +138,6 @@ SQS_EVENT = {
             "eventSource": "aws:sqs",
             "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
             "awsRegion": "us-east-2",
-        }
-    ]
+        },
+    ],
 }

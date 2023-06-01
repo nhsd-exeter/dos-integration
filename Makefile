@@ -114,32 +114,10 @@ UNIT_TEST_ARGS=" \
 		"
 
 integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration ingest-change-event --client-id test-id test_tmp.txt
-	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
-	if [[ $$VALUE =~ .*"PHA".* ]]; then
-		echo "PHA"
-		NO_LOG_TAG="pharmacy_no_log_searches"
-	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
-		echo "Dentist"
-		NO_LOG_TAG="dentist_no_log_searches"
-	fi
-	rm -rf test_tmp.txt
-	make integration-test TAGS=$$NO_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+	make integration-test TAGS="pharmacy_no_log_searches" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	aws appconfig get-configuration --application uec-dos-int-$(ENVIRONMENT)-lambda-app-config --environment $(ENVIRONMENT) \
-	--configuration ingest-change-event --client-id test-id test_tmp.txt
-	VALUE=$$(jq ".accepted_org_types.rules.org_type_in_list.conditions[0].value" test_tmp.txt)
-	if [[ $$VALUE =~ .*"PHA".* ]]; then
-		echo "PHA"
-		COULDWATCH_LOG_TAG="pharmacy_cloudwatch_queries"
-	elif [[ $$VALUE =~ .*"Dentist".* ]]; then
-		echo "Dentist"
-		COULDWATCH_LOG_TAG="dentist_cloudwatch_queries"
-	fi
-	rm -rf test_tmp.txt
-	make integration-test TAGS=$$COULDWATCH_LOG_TAG PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
+	make integration-test TAGS="pharmacy_cloudwatch_queries" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
 integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
@@ -149,23 +127,8 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
-		-e SHARED_ENVIRONMENT=$(SHARED_ENVIRONMENT) \
-		-e BLUE_GREEN_ENVIRONMENT=$(BLUE_GREEN_ENVIRONMENT) \
-		-e API_KEY_SECRET=$(TF_VAR_api_gateway_api_key_name) \
-		-e NHS_UK_API_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e DOS_DB_PASSWORD_SECRET_NAME=$(DB_SECRET_NAME) \
-		-e DOS_DB_PASSWORD_KEY=$(DB_SECRET_KEY) \
-		-e DOS_DB_USERNAME_SECRET_NAME=$(DB_USER_NAME_SECRET_NAME) \
-		-e DOS_DB_USERNAME_KEY=$(DB_USER_NAME_SECRET_KEY) \
-		-e URL=https://$(DOS_INTEGRATION_URL) \
-		-e SERVICE_MATCHER=$(TF_VAR_service_matcher_lambda_name) \
-		-e SERVICE_SYNC=$(TF_VAR_service_sync_lambda_name) \
-		-e DOS_DB_HANDLER=$(TF_VAR_dos_db_handler_lambda_name) \
-		-e EVENT_REPLAY=$(TF_VAR_event_replay_lambda_name) \
-		-e DYNAMO_DB_TABLE=$(TF_VAR_change_events_table_name) \
-		-e DOS_DB_IDENTIFIER_NAME=$(DB_SERVER_NAME) \
+		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
 		-e RUN_ID=$$RUN_ID \
-		-e CR_FIFO_DLQ=$(TF_VAR_dos_db_update_dlq_handler_lambda_name) \
 		"
 
 clean: # Runs whole project clean
@@ -323,7 +286,7 @@ tag-commit-for-deployment: # Tag git commit for deployment - mandatory: PROFILE=
 		echo Recommended: you run this command from the main branch
 	fi
 
-tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[dsuec-number], COMMIT=[short commit hash]
+tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mandatory: ENVIRONMENT=[ds-number], COMMIT=[short commit hash]
 	if [ "$(PROFILE)" != "$(ENVIRONMENT)" ]; then
 		tag=$(ENVIRONMENT)-destroy-$(BUILD_TIMESTAMP)
 		make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
@@ -339,7 +302,7 @@ re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SO
 	done
 
 get-environment-from-pr:
-	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DSUEC-(?<x>.[0-9]*).*"; "dsuec-\(.x)") ')
+	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DS-(?<x>.[0-9]*).*"; "ds-\(.x)") ')
 	echo $$ENVIRONMENT
 
 is-environment-deployed:
@@ -420,30 +383,25 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
-			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
 			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
-			-H https://$(DOS_INTEGRATION_URL) \
-			--csv=results/$(START_TIME)_create_change_events" $(PERFORMANCE_TEST_DIR_AND_ARGS)
+			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 PERFORMANCE_TEST_DIR_AND_ARGS= \
-	DIR=./test/performance/create_change_events \
-	ARGS="\
-		-p 8089:8089 \
-		-e API_KEY_SECRET_NAME=$(TF_VAR_api_gateway_api_key_name) \
-		-e API_KEY_SECRET_KEY=$(TF_VAR_nhs_uk_api_key_key) \
-		-e CHANGE_EVENTS_TABLE_NAME=$(TF_VAR_change_events_table_name) \
-		"
+	DIR=./test/performance \
+	ARGS="-p 8089:8089 --env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 
 performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
-	rm -rf $(PROJECT_DIR)/test/performance/create_change_events/results/*.csv
+	rm -rf $(PROJECT_DIR)/test/performance/results/*.csv
 
 stress-test-in-pipeline: # An all in one stress test make target
 	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
@@ -510,14 +468,11 @@ trigger-dos-deployment-pipeline:
 	rm -rf jenkins.cookies
 
 python-linting:
-	make python-code-check FILES=application
-	make python-code-check FILES=test
+	make docker-run-ruff
 
 python-code-checks:
 	make python-check-dead-code
-	make python-check-imports
-	make python-code-check FILES=application
-	make python-code-check FILES=test
+	make python-linting
 	make unit-test
 	echo "Python code checks completed"
 
@@ -526,32 +481,6 @@ python-check-dead-code:
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		DIR=$(APPLICATION_DIR) \
 		CMD="python -m vulture"
-
-python-format:
-	make python-code-format FILES=application
-	make python-code-format FILES=test
-
-python-check-imports:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m isort . -l=120 --check-only --profile=black \
-			--force-alphabetical-sort-within-sections --known-local-folder=common \
-			"
-
-python-fix-imports:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m isort . -l=120 --profile=black --force-alphabetical-sort-within-sections \
-			--known-local-folder=common \
-			"
-
-python-check-security:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m bandit -r . -c pyproject.toml"
 
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler
@@ -646,3 +575,16 @@ deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
 
 undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
 	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+
+# ==============================================================================
+# Ruff
+
+docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
+	make -s docker-run \
+	IMAGE=$$(make _docker-get-reg)/tester \
+		CMD="ruff check . $(RUFF_OPTS)"
+
+python-ruff-fix: # Auto fixes ruff warnings
+	make docker-run-ruff RUFF_OPTS="--fix"
+
+.SILENT: docker-run-ruff

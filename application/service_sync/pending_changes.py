@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
-from json import dumps, JSONDecodeError, loads
+from json import JSONDecodeError, dumps, loads
 from os import environ
 from time import time_ns
-from typing import List, Optional
 
 from aws_lambda_powertools.logging import Logger
 from boto3 import client
@@ -22,9 +21,9 @@ logger = Logger(child=True)
 
 @dataclass(repr=True)
 class PendingChange:
-    """A class representing a pending change from the DoS database with useful information about the change"""
+    """A class representing a pending change from the DoS database with useful information about the change."""
 
-    id: str  # Id of the pending change from the change table
+    id: str  # Id of the pending change from the change table  # noqa: A003
     value: str  # Value of the pending change as a JSON string
     creatorsname: str  # User name of the user who made the change
     email: str  # Email address of the user who made the change
@@ -34,15 +33,16 @@ class PendingChange:
     user_id: str  # User id of the user who made the change
 
     def __init__(self, db_cursor_row: dict) -> None:
-        """Sets the attributes of this object to those found in the db row
+        """Sets the attributes of this object to those found in the db row.
+
         Args:
-            db_cursor_row (dict): row from db as key/val pairs
+            db_cursor_row (dict): row from db as key/val pairs.
         """
         for row_key, row_value in db_cursor_row.items():
             setattr(self, row_key, row_value)
 
     def __repr__(self) -> str:
-        """Returns a string representation of this object
+        """Returns a string representation of this object.
 
         Returns:
             str: String representation of this object
@@ -60,7 +60,7 @@ class PendingChange:
         )
 
     def is_valid(self) -> bool:
-        """Checks if the pending change is valid
+        """Checks if the pending change is valid.
 
         Returns:
             bool: True if the pending change is valid, False otherwise
@@ -68,17 +68,17 @@ class PendingChange:
         try:
             value_dict = loads(self.value)
             changes = value_dict["new"]
-            is_types_valid = [True if change in DI_CHANGE_ITEMS else False for change in changes.keys()]
+            is_types_valid = [change in DI_CHANGE_ITEMS for change in changes]
             return all(is_types_valid)
         except Exception:
             logger.exception(
-                f"Invalid JSON at pending change {self.id}, unable to show as contains sensitive user data"
+                f"Invalid JSON at pending change {self.id}, unable to show as contains sensitive user data",
             )
             return False
 
 
 def check_and_remove_pending_dos_changes(service_id: str) -> None:
-    """Checks for pending changes in DoS and removes them if they exist
+    """Checks for pending changes in DoS and removes them if they exist.
 
     Args:
         service_id (str): The ID of the service to check
@@ -96,8 +96,8 @@ def check_and_remove_pending_dos_changes(service_id: str) -> None:
             logger.info("No valid pending changes found")
 
 
-def get_pending_changes(connection: Connection, service_id: str) -> Optional[List[PendingChange]]:
-    """Gets pending changes for a service ID
+def get_pending_changes(connection: Connection, service_id: str) -> list[PendingChange] | None:
+    """Gets pending changes for a service ID.
 
     Args:
         connection (connection): The connection to the DoS database
@@ -113,13 +113,13 @@ def get_pending_changes(connection: Connection, service_id: str) -> Optional[Lis
         "WHERE serviceid=%(SERVICE_ID)s AND approvestatus='PENDING'"
     )
     query_vars = {"SERVICE_ID": service_id}
-    cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
-    response_rows: List[DictRow] = cursor.fetchall()
+    cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
+    response_rows: list[DictRow] = cursor.fetchall()
     cursor.close()
-    if len(response_rows) < 1:
+    if not response_rows:
         return None
     logger.info(f"Pending changes found for Service ID {service_id}")
-    pending_changes: List[PendingChange] = []
+    pending_changes: list[PendingChange] = []
     for row in response_rows:
         pending_change = PendingChange(row)
         logger.info(f"Pending change found: {pending_change}", extra={"pending_change": pending_change})
@@ -132,8 +132,8 @@ def get_pending_changes(connection: Connection, service_id: str) -> Optional[Lis
     return pending_changes
 
 
-def reject_pending_changes(connection: Connection, pending_changes: List[PendingChange]) -> None:
-    """Rejects pending changes from the database
+def reject_pending_changes(connection: Connection, pending_changes: list[PendingChange]) -> None:
+    """Rejects pending changes from the database.
 
     Args:
         connection (connection): The connection to the DoS database
@@ -146,7 +146,7 @@ def reject_pending_changes(connection: Connection, pending_changes: List[Pending
     )
     # SQL Injection is prevented by the query only using data from DoS DB
     sql_query = (
-        "UPDATE changes SET approvestatus='REJECTED', "  # nosec B608
+        "UPDATE changes SET approvestatus='REJECTED', "  # noqa: S608
         "modifiedtimestamp=%(TIMESTAMP)s, modifiersname=%(USER_NAME)s"
         f""" WHERE {conditions}"""
     )
@@ -154,25 +154,28 @@ def reject_pending_changes(connection: Connection, pending_changes: List[Pending
         "USER_NAME": DOS_INTEGRATION_USER_NAME,
         "TIMESTAMP": datetime.now(timezone("Europe/London")),
     }
-    cursor = query_dos_db(connection=connection, query=sql_query, vars=query_vars)
+    cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
     cursor.close()
     logger.info("Rejected pending change/s", extra={"pending_changes": pending_changes})
 
 
-def log_rejected_changes(pending_changes: List[PendingChange]) -> None:
-    """Logs the rejected changes
+def log_rejected_changes(pending_changes: list[PendingChange]) -> None:
+    """Logs the rejected changes.
 
     Args:
         pending_changes (List[PendingChange]): The pending changes to log
     """
     for pending_change in pending_changes:
         ServiceUpdateLogger(
-            service_uid=pending_change.uid, service_name=pending_change.name, type_id=pending_change.typeid, odscode=""
+            service_uid=pending_change.uid,
+            service_name=pending_change.name,
+            type_id=pending_change.typeid,
+            odscode="",
         ).log_rejected_change(pending_change.id)
 
 
-def send_rejection_emails(pending_changes: List[PendingChange]) -> None:
-    """Sends rejection emails to the users who created the pending changes
+def send_rejection_emails(pending_changes: list[PendingChange]) -> None:
+    """Sends rejection emails to the users who created the pending changes.
 
     Args:
         pending_changes (List[PendingChange]): The pending changes to send rejection emails for
@@ -211,15 +214,16 @@ def send_rejection_emails(pending_changes: List[PendingChange]) -> None:
 
 
 def build_change_rejection_email_contents(pending_change: PendingChange, file_name: str) -> str:
-    """Builds the contents of the change rejection email
+    """Builds the contents of the change rejection email.
 
     Args:
         pending_change (PendingChange): The pending change to build the email for
+        file_name (str): The name of the file to upload to S3
 
     Returns:
         str: The contents of the email
     """
-    with open("service_sync/rejection-email.html", "r") as email_template:
+    with open("service_sync/rejection-email.html") as email_template:
         file_contents = email_template.read()
         email_template.close()
     email_correlation_id = f"{pending_change.uid}-{time_ns()}"

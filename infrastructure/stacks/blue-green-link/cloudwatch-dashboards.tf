@@ -1,4 +1,4 @@
-resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
+resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
   dashboard_name = var.cloudwatch_monitoring_dashboard_name
   dashboard_body = jsonencode(
     {
@@ -15,7 +15,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
         },
         {
           height : 6,
-          width : 11,
+          width : 13,
           y : 0,
           x : 3,
           type : "metric",
@@ -35,30 +35,31 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
               left : {
                 label : "Minutes",
                 showUnits : false
-            } }
+            } },
+            timezone : "LOCAL"
           }
         },
         {
           type : "metric",
-          x : 14,
+          x : 16,
           y : 0,
-          width : 10,
+          width : 8,
           height : 6,
           properties : {
             "sparkline" : true,
             view : "singleValue",
             metrics : [
-              ["UEC-DOS-INT", "UpdateRequestFailed", "ENV", var.blue_green_environment],
-              [".", "UpdateRequestSuccess", ".", var.blue_green_environment],
-              [".", "ServiceSyncHealthCheckSuccess", ".", var.blue_green_environment],
-              [".", "ServiceSyncHealthCheckFailure", ".", var.blue_green_environment],
-              [".", "ChangeEventReceived", ".", var.blue_green_environment]
+              ["UEC-DOS-INT", "UpdateRequestSuccess", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#2ca02c", "label" : "DoS Service Update Success" }],
+              [".", "UpdateRequestFailed", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#d62728", "label" : "DoS Service Update Failed" }],
+              [".", "ChangeEventReceived", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#1f77b4", "label" : "Change Event Received" }],
+              [".", "DoSAllServiceUpdates", ".", var.blue_green_environment, { "label" : "All DoS Data Item Updates", "color" : "#000000" }],
             ],
             stacked : false,
             region : var.aws_region,
             period : 3600,
             stat : "Sum",
-            title : "Custom Metrics in the last hour"
+            title : "System Health (Per Hour)",
+            timezone : "LOCAL"
           }
         },
         {
@@ -78,7 +79,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             stat : "Sum",
             period : 60,
             region : var.aws_region,
-            title : "Change Event Queue"
+            title : "Change Event Queue",
+            timezone : "LOCAL"
           }
         },
         {
@@ -98,7 +100,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             stat : "Sum",
             period : 60,
             region : var.aws_region,
-            title : "Holding Queue"
+            title : "Holding Queue",
+            timezone : "LOCAL"
           }
         },
         {
@@ -118,7 +121,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             stat : "Sum",
             period : 60,
             region : var.aws_region,
-            title : "Update Request Queue"
+            title : "Update Request Queue",
+            timezone : "LOCAL"
           }
         },
         {
@@ -140,7 +144,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             ],
             region : var.aws_region,
             title : "Ingest Change Event Lambda",
-            period : 60
+            period : 60,
+            timezone : "LOCAL"
           }
         },
         {
@@ -162,7 +167,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             ],
             region : var.aws_region,
             title : "Service Matcher",
-            period : 60
+            period : 60,
+            timezone : "LOCAL"
           }
         },
         {
@@ -184,7 +190,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             ],
             region : var.aws_region,
             title : "Service Sync",
-            period : 60
+            period : 60,
+            timezone : "LOCAL"
           }
         },
         {
@@ -199,28 +206,28 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             metrics : [
               ["AWS/Lambda", "Errors", "FunctionName", var.change_event_dlq_handler_lambda_name, { "id" : "m11", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.change_event_dlq_handler_lambda_name, { "id" : "m12", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m11/m12) * 100", "label" : "Change Event DLQ Handler", region : var.aws_region }],
+              [{ "expression" : "(m11/m12) * 100", "label" : "Change Event DLQ Handler", region : var.aws_region, "color" : "#1f77b4" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.dos_db_update_dlq_handler_lambda_name, { "id" : "m21", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.dos_db_update_dlq_handler_lambda_name, { "id" : "m22", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m21/m22) * 100", "label" : "DoS DB Update Handler", region : var.aws_region }],
+              [{ "expression" : "(m21/m22) * 100", "label" : "DoS DB Update Handler", region : var.aws_region, "color" : "#ff7f0e" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.event_replay_lambda_name, { "id" : "m31", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.event_replay_lambda_name, { "id" : "m32", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m31/m32) * 100", "label" : "Event Replay", region : var.aws_region }],
+              [{ "expression" : "(m31/m32) * 100", "label" : "Event Replay", region : var.aws_region, "color" : "#2ca02c" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.ingest_change_event_lambda_name, { "id" : "m41", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.ingest_change_event_lambda_name, { "id" : "m42", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m41/m42) * 100", "label" : "Ingest Change Event", region : var.aws_region }],
+              [{ "expression" : "(m41/m42) * 100", "label" : "Ingest Change Event", region : var.aws_region, "color" : "#d62728" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.send_email_lambda_name, { "id" : "m51", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.send_email_lambda_name, { "id" : "m52", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m51/m52) * 100", "label" : "Send Email", region : var.aws_region }],
+              [{ "expression" : "(m51/m52) * 100", "label" : "Send Email", region : var.aws_region, "color" : "#9467bd" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.service_matcher_lambda_name, { "id" : "m61", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.service_matcher_lambda_name, { "id" : "m62", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m61/m62) * 100", "label" : "Service Matcher", region : var.aws_region }],
+              [{ "expression" : "(m61/m62) * 100", "label" : "Service Matcher", region : var.aws_region, "color" : "#8c564b" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.service_sync_lambda_name, { "id" : "m71", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.service_sync_lambda_name, { "id" : "m72", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m71/m72) * 100", "label" : "Service Sync", region : var.aws_region }],
+              [{ "expression" : "(m71/m72) * 100", "label" : "Service Sync", region : var.aws_region, "color" : "#e377c2" }],
               ["AWS/Lambda", "Errors", "FunctionName", var.slack_messenger_lambda_name, { "id" : "m81", "stat" : "Sum", "visible" : false }],
               [".", "Invocations", ".", var.slack_messenger_lambda_name, { "id" : "m82", "stat" : "Sum", "visible" : false }],
-              [{ "expression" : "(m81/m82) * 100", "label" : "Slack Messenger", region : var.aws_region }]
+              [{ "expression" : "(m81/m82) * 100", "label" : "Slack Messenger", region : var.aws_region, "color" : "#bcbd22" }]
             ],
             region : var.aws_region,
             title : "Lambda Error Rates (%) -> Above 0 is bad",
@@ -229,7 +236,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
               left : {
                 label : "Percentage",
                 showUnits : false
-            } }
+            } },
+            timezone : "LOCAL"
           }
         },
         {
@@ -241,14 +249,15 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
           properties : {
             metrics : [
               ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.dos_db_name, { stat : "Maximum" }],
-              [".", ".", ".", var.dos_db_replica_name, { stat : "Maximum" }]
+              ["...", var.dos_db_replica_name, { stat : "Maximum" }]
             ],
             view : "timeSeries",
             stacked : false,
             region : var.aws_region,
             period : 60,
             stat : "Minimum",
-            title : "DB Connections"
+            title : "DB Connections",
+            timezone : "LOCAL"
           }
         },
         {
@@ -260,14 +269,15 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
           properties : {
             metrics : [
               ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.dos_db_name],
-              [".", ".", ".", var.dos_db_replica_name]
+              ["...", var.dos_db_replica_name]
             ],
             view : "timeSeries",
             stacked : false,
             region : var.aws_region,
             period : 60,
             stat : "Maximum",
-            title : "DB CPU Utilization"
+            title : "DB CPU Utilization",
+            timezone : "LOCAL"
           }
         },
         {
@@ -282,7 +292,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             metrics : [
               ["AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", var.dos_db_replica_name]
             ],
-            region : var.aws_region
+            region : var.aws_region,
+            timezone : "LOCAL"
           }
         },
         {
@@ -301,7 +312,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             region : var.aws_region,
             stat : "Sum",
             period : 60,
-            title : "NHS UK Endpoint Errors"
+            title : "NHS UK Endpoint Errors",
+            timezone : "LOCAL"
           }
         },
         {
@@ -321,10 +333,141 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_dashboard" {
             region : var.aws_region,
             stat : "Sum",
             period : 60,
-            title : "Dead Letter Queue messages"
+            title : "Dead Letter Queue messages",
+            timezone : "LOCAL"
           }
         }
       ]
+    }
+  )
+}
+
+resource "aws_cloudwatch_dashboard" "cloudwatch_data_dashboard" {
+  dashboard_name = var.cloudwatch_data_dashboard_name
+  dashboard_body = jsonencode({
+    widgets : [
+      {
+        type : "metric",
+        x : 0,
+        y : 0,
+        width : 6,
+        height : 8,
+        properties : {
+          view : "pie",
+          metrics : [
+            ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsurl", { "label" : "Website", "id" : "m1", "visible" : false }],
+            ["...", "postalcode", { "label" : "Postcode", "id" : "m2", "visible" : false }],
+            ["...", "postaladdress", { "label" : "Address", "id" : "m3", "visible" : false }],
+            ["...", "cmstelephoneno", { "label" : "Public Phone", "id" : "m4", "visible" : false }],
+            ["...", "cmseastings", { "label" : "Easting", "id" : "m5", "visible" : false }],
+            ["...", "cmsnorthings", { "label" : "Northing", "id" : "m6", "visible" : false }],
+            ["...", "cmsorgtown", { "label" : "Town", "id" : "m7", "visible" : false }],
+            ["...", "latitude", { "label" : "Latitude", "id" : "m8", "visible" : false }],
+            ["...", "longitude", { "label" : "Longitutde", "id" : "m9", "visible" : false }],
+            ["...", "cmsopentimemonday", { "label" : "Monday", "id" : "m11", "visible" : false }],
+            ["...", "cmsopentimetuesday", { "label" : "Tuesday", "id" : "m12", "visible" : false }],
+            ["...", "cmsopentimewednesday", { "label" : "Wednesday", "id" : "m13", "visible" : false }],
+            ["...", "cmsopentimethursday", { "label" : "Thursday", "id" : "m14", "visible" : false }],
+            ["...", "cmsopentimefriday", { "label" : "Friday", "id" : "m15", "visible" : false }],
+            ["...", "cmsopentimesaturday", { "label" : "Saturday", "id" : "m16", "visible" : false }],
+            ["...", "cmsopentimesunday", { "label" : "Sunday", "id" : "m17", "visible" : false }],
+            [{ "expression" : "m1+m2+m3+m4+m5+m6+m7+m8+m9", "label" : "Demographic Updates", "color" : "#1f77b4" }],
+            [{ "expression" : "m11+m12+m13+m14+m15+m16+m17", "label" : "Standard Opening Times", "color" : "#ff7f0e" }],
+            ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
+            ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmssgsdid", { "label" : "Palliative Care", "color" : "#9467bd" }],
+          ],
+          stacked : false,
+          region : var.aws_region,
+          period : 3600,
+          stat : "Sum",
+          title : "DoS Service Updates (Last Hour)",
+          timezone : "LOCAL"
+        }
+      },
+      {
+        type : "metric",
+        x : 6,
+        y : 0,
+        width : 18,
+        height : 4,
+        properties : {
+          "sparkline" : true,
+          view : "singleValue",
+          metrics : [
+            ["UEC-DOS-INT", "DoSAllServiceUpdates", "ENV", var.blue_green_environment, { "label" : "All", "color" : "#000000" }],
+            [".", "DoSServiceUpdate", ".", var.blue_green_environment, "field", "cmsurl", { "label" : "Website", "id" : "m1", "visible" : false }],
+            ["...", "postalcode", { "label" : "Postcode", "id" : "m2", "visible" : false }],
+            ["...", "postaladdress", { "label" : "Address", "id" : "m3", "visible" : false }],
+            ["...", "cmstelephoneno", { "label" : "Public Phone", "id" : "m4", "visible" : false }],
+            ["...", "cmseastings", { "label" : "Easting", "id" : "m5", "visible" : false }],
+            ["...", "cmsnorthings", { "label" : "Northing", "id" : "m6", "visible" : false }],
+            ["...", "cmsorgtown", { "label" : "Town", "id" : "m7", "visible" : false }],
+            ["...", "latitude", { "label" : "Latitude", "id" : "m8", "visible" : false }],
+            ["...", "longitude", { "label" : "Longitutde", "id" : "m9", "visible" : false }],
+            ["...", "cmsopentimemonday", { "label" : "Monday", "id" : "m11", "visible" : false }],
+            ["...", "cmsopentimetuesday", { "label" : "Tuesday", "id" : "m12", "visible" : false }],
+            ["...", "cmsopentimewednesday", { "label" : "Wednesday", "id" : "m13", "visible" : false }],
+            ["...", "cmsopentimethursday", { "label" : "Thursday", "id" : "m14", "visible" : false }],
+            ["...", "cmsopentimefriday", { "label" : "Friday", "id" : "m15", "visible" : false }],
+            ["...", "cmsopentimesaturday", { "label" : "Saturday", "id" : "m16", "visible" : false }],
+            ["...", "cmsopentimesunday", { "label" : "Sunday", "id" : "m17", "visible" : false }],
+            [{ "expression" : "m1+m2+m3+m4+m5+m6+m7+m8+m9", "label" : "Demographic Updates", "color" : "#1f77b4" }],
+            [{ "expression" : "m11+m12+m13+m14+m15+m16+m17", "label" : "Standard Opening Times", "color" : "#ff7f0e" }],
+            ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
+            ["...", "cmssgsdid", { "label" : "Palliative Care", "color" : "#9467bd" }],
+          ],
+          stacked : false,
+          region : var.aws_region,
+          period : 3600,
+          stat : "Sum",
+          title : "DoS Service Updates (Per Hour)",
+          timezone : "LOCAL"
+        }
+      },
+      { type : "metric",
+        x : 6,
+        y : 4,
+        width : 18,
+        height : 4,
+        properties : {
+          "sparkline" : true,
+          view : "singleValue",
+          metrics : [
+            ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsurl", { "label" : "Website" }],
+            ["...", "postalcode", { "label" : "Postcode" }],
+            ["...", "postaladdress", { "label" : "Address" }],
+            ["...", "cmstelephoneno", { "label" : "Public Phone", }],
+            ["...", "cmseastings", { "label" : "Easting" }],
+            ["...", "cmsnorthings", { "label" : "Northing" }],
+            ["...", "cmsorgtown", { "label" : "Town" }],
+            ["...", "latitude", { "label" : "Latitude" }],
+            ["...", "longitude", { "label" : "Longitutde" }],
+            ["...", "cmsopentimemonday", { "label" : "Monday" }],
+            ["...", "cmsopentimetuesday", { "label" : "Tuesday" }],
+            ["...", "cmsopentimewednesday", { "label" : "Wednesday" }],
+            ["...", "cmsopentimethursday", { "label" : "Thursday" }],
+            ["...", "cmsopentimefriday", { "label" : "Friday" }],
+            ["...", "cmsopentimesaturday", { "label" : "Saturday" }],
+            ["...", "cmsopentimesunday", { "label" : "Sunday" }],
+            ["...", "cmsopentimespecified", { "label" : "Specified Opening Times" }],
+            ["...", "cmssgsdid", { "label" : "Palliative Care" }],
+          ]
+          sparkline : true,
+          period : 900,
+          region : var.aws_region,
+          stacked : true,
+          stat : "Sum",
+          title : "DoS Individual Service Updates (Per 15 Minutes)",
+          view : "timeSeries",
+          timezone : "LOCAL"
+          yAxis : {
+            left : {
+              label : "Updates",
+              showUnits : false
+          } }
+        }
+      }
+    ]
     }
   )
 }

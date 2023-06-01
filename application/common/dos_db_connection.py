@@ -1,11 +1,12 @@
+from collections.abc import Generator
 from contextlib import contextmanager
 from os import environ
 from time import time_ns
-from typing import Any, Dict, Generator, Optional
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
-from psycopg import connect, Connection, Cursor
-from psycopg.rows import dict_row, DictRow
+from psycopg import Connection, Cursor, connect
+from psycopg.rows import DictRow, dict_row
 from typing_extensions import LiteralString
 
 from common.secretsmanager import get_secret
@@ -16,7 +17,7 @@ db_connection = None
 
 @contextmanager
 def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
-    """Creates a new connection to the DoS DB Replica
+    """Creates a new connection to the DoS DB Replica.
 
     Yields:
         Generator[connection, None, None]: Connection to the database
@@ -45,7 +46,7 @@ def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
 
 @contextmanager
 def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
-    """Creates a new connection to the DoS DB
+    """Creates a new connection to the DoS DB.
 
     Yields:
         Generator[connection, None, None]: Connection to the database
@@ -66,10 +67,15 @@ def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
     db_connection.close()
 
 
-def connection_to_db(
-    server: str, port: str, db_name: str, db_schema: str, db_user: str, db_password: str
+def connection_to_db(  # noqa: PLR0913
+    server: str,
+    port: str,
+    db_name: str,
+    db_schema: str,
+    db_user: str,
+    db_password: str,
 ) -> Connection:
-    """Creates a new connection to a database
+    """Creates a new connection to a database.
 
     Args:
         server (str): Database server to connect to
@@ -97,23 +103,29 @@ def connection_to_db(
 
 
 def query_dos_db(
-    connection: Connection, query: LiteralString, vars: Optional[Dict[str, Any]] = None, log_vars: bool = True
+    connection: Connection,
+    query: LiteralString,
+    query_vars: dict[str, Any] | None = None,
+    log_vars: bool = True,
 ) -> Cursor[DictRow]:
-    """Queries the database given in the connection object
+    """Queries the database given in the connection object.
 
     Args:
         connection (Connection): Connection to the database
         query (str): Query to execute
-        vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
+        query_vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
+        log_vars (bool, optional): Whether to log the query variables. Defaults to True.
 
     Returns:
         DictRow: Cursor to the query results
     """
     cursor = connection.cursor(row_factory=dict_row)
 
-    logger.info("Query to execute", extra={"query": query, "vars": vars if log_vars else "Vars have been redacted."})
+    logger.info(
+        "Query to execute", extra={"query": query, "vars": query_vars if log_vars else "Vars have been redacted."},
+    )
 
     time_start = time_ns() // 1000000
-    cursor.execute(query=query, params=vars)
+    cursor.execute(query=query, params=query_vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
     return cursor

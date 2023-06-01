@@ -1,7 +1,7 @@
 from decimal import Decimal
 from os import getenv
 from time import time_ns
-from typing import Any, Dict
+from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
@@ -19,8 +19,8 @@ logger = Logger()
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
 @logger.inject_lambda_context(clear_state=True)
-def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
-    """Entrypoint handler for the authoriser lambda
+def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noqa: ARG001
+    """Entrypoint handler for the authoriser lambda.
 
     Args:
         event (Dict[str, Any]): Lambda function invocation event
@@ -43,18 +43,39 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> str:
     return dumps({"message": "The change event has been re-sent successfully", "correlation_id": correlation_id})
 
 
-def validate_event(event: Dict[str, Any]) -> None:
+def validate_event(event: dict[str, Any]) -> None:
+    """Validate the event payload.
+
+    Args:
+        event (dict[str, Any]): The event payload
+    """
     if "odscode" not in event:
-        raise ValueError("Missing 'odscode' in event")
+        msg = "Missing 'odscode' in event"
+        raise ValueError(msg)
     if "sequence_number" not in event:
-        raise ValueError("Missing 'sequence_number' in event")
+        msg = "Missing 'sequence_number' in event"
+        raise ValueError(msg)
 
 
-def build_correlation_id():
+def build_correlation_id() -> str:
+    """Build a correlation id for the event replay.
+
+    Returns:
+        str: The correlation id
+    """
     return f'{time_ns()}-{getenv("ENV")}-replayed-event'
 
 
-def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
+def get_change_event(odscode: str, sequence_number: Decimal) -> dict[str, Any]:
+    """Get the change event from dynamodb.
+
+    Args:
+        odscode (str): The ods code of the organisation
+        sequence_number (Decimal): The sequence number of the change event
+
+    Returns:
+        dict[str, Any]: The change event
+    """
     response = client("dynamodb").query(
         TableName=getenv("CHANGE_EVENTS_TABLE_NAME"),
         IndexName="gsi_ods_sequence",
@@ -72,7 +93,8 @@ def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
         ScanIndexForward=False,
     )
     if len(response["Items"]) == 0:
-        raise ValueError(f"No change event found for ods code {odscode} and sequence number {sequence_number}")
+        msg = f"No change event found for ods code {odscode} and sequence number {sequence_number}"
+        raise ValueError(msg)
     item = response["Items"][0]
     logger.info("Retrieved change event from dynamodb", extra={"item": item})
     deserializer = TypeDeserializer()
@@ -82,7 +104,15 @@ def get_change_event(odscode: str, sequence_number: Decimal) -> Dict[str, Any]:
     return change_event
 
 
-def send_change_event(change_event: Dict[str, Any], odscode: str, sequence_number: int, correlation_id: str):
+def send_change_event(change_event: dict[str, Any], odscode: str, sequence_number: int, correlation_id: str) -> None:
+    """Send the change event to the change event SQS queue.
+
+    Args:
+        change_event (dict[str, Any]): The change event
+        odscode (str): The ods code of the organisation
+        sequence_number (int): The sequence number of the change event
+        correlation_id (str): The correlation id of the event replay
+    """
     sqs = client("sqs")
     queue_url = sqs.get_queue_url(QueueName=getenv("CHANGE_EVENT_SQS_NAME"))["QueueUrl"]
     logger.info("Sending change event to SQS", extra={"queue_url": queue_url})

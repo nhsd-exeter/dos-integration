@@ -6,24 +6,24 @@
 LOG_LEVEL:= DEBUG
 
 DB_SERVER_NAME := uec-core-dos-performance-db-12
-DB_ROUTE_53 := uec-core-dos-performance-data.dos-db-sync-rds
+DB_ROUTE_53 := uec-core-dos-performance-primary.dos-db-sync-rds
 DB_REPLICA_SERVER_NAME := uec-core-dos-performance-db-12-replica-di
 DB_REPLICA_53 := uec-core-dos-performance-di-replica.dos-db-sync-rds
 DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 DOS_DB_SG_NAME := uec-core-dos-performance-datastore-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance-di-sg
+DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance-db-12-replica-di-sg
 
-DB_SECRET_NAME := core-dos-dev/deployment
+DB_SECRET_NAME := uec-core-dos-performance-db-di-readwrite-user-password
 DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
 
-DB_REPLICA_SECRET_NAME := core-dos-dev/deployment
-DB_REPLICA_SECRET_KEY := DB_DI_READWRITE_PASSWORD
+DB_REPLICA_SECRET_NAME := uec-core-dos-performance-db-di-readonly-user-password
+DB_REPLICA_SECRET_KEY := DB_DI_READONLY_PASSWORD
 DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
-DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
+DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-dev/deployment

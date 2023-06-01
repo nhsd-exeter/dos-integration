@@ -2,19 +2,20 @@ from decimal import Decimal
 from json import dumps, loads
 from os import environ
 from time import time
+from typing import Any
 from unittest.mock import patch
 
+import pytest
 from aws_lambda_powertools.logging import Logger
 from boto3.dynamodb.types import TypeDeserializer
-from pytest import fixture, raises
 
 FILE_PATH = "application.common.dynamodb"
 
 
-@fixture
-def dynamodb_table_create(dynamodb_client):
-    """Create a DynamoDB CHANGE_EVENTS_TABLE table fixture."""
-    table = dynamodb_client.create_table(
+@pytest.fixture()
+def dynamodb_table_create(dynamodb_client) -> dict[str, Any]:
+    """Create a DynamoDB CHANGE_EVENTS_TABLE table pytest.fixture."""
+    return dynamodb_client.create_table(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         BillingMode="PAY_PER_REQUEST",
         KeySchema=[
@@ -34,52 +35,49 @@ def dynamodb_table_create(dynamodb_client):
                     {"AttributeName": "SequenceNumber", "KeyType": "RANGE"},
                 ],
                 "Projection": {"ProjectionType": "ALL"},
-            }
+            },
         ],
     )
-    return table
 
 
 def test_get_circuit_is_open_none(dynamodb_table_create, dynamodb_client):
-    from ..dynamodb import get_circuit_is_open
+    from application.common.dynamodb import get_circuit_is_open
 
-    is_open = get_circuit_is_open("BLABLABLA")
-    assert is_open is None
+    assert get_circuit_is_open("BLABLABLA") is None
 
 
 def test_put_and_get_circuit_is_open(dynamodb_table_create, dynamodb_client):
-    from ..dynamodb import get_circuit_is_open, put_circuit_is_open
+    from application.common.dynamodb import get_circuit_is_open, put_circuit_is_open
 
     put_circuit_is_open("TESTCIRCUIT", True)
-    is_open = get_circuit_is_open("TESTCIRCUIT")
 
-    assert is_open
+    assert get_circuit_is_open("TESTCIRCUIT")
 
 
 def test_put_circuit_exception(dynamodb_table_create, dynamodb_client):
-    from ..dynamodb import put_circuit_is_open
+    from application.common.dynamodb import put_circuit_is_open
 
     temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
     del environ["CHANGE_EVENTS_TABLE_NAME"]
-    with raises(Exception):
+    with pytest.raises(Exception):  # noqa: PT011,B017
         put_circuit_is_open("TESTCIRCUIT", True)
 
     environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
 
 
 def test_get_circuit_exception(dynamodb_table_create, dynamodb_client):
-    from ..dynamodb import get_circuit_is_open
+    from application.common.dynamodb import get_circuit_is_open
 
     temp_table = environ["CHANGE_EVENTS_TABLE_NAME"]
     del environ["CHANGE_EVENTS_TABLE_NAME"]
-    with raises(Exception):
+    with pytest.raises(Exception):  # noqa: PT011,B017
         get_circuit_is_open("TESTCIRCUIT")
 
     environ["CHANGE_EVENTS_TABLE_NAME"] = temp_table
 
 
 def test_add_change_event_to_dynamodb(dynamodb_table_create, change_event, dynamodb_client):
-    from ..dynamodb import add_change_event_to_dynamodb, dict_hash, TTL
+    from application.common.dynamodb import TTL, add_change_event_to_dynamodb, dict_hash
 
     # Arrange
     event_received_time = int(time())
@@ -97,7 +95,7 @@ def test_add_change_event_to_dynamodb(dynamodb_table_create, change_event, dynam
     expected = loads(dumps(change_event), parse_float=Decimal)
 
     assert response_id == change_id
-    assert deserialized["EventReceived"] == int(event_received_time)
+    assert deserialized["EventReceived"] == event_received_time
     assert deserialized["TTL"] == int(event_received_time + TTL)
     assert deserialized["Id"] == change_id
     assert deserialized["SequenceNumber"] == 1
@@ -105,9 +103,14 @@ def test_add_change_event_to_dynamodb(dynamodb_table_create, change_event, dynam
 
 
 def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
-    dynamodb_table_create, change_event, dynamodb_client
+    dynamodb_table_create,
+    change_event,
+    dynamodb_client,
 ):
-    from ..dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+    from application.common.dynamodb import (
+        add_change_event_to_dynamodb,
+        get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    )
 
     event_received_time = int(time())
     add_change_event_to_dynamodb(change_event.copy(), 1, event_received_time)
@@ -131,7 +134,10 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
 
 
 def test_same_sequence_id_and_same_change_event_multiple_times(dynamodb_table_create, change_event, dynamodb_client):
-    from ..dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+    from application.common.dynamodb import (
+        add_change_event_to_dynamodb,
+        get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    )
 
     event_received_time = int(time())
     add_change_event_to_dynamodb(change_event.copy(), 3, event_received_time)
@@ -153,7 +159,7 @@ def test_same_sequence_id_and_same_change_event_multiple_times(dynamodb_table_cr
 
 
 def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_event):
-    from ..dynamodb import get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+    from application.common.dynamodb import get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 
     latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
     assert latest_sequence_number == 0
@@ -161,10 +167,15 @@ def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create, change_even
 
 @patch.object(Logger, "error")
 def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
-    mock_logger, dynamodb_table_create, change_event, dynamodb_client
+    mock_logger,
+    dynamodb_table_create,
+    change_event,
+    dynamodb_client,
 ):
-
-    from ..dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
+    from application.common.dynamodb import (
+        add_change_event_to_dynamodb,
+        get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
+    )
 
     event_received_time = int(time())
     odscode = change_event["ODSCode"]
@@ -241,21 +252,21 @@ def copy_and_modify_website(ce, new_website: str):
 
 
 def test_get_newest_event_per_odscode(dynamodb_table_create, change_event, dynamodb_client, dynamodb_resource):
-    from ..dynamodb import add_change_event_to_dynamodb, get_newest_event_per_odscode
+    from application.common.dynamodb import add_change_event_to_dynamodb, get_newest_event_per_odscode
 
-    ceAAA11 = change_event.copy()
+    ceAAA11 = change_event.copy()  # noqa: N806
     ceAAA11["ODSCode"] = "AAA11"
     add_change_event_to_dynamodb(ceAAA11, 301, int(time()))
     for i in range(10):
         add_change_event_to_dynamodb(ceAAA11, i, int(time()))
 
-    ceBBB22 = change_event.copy()
+    ceBBB22 = change_event.copy()  # noqa: N806
     ceBBB22["ODSCode"] = "BBB22"
     add_change_event_to_dynamodb(ceBBB22, 505, int(time()))
     for i in range(10):
         add_change_event_to_dynamodb(ceBBB22, i, int(time()))
 
-    ceCCC33 = change_event.copy()
+    ceCCC33 = change_event.copy()  # noqa: N806
     ceCCC33["ODSCode"] = "CCC33"
     add_change_event_to_dynamodb(ceCCC33, 400, int(time()))
     for i in range(10):

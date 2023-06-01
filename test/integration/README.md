@@ -64,7 +64,7 @@ will only run the following:
 
 The test suite can also be run against any environment currently setup in the nonprod AWS account. This can be selected by adding the environment name in lowercase to the ENVIRONMENT argument when running the test suite.
 E.g.
-If your current environment is DSUEC-123 then you can add `ENVIRONMENT=dsuec-123` to the run args and the test suite will run against this environment. The test environment uses "test" and the dev environment "dev".
+If your current environment is DS-123 then you can add `ENVIRONMENT=ds-123` to the run args and the test suite will run against this environment. The test environment uses "test" and the dev environment "dev".
 
 Note: Your personal IP address may need to be white listed on the selected environment to ensure that the test can function.
 

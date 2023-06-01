@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 from json import dumps
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
-from pytest import fixture
 
-from ..change_event_dlq_handler import lambda_handler
+from application.change_event_dlq_handler.change_event_dlq_handler import lambda_handler
 from common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 FILE_PATH = "application.change_event_dlq_handler.change_event_dlq_handler"
@@ -30,9 +30,9 @@ STAFF_CHANGE_EVENT_FROM_HOLDING_QUEUE = {
 }
 
 
-@fixture
+@pytest.fixture()
 def dead_letter_change_event_from_change_event_queue():
-    yield {
+    return {
         "Records": [
             {
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
@@ -62,14 +62,14 @@ def dead_letter_change_event_from_change_event_queue():
                 "eventSource": "aws:sqs",
                 "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
                 "awsRegion": "us-east-2",
-            }
-        ]
+            },
+        ],
     }
 
 
-@fixture
+@pytest.fixture()
 def dead_letter_staff_change_event_from_change_event_queue():
-    yield {
+    return {
         "Records": [
             {
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
@@ -99,14 +99,14 @@ def dead_letter_staff_change_event_from_change_event_queue():
                 "eventSource": "aws:sqs",
                 "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
                 "awsRegion": "us-east-2",
-            }
-        ]
+            },
+        ],
     }
 
 
-@fixture
+@pytest.fixture()
 def dead_letter_change_event_from_holding_queue():
-    yield {
+    return {
         "Records": [
             {
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
@@ -123,16 +123,16 @@ def dead_letter_change_event_from_holding_queue():
                 "eventSource": "aws:sqs",
                 "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:my-queue",
                 "awsRegion": "us-east-2",
-            }
-        ]
+            },
+        ],
     }
 
 
-@fixture
+@pytest.fixture()
 def lambda_context():
     @dataclass
     class LambdaContext:
-        """Mock LambdaContext - All dummy values"""
+        """Mock LambdaContext - All dummy values."""
 
         function_name: str = "change-event-dlq-handler"
         memory_limit_in_mb: int = 128
@@ -151,8 +151,8 @@ def test_lambda_handler_event_from_change_event_queue(
     mock_set_dimensions: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_extract_body: MagicMock,
-    dead_letter_staff_change_event_from_change_event_queue: Dict[str, Any],
-    dead_letter_change_event_from_change_event_queue: Dict[str, Any],
+    dead_letter_staff_change_event_from_change_event_queue: dict[str, Any],
+    dead_letter_change_event_from_change_event_queue: dict[str, Any],
     lambda_context,
 ):
     # Arrange
@@ -163,7 +163,7 @@ def test_lambda_handler_event_from_change_event_queue(
     # Assert
     mock_extract_body.assert_called_once_with(dead_letter_change_event_from_change_event_queue["Records"][0]["body"])
     expected_timestamp = int(
-        dead_letter_change_event_from_change_event_queue["Records"][0]["attributes"]["SentTimestamp"]
+        dead_letter_change_event_from_change_event_queue["Records"][0]["attributes"]["SentTimestamp"],
     )
     mock_add_change_event_to_dynamodb.assert_called_once_with(extracted_body, 123456789, expected_timestamp)
 
@@ -175,7 +175,7 @@ def test_lambda_handler_event_from_holding_queue(
     mock_put_metric: MagicMock,
     mock_set_dimensions: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
-    dead_letter_change_event_from_holding_queue: Dict[str, Any],
+    dead_letter_change_event_from_holding_queue: dict[str, Any],
     lambda_context,
 ):
     # Act
@@ -183,5 +183,7 @@ def test_lambda_handler_event_from_holding_queue(
     # Assert
     expected_timestamp = int(dead_letter_change_event_from_holding_queue["Records"][0]["attributes"]["SentTimestamp"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(
-        CHANGE_EVENT_FROM_CHANGE_EVENT_QUEUE, CHANGE_EVENT_FROM_HOLDING_QUEUE["sequence_number"], expected_timestamp
+        CHANGE_EVENT_FROM_CHANGE_EVENT_QUEUE,
+        CHANGE_EVENT_FROM_HOLDING_QUEUE["sequence_number"],
+        expected_timestamp,
     )
