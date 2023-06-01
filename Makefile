@@ -141,6 +141,18 @@ clean: # Runs whole project clean
 		performance-test-clean
 	rm -rf test/integration/replay/.*.txt
 
+remove-development-environments: # Removes development environments - mandatory: PROFILE
+	STACK_NAMES=$$(aws cloudformation list-stacks  --output json | jq -r '.StackSummaries[] | select ( .StackName | contains("dos-integration")) | select (.StackStatus == "UPDATE_COMPLETE").StackName')
+	for ENVIRONMENT in $$STACK_NAMES; do \
+		ENVIRONMENT=$$(echo $$ENVIRONMENT | sed -e "s/^uec-dos-integration-//");
+		if [[ ! "$$ENVIRONMENT" =~ ^(dev|test|perf|perf2|release)$$ ]] && [[ "$$ENVIRONMENT" != *"-dev" ]]; then
+			make terraform-clean
+			echo "Removing $$ENVIRONMENT"
+			make undeploy PROFILE=dev ENVIRONMENT=$$ENVIRONMENT OPTS="--refresh=false" SHARED_ENVIRONMENT=$$ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$$ENVIRONMENT
+			echo "Removed $$ENVIRONMENT"
+		fi
+	done
+
 # ==============================================================================
 # Service Sync
 
