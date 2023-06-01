@@ -42,6 +42,7 @@ resource "aws_security_group_rule" "database_allow_in_from_lambda" {
 }
 
 resource "aws_security_group_rule" "database_replica_allow_in_from_lambda" {
+  count                    = var.profile == "demo" || var.profile == "live" ? 1 : 0
   type                     = "ingress"
   from_port                = 5432
   to_port                  = 5432
