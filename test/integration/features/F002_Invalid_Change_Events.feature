@@ -5,15 +5,15 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event "ODSCode" is set to "F8KE1"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with message "Found 0 services in DB"
-    And the "service-matcher" lambda shows field "message" with message "No matching DOS services"
+    Then the "service-matcher" lambda shows field "message" with value "Found 0 services in DB"
+    And the "service-matcher" lambda shows field "message" with value "No matching DOS services"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SXX2. Changed Event with Hidden Organisation status is reported
     Given a basic service is created
     And the change event "OrganisationStatus" is set to "Hidden"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with message "NHS Service marked as closed or hidden"
+    Then the "service-matcher" lambda shows field "message" with value "NHS Service marked as closed or hidden"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -21,7 +21,7 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "report_key" with message "HIDDEN_OR_CLOSED"
+    Then the "service-matcher" lambda shows field "report_key" with value "HIDDEN_OR_CLOSED"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -29,7 +29,7 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Type ID: 'DEN'"
+    Then the "ingest-change-event" lambda shows field "message" with value "Validation Error - Unexpected Org Type ID: 'DEN'"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -40,7 +40,7 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then logs show staff data has been redacted
     And error messages do not show Staff data
-    And the "ingest-change-event" lambda shows field "message" with message "Validation Error - Unexpected Org Sub Type ID: 'com'"
+    And the "ingest-change-event" lambda shows field "message" with value "Validation Error - Unexpected Org Sub Type ID: 'com'"
 
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -48,7 +48,7 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event "Postcode" is set to "BT4 2HU"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with message "INVALID_POSTCODE"
+    Then the "service-sync" lambda shows field "report_key" with value "INVALID_POSTCODE"
 
   @complete @dev @pharmacy_no_log_searches
   Scenario: F002SXX7. Address changes are discarded when postcode is invalid
@@ -65,7 +65,7 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event has no weekday present in opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
     And the Slack channel shows an alert saying "Invalid Opening Times" from "BLUE_GREEN_ENVIRONMENT"
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -73,14 +73,14 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event has an invalid openingtimetype
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX10. IsOpen is true AND Times is blank
     Given a basic service is created
     And the change event has undefined opening and closing times
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -88,21 +88,21 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event has opening times open status set to false
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX12. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
     Given a basic service is created
     And the change event has an additional date with no specified date
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Opening times are not valid"
+    Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX16. Pharmacy with non '13%' service type code prompts error.
     Given a basic service is created
     And the change event "ODSCode" is set to "TP68G"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "report_key" with message "UNMATCHED_SERVICE_TYPE"
+    Then the "service-matcher" lambda shows field "report_key" with value "UNMATCHED_SERVICE_TYPE"
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
@@ -110,26 +110,26 @@ Feature: F002. Invalid change event Exception handling
     Given a basic service is created
     And the change event "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with message "GENERIC_BANK_HOLIDAY"
+    Then the "service-sync" lambda shows field "report_key" with value "GENERIC_BANK_HOLIDAY"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX18. Pharmacies with blank standard opening times are reported in logs.
     Given a basic service is created
     And the change event has no standard opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with message "BLANK_STANDARD_OPENINGS"
+    Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F002SX19. Pharmacies without blank standard opening times are not reported in logs.
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda does not show "report_key" with message "BLANK_STANDARD_OPENINGS"
+    Then the "service-sync" lambda does not show "report_key" with value "BLANK_STANDARD_OPENINGS"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F002SX20. A service with multiple entries as pharmacies raises alerts
     Given "<count>" basic services are created
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows "<count>" of "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
+    Then the "service-matcher" lambda shows "<count>" of "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
 
     Examples:
       | count |
@@ -142,5 +142,5 @@ Feature: F002. Invalid change event Exception handling
     And the service "service_type" is set to "131"
     And the entry is committed to the services table
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "report_key" with message "UNEXPECTED_PHARMACY_PROFILING"
-    And the "service-matcher" lambda shows field "reason" with message "No 'Pharmacy' type services found (type 13)"
+    Then the "service-matcher" lambda shows field "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
+    And the "service-matcher" lambda shows field "reason" with value "No 'Pharmacy' type services found (type 13)"
