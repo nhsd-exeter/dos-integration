@@ -88,21 +88,14 @@ Feature: F002. Invalid change event Exception handling
     And the service history is not updated
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SX12. Pharmacies with generic bank holidays are reported in logs.
-    Given a basic service is created
-    And the change event "ODSCode" is set to "FJQ49"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with value "GENERIC_BANK_HOLIDAY"
-
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SX13. Pharmacies with blank standard opening times are reported in logs.
+  Scenario: F002SX12. Pharmacies with blank standard opening times are reported in logs.
     Given a basic service is created
     And the change event has no standard opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F002SX14. A service with multiple entries as pharmacies raises alerts
+  Scenario Outline: F002SX13. A service with multiple entries as pharmacies raises alerts
     Given "<count>" basic services are created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows "<count>" of "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"

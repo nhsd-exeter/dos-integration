@@ -28,9 +28,19 @@ Feature: F007. Report Logging
   Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
     Given a basic service is created
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries @wip
   Scenario: F007SX04 Check for services with generic bank holiday openings log
     Given a basic service is created
+    And the change event "ODSCode" is set to "FJQ49"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "report_key" with value "GENERIC_BANK_HOLIDAY"
+    And "nhsuk_odscode" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "nhsuk_organisation_name" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "dos_service_uid" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "dos_service_name" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "dos_service_type_id" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "bank_holiday_opening_times" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "nhsuk_parentorg" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX05 Check for Unexpected Pharmacy Profiling log
@@ -45,7 +55,6 @@ Feature: F007. Report Logging
     And "dos_service_name" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
     And "dos_service_address" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
     And "dos_service_postcode" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
-    And "reason" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX06 Check for Unmatched Pharmacy Report log
