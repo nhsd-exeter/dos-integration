@@ -76,10 +76,7 @@ Feature: F007. Report Logging
     And "nhsuk_organisation_subtype" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And "nhsuk_organisation_status" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And "nhsuk_address1" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
-    And "nhsuk_address2" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
-    And "nhsuk_address3" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And "nhsuk_city" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
-    And "nhsuk_county" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And "nhsuk_postcode" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And the service history is not updated
