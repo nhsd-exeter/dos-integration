@@ -24,11 +24,11 @@ Feature: F007. Report Logging
     And "error_reason" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
-  @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
-    Given a basic service is created
+  # @complete @pharmacy_cloudwatch_queries @wip
+  # Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
+  #   Given a basic service is created
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX04 Check for services with generic bank holiday openings log
     Given a basic service is created
     And the change event "ODSCode" is set to "FJQ49"
@@ -59,16 +59,47 @@ Feature: F007. Report Logging
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX06 Check for Unmatched Pharmacy Report log
     Given a basic service is created
+    And the change event "ODSCode" is set to "FXXX1"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with value "UNMATCHED_PHARMACY"
+    And "nhsuk_odscode" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_organisation_typeid" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_organisation_subtype" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_organisation_status" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_address1" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_address2" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_address3" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_city" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_county" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_postcode" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX07 Check for Unmatched Service Type Report log
     Given a basic service is created
+    And the change event "ODSCode" is set to "TP68G"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with value "UNMATCHED_SERVICE_TYPE"
+    And "nhsuk_odscode" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_name" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_typeid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_subtype" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_status" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_uid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_typeid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_publicname" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_status" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
+    And the service history is not updated
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX08 Check for Blank Opening Times Report log
     Given a basic service is created
+    And the Changed Event has blank opening times
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda does not show "report_key" with value "BLANK_STANDARD_OPENINGS"
+    Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
     And "nhsuk_odscode" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_service_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_region" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs

@@ -184,7 +184,7 @@ def create_multiple_basic_service_entry(context: Context, count: str) -> Context
     context = a_service_table_entry_is_created(context)
     context = service_table_entry_is_committed(context)
     ods_code = context.generator_data["odscode"]
-    for _x in range(int(count) - 1):
+    for _ in range(int(count) - 1):
         context = a_service_table_entry_is_created(context, ods_code)
         context = service_table_entry_is_committed(context)
     return context
@@ -654,6 +654,20 @@ def create_ods_in_ddb(context: Context) -> Context:
     context = the_change_event_is_sent_with_custom_sequence(context, 100)
     context.sequence_number = 100
     context.unique_key = generate_random_int()
+    return context
+
+
+@given("the Changed Event has blank opening times", target_fixture="context")
+def change_event_with_blank_opening_times(context: Context) -> Context:
+    """Create a change event with blank opening times.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    context.change_event["OpeningTimes"] = []
     return context
 
 
