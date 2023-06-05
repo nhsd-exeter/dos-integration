@@ -6,9 +6,9 @@
 LOG_LEVEL:= DEBUG
 
 DB_SERVER_NAME := uec-core-dos-regression-db-12
-DB_ROUTE_53 := core-dos-regression-master.dos-db-rds
+DB_ROUTE_53 := uec-core-dos-regression-dos-primary-rw.dos-datastore-regression
 DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
-DB_REPLICA_53 := uec-core-dos-dev-db-replica-di.dos-db-rds
+DB_REPLICA_53 := uec-core-dos-regression-di-ro.dos-datastore-regression
 DB_PORT := 5432
 DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
