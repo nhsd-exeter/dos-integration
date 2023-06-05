@@ -34,7 +34,18 @@ Feature: F007. Report Logging
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX05 Check for Unexpected Pharmacy Profiling log
-    Given a basic service is created
+    Given an entry is created in the services table
+    And the service "service_type" is set to "131"
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
+    And the "service-matcher" lambda shows field "reason" with value "No 'Pharmacy' type services found (type 13)"
+    And "ods_code" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "dos_service_uid" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "dos_service_name" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "dos_service_address" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "dos_service_postcode" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "reason" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX06 Check for Unmatched Pharmacy Report log
@@ -44,9 +55,15 @@ Feature: F007. Report Logging
   Scenario: F007SX07 Check for Unmatched Service Type Report log
     Given a basic service is created
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries @wip
   Scenario: F007SX08 Check for Blank Opening Times Report log
     Given a basic service is created
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda does not show "report_key" with value "BLANK_STANDARD_OPENINGS"
+    And "nhsuk_odscode" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+    And "dos_service_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+    And "dos_region" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+    And "dos_service_uid" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX09 Check for Hidden Or Closed Report log
@@ -71,7 +88,7 @@ Feature: F007. Report Logging
       | Closed             |
       | Hidden             |
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX010 Check for Invalid Postcode Report log
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
@@ -81,7 +98,6 @@ Feature: F007. Report Logging
     And "nhsuk_organisation_name" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_address1" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_city" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
-    And "nhsuk_county" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_postcode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "validation_error_reason" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "dos_service" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs

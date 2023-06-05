@@ -101,14 +101,8 @@ Feature: F002. Invalid change event Exception handling
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
 
-  @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SX14. Pharmacies without blank standard opening times are not reported in logs.
-    Given a basic service is created
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda does not show "report_key" with value "BLANK_STANDARD_OPENINGS"
-
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F002SX15. A service with multiple entries as pharmacies raises alerts
+  Scenario Outline: F002SX14. A service with multiple entries as pharmacies raises alerts
     Given "<count>" basic services are created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows "<count>" of "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
@@ -117,12 +111,3 @@ Feature: F002. Invalid change event Exception handling
       | count |
       | 2     |
       | 4     |
-
-  @complete @pharmacy_cloudwatch_queries
-  Scenario: F002SX16. No service type 13 for entry
-    Given an entry is created in the services table
-    And the service "service_type" is set to "131"
-    And the entry is committed to the services table
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
-    And the "service-matcher" lambda shows field "reason" with value "No 'Pharmacy' type services found (type 13)"
