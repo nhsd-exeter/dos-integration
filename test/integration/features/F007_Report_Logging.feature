@@ -25,3 +25,35 @@ Feature: F007. Report Logging
     # And "nhsuk_organisation_name" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_reason" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX03 Check for Incorrect Palliative Stockholder Type log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX04 Check for services with generic bank holiday openings log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX05 Check for Unexpected Pharmacy Profiling log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX06 Check for Unmatched Pharmacy Report log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX07 Check for Unmatched Service Type Report log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX08 Check for Blank Opening Times Report log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX09 Check for Hidden Or Closed Report log
+    Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX010 Check for Invalid Opening Times log
+    Given a basic service is created
