@@ -57,3 +57,21 @@ Feature: F007. Report Logging
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX010 Check for Invalid Opening Times log
     Given a basic service is created
+
+  @complete @pharmacy_cloudwatch_queries @wip
+  Scenario Outline: F007SX011 Check for Invalid Postcode Report log
+    Given a basic service is created
+    And the change event "Postcode" is set to "FAKE"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
+    And the "service-sync" lambda shows field "report_key" with value "INVALID_POSTCODE"
+    And "nhsuk_odscode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_organisation_name" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_address1" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_address2" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_address3" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_city" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_county" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "nhsuk_postcode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "validation_error_reason" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "dos_service" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
