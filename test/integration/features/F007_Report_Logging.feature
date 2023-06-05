@@ -24,9 +24,17 @@ Feature: F007. Report Logging
     And "error_reason" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
-  # @complete @pharmacy_cloudwatch_queries @wip
-  # Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
-  #   Given a basic service is created
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
+    Given an entry is created in the services table
+    And the service "service_type" is set to "131"
+    And the entry is committed to the services table
+    And the service in DoS supports palliative care
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "report_key" with value "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
+    And "dos_service_type_name" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
+    And "type_id" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
+    And "service_name" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX04 Check for services with generic bank holiday openings log
