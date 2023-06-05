@@ -6,14 +6,13 @@
 LOG_LEVEL:= DEBUG
 
 DB_SERVER_NAME := uec-core-dos-performance2-db-12
-DB_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
+DB_ROUTE_53 := uec-core-dos-performance2-dos-primary-rw.dos-datastore-performance2
 DB_REPLICA_SERVER_NAME := uec-core-dos-performance2-db-12-replica-di
-DB_REPLICA_53 := uec-core-dos-performance2-di-replica.dos-db-sync-rds
+DB_REPLICA_53 := uec-core-dos-performance2-di-ro.dos-datastore-performance2
 DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
-DOS_DB_SG_NAME := uec-core-dos-performance2-datastore-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance2-di-sg
+DOS_DB_SG_NAME := uec-core-dos-performance2-datastore-di-sg
 
 DB_SECRET_NAME := uec-core-dos-performance2-db-di-readwrite-user-password
 DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
