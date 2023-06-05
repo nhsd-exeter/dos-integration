@@ -15,63 +15,75 @@ Feature: F007. Report Logging
     And "dos_services" attribute is identified in the "INVALID_OPEN_TIMES" report in "service-matcher" logs
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX02 Check for generic change event error log
+  Scenario: F007SX02 Check for generic change event error log
     Given a basic service is created
     And the change event "website" is set to "test@test.com"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with value "GENERIC_CHANGE_EVENT_ERROR"
     And "ods_code" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
-    # And "org_type" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
-    # And "nhsuk_organisation_name" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_reason" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX03 Check for Incorrect Palliative Stockholder Type log
+  Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX04 Check for services with generic bank holiday openings log
+  Scenario: F007SX04 Check for services with generic bank holiday openings log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX05 Check for Unexpected Pharmacy Profiling log
+  Scenario: F007SX05 Check for Unexpected Pharmacy Profiling log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX06 Check for Unmatched Pharmacy Report log
+  Scenario: F007SX06 Check for Unmatched Pharmacy Report log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX07 Check for Unmatched Service Type Report log
+  Scenario: F007SX07 Check for Unmatched Service Type Report log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX08 Check for Blank Opening Times Report log
+  Scenario: F007SX08 Check for Blank Opening Times Report log
     Given a basic service is created
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX09 Check for Hidden Or Closed Report log
     Given a basic service is created
+    And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "message" with value "NHS Service marked as closed or hidden"
+    And the "service-matcher" lambda shows field "report_key" with value "HIDDEN_OR_CLOSED"
+    And "dos_service_id" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "dos_service_uid" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "nhsuk_odscode" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "dos_service_publicname" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "nhsuk_service_status" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "nhsuk_service_type" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "nhsuk_sector" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "dos_service_status" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "dos_service_type" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And the service history is not updated
 
-  @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX010 Check for Invalid Opening Times log
-    Given a basic service is created
+    Examples:
+      | OrganisationStatus |
+      | Closed             |
+      | Hidden             |
 
   @complete @pharmacy_cloudwatch_queries @wip
-  Scenario Outline: F007SX011 Check for Invalid Postcode Report log
+  Scenario: F007SX010 Check for Invalid Postcode Report log
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
     When the Changed Event is sent for processing with "valid" api key
-    Then the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
-    And the "service-sync" lambda shows field "report_key" with value "INVALID_POSTCODE"
+    Then the "service-sync" lambda shows field "report_key" with value "INVALID_POSTCODE"
     And "nhsuk_odscode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_organisation_name" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_address1" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
-    And "nhsuk_address2" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
-    And "nhsuk_address3" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_city" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_county" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "nhsuk_postcode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "validation_error_reason" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "dos_service" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
+    And the service history is not updated
