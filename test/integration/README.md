@@ -23,7 +23,7 @@ The integration test suite is contained within test/integration and comprises a 
     - [Given an entry is created in the services table](#given-an-entry-is-created-in-the-services-table)
     - [Given the change event field is set to value](#given-the-change-event-field-is-set-to-value)
     - [When the Changed Event is sent for processing with "valid" api key](#when-the-changed-event-is-sent-for-processing-with-valid-api-key)
-    - [Then the "lambda" lambda shows field "field" with message "message"](#then-the-lambda-lambda-shows-field-field-with-message-message)
+    - [Then the "lambda" lambda shows field "field" with value "message"](#then-the-lambda-lambda-shows-field-field-with-message-message)
     - [Then DoS has "value" in the "field" field](#then-dos-has-value-in-the-field-field)
 - [Data Generation](#data-generation)
   - [Data Generation variable contents](#data-generation-variable-contents)
@@ -156,7 +156,7 @@ This sets a value in the change event. This generic step should be able to chang
 
 This step sends the current stored change_event to the API Gateway of the selected environment.
 
-### Then the "lambda" lambda shows field "field" with message "message"
+### Then the "lambda" lambda shows field "field" with value "message"
 
 This is a generic log check step that will ensure a value is found in a certain field of a lambdas logs.
 
