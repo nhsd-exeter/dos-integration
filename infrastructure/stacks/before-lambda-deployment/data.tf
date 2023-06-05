@@ -65,7 +65,3 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_regi
 data "aws_security_group" "dos_db_sg" {
   name = var.dos_db_sg_name
 }
-
-data "aws_security_group" "dos_db_replica_sg" {
-  name = var.dos_db_replica_sg_name
-}

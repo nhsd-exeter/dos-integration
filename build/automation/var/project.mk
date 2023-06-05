@@ -141,7 +141,6 @@ TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(S
 # Lambda Security Group
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-lambda-sg
 TF_VAR_dos_db_sg_name := $(DOS_DB_SG_NAME)
-TF_VAR_dos_db_replica_sg_name := $(DOS_DB_REPLICA_SG_NAME)
 
 # SQS Queues
 TF_VAR_holding_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo
