@@ -106,7 +106,6 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
@@ -194,12 +193,6 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 
 dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
-
-# ==============================================================================
-# Orchestrator
-
-orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
 # Send Email
@@ -499,7 +492,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=dos-db-handler
 	make docker-create-repository NAME=dos-db-update-dlq-handler
 	make docker-create-repository NAME=event-replay
-	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=service-matcher
 	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger

@@ -26,15 +26,6 @@ resource "aws_cloudwatch_log_subscription_filter" "service_sync_dos_logs_subscri
   depends_on      = [time_sleep.wait_a_minute]
 }
 
-resource "aws_cloudwatch_log_subscription_filter" "orchestrator_logs_subscription_filter" {
-  name            = var.orchestrator_subscription_filter_name
-  role_arn        = data.aws_iam_role.di_firehose_role.arn
-  log_group_name  = "/aws/lambda/${var.orchestrator_lambda_name}"
-  filter_pattern  = ""
-  destination_arn = data.aws_kinesis_firehose_delivery_stream.dos_integration_firehose.arn
-  depends_on      = [time_sleep.wait_a_minute]
-}
-
 resource "aws_cloudwatch_log_subscription_filter" "change_event_dlq_handler_logs_subscription_filter" {
   name            = var.change_event_dlq_handler_subscription_filter_name
   role_arn        = data.aws_iam_role.di_firehose_role.arn

@@ -21,7 +21,7 @@ resource "aws_sqs_queue" "update_request_queue" {
   deduplication_scope         = "messageGroup"
   message_retention_seconds   = 1209600 # 14 days
   fifo_throughput_limit       = "perMessageGroupId"
-  visibility_timeout_seconds  = 30 # Should be same as orchestrator + service sync max execution time
+  visibility_timeout_seconds  = 30 # Service sync max execution time
   kms_master_key_id           = data.aws_kms_key.signing_key.key_id
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.update_request_dlq.arn
@@ -35,6 +35,13 @@ resource "aws_lambda_event_source_mapping" "holding_queue_event_source_mapping" 
   event_source_arn = aws_sqs_queue.holding_queue.arn
   enabled          = true
   function_name    = data.aws_lambda_function.service_matcher.arn
+}
+
+resource "aws_lambda_event_source_mapping" "update_request_event_source_mapping" {
+  batch_size       = 1
+  event_source_arn = aws_sqs_queue.update_request_queue.arn
+  enabled          = true
+  function_name    = data.aws_lambda_function.service_sync.arn
 }
 
 resource "aws_sqs_queue" "holding_queue_dlq" {

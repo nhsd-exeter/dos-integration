@@ -158,27 +158,6 @@ functions:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 2
 
-  orchestrator:
-    image: ${env:DOCKER_REGISTRY}/${env:ORCHESTRATOR}:${env:VERSION}
-    architecture: x86_64
-    name: ${env:ORCHESTRATOR_LAMBDA_NAME}
-    description: ${sls:stage} Orchestrator
-    memorySize: 128
-    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins)
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
-    maximumRetryAttempts: 0
-    reservedConcurrency: 1 # ensure only one orchestrator running at a time
-    events:
-      - schedule: rate(1 minute)
-    environment:
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CIRCUIT: DOS_DATABASE
-      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
-      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
-      SERVICE_SYNC_FUNCTION_NAME: ${env:SERVICE_SYNC_LAMBDA_NAME}
-      RUN_FOR: 280
-      SLEEP_FOR_WHEN_OPEN: 2
-
   send-email:
     image: ${env:DOCKER_REGISTRY}/${env:SEND_EMAIL}:${env:VERSION}
     architecture: x86_64
@@ -235,7 +214,6 @@ functions:
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_sync_role_name}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CIRCUIT: DOS_DATABASE
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}
@@ -252,6 +230,7 @@ functions:
       TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
       SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
+    reservedConcurrency: 10
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"
