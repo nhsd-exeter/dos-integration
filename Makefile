@@ -378,12 +378,8 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
-	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 10 --run-time 1m)
-	else
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
-	fi
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+	PERFORMANCE_ARGS=$$(echo --users 30 --spawn-rate 10 --run-time 5m)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \

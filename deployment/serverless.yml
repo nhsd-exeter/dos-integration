@@ -230,7 +230,7 @@ functions:
       TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
       SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
-    reservedConcurrency: 10
+    reservedConcurrency: 50
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"
