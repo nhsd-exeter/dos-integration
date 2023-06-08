@@ -145,7 +145,7 @@ TF_VAR_dos_db_sg_name := $(DOS_DB_SG_NAME)
 TF_VAR_dos_db_replica_sg_name := $(DOS_DB_REPLICA_SG_NAME)
 
 # SQS Queues
-TF_VAR_holding_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo # TODO: Convert to standard queue when/if message grouping is implemented
+TF_VAR_holding_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo
 TF_VAR_update_request_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-queue.fifo
 update_request_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue_name)
 holding_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_holding_queue_name)
@@ -201,7 +201,7 @@ TF_VAR_service_sync_dos_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-
 TF_VAR_slack_messenger_subscription_filter_name := $(SLACK_MESSENGER_LAMBDA_NAME)-cw-logs-firehose-subscription
 
 # Cloudwatch dashboards
-TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-full-monitoring-dashboard
+TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-monitoring-dashboard
 TF_VAR_cloudwatch_data_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-data-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
