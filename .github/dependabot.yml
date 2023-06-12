@@ -11,7 +11,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/application"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     target-branch: "develop"
     versioning-strategy: increase-if-necessary
 
