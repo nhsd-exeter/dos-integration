@@ -10,6 +10,7 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - make docker-hub-signin
   build:
+    on-failure: ABORT
     commands:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - echo Branch = $BUILD_BRANCH
