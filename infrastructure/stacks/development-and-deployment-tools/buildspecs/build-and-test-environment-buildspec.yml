@@ -25,7 +25,7 @@ phases:
       - |
         if [ -n "$BUILD_BRANCH" ]; then
           if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment"  BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed /n During Build and Deploy phase /n Please investigate";
+            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment"  BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed - During Build and Deploy phase \n Please investigate";
             exit 1;
           else
             make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Succeeded";
@@ -40,7 +40,7 @@ phases:
     finally:
       - |
         if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-          make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed /n During Test phase /n Please investigate";
+          make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed - During Test phase \n Please investigate";
           exit 1;
         fi
 
