@@ -279,6 +279,7 @@ def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         )
     return changes_to_dos
 
+
 def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> bool:
     """Check if the standard opening times have changed for a specific day.
 
@@ -310,6 +311,7 @@ def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> b
     )
     return False
 
+
 def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
     """Check if the specified opening times have changed.
 
@@ -340,6 +342,7 @@ def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
     changes.current_specified_opening_times = dos_spec_open_dates
     changes.new_specified_opening_times = future_nhs_spec_open_dates
     return True
+
 
 def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     """Compares and creates changes individually for all opening times if needed.
@@ -435,6 +438,10 @@ def has_palliative_care_changed(changes: ChangesToDoS) -> bool:
     if changes.current_palliative_care != changes.new_palliative_care:
         logger.info(
             f"Palliative Care is not equal, DoS='{changes.current_palliative_care}' != NHS UK='{changes.new_palliative_care}'",  # noqa: E501
+            extra={
+                "dos_palliative_care": changes.current_palliative_care,
+                "nhsuk_palliative_care": changes.new_palliative_care,
+            },
         )
         return True
     logger.info(
@@ -462,13 +469,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         and skip_palliative_care_check is False
     ):
         changes_to_dos.palliative_care_changes = True
-        logger.info(
-        "Palliative care not equal",
-        extra={
-            "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
-            "nhsuk_palliative_care": changes_to_dos.nhs_entity.palliative_care,
-        },
-    )
+
         changes_to_dos.service_histories.add_sgsdid_change(
             sgsdid=DOS_PALLIATIVE_CARE_SGSDID,
             new_value=changes_to_dos.nhs_entity.palliative_care,
