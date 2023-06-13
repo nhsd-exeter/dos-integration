@@ -146,10 +146,7 @@ def get_newest_event_per_odscode(threads: int = 2, limit: int = None) -> dict[st
     def merge_newest_events(newest_events: dict, more_events: list[dict]):  # noqa: ANN202
         for event in more_events:
             newest_event = newest_events.get(event["ODSCode"])
-            if (
-                newest_event is None
-                or newest_event["SequenceNumber"] <= event["SequenceNumber"]
-            ):
+            if newest_event is None or newest_event["SequenceNumber"] <= event["SequenceNumber"]:
                 newest_events[event["ODSCode"]] = event
 
     def scan_thread(segment: int, total_segments: int):  # noqa: ANN202
