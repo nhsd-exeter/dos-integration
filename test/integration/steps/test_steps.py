@@ -46,6 +46,7 @@ from .utilities.utils import (
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_locations_table_data,
+    get_palliative_care,
     get_s3_email_file,
     get_service_history,
     get_service_history_specified_opening_times,
@@ -1452,4 +1453,29 @@ def error_contains_no_staff(context: Context) -> Context:
     )
     logs = loads(get_logs(query, "ingest-change-event", context.start_time))
     assert "Superintendent Pharmacist" not in logs, "ERROR: Logs output the staff field on error"
+    return context
+
+
+@then(parse('palliative care is "{action}" to the service'), target_fixture="context")
+def _(context: Context, action: str) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    match action:
+        case "added":
+            applied = True
+        case "removed":
+            applied = False
+        case _:
+            msg = f"Unexpected action: {action}"
+            raise ValueError(msg)
+
+    palliative_care = get_palliative_care(context.service_id)
+    assert palliative_care == applied, "ERROR: Palliative care not correctly applied/removed to DoS service"
     return context
