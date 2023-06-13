@@ -19,7 +19,7 @@ resource "aws_codebuild_project" "di_build_environment" {
   count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-build-and-test-environment-stage"
   description    = "Builds environment based on push to task branches"
-  build_timeout  = "60"
+  build_timeout  = "90"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 

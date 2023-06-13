@@ -36,6 +36,7 @@ class DoSService:
     web: str
     typeid: int
     statusid: int
+    status_name: str
     publicphone: str
     publicname: str
     service_type_name: str
@@ -117,8 +118,9 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     # Safe as conditional is configurable but variables is inputted to psycopg as variables
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
-        "statusid, publicphone, publicname, st.name service_type_name"
+        "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
+        " LEFT JOIN servicestatuses ss ON s.statusid = ss.id"
         f" WHERE {conditions}"
     )
     with connect_to_dos_db_replica() as connection:

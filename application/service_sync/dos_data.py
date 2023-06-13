@@ -64,9 +64,10 @@ def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHis
 
     """
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, publicphone, publicname, "
-        "st.name service_type_name, easting, northing, latitude, longitude FROM services s "
-        "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.id = %(SERVICE_ID)s"
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, ss.name status_name, "
+        "publicphone, publicname, st.name service_type_name, easting, northing, latitude, longitude FROM services s "
+        "LEFT JOIN servicetypes st ON s.typeid = st.id LEFT JOIN servicestatuses ss ON s.statusid = ss.id "
+        "WHERE s.id = %(SERVICE_ID)s"
     )
     query_vars = {"SERVICE_ID": service_id}
     # Connect to the DoS database

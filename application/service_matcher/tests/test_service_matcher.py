@@ -401,6 +401,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
+        nhs_entity=mock_entity,
         matching_services=[service, service],
         reason="Multiple 'Pharmacy' type services found (type 13)",
     )
@@ -447,6 +448,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
+        nhs_entity=mock_entity,
         matching_services=[service, service],
         reason="No 'Pharmacy' type services found (type 13)",
     )
