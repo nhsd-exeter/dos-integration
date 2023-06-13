@@ -43,7 +43,7 @@ def test_field_names():
         "statusid",
         "publicphone",
         "publicname",
-        "servicename",
+        "service_type_name",
         "easting",
         "northing",
         "latitude",
@@ -151,7 +151,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name servicename FROM services s "
+            "statusid, publicphone, publicname, st.name service_type_name FROM services s "
             "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
@@ -217,7 +217,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, 
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
+            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
             "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
         query_vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
@@ -245,7 +245,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, "
-            "publicphone, publicname, st.name servicename FROM services s LEFT JOIN servicetypes"
+            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes"
             " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
@@ -695,7 +695,7 @@ def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa
         "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
         "publicphone": "0123 012 012",
         "publicname": None,
-        "servicename": "my service",
+        "service_type_name": "my service",
     }
 
 

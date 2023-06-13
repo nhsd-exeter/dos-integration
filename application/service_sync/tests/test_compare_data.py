@@ -116,7 +116,8 @@ def test_has_website_changed_add_website(
     assert dos_service.web == changes_to_dos.current_website
     assert nhs_website == changes_to_dos.new_website
     mock_format_website.assert_not_called()
-    mock_validate_website.assert_called_once_with(nhs_entity, nhs_website)
+    mock_validate_website.assert_called_once_with(nhs_entity, nhs_website, dos_service)
+
 
 
 @patch(f"{FILE_PATH}.validate_website")

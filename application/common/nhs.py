@@ -50,7 +50,6 @@ class NHSEntity:
         self.org_type = entity_data.get("OrganisationType")
         self.org_sub_type = entity_data.get("OrganisationSubType")
         self.org_status = entity_data.get("OrganisationStatus")
-        self.odscode = entity_data.get("ODSCode")
         self.postcode = entity_data.get("Postcode")
         self.parent_org_name = entity_data.get("ParentOrganisation", {}).get("OrganisationName")
         self.address_lines = [
@@ -64,6 +63,8 @@ class NHSEntity:
         self.phone = self.extract_contact("Telephone")
         self.website = self.extract_contact("Website")
         self.palliative_care = self.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+
+        logger.append_keys(nhsuk_organisation_typeid=self.org_type_id, nhsuk_organisation_name=self.org_name)
 
     def __repr__(self) -> str:
         """Returns a string representation of the object."""
