@@ -1,4 +1,3 @@
-from os import environ
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
@@ -15,42 +14,12 @@ from common.dos import (
     get_standard_opening_times_from_db,
     has_palliative_care,
 )
-from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
-from common.dynamodb import put_circuit_is_open
+from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from common.report_logging import log_palliative_care_z_code_does_not_exist
 from common.utilities import add_metric
 
 logger = Logger(child=True)
-
-
-def run_db_health_check() -> None:
-    """Runs a health check to ensure the db is running."""
-    try:
-        logger.info("Running health check")
-        with connect_to_dos_db() as connection:
-            cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            if cursor.fetchall():
-                logger.info("DoS database is running")
-            else:
-                logger.error("Health check failed - No services found in DoS DB")
-                add_metric("ServiceSyncHealthCheckFailure")
-                return
-        with connect_to_dos_db_replica() as connection:
-            cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            if cursor.fetchall():
-                logger.info("DoS database replica is running")
-            else:
-                logger.error("Health check failed - No services found in DoS DB Replica")
-                add_metric("ServiceSyncHealthCheckFailure")
-                return
-        put_circuit_is_open(environ["CIRCUIT"], False)
-        logger.info("Health check successful")
-        add_metric("ServiceSyncHealthCheckSuccess")
-    except Exception:
-        # If an error occurs, circuit remains open
-        logger.exception("Health check failed")
-        add_metric("ServiceSyncHealthCheckFailure")
 
 
 def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHistories]:

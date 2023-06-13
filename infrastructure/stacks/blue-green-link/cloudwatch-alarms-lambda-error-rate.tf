@@ -190,54 +190,6 @@ resource "aws_cloudwatch_metric_alarm" "ingest_change_event_error_rate_alert" {
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "orchestrator_error_rate_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Orchestrator error rate has exceeded 10%"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Orchestrator Error Rate"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  evaluation_periods        = "2"
-  threshold                 = "10"
-  insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-
-  metric_query {
-    id          = "expression"
-    expression  = "(errors/invocations) * 100"
-    label       = "Error Rate (%)"
-    return_data = "true"
-  }
-
-  metric_query {
-    id = "errors"
-    metric {
-      metric_name = "Errors"
-      namespace   = "AWS/Lambda"
-      period      = "120"
-      stat        = "Sum"
-      unit        = "Count"
-      dimensions = {
-        FunctionName = var.orchestrator_lambda_name
-      }
-    }
-  }
-
-  metric_query {
-    id = "invocations"
-    metric {
-      metric_name = "Invocations"
-      namespace   = "AWS/Lambda"
-      period      = "120"
-      stat        = "Sum"
-      unit        = "Count"
-      dimensions = {
-        FunctionName = var.orchestrator_lambda_name
-      }
-    }
-  }
-}
-
 resource "aws_cloudwatch_metric_alarm" "send_email_error_rate_alert" {
   count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]

@@ -106,7 +106,6 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
@@ -194,12 +193,6 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 
 dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
-
-# ==============================================================================
-# Orchestrator
-
-orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
 # Send Email
@@ -385,12 +378,8 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
-	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 10 --run-time 1m)
-	else
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
-	fi
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+	PERFORMANCE_ARGS=$$(echo --users 25 --spawn-rate 10 --run-time 10m)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
@@ -499,7 +488,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=dos-db-handler
 	make docker-create-repository NAME=dos-db-update-dlq-handler
 	make docker-create-repository NAME=event-replay
-	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=service-matcher
 	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger
