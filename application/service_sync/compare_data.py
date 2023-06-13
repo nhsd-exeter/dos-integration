@@ -37,7 +37,6 @@ from common.report_logging import (
     log_blank_standard_opening_times,
     log_incorrect_palliative_stockholder_type,
     log_invalid_nhsuk_postcode,
-    log_palliative_care_not_equal,
 )
 from common.utilities import is_val_none_or_empty
 
@@ -456,17 +455,20 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     skip_palliative_care_check = skip_if_key_is_none(
         changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
     )
-    logger.debug(f"Skip palliative care check: {skip_palliative_care_check}")
+    logger.info(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and has_palliative_care_changed(changes=changes_to_dos)
         and skip_palliative_care_check is False
     ):
         changes_to_dos.palliative_care_changes = True
-        log_palliative_care_not_equal(
-            nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
-            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
-        )
+        logger.info(
+        "Palliative care not equal",
+        extra={
+            "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
+            "nhsuk_palliative_care": changes_to_dos.nhs_entity.palliative_care,
+        },
+    )
         changes_to_dos.service_histories.add_sgsdid_change(
             sgsdid=DOS_PALLIATIVE_CARE_SGSDID,
             new_value=changes_to_dos.nhs_entity.palliative_care,

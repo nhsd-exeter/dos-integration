@@ -11,7 +11,6 @@ from application.common.report_logging import (
     log_incorrect_palliative_stockholder_type,
     log_invalid_nhsuk_postcode,
     log_invalid_open_times,
-    log_palliative_care_not_equal,
     log_palliative_care_z_code_does_not_exist,
     log_service_updated,
     log_service_with_generic_bank_holiday,
@@ -27,7 +26,6 @@ from common.constants import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
-    PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
     UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
@@ -383,25 +381,6 @@ def test_log_service_updated(mock_logger: MagicMock):
             "service_name": service_name,
             "service_uid": service_uid,
             "type_id": type_id,
-        },
-    )
-
-
-@patch.object(Logger, "warning")
-def test_log_palliative_care_not_equal(mock_logger: MagicMock):
-    # Arrange
-    expected_dos_palliative_care = True
-    expected_nhsuk_palliative_care = False
-    # Act
-    log_palliative_care_not_equal(expected_nhsuk_palliative_care, expected_dos_palliative_care)
-    # Assert
-    assert PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID == "PALLIATIVE_CARE_NOT_EQUAL"
-    mock_logger.assert_called_with(
-        "Palliative care not equal",
-        extra={
-            "report_key": PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
-            "dos_palliative_care": expected_dos_palliative_care,
-            "nhsuk_palliative_care": expected_nhsuk_palliative_care,
         },
     )
 

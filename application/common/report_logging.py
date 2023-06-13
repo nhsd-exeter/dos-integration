@@ -13,7 +13,6 @@ from common.constants import (
     INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
-    PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
     UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
@@ -175,12 +174,8 @@ def log_invalid_open_times(
             "nhsuk_open_times_payload": json.dumps(
                 nhs_entity.entity_data["OpeningTimes"],
             ),
-            "dos_service_type_name": ", ".join(
-                str(service.servicename) for service in matching_services
-            ),
-            "dos_services": ", ".join(
-                str(service.uid) for service in matching_services
-            ),
+            "dos_service_type_name": ", ".join(str(service.servicename) for service in matching_services),
+            "dos_services": ", ".join(str(service.uid) for service in matching_services),
         },
     )
     metrics.set_namespace("UEC-DOS-INT")
@@ -322,26 +317,6 @@ def log_service_updated(  # noqa: PLR0913
             "service_name": service_name,
             "service_uid": service_uid,
             "type_id": type_id,
-        },
-    )
-
-
-def log_palliative_care_not_equal(
-    nhs_uk_palliative_care: bool,
-    dos_palliative_care: bool,
-) -> None:
-    """Log a service found to have an invalid website.
-
-    Args:
-        nhs_uk_palliative_care (bool): The NHS website to report
-        dos_palliative_care (bool): The NHS entity to report
-    """
-    logger.warning(
-        "Palliative care not equal",
-        extra={
-            "report_key": PALLIATIVE_CARE_NOT_EQUAL_REPORT_ID,
-            "dos_palliative_care": dos_palliative_care,
-            "nhsuk_palliative_care": nhs_uk_palliative_care,
         },
     )
 
