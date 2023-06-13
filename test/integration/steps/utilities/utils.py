@@ -967,6 +967,4 @@ def get_palliative_care(service_id: str) -> bool:
     lambda_payload = {"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     response = loads(loads(response))
-    print(response)
-    print(type(response))
     return len(response) > 0
