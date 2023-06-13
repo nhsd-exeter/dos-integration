@@ -181,6 +181,7 @@ functions:
     timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_matcher_role_name}
     maximumRetryAttempts: 0
+    reservedConcurrency: ${env:SERVICE_MATCHER_MAX_CONCURRENCY}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
@@ -230,7 +231,7 @@ functions:
       TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
       SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
-    reservedConcurrency: 50
+    reservedConcurrency: ${env:SERVICE_SYNC_MAX_CONCURRENCY}
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"
