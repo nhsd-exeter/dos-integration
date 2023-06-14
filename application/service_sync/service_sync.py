@@ -11,7 +11,7 @@ from boto3 import client
 from .compare_data import compare_nhs_uk_and_dos_data
 from .dos_data import get_dos_service_and_history, run_db_health_check, update_dos_data
 from .pending_changes import check_and_remove_pending_dos_changes
-from common.dynamodb import put_circuit_is_open
+from common.circuit import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import UpdateRequestMetadata, UpdateRequestQueueItem

@@ -8,7 +8,7 @@ from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 
-from common.dynamodb import get_circuit_is_open
+from common.circuit import get_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
 from common.utilities import extract_body
