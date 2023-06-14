@@ -153,7 +153,7 @@ def test_lambda_handler_with_sensitive_staff_key(
 ):
     # Arrange
     event = SQS_EVENT.copy()
-    event["Records"][0]["body"] = dumps(change_event_staff)
+    event["Records"][0]["body"] = dumps(change_event_staff.copy())
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = queue_url = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
     sqs_timestamp = 1642619743522

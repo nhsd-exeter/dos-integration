@@ -21,6 +21,14 @@ with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
 
 
+@pytest.fixture(autouse=True)
+def _reset_standard_change_event() -> None:
+    """Reset the standard change event to its original state."""
+    with open(STD_EVENT_PATH, encoding="utf8") as file:
+        PHARMACY_STANDARD_EVENT.clear()
+        PHARMACY_STANDARD_EVENT.update(json.load(file))
+
+
 def get_std_event(**kwargs: Any) -> dict:  # noqa: ANN401
     """Creates a standard event with random data for the unit testing."""
     event = PHARMACY_STANDARD_EVENT.copy()
@@ -90,7 +98,7 @@ def _aws_credentials() -> None:
 
 
 @pytest.fixture()
-def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401
+def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401,
     """DynamoDB Client Class."""
     return boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
 
@@ -170,3 +178,31 @@ def lambda_context() -> LambdaContext:
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
+
+
+@pytest.fixture()
+def dynamodb_table_create(dynamodb_client: Any) -> dict[str, Any]:  # noqa: ANN401
+    """Create a DynamoDB CHANGE_EVENTS_TABLE table pytest.fixture."""
+    return dynamodb_client.create_table(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        BillingMode="PAY_PER_REQUEST",
+        KeySchema=[
+            {"AttributeName": "Id", "KeyType": "HASH"},
+            {"AttributeName": "ODSCode", "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "Id", "AttributeType": "S"},
+            {"AttributeName": "ODSCode", "AttributeType": "S"},
+            {"AttributeName": "SequenceNumber", "AttributeType": "N"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "gsi_ods_sequence",
+                "KeySchema": [
+                    {"AttributeName": "ODSCode", "KeyType": "HASH"},
+                    {"AttributeName": "SequenceNumber", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            },
+        ],
+    )
