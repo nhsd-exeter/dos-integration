@@ -6,13 +6,13 @@ from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from common.constants import DLQ_HANDLER_REPORT_ID
 from common.middlewares import unhandled_exception_logging
 from common.utilities import add_metric, extract_body, get_sqs_msg_attribute
 
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 tracer = Tracer()
 logger = Logger()
+DOS_DB_UPDATE_DLQ_HANDLER_EVENT = "DOS_DB_UPDATE_DLQ_HANDLER_RECEIVED_EVENT"
 
 
 @unhandled_exception_logging()
@@ -41,7 +41,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.warning(
         "DoS DB Update DLQ Handler hit",
         extra={
-            "report_key": DLQ_HANDLER_REPORT_ID,
+            "report_key": DOS_DB_UPDATE_DLQ_HANDLER_EVENT,
             "error_msg": f"Message Abandoned: {error_msg}",
             "error_msg_http_code": get_sqs_msg_attribute(record.message_attributes, "error_msg_http_code"),
             "change_payload": body,

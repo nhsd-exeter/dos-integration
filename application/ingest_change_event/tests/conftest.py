@@ -1,7 +1,7 @@
 import pytest
 from testfixtures import LogCapture
 
-from common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
+from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
 @pytest.fixture()

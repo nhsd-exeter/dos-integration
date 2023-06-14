@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
-from os import environ, path
-from pathlib import Path
+from os import environ
 from random import choices, randint, uniform
 from typing import Any
 
@@ -13,11 +12,11 @@ from moto import mock_dynamodb
 from application.common.dos import DoSLocation, DoSService
 from application.common.opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
+STD_EVENT_PATH = "application/test_resources/STANDARD_EVENT.json"
 with open(STD_EVENT_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
-STD_EVENT_STAFF_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT_WITH_STAFF.json")
+STD_EVENT_STAFF_PATH = "application/test_resources/STANDARD_EVENT_WITH_STAFF.json"
 with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
 
@@ -48,7 +47,7 @@ def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     return dos_service
 
 
-def blank_dos_service(**kwargs: Any) -> DoSService:    # noqa: ANN401
+def blank_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     """Creates a DoSService Object with blank str data for the unit testing."""
     test_data = {col: "" for col in DoSService.field_names()}
     dos_service = DoSService(test_data)
@@ -165,9 +164,9 @@ def lambda_context() -> LambdaContext:
 
     @dataclass
     class LambdaContext:
-        function_name: str = "service-matcher"
+        function_name: str = "lambda"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:service-matcher"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:lambda"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()

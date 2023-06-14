@@ -2,7 +2,6 @@ from datetime import date, time
 
 import pytest
 
-from .conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 from application.common.constants import CLOSED_AND_HIDDEN_STATUSES
 from application.common.nhs import (
     NHSEntity,
@@ -11,6 +10,7 @@ from application.common.nhs import (
     is_std_opening_json,
     skip_if_key_is_none,
 )
+from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 

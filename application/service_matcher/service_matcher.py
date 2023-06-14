@@ -13,18 +13,18 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 from pytz import timezone
 
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, PHARMACY_SERVICE_TYPE_ID
-from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
-from common.middlewares import unhandled_exception_logging
-from common.nhs import NHSEntity
-from common.report_logging import (
+from .reporting import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
-from common.service_type import get_valid_service_types
+from .service_type import get_valid_service_types
+from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, PHARMACY_SERVICE_TYPE_ID
+from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.middlewares import unhandled_exception_logging
+from common.nhs import NHSEntity
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
 

@@ -2,9 +2,9 @@ from re import search
 
 from aws_lambda_powertools.logging import Logger
 
+from .reporting import log_service_with_generic_bank_holiday, log_website_is_invalid
 from common.dos import DoSService
 from common.nhs import NHSEntity
-from common.report_logging import log_service_with_generic_bank_holiday, log_website_is_invalid
 
 logger = Logger(child=True)
 

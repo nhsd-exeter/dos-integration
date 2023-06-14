@@ -19,7 +19,7 @@ from application.common.constants import (
     DOS_WEBSITE_CHANGE_KEY,
 )
 from application.common.opening_times import WEEKDAYS
-from application.common.tests.conftest import dummy_dos_location
+from application.conftest import dummy_dos_location
 from application.service_sync.changes_to_dos import ChangesToDoS
 from application.service_sync.compare_data import (
     compare_location_data,
@@ -168,7 +168,8 @@ def test_compare_website(mock_set_up_for_services_table_change: MagicMock, mock_
 @patch(f"{FILE_PATH}.has_website_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 def test_compare_website_no_change(
-    mock_set_up_for_services_table_change: MagicMock, mock_has_website_changed: MagicMock,
+    mock_set_up_for_services_table_change: MagicMock,
+    mock_has_website_changed: MagicMock,
 ):
     # Arrange
     changes_to_dos = MagicMock()
@@ -189,7 +190,13 @@ def test_has_location_changed(mock_get_valid_dos_location: MagicMock):
     service_histories = MagicMock()
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     dummy_dos_location = DoSLocation(
-        id=0, postcode="DUMMY", easting=0, northing=0, postaltown="STUB", latitude=0, longitude=0,
+        id=0,
+        postcode="DUMMY",
+        easting=0,
+        northing=0,
+        postaltown="STUB",
+        latitude=0,
+        longitude=0,
     )
     mock_get_valid_dos_location.return_value = dummy_dos_location
     # Act
@@ -328,7 +335,8 @@ def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock,
 @patch(f"{FILE_PATH}.has_location_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 def test_compare_location_data_no_changes(
-    mock_set_up_for_services_table_change: MagicMock, mock_has_location_changed: MagicMock,
+    mock_set_up_for_services_table_change: MagicMock,
+    mock_has_location_changed: MagicMock,
 ):
     # Arrange
     changes_to_dos = MagicMock()
@@ -650,7 +658,8 @@ def test_has_public_phone_changed_no_change():
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.has_public_phone_changed")
 def test_compare_public_phone_change(
-    mock_has_public_phone_changed: MagicMock, mock_set_up_for_service_table_change: MagicMock,
+    mock_has_public_phone_changed: MagicMock,
+    mock_set_up_for_service_table_change: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -680,7 +689,8 @@ def test_compare_public_phone_change(
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.has_public_phone_changed")
 def test_compare_public_phone_no_change(
-    mock_has_public_phone_changed: MagicMock, mock_set_up_for_service_table_change: MagicMock,
+    mock_has_public_phone_changed: MagicMock,
+    mock_set_up_for_service_table_change: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
