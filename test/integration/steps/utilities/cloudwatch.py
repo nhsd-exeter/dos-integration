@@ -5,6 +5,7 @@ from sqlite3 import Timestamp
 from time import sleep
 
 from boto3 import client
+from botocore.exceptions import ClientError
 from pytz import timezone
 
 LAMBDA_CLIENT_LOGS = client("logs")
@@ -17,7 +18,7 @@ def get_logs(
     retry_count: int = 32,
     sleep_per_loop: int = 20,
 ) -> str:
-    """Get logs from cloudwatch.
+    """Get logs from CloudWatch.
 
     Args:
         query (str): CloudWatch Logs Insights query
@@ -33,12 +34,18 @@ def get_logs(
     logs_found = False
     counter = 0
     while not logs_found:
-        start_query_response = LAMBDA_CLIENT_LOGS.start_query(
-            logGroupName=log_group_name,
-            startTime=int(start_time),
-            endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
-            queryString=query,
-        )
+        try:
+            start_query_response = LAMBDA_CLIENT_LOGS.start_query(
+                logGroupName=log_group_name,
+                startTime=int(start_time),
+                endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
+                queryString=query,
+            )
+        except ClientError as error:
+            if error.response["Error"]["Code"] == "LimitExceededException":
+                sleep(sleep_per_loop)
+                continue
+            raise
         query_id = start_query_response["queryId"]
         response = None
         while response is None or response["status"] != "Complete":
@@ -65,12 +72,21 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
         bool: True if no logs found
     """
     log_group_name = get_log_group_name(event_lambda)
-    start_query_response = LAMBDA_CLIENT_LOGS.start_query(
-        logGroupName=log_group_name,
-        startTime=int(start_time),
-        endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
-        queryString=query,
-    )
+    logs_found = False
+    while not logs_found:
+        try:
+            start_query_response = LAMBDA_CLIENT_LOGS.start_query(
+                logGroupName=log_group_name,
+                startTime=int(start_time),
+                endTime=int(datetime.now(timezone("Europe/London")).timestamp()),
+                queryString=query,
+            )
+        except ClientError as error:
+            if error.response["Error"]["Code"] == "LimitExceededException":
+                sleep(20)
+                continue
+            raise
+        logs_found = True
 
     query_id = start_query_response["queryId"]
     sleep(30)
