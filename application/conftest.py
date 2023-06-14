@@ -8,6 +8,7 @@ import pytest
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import Session
 from moto import mock_dynamodb
+from testfixtures import LogCapture
 
 from application.common.dos import DoSLocation, DoSService
 from application.common.opening_times import StandardOpeningTimes
@@ -84,6 +85,12 @@ def dummy_dos_location() -> DoSLocation:
 def change_event() -> dict:
     """Generate a change event for testing."""
     return PHARMACY_STANDARD_EVENT.copy()
+
+
+@pytest.fixture()
+def change_event_staff() -> dict:
+    """Get a standard change event with staff."""
+    return PHARMACY_STANDARD_EVENT_STAFF.copy()
 
 
 @pytest.fixture()
@@ -178,6 +185,17 @@ def lambda_context() -> LambdaContext:
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
+
+
+@pytest.fixture()
+def log_capture() -> LogCapture:
+    """Capture logs.
+
+    Yields:
+        LogCapture: Log capture
+    """
+    with LogCapture(names="lambda") as capture:
+        yield capture
 
 
 @pytest.fixture()
