@@ -99,6 +99,17 @@ def get_service_history(service_id: str) -> dict:
     Returns:
         dict: The service history for the service
     """
+    data = []
+    retry_counter = 0
+    query = "SELECT history FROM servicehistories WHERE serviceid = %(SERVICE_ID)s"
+    max_retry = 2
+    while not data and retry_counter < max_retry:
+        query_vars = {"SERVICE_ID": service_id}
+        response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": query_vars})
+        data = loads(loads(response))
+        retry_counter += 1
+        sleep(30)
+    return loads(data[0]["history"])
 
 
 def get_service_modified_time(service_id: str) -> str:
@@ -137,12 +148,34 @@ def wait_for_service_update(response_start_time: datetime) -> None:
         raise ValueError(msg)
 
 
-def check_demographic_field_updated(field: str, expected_value: str) -> None:
-    """Check that the demographic field was updated."""
+def check_demographic_field_updated(field: str, service_history_key: str, expected_value: str) -> None:
+    """Check that the demographic field was updated in the services table and in service history.
+
+    Args:
+        field (str): The demographic field to check
+        service_history_key (str): The key in the service history to check
+        expected_value (str): The expected value of the demographic field
+    """
+
+    def assert_field_updated() -> None:
+        query = f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s"  # noqa: S608
+        response = invoke_dos_db_handler_lambda(
+            {"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}},
+        )
+        response = loads(loads(response))
+        assert (
+            response[0][field] == expected_value
+        ), f"Demographic field {field} was not updated - expected: '{expected_value}', actual: '{response[0][field]}'"
+
+    def assert_field_updated_in_history() -> None:
+        history = get_service_history(service_id)
+        first_key_in_service_history = list(history.keys())[0]
+        new_history = history[first_key_in_service_history]["new"]
+        print(f"new_history: {new_history}")
+        assert (
+            expected_value == new_history[service_history_key]["data"]
+        ), f"Expected data: {expected_value}, Expected data type: {type(expected_value)}, Actual data: {new_history[service_history_key]['data']}"  # noqa: E501
+
     service_id = get_service_id_for_ods_code("FC766")
-    query = f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s"  # noqa: S608
-    response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
-    response = loads(loads(response))
-    assert (
-        response[0][field] == expected_value
-    ), f"Demographic field {field} was not updated - expected: '{expected_value}', actual: '{response[0][field]}'"
+    assert_field_updated()
+    assert_field_updated_in_history()

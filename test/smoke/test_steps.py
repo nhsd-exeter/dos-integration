@@ -4,7 +4,6 @@ from re import sub
 import pytest
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
-from pytest_bdd.parsers import parse
 from pytz import timezone
 
 from .functions.change_event import ChangeEvent
@@ -43,36 +42,34 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     return smoke_test_context
 
 
-@given(parse('I update the change event "{field}"'), target_fixture="smoke_test_context")
-def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
+@given("I make changes to the change event", target_fixture="smoke_test_context")
+def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     """Update the change event field to new value.
 
     Args:
-        field (str): The field to update
         smoke_test_context (SmokeTestContext): The smoke test context
 
     Returns:
         SmokeTestContext: The smoke test context
     """
-    match field:
-        case "address":
-            new_address = f"{FAKER.street_address()}${FAKER.city()}"
-            new_address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), new_address)
-            new_address = new_address.replace("\n", "$")
-            new_address = new_address.replace("'", "")
-            new_address = new_address.replace("&", "and")
-            smoke_test_context.updated_service.address = new_address
-        case "website":
-            smoke_test_context.updated_service.website = FAKER.url()
-        case "phone":
-            smoke_test_context.updated_service.phone = FAKER.phone_number()
-        case "standard_opening_times":
-            pass
-        case "specified_opening_times":
-            pass
-        case _:
-            msg = f"Unknown field {field}"
-            raise ValueError(msg)
+
+    def update_address() -> str:
+        new_address = f"{FAKER.street_address()}${FAKER.city()}"
+        new_address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), new_address)
+        new_address = new_address.replace("\n", "$")
+        new_address = new_address.replace("'", "")
+        new_address = new_address.replace("&", "and")
+        smoke_test_context.updated_service.address = new_address
+
+    def update_website() -> str:
+        smoke_test_context.updated_service.website = FAKER.url()
+
+    def update_phone() -> str:
+        smoke_test_context.updated_service.phone = FAKER.phone_number()
+
+    update_address()
+    update_website()
+    update_phone()
     return smoke_test_context
 
 
@@ -120,40 +117,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     return smoke_test_context
 
 
-@then(
-    parse('I should see an update to the "{field}" field and service history in DoS'),
-    target_fixture="smoke_test_context",
-)
-def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
-    """Check the DoS service history and field has been updated.
-
-    Args:
-        field (str): The field to check
-        smoke_test_context (SmokeTestContext): The smoke test context
-
-    Returns:
-        SmokeTestContext: The smoke test context
-    """
-    match field:
-        case "address":
-            check_demographic_field_updated(field=field, expected_value=smoke_test_context.updated_service.address)
-        case "website":
-            check_demographic_field_updated(field="web", expected_value=smoke_test_context.updated_service.website)
-        case "phone":
-            check_demographic_field_updated(
-                field="publicphone",
-                expected_value=smoke_test_context.updated_service.phone,
-            )
-        case "standard_opening_times":
-            pass
-        case "specified_opening_times":
-            pass
-        case _:
-            msg = f"Unknown field {field}"
-            raise ValueError(msg)
-    return smoke_test_context
-
-
+@then("I should see data matching the updated service in DoS")
 @then("I should see data matching the original service in DoS")
 def _(smoke_test_context: SmokeTestContext) -> None:
     """Check the DoS service has been updated to match the original service.
@@ -164,3 +128,14 @@ def _(smoke_test_context: SmokeTestContext) -> None:
     Returns:
         SmokeTestContext: The smoke test context
     """
+    check_demographic_field_updated(
+        field="address", service_history_key="postaladdress", expected_value=smoke_test_context.updated_service.address
+    )
+    check_demographic_field_updated(
+        field="web", service_history_key="cmsurl", expected_value=smoke_test_context.updated_service.website
+    )
+    check_demographic_field_updated(
+        field="publicphone",
+        service_history_key="cmstelephoneno",
+        expected_value=smoke_test_context.updated_service.phone,
+    )
