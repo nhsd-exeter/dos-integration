@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 
-@dataclass(init=True)
+@dataclass(init=True, repr=True)
 class SmokeTestContext:
     """Context for smoke tests."""
 

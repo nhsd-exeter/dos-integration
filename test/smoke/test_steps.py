@@ -17,6 +17,7 @@ def smoke_test_context() -> SmokeTestContext:
 
 @given("I create a new change event matching DoS", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
+    """Create a new change event matching DoS."""
     return smoke_test_context
 
 
