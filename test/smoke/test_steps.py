@@ -1,11 +1,14 @@
+from datetime import datetime
+
 import pytest
 from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
+from pytz import timezone
 
 from .functions.change_event import ChangeEvent
 from .functions.change_event_request import send_change_event
-from .functions.service import get_change_event_for_service
+from .functions.service import get_change_event_for_service, wait_for_service_update
 from .functions.smoke_test_context import SmokeTestContext
 
 scenarios("smoke.feature")
@@ -93,6 +96,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     Returns:
         SmokeTestContext: The smoke test context
     """
+    smoke_test_context.request_start_time = datetime.now(tz=timezone("Europe/London"))
     change_event_json = smoke_test_context.updated_service.create_change_event()
     send_change_event(change_event_json)
     return smoke_test_context
@@ -108,6 +112,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     Returns:
         SmokeTestContext: The smoke test context
     """
+    wait_for_service_update(smoke_test_context.request_start_time)
     return smoke_test_context
 
 

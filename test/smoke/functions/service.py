@@ -1,4 +1,8 @@
+from datetime import datetime
 from json import loads
+from time import sleep
+
+from pytz import UTC
 
 from .aws import invoke_dos_db_handler_lambda
 from .change_event import ChangeEvent
@@ -95,3 +99,38 @@ def get_service_history(service_id: str) -> dict:
     Returns:
         dict: The service history for the service
     """
+
+
+def get_service_modified_time(service_id: str) -> str:
+    """Get the modifiedtime for a service.
+
+    Args:
+        service_id (str): The service ID to get the modifiedtime for
+
+    Returns:
+        str: The modifiedtime for the service
+    """
+    query = "SELECT modifiedtime FROM services WHERE id = %(SERVICE_ID)s"
+    response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
+    response = loads(loads(response))
+    return response[0]["modifiedtime"]
+
+
+def wait_for_service_update(response_start_time: datetime) -> None:
+    """Wait for the service to be updated by checking modifiedtime.
+
+    Args:
+        response_start_time (datetime): The time the response was started
+    """
+    service_id = get_service_id_for_ods_code("FC766")
+    for _ in range(12):
+        sleep(10)
+        updated_date_time_str: str = get_service_modified_time(service_id)
+        updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+        updated_date_time = updated_date_time.replace(tzinfo=UTC)
+        response_start_time = response_start_time.replace(tzinfo=UTC)
+        if updated_date_time > response_start_time:
+            break
+    else:
+        msg = f"Service not updated, service_id: {service_id}"
+        raise ValueError(msg)

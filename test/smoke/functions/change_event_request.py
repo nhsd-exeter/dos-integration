@@ -7,7 +7,7 @@ from requests import Response, post
 from .aws import get_latest_sequence_id_for_a_given_odscode, get_secret
 
 
-def send_change_event(change_event_json: dict) -> None:
+def send_change_event(change_event_json: dict) -> Response:
     """Send change event to DoS Integration API.
 
     Args:
@@ -27,6 +27,7 @@ def send_change_event(change_event_json: dict) -> None:
     if response.status_code != 200:
         msg = f"Unable to process change request payload. Error: {response.text}"
         raise ValueError(msg)
+    return response
 
 
 def generate_unique_sequence_number(odscode: str) -> str:
