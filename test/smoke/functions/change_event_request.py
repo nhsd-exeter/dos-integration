@@ -16,6 +16,7 @@ def send_change_event(change_event_json: dict) -> Response:
     api_key = loads(get_secret(getenv("API_KEY_SECRET")))[getenv("NHS_UK_API_KEY")]
     sequence_number = generate_unique_sequence_number(change_event_json["ODSCode"])
     correlation_id = f"{time_ns()}-Smoke-Test"
+    print(f"Sending change event with sequence number {sequence_number} and correlation ID {correlation_id}")
     api_gateway_url = getenv("HTTPS_DOS_INTEGRATION_URL")
     headers = {
         "x-api-key": api_key,

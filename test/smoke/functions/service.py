@@ -123,6 +123,7 @@ def wait_for_service_update(response_start_time: datetime) -> None:
         response_start_time (datetime): The time the response was started
     """
     service_id = get_service_id_for_ods_code("FC766")
+    updated_date_time = None
     for _ in range(12):
         sleep(10)
         updated_date_time_str: str = get_service_modified_time(service_id)
@@ -132,5 +133,16 @@ def wait_for_service_update(response_start_time: datetime) -> None:
         if updated_date_time > response_start_time:
             break
     else:
-        msg = f"Service not updated, service_id: {service_id}"
+        msg = f"Service not updated, service_id: {service_id}, modifiedtime: {updated_date_time}"
         raise ValueError(msg)
+
+
+def check_demographic_field_updated(field: str, expected_value: str) -> None:
+    """Check that the demographic field was updated."""
+    service_id = get_service_id_for_ods_code("FC766")
+    query = f"SELECT {field} FROM services WHERE id = %(SERVICE_ID)s"  # noqa: S608
+    response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
+    response = loads(loads(response))
+    assert (
+        response[0][field] == expected_value
+    ), f"Demographic field {field} was not updated - expected: '{expected_value}', actual: '{response[0][field]}'"

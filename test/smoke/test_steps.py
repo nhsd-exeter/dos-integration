@@ -1,4 +1,5 @@
 from datetime import datetime
+from re import sub
 
 import pytest
 from faker import Faker
@@ -8,7 +9,7 @@ from pytz import timezone
 
 from .functions.change_event import ChangeEvent
 from .functions.change_event_request import send_change_event
-from .functions.service import get_change_event_for_service, wait_for_service_update
+from .functions.service import check_demographic_field_updated, get_change_event_for_service, wait_for_service_update
 from .functions.smoke_test_context import SmokeTestContext
 
 scenarios("smoke.feature")
@@ -56,7 +57,10 @@ def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     match field:
         case "address":
             new_address = f"{FAKER.street_address()}${FAKER.city()}"
+            new_address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), new_address)
             new_address = new_address.replace("\n", "$")
+            new_address = new_address.replace("'", "")
+            new_address = new_address.replace("&", "and")
             smoke_test_context.updated_service.address = new_address
         case "website":
             smoke_test_context.updated_service.website = FAKER.url()
@@ -130,6 +134,23 @@ def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     Returns:
         SmokeTestContext: The smoke test context
     """
+    match field:
+        case "address":
+            check_demographic_field_updated(field=field, expected_value=smoke_test_context.updated_service.address)
+        case "website":
+            check_demographic_field_updated(field="web", expected_value=smoke_test_context.updated_service.website)
+        case "phone":
+            check_demographic_field_updated(
+                field="publicphone",
+                expected_value=smoke_test_context.updated_service.phone,
+            )
+        case "standard_opening_times":
+            pass
+        case "specified_opening_times":
+            pass
+        case _:
+            msg = f"Unknown field {field}"
+            raise ValueError(msg)
     return smoke_test_context
 
 
