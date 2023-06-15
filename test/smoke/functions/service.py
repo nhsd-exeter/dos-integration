@@ -1,8 +1,11 @@
-from .aws import invoke_dos_db_handler_lambda
 from json import loads
 
+from .aws import invoke_dos_db_handler_lambda
+from .change_event import ChangeEvent
+from .types import Demographics
 
-def get_service(ods_code: str) -> None:
+
+def get_change_event_for_service(ods_code: str) -> ChangeEvent:
     """Get a service from DoS.
 
     Args:
@@ -10,6 +13,16 @@ def get_service(ods_code: str) -> None:
     """
     service_id = get_service_id_for_ods_code(ods_code)
     demographics = get_demographics_for_service(service_id)
+    standard_opening_times = get_standard_opening_times_for_service(service_id)
+    specified_opening_times = get_specified_opening_times_for_service(service_id)
+
+    return ChangeEvent(
+        address=demographics["address"],
+        website=demographics["website"],
+        phone=demographics["phone"],
+        standard_opening_times=standard_opening_times,
+        specified_opening_times=specified_opening_times,
+    )
 
 
 def get_service_id_for_ods_code(ods_code: str) -> str:
@@ -27,14 +40,14 @@ def get_service_id_for_ods_code(ods_code: str) -> str:
     return response[0]["id"]
 
 
-def get_demographics_for_service(service_id: str) -> dict:
+def get_demographics_for_service(service_id: str) -> Demographics:
     """Get the demographics for a service.
 
     Args:
         service_id (str): The service ID to get the demographics for
 
     Returns:
-        dict: The demographics for the service
+        Demographics: The demographics for the service
     """
     query = "SELECT address, web, publicphone FROM services WHERE id = %(SERVICE_ID)s"
     response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
@@ -56,6 +69,9 @@ def get_standard_opening_times_for_service(service_id: str) -> dict:
     Returns:
         dict: The standard opening times for the service
     """
+    response = invoke_dos_db_handler_lambda({"type": "change_event_standard_opening_times", "service_id": service_id})
+    response_list = loads(response)
+    return response_list
 
 
 def get_specified_opening_times_for_service(service_id: str) -> dict:
@@ -67,6 +83,9 @@ def get_specified_opening_times_for_service(service_id: str) -> dict:
     Returns:
         dict: The specified opening times for the service
     """
+    response = invoke_dos_db_handler_lambda({"type": "change_event_specified_opening_times", "service_id": service_id})
+    response_list = loads(response)
+    return response_list
 
 
 def get_service_history(service_id: str) -> dict:

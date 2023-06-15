@@ -3,8 +3,8 @@ from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
+from .functions.service import get_change_event_for_service
 from .functions.smoke_test_context import SmokeTestContext
-from .functions.service import get_service
 
 scenarios("smoke.feature")
 FAKER = Faker("en_GB")
@@ -19,7 +19,7 @@ def smoke_test_context() -> SmokeTestContext:
 @given("I create a new change event matching DoS", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     """Create a new change event matching DoS."""
-    get_service("FC766")
+    get_change_event_for_service("FC766")
     return smoke_test_context
 
 
