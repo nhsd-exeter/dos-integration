@@ -5,14 +5,14 @@ from time import sleep
 from boto3 import client
 
 
-def invoke_dos_db_handler_lambda(lambda_payload: dict) -> dict:
+def invoke_dos_db_handler_lambda(lambda_payload: dict) -> str:
     """Invoke dos db handler lambda.
 
     Args:
         lambda_payload (dict): Lambda payload.
 
     Returns:
-        dict: Lambda response payload.
+        str: Lambda response payload (json).
     """
     lambda_client = client("lambda")
     response_status = False

@@ -1,10 +1,15 @@
+from .aws import invoke_dos_db_handler_lambda
+from json import loads
+
+
 def get_service(ods_code: str) -> None:
     """Get a service from DoS.
 
     Args:
         ods_code (str): The ODS code of the service to get
     """
-    get_service_id_for_ods_code(ods_code)
+    service_id = get_service_id_for_ods_code(ods_code)
+    demographics = get_demographics_for_service(service_id)
 
 
 def get_service_id_for_ods_code(ods_code: str) -> str:
@@ -16,6 +21,10 @@ def get_service_id_for_ods_code(ods_code: str) -> str:
     Returns:
         str: The service ID for the ODS code
     """
+    query = "SELECT id FROM services WHERE odscode = %(ODS_CODE)s"
+    response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"ODS_CODE": ods_code}})
+    response = loads(loads(response))
+    return response[0]["id"]
 
 
 def get_demographics_for_service(service_id: str) -> dict:
@@ -27,6 +36,15 @@ def get_demographics_for_service(service_id: str) -> dict:
     Returns:
         dict: The demographics for the service
     """
+    query = "SELECT address, web, publicphone FROM services WHERE id = %(SERVICE_ID)s"
+    response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
+    response_list = loads(loads(response))
+    response_dict = response_list[0]
+    return {
+        "address": response_dict["address"],
+        "website": response_dict["web"],
+        "phone": response_dict["publicphone"],
+    }
 
 
 def get_standard_opening_times_for_service(service_id: str) -> dict:
