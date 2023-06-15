@@ -3,6 +3,8 @@ from faker import Faker
 from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 
+from .functions.change_event import ChangeEvent
+from .functions.change_event_request import send_change_event
 from .functions.service import get_change_event_for_service
 from .functions.smoke_test_context import SmokeTestContext
 
@@ -18,8 +20,22 @@ def smoke_test_context() -> SmokeTestContext:
 
 @given("I create a new change event matching DoS", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
-    """Create a new change event matching DoS."""
-    get_change_event_for_service("FC766")
+    """Create a new change event matching DoS.
+
+    Args:
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
+    """
+    smoke_test_context.original_service = get_change_event_for_service("FC766")
+    smoke_test_context.updated_service = ChangeEvent(
+        address=smoke_test_context.original_service.address,
+        website=smoke_test_context.original_service.website,
+        phone=smoke_test_context.original_service.phone,
+        standard_opening_times=smoke_test_context.original_service.standard_opening_times,
+        specified_opening_times=smoke_test_context.original_service.specified_opening_times,
+    )
     return smoke_test_context
 
 
@@ -29,22 +45,69 @@ def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
 
     Args:
         field (str): The field to update
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
     """
+    match field:
+        case "address":
+            new_address = f"{FAKER.street_address()}${FAKER.city()}"
+            new_address = new_address.replace("\n", "$")
+            smoke_test_context.updated_service.address = new_address
+        case "website":
+            smoke_test_context.updated_service.website = FAKER.url()
+        case "phone":
+            smoke_test_context.updated_service.phone = FAKER.phone_number()
+        case "standard_opening_times":
+            pass
+        case "specified_opening_times":
+            pass
+        case _:
+            msg = f"Unknown field {field}"
+            raise ValueError(msg)
     return smoke_test_context
 
 
 @given("I want to reset the change event", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
+    """Reset the change event to the original value.
+
+    Args:
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
+    """
+    smoke_test_context.updated_service = smoke_test_context.original_service
     return smoke_test_context
 
 
 @when("I run the smoke test", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
+    """Run the smoke test.
+
+    Args:
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
+    """
+    change_event_json = smoke_test_context.updated_service.create_change_event()
+    send_change_event(change_event_json)
     return smoke_test_context
 
 
 @then("I should see an update to DoS", target_fixture="smoke_test_context")
 def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
+    """Check the DoS service has been updated.
+
+    Args:
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
+    """
     return smoke_test_context
 
 
@@ -57,10 +120,21 @@ def _(field: str, smoke_test_context: SmokeTestContext) -> SmokeTestContext:
 
     Args:
         field (str): The field to check
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
     """
     return smoke_test_context
 
 
 @then("I should see data matching the original service in DoS")
 def _(smoke_test_context: SmokeTestContext) -> None:
-    pass
+    """Check the DoS service has been updated to match the original service.
+
+    Args:
+        smoke_test_context (SmokeTestContext): The smoke test context
+
+    Returns:
+        SmokeTestContext: The smoke test context
+    """

@@ -1,8 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
+from .change_event import ChangeEvent
 
 
-@dataclass(init=True, repr=True)
+@dataclass(repr=True)
 class SmokeTestContext:
     """Context for smoke tests."""
 
-    original_service: dict = field(default_factory=dict)
+    original_service: ChangeEvent | None = None
+    updated_service: ChangeEvent | None = None

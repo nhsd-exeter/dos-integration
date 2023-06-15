@@ -70,8 +70,7 @@ def get_standard_opening_times_for_service(service_id: str) -> dict:
         dict: The standard opening times for the service
     """
     response = invoke_dos_db_handler_lambda({"type": "change_event_standard_opening_times", "service_id": service_id})
-    response_list = loads(response)
-    return response_list
+    return loads(response)
 
 
 def get_specified_opening_times_for_service(service_id: str) -> dict:
@@ -84,8 +83,7 @@ def get_specified_opening_times_for_service(service_id: str) -> dict:
         dict: The specified opening times for the service
     """
     response = invoke_dos_db_handler_lambda({"type": "change_event_specified_opening_times", "service_id": service_id})
-    response_list = loads(response)
-    return response_list
+    return loads(response)
 
 
 def get_service_history(service_id: str) -> dict:
