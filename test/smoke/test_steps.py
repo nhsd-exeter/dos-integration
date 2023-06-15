@@ -129,10 +129,10 @@ def _(smoke_test_context: SmokeTestContext) -> None:
         SmokeTestContext: The smoke test context
     """
     check_demographic_field_updated(
-        field="address", service_history_key="postaladdress", expected_value=smoke_test_context.updated_service.address
+        field="address", service_history_key="postaladdress", expected_value=smoke_test_context.updated_service.address,
     )
     check_demographic_field_updated(
-        field="web", service_history_key="cmsurl", expected_value=smoke_test_context.updated_service.website
+        field="web", service_history_key="cmsurl", expected_value=smoke_test_context.updated_service.website,
     )
     check_demographic_field_updated(
         field="publicphone",
