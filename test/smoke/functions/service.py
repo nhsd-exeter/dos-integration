@@ -8,6 +8,8 @@ from .aws import invoke_dos_db_handler_lambda
 from .change_event import ChangeEvent
 from .types import Demographics
 
+DEFAULT_ODS_CODE = "FC766"
+
 
 def get_change_event_for_service(ods_code: str) -> ChangeEvent:
     """Get a service from DoS.
@@ -64,20 +66,32 @@ def get_demographics_for_service(service_id: str) -> Demographics:
     }
 
 
-def get_standard_opening_times_for_service(service_id: str) -> dict:
+def get_standard_opening_times_for_service(service_id: str) -> list[dict | None]:
     """Get the standard opening times for a service.
 
     Args:
         service_id (str): The service ID to get the standard opening times for
 
     Returns:
-        dict: The standard opening times for the service
+        list[dict | None]: The standard opening times for the service
     """
+    opening_periods = []
     response = invoke_dos_db_handler_lambda({"type": "change_event_standard_opening_times", "service_id": service_id})
-    return loads(response)
+    response = loads(response)
+    for day, values in response.items():
+        opening_periods.extend(
+            {
+                "day": day,
+                "open": opening_period["start_time"],
+                "close": opening_period["end_time"],
+                "open_or_closed": True,
+            }
+            for opening_period in values
+        )
+    return opening_periods
 
 
-def get_specified_opening_times_for_service(service_id: str) -> dict:
+def get_specified_opening_times_for_service(service_id: str) -> list[dict | None]:
     """Get the specified opening times for a service.
 
     Args:
@@ -86,8 +100,20 @@ def get_specified_opening_times_for_service(service_id: str) -> dict:
     Returns:
         dict: The specified opening times for the service
     """
+    opening_periods = []
     response = invoke_dos_db_handler_lambda({"type": "change_event_specified_opening_times", "service_id": service_id})
-    return loads(response)
+    response = loads(response)
+    for date, values in response.items():
+        opening_periods.extend(
+            {
+                "date": date,
+                "open": opening_period["start_time"],
+                "close": opening_period["end_time"],
+                "open_or_closed": True,
+            }
+            for opening_period in values
+        )
+    return opening_periods
 
 
 def get_service_history(service_id: str) -> dict:
@@ -135,6 +161,7 @@ def wait_for_service_update(response_start_time: datetime) -> None:
     """
     service_id = get_service_id_for_ods_code("FC766")
     updated_date_time = None
+    sleep(30)
     for _ in range(12):
         sleep(10)
         updated_date_time_str: str = get_service_modified_time(service_id)
@@ -171,11 +198,48 @@ def check_demographic_field_updated(field: str, service_history_key: str, expect
         history = get_service_history(service_id)
         first_key_in_service_history = list(history.keys())[0]
         new_history = history[first_key_in_service_history]["new"]
-        print(f"new_history: {new_history}")
         assert (
             expected_value == new_history[service_history_key]["data"]
         ), f"Expected data: {expected_value}, Expected data type: {type(expected_value)}, Actual data: {new_history[service_history_key]['data']}"  # noqa: E501
 
-    service_id = get_service_id_for_ods_code("FC766")
+    service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
     assert_field_updated_in_history()
+
+
+def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
+    """Check that the standard opening times were updated in the services table and in service history.
+
+    Args:
+        expected_value (list[dict]): The expected value of the standard opening times
+    """
+
+    def assert_field_updated() -> None:
+        response = invoke_dos_db_handler_lambda(
+            {"type": "change_event_standard_opening_times", "service_id": service_id},
+        )
+        response = loads(response)
+        expected_opening_periods = []
+        for day, values in response.items():
+            expected_opening_periods.extend(
+                {
+                    "day": day,
+                    "open": opening_period["start_time"],
+                    "close": opening_period["end_time"],
+                    "open_or_closed": True,
+                }
+                for opening_period in values
+            )
+
+        print(response)
+        assert expected_opening_periods == expected_value, (
+            "Standard opening times were not updated - "
+            f"expected: '{expected_value}', actual: '{expected_opening_periods}'"
+        )
+
+    # def assert_field_updated_in_history() -> None:
+    #     assert (
+    #     ), f"Expected data: {expected_value}, Expected data type: {type(expected_value)}, Actual data: {new_history[service_history_key]['data']}"  # noqa: E501
+
+    service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
+    assert_field_updated()

@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from json import load
-
-from .types import StandardOpeningTimes
+from datetime import date
 
 
 @dataclass(init=True, repr=True)
@@ -11,8 +10,8 @@ class ChangeEvent:
     address: str
     website: str
     phone: str  # Public phone number
-    standard_opening_times: field(default_factory=StandardOpeningTimes)
-    specified_opening_times: field(default_factory=dict)
+    standard_opening_times: field(default_factory=list)
+    specified_opening_times: field(default_factory=list)
 
     def create_change_event(self) -> dict:
         """Create a change event from the base change event and set the attributes.
@@ -25,6 +24,7 @@ class ChangeEvent:
         base_change_event = self._set_address(base_change_event)
         base_change_event = self._set_contact_details(base_change_event, "Website", self.website)
         base_change_event = self._set_contact_details(base_change_event, "Telephone", self.phone)
+        base_change_event = self._set_opening_times(base_change_event)
 
         return base_change_event
 
@@ -116,3 +116,36 @@ class ChangeEvent:
                 raise ValueError(msg)
 
         return address_line_1, address_line_2, address_line_3, city, county
+
+    def _set_opening_times(self, base_change_event: dict) -> dict:
+        """Set the opening times attributes on the change event.
+
+        Args:
+            base_change_event (dict): The base change event
+
+        Returns:
+            dict: The change event
+        """
+        base_change_event["OpeningTimes"].extend(
+            {
+                "ClosingTime": day["close"],
+                "IsOpen": day["open_or_closed"],
+                "OpeningTime": day["open"],
+                "OpeningTimeType": "General",
+                "Weekday": day["day"],
+            }
+            for day in self.standard_opening_times
+        )
+        base_change_event["OpeningTimes"].extend(
+            {
+                "AdditionalOpeningDate": specified_opening_date["date"].strftime("%b %d %Y")
+                if isinstance(specified_opening_date["date"], date)
+                else specified_opening_date["date"],
+                "ClosingTime": specified_opening_date["close"],
+                "IsOpen": specified_opening_date["open_or_closed"],
+                "OpeningTime": specified_opening_date["open"],
+                "OpeningTimeType": "Additional",
+            }
+            for specified_opening_date in self.specified_opening_times
+        )
+        return base_change_event
