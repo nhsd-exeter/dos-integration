@@ -10,6 +10,7 @@ from .functions.change_event import ChangeEvent
 from .functions.change_event_request import send_change_event
 from .functions.service import (
     check_demographic_field_updated,
+    check_specified_opening_times_updated,
     check_standard_opening_times_updated,
     get_change_event_for_service,
     wait_for_service_update,
@@ -172,3 +173,4 @@ def _(smoke_test_context: SmokeTestContext) -> None:
         expected_value=smoke_test_context.updated_service.phone,
     )
     check_standard_opening_times_updated(expected_value=smoke_test_context.updated_service.standard_opening_times)
+    check_specified_opening_times_updated(expected_value=smoke_test_context.updated_service.specified_opening_times)

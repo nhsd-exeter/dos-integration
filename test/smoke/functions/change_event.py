@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
-from json import load
 from datetime import date
+from json import load
 
 
 @dataclass(init=True, repr=True)

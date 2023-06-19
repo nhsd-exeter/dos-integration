@@ -230,8 +230,6 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
                 }
                 for opening_period in values
             )
-
-        print(response)
         assert expected_opening_periods == expected_value, (
             "Standard opening times were not updated - "
             f"expected: '{expected_value}', actual: '{expected_opening_periods}'"
@@ -240,6 +238,38 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
     # def assert_field_updated_in_history() -> None:
     #     assert (
     #     ), f"Expected data: {expected_value}, Expected data type: {type(expected_value)}, Actual data: {new_history[service_history_key]['data']}"  # noqa: E501
+
+    service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
+    assert_field_updated()
+
+
+def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
+    """Check that the standard opening times were updated in the services table and in service history.
+
+    Args:
+        expected_value (list[dict]): The expected value of the standard opening times
+    """
+
+    def assert_field_updated() -> None:
+        response = invoke_dos_db_handler_lambda(
+            {"type": "change_event_specified_opening_times", "service_id": service_id},
+        )
+        response = loads(response)
+        expected_opening_periods = []
+        for date_str, values in response.items():
+            expected_opening_periods.extend(
+                {
+                    "date": datetime.strptime(date_str, "%Y-%m-%d").date(),
+                    "open": specified_opening_date["start_time"],
+                    "close": specified_opening_date["end_time"],
+                    "open_or_closed": True,
+                }
+                for specified_opening_date in values
+            )
+        assert expected_opening_periods == expected_value, (
+            "Standard opening times were not updated - "
+            f"expected: '{expected_value}', actual: '{expected_opening_periods}'"
+        )
 
     service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
