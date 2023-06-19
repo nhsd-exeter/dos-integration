@@ -34,8 +34,7 @@ def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noq
     validate_event(event)
     odscode = event["odscode"]
     sequence_number = event["sequence_number"]
-    logger.append_keys(ods_code=odscode)
-    logger.append_keys(sequence_number=sequence_number)
+    logger.append_keys(ods_code=odscode, sequence_number=sequence_number)
     change_event = get_change_event(odscode, Decimal(sequence_number))
     org_type_id = change_event.get("OrganisationTypeId")
     logger.append_keys(org_type_id=org_type_id)

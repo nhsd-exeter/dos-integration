@@ -74,8 +74,7 @@ def test_lambda_handler(
     assert response == dumps(
         {"message": "The change event has been re-sent successfully", "correlation_id": correlation_id},
     )
-    mock_append_keys.assert_any_call(ods_code=event["odscode"])
-    mock_append_keys.assert_any_call(sequence_number=event["sequence_number"])
+    mock_append_keys.assert_any_call(ods_code=event["odscode"], sequence_number=event["sequence_number"])
     mock_build_correlation_id.assert_called_once_with()
     mock_get_change_event.assert_called_once_with(event["odscode"], Decimal(event["sequence_number"]))
     mock_send_change_event.assert_called_once_with(

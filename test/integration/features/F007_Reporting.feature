@@ -23,6 +23,7 @@ Feature: F007. Report Logging
     And "ods_code" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_reason" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
+    And "dos_region" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
@@ -46,9 +47,10 @@ Feature: F007. Report Logging
     And "nhsuk_organisation_name" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
     And "dos_service_uid" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
     And "dos_service_name" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
-    And "dos_service_type_id" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "dos_service_type_name" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
     And "bank_holiday_opening_times" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
-    And "nhsuk_parentorg" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "nhsuk_parent_org" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
+    And "dos_region" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX05 Check for Unexpected Pharmacy Profiling log
@@ -109,6 +111,8 @@ Feature: F007. Report Logging
     And "dos_service_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_region" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_service_uid" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+    And "dos_service_type_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX09 Check for Hidden Or Closed Report log
@@ -146,5 +150,7 @@ Feature: F007. Report Logging
     And "nhsuk_postcode" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "validation_error_reason" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And "dos_service" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "dos_region" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
+    And "dos_service_name" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
     And the service history is not updated

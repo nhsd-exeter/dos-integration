@@ -41,7 +41,7 @@ def log_blank_standard_opening_times(
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": dos_service.statusid,
             "dos_service_type": dos_service.typeid,
-            "dos_service_type_name": dos_service.servicename,
+            "dos_service_type_name": dos_service.service_type_name,
             "dos_region": dos_service.get_region(),
         },
     )
@@ -57,7 +57,7 @@ def log_invalid_nhsuk_postcode(
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
-        dos_service (List[DoSService]): The list of DoS matching services.
+        dos_service (DoSService): DoS service to report
         metrics (Any): The metrics object to report to.
     """
     error_msg = f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
@@ -66,7 +66,6 @@ def log_invalid_nhsuk_postcode(
         extra={
             "report_key": INVALID_POSTCODE_REPORT_ID,
             "nhsuk_odscode": nhs_entity.odscode,
-            "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_organisation_type": nhs_entity.org_type,
             "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "nhsuk_address1": nhs_entity.entity_data.get("Address1", ""),
@@ -77,7 +76,9 @@ def log_invalid_nhsuk_postcode(
             "nhsuk_postcode": nhs_entity.postcode,
             "validation_error_reason": "Postcode not valid/found on DoS",
             "dos_service": dos_service.uid,
-            "dos_service_type_name": dos_service.servicename,
+            "dos_service_type_name": dos_service.service_type_name,
+            "dos_region": dos_service.get_region(),
+            "dos_service_name": dos_service.name,
         },
     )
     metrics.set_namespace("UEC-DOS-INT")
@@ -111,27 +112,28 @@ def log_service_with_generic_bank_holiday(
             "nhsuk_organisation_name": nhs_entity.org_name,
             "dos_service_uid": dos_service.uid,
             "dos_service_name": dos_service.name,
-            "dos_service_type_id": dos_service.typeid,
             "bank_holiday_opening_times": open_periods_str,
-            "nhsuk_parentorg": nhs_entity.parent_org_name,
-            "dos_service_type_name": dos_service.servicename,
+            "nhsuk_parent_org": nhs_entity.parent_org_name,
+            "dos_service_type_name": dos_service.service_type_name,
+            "dos_region": dos_service.get_region(),
         },
     )
 
 
-def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
+def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str, dos_service: DoSService) -> None:
     """Log a service found to have an invalid website.
 
     Args:
         nhs_uk_entity (NHSEntity): The NHS entity to report
         nhs_website (str): The NHS website to report
+        dos_service (DoSService): The DoS service to report
     """
-    logger.warning(
-        f"Website is not valid, {nhs_website=}",
-        extra={
-            "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
-            "error_reason": "Website is not valid",
-            "error_info": f"NHSUK unedited website: '{nhs_uk_entity.website}', NHSUK website='{nhs_website}'",
+    log_generic_change_event_error(
+        "Website is not valid",
+        "Website is not valid",
+        f"NHSUK unedited website: '{nhs_uk_entity.website}', NHSUK website='{nhs_website}'",
+        dos_service,
+        {
             "nhs_unedited_website": nhs_uk_entity.website,
             "nhs_website": nhs_website,
         },
@@ -140,21 +142,45 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str) -> None:
 
 def log_palliative_care_z_code_does_not_exist(
     symptom_group_symptom_discriminator_combo_rowcount: int,
+    dos_service: DoSService,
 ) -> None:
     """Log a service found to have an invalid website.
 
     Args:
         symptom_group_symptom_discriminator_combo_rowcount (int): The number of rows returned from the database query
+        dos_service (DoSService): The DoS service to report
+    """
+    log_generic_change_event_error(
+        "Palliative care Z code does not exist in the DoS database",
+        "Palliative care Z code does not exist",
+        f"symptom_group_symptom_discriminator={bool(symptom_group_symptom_discriminator_combo_rowcount)}",
+        dos_service,
+    )
+
+
+def log_generic_change_event_error(
+    message: str,
+    error_reason: str,
+    error_info: str,
+    dos_service: DoSService,
+    extra: dict[str, Any] | None = None,
+) -> None:
+    """Log a generic change event error.
+
+    Args:
+        message (str): The message to log
+        error_reason (str): The error reason
+        error_info (str): The error info
+        dos_service (DoSService): The DoS service to report
+        extra (dict[str, Any], optional): Extra information to log. Defaults to None.
     """
     logger.warning(
-        "Palliative care Z code does not exist in the DoS database",
-        extra={
-            "report_key": GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
-            "error_reason": "Palliative care Z code does not exist",
-            "error_info": (
-                f"symptom_group_symptom_discriminator={bool(symptom_group_symptom_discriminator_combo_rowcount)}"
-            ),
-        },
+        message,
+        report_key=GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
+        error_reason=error_reason,
+        error_info=error_info,
+        dos_region=dos_service.get_region(),
+        extra=extra,
     )
 
 
@@ -166,6 +192,7 @@ def log_service_updated(  # noqa: PLR0913
     service_name: str,
     service_uid: str,
     type_id: str,
+    dos_service: DoSService,
 ) -> None:
     """Log a service update.
 
@@ -177,6 +204,7 @@ def log_service_updated(  # noqa: PLR0913
         service_name (str): The service name
         service_uid (str): The service uid
         type_id (str): The type id
+        dos_service (DoSService): The DoS service to report
     """
     logger.warning(
         "Service update complete",
@@ -189,6 +217,7 @@ def log_service_updated(  # noqa: PLR0913
             "service_name": service_name,
             "service_uid": service_uid,
             "type_id": type_id,
+            "dos_region": dos_service.get_region(),
         },
     )
 
@@ -211,6 +240,7 @@ def log_incorrect_palliative_stockholder_type(
             "report_key": INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
             "dos_palliative_care": dos_palliative_care,
             "nhsuk_palliative_care": nhs_uk_palliative_care,
-            "dos_service_type_name": dos_service.servicename,
+            "dos_service_type_name": dos_service.service_type_name,
+            "dos_region": dos_service.get_region(),
         },
     )

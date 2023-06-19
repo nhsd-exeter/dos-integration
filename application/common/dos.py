@@ -24,7 +24,7 @@ dos_location_cache = {}
 
 @dataclass
 class DoSService:
-    """Class to represent a DoS Service, field names are equal to equivalent db column names."""
+    """Class to represent a DoS Service."""
 
     id: int  # noqa: A003
     uid: int
@@ -38,7 +38,7 @@ class DoSService:
     statusid: int
     publicphone: str
     publicname: str
-    servicename: str
+    service_type_name: str
     easting: int
     northing: int
     latitude: float
@@ -117,7 +117,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     # Safe as conditional is configurable but variables is inputted to psycopg as variables
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
-        "statusid, publicphone, publicname, st.name servicename"
+        "statusid, publicphone, publicname, st.name service_type_name"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
         f" WHERE {conditions}"
     )

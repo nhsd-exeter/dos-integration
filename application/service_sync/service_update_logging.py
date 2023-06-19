@@ -16,6 +16,7 @@ from common.constants import (
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
 )
+from common.dos import DoSService
 from common.opening_times import SpecifiedOpeningTime, StandardOpeningTimes, opening_period_times_from_list
 
 logger = PowerToolsLogger(child=True)
@@ -28,8 +29,16 @@ class ServiceUpdateLogger:
     dos_basic_format = "%(asctime)s|%(levelname)s|DOS_INTEGRATION_%(environment)s|%(message)s"
     dos_logger: Logger
     logger: PowerToolsLogger
+    dos_service: DoSService | None
 
-    def __init__(self, service_uid: str, service_name: str, type_id: str, odscode: str) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        service_uid: str,
+        service_name: str,
+        type_id: str,
+        odscode: str,
+        dos_service: DoSService = None,
+    ) -> None:
         """Initialise the ServiceUpdateLogger.
 
         Args:
@@ -37,6 +46,7 @@ class ServiceUpdateLogger:
             service_name (str): The service name
             type_id (str): The service type id
             odscode (str): The service odscode
+            dos_service (DoSService, optional): The DoSService object. Defaults to None.
         """
         # Create new logger / get existing logger
         self.dos_logger = Logger("dos_logger")
@@ -55,6 +65,7 @@ class ServiceUpdateLogger:
         self.odscode = odscode
         self.correlation_id = self.logger.get_correlation_id()
         self.environment = getenv("ENV", "UNKNOWN").upper()
+        self.dos_service = dos_service
 
     def get_opening_times_change(
         self,
@@ -111,6 +122,7 @@ class ServiceUpdateLogger:
             service_name=self.service_name,
             service_uid=self.service_uid,
             type_id=self.type_id,
+            dos_service=self.dos_service,
         )
         add_service_updated_metric(data_field_modified=data_field_modified)
 
@@ -257,6 +269,7 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
         odscode=str(changes_to_dos.nhs_entity.odscode),
+        dos_service=changes_to_dos.dos_service,
     )
     most_recent_service_history_entry = list(service_histories.service_history.keys())[0]
     service_history_changes: dict[str, str] = service_histories.service_history[most_recent_service_history_entry][

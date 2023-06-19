@@ -232,7 +232,7 @@ def test_update_dos_data(
     )
     mock_save_palliative_care_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
-        service_id=service_id,
+        dos_service=changes_to_dos.dos_service,
         is_changes=changes_to_dos.palliative_care_changes,
         palliative_care=changes_to_dos.nhs_entity.palliative_care,
     )
@@ -283,7 +283,7 @@ def test_update_dos_data_no_changes(
     )
     mock_save_palliative_care_into_db.assert_called_once_with(
         connection=mock_connect_to_dos_db().__enter__(),
-        service_id=service_id,
+        dos_service=changes_to_dos.dos_service,
         is_changes=changes_to_dos.palliative_care_changes,
         palliative_care=changes_to_dos.nhs_entity.palliative_care,
     )
@@ -376,17 +376,17 @@ def test_save_palliative_care_into_db_insert(
 ):
     # Arrange
     mock_connection = MagicMock()
-    service_id = 1
+    dos_service = MagicMock()
     palliative_care = True
     mock_validate_dos_palliative_care_z_code_exists.return_value = True
     # Act
-    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
+    response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="INSERT INTO servicesgsds (serviceid, sdid, sgid) VALUES (%(SERVICE_ID)s, %(SDID)s, %(SGID)s);",
-        query_vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+        query_vars={"SERVICE_ID": dos_service.id, "SDID": 14167, "SGID": 360},
     )
 
 
@@ -398,17 +398,17 @@ def test_save_palliative_care_into_db_delete(
 ):
     # Arrange
     mock_connection = MagicMock()
-    service_id = 1
+    dos_service = MagicMock()
     palliative_care = False
     mock_validate_dos_palliative_care_z_code_exists.return_value = True
     # Act
-    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
+    response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert True is response
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="DELETE FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sdid=%(SDID)s AND sgid=%(SGID)s;",
-        query_vars={"SERVICE_ID": service_id, "SDID": 14167, "SGID": 360},
+        query_vars={"SERVICE_ID": dos_service.id, "SDID": 14167, "SGID": 360},
     )
 
 
@@ -422,11 +422,11 @@ def test_save_palliative_care_into_db_no_z_code(
 ):
     # Arrange
     mock_connection = MagicMock()
-    service_id = 1
+    dos_service = MagicMock()
     palliative_care = True
     mock_validate_dos_palliative_care_z_code_exists.return_value = False
     # Act
-    response = save_palliative_care_into_db(mock_connection, service_id, True, palliative_care)
+    response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert False is response
     mock_add_metric.assert_called_once_with("DoSPalliativeCareZCodeDoesNotExist")
@@ -443,11 +443,11 @@ def test_save_palliative_care_into_db_no_change(
 ):
     # Arrange
     mock_connection = MagicMock()
-    service_id = 1
+    dos_service = MagicMock()
     palliative_care = True
     mock_validate_dos_palliative_care_z_code_exists.return_value = True
     # Act
-    response = save_palliative_care_into_db(mock_connection, service_id, False, palliative_care)
+    response = save_palliative_care_into_db(mock_connection, dos_service, False, palliative_care)
     # Assert
     assert False is response
     mock_add_metric.assert_not_called()
@@ -459,8 +459,9 @@ def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 1
+    dos_service = MagicMock()
     # Act
-    response = validate_dos_palliative_care_z_code_exists(mock_connection)
+    response = validate_dos_palliative_care_z_code_exists(mock_connection, dos_service)
     # Assert
     assert True is response
     mock_query_dos_db.assert_has_calls(
@@ -483,8 +484,9 @@ def test_validate_dos_palliative_care_z_code_exists_does_not_exist(mock_query_do
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 0
+    dos_service = MagicMock()
     # Act
-    response = validate_dos_palliative_care_z_code_exists(mock_connection)
+    response = validate_dos_palliative_care_z_code_exists(mock_connection, dos_service)
     # Assert
     assert False is response
     mock_query_dos_db.assert_has_calls(

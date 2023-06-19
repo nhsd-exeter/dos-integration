@@ -41,7 +41,7 @@ def log_closed_or_hidden_services(
                 "nhsuk_sector": nhs_entity.org_sub_type,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_type": dos_service.typeid,
-                "dos_service_type_name": dos_service.servicename,
+                "dos_service_type_name": dos_service.service_type_name,
             },
         )
 
@@ -95,7 +95,7 @@ def log_invalid_open_times(
             "nhsuk_open_times_payload": json.dumps(
                 nhs_entity.entity_data["OpeningTimes"],
             ),
-            "dos_service_type_name": ", ".join(str(service.servicename) for service in matching_services),
+            "dos_service_type_name": ", ".join(str(service.service_type_name) for service in matching_services),
             "dos_services": ", ".join(str(service.uid) for service in matching_services),
         },
     )
@@ -132,7 +132,7 @@ def log_unmatched_service_types(
                 "dos_service_publicname": unmatched_service.name,
                 "dos_service_status": VALID_STATUS_ID,
                 "dos_service_typeid": unmatched_service.typeid,
-                "dos_service_type_name": unmatched_service.servicename,
+                "dos_service_type_name": unmatched_service.service_type_name,
             },
         )
 

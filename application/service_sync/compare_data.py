@@ -89,7 +89,7 @@ def has_website_changed(changes: ChangesToDoS) -> bool:
         changes.new_website = nhs_uk_website
         if changes.dos_service.web != nhs_uk_website:
             logger.info(f"Website is not equal, {changes.dos_service.web=} != {nhs_uk_website=}")
-            return validate_website(changes.nhs_entity, nhs_uk_website)
+            return validate_website(changes.nhs_entity, nhs_uk_website, changes.dos_service)
         logger.info(f"Website is equal, {changes.dos_service.web=} == {nhs_uk_website=}")
     return False
 
