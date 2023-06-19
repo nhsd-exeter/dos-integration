@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import datetime
 from json import load
 
 
@@ -136,11 +136,14 @@ class ChangeEvent:
             }
             for day in self.standard_opening_times
         )
+
+        for specified_opening_date in self.specified_opening_times:
+            if isinstance(specified_opening_date["date"], str):
+                specified_opening_date["date"] = datetime.strptime(specified_opening_date["date"], "%Y-%m-%d").date()
+
         base_change_event["OpeningTimes"].extend(
             {
-                "AdditionalOpeningDate": specified_opening_date["date"].strftime("%b %d %Y")
-                if isinstance(specified_opening_date["date"], date)
-                else specified_opening_date["date"],
+                "AdditionalOpeningDate": specified_opening_date["date"].strftime("%b %d %Y"),
                 "ClosingTime": specified_opening_date["close"],
                 "IsOpen": specified_opening_date["open_or_closed"],
                 "OpeningTime": specified_opening_date["open"],
