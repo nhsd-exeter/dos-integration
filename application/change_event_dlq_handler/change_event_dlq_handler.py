@@ -6,7 +6,6 @@ from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
-from common.constants import FIFO_DLQ_HANDLER_REPORT_ID
 from common.dynamodb import add_change_event_to_dynamodb
 from common.middlewares import redact_staff_key_from_event, unhandled_exception_logging
 from common.utilities import extract_body, get_sequence_number, get_sqs_msg_attribute, handle_sqs_msg_attributes
@@ -14,6 +13,7 @@ from common.utilities import extract_body, get_sequence_number, get_sqs_msg_attr
 TTL = 157680000  # int((365*5)*24*60*60) . 5 years in seconds
 tracer = Tracer()
 logger = Logger()
+CHANGE_EVENT_DLQ_HANDLER_EVENT = "CHANGE_EVENT_DLQ_HANDLER_RECEIVED_EVENT"
 
 
 @redact_staff_key_from_event()
@@ -62,7 +62,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.warning(
         "Change Event Dead Letter Queue Handler received event",
         extra={
-            "report_key": FIFO_DLQ_HANDLER_REPORT_ID,
+            "report_key": CHANGE_EVENT_DLQ_HANDLER_EVENT,
             "error_msg": f"Message Abandoned: {error_msg}",
             "error_msg_http_code": attributes["error_msg_http_code"],
             "payload": change_event,

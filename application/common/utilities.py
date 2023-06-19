@@ -31,11 +31,10 @@ def extract_body(body: str) -> dict[str, Any]:
         Dict[str, Any]: Message body as a dictionary
     """
     try:
-        body = loads(body)
+        return loads(body)
     except ValueError as e:
         msg = "Change Event unable to be extracted"
         raise ValueError(msg) from e
-    return body
 
 
 def json_str_body(body: dict[str, Any]) -> str:

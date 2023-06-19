@@ -10,10 +10,10 @@ from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
+from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.tests.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 
 FILE_PATH = "application.service_matcher.service_matcher"
 

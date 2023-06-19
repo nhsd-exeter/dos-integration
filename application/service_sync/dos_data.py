@@ -6,8 +6,10 @@ from psycopg.rows import DictRow
 from psycopg.sql import SQL, Identifier, Literal
 
 from .changes_to_dos import ChangesToDoS
+from .reporting import log_palliative_care_z_code_does_not_exist
 from .service_histories import ServiceHistories
 from .service_update_logging import log_service_updates
+from common.circuit import put_circuit_is_open
 from common.constants import DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR, DOS_PALLIATIVE_CARE_SYMPTOM_GROUP
 from common.dos import (
     DoSService,
@@ -16,9 +18,7 @@ from common.dos import (
     has_palliative_care,
 )
 from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
-from common.dynamodb import put_circuit_is_open
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.report_logging import log_palliative_care_z_code_does_not_exist
 from common.utilities import add_metric
 
 logger = Logger(child=True)

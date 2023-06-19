@@ -73,7 +73,7 @@ scenarios(
     "../features/F004_Error_Handling.feature",
     "../features/F005_Support_Functions.feature",
     "../features/F006_Opening_Times.feature",
-    "../features/F007_Report_Logging.feature",
+    "../features/F007_Reporting.feature",
 )
 FAKER = Faker("en_GB")
 

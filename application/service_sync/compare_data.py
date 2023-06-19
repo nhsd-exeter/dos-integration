@@ -4,6 +4,11 @@ from aws_lambda_powertools.logging import Logger
 
 from .changes_to_dos import ChangesToDoS
 from .format import format_address, format_website
+from .reporting import (
+    log_blank_standard_opening_times,
+    log_incorrect_palliative_stockholder_type,
+    log_invalid_nhsuk_postcode,
+)
 from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
 from .validation import validate_opening_times, validate_website
@@ -32,11 +37,6 @@ from common.opening_times import (
     SpecifiedOpeningTime,
     StandardOpeningTimes,
     opening_period_times_from_list,
-)
-from common.report_logging import (
-    log_blank_standard_opening_times,
-    log_incorrect_palliative_stockholder_type,
-    log_invalid_nhsuk_postcode,
 )
 from common.utilities import is_val_none_or_empty
 

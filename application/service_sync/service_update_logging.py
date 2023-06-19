@@ -7,6 +7,7 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
 from .changes_to_dos import ChangesToDoS
+from .reporting import log_service_updated
 from .service_histories import ServiceHistories
 from common.constants import (
     DOS_INTEGRATION_USER_NAME,
@@ -16,7 +17,6 @@ from common.constants import (
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
 )
 from common.opening_times import SpecifiedOpeningTime, StandardOpeningTimes, opening_period_times_from_list
-from common.report_logging import log_service_updated
 
 logger = PowerToolsLogger(child=True)
 
@@ -142,11 +142,13 @@ class ServiceUpdateLogger:
             weekday (str): The weekday to log the update for e.g monday
         """
         previous_value = (
-            previous_value if isinstance(previous_value, str)
+            previous_value
+            if isinstance(previous_value, str)
             else opening_period_times_from_list(open_periods=previous_value.get_openings(weekday), with_space=False)
         )
         new_value = (
-            new_value if isinstance(new_value, str)
+            new_value
+            if isinstance(new_value, str)
             else opening_period_times_from_list(open_periods=new_value.get_openings(weekday), with_space=False)
         )
         existing_value, updated_value = self.get_opening_times_change(data_field_modified, previous_value, new_value)

@@ -2,7 +2,6 @@ from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
 
-from .conftest import dummy_dos_service
 from application.common.dos import (
     DoSService,
     db_rows_to_spec_open_times,
@@ -18,6 +17,7 @@ from application.common.dos import (
     has_palliative_care,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from application.conftest import dummy_dos_service
 from common.constants import (
     DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,

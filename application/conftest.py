@@ -1,7 +1,6 @@
 import json
 from dataclasses import dataclass
-from os import environ, path
-from pathlib import Path
+from os import environ
 from random import choices, randint, uniform
 from typing import Any
 
@@ -9,17 +8,26 @@ import pytest
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import Session
 from moto import mock_dynamodb
+from testfixtures import LogCapture
 
 from application.common.dos import DoSLocation, DoSService
 from application.common.opening_times import StandardOpeningTimes
 
-STD_EVENT_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT.json")
+STD_EVENT_PATH = "application/test_resources/STANDARD_EVENT.json"
 with open(STD_EVENT_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT = json.load(file)
 
-STD_EVENT_STAFF_PATH = path.join(Path(__file__).parent.resolve(), "STANDARD_EVENT_WITH_STAFF.json")
+STD_EVENT_STAFF_PATH = "application/test_resources/STANDARD_EVENT_WITH_STAFF.json"
 with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
+
+
+@pytest.fixture(autouse=True)
+def _reset_standard_change_event() -> None:
+    """Reset the standard change event to its original state."""
+    with open(STD_EVENT_PATH, encoding="utf8") as file:
+        PHARMACY_STANDARD_EVENT.clear()
+        PHARMACY_STANDARD_EVENT.update(json.load(file))
 
 
 def get_std_event(**kwargs: Any) -> dict:  # noqa: ANN401
@@ -48,7 +56,7 @@ def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     return dos_service
 
 
-def blank_dos_service(**kwargs: Any) -> DoSService:    # noqa: ANN401
+def blank_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     """Creates a DoSService Object with blank str data for the unit testing."""
     test_data = {col: "" for col in DoSService.field_names()}
     dos_service = DoSService(test_data)
@@ -80,6 +88,12 @@ def change_event() -> dict:
 
 
 @pytest.fixture()
+def change_event_staff() -> dict:
+    """Get a standard change event with staff."""
+    return PHARMACY_STANDARD_EVENT_STAFF.copy()
+
+
+@pytest.fixture()
 def _aws_credentials() -> None:
     """Mocked AWS Credentials for moto."""
     environ["AWS_ACCESS_KEY_ID"] = "testing"
@@ -91,7 +105,7 @@ def _aws_credentials() -> None:
 
 
 @pytest.fixture()
-def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401
+def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401,
     """DynamoDB Client Class."""
     return boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
 
@@ -165,9 +179,48 @@ def lambda_context() -> LambdaContext:
 
     @dataclass
     class LambdaContext:
-        function_name: str = "service-matcher"
+        function_name: str = "lambda"
         memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:service-matcher"
+        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:809313241:function:lambda"
         aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
 
     return LambdaContext()
+
+
+@pytest.fixture()
+def log_capture() -> LogCapture:
+    """Capture logs.
+
+    Yields:
+        LogCapture: Log capture
+    """
+    with LogCapture(names="lambda") as capture:
+        yield capture
+
+
+@pytest.fixture()
+def dynamodb_table_create(dynamodb_client: Any) -> dict[str, Any]:  # noqa: ANN401
+    """Create a DynamoDB CHANGE_EVENTS_TABLE table pytest.fixture."""
+    return dynamodb_client.create_table(
+        TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
+        BillingMode="PAY_PER_REQUEST",
+        KeySchema=[
+            {"AttributeName": "Id", "KeyType": "HASH"},
+            {"AttributeName": "ODSCode", "KeyType": "RANGE"},
+        ],
+        AttributeDefinitions=[
+            {"AttributeName": "Id", "AttributeType": "S"},
+            {"AttributeName": "ODSCode", "AttributeType": "S"},
+            {"AttributeName": "SequenceNumber", "AttributeType": "N"},
+        ],
+        GlobalSecondaryIndexes=[
+            {
+                "IndexName": "gsi_ods_sequence",
+                "KeySchema": [
+                    {"AttributeName": "ODSCode", "KeyType": "HASH"},
+                    {"AttributeName": "SequenceNumber", "KeyType": "RANGE"},
+                ],
+                "Projection": {"ProjectionType": "ALL"},
+            },
+        ],
+    )

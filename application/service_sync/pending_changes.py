@@ -10,10 +10,10 @@ from psycopg import Connection
 from psycopg.rows import DictRow
 from pytz import timezone
 
+from .s3 import put_content_to_s3
 from .service_update_logging import ServiceUpdateLogger
 from common.constants import DI_CHANGE_ITEMS, DOS_INTEGRATION_USER_NAME
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
-from common.s3 import put_content_to_s3
 from common.types import EmailFile, EmailMessage
 
 logger = Logger(child=True)

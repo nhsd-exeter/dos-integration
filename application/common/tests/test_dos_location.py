@@ -1,7 +1,7 @@
 import pytest
 
-from .conftest import dummy_dos_location
 from application.common.dos_location import DoSLocation
+from application.conftest import dummy_dos_location
 
 
 @pytest.mark.parametrize(
@@ -9,43 +9,85 @@ from application.common.dos_location import DoSLocation
     [
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=None, longitude=None,
+                id=1,
+                postcode="TE57ER",
+                easting=None,
+                northing=None,
+                postaltown="TOWN",
+                latitude=None,
+                longitude=None,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=1, postaltown="TOWN", latitude=1.1, longitude=1.1,
+                id=1,
+                postcode="TE57ER",
+                easting=None,
+                northing=1,
+                postaltown="TOWN",
+                latitude=1.1,
+                longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1,
+                id=1,
+                postcode="TE57ER",
+                easting=1,
+                northing=None,
+                postaltown="TOWN",
+                latitude=1.1,
+                longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=1.1,
+                id=1,
+                postcode="TE57ER",
+                easting=1,
+                northing=1,
+                postaltown="TOWN",
+                latitude=None,
+                longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=1.1, longitude=None,
+                id=1,
+                postcode="TE57ER",
+                easting=1,
+                northing=1,
+                postaltown="TOWN",
+                latitude=1.1,
+                longitude=None,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=None, northing=None, postaltown="TOWN", latitude=1.1, longitude=1.1,
+                id=1,
+                postcode="TE57ER",
+                easting=None,
+                northing=None,
+                postaltown="TOWN",
+                latitude=1.1,
+                longitude=1.1,
             ),
             False,
         ),
         (
             DoSLocation(
-                id=1, postcode="TE57ER", easting=1, northing=1, postaltown="TOWN", latitude=None, longitude=None,
+                id=1,
+                postcode="TE57ER",
+                easting=1,
+                northing=1,
+                postaltown="TOWN",
+                latitude=None,
+                longitude=None,
             ),
             False,
         ),
