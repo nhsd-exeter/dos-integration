@@ -235,12 +235,23 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
             f"expected: '{expected_value}', actual: '{expected_opening_periods}'"
         )
 
-    # def assert_field_updated_in_history() -> None:
-    #     assert (
-    #     ), f"Expected data: {expected_value}, Expected data type: {type(expected_value)}, Actual data: {new_history[service_history_key]['data']}"  # noqa: E501
+    def assert_field_updated_in_history() -> None:
+        history = get_service_history(service_id)
+        first_key = list(history.keys())[0]
+        new_history = history[first_key]["new"]
+
+        for expected_value_time_periods in expected_value:
+            cms_key = f"cmsopentime{expected_value_time_periods['day'].lower()}"
+            open_seconds = datetime.strptime(expected_value_time_periods["open"], "%H:%M").time().strftime("%S")
+            close_seconds = datetime.strptime(expected_value_time_periods["close"], "%H:%M").time().strftime("%S")
+            seconds_str = f"{open_seconds}-{close_seconds}"
+            assert (
+                seconds_str in new_history[cms_key]["data"]["add"]
+            ), f"Expected data: {seconds_str}, Actual data: {new_history[cms_key]['data']['add']}"
 
     service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
+    assert_field_updated_in_history()
 
 
 def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
@@ -271,5 +282,9 @@ def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
             f"expected: '{expected_value}', actual: '{expected_opening_periods}'"
         )
 
+    def assert_field_updated_in_history() -> None:
+        pass
+
     service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
+    assert_field_updated_in_history()

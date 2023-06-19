@@ -132,12 +132,17 @@ integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[compl
 		"
 
 production-smoke-test: # Smoke test DI project - mandatory: PROFILE; optional: ENVIRONMENT
+	if [ "$(PROFILE)" != "live" ]; then
+		make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
+		DIR=./test/smoke \
+		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
+	else
+		echo "Production smoke test not allowed on live profile"
+		exit 1
+	fi
 
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
-	DIR=./test/smoke \
-	ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 
 clean: # Runs whole project clean
 	make \

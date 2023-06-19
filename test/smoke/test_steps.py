@@ -127,7 +127,6 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     """
     smoke_test_context.request_start_time = datetime.now(tz=timezone("Europe/London"))
     change_event_json = smoke_test_context.updated_service.create_change_event()
-    print(change_event_json)
     send_change_event(change_event_json)
     return smoke_test_context
 
