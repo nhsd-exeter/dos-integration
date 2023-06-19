@@ -46,7 +46,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_type": dos_service.typeid,
-            "dos_service_type_name": dos_service.servicename,
+            "dos_service_type_name": dos_service.service_type_name,
         },
     )
 
@@ -132,7 +132,7 @@ def test_log_invalid_open_times(mock_logger):
             "nhsuk_organisation_name": nhs_entity.org_name,
             "nhsuk_open_times_payload": json.dumps(opening_times),
             "dos_services": ", ".join(str(service.uid) for service in dos_services),
-            "dos_service_type_name": ", ".join(str(service.servicename) for service in dos_services),
+            "dos_service_type_name": ", ".join(str(service.service_type_name) for service in dos_services),
         },
     )
     # Clean up
@@ -176,7 +176,7 @@ def test_log_unmatched_service_types(mock_logger):
             "dos_service_publicname": dos_service.name,
             "dos_service_status": VALID_STATUS_ID,
             "dos_service_typeid": dos_service.typeid,
-            "dos_service_type_name": dos_service.servicename,
+            "dos_service_type_name": dos_service.service_type_name,
         },
     )
 
