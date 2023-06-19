@@ -46,6 +46,7 @@ from .utilities.utils import (
     get_expected_data,
     get_latest_sequence_id_for_a_given_odscode,
     get_locations_table_data,
+    get_palliative_care,
     get_s3_email_file,
     get_service_history,
     get_service_history_specified_opening_times,
@@ -71,7 +72,8 @@ scenarios(
     "../features/F003_DoS_Security.feature",
     "../features/F004_Error_Handling.feature",
     "../features/F005_Support_Functions.feature",
-    "../features/F006_Opening_times.feature",
+    "../features/F006_Opening_Times.feature",
+    "../features/F007_Reporting.feature",
 )
 FAKER = Faker("en_GB")
 
@@ -183,7 +185,7 @@ def create_multiple_basic_service_entry(context: Context, count: str) -> Context
     context = a_service_table_entry_is_created(context)
     context = service_table_entry_is_committed(context)
     ods_code = context.generator_data["odscode"]
-    for _x in range(int(count) - 1):
+    for _ in range(int(count) - 1):
         context = a_service_table_entry_is_created(context, ods_code)
         context = service_table_entry_is_committed(context)
     return context
@@ -656,6 +658,20 @@ def create_ods_in_ddb(context: Context) -> Context:
     return context
 
 
+@given("the Changed Event has blank opening times", target_fixture="context")
+def change_event_with_blank_opening_times(context: Context) -> Context:
+    """Create a change event with blank opening times.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    context.change_event["OpeningTimes"] = []
+    return context
+
+
 @when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
 def post_an_sqs_message(queue_type: str, context: Context) -> None:
     """Post an SQS message to the queue.
@@ -1050,25 +1066,27 @@ def step_then_should_transform_into(context: Context, status: str) -> None:
     ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
 
 
-@then("the attributes for invalid opening times report is identified in the logs")
-def invalid_opening_times_exception(context: Context) -> None:
-    """Assert the attributes for invalid opening times report is identified in the logs.
+@then(parse('"{attribute}" attribute is identified in the "{report}" report in "{lambda_name}" logs'))
+def step_then_attribute_is_identified_in_the_report(
+    context: Context,
+    attribute: str,
+    report: str,
+    lambda_name: str,
+) -> None:
+    """Assert the attribute is identified in the report in lambda logs.
 
     Args:
         context (Context): The context object.
+        attribute (str): Attribute name.
+        report (str): Report name.
+        lambda_name (str): Lambda name.
     """
     query = (
         f'fields @message | sort @timestamp asc | filter correlation_id="{context.correlation_id}"'
-        '| filter report_key="INVALID_OPEN_TIMES"'
+        f'| filter report_key="{report}"'
     )
-    logs = get_logs(query, "service-matcher", context.start_time)
-    for item in [
-        "nhsuk_odscode",
-        "nhsuk_organisation_name",
-        "nhsuk_open_times_payload",
-        "dos_services",
-    ]:
-        assert item in logs
+    logs = get_logs(query, lambda_name, context.start_time)
+    assert attribute in logs
 
 
 @then("the stored Changed Event is reprocessed in DI")
@@ -1242,7 +1260,7 @@ def standard_day_confirmed_open_check(context: Context, open_or_closed: str, day
     return context
 
 
-@then(parse('the "{lambda_name}" lambda shows field "{field}" with message "{message}"'))
+@then(parse('the "{lambda_name}" lambda shows field "{field}" with value "{message}"'))
 def generic_lambda_log_check_function(context: Context, lambda_name: str, field: str, message: str) -> None:
     """Assert the lambda log contains the expected message.
 
@@ -1262,7 +1280,7 @@ def generic_lambda_log_check_function(context: Context, lambda_name: str, field:
     assert message in logs, f"ERROR!!.. error event processor did not detect the {field}: {message}."
 
 
-@then(parse('the "{lambda_name}" lambda shows "{count}" of "{field}" with message "{message}"'))
+@then(parse('the "{lambda_name}" lambda shows "{count}" of "{field}" with value "{message}"'))
 def generic_lambda_multiple_log_check_function(
     context: Context,
     lambda_name: str,
@@ -1290,7 +1308,7 @@ def generic_lambda_multiple_log_check_function(
     assert len(loads(logs)["results"]) == int(count), "ERROR!!.. Incorrect number of log entries"
 
 
-@then(parse('the "{lambda_name}" lambda does not show "{field}" with message "{message}"'))
+@then(parse('the "{lambda_name}" lambda does not show "{field}" with value "{message}"'))
 def generic_lambda_log_negative_check_function(context: Context, lambda_name: str, field: str, message: str) -> None:
     """Assert the lambda log does not contain the expected message.
 
@@ -1435,4 +1453,29 @@ def error_contains_no_staff(context: Context) -> Context:
     )
     logs = loads(get_logs(query, "ingest-change-event", context.start_time))
     assert "Superintendent Pharmacist" not in logs, "ERROR: Logs output the staff field on error"
+    return context
+
+
+@then(parse('palliative care is "{action}" to the service'), target_fixture="context")
+def _(context: Context, action: str) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    match action:
+        case "added":
+            applied = True
+        case "removed":
+            applied = False
+        case _:
+            msg = f"Unexpected action: {action}"
+            raise ValueError(msg)
+
+    palliative_care = get_palliative_care(context.service_id)
+    assert palliative_care == applied, "ERROR: Palliative care not correctly applied/removed to DoS service"
     return context

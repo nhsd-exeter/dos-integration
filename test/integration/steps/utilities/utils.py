@@ -947,3 +947,24 @@ def get_s3_email_file(context: Context) -> Context:
         context.other = load(email_file)
     remove("./email_file.json")
     return context
+
+
+def get_palliative_care(service_id: str) -> bool:
+    """Get palliative care from DoS.
+
+    Args:
+        service_id (str): Service ID
+
+    Returns:
+        bool: True if palliative care is found, False otherwise
+    """
+    wait_for_service_update(service_id)
+    query = """SELECT sgsds.id as z_code from servicesgsds sgsds
+            WHERE sgsds.serviceid = %(SERVICE_ID)s
+            AND sgsds.sgid = 360
+            AND sgsds.sdid  = 14167
+            """
+    lambda_payload = {"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}}
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    response = loads(loads(response))
+    return len(response) > 0

@@ -19,7 +19,7 @@ from application.common.constants import (
     DOS_WEBSITE_CHANGE_KEY,
 )
 from application.common.opening_times import WEEKDAYS
-from application.common.tests.conftest import dummy_dos_location
+from application.conftest import dummy_dos_location
 from application.service_sync.changes_to_dos import ChangesToDoS
 from application.service_sync.compare_data import (
     compare_location_data,
@@ -116,7 +116,9 @@ def test_has_website_changed_add_website(
     assert dos_service.web == changes_to_dos.current_website
     assert nhs_website == changes_to_dos.new_website
     mock_format_website.assert_not_called()
-    mock_validate_website.assert_called_once_with(nhs_entity, nhs_website)
+    mock_validate_website.assert_called_once_with(nhs_entity, nhs_website, dos_service)
+
+
 
 @patch(f"{FILE_PATH}.validate_website")
 @patch(f"{FILE_PATH}.is_val_none_or_empty")
@@ -146,8 +148,7 @@ def test_has_website_changed_no_change(
 
 @patch(f"{FILE_PATH}.has_website_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_website(mock_set_up_for_services_table_change: MagicMock,
-                        mock_has_website_changed: MagicMock):
+def test_compare_website(mock_set_up_for_services_table_change: MagicMock, mock_has_website_changed: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
     mock_has_website_changed.return_value = True
@@ -167,8 +168,10 @@ def test_compare_website(mock_set_up_for_services_table_change: MagicMock,
 
 @patch(f"{FILE_PATH}.has_website_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_website_no_change(mock_set_up_for_services_table_change: MagicMock,
-                                mock_has_website_changed: MagicMock):
+def test_compare_website_no_change(
+    mock_set_up_for_services_table_change: MagicMock,
+    mock_has_website_changed: MagicMock,
+):
     # Arrange
     changes_to_dos = MagicMock()
     mock_has_website_changed.return_value = False
@@ -187,8 +190,15 @@ def test_has_location_changed(mock_get_valid_dos_location: MagicMock):
     nhs_entity = MagicMock()
     service_histories = MagicMock()
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
-    dummy_dos_location = DoSLocation(id=0, postcode="DUMMY", easting=0, northing=0, postaltown="STUB",
-                                    latitude=0, longitude=0)
+    dummy_dos_location = DoSLocation(
+        id=0,
+        postcode="DUMMY",
+        easting=0,
+        northing=0,
+        postaltown="STUB",
+        latitude=0,
+        longitude=0,
+    )
     mock_get_valid_dos_location.return_value = dummy_dos_location
     # Act
     address_response, postcode_response, dos_location = has_location_changed(changes_to_dos)
@@ -255,8 +265,7 @@ def test_has_location_changed_no_change(mock_get_valid_dos_location: MagicMock):
 
 @patch(f"{FILE_PATH}.has_location_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock,
-                            mock_has_location_changed: MagicMock):
+def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock, mock_has_location_changed: MagicMock):
     # Arrange
     changes_to_dos = MagicMock()
     dos_location = dummy_dos_location()
@@ -323,10 +332,13 @@ def test_compare_location_data(mock_set_up_for_services_table_change: MagicMock,
         ],
     )
 
+
 @patch(f"{FILE_PATH}.has_location_changed")
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
-def test_compare_location_data_no_changes(mock_set_up_for_services_table_change: MagicMock,
-                                        mock_has_location_changed: MagicMock):
+def test_compare_location_data_no_changes(
+    mock_set_up_for_services_table_change: MagicMock,
+    mock_has_location_changed: MagicMock,
+):
     # Arrange
     changes_to_dos = MagicMock()
     mock_has_location_changed.return_value = False, False, None
@@ -337,6 +349,7 @@ def test_compare_location_data_no_changes(mock_set_up_for_services_table_change:
     mock_has_location_changed.assert_called_once_with(changes=changes_to_dos)
     mock_set_up_for_services_table_change.assert_not_called()
 
+
 @pytest.mark.parametrize("weekday", WEEKDAYS)
 def test_has_standard_opening_times_changed(weekday: str):
     # Arrange
@@ -346,7 +359,7 @@ def test_has_standard_opening_times_changed(weekday: str):
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     dos_service.standard_opening_times.same_openings.return_value = False
     # Act
-    has_standard_opening_times_changed(changes_to_dos,weekday)
+    has_standard_opening_times_changed(changes_to_dos, weekday)
     # Assert
     assert hasattr(changes_to_dos, f"current_{weekday}_opening_times")
     assert hasattr(changes_to_dos, f"new_{weekday}_opening_times")
@@ -365,6 +378,7 @@ def test_has_standard_opening_times_changed_no_changes(weekday: str):
     # Assert
     assert False is hasattr(changes_to_dos, f"current_{weekday}_opening_times")
     assert False is hasattr(changes_to_dos, f"new_{weekday}_opening_times")
+
 
 @patch(f"{FILE_PATH}.SpecifiedOpeningTime")
 def test_has_specified_opening_times_changed(mock_specified_opening_time: MagicMock):
@@ -397,6 +411,7 @@ def test_has_specified_opening_times_changed_no_change(mock_specified_opening_ti
     assert False is response
     assert None is changes_to_dos.new_specified_opening_times
     assert None is changes_to_dos.current_specified_opening_times
+
 
 @patch(f"{FILE_PATH}.has_specified_opening_times_changed")
 @patch(f"{FILE_PATH}.has_standard_opening_times_changed")
@@ -643,8 +658,10 @@ def test_has_public_phone_changed_no_change():
 
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.has_public_phone_changed")
-def test_compare_public_phone_change(mock_has_public_phone_changed: MagicMock,
-                                    mock_set_up_for_service_table_change: MagicMock):
+def test_compare_public_phone_change(
+    mock_has_public_phone_changed: MagicMock,
+    mock_set_up_for_service_table_change: MagicMock,
+):
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -665,14 +682,17 @@ def test_compare_public_phone_change(mock_has_public_phone_changed: MagicMock,
         change_key=DOS_PUBLIC_PHONE_CHANGE_KEY,
         new_value=changes_to_dos.new_public_phone,
         previous_value=changes_to_dos.current_public_phone,
-        service_table_field_name="publicphone")
+        service_table_field_name="publicphone",
+    )
     assert response == changes_to_dos
 
 
 @patch(f"{FILE_PATH}.set_up_for_services_table_change")
 @patch(f"{FILE_PATH}.has_public_phone_changed")
-def test_compare_public_phone_no_change(mock_has_public_phone_changed: MagicMock,
-                                    mock_set_up_for_service_table_change: MagicMock):
+def test_compare_public_phone_no_change(
+    mock_has_public_phone_changed: MagicMock,
+    mock_set_up_for_service_table_change: MagicMock,
+):
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -721,9 +741,7 @@ def test_has_palliative_care_changed_no_change():
 
 
 @patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
-@patch(f"{FILE_PATH}.log_palliative_care_not_equal")
 def test_compare_palliative_care_unequal(
-    mock_log_palliative_care_not_equal: MagicMock,
     mock_log_incorrect_palliative_stockholder_type: MagicMock,
 ):
     # Arrange
@@ -731,26 +749,20 @@ def test_compare_palliative_care_unequal(
     nhs_entity = MagicMock()
     service_histories = MagicMock()
     dos_service.typeid = 13
-    dos_service.palliative_care = dos_palliative_care = True
-    nhs_entity.palliative_care = nhs_palliative_care = False
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = False
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
 
     # Act
     response = compare_palliative_care(changes_to_dos)
     # Assert
     assert response == changes_to_dos
-    mock_log_palliative_care_not_equal.assert_called_once_with(
-        nhs_uk_palliative_care=nhs_palliative_care,
-        dos_palliative_care=dos_palliative_care,
-    )
     mock_log_incorrect_palliative_stockholder_type.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_palliative_care_log_value")
 @patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
-@patch(f"{FILE_PATH}.log_palliative_care_not_equal")
 def test_compare_palliative_care_invalid(
-    mock_log_palliative_care_not_equal: MagicMock,
     mock_log_incorrect_palliative_stockholder_type: MagicMock,
     mock_get_palliative_care_log_value: MagicMock,
 ):
@@ -768,7 +780,6 @@ def test_compare_palliative_care_invalid(
     response = compare_palliative_care(changes_to_dos)
     # Assert
     assert response == changes_to_dos
-    mock_log_palliative_care_not_equal.assert_not_called()
     mock_log_incorrect_palliative_stockholder_type.assert_called_once_with(
         nhs_uk_palliative_care=nhs_palliative_care,
         dos_palliative_care=dos_palliative_care,

@@ -1,7 +1,7 @@
 import pytest
 
 from application.common.constants import SERVICE_TYPES, VALID_SERVICE_TYPES_KEY
-from application.common.service_type import get_valid_service_types
+from application.service_matcher.service_type import get_valid_service_types
 
 FILE_PATH = "application.common.service_type"
 

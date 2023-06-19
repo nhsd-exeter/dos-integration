@@ -13,7 +13,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   Scenario: F001SXX2. A Changed event with aligned data does not save an update to DoS
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "No changes to save"
+    Then the "service-sync" lambda shows field "message" with value "No changes to save"
     And the service history is not updated
 
   @complete @pharmacy_no_log_searches
@@ -51,7 +51,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id
     Then the Changed Event is stored in dynamo db
-    And the "ingest-change-event" lambda shows field "message" with message "Added record to dynamodb"
+    And the "ingest-change-event" lambda shows field "message" with value "Added record to dynamodb"
 
   @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX8 Changed Event with URL variations is formatted and accepted by Dos
@@ -145,7 +145,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   Scenario: F001SX18 Empty Specified opening times results in no change and no error
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "No valid pending changes found"
+    Then the "service-sync" lambda shows field "message" with value "No valid pending changes found"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX19 Empty CE Specified opening times removes all SP times in DoS
@@ -154,7 +154,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the entry is committed to the services table
     And the specified opening date is set to "no" date
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Deleting all specified opening times"
+    Then the "service-sync" lambda shows field "message" with value "Deleting all specified opening times"
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SX20 CE Specified Opening Times with future dates replaces empty Dos SP times
@@ -177,23 +177,23 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service in DoS supports palliative care
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Palliative Care is equal"
+    Then the "service-sync" lambda shows field "message" with value "Palliative Care is equal"
     And the service history is not updated
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_no_log_searches
   Scenario: F001SX23. Palliative Care Service with changed data flagged (removed)
     Given a basic service is created
     And the service in DoS supports palliative care
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
+    Then palliative care is "removed" to the service
     And the service history shows "cmssgsdid" change type is "delete"
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_no_log_searches
   Scenario: F001SX24. Palliative Care Service with changed data flagged (added)
     Given a basic service is created
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with message "PALLIATIVE_CARE_NOT_EQUAL"
+    Then palliative care is "added" to the service
     And the service history shows "cmssgsdid" change type is "add"
 
   @complete @pharmacy_cloudwatch_queries
@@ -203,5 +203,5 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the entry is committed to the services table
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with message "Not suitable for palliative care comparison"
+    Then the "service-sync" lambda shows field "message" with value "Not suitable for palliative care comparison"
     And the service history is not updated

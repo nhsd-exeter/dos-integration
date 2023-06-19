@@ -24,7 +24,7 @@ dos_location_cache = {}
 
 @dataclass
 class DoSService:
-    """Class to represent a DoS Service, field names are equal to equivalent db column names."""
+    """Class to represent a DoS Service."""
 
     id: int  # noqa: A003
     uid: int
@@ -38,7 +38,7 @@ class DoSService:
     statusid: int
     publicphone: str
     publicname: str
-    servicename: str
+    service_type_name: str
     easting: int
     northing: int
     latitude: float
@@ -117,7 +117,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     # Safe as conditional is configurable but variables is inputted to psycopg as variables
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
-        "statusid, publicphone, publicname, st.name servicename"
+        "statusid, publicphone, publicname, st.name service_type_name"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
         f" WHERE {conditions}"
     )
@@ -169,22 +169,6 @@ def get_dos_locations(postcode: str | None = None, try_cache: bool = True) -> li
     return dos_locations
 
 
-def get_all_valid_dos_postcodes() -> set[str]:
-    """Gets all the valid DoS postcodes that are found in the locations table.
-
-    Returns:
-        set[str]: A set of normalised postcodes as strings.
-    """
-    logger.info("Collecting all valid postcodes from DoS DB")
-    sql_command = "SELECT postcode FROM locations"
-    with connect_to_dos_db_replica() as connection:
-        cursor = query_dos_db(connection=connection, query=sql_command)
-        postcodes = {row["postcode"].replace(" ", "").upper() for row in cursor.fetchall()}
-        cursor.close()
-    logger.info(f"Found {len(postcodes)} unique postcodes from DoS DB.")
-    return postcodes
-
-
 def get_valid_dos_location(postcode: str) -> DoSLocation | None:
     """Gets the valid DoS location for the given postcode.
 
@@ -196,56 +180,6 @@ def get_valid_dos_location(postcode: str) -> DoSLocation | None:
     """
     dos_locations = [loc for loc in get_dos_locations(postcode) if loc.is_valid()]
     return dos_locations[0] if dos_locations else None
-
-
-def get_services_from_db(typeids: Iterable) -> list[DoSService]:
-    """VUNERABLE TO SQL INJECTION: DO NOT USE IN LAMBDA."""
-    # Find base services
-    sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, "  # noqa: S608 - Not for use within lambda
-        "statusid, publicphone, publicname, st.name servicename "
-        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        f"WHERE typeid IN ({','.join(map(str, typeids))}) "
-        f"AND statusid = 1 AND odscode IS NOT NULL"
-    )
-    with connect_to_dos_db_replica() as connection:
-        cursor = query_dos_db(connection=connection, query=sql_query)
-        services = [DoSService(row) for row in cursor.fetchall()]
-        cursor.close()
-        service_id_strings = {str(s.id) for s in services}
-
-        # Collect and apply all std open times to services
-        sql_query = (
-            "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "  # noqa: S608
-            "FROM servicedayopenings sdo "
-            "INNER JOIN servicedayopeningtimes sdot "
-            "ON sdo.id = sdot.servicedayopeningid "
-            "LEFT JOIN openingtimedays otd "
-            "ON sdo.dayid = otd.id "
-            f"WHERE sdo.serviceid IN ({','.join(service_id_strings)})"
-        )
-        cursor = query_dos_db(connection=connection, query=sql_query)
-        std_open_times = db_rows_to_std_open_times_map(list(cursor.fetchall()))
-        for service in services:
-            service.standard_opening_times = std_open_times.get(service.id, StandardOpeningTimes())
-        cursor.close()
-
-        # Collect and apply all spec open times to services
-        # Not used within lambda
-        sql_query = (
-            "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "  # noqa: S608
-            "FROM servicespecifiedopeningdates ssod "
-            "INNER JOIN servicespecifiedopeningtimes ssot "
-            "ON ssod.id = ssot.servicespecifiedopeningdateid "
-            f"WHERE ssod.serviceid IN ({','.join(service_id_strings)})"
-        )
-        cursor = query_dos_db(connection=connection, query=sql_query)
-        spec_open_times = db_rows_to_spec_open_times_map(list(cursor.fetchall()))
-        for service in services:
-            service.specified_opening_times = spec_open_times.get(service.id, [])
-        cursor.close()
-
-    return services
 
 
 def get_specified_opening_times_from_db(connection: Connection, service_id: int) -> list[SpecifiedOpeningTime]:
@@ -329,10 +263,7 @@ def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> dict[str, list[Sp
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
 
-    return {
-        service_id: db_rows_to_spec_open_times(db_rows)
-        for service_id, db_rows in serviceid_dbrows_map.items()
-    }
+    return {service_id: db_rows_to_spec_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
 
 
 def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
@@ -361,10 +292,7 @@ def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> dict[str, Standard
     for db_row in db_rows:
         serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
 
-    return {
-        service_id: db_rows_to_std_open_times(db_rows)
-        for service_id, db_rows in serviceid_dbrows_map.items()
-    }
+    return {service_id: db_rows_to_std_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
 
 
 def has_palliative_care(service: DoSService, connection: Connection) -> bool:

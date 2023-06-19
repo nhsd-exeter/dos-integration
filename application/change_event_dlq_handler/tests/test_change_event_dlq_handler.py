@@ -7,7 +7,7 @@ import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 
 from application.change_event_dlq_handler.change_event_dlq_handler import lambda_handler
-from common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
+from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 FILE_PATH = "application.change_event_dlq_handler.change_event_dlq_handler"
 

@@ -1,6 +1,6 @@
 # For documentation see here - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
 service: uec-dos-integration
-frameworkVersion: '3'
+frameworkVersion: "3"
 configValidationMode: error
 
 provider:
@@ -110,17 +110,17 @@ functions:
       DB_READ_AND_WRITE_USER_NAME: ${env:DB_SCHEMA}
     maximumRetryAttempts: 0
     vpcDiscovery:
-      vpcName: '${env:AWS_VPC_NAME}'
+      vpcName: "${env:AWS_VPC_NAME}"
       subnets:
         - tagKey: Name
           tagValues:
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c"
       securityGroups:
         - tagKey: Name
           tagValues:
-            - '${env:TF_VAR_lambda_security_group_name}'
+            - "${env:TF_VAR_lambda_security_group_name}"
 
   dos-db-update-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_UPDATE_DLQ_HANDLER}:${env:VERSION}
@@ -190,7 +190,7 @@ functions:
     environment:
       AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
-      EMAIL_SECRET_NAME : ${env:PROJECT_DEPLOYMENT_SECRETS}
+      EMAIL_SECRET_NAME: ${env:PROJECT_DEPLOYMENT_SECRETS}
     maximumRetryAttempts: 2
 
   service-matcher:
@@ -213,17 +213,17 @@ functions:
       DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
       DB_SCHEMA: ${env:DB_SCHEMA}
     vpcDiscovery:
-      vpcName: '${env:AWS_VPC_NAME}'
+      vpcName: "${env:AWS_VPC_NAME}"
       subnets:
         - tagKey: Name
           tagValues:
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c"
       securityGroups:
         - tagKey: Name
           tagValues:
-            - '${env:TF_VAR_lambda_security_group_name}'
+            - "${env:TF_VAR_lambda_security_group_name}"
 
   service-sync:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_SYNC}:${env:VERSION}
@@ -254,17 +254,17 @@ functions:
       SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
     maximumRetryAttempts: 0
     vpcDiscovery:
-      vpcName: '${env:AWS_VPC_NAME}'
+      vpcName: "${env:AWS_VPC_NAME}"
       subnets:
         - tagKey: Name
           tagValues:
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b'
-            - '${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c'
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c"
       securityGroups:
         - tagKey: Name
           tagValues:
-            - '${env:TF_VAR_lambda_security_group_name}'
+            - "${env:TF_VAR_lambda_security_group_name}"
 
   slack-messenger:
     image: ${env:DOCKER_REGISTRY}/${env:SLACK_MESSENGER}:${env:VERSION}

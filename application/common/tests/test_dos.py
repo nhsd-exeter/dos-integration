@@ -2,24 +2,22 @@ from datetime import date, datetime, time, timezone
 from random import choices
 from unittest.mock import MagicMock, patch
 
-from .conftest import dummy_dos_service
 from application.common.dos import (
     DoSService,
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
     db_rows_to_std_open_times,
     db_rows_to_std_open_times_map,
-    get_all_valid_dos_postcodes,
     get_dos_locations,
     get_matching_dos_services,
     get_region,
-    get_services_from_db,
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
     get_valid_dos_location,
     has_palliative_care,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from application.conftest import dummy_dos_service
 from common.constants import (
     DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
@@ -45,7 +43,7 @@ def test_field_names():
         "statusid",
         "publicphone",
         "publicname",
-        "servicename",
+        "service_type_name",
         "easting",
         "northing",
         "latitude",
@@ -153,7 +151,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name servicename FROM services s "
+            "statusid, publicphone, publicname, st.name service_type_name FROM services s "
             "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
@@ -219,7 +217,7 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, 
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name servicename FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
+            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
             "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
         query_vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
@@ -247,7 +245,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, "
-            "publicphone, publicname, st.name servicename FROM services s LEFT JOIN servicetypes"
+            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes"
             " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
@@ -459,32 +457,6 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
     )
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
-@patch(f"{FILE_PATH}.query_dos_db")
-def test_get_all_valid_dos_postcodes(mock_query_dos_db, mock_connect_to_dos_db_replica):
-    # Arrange
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = MagicMock()
-    mock_cursor = MagicMock()
-    db_return = [
-        {"postcode": "BA2 7AF"},
-        {"postcode": "EY8 8AH"},
-        {"postcode": "SW9 5EZ"},
-        {"postcode": "W2 8PP"},
-        {"postcode": "PO1 9"},
-        {"postcode": "B W 4 5 H D"},
-        {"postcode": "BA2 7AF"},
-    ]
-    mock_cursor.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_cursor
-
-    expected_result = {"BA27AF", "EY88AH", "SW95EZ", "W28PP", "PO19", "BW45HD"}
-
-    # Act
-    response = get_all_valid_dos_postcodes()
-    # Assert
-    assert response == expected_result
-
-
 @patch(f"{FILE_PATH}.get_dos_locations")
 def test_get_valid_dos_location(mock_get_dos_locations: MagicMock):
     # Arrange
@@ -506,81 +478,6 @@ def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMo
     location = get_valid_dos_location(postcode)
     # Assert
     assert location is None
-
-
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
-@patch(f"{FILE_PATH}.query_dos_db")
-def test_get_services_from_db(mock_query_dos_db, mock_connect_to_dos_db_replica):
-    # Arrange
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = MagicMock()
-    db_returns = [
-        [get_db_item(id=1, typeid=12), get_db_item(id=2, typeid=14)],
-        [
-            {"serviceid": 1, "dayid": 4, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
-            {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-            {"serviceid": 2, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
-            {"serviceid": 2, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        ],
-        [
-            {
-                "serviceid": 1,
-                "date": date(2019, 5, 6),
-                "starttime": time(8, 0, 0),
-                "endtime": time(20, 0, 0),
-                "isclosed": False,
-            },
-            {
-                "serviceid": 1,
-                "date": date(2019, 5, 27),
-                "starttime": time(8, 0, 0),
-                "endtime": time(20, 0, 0),
-                "isclosed": False,
-            },
-            {
-                "serviceid": 2,
-                "date": date(2019, 8, 26),
-                "starttime": time(8, 0, 0),
-                "endtime": time(20, 0, 0),
-                "isclosed": False,
-            },
-            {"serviceid": 1, "date": date(2019, 9, 20), "starttime": None, "endtime": None, "isclosed": True},
-            {
-                "serviceid": 2,
-                "date": date(2019, 5, 6),
-                "starttime": time(6, 0, 0),
-                "endtime": time(7, 0, 0),
-                "isclosed": False,
-            },
-        ],
-    ]
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.side_effect = db_returns
-    mock_query_dos_db.return_value = mock_cursor
-
-    expected_reprs = sorted(
-        [
-            "<DoSService: name='fake name' id=1 uid=159514725 odscode=FA9321 type=12 status=1>"
-            "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
-            "friday=[], saturday=[], sunday=[13:00:00-15:30:00]>"
-            "<SpecifiedOpenTime: 06-05-2019 open=True [08:00:00-20:00:00]>"
-            "<SpecifiedOpenTime: 27-05-2019 open=True [08:00:00-20:00:00]>"
-            "<SpecifiedOpenTime: 20-09-2019 open=False []>",
-            "<DoSService: name='fake name' id=2 uid=159514725 odscode=FA9321 type=14 status=1>"
-            "<StandardOpeningTimes: monday=[], tuesday=[08:00:00-17:00:00], wednesday=[], thursday=[], "
-            "friday=[13:00:00-15:30:00], saturday=[], sunday=[]>"
-            "<SpecifiedOpenTime: 06-05-2019 open=True [06:00:00-07:00:00]>"
-            "<SpecifiedOpenTime: 26-08-2019 open=True [08:00:00-20:00:00]>",
-        ],
-    )
-
-    # Act
-    services = get_services_from_db([12, 14])
-    actual_service_repr = [
-        repr(s) + repr(s.standard_opening_times) + "".join(repr(spectime) for spectime in s.specified_opening_times)
-        for s in services
-    ]
-
-    assert actual_service_repr == expected_reprs
 
 
 def test_db_rows_to_spec_open_times():
@@ -798,7 +695,7 @@ def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa
         "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
         "publicphone": "0123 012 012",
         "publicname": None,
-        "servicename": "my service",
+        "service_type_name": "my service",
     }
 
 

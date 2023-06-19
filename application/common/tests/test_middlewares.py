@@ -11,8 +11,8 @@ from application.common.middlewares import (
     unhandled_exception_logging,
     unhandled_exception_logging_hidden_event,
 )
-from application.common.tests.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 from application.common.utilities import extract_body
+from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
 def test_redact_staff_key_from_event_with_no_staff_key(caplog):

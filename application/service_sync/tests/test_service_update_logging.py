@@ -102,6 +102,7 @@ def test_service_update_logger_log_service_update(
     # Arrange
     environ["ENV"] = "UNKNOWN"
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
+    service_update_logger.dos_service = dos_service = MagicMock()
     # Act
     service_update_logger.log_service_update(
         data_field_modified=EXAMPLE_DATA_FIELD_MODIFIED,
@@ -109,7 +110,6 @@ def test_service_update_logger_log_service_update(
         previous_value=EXAMPLE_PREVIOUS_VALUE,
         new_value=EXAMPLE_NEW_VALUE,
     )
-
     # Assert
     mock_log_service_update.assert_called_once_with(
         action=EXAMPLE_ACTION,
@@ -119,6 +119,7 @@ def test_service_update_logger_log_service_update(
         service_name=SERVICE_NAME,
         service_uid=SERVICE_UID,
         type_id=TYPE_ID,
+        dos_service=dos_service,
     )
     dos_logger_mock.info.assert_called_once_with(
         msg=f"correlation_id|{DOS_INTEGRATION_USER_NAME}|{NULL_VALUE}|{SERVICE_UID}|"
@@ -236,6 +237,7 @@ def test_log_service_updates_demographics_change(mock_service_update_logger: Mag
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
         odscode=str(changes_to_dos.nhs_entity.odscode),
+        dos_service=changes_to_dos.dos_service,
     )
     mock_service_update_logger.return_value.log_service_update.assert_called_once_with(
         data_field_modified=change_key,
@@ -276,6 +278,7 @@ def test_log_service_updates_standard_opening_times_change(mock_service_update_l
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
         odscode=str(changes_to_dos.nhs_entity.odscode),
+        dos_service=changes_to_dos.dos_service,
     )
     mock_service_update_logger.return_value.log_standard_opening_times_service_update_for_weekday.assert_called_once_with(  # noqa: E501
         data_field_modified=change_key,
@@ -317,6 +320,7 @@ def test_log_service_updates_specified_opening_times_change(mock_service_update_
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
         odscode=str(changes_to_dos.nhs_entity.odscode),
+        dos_service=changes_to_dos.dos_service,
     )
     mock_service_update_logger.return_value.log_specified_opening_times_service_update.assert_called_once_with(
         action=EXAMPLE_ACTION,
@@ -356,6 +360,7 @@ def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock
         service_name=changes_to_dos.dos_service.name,
         type_id=str(changes_to_dos.dos_service.typeid),
         odscode=str(changes_to_dos.nhs_entity.odscode),
+        dos_service=changes_to_dos.dos_service,
     )
 
     mock_service_update_logger.return_value.log_sgsdid_service_update.assert_called_once_with(

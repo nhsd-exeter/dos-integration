@@ -33,10 +33,6 @@ data "template_file" "delete_nonprod_environment_on_pr_merged_buildspec" {
   template = file("buildspecs/delete-nonprod-environment-on-pr-merged-buildspec.yml")
 }
 
-data "template_file" "build_environment_buildspec" {
-  template = file("buildspecs/build-environment-buildspec.yml")
-}
-
 data "template_file" "delete_ecr_images_buildspec" {
   template = file("buildspecs/delete-ecr-images-buildspec.yml")
 }

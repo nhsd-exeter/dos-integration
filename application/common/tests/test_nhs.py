@@ -2,16 +2,15 @@ from datetime import date, time
 
 import pytest
 
-from .conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 from application.common.constants import CLOSED_AND_HIDDEN_STATUSES
 from application.common.nhs import (
     NHSEntity,
     get_palliative_care_log_value,
     is_spec_opening_json,
     is_std_opening_json,
-    match_nhs_entities_to_services,
     skip_if_key_is_none,
 )
+from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
 from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
@@ -636,39 +635,6 @@ def test_is_matching_dos_service():  # noqa: PLR0915
     dos_service.odscode = "VABCDEU123"
     dos_service.typeid = 324634324
     assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-
-def test_match_nhs_entities_to_services():
-    nhs1 = NHSEntity({"ODSCode": "V012345"})
-    nhs2 = NHSEntity({"ODSCode": "FA912"})
-
-    dos1a = dummy_dos_service()
-    dos1a.odscode = "V123456789"
-    dos1a.typeid = DENTIST_SERVICE_ID
-
-    dos1b = dummy_dos_service()
-    dos1b.odscode = "V123456222"
-    dos1b.typeid = DENTIST_SERVICE_ID
-
-    dos1c = dummy_dos_service()
-    dos1c.odscode = "V123456222"
-    dos1c.typeid = 999
-
-    dos2a = dummy_dos_service()
-    dos2a.odscode = "FA912333"
-    dos2a.typeid = PHARMACY_SERVICE_ID
-
-    dos2a = dummy_dos_service()
-    dos2a.odscode = "FA912333"
-    dos2a.typeid = PHARMACY_SERVICE_ID
-
-    expected_result = {nhs1.odscode: [dos1a, dos1b], nhs2.odscode: [dos2a]}
-
-    nhs_entities = [nhs1, nhs2]
-    dos_services = [dos1a, dos1b, dos1c, dos2a]
-    actual_result = match_nhs_entities_to_services(nhs_entities, dos_services)
-
-    assert actual_result == expected_result
 
 
 @pytest.mark.parametrize(

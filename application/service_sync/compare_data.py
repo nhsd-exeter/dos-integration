@@ -4,6 +4,11 @@ from aws_lambda_powertools.logging import Logger
 
 from .changes_to_dos import ChangesToDoS
 from .format import format_address, format_website
+from .reporting import (
+    log_blank_standard_opening_times,
+    log_incorrect_palliative_stockholder_type,
+    log_invalid_nhsuk_postcode,
+)
 from .service_histories import ServiceHistories
 from .service_histories_change import ServiceHistoriesChange
 from .validation import validate_opening_times, validate_website
@@ -32,12 +37,6 @@ from common.opening_times import (
     SpecifiedOpeningTime,
     StandardOpeningTimes,
     opening_period_times_from_list,
-)
-from common.report_logging import (
-    log_blank_standard_opening_times,
-    log_incorrect_palliative_stockholder_type,
-    log_invalid_nhsuk_postcode,
-    log_palliative_care_not_equal,
 )
 from common.utilities import is_val_none_or_empty
 
@@ -90,7 +89,7 @@ def has_website_changed(changes: ChangesToDoS) -> bool:
         changes.new_website = nhs_uk_website
         if changes.dos_service.web != nhs_uk_website:
             logger.info(f"Website is not equal, {changes.dos_service.web=} != {nhs_uk_website=}")
-            return validate_website(changes.nhs_entity, nhs_uk_website)
+            return validate_website(changes.nhs_entity, nhs_uk_website, changes.dos_service)
         logger.info(f"Website is equal, {changes.dos_service.web=} == {nhs_uk_website=}")
     return False
 
@@ -280,6 +279,7 @@ def compare_location_data(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         )
     return changes_to_dos
 
+
 def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> bool:
     """Check if the standard opening times have changed for a specific day.
 
@@ -311,6 +311,7 @@ def has_standard_opening_times_changed(changes: ChangesToDoS, weekday: str) -> b
     )
     return False
 
+
 def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
     """Check if the specified opening times have changed.
 
@@ -341,6 +342,7 @@ def has_specified_opening_times_changed(changes: ChangesToDoS) -> bool:
     changes.current_specified_opening_times = dos_spec_open_dates
     changes.new_specified_opening_times = future_nhs_spec_open_dates
     return True
+
 
 def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     """Compares and creates changes individually for all opening times if needed.
@@ -436,6 +438,10 @@ def has_palliative_care_changed(changes: ChangesToDoS) -> bool:
     if changes.current_palliative_care != changes.new_palliative_care:
         logger.info(
             f"Palliative Care is not equal, DoS='{changes.current_palliative_care}' != NHS UK='{changes.new_palliative_care}'",  # noqa: E501
+            extra={
+                "dos_palliative_care": changes.current_palliative_care,
+                "nhsuk_palliative_care": changes.new_palliative_care,
+            },
         )
         return True
     logger.info(
@@ -456,17 +462,14 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     skip_palliative_care_check = skip_if_key_is_none(
         changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
     )
-    logger.debug(f"Skip palliative care check: {skip_palliative_care_check}")
+    logger.info(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and has_palliative_care_changed(changes=changes_to_dos)
         and skip_palliative_care_check is False
     ):
         changes_to_dos.palliative_care_changes = True
-        log_palliative_care_not_equal(
-            nhs_uk_palliative_care=changes_to_dos.nhs_entity.palliative_care,
-            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
-        )
+
         changes_to_dos.service_histories.add_sgsdid_change(
             sgsdid=DOS_PALLIATIVE_CARE_SGSDID,
             new_value=changes_to_dos.nhs_entity.palliative_care,

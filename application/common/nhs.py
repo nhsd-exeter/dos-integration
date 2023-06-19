@@ -1,4 +1,3 @@
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
@@ -51,7 +50,6 @@ class NHSEntity:
         self.org_type = entity_data.get("OrganisationType")
         self.org_sub_type = entity_data.get("OrganisationSubType")
         self.org_status = entity_data.get("OrganisationStatus")
-        self.odscode = entity_data.get("ODSCode")
         self.postcode = entity_data.get("Postcode")
         self.parent_org_name = entity_data.get("ParentOrganisation", {}).get("OrganisationName")
         self.address_lines = [
@@ -65,6 +63,8 @@ class NHSEntity:
         self.phone = self.extract_contact("Telephone")
         self.website = self.extract_contact("Website")
         self.palliative_care = self.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+
+        logger.append_keys(nhsuk_organisation_typeid=self.org_type_id, nhsuk_organisation_name=self.org_name)
 
     def __repr__(self) -> str:
         """Returns a string representation of the object."""
@@ -81,11 +81,9 @@ class NHSEntity:
                 item.get("ContactValue")
                 for item in self.entity_data.get("Contacts", [])
                 if (
-                    item.get("ContactMethodType", "").upper()
-                    == contact_type.upper()
+                    item.get("ContactMethodType", "").upper() == contact_type.upper()
                     and item.get("ContactType", "").upper() == "PRIMARY"
-                    and item.get("ContactAvailabilityType", "").upper()
-                    == "OFFICE HOURS"
+                    and item.get("ContactAvailabilityType", "").upper() == "OFFICE HOURS"
                 )
             ),
             None,
@@ -228,8 +226,7 @@ def is_std_opening_json(item: dict) -> bool:
 
     # If marked as closed, ensure open time values are not present
     return bool(
-        is_open
-        or all(value in ["", None] for value in (open_time, close_time)),
+        is_open or all(value in ["", None] for value in (open_time, close_time)),
     )
 
 
@@ -256,32 +253,8 @@ def is_spec_opening_json(item: dict) -> bool:
 
     # If marked as closed, ensure open time values are not present
     return bool(
-        is_open
-        or all(value in ["", None] for value in (open_time, close_time)),
+        is_open or all(value in ["", None] for value in (open_time, close_time)),
     )
-
-
-def match_nhs_entities_to_services(
-    nhs_entities: list[NHSEntity],
-    services: list[DoSService],
-) -> dict[str, list[DoSService]]:
-    """Match NHS Entities to corresponding list of services.
-
-    Takes lists of NHS Entities and DoS Services and creates a dict where the keys are NHS odscodes
-    and the values are the corresponding lists of services that match that code.
-    """
-    logger.info("Matching all NHS Entities to corresponding list of services.")
-    servicelist_map = defaultdict(list)
-    for nhs_entity in nhs_entities:
-        for service in services:
-            if nhs_entity.is_matching_dos_service(service):
-                servicelist_map[nhs_entity.odscode].append(service)
-
-    logger.info(
-        f"{len(servicelist_map)}/{len(nhs_entities)} nhs entities matches with at least 1 service. "
-        f"{len(nhs_entities) - len(servicelist_map)} not matched.",
-    )
-    return dict(servicelist_map)
 
 
 def skip_if_key_is_none(key: Any) -> bool:  # noqa: ANN401

@@ -277,6 +277,7 @@ def build_change_event(context: Context) -> None:
         "OrganisationType": "Pharmacy",
         "OrganisationTypeId": "PHA",
         "UniqueKey": generate_unique_key(),
+        "ParentOrganisation": {"ODSCode": "TES", "OrganisationName": "Fake Pharmacy Corporation"},
         "Staff": [],
     }
     context.change_event = change_event

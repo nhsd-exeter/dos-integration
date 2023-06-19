@@ -64,7 +64,7 @@ def test_validate_opening_times_failure(
 @patch(f"{FILE_PATH}.log_website_is_invalid")
 def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website: str):
     # Act & Assert
-    assert True is validate_website(nhs_entity=NHSEntity({}), nhs_website=website)
+    assert True is validate_website(nhs_entity=NHSEntity({}), nhs_website=website, dos_service=MagicMock())
     mock_log_website_is_invalid.assert_not_called()
 
 
@@ -79,6 +79,7 @@ def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website
 def test_validate_website_failure(mock_log_website_is_invalid: MagicMock, website: str):
     # Arrange
     nhs_entity = NHSEntity({})
+    dos_service = MagicMock()
     # Act & Assert
-    assert False is validate_website(nhs_entity=nhs_entity, nhs_website=website)
-    mock_log_website_is_invalid.assert_called_once_with(nhs_entity, website)
+    assert False is validate_website(nhs_entity=nhs_entity, nhs_website=website, dos_service=dos_service)
+    mock_log_website_is_invalid.assert_called_once_with(nhs_entity, website, dos_service)

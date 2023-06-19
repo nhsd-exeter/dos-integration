@@ -17,9 +17,9 @@ resource "aws_codebuild_webhook" "build_environment_webhook" {
 
 resource "aws_codebuild_project" "di_build_environment" {
   count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-build-environment-stage"
+  name           = "${var.project_id}-${var.environment}-build-and-test-environment-stage"
   description    = "Builds environment based on push to task branches"
-  build_timeout  = "30"
+  build_timeout  = "60"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
@@ -45,9 +45,8 @@ resource "aws_codebuild_project" "di_build_environment" {
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-environment-stage"
+      value = "${var.project_id}-${var.environment}-build-and-test-environment-stage"
     }
-
     environment_variable {
       name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
       value = var.aws_account_id_live_parent
@@ -71,7 +70,7 @@ resource "aws_codebuild_project" "di_build_environment" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-environment-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-and-test-environment-stage"
       stream_name = ""
     }
   }
@@ -79,7 +78,6 @@ resource "aws_codebuild_project" "di_build_environment" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = data.template_file.build_environment_buildspec.rendered
+    buildspec       = file("buildspecs/build-and-test-environment-buildspec.yml")
   }
-
 }

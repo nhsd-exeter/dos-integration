@@ -2,9 +2,9 @@ from re import search
 
 from aws_lambda_powertools.logging import Logger
 
+from .reporting import log_service_with_generic_bank_holiday, log_website_is_invalid
 from common.dos import DoSService
 from common.nhs import NHSEntity
-from common.report_logging import log_service_with_generic_bank_holiday, log_website_is_invalid
 
 logger = Logger(child=True)
 
@@ -30,17 +30,18 @@ def validate_opening_times(dos_service: DoSService, nhs_entity: NHSEntity) -> bo
     return True
 
 
-def validate_website(nhs_entity: NHSEntity, nhs_website: str) -> bool:
+def validate_website(nhs_entity: NHSEntity, nhs_website: str, dos_service: DoSService) -> bool:
     """Validates the website matches DoS validation rules.
 
     Args:
         nhs_entity (NHSEntity): NHS entity object to log if validation warning.
         nhs_website (str): NHS website to validate.
+        dos_service (DoSService): DoS service object to validate.
 
     Returns:
         bool: True if website matches DoS validation rules, False otherwise.
     """
     if search(r"^(https?:\/\/)?([a-z\d][a-z\d-]*[a-z\d]\.)+[a-z]{2,}(\/.*)?$", nhs_website):
         return True
-    log_website_is_invalid(nhs_entity, nhs_website)
+    log_website_is_invalid(nhs_entity, nhs_website, dos_service)
     return False
