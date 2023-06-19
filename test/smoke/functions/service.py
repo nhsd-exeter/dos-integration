@@ -7,6 +7,7 @@ from pytz import UTC
 from .aws import invoke_dos_db_handler_lambda
 from .change_event import ChangeEvent
 from .types import Demographics
+from .utilities import seconds_since_midnight
 
 DEFAULT_ODS_CODE = "FC766"
 
@@ -242,8 +243,12 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
 
         for expected_value_time_periods in expected_value:
             cms_key = f"cmsopentime{expected_value_time_periods['day'].lower()}"
-            open_seconds = datetime.strptime(expected_value_time_periods["open"], "%H:%M").time().strftime("%S")
-            close_seconds = datetime.strptime(expected_value_time_periods["close"], "%H:%M").time().strftime("%S")
+            open_seconds = seconds_since_midnight(
+                datetime.strptime(expected_value_time_periods["open"], "%H:%M").time(),
+            )
+            close_seconds = seconds_since_midnight(
+                datetime.strptime(expected_value_time_periods["close"], "%H:%M").time(),
+            )
             seconds_str = f"{open_seconds}-{close_seconds}"
             assert (
                 seconds_str in new_history[cms_key]["data"]["add"]
@@ -283,7 +288,22 @@ def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
         )
 
     def assert_field_updated_in_history() -> None:
-        pass
+        history = get_service_history(service_id)
+        first_key = list(history.keys())[0]
+        specified_opening_times_key = "cmsopentimespecified"
+        new_history = history[first_key]["new"]
+        expected_specified_opening_times = [
+            (
+                f'{value["date"]}-'
+                f'{seconds_since_midnight(datetime.strptime(value["open"], "%H:%M").time())}-'
+                f'{seconds_since_midnight(datetime.strptime(value["close"], "%H:%M").time())}'
+            )
+            for value in expected_value
+        ]
+        assert expected_specified_opening_times == new_history[specified_opening_times_key]["data"]["add"], (
+            f"Expected data: {expected_specified_opening_times},"
+            f" Actual data: {new_history[specified_opening_times_key]['data']['add']}"
+        )
 
     service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
