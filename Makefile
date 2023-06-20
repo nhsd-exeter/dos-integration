@@ -591,17 +591,6 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
 
 # ==============================================================================
-# DynamoDB Cleanup Job
-run-dynamodb-cleanup-job:
-	python3 scripts/dynamodb_cleanup_job/script.py
-
-deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
-	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
-
-undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
-	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
-
-# ==============================================================================
 # Ruff
 
 docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
