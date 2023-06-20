@@ -19,6 +19,7 @@ def test_app_config(mock_app_config_store):
         environment=environment,
         application=f"uec-dos-int-{environment}-lambda-app-config",
         name=feature_flags_name,
+        max_age=300,
     )
     # Clean up
     del environ["SHARED_ENVIRONMENT"]
