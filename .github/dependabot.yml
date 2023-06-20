@@ -60,25 +60,19 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/deployment-pipelines"
+    directory: "/infrastructure/stacks/blue-green-link"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/shared-resources"
     schedule:
       interval: "monthly"
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/development-and-deployment-tools"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/perf-test-tools"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/release-pipeline"
     schedule:
       interval: "monthly"
     target-branch: "develop"
