@@ -87,7 +87,7 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
     }
   }
   stage {
-    name = "Deploy_Demo_Environment"
+    name = "Deploy_Cicd_Release_Environment"
     dynamic "action" {
       for_each = local.cicd_prod_environments
       content {
@@ -118,6 +118,35 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
             }
           ])
         }
+      }
+    }
+    action {
+      name            = "Smoke_Test_New_Version"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 2
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = aws_codebuild_project.production_smoke_test.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "PROFILE"
+            value = "demo"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "ENVIRONMENT"
+            value = "cicd-release"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "AWS_ACCOUNT"
+            value = "PROD"
+            type  = "PLAINTEXT"
+          }
+        ])
       }
     }
   }
