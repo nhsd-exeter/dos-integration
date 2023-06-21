@@ -8,7 +8,6 @@ resource "aws_codepipeline" "development_pipeline" {
     type     = "S3"
   }
 
-
   stage {
     name = "Source"
     action {
@@ -164,16 +163,42 @@ resource "aws_codepipeline" "development_pipeline" {
         ])
       }
     }
+
+    action {
+      name            = "Smoke_Test_Demo"
+      category        = "Build"
+      owner           = "AWS"
+      run_order       = 2
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
+      configuration = {
+        ProjectName = aws_codebuild_project.production_smoke_test.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "PROFILE"
+            value = "demo"
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "ENVIRONMENT"
+            value = "demo"
+            type  = "PLAINTEXT"
+          }
+        ])
+      }
+    }
   }
+
   depends_on = [
     module.development_pipeline_artefact_bucket,
     aws_codebuild_project.di_unit_tests_stage,
     aws_codebuild_project.di_build_image_stage,
     aws_codebuild_project.di_full_deploy_stage,
     aws_codebuild_project.di_integration_tests_autoflags,
+    aws_codebuild_project.production_smoke_test,
   ]
 }
-
 
 
 module "development_pipeline_artefact_bucket" {

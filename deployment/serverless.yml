@@ -71,7 +71,13 @@ plugins:
 
 custom:
   serverlessIfElse:
-    - If: '"${env:AWS_ACCOUNT_NAME}" == "prod"'
+    - If: '"${env:PROFILE}" == "live"'
+      Exclude:
+        - functions.dos-db-handler
+    - If: '"${env:PROFILE}" == "perf"'
+      Exclude:
+        - functions.dos-db-handler
+    - If: '"${env:PROFILE}" == "perf2"'
       Exclude:
         - functions.dos-db-handler
 
@@ -107,7 +113,7 @@ functions:
       DB_SCHEMA: ${env:DB_SCHEMA}
       DB_SECRET_KEY: ${env:DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY}
       DB_SECRET_NAME: ${env:DOS_DEPLOYMENT_SECRETS}
-      DB_READ_AND_WRITE_USER_NAME: ${env:DB_SCHEMA}
+      DB_READ_AND_WRITE_USER_NAME: ${env:DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME}
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"

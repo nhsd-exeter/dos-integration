@@ -434,8 +434,8 @@ EOF
 }
 
 module "dos_db_handler" {
-  # Only deploy when the environment is not prod
-  count                = var.profile != "demo" && var.profile != "live" ? 1 : 0
+  # Only deploy when the environment is not live
+  count                = var.profile != "live" ? 1 : 0
   source               = "../../modules/lambda-iam-role"
   lambda_name          = var.dos_db_handler_lambda_name
   use_custom_policy    = true

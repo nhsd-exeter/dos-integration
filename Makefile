@@ -277,20 +277,6 @@ plan-development-and-deployment-tools:
 	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
 	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
-deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
-	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
-
-undeploy-perf-test-tools:
-	make terraform-destroy-auto-approve STACKS=perf-test-tools PROFILE=tools
-
-plan-perf-test-tools:
-	if [ "$(PROFILE)" == "tools" ]; then
-		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=perf-test-tools
-	else
-		echo "Only tools profile supported at present"
-	fi
-
 docker-hub-signin: # Sign into Docker hub
 	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
 	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
@@ -318,13 +304,6 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 	else
 		echo This is for destroying old dev environments PROFILE should not be equal to ENVIRONMENT
 	fi
-
-re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SOURCE=[tag], TARGET=[tag]
-	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_PROD_LIST) | tr "," "\n"); do
-		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
-		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)
-		make docker-push NAME=$$IMAGE_NAME VERSION=$(TARGET)
-	done
 
 get-environment-from-pr:
 	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DS-(?<x>.[0-9]*).*"; "ds-\(.x)") ')

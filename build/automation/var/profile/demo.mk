@@ -37,3 +37,10 @@ TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 # Organisation Types Feature Flags
 
 ACCEPTED_ORG_TYPES := PHA
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DoS DB Handler
+
+DOS_DEPLOYMENT_SECRETS := core-dos-uet/deployment
+DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_DI_READWRITE_PASSWORD
+DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME = $(DB_READ_AND_WRITE_USER_NAME)
