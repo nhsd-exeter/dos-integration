@@ -1,0 +1,28 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - export TOKEN=$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
+      - |
+        if [[ "$AWS_ACCOUNT" == "PROD" ]]; then
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+        else
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+        fi
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - echo PROFILE=$PROFILE
+      - echo ENVIRONMENT=$ENVIRONMENT
+      - export PREVIOUS_VERSION=$(make terraform-output STACKS=blue-green-link OPTS='-raw previous_blue_green_environment' PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT | tail -n -1 | cut -d - -f1)
+      - mkdir -p $CODEBUILD_SRC_DIR/git_repo
+      - cd $CODEBUILD_SRC_DIR/git_repo
+      - git clone https://$TOKEN@github.com/$PROJECT_REPO
+      - cd dos-integration
+      - git checkout $PREVIOUS_VERSION
+  build:
+    commands:
+      - make tag-commit-to-rollback-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT COMMIT=$PREVIOUS_VERSION
+      - sleep 300 # wait for the rollback to complete
