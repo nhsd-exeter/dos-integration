@@ -15,7 +15,6 @@ SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
 PROJECT_LAMBDAS_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(ORCHESTRATOR),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(DOS_DB_HANDLER),$(INGEST_CHANGE_EVENT)
-PROJECT_LAMBDAS_PROD_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(ORCHESTRATOR),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(INGEST_CHANGE_EVENT)
 PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
@@ -207,9 +206,3 @@ TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
-
-# ---------------------------------------------------------------------------------------------------------------------
-# DoS DB Handler (Non-Prod Only)
-
-DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
-DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_RELEASE_USER_PASSWORD
