@@ -9,11 +9,6 @@ resource "aws_codebuild_project" "trigger_rollback" {
     type = "CODEPIPELINE"
   }
 
-  cache {
-    type  = "LOCAL"
-    modes = ["LOCAL_SOURCE_CACHE", "LOCAL_DOCKER_LAYER_CACHE"]
-  }
-
   environment {
     compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
@@ -40,6 +35,18 @@ resource "aws_codebuild_project" "trigger_rollback" {
     environment_variable {
       name  = "AWS_ACCOUNT_ID_IDENTITIES"
       value = var.aws_account_id_identities
+    }
+    environment_variable {
+      name  = "GIT_REPO_URL"
+      value = var.github_url
+    }
+    environment_variable {
+      name  = "PROJECT_REPO"
+      value = "${var.github_owner}/${var.github_repo}"
+    }
+    environment_variable {
+      name  = "ROLLBACK_PROJECT_NAME"
+      value = aws_codebuild_project.blue_green_rollback_stage.name
     }
   }
 
