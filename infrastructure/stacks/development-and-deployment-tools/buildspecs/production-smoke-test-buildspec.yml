@@ -27,6 +27,6 @@ reports:
   PytestSmokeTestReport:
     files:
       - "testresults.json"
-    base-directory: $CODEBUILD_SRC_DIR/test/smoke
+    base-directory: $CODEBUILD_SRC_DIR/test/smoke/results
     discard-paths: yes
     file-format: CUCUMBERJSON
