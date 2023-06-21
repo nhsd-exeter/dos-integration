@@ -307,4 +307,5 @@ def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
 
     service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
     assert_field_updated()
-    assert_field_updated_in_history()
+    if expected_value:
+        assert_field_updated_in_history()

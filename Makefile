@@ -135,7 +135,7 @@ production-smoke-test: # Smoke test DI project - mandatory: PROFILE; optional: E
 	if [ "$(PROFILE)" != "live" ]; then
 		make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json --reruns 2 --reruns-delay 60" \
+		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
 		DIR=./test/smoke \
 		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 	else
