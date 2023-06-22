@@ -32,16 +32,16 @@ def log_closed_or_hidden_services(
             "NHS Service marked as closed or hidden, no change events will be produced from this event",
             extra={
                 "report_key": HIDDEN_OR_CLOSED_REPORT_ID,
-                "dos_service_id": dos_service.id,
                 "dos_service_uid": dos_service.uid,
                 "nhsuk_odscode": nhs_entity.odscode,
-                "dos_service_publicname": dos_service.name,
+                "dos_service_name": dos_service.name,
                 "nhsuk_service_status": nhs_entity.org_status,
                 "nhsuk_service_type": nhs_entity.org_type,
                 "nhsuk_sector": nhs_entity.org_sub_type,
                 "dos_service_status": VALID_STATUS_ID,
-                "dos_service_type": dos_service.typeid,
-                "dos_service_type_name": dos_service.service_type_name,
+                "dos_service_type": dos_service.service_type_name,
+                "dos_region": dos_service.get_region(),
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
             },
         )
 
@@ -138,12 +138,14 @@ def log_unmatched_service_types(
 
 
 def log_unexpected_pharmacy_profiling(
+    nhs_entity: NHSEntity,
     matching_services: list[DoSService],
     reason: str,
 ) -> None:
     """Log a service found to have an invalid website.
 
     Args:
+        nhs_entity (NHSEntity): The NHS entity to report
         matching_services (list[DoSService]): The DoS services to report
         reason (str): The reason for the report
     """
@@ -156,7 +158,9 @@ def log_unexpected_pharmacy_profiling(
                 "dos_service_name": service.name,
                 "dos_service_address": service.address,
                 "dos_service_postcode": service.postcode,
-                "dos_service_type_id": service.typeid,
+                "dos_service_type": service.service_type_name,
+                "dos_region": service.get_region(),
                 "reason": reason,
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
             },
         )

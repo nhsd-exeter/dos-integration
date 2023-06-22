@@ -65,8 +65,8 @@ Feature: F007. Report Logging
     And "dos_service_name" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
     And "dos_service_address" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
     And "dos_service_postcode" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
-    And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
-    And "dos_region" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
+    And "dos_region" attribute is identified in the "UNEXPECTED_PHARMACY_PROFILING" report in "service-matcher" logs
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX06 Check for Unmatched Pharmacy Report log
@@ -132,6 +132,7 @@ Feature: F007. Report Logging
     And "dos_service_status" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
     And "dos_service_type" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
     And "dos_region" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "HIDDEN_OR_CLOSED" report in "service-matcher" logs
     And the service history is not updated
 
     Examples:
