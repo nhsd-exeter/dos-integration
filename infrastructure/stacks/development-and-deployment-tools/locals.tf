@@ -48,5 +48,6 @@ locals {
     "AWS_ACCOUNT_ID_NONPROD"     = var.aws_account_id_nonprod
     "AWS_ACCOUNT_ID_IDENTITIES"  = var.aws_account_id_identities
     "AWS_ACCOUNT_ID_PROD"        = var.aws_account_id_prod
+    "PIPELINE_BUILD_ROLE"        = "UECDoSINTPipelineBuildRole"
   }
 }
