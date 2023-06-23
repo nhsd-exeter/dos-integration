@@ -21,25 +21,12 @@ resource "aws_codebuild_project" "production_smoke_test" {
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = true
 
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
-      value = var.aws_account_id_live_parent
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_MGMT"
-      value = var.aws_account_id_mgmt
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_NONPROD"
-      value = var.aws_account_id_nonprod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_PROD"
-      value = var.aws_account_id_prod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_IDENTITIES"
-      value = var.aws_account_id_identities
+    dynamic "environment_variable" {
+      for_each = local.default_environment_variables
+      content {
+        name  = environment_variable.key
+        value = environment_variable.value
+      }
     }
   }
 

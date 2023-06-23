@@ -48,26 +48,14 @@ resource "aws_codebuild_project" "di_destroy_environment_from_tag" {
       name  = "CB_PROJECT_NAME"
       value = "${var.project_id}-${var.environment}-destroy-nonprod-environments-stage"
     }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
-      value = var.aws_account_id_live_parent
+    dynamic "environment_variable" {
+      for_each = local.default_environment_variables
+      content {
+        name  = environment_variable.key
+        value = environment_variable.value
+      }
     }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_MGMT"
-      value = var.aws_account_id_mgmt
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_NONPROD"
-      value = var.aws_account_id_nonprod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_PROD"
-      value = var.aws_account_id_prod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_IDENTITIES"
-      value = var.aws_account_id_identities
-    }
+
   }
   logs_config {
     cloudwatch_logs {

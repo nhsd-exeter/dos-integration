@@ -53,26 +53,14 @@ resource "aws_codebuild_project" "di_build_cicd_shared_resources_artefact" {
       name  = "CICD_ARTIFACT_BUCKET"
       value = var.cicd_shared_resoures_deployment_pipeline_artefact_bucket
     }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_LIVE_PARENT"
-      value = var.aws_account_id_live_parent
+    dynamic "environment_variable" {
+      for_each = local.default_environment_variables
+      content {
+        name  = environment_variable.key
+        value = environment_variable.value
+      }
     }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_MGMT"
-      value = var.aws_account_id_mgmt
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_NONPROD"
-      value = var.aws_account_id_nonprod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_PROD"
-      value = var.aws_account_id_prod
-    }
-    environment_variable {
-      name  = "AWS_ACCOUNT_ID_IDENTITIES"
-      value = var.aws_account_id_identities
-    }
+
   }
   logs_config {
     cloudwatch_logs {
