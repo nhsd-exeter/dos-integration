@@ -73,7 +73,7 @@ resource "aws_codebuild_project" "build_deploy_test_release" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = data.template_file.build_deploy_test_release_buildspec.rendered
+    buildspec       = file("buildspecs/build-deploy-test-release-buildspec.yml")
   }
 
 }

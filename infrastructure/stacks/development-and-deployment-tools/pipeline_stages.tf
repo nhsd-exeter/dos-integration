@@ -188,7 +188,7 @@ resource "aws_codebuild_project" "di_deploy_blue_green_environment_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.deploy_blue_green_environment_buildspec.rendered
+    buildspec = file("buildspecs/deploy-blue-green-environment-buildspec.yml")
   }
   depends_on = [
     aws_codebuild_project.di_delete_blue_green_environment
@@ -231,7 +231,7 @@ resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" 
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.deploy_shared_resources_environment_buildspec.rendered
+    buildspec = file("buildspecs/deploy-shared-resources-environment-buildspec.yml")
   }
 }
 
@@ -280,6 +280,6 @@ resource "aws_codebuild_project" "di_integration_tests_autoflags" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.integration_tests_buildspec.rendered
+    buildspec = file("buildspecs/integration-tests-buildspec.yml")
   }
 }

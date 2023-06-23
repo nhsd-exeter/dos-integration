@@ -68,6 +68,6 @@ resource "aws_codebuild_project" "di_delete_ecr_images" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = data.template_file.delete_ecr_images_buildspec.rendered
+    buildspec       = file("buildspecs/delete-ecr-images-buildspec.yml")
   }
 }

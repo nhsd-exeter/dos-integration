@@ -62,7 +62,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.setup_dos_environment_buildspec.rendered
+    buildspec = file("buildspecs/setup-dos-environment-buildspec.yml")
   }
   vpc_config {
     security_group_ids = [
