@@ -37,16 +37,16 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
         "NHS Service marked as closed or hidden, no change events will be produced from this event",
         extra={
             "report_key": HIDDEN_OR_CLOSED_REPORT_ID,
-            "dos_service_id": dos_service.id,
             "dos_service_uid": dos_service.uid,
             "nhsuk_odscode": nhs_entity.odscode,
-            "dos_service_publicname": dos_service.name,
+            "dos_service_name": dos_service.name,
             "nhsuk_service_status": nhs_entity.org_status,
             "nhsuk_service_type": nhs_entity.org_type,
             "nhsuk_sector": nhs_entity.org_sub_type,
             "dos_service_status": VALID_STATUS_ID,
-            "dos_service_type": dos_service.typeid,
-            "dos_service_type_name": dos_service.service_type_name,
+            "dos_service_type": dos_service.service_type_name,
+            "dos_region": dos_service.get_region(),
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )
 
@@ -185,7 +185,8 @@ def test_log_unmatched_service_types(mock_logger):
 def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
     dos_service = dummy_dos_service()
     reason = "reason 123"
-    log_unexpected_pharmacy_profiling([dos_service], reason)
+    nhs_entity = NHSEntity({})
+    log_unexpected_pharmacy_profiling(nhs_entity, [dos_service], reason)
     assert UNEXPECTED_PHARMACY_PROFILING_REPORT_ID == "UNEXPECTED_PHARMACY_PROFILING"
     mock_logger.assert_called_with(
         "Pharmacy profiling is incorrect",
@@ -195,7 +196,9 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
             "dos_service_name": dos_service.name,
             "dos_service_address": dos_service.address,
             "dos_service_postcode": dos_service.postcode,
-            "dos_service_type_id": dos_service.typeid,
+            "dos_service_type": dos_service.service_type_name,
+            "dos_region": dos_service.get_region(),
             "reason": reason,
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )

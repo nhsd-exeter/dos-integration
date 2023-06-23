@@ -92,11 +92,13 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
             service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
         ]
         log_unexpected_pharmacy_profiling(
+            nhs_entity=nhs_entity,
             matching_services=type_13_matching_services,
             reason="Multiple 'Pharmacy' type services found (type 13)",
         )
     elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
         log_unexpected_pharmacy_profiling(
+            nhs_entity=nhs_entity,
             matching_services=matching_services,
             reason="No 'Pharmacy' type services found (type 13)",
         )
