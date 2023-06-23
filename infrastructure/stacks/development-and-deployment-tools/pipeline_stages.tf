@@ -43,7 +43,7 @@ resource "aws_codebuild_project" "di_unit_tests_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.unit_tests_buildspec.rendered
+    buildspec = file("buildspecs/unit-tests-buildspec.yml")
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_codebuild_project" "di_build_image_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.build_buildspec.rendered
+    buildspec = file("buildspecs/build-buildspec.yml")
   }
 }
 
@@ -133,7 +133,7 @@ resource "aws_codebuild_project" "di_full_deploy_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = data.template_file.deploy_full_environment_buildspec.rendered
+    buildspec = file("buildspecs/deploy-full-environment-buildspec.yml")
   }
 }
 

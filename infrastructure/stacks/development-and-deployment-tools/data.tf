@@ -1,22 +1,6 @@
 # ##############
 # # Codebuild buildspecs
 # ##############
-data "template_file" "unit_tests_buildspec" {
-  template = file("buildspecs/unit-tests-buildspec.yml")
-}
-
-data "template_file" "build_buildspec" {
-  template = file("buildspecs/build-buildspec.yml")
-}
-
-data "template_file" "build_image_buildspec" {
-  template = file("buildspecs/build-image-buildspec.yml")
-}
-
-data "template_file" "deploy_full_environment_buildspec" {
-  template = file("buildspecs/deploy-full-environment-buildspec.yml")
-}
-
 data "template_file" "integration_tests_buildspec" {
   template = file("buildspecs/integration-tests-buildspec.yml")
 }

@@ -89,6 +89,6 @@ resource "aws_codebuild_project" "di_build_image" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = data.template_file.build_image_buildspec.rendered
+    buildspec       = file("buildspecs/build-image-buildspec.yml")
   }
 }
