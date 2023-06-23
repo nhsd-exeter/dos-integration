@@ -41,5 +41,13 @@ locals {
       "filematch" = "serverless.yml"
     }
   }
-
+  default_environment_variables = {
+    "AWS_DEFAULT_REGION"         = var.aws_region
+    "AWS_ACCOUNT_ID_LIVE_PARENT" = var.aws_account_id_live_parent
+    "AWS_ACCOUNT_ID_MGMT"        = var.aws_account_id_mgmt
+    "AWS_ACCOUNT_ID_NONPROD"     = var.aws_account_id_nonprod
+    "AWS_ACCOUNT_ID_IDENTITIES"  = var.aws_account_id_identities
+    "AWS_ACCOUNT_ID_PROD"        = var.aws_account_id_prod
+    "PIPELINE_BUILD_ROLE"        = "UECDoSINTPipelineBuildRole"
+  }
 }
