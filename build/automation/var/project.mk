@@ -135,6 +135,28 @@ TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alar
 TF_VAR_blue_green_deployment_previous_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-previous-version
 TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-current-version
 
+# WAF
+TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl
+TF_VAR_waf_log_group_name := aws-waf-logs-$(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-group
+TF_VAR_waf_ip_set_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-set
+
+TF_VAR_waf_aws_common_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-rule
+TF_VAR_waf_ip_reputation_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-reputation-list-rule
+TF_VAR_waf_non_gb_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-non-gb-rule
+TF_VAR_waf_ip_allow_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-allow-list-rule
+TF_VAR_waf_rate_based_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-rule
+TF_VAR_waf_aws_known_bad_inputs_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-rule
+TF_VAR_waf_aws_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-rule
+
+TF_VAR_waf_aws_common_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-metric
+TF_VAR_ip_reputation_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-ip-reputation-list-metric
+TF_VAR_non_gb_rule_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-non-gb-rule-metric
+TF_VAR_waf_ip_allow_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-allow-list-metric
+TF_VAR_waf_rate_based_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-metric
+TF_VAR_waf_aws_known_bad_inputs_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-metric
+TF_VAR_waf_acl_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl-metric
+TF_VAR_waf_aws_sqli_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-metric
+
 # -------------------------------
 # BLUE/GREEN ENVIRONMENT VARIABLES
 

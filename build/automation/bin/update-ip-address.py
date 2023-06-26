@@ -8,7 +8,8 @@ from boto3 import client
 
 def get_ip_address() -> str:
     # For documentation on ipify see here - https://www.ipify.org/
-    return urlopen("https://api.ipify.org").read().decode("utf8")
+    ip_v4_address = urlopen("https://api.ipify.org").read().decode("utf8")
+    return f"{ip_v4_address}/32"
 
 
 def get_username():
