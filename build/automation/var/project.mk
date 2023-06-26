@@ -41,6 +41,8 @@ SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment := $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment := $(SHARED_ENVIRONMENT)
 
+
+AWS_SSO_ROLE_KEY := AWS_SSO_ROLE
 # AppConfig
 TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)
 

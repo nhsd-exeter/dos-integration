@@ -51,6 +51,7 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
+	echo "unset AWS_PROFILE"
 	echo "export DB_SERVER=$(DB_ROUTE_53)"
 	echo "export DB_REPLICA_SERVER=$(DB_REPLICA_53)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
@@ -65,8 +66,10 @@ populate-deployment-variables:
 	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
 	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
+	echo "export TF_VAR_aws_sso_role=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(AWS_SSO_ROLE_KEY)')"
 
 populate-serverless-variables:
+	echo "unset AWS_PROFILE"
 	echo "export TERRAFORM_KMS_KEY_ID=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)"
 
 unit-test-local:
@@ -542,6 +545,7 @@ link-blue-green-environment: # Links blue green environment - mandatory: PROFILE
 	make terraform-apply-auto-approve STACKS=blue-green-link
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
@@ -555,6 +559,7 @@ undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
 
 unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=blue-green-link
 
 tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green environment - mandatory: COMMIT=[short commit hash]
