@@ -113,11 +113,6 @@ variable "event_replay_lambda_name" {
   description = "Name of event replay lambda"
 }
 
-variable "orchestrator_lambda_name" {
-  type        = string
-  description = "Name of orchestrator lambda"
-}
-
 variable "slack_messenger_lambda_name" {
   type        = string
   description = "Name of slack messenger lambda"

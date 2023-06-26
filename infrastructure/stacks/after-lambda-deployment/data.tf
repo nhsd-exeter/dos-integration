@@ -6,6 +6,10 @@ data "aws_lambda_function" "service_matcher" {
   function_name = var.service_matcher_lambda_name
 }
 
+data "aws_lambda_function" "service_sync" {
+  function_name = var.service_sync_lambda_name
+}
+
 data "aws_lambda_function" "ingest_change_event" {
   function_name = var.ingest_change_event_lambda_name
 }

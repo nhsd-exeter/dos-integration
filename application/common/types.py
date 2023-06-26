@@ -18,30 +18,6 @@ class UpdateRequest(TypedDict):
     service_id: str
 
 
-class UpdateRequestMetadata(TypedDict):
-    """Class to represent the update request metadata."""
-
-    dynamo_record_id: str
-    correlation_id: str
-    message_received: int
-    ods_code: str
-    message_deduplication_id: str
-    message_group_id: str
-
-
-class UpdateRequestQueueItem(TypedDict):
-    """Update Request Queue Item.
-
-    Class to represent the update request queue item containing the payload and metadata
-    Optional fields are for the health check as it does not have a payload or metadata.
-    """
-
-    update_request: UpdateRequest | None
-    recipient_id: str | None
-    metadata: UpdateRequestMetadata | None
-    is_health_check: bool
-
-
 class EmailFile(TypedDict):
     """Class to represent the email file saved to S3."""
 

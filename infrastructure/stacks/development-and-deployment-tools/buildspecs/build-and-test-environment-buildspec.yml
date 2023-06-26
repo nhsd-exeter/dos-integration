@@ -4,6 +4,7 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - make docker-pull NAME=serverless VERSION=latest
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
@@ -15,12 +16,14 @@ phases:
       - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - echo Branch = $BUILD_BRANCH
       - |
-        if [ -n "$BUILD_BRANCH" ]; then
-          make build-and-deploy BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE DOCKER_BUILDKIT=1 OPTS="-parallelism=50";
-        else
-          echo "Build Failed due to incorrect naming of branch. Please check the branch name.";
-          exit 1;
+        if [ -z "$BUILD_BRANCH" ]; then
+          echo "Not triggered by branch will stop deploying"
+          exit
         fi
+      - export BUILD_VERSION=$(make commit-date-hash-tag)
+      - echo version = $BUILD_VERSION
+      - make wait-for-ecr-lambda-images-to-exist-for-tag TAG=$BUILD_VERSION
+      - make deploy VERSION=$BUILD_VERSION BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE TF_CLI_ARGS="-parallelism=30"
     finally:
       - |
         if [ -n "$BUILD_BRANCH" ]; then

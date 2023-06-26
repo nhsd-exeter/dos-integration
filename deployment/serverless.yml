@@ -7,7 +7,7 @@ provider:
   name: aws
   deploymentMethod: direct
   lambdaHashingVersion: 20201221
-  architecture: x86_64
+  architecture: arm64
   region: ${env:AWS_REGION}
   versionFunctions: false
   deploymentBucket:
@@ -84,7 +84,6 @@ custom:
 functions:
   change-event-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:CHANGE_EVENT_DLQ_HANDLER}:${env:VERSION}
-    architecture: x86_64
     name: ${env:CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} Change Event DLQ Handler lambda
     memorySize: 128
@@ -96,7 +95,6 @@ functions:
 
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_HANDLER}:${env:VERSION}
-    architecture: x86_64
     name: ${env:DOS_DB_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in Non-Live environments
     memorySize: 128
@@ -130,7 +128,6 @@ functions:
 
   dos-db-update-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_UPDATE_DLQ_HANDLER}:${env:VERSION}
-    architecture: x86_64
     name: ${env:DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME}
     description: ${sls:stage} DoS DB Update DLQ Handler lambda
     memorySize: 128
@@ -140,7 +137,6 @@ functions:
 
   event-replay:
     image: ${env:DOCKER_REGISTRY}/${env:EVENT_REPLAY}:${env:VERSION}
-    architecture: x86_64
     name: ${env:EVENT_REPLAY_LAMBDA_NAME}
     description: ${sls:stage} Event Replay lambda
     memorySize: 128
@@ -153,7 +149,6 @@ functions:
 
   ingest-change-event:
     image: ${env:DOCKER_REGISTRY}/${env:INGEST_CHANGE_EVENT}:${env:VERSION}
-    architecture: x86_64
     name: ${env:INGEST_CHANGE_EVENT_LAMBDA_NAME}
     description: ${sls:stage} Ingest Change Event lambda
     memorySize: 128
@@ -164,30 +159,8 @@ functions:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 2
 
-  orchestrator:
-    image: ${env:DOCKER_REGISTRY}/${env:ORCHESTRATOR}:${env:VERSION}
-    architecture: x86_64
-    name: ${env:ORCHESTRATOR_LAMBDA_NAME}
-    description: ${sls:stage} Orchestrator
-    memorySize: 128
-    timeout: 295 # 4 minutes and 55 seconds (should mean max 5 second gap every 5 mins)
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_orchestrator_role_name}
-    maximumRetryAttempts: 0
-    reservedConcurrency: 1 # ensure only one orchestrator running at a time
-    events:
-      - schedule: rate(1 minute)
-    environment:
-      CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CIRCUIT: DOS_DATABASE
-      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
-      DOS_TRANSACTIONS_PER_SECOND: ${env:DOS_TRANSACTIONS_PER_SECOND}
-      SERVICE_SYNC_FUNCTION_NAME: ${env:SERVICE_SYNC_LAMBDA_NAME}
-      RUN_FOR: 280
-      SLEEP_FOR_WHEN_OPEN: 2
-
   send-email:
     image: ${env:DOCKER_REGISTRY}/${env:SEND_EMAIL}:${env:VERSION}
-    architecture: x86_64
     name: ${env:SEND_EMAIL_LAMBDA_NAME}
     description: ${sls:stage} Send Email lambda
     memorySize: 128
@@ -201,13 +174,13 @@ functions:
 
   service-matcher:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_MATCHER}:${env:VERSION}
-    architecture: x86_64
     name: ${env:SERVICE_MATCHER_LAMBDA_NAME}
     description: ${sls:stage} Service Matcher lambda
     memorySize: 192
     timeout: 10
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_matcher_role_name}
     maximumRetryAttempts: 0
+    reservedConcurrency: ${env:SERVICE_MATCHER_MAX_CONCURRENCY}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
@@ -233,7 +206,6 @@ functions:
 
   service-sync:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_SYNC}:${env:VERSION}
-    architecture: x86_64
     name: ${env:SERVICE_SYNC_LAMBDA_NAME}
     description: ${sls:stage} Service Sync lambda
     memorySize: 512
@@ -241,7 +213,6 @@ functions:
     role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_sync_role_name}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CIRCUIT: DOS_DATABASE
       UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}
@@ -258,6 +229,7 @@ functions:
       TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
       SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
+    reservedConcurrency: ${env:SERVICE_SYNC_MAX_CONCURRENCY}
     maximumRetryAttempts: 0
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"
@@ -274,7 +246,6 @@ functions:
 
   slack-messenger:
     image: ${env:DOCKER_REGISTRY}/${env:SLACK_MESSENGER}:${env:VERSION}
-    architecture: x86_64
     name: ${env:SLACK_MESSENGER_LAMBDA_NAME}
     description: ${sls:stage} Slack Messenger lambda
     memorySize: 128

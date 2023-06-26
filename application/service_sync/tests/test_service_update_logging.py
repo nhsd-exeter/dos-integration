@@ -110,6 +110,7 @@ def test_service_update_logger_log_service_update(
         previous_value=EXAMPLE_PREVIOUS_VALUE,
         new_value=EXAMPLE_NEW_VALUE,
     )
+    correlation_id = service_update_logger.correlation_id
     # Assert
     mock_log_service_update.assert_called_once_with(
         action=EXAMPLE_ACTION,
@@ -122,10 +123,10 @@ def test_service_update_logger_log_service_update(
         dos_service=dos_service,
     )
     dos_logger_mock.info.assert_called_once_with(
-        msg=f"correlation_id|{DOS_INTEGRATION_USER_NAME}|{NULL_VALUE}|{SERVICE_UID}|"
+        msg=f"{correlation_id}|{DOS_INTEGRATION_USER_NAME}|{NULL_VALUE}|{SERVICE_UID}|"
         f"{SERVICE_NAME}|{TYPE_ID}|{EXAMPLE_DATA_FIELD_MODIFIED}|{EXAMPLE_ACTION}|"
         f""""{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"|{NULL_VALUE}|message=UpdateService|"""
-        f"correlationId=correlation_id|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
+        f"correlationId={correlation_id}|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
         extra={"environment": "UNKNOWN"},
     )
     # Cleanup

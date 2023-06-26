@@ -84,11 +84,6 @@ variable "event_replay_subscription_filter_name" {
   description = "Log filter name for event replay lambda"
 }
 
-variable "orchestrator_subscription_filter_name" {
-  type        = string
-  description = "Log filter name for orchestrator lambda"
-}
-
 variable "slack_messenger_subscription_filter_name" {
   type        = string
   description = "Log filter name for slack messenger lambda"
@@ -152,11 +147,6 @@ variable "dos_db_update_dlq_handler_lambda_name" {
 variable "event_replay_lambda_name" {
   type        = string
   description = "Name of event replay lambda"
-}
-
-variable "orchestrator_lambda_name" {
-  type        = string
-  description = "Name of orchestrator lambda"
 }
 
 variable "slack_messenger_lambda_name" {

@@ -5,17 +5,18 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
+from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
+from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 
 from .compare_data import compare_nhs_uk_and_dos_data
-from .dos_data import get_dos_service_and_history, run_db_health_check, update_dos_data
+from .dos_data import get_dos_service_and_history, update_dos_data
 from .pending_changes import check_and_remove_pending_dos_changes
-from common.circuit import put_circuit_is_open
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
-from common.types import UpdateRequestMetadata, UpdateRequestQueueItem
-from common.utilities import add_metric
+from common.types import UpdateRequest
+from common.utilities import add_metric, extract_body
 
 tracer = Tracer()
 logger = Logger()
@@ -23,28 +24,30 @@ logger = Logger()
 
 @tracer.capture_lambda_handler()
 @unhandled_exception_logging
-@logger.inject_lambda_context(clear_state=True, correlation_id_path="metadata.correlation_id")
-def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> None:  # noqa: ARG001
+@logger.inject_lambda_context(clear_state=True)
+@event_source(data_class=SQSEvent)
+def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: ARG001
     """Entrypoint handler for the service_sync lambda.
 
     Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
+        event (SQSEvent): Lambda function invocation event
         context (LambdaContext): Lambda function context object
     """
-    logger.append_keys(health_check=event["is_health_check"])
     try:
-        if event["is_health_check"]:
-            run_db_health_check()
-            return
-        set_up_logging(event)
-        # Not a health check, so process the update request
-        service_id: int = event["update_request"]["service_id"]
+        record: SQSRecord = next(event.records)
+        update_request: UpdateRequest = extract_body(record.body)
+        logger.set_correlation_id(str(record.message_attributes.get("correlation_id", {}).get("stringValue")))
+        logger.append_keys(
+            ods_code=update_request["change_event"].get("ODSCode"),
+            service_id=update_request["service_id"],
+        )
+        service_id: str = update_request["service_id"]
         check_and_remove_pending_dos_changes(service_id)
         # Set up NHS UK Service
-        change_event: dict[str, Any] = event["update_request"]["change_event"]
+        change_event: dict[str, Any] = update_request["change_event"]
         nhs_entity = NHSEntity(change_event)
         # Get current DoS state
-        dos_service, service_histories = get_dos_service_and_history(service_id=service_id)
+        dos_service, service_histories = get_dos_service_and_history(service_id=int(service_id))
         # Compare NHS UK and DoS data
         changes_to_dos = compare_nhs_uk_and_dos_data(
             dos_service=dos_service,
@@ -54,53 +57,40 @@ def lambda_handler(event: UpdateRequestQueueItem, context: LambdaContext) -> Non
         # Update Service History with changes to be made
         service_histories = changes_to_dos.service_histories
         # Update DoS data
-        update_dos_data(changes_to_dos=changes_to_dos, service_id=service_id, service_histories=service_histories)
+        update_dos_data(changes_to_dos=changes_to_dos, service_id=int(service_id), service_histories=service_histories)
         # Delete the message from the queue
-        remove_sqs_message_from_queue(event=event)
+        remove_sqs_message_from_queue(receipt_handle=record.receipt_handle)
         # Log custom metrics
-        add_success_metric(event=event)
+        add_success_metric(
+            message_received=int(record.message_attributes.get("message_received", {}).get("stringValue")),
+        )
         add_metric("UpdateRequestSuccess")
         add_metric("ServiceUpdateSuccess")
     except Exception:
-        put_circuit_is_open(environ["CIRCUIT"], True)
         add_metric("UpdateRequestFailed")
         logger.exception("Error processing change event")
 
 
-def set_up_logging(event: UpdateRequestQueueItem) -> None:
-    """Sets up the logger with the ODS code and service ID.
-
-    Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
-    """
-    logger.append_keys(
-        ods_code=event["update_request"]["change_event"].get("ODSCode"),
-        service_id=event["update_request"]["service_id"],
-    )
-
-
-def remove_sqs_message_from_queue(event: UpdateRequestQueueItem) -> None:
+def remove_sqs_message_from_queue(receipt_handle: str) -> None:
     """Removes the SQS message from the queue.
 
     Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
+        receipt_handle (str): The SQS message receipt handle
     """
     sqs = client("sqs")
-    sqs.delete_message(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], ReceiptHandle=event["recipient_id"])
-    logger.info("Removed SQS message from queue", extra={"receipt_handle": event["recipient_id"]})
+    sqs.delete_message(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], ReceiptHandle=receipt_handle)
+    logger.info("Removed SQS message from queue", extra={"receipt_handle": receipt_handle})
 
 
 @metric_scope
-def add_success_metric(event: UpdateRequestQueueItem, metrics: Any) -> None:  # noqa: ANN401
+def add_success_metric(message_received: int, metrics: Any) -> None:  # noqa: ANN401
     """Adds a success metric to the custom metrics collection.
 
     Args:
-        event (UpdateRequestQueueItem): Lambda function invocation event
-        metrics (Any): Custom metrics collection
+        message_received (int): The time the message was received in milliseconds
+        metrics (Any): The custom metrics collection
     """
     after = time_ns() // 1000000
-    metadata: UpdateRequestMetadata = event["metadata"]
-    message_received = metadata["message_received"]
     diff = after - message_received
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("message", f"Recording change event latency of {diff}")

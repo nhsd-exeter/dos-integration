@@ -20,7 +20,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests $$UNDERSCORE_LAMBDA_NAME common/*.py __init__.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler BUILD_OPTS="--platform=linux/arm64"
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 build-and-push: # Build lambda docker images and pushes them to ECR
@@ -109,7 +109,6 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
@@ -210,12 +209,6 @@ event-replay-build-and-deploy: ### Build and deploy event replay lambda docker i
 
 dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
 	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
-
-# ==============================================================================
-# Orchestrator
-
-orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
 
 # ==============================================================================
 # Send Email
@@ -380,12 +373,8 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
-	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 10 --run-time 1m)
-	else
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
-	fi
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+	PERFORMANCE_ARGS=$$(echo --users 25 --spawn-rate 10 --run-time 10m)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
@@ -494,7 +483,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=dos-db-handler
 	make docker-create-repository NAME=dos-db-update-dlq-handler
 	make docker-create-repository NAME=event-replay
-	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=service-matcher
 	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger
@@ -575,6 +563,45 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
 
 # ==============================================================================
+# Pipeline Targets
+
+commit-date-hash-tag:
+	echo "$(BUILD_COMMIT_DATETIME)-$(BUILD_COMMIT_HASH)"
+
+check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: REPO=[repository name],TAG=[string to match tag of an image]
+	if [ $$(aws ecr batch-get-image --repository-name $(REPO) --image-ids imageTag=$(TAG) --registry-id=$(AWS_ACCOUNT_ID_MGMT) | jq '.images | length') == 1 ];
+	then
+		echo true
+	else
+		echo false
+	fi
+
+check-ecr-lambda-images-exist-for-tag: ### Check all lambda images with given tag exist in ECR - mandatory: TAG=[string to match tag of an image]
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
+		if [[ "$$IMAGE_STATUS" == "false" ]]; then
+			echo false
+			exit
+		fi
+	done
+	echo true
+
+wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist with given tag in ECR or timeout - mandatory: TAG=[string to match tag of an image]
+	TIMEOUT=600
+	START_TS=$$(date +%s)
+	echo "Checking lambda images are ready.."
+	while [ $$(make check-ecr-lambda-images-exist-for-tag) == "false" ]; do
+		ELAPSED_TIME=$$(expr $$(date +%s) - $$START_TS )
+		if [ "$$ELAPSED_TIME" -gt "$$TIMEOUT" ]; then
+			echo "Failed to find Lambda images in given timeout $$TIMEOUT secs"
+			exit 1
+		fi
+		echo "..Lambda images not ready, waiting 10 second before checking again.."
+		sleep 10
+	done
+		echo "..Lambda images ready"
+
+# ==============================================================================
 # Ruff
 
 docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
@@ -585,4 +612,8 @@ docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 python-ruff-fix: # Auto fixes ruff warnings
 	make docker-run-ruff RUFF_OPTS="--fix"
 
-.SILENT: docker-run-ruff
+.SILENT: docker-run-ruff \
+	commit-date-hash-tag \
+	check-ecr-image-tag-exist \
+	wait-for-ecr-lambda-images-to-exist-for-tag \
+	check-ecr-lambda-images-exist-for-tag
