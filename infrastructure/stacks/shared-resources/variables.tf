@@ -241,3 +241,12 @@ variable "waf_aws_sqli_metric_name" {
   type        = string
   description = "WAF AWS SQLi metric name"
 }
+
+# ##############
+# # IAM
+# ##############
+
+variable "aws_sso_role" {
+  type        = string
+  description = "The name of the role to assume for AWS SSO"
+}
