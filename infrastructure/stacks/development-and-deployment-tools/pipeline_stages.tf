@@ -225,7 +225,7 @@ resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" 
 
   logs_config {
     cloudwatch_logs {
-      group_name  = "${var.project_id}-${var.environment}-deploy-shared-resources-environment-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-deploy-shared-resources-environment-stage"
       stream_name = ""
     }
   }
