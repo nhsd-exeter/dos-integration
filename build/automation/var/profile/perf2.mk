@@ -35,7 +35,7 @@ TAG_SECRET_MANAGER := uec-dos-int-dev/deployment
 # ==============================================================================
 # Performance variables
 
-SERVICE_MATCHER_MAX_CONCURRENCY := 80
+SERVICE_MATCHER_MAX_CONCURRENCY := 30
 SERVICE_SYNC_MAX_CONCURRENCY := 50
 
 # ==============================================================================

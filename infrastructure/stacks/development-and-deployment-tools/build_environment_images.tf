@@ -9,7 +9,7 @@ resource "aws_codebuild_webhook" "build_environment_image_webhook" {
     }
     filter {
       type    = "HEAD_REF"
-      pattern = "refs/heads/task/DSUEC-[0-9]*"
+      pattern = "refs/heads/task/DS-[0-9]*"
     }
   }
   depends_on = [aws_codebuild_project.di_build_environment_image]
