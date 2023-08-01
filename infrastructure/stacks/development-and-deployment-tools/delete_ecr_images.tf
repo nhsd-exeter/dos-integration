@@ -1,16 +1,16 @@
-resource "aws_cloudwatch_event_rule" "delete_ecr_images_rule" {
-  count               = var.environment == "dev" ? 1 : 0
-  name                = "${var.project_id}-${var.environment}-delete-ecr-images-rule"
-  description         = "Delete ECR images on the first of every month"
-  schedule_expression = "cron(0 0 1 * ? *)"
-}
+# resource "aws_cloudwatch_event_rule" "delete_ecr_images_rule" {
+#   count               = var.environment == "dev" ? 1 : 0
+#   name                = "${var.project_id}-${var.environment}-delete-ecr-images-rule"
+#   description         = "Delete ECR images on the first of every month"
+#   schedule_expression = "cron(0 0 1 * ? *)"
+# }
 
-resource "aws_cloudwatch_event_target" "delete_ecr_images_trigger" {
-  count    = var.environment == "dev" ? 1 : 0
-  rule     = aws_cloudwatch_event_rule.delete_ecr_images_rule[0].name
-  arn      = aws_codebuild_project.di_delete_ecr_images[0].arn
-  role_arn = data.aws_iam_role.pipeline_role.arn
-}
+# resource "aws_cloudwatch_event_target" "delete_ecr_images_trigger" {
+#   count    = var.environment == "dev" ? 1 : 0
+#   rule     = aws_cloudwatch_event_rule.delete_ecr_images_rule[0].name
+#   arn      = aws_codebuild_project.di_delete_ecr_images[0].arn
+#   role_arn = data.aws_iam_role.pipeline_role.arn
+# }
 
 resource "aws_codebuild_project" "di_delete_ecr_images" {
   count          = var.environment == "dev" ? 1 : 0
