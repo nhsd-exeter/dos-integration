@@ -18,7 +18,7 @@ resource "aws_codebuild_webhook" "build_environment_image_webhook" {
 resource "aws_codebuild_project" "di_build_environment_image" {
   for_each       = var.environment == "dev" ? local.to_build : toset([])
   name           = "${var.project_id}-${var.environment}-build-${each.key}-environment-image-stage"
-  description    = "Builds environment images based on push to task branches"
+  description    = "Builds environment (lambda) images based on push to task branches"
   build_timeout  = "30"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -86,7 +86,7 @@ resource "aws_codebuild_project" "di_build_environment_image" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-arm-buildspec.yml")
+    buildspec       = file("buildspecs/build-arm-image-buildspec.yml")
   }
 
 }
