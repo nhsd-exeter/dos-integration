@@ -86,7 +86,7 @@ resource "aws_codebuild_project" "di_build_environment_image" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-arm-image-buildspec.yml")
+    buildspec       = file("buildspecs/build-arm-image-from-webhook-buildspec.yml")
   }
 
 }
