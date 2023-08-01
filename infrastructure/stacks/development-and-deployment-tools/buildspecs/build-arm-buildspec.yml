@@ -2,12 +2,12 @@
 version: 0.2
 
 phases:
-  pre_build:
+  install:
     commands:
       - mkdir -p $HOME/.docker/cli-plugins
       - wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.10.3/buildx-v0.10.3.linux-arm64
       - chmod a+rx $HOME/.docker/cli-plugins/docker-buildx
-      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
@@ -17,9 +17,17 @@ phases:
       - export DOCKER_CLI_EXPERIMENTAL=enabled
       - docker buildx create --name mybuilder --use
       - docker buildx version
+
   build:
     commands:
-      - echo "[Building docker containers]"
+      - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
+      - echo Branch = $BUILD_BRANCH
+      - |
+        if [ -z "$BUILD_BRANCH" ]; then
+          echo "Not triggered by branch will stop deploying"
+          exit
+        fi
+      - echo "[Building branch lambda images]"
       - echo VERSION = $(make commit-date-hash-tag)
       - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$BUILD_ITEM_NAME VERSION=$(make commit-date-hash-tag) DOCKER_BUILDKIT=1
       - echo "[Pushing images to ECR]"

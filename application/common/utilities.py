@@ -6,6 +6,8 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
+from common.types import UpdateRequest
+
 logger = Logger()
 
 
@@ -21,14 +23,14 @@ def is_val_none_or_empty(val: Any) -> bool:  # noqa: ANN401
     return not (val and not val.isspace())
 
 
-def extract_body(body: str) -> dict[str, Any]:
+def extract_body(body: str) -> dict[str, Any] | UpdateRequest:
     """Extracts the event body from the lambda function invocation event.
 
     Args:
         body (str): Lambda function invocation event body
 
     Returns:
-        Dict[str, Any]: Message body as a dictionary
+        Dict[str, Any] | UpdateRequest: Message body as a dictionary
     """
     try:
         return loads(body)

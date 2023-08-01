@@ -32,7 +32,13 @@ SLACK_ALERT_CHANNEL := dos-integration-dev-status
 
 TAG_SECRET_MANAGER := uec-dos-int-dev/deployment
 
-# ---------------------------------------------------------------------------------------------------------------------
+# ==============================================================================
+# Performance variables
+
+SERVICE_MATCHER_MAX_CONCURRENCY := 30
+SERVICE_SYNC_MAX_CONCURRENCY := 50
+
+# ==============================================================================
 # DoS DB Handler
 
 DOS_DEPLOYMENT_SECRETS := null

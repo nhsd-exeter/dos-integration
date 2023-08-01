@@ -82,99 +82,7 @@ resource "aws_iam_role_policy" "event_replay_policy" {
 EOF
 }
 
-resource "aws_iam_role" "orchestrator_role" {
-  name               = var.orchestrator_role_name
-  path               = "/"
-  description        = ""
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
 
-resource "aws_iam_role_policy" "orchestrator_policy" {
-  name   = "orchestrator_policy"
-  role   = aws_iam_role.orchestrator_role.id
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "lambda:InvokeFunction",
-      "Resource": "arn:aws:lambda:${var.aws_region}:${var.aws_account_id}:function:${var.service_sync_lambda_name}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "ec2:CreateNetworkInterface",
-        "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface",
-        "ec2:AssignPrivateIpAddresses",
-        "ec2:UnassignPrivateIpAddresses",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeVpcs",
-        "xray:PutTraceSegments",
-        "xray:PutTelemetryRecords"
-      ],
-      "Resource": ["*"]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage"
-      ],
-      "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_queue_name}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "kms:Encrypt",
-        "kms:GenerateDataKey*",
-        "kms:DescribeKey",
-        "kms:Decrypt"
-      ],
-      "Resource": "${data.aws_kms_key.signing_key.arn}"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:GetItem",
-        "dynamodb:Query",
-        "dynamodb:Scan",
-        "dynamodb:BatchWriteItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem"
-      ],
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": "dynamodb:Query",
-      "Resource":"arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence"
-    }
-  ]
-}
-EOF
-}
 
 resource "aws_iam_role" "slack_messenger_role" {
   name               = var.slack_messenger_role_name
@@ -321,7 +229,8 @@ module "service_sync" {
       "Effect": "Allow",
       "Action": [
         "sqs:DeleteMessage",
-        "sqs:DeleteMessageBatch"
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage"
       ],
       "Resource":"arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.update_request_queue_name}"
     },

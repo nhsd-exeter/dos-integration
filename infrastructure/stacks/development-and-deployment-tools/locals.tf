@@ -31,7 +31,7 @@ locals {
       "AWS_ACCOUNT"        = "PROD"
     }
   }
-  to_build                 = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "orchestrator", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event"])
+  to_build                 = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event"])
   integration_make_targets = toset(["integration-test-autoflags-cloudwatch-logs", "integration-test-autoflags-no-logs"])
   independent_build_images = {
     tester = {

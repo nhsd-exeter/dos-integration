@@ -626,6 +626,7 @@ BUILD_COMMIT_DATE := $(or $(shell TZ=UTC git show -s --format=%cd --date=format-
 BUILD_COMMIT_AUTHOR_NAME := $(shell git show -s --format='%an' HEAD 2> /dev/null ||:)
 BUILD_COMMIT_AUTHOR_EMAIL := $(shell git show -s --format='%ae' HEAD 2> /dev/null ||:)
 BUILD_COMMIT_MESSAGE := $(shell git log -1 --pretty=%B HEAD 2> /dev/null ||:)
+BUILD_COMMIT_DATETIME := $(or $(shell TZ=UTC git show -s --format=%cd --date=format-local:%Y%m%d%H%M%S HEAD 2> /dev/null ||:), unknown)
 BUILD_TAG := $(shell echo "$(BUILD_TAG)" | grep -Eq ^jenkins- && echo $(BUILD_TIMESTAMP)-$(BUILD_COMMIT_HASH) || echo $(or $(BUILD_TAG), $(BUILD_TIMESTAMP)-$(BUILD_COMMIT_HASH)))
 
 USER_ID := $(shell id -u)

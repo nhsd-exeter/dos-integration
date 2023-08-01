@@ -58,10 +58,6 @@ variable "dos_db_replica_sg_name" {
 # ############################
 # # IAM
 # ############################
-variable "orchestrator_role_name" {
-  type        = string
-  description = "Role name for event processor lambda"
-}
 
 variable "change_event_dlq_handler_role_name" {
   type        = string
