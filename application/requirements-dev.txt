@@ -16,6 +16,6 @@ pytest-sugar
 pytest-xdist
 requests
 responses
-ruff == 0.0.272
+ruff == 0.0.281
 testfixtures
 vulture
