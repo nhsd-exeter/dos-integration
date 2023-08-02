@@ -82,7 +82,26 @@
       "ContactValue": "0118 999 88199 9119 725 3"
     }
   ],
-
+  "Services": [
+    {
+      "ServiceName": "NHS blood pressure check service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV0560",
+      "Contacts": [],
+      "Treatments": [],
+      "OpeningTimes": [],
+      "AgeRange": []
+    },
+    {
+      "ServiceName": "NHS Pharmacy Contraception Service",
+      "ServiceDescription": null,
+      "ServiceCode": "SRV2000",
+      "Contacts": [],
+      "Treatments": [],
+      "OpeningTimes": [],
+      "AgeRange": []
+    }
+  ],
   "LastUpdatedDates": {
     "OpeningTimes": "2021-09-07T10:21:30+00:00",
     "Facilities": "2021-09-07T10:21:42+00:00",
