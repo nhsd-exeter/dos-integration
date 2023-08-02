@@ -569,9 +569,6 @@ aws-accounts-create-template-config-file-v1: ### Create AWS accounts variables t
 	aws-dynamodb-query \
 	aws-ecr-get-image-digest \
 	aws-ecr-get-login-password \
-	aws-ecr-get-security-scan \
-	aws-ecr-wait-for-image-scan-complete \
-	aws-ecr-describe-image-scan-findings \
 	aws-elasticsearch-get-endpoint \
 	aws-iam-policy-exists \
 	aws-iam-role-exists \
