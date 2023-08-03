@@ -13,7 +13,7 @@ DB_PORT := 5432
 DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 DOS_DB_SG_NAME := uec-core-dos-performance2-datastore-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance2-di-sg
+DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance2-db-12-replica-di-sg
 
 DB_SECRET_NAME := uec-core-dos-performance2-db-di-readwrite-user-password
 DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
@@ -31,3 +31,16 @@ SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-dev-status
 
 TAG_SECRET_MANAGER := uec-dos-int-dev/deployment
+
+# ==============================================================================
+# Performance variables
+
+SERVICE_MATCHER_MAX_CONCURRENCY := 30
+SERVICE_SYNC_MAX_CONCURRENCY := 50
+
+# ==============================================================================
+# DoS DB Handler
+
+DOS_DEPLOYMENT_SECRETS := null
+DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := null
+DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := null

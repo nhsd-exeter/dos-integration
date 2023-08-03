@@ -138,3 +138,115 @@ variable "di_firehose_role" {
   type        = string
   description = "The firehose delivery stream role name"
 }
+
+# ##############
+# # WAF
+# ##############
+
+variable "waf_acl_name" {
+  type        = string
+  description = "Name of the WAF ACL"
+}
+
+variable "waf_log_group_name" {
+  type        = string
+  description = "Name of the log group for WAF logs"
+}
+
+variable "waf_ip_set_name" {
+  type        = string
+  description = "Name of the WAF IP set"
+}
+
+# ##############
+# # WAF RULES
+# ##############
+
+variable "waf_aws_common_rule_name" {
+  type        = string
+  description = "WAF AWS common rule name"
+}
+
+variable "waf_ip_reputation_list_rule_name" {
+  type        = string
+  description = "WAF IP Reputation List rule name"
+}
+
+variable "waf_non_gb_rule_name" {
+  type        = string
+  description = "WAF Non GB rule name"
+}
+
+variable "waf_ip_allow_list_rule_name" {
+  type        = string
+  description = "WAF IP Allow List rule name"
+}
+
+variable "waf_rate_based_rule_name" {
+  type        = string
+  description = "WAF rate based rule name"
+}
+
+variable "waf_aws_known_bad_inputs_rule_name" {
+  type        = string
+  description = "WAF AWS known bad inputs rule name"
+}
+
+variable "waf_aws_sqli_rule_name" {
+  type        = string
+  description = "WAF AWS SQLi rule name"
+}
+
+
+# ##############
+# # WAF METRICS
+# ##############
+
+variable "waf_aws_common_metric_name" {
+  type        = string
+  description = "AWS common metric name"
+}
+
+variable "ip_reputation_list_metric_name" {
+  type        = string
+  description = "IP Reputation List metric name"
+}
+
+variable "non_gb_rule_metric_name" {
+  type        = string
+  description = "Non GB rule metric name"
+}
+
+variable "waf_ip_allow_list_metric_name" {
+  type        = string
+  description = "WAF IP Allow List metric name"
+}
+
+variable "waf_rate_based_metric_name" {
+  type        = string
+  description = "WAF rate based metric name"
+}
+
+variable "waf_aws_known_bad_inputs_metric_name" {
+  type        = string
+  description = "WAF AWS known bad inputs metric name"
+}
+
+variable "waf_acl_metric_name" {
+  type        = string
+  description = "WAF ACL metric name"
+}
+
+variable "waf_aws_sqli_metric_name" {
+  type        = string
+  description = "WAF AWS SQLi metric name"
+}
+
+# ##############
+# # IAM
+# ##############
+
+variable "aws_sso_role" {
+  type        = string
+  description = "The name of the role to assume for AWS SSO"
+}

@@ -38,3 +38,9 @@ TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 # Organisation Types Feature Flags
 
 ACCEPTED_ORG_TYPES := PHA
+
+# ==============================================================================
+# Performance variables
+
+SERVICE_MATCHER_MAX_CONCURRENCY := 30
+SERVICE_SYNC_MAX_CONCURRENCY := 50

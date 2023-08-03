@@ -14,8 +14,7 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-PROJECT_LAMBDAS_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(ORCHESTRATOR),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(DOS_DB_HANDLER),$(INGEST_CHANGE_EVENT)
-PROJECT_LAMBDAS_PROD_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(ORCHESTRATOR),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(INGEST_CHANGE_EVENT)
+PROJECT_LAMBDAS_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(DOS_DB_HANDLER),$(INGEST_CHANGE_EVENT)
 PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
@@ -35,13 +34,14 @@ TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 TF_VAR_dos_db_replica_name := $(DB_REPLICA_SERVER_NAME)
 
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
-DOS_TRANSACTIONS_PER_SECOND = 6
 
 BLUE_GREEN_ENVIRONMENT := $(or $(BLUE_GREEN_ENVIRONMENT), $(ENVIRONMENT))
 SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment := $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment := $(SHARED_ENVIRONMENT)
 
+
+AWS_SSO_ROLE_KEY := AWS_SSO_ROLE
 # AppConfig
 TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)
 
@@ -86,7 +86,6 @@ DOS_DB_HANDLER := dos-db-handler
 DOS_DB_UPDATE_DLQ_HANDLER := dos-db-update-dlq-handler
 EVENT_REPLAY := event-replay
 INGEST_CHANGE_EVENT := ingest-change-event
-ORCHESTRATOR := orchestrator
 SEND_EMAIL := send-email
 SERVICE_MATCHER := service-matcher
 SERVICE_SYNC := service-sync
@@ -136,6 +135,28 @@ TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alar
 TF_VAR_blue_green_deployment_previous_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-previous-version
 TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-current-version
 
+# WAF
+TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl
+TF_VAR_waf_log_group_name := aws-waf-logs-$(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-group
+TF_VAR_waf_ip_set_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-set
+
+TF_VAR_waf_aws_common_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-rule
+TF_VAR_waf_ip_reputation_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-reputation-list-rule
+TF_VAR_waf_non_gb_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-non-gb-rule
+TF_VAR_waf_ip_allow_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-allow-list-rule
+TF_VAR_waf_rate_based_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-rule
+TF_VAR_waf_aws_known_bad_inputs_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-rule
+TF_VAR_waf_aws_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-rule
+
+TF_VAR_waf_aws_common_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-metric
+TF_VAR_ip_reputation_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-ip-reputation-list-metric
+TF_VAR_non_gb_rule_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-non-gb-rule-metric
+TF_VAR_waf_ip_allow_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-allow-list-metric
+TF_VAR_waf_rate_based_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-metric
+TF_VAR_waf_aws_known_bad_inputs_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-metric
+TF_VAR_waf_acl_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl-metric
+TF_VAR_waf_aws_sqli_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-metric
+
 # -------------------------------
 # BLUE/GREEN ENVIRONMENT VARIABLES
 
@@ -159,7 +180,6 @@ DOS_DB_HANDLER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_H
 DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_UPDATE_DLQ_HANDLER)
 EVENT_REPLAY_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(EVENT_REPLAY)
 INGEST_CHANGE_EVENT_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(INGEST_CHANGE_EVENT)
-ORCHESTRATOR_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(ORCHESTRATOR)
 SEND_EMAIL_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SEND_EMAIL)
 SERVICE_MATCHER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_MATCHER)
 SERVICE_SYNC_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_SYNC)
@@ -170,7 +190,6 @@ TF_VAR_dos_db_handler_lambda_name := $(DOS_DB_HANDLER_LAMBDA_NAME)
 TF_VAR_dos_db_update_dlq_handler_lambda_name := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME)
 TF_VAR_event_replay_lambda_name := $(EVENT_REPLAY_LAMBDA_NAME)
 TF_VAR_ingest_change_event_lambda_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)
-TF_VAR_orchestrator_lambda_name := $(ORCHESTRATOR_LAMBDA_NAME)
 TF_VAR_send_email_lambda_name := $(SEND_EMAIL_LAMBDA_NAME)
 TF_VAR_service_matcher_lambda_name := $(SERVICE_MATCHER_LAMBDA_NAME)
 TF_VAR_service_sync_lambda_name := $(SERVICE_SYNC_LAMBDA_NAME)
@@ -182,7 +201,6 @@ TF_VAR_dos_db_handler_role_name := $(DOS_DB_HANDLER_LAMBDA_NAME)-role
 TF_VAR_dos_db_update_dlq_handler_role_name := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME)-role
 TF_VAR_event_replay_role_name := $(EVENT_REPLAY_LAMBDA_NAME)-role
 TF_VAR_ingest_change_event_role_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)-role
-TF_VAR_orchestrator_role_name := $(ORCHESTRATOR_LAMBDA_NAME)-role
 TF_VAR_send_email_role_name := $(SEND_EMAIL_LAMBDA_NAME)-role
 TF_VAR_service_matcher_role_name := $(SERVICE_MATCHER_LAMBDA_NAME)-role
 TF_VAR_service_sync_role_name := $(SERVICE_SYNC_LAMBDA_NAME)-role
@@ -193,7 +211,6 @@ TF_VAR_change_event_dlq_handler_subscription_filter_name := $(CHANGE_EVENT_DLQ_H
 TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(DOS_DB_HANDLER_LAMBDA_NAME)-cw-logs-firehose-subscription
 TF_VAR_event_replay_subscription_filter_name := $(EVENT_REPLAY_LAMBDA_NAME)-cw-logs-firehose-subscription
 TF_VAR_ingest_change_event_subscription_filter_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_orchestrator_subscription_filter_name := $(ORCHESTRATOR_LAMBDA_NAME)-cw-logs-firehose-subscription
 TF_VAR_send_email_subscription_filter_name := $(SEND_EMAIL_LAMBDA_NAME)-cw-logs-firehose-subscription
 TF_VAR_service_matcher_subscription_filter_name := $(SERVICE_MATCHER_LAMBDA_NAME)-cw-logs-firehose-subscription
 TF_VAR_service_sync_di_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-di-cw-logs-firehose-subscription
@@ -207,9 +224,3 @@ TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
-
-# ---------------------------------------------------------------------------------------------------------------------
-# DoS DB Handler (Non-Prod Only)
-
-DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
-DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_RELEASE_USER_PASSWORD

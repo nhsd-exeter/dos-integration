@@ -31,3 +31,16 @@ SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-dev-status
 
 TAG_SECRET_MANAGER := uec-dos-int-dev/deployment
+
+# ==============================================================================
+# Performance variables
+
+SERVICE_MATCHER_MAX_CONCURRENCY := 3
+SERVICE_SYNC_MAX_CONCURRENCY := 2
+
+# ==============================================================================
+# DoS DB Handler
+
+DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
+DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_RELEASE_USER_PASSWORD
+DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := pathwaysdos

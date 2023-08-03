@@ -20,7 +20,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 	tar -czf $(DOCKER_DIR)/lambda/assets/app.tar.gz \
 		--exclude=tests $$UNDERSCORE_LAMBDA_NAME common/*.py __init__.py > /dev/null 2>&1
 	cd $(PROJECT_DIR)
-	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler
+	make -s docker-image GENERIC_IMAGE_NAME=lambda CMD=$$UNDERSCORE_LAMBDA_NAME.$$UNDERSCORE_LAMBDA_NAME.lambda_handler BUILD_OPTS="--platform=linux/arm64"
 	rm -f $(DOCKER_DIR)/lambda/assets/*.tar.gz $(DOCKER_DIR)/lambda/assets/*.txt
 
 build-and-push: # Build lambda docker images and pushes them to ECR
@@ -51,6 +51,7 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make deploy VERSION=$(BUILD_TAG)
 
 populate-deployment-variables:
+	echo "unset AWS_PROFILE"
 	echo "export DB_SERVER=$(DB_ROUTE_53)"
 	echo "export DB_REPLICA_SERVER=$(DB_REPLICA_53)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
@@ -65,8 +66,10 @@ populate-deployment-variables:
 	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
 	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
+	echo "export TF_VAR_aws_sso_role=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(AWS_SSO_ROLE_KEY)')"
 
 populate-serverless-variables:
+	echo "unset AWS_PROFILE"
 	echo "export TERRAFORM_KMS_KEY_ID=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)"
 
 unit-test-local:
@@ -106,20 +109,19 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
-		--volume $(APPLICATION_DIR)/orchestrator:/tmp/.packages/orchestrator \
 		--volume $(APPLICATION_DIR)/send_email:/tmp/.packages/send_email \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
-integration-test-autoflags-no-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+integration-test-autoflags-no-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make integration-test TAGS="pharmacy_no_log_searches" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
-integration-test-autoflags-cloudwatch-logs: #End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+integration-test-autoflags-cloudwatch-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	make integration-test TAGS="pharmacy_cloudwatch_queries" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
 
-integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tools \
@@ -130,6 +132,19 @@ integration-test: #End to end test DI project - mandatory: PROFILE, TAGS=[comple
 		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
 		-e RUN_ID=$$RUN_ID \
 		"
+
+production-smoke-test: # Smoke test DI project - mandatory: PROFILE; optional: ENVIRONMENT
+	if [ "$(PROFILE)" != "live" ]; then
+		make -s docker-run-tools \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
+		DIR=./test/smoke \
+		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
+	else
+		echo "Production smoke test not allowed on live profile"
+		exit 1
+	fi
+
 
 clean: # Runs whole project clean
 	make \
@@ -196,12 +211,6 @@ dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler la
 	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
 
 # ==============================================================================
-# Orchestrator
-
-orchestrator-build-and-deploy: ### Build and deploy orchestrator lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=orchestrator
-
-# ==============================================================================
 # Send Email
 
 send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
@@ -264,20 +273,6 @@ plan-development-and-deployment-tools:
 	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
 	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
 
-deploy-perf-test-tools: # Deploys perf test tools terraform stack - mandatory: ENVIRONMENT. Shared Development ENVIRONMENT is tools
-	make terraform-apply-auto-approve STACKS=perf-test-tools PROFILE=tools
-
-undeploy-perf-test-tools:
-	make terraform-destroy-auto-approve STACKS=perf-test-tools PROFILE=tools
-
-plan-perf-test-tools:
-	if [ "$(PROFILE)" == "tools" ]; then
-		export TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=GITHUB_TOKEN)
-		make terraform-plan STACKS=perf-test-tools
-	else
-		echo "Only tools profile supported at present"
-	fi
-
 docker-hub-signin: # Sign into Docker hub
 	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
 	export DOCKER_PASSWORD=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_PASS)
@@ -305,13 +300,6 @@ tag-commit-to-destroy-environment: # Tag git commit to destroy deployment - mand
 	else
 		echo This is for destroying old dev environments PROFILE should not be equal to ENVIRONMENT
 	fi
-
-re-tag-images-for-deployment: # Re-tag ECR images for deployment - Mandatory: SOURCE=[tag], TARGET=[tag]
-	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_PROD_LIST) | tr "," "\n"); do
-		make docker-pull NAME=$$IMAGE_NAME VERSION=$(SOURCE)
-		make docker-tag NAME=$$IMAGE_NAME SOURCE=$(SOURCE) TARGET=$(TARGET)
-		make docker-push NAME=$$IMAGE_NAME VERSION=$(TARGET)
-	done
 
 get-environment-from-pr:
 	ENVIRONMENT=$$(gh pr list -s merged --json number,mergeCommit,headRefName --repo=nhsd-exeter/dos-integration |  jq --raw-output '.[] | select(.number == $(PR_NUMBER)) | .headRefName | sub( ".*:*/DS-(?<x>.[0-9]*).*"; "ds-\(.x)") ')
@@ -385,12 +373,8 @@ tester-clean:
 # -----------------------------
 # Performance Testing
 
-stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], optional: PIPELINE=true/false
-	if [ $(PIPELINE) == true ]; then
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 10 --run-time 1m)
-	else
-		PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 2 --run-time 10m)
-	fi
+stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+	PERFORMANCE_ARGS=$$(echo --users 25 --spawn-rate 10 --run-time 10m)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f stress_test_locustfile.py --headless \
@@ -499,7 +483,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=dos-db-handler
 	make docker-create-repository NAME=dos-db-update-dlq-handler
 	make docker-create-repository NAME=event-replay
-	make docker-create-repository NAME=orchestrator
 	make docker-create-repository NAME=service-matcher
 	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger
@@ -550,6 +533,7 @@ link-blue-green-environment: # Links blue green environment - mandatory: PROFILE
 	make terraform-apply-auto-approve STACKS=blue-green-link
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
@@ -563,6 +547,7 @@ undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended
 	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
 
 unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
 	make terraform-destroy-auto-approve STACKS=blue-green-link
 
 tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green environment - mandatory: COMMIT=[short commit hash]
@@ -578,15 +563,43 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 	make git-tag-create TAG=$$tag COMMIT=$(COMMIT)
 
 # ==============================================================================
-# DynamoDB Cleanup Job
-run-dynamodb-cleanup-job:
-	python3 scripts/dynamodb_cleanup_job/script.py
+# Pipeline Targets
 
-deploy-dynamodb-cleanup-job: # Deploys dynamodb cleanup job
-	make terraform-apply-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+commit-date-hash-tag:
+	echo "$(BUILD_COMMIT_DATETIME)-$(BUILD_COMMIT_HASH)"
 
-undeploy-dynamodb-cleanup-job: # Undeploys dynamodb cleanup job
-	make terraform-destroy-auto-approve STACKS=dynamo-db-clean-up-job PROFILE=tools ENVIRONMENT=dev
+check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: REPO=[repository name],TAG=[string to match tag of an image]
+	if [ $$(aws ecr batch-get-image --repository-name $(REPO) --image-ids imageTag=$(TAG) --registry-id=$(AWS_ACCOUNT_ID_MGMT) | jq '.images | length') == 1 ];
+	then
+		echo true
+	else
+		echo false
+	fi
+
+check-ecr-lambda-images-exist-for-tag: ### Check all lambda images with given tag exist in ECR - mandatory: TAG=[string to match tag of an image]
+	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
+		IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
+		if [[ "$$IMAGE_STATUS" == "false" ]]; then
+			echo false
+			exit
+		fi
+	done
+	echo true
+
+wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist with given tag in ECR or timeout - mandatory: TAG=[string to match tag of an image]
+	TIMEOUT=600
+	START_TS=$$(date +%s)
+	echo "Checking lambda images are ready.."
+	while [ $$(make check-ecr-lambda-images-exist-for-tag) == "false" ]; do
+		ELAPSED_TIME=$$(expr $$(date +%s) - $$START_TS )
+		if [ "$$ELAPSED_TIME" -gt "$$TIMEOUT" ]; then
+			echo "Failed to find Lambda images in given timeout $$TIMEOUT secs"
+			exit 1
+		fi
+		echo "..Lambda images not ready, waiting 10 second before checking again.."
+		sleep 10
+	done
+		echo "..Lambda images ready"
 
 # ==============================================================================
 # Ruff
@@ -599,4 +612,8 @@ docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 python-ruff-fix: # Auto fixes ruff warnings
 	make docker-run-ruff RUFF_OPTS="--fix"
 
-.SILENT: docker-run-ruff
+.SILENT: docker-run-ruff \
+	commit-date-hash-tag \
+	check-ecr-image-tag-exist \
+	wait-for-ecr-lambda-images-to-exist-for-tag \
+	check-ecr-lambda-images-exist-for-tag

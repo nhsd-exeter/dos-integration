@@ -151,8 +151,8 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
         connection=mock_connection,
         query=(
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name service_type_name FROM services s "
-            "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
+            "statusid, publicphone, publicname, st.name service_type_name "
+            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
     )
@@ -216,9 +216,10 @@ def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, 
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
-            "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, publicphone, publicname, st.name service_type_name "
+            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+            "WHERE odscode = %(ODS)s or odscode LIKE %(ODS7)s"
         ),
         query_vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
     )
@@ -244,9 +245,9 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, "
-            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes"
-            " st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, publicphone, publicname, st.name service_type_name"
+            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
         ),
         query_vars={"ODS": f"{odscode[:5]}%"},
     )

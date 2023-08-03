@@ -31,7 +31,7 @@ locals {
       "AWS_ACCOUNT"        = "PROD"
     }
   }
-  to_build                 = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "orchestrator", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event"])
+  to_build                 = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event"])
   integration_make_targets = toset(["integration-test-autoflags-cloudwatch-logs", "integration-test-autoflags-no-logs"])
   independent_build_images = {
     tester = {
@@ -41,5 +41,13 @@ locals {
       "filematch" = "serverless.yml"
     }
   }
-
+  default_environment_variables = {
+    "AWS_DEFAULT_REGION"         = var.aws_region
+    "AWS_ACCOUNT_ID_LIVE_PARENT" = var.aws_account_id_live_parent
+    "AWS_ACCOUNT_ID_MGMT"        = var.aws_account_id_mgmt
+    "AWS_ACCOUNT_ID_NONPROD"     = var.aws_account_id_nonprod
+    "AWS_ACCOUNT_ID_IDENTITIES"  = var.aws_account_id_identities
+    "AWS_ACCOUNT_ID_PROD"        = var.aws_account_id_prod
+    "PIPELINE_BUILD_ROLE"        = "UECDoSINTPipelineBuildRole"
+  }
 }

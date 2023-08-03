@@ -12,7 +12,7 @@ phases:
       - echo PROFILE=$PROFILE
       - echo SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT
       # Sign into nonprod to access docker hub
-      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
@@ -23,9 +23,9 @@ phases:
       # Sign into relevant account to for rollbacking environment
       - |
         if [[ "$PROFILE" == "live" ]] || [[ "$PROFILE" == "demo" ]]; then
-          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_PROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
         else
-          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+          temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
         fi
       - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)

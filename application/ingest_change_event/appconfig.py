@@ -20,6 +20,7 @@ class AppConfig:
             environment=shared_environment,
             application=f"uec-dos-int-{shared_environment}-lambda-app-config",
             name=name,
+            max_age=300,
         )
 
     def get_raw_configuration(self) -> dict[str, Any]:

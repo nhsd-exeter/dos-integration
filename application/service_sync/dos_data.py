@@ -1,5 +1,3 @@
-from os import environ
-
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
 from psycopg.rows import DictRow
@@ -9,7 +7,6 @@ from .changes_to_dos import ChangesToDoS
 from .reporting import log_palliative_care_z_code_does_not_exist
 from .service_histories import ServiceHistories
 from .service_update_logging import log_service_updates
-from common.circuit import put_circuit_is_open
 from common.constants import DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR, DOS_PALLIATIVE_CARE_SYMPTOM_GROUP
 from common.dos import (
     DoSService,
@@ -17,40 +14,11 @@ from common.dos import (
     get_standard_opening_times_from_db,
     has_palliative_care,
 )
-from common.dos_db_connection import connect_to_dos_db, connect_to_dos_db_replica, query_dos_db
+from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from common.utilities import add_metric
 
 logger = Logger(child=True)
-
-
-def run_db_health_check() -> None:
-    """Runs a health check to ensure the db is running."""
-    try:
-        logger.info("Running health check")
-        with connect_to_dos_db() as connection:
-            cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            if cursor.fetchall():
-                logger.info("DoS database is running")
-            else:
-                logger.error("Health check failed - No services found in DoS DB")
-                add_metric("ServiceSyncHealthCheckFailure")
-                return
-        with connect_to_dos_db_replica() as connection:
-            cursor = query_dos_db(connection=connection, query="SELECT id FROM services LIMIT 1")
-            if cursor.fetchall():
-                logger.info("DoS database replica is running")
-            else:
-                logger.error("Health check failed - No services found in DoS DB Replica")
-                add_metric("ServiceSyncHealthCheckFailure")
-                return
-        put_circuit_is_open(environ["CIRCUIT"], False)
-        logger.info("Health check successful")
-        add_metric("ServiceSyncHealthCheckSuccess")
-    except Exception:
-        # If an error occurs, circuit remains open
-        logger.exception("Health check failed")
-        add_metric("ServiceSyncHealthCheckFailure")
 
 
 def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHistories]:
@@ -64,8 +32,8 @@ def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHis
 
     """
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, publicphone, publicname, "
-        "st.name service_type_name, easting, northing, latitude, longitude FROM services s "
+        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, "
+        "publicphone, publicname, st.name service_type_name, easting, northing, latitude, longitude FROM services s "
         "LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.id = %(SERVICE_ID)s"
     )
     query_vars = {"SERVICE_ID": service_id}
