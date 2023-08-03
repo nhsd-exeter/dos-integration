@@ -70,13 +70,22 @@ resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" 
     "accepted_service_types" : {
       "default" : false,
       "rules" : {
-        "sevice_type_ids_in_list" : {
+        "active_service_types" : {
           "when_match" : true,
           "conditions" : [
             {
               "action" : "KEY_IN_VALUE",
               "key" : "service_type_ids",
               "value" : [13, 131, 132, 134, 137]
+            }
+          ]
+          }, "active_closed_commissioning_service_types" : {
+          "when_match" : true,
+          "conditions" : [
+            {
+              "action" : "KEY_IN_VALUE",
+              "key" : "service_type_ids",
+              "value" : []
             }
           ]
         }
