@@ -84,22 +84,22 @@ batch:
           LAMBDA: slack-messenger
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/build-arm-image.yml
 
-    # - identifier: deploy
-    #   env:
-    #     compute-type: BUILD_GENERAL1_SMALL
-    #     image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
-    #     type: LINUX_CONTAINER
-    #     privileged-mode: true
-    #   buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/deploy-set-environment.yml
-    #   variables:
-    #     ENVIRONMENT: release
-    #     PROFILE: dev
-    #   depend-on:
-    #     - build_change_event_dlq_handler
-    #     - build_dos_db_handler
-    #     - build_dos_db_update_dlq_handler
-    #     - build_event_replay
-    #     - build_ingest_change_event
-    #     - build_service_matcher
-    #     - build_service_sync
-    #     - build_slack_messenger
+    - identifier: deploy
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/deploy-set-environment.yml
+      variables:
+        ENVIRONMENT: release
+        PROFILE: dev
+      depend-on:
+        - build_change_event_dlq_handler
+        - build_dos_db_handler
+        - build_dos_db_update_dlq_handler
+        - build_event_replay
+        - build_ingest_change_event
+        - build_service_matcher
+        - build_service_sync
+        - build_slack_messenger
