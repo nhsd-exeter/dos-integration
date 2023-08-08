@@ -11,7 +11,7 @@ class AllChangesChangeEvent(FastHttpUser):
     trace_id: str | None = None
     headers: dict[str, str] | None = None
     payload: dict[str, Any] | None = None
-    wait_time = constant_pacing(30)
+    wait_time = constant_pacing(10)
 
     def on_start(self) -> None:
         """Get the api key before starting the test."""
@@ -30,7 +30,7 @@ class OdscodeDoesNotExistInDoS(FastHttpUser):
     trace_id: str | None = None
     headers: dict[str, str] | None = None
     payload: dict[str, Any] | None = None
-    wait_time = constant_pacing(30)
+    wait_time = constant_pacing(10)
 
     def on_start(self) -> None:
         """Get the api key before starting the test."""

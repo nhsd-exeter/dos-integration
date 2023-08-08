@@ -386,7 +386,7 @@ load-test: # Create change events for load performance testing - mandatory: PROF
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
 		CMD="python -m locust -f load_test_locustfile.py --headless \
-			--users 50 --spawn-rate 2 --run-time 30m --stop-timeout 5	 --exit-code-on-error 0 \
+			--users 50 --spawn-rate 5 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
