@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_deploy_test_release_webhook" {
-  project_name = aws_codebuild_project.build_deploy_test_release[0].name
+  project_name = aws_codebuild_project.build_deploy_test_release.name
   build_type   = "BUILD"
   filter_group {
     filter {

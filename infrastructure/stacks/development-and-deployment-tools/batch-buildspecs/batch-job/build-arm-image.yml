@@ -28,4 +28,6 @@ phases:
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$LAMBDA VERSION=$(make commit-date-hash-tag)
-      - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+
+  post_build:
+    - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
