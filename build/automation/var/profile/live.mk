@@ -44,3 +44,10 @@ ACCEPTED_ORG_TYPES := PHA
 
 SERVICE_MATCHER_MAX_CONCURRENCY := 30
 SERVICE_SYNC_MAX_CONCURRENCY := 50
+
+# ==============================================================================
+# DoS DB Handler
+
+DOS_DEPLOYMENT_SECRETS := null
+DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := null
+DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := null
