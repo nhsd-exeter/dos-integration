@@ -1,6 +1,6 @@
 resource "aws_codebuild_webhook" "build_deploy_test_release_webhook" {
   project_name = aws_codebuild_project.build_deploy_test_release.name
-  build_type   = "BUILD"
+  build_type   = "BUILD_BATCH"
   filter_group {
     filter {
       type    = "EVENT"
