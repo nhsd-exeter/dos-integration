@@ -30,4 +30,5 @@ phases:
       - make docker-push NAME=$LAMBDA VERSION=$(make commit-date-hash-tag)
 
   post_build:
-    - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
+    commands:
+      - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
