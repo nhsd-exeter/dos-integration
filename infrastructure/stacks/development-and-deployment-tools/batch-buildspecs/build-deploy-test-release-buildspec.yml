@@ -90,10 +90,10 @@ batch:
         image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         type: LINUX_CONTAINER
         privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/deploy-set-environment.yml
-      variables:
-        ENVIRONMENT: release
-        PROFILE: dev
       depend-on:
         - build_change_event_dlq_handler
         - build_dos_db_handler
@@ -110,11 +110,11 @@ batch:
         image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         type: LINUX_CONTAINER
         privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
+          TAG: pharmacy_cloudwatch_queries
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/integration-test.yml
-      variables:
-        ENVIRONMENT: release
-        PROFILE: dev
-        TAG: pharmacy_cloudwatch_queries
       depend-on:
         - deploy
 
@@ -124,10 +124,10 @@ batch:
         image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
         type: LINUX_CONTAINER
         privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
+          TAG: pharmacy_no_log_searches
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/batch-job/integration-test.yml
-      variables:
-        ENVIRONMENT: release
-        PROFILE: dev
-        TAG: pharmacy_no_log_searches
       depend-on:
         - deploy
