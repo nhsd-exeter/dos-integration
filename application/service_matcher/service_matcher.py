@@ -135,45 +135,10 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     """
     # Check database for services with same first 5 digits of ODSCode
     logger.info(f"Getting matching DoS Services for odscode '{nhs_entity.odscode}'.")
-    matching_dos_services = get_matching_dos_services(nhs_entity.odscode, nhs_entity.org_type_id)
-
-    # Filter for matched and unmatched service types and valid status
-    matching_services, non_matching_services = [], []
-
-    # # valid_service_types = get_valid_service_types(nhs_entity.org_type_id)
-    # valid_service_types = [13, 131, 132, 134, 137]
-    # valid_pharmacy_first_types = [148, 149]
-
-    # toggle_pharmacy_first = False
-
-    # matching_dos_services = [
-    #     service
-    #     for service in matching_dos_services
-    #     if service.typeid in valid_service_types
-    #     and service.statusid == VALID_STATUS_ID
-    #     or service.typeid in valid_pharmacy_first_types
-    #     and service.statusid in [1, 2, 3]
-    #     and toggle_pharmacy_first
-    # ]
-    # matching_pharmacy_first_services = [
-    #     service
-    #     for service in matching_dos_services
-    #     if service.typeid in valid_pharmacy_first_types and service.statusid in [1, 2, 3]
-    # ]
-
-    # for service in matching_dos_services:
-    #     if int(service.statusid) == VALID_STATUS_ID:  # VALID_STATUS_ID = 1 (Active)
-    #         if int(service.typeid) in valid_service_types:
-    #             matching_services.append(service)
-    #         else:
-    #             non_matching_services.append(service)
-
-    if non_matching_services:
-        log_unmatched_service_types(nhs_entity, non_matching_services)
-
+    matching_services = get_matching_dos_services(nhs_entity.odscode, nhs_entity.org_type_id)
     logger.info(
-        f"Found {len(matching_dos_services)} services in DB with "
-        f"matching first 5 chars of ODSCode: {matching_dos_services}",
+        f"Found {len(matching_services)} services in DB with "
+        f"matching first 5 chars of ODSCode: {matching_services}",
     )
 
     return matching_services

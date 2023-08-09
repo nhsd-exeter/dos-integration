@@ -17,6 +17,11 @@ from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 VALID_STATUS_ID = 1
+
+ACTIVE_STATUS_ID = 1
+CLOSED_STATUS_ID = 2
+COMMISSIONING_STATUS_ID = 3
+
 logger = Logger(child=True)
 dos_location_cache = {}
 
@@ -104,12 +109,16 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     """
     logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
 
-    named_args = {"ODS": f"{odscode[:5]}%"}
+    named_args = {
+        "ODS": f"{odscode[:5]}%",
+        "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
+        "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+    }
 
-    if True:  # Add pharmacy first condition
-        pharmacy_first_condition = " OR  s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s AND s.statusid = %(PHARMACY_FIRST_STATUSES)s"  # noqa: E501
-        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = PHARMACY_SERVICE_TYPE_IDS
-        named_args["PHARMACY_FIRST_STATUSES"] = VALID_STATUS_ID
+    if False:  # Add pharmacy first condition
+        pharmacy_first_condition = " OR s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s AND s.statusid IN %(PHARMACY_FIRST_STATUSES)s"  # noqa: E501
+        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = (148, 149)
+        named_args["PHARMACY_FIRST_STATUSES"] = [ACTIVE_STATUS_ID, CLOSED_STATUS_ID, COMMISSIONING_STATUS_ID]
     else:
         pharmacy_first_condition = ""
 
@@ -117,7 +126,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
         "statusid, publicphone, publicname, st.name service_type_name"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        " WHERE s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_SERVICE_TYPE_IDS)s AND s.statusid = %(ACTIVE_STATUS_ID)s"
+        " WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s"  # noqa: E501
         f"{pharmacy_first_condition}"
     )
     with connect_to_dos_db_replica() as connection:
