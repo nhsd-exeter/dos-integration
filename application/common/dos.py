@@ -104,18 +104,21 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     """
     logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
 
-    if org_type_id == PHARMACY_ORG_TYPE_ID:
-        conditions = "odscode LIKE %(ODS)s"
-        named_args = {"ODS": f"{odscode[:5]}%"}
+    named_args = {"ODS": f"{odscode[:5]}%"}
+
+    if True:  # Add pharmacy first condition
+        pharmacy_first_condition = " OR  s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s AND s.statusid = %(PHARMACY_FIRST_STATUSES)s"  # noqa: E501
+        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = PHARMACY_SERVICE_TYPE_IDS
+        named_args["PHARMACY_FIRST_STATUSES"] = VALID_STATUS_ID
     else:
-        conditions = "odscode = %(ODS)s"
-        named_args = {"ODS": f"{odscode}%"}
-    # Safe as conditional is configurable but variables is inputted to psycopg as variables
+        pharmacy_first_condition = ""
+
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
         "statusid, publicphone, publicname, st.name service_type_name"
         " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        f" WHERE {conditions}"
+        " WHERE s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_SERVICE_TYPE_IDS)s AND s.statusid = %(ACTIVE_STATUS_ID)s"
+        f"{pharmacy_first_condition}"
     )
     with connect_to_dos_db_replica() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)
