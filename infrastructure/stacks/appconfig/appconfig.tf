@@ -57,7 +57,7 @@ resource "aws_appconfig_configuration_profile" "service_matcher" {
   name           = "service-matcher"
   description    = "AppConfig Configuration Profile for Service Matcher lambda"
   location_uri   = "hosted"
-  type           = "AWS.Freeform"
+  type           = "AWS.AppConfig.FeatureFlags"
 }
 
 resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" {
@@ -67,32 +67,19 @@ resource "aws_appconfig_hosted_configuration_version" "service_matcher_version" 
   content_type             = "application/json"
 
   content = jsonencode({
-    "accepted_service_types" : {
-      "default" : false,
-      "rules" : {
-        "active_service_types" : {
-          "when_match" : true,
-          "conditions" : [
-            {
-              "action" : "KEY_IN_VALUE",
-              "key" : "service_type_ids",
-              "value" : [13, 131, 132, 134, 137]
-            }
-          ]
-          }, "active_closed_commissioning_service_types" : {
-          "when_match" : true,
-          "conditions" : [
-            {
-              "action" : "KEY_IN_VALUE",
-              "key" : "service_type_ids",
-              "value" : []
-            }
-          ]
-        }
-      }
-    }
-    }
-  )
+    flags : {
+      pharmacy_first_phase_one : {
+        name : "pharmacy_first_phase_one",
+        description : "Pharmacy First Phase One Flag",
+      },
+    },
+    values : {
+      pharmacy_first_phase_one : {
+        enabled : "false",
+      },
+    },
+    version : "1"
+  })
 }
 
 resource "aws_appconfig_deployment" "service_matcher_deployment" {
