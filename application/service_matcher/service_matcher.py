@@ -18,10 +18,9 @@ from .reporting import (
     log_invalid_open_times,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
-    log_unmatched_service_types,
 )
-from common.constants import PHARMACY_SERVICE_TYPE_ID, PHARMACY_SERVICE_TYPE_IDS
-from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
+from common.constants import PHARMACY_SERVICE_TYPE_ID
+from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
@@ -135,13 +134,23 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     """
     # Check database for services with same first 5 digits of ODSCode
     logger.info(f"Getting matching DoS Services for odscode '{nhs_entity.odscode}'.")
-    matching_services = get_matching_dos_services(nhs_entity.odscode, nhs_entity.org_type_id)
+    pharmacy_first_phase_one_feature_flag = get_pharmacy_first_phase_one_feature_flag()
+    matching_services = get_matching_dos_services(nhs_entity.odscode, pharmacy_first_phase_one_feature_flag)
     logger.info(
         f"Found {len(matching_services)} services in DB with "
         f"matching first 5 chars of ODSCode: {matching_services}",
     )
 
     return matching_services
+
+
+def get_pharmacy_first_phase_one_feature_flag() -> bool:
+    """Gets the pharmacy first phase one feature flag.
+
+    Returns:
+        bool: True if the feature flag is enabled, False otherwise.
+    """
+    return True
 
 
 def send_update_requests(

@@ -9,7 +9,6 @@ from psycopg import Connection
 from .constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
-    PHARMACY_ORG_TYPE_ID,
     PHARMACY_SERVICE_TYPE_IDS,
 )
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
@@ -96,18 +95,18 @@ class DoSService:
         return self.region
 
 
-def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService]:
+def get_matching_dos_services(odscode: str, pharmacy_first_phases_one_feature_flag: bool) -> list[DoSService]:
     """Retrieves DoS Services from DoS database.
 
     Args:
         odscode (str): ODScode to match on
-        org_type_id (str): OrganisationType to match on
+        pharmacy_first_phases_one_feature_flag (bool): Whether to include pharmacy first services
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
-    logger.info(f"Searching for '{org_type_id}' DoS services with ODSCode that matches '{odscode}'")
+    logger.info(f"Searching for Pharmacy DoS services with ODSCode that matches '{odscode}'")
 
     named_args = {
         "ODS": f"{odscode[:5]}%",
@@ -115,7 +114,7 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
         "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
     }
 
-    if False:  # Add pharmacy first condition
+    if pharmacy_first_phases_one_feature_flag:  # Add pharmacy first condition
         pharmacy_first_condition = " OR s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s AND s.statusid IN %(PHARMACY_FIRST_STATUSES)s"  # noqa: E501
         named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = (148, 149)
         named_args["PHARMACY_FIRST_STATUSES"] = [ACTIVE_STATUS_ID, CLOSED_STATUS_ID, COMMISSIONING_STATUS_ID]

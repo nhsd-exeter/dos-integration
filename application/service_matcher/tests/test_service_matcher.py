@@ -45,8 +45,7 @@ def lambda_context():
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-@patch(f"{FILE_PATH}.log_unmatched_service_types")
-def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
+def test_get_matching_services(mock_get_matching_dos_services, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
@@ -57,22 +56,17 @@ def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matchi
     matching_services = get_matching_services(nhs_entity)
     # Assert
     assert matching_services == [service]
-    mock_log_unmatched_service_types.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-@patch(f"{FILE_PATH}.log_unmatched_service_types")
-def test_get_unmatching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
+def test_get_unmatching_services(mock_get_matching_dos_services, change_event):
     # Arrange
     nhs_entity = NHSEntity(change_event)
-    service = dummy_dos_service()
-    service.typeid = 999
-    service.statusid = 1
-    mock_get_matching_dos_services.return_value = [service]
+    mock_get_matching_dos_services.return_value = []
     # Act
-    get_matching_services(nhs_entity)
+    response = get_matching_services(nhs_entity)
     # Assert
-    mock_log_unmatched_service_types.assert_called_once()
+    assert response == []
 
 
 def get_message_attributes(

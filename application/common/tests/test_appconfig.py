@@ -1,9 +1,9 @@
 from os import environ
 from unittest.mock import MagicMock, patch
 
-from application.ingest_change_event.appconfig import AppConfig
+from application.common.appconfig import AppConfig
 
-FILE_PATH = "application.ingest_change_event.appconfig"
+FILE_PATH = "application.common.appconfig"
 
 
 @patch(f"{FILE_PATH}.AppConfigStore")

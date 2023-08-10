@@ -3,6 +3,7 @@ from random import choices
 from unittest.mock import MagicMock, patch
 
 from application.common.dos import (
+    ACTIVE_STATUS_ID,
     DoSService,
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
@@ -21,7 +22,6 @@ from application.conftest import dummy_dos_service
 from common.constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
-    PHARMACY_ORG_TYPE_ID,
 )
 
 OP = OpenPeriod.from_string
@@ -140,7 +140,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
     # Act
-    response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
+    response = get_matching_dos_services(odscode, False)
     # Assert
     service = response[0]
     assert service.odscode == odscode
@@ -149,11 +149,57 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name service_type_name "
-            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
+            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
+            "s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
+            "AND s.statusid = %(ACTIVE_STATUS_ID)s"
         ),
-        query_vars={"ODS": f"{odscode[:5]}%"},
+        query_vars={
+            "ODS": "FQ038%",
+            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
+            "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+        },
+    )
+    mock_cursor.fetchall.assert_called_with()
+    mock_cursor.close.assert_called_with()
+
+
+@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+    # Arrange
+    odscode = "FQ038"
+    name = "My Pharmacy"
+    service_id = 22851351399
+    db_return = [get_db_item(odscode, name, id=service_id)]
+    mock_connection = MagicMock()
+    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
+    # Act
+    response = get_matching_dos_services(odscode, True)
+    # Assert
+    service = response[0]
+    assert service.odscode == odscode
+    assert service.id == service_id
+    assert service.name == name
+    mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
+        query=(
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
+            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.odscode "
+            "LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s "
+            "OR s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s "
+            "AND s.statusid IN %(PHARMACY_FIRST_STATUSES)s"
+        ),
+        query_vars={
+            "ODS": "FQ038%",
+            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
+            "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+            "PHARMACY_FIRST_SERVICE_TYPE_IDS": (148, 149),
+            "PHARMACY_FIRST_STATUSES": [1, 2, 3],
+        },
     )
     mock_cursor.fetchall.assert_called_with()
     mock_cursor.close.assert_called_with()
@@ -203,17 +249,21 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
     # Act
-    response = get_matching_dos_services(odscode, PHARMACY_ORG_TYPE_ID)
+    response = get_matching_dos_services(odscode, False)
     # Assert
     assert response == []
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name service_type_name"
-            " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE odscode LIKE %(ODS)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
+            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.odscode "
+            "LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s"
         ),
-        query_vars={"ODS": f"{odscode[:5]}%"},
+        query_vars={
+            "ODS": f"{odscode[:5]}%",
+            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
+            "ACTIVE_STATUS_ID": 1,
+        },
     )
     mock_cursor.fetchall.assert_called_with()
     mock_cursor.close.assert_called_with()

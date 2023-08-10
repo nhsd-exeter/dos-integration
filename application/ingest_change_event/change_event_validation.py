@@ -4,7 +4,7 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
-from .appconfig import AppConfig
+from common.appconfig import AppConfig
 from common.constants import (
     PHARMACY_ODSCODE_LENGTH,
     PHARMACY_ORG_TYPE_ID,
