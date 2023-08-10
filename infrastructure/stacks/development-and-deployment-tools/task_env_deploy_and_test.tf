@@ -1,7 +1,6 @@
-resource "aws_codebuild_webhook" "build_environment_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_build_environment[0].name
-  build_type   = "BUILD"
+resource "aws_codebuild_webhook" "task_env_deploy_and_test_webhook" {
+  project_name = aws_codebuild_project.task_env_deploy_and_test.name
+  build_type   = "BUILD_BATCH"
   filter_group {
     filter {
       type    = "EVENT"
@@ -12,13 +11,13 @@ resource "aws_codebuild_webhook" "build_environment_webhook" {
       pattern = "refs/heads/task/DS-[0-9]*"
     }
   }
-  depends_on = [aws_codebuild_project.di_build_environment]
+  depends_on = [aws_codebuild_project.task_env_deploy_and_test]
 }
 
-resource "aws_codebuild_project" "di_build_environment" {
-  count          = var.environment == "dev" ? 1 : 0
-  name           = "${var.project_id}-${var.environment}-build-and-test-environment-stage"
-  description    = "Builds environment based on push to task branches"
+
+resource "aws_codebuild_project" "task_env_deploy_and_test" {
+  name           = "${var.project_id}-${var.environment}-task-env-deploy-and-test"
+  description    = "Builds, deploys and tests task environment, triggered by a push to a task branch"
   build_timeout  = "90"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -32,8 +31,13 @@ resource "aws_codebuild_project" "di_build_environment" {
     modes = ["LOCAL_DOCKER_LAYER_CACHE"]
   }
 
+  build_batch_config {
+    service_role    = data.aws_iam_role.pipeline_role.arn
+    timeout_in_mins = 60
+  }
+
   environment {
-    compute_type                = "BUILD_GENERAL1_LARGE"
+    compute_type                = "BUILD_GENERAL1_SMALL"
     image                       = "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
@@ -45,7 +49,7 @@ resource "aws_codebuild_project" "di_build_environment" {
     }
     environment_variable {
       name  = "CB_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-and-test-environment-stage"
+      value = "${var.project_id}-${var.environment}-task-env-deploy-and-test"
     }
     dynamic "environment_variable" {
       for_each = local.default_environment_variables
@@ -58,7 +62,7 @@ resource "aws_codebuild_project" "di_build_environment" {
   }
   logs_config {
     cloudwatch_logs {
-      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-build-and-test-environment-stage"
+      group_name  = "/aws/codebuild/${var.project_id}-${var.environment}-task-env-deploy-and-test"
       stream_name = ""
     }
   }
@@ -66,6 +70,6 @@ resource "aws_codebuild_project" "di_build_environment" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-and-test-environment-buildspec.yml")
+    buildspec       = file("batch-buildspecs/task-env-deploy-and-test-buildspec.yml")
   }
 }
