@@ -264,14 +264,14 @@ undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
 
 deploy-development-and-deployment-tools:
 	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
-	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
+	make terraform-apply-auto-approve STACKS=development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev TF_VAR_github_token=$$TF_VAR_github_token
 
 undeploy-development-and-deployment-tools:
-	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token="any"
+	make terraform-destroy-auto-approve STACKS=development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev TF_VAR_github_token="any"
 
 plan-development-and-deployment-tools:
 	TF_VAR_github_token=$$(make -s secret-get-existing-value NAME=uec-dos-int-tools/deployment KEY=GITHUB_TOKEN)
-	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools TF_VAR_github_token=$$TF_VAR_github_token
+	make terraform-plan STACKS=development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev TF_VAR_github_token=$$TF_VAR_github_token
 
 docker-hub-signin: # Sign into Docker hub
 	export DOCKER_USERNAME=$$($(AWSCLI) secretsmanager get-secret-value --secret-id uec-pu-updater/deployment --version-stage AWSCURRENT --region $(AWS_REGION) --query '{SecretString: SecretString}' | jq --raw-output '.SecretString' | jq -r .DOCKER_HUB_USERNAME)
