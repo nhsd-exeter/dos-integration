@@ -192,6 +192,15 @@ module "service_matcher" {
         "kms:Decrypt"
       ],
       "Resource": "${data.aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "appconfig:GetConfiguration",
+        "appconfig:StartConfigurationSession",
+        "appconfig:GetLatestConfiguration"
+        ],
+      "Resource": "*"
     }
   ]
 }
