@@ -1,0 +1,34 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - mkdir -p $HOME/.docker/cli-plugins
+      - wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.10.3/buildx-v0.10.3.linux-arm64
+      - chmod a+rx $HOME/.docker/cli-plugins/docker-buildx
+      - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/UECDoSINTPipelineBuildRole" --role-session-name "CodeBuildSession")
+      - export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
+      - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
+      - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
+      - make docker-hub-signin
+      - docker run --privileged --rm tonistiigi/binfmt --install all
+      - export DOCKER_BUILDKIT=1
+      - export DOCKER_CLI_EXPERIMENTAL=enabled
+      - docker buildx create --name mybuilder --use
+      - docker buildx version
+
+  build:
+    commands:
+      - echo "[Building branch lambda images]"
+      - echo VERSION = $(make commit-date-hash-tag)
+      - make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$LAMBDA VERSION=$(make commit-date-hash-tag) DOCKER_BUILDKIT=1
+      - echo "[Pushing images to ECR]"
+      - unset AWS_ACCESS_KEY_ID
+      - unset AWS_SECRET_ACCESS_KEY
+      - unset AWS_SESSION_TOKEN
+      - make docker-push NAME=$LAMBDA VERSION=$(make commit-date-hash-tag)
+
+  post_build:
+    commands:
+      - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$(make commit-date-hash-tag) SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
