@@ -54,6 +54,16 @@ batch:
           LAMBDA: ingest-change-event
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
 
+    - identifier: build_send_email
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: send-email
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
     - identifier: build_service_matcher
       env:
         compute-type: BUILD_GENERAL1_SMALL
