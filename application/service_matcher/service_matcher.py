@@ -20,7 +20,6 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
-
 from common.constants import PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
@@ -141,6 +140,7 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     logger.info(
         f"Found {len(matching_services)} services in DB with "
         f"matching first 5 chars of ODSCode: {matching_services}",
+        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
     )
 
     return matching_services
@@ -153,7 +153,7 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
         bool: True if the feature flag is enabled, False otherwise.
     """
     pharmacy_first_phase_one: str = parameters.get_parameter("uec-dos-int-ds-1161-pharmacy-first-phase-one")
-    pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001, S307
+    pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001
     logger.debug(
         "Got pharmacy first phase one feature flag",
         extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},

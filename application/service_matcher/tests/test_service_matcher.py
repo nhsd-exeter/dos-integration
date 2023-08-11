@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from json import dumps
 from os import environ
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
@@ -44,29 +44,39 @@ def lambda_context():
     return LambdaContext()
 
 
+@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_matching_services(mock_get_matching_dos_services, change_event):
+def test_get_matching_services(
+    mock_get_matching_dos_services, mock_get_pharmacy_first_phase_one_feature_flag: MagicMock, change_event,
+):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
     service.typeid = 13
     service.statusid = 1
     mock_get_matching_dos_services.return_value = [service]
+    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
     # Act
     matching_services = get_matching_services(nhs_entity)
     # Assert
     assert matching_services == [service]
+    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_unmatching_services(mock_get_matching_dos_services, change_event):
+def test_get_unmatching_services(
+    mock_get_matching_dos_services, mock_get_pharmacy_first_phase_one_feature_flag: MagicMock, change_event,
+):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     mock_get_matching_dos_services.return_value = []
+    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
     # Act
     response = get_matching_services(nhs_entity)
     # Assert
     assert response == []
+    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
 
 
 def get_message_attributes(
