@@ -102,8 +102,7 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          ENVIRONMENT: release
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/deploy-set-environment.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/deploy-task-environment.yml
       depend-on:
         - build_change_event_dlq_handler
         - build_dos_db_handler
@@ -122,8 +121,7 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          ENVIRONMENT: release
           TAG: pharmacy
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/integration-test.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
