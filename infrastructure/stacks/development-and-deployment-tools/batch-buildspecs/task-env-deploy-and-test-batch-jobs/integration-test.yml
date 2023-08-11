@@ -12,7 +12,6 @@ phases:
       - make docker-pull NAME=tester VERSION=latest
   build:
     commands:
-      - make integration-test PROFILE=$PROFILE PARALLEL_TEST_COUNT=20 TAGS=pharmacy
       - make integration-test PROFILE=$PROFILE BUILD_BRANCH=$BUILD_BRANCH TAGS=$TAG PARALLEL_TEST_COUNT=20
     finally:
       - |

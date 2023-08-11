@@ -32,8 +32,9 @@ phases:
     finally:
       - |
         if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build Arm Image"  BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Image Failed - Please investigate";
-            exit 1;
+          make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build Arm Image"  BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Image Failed - Please investigate";
+          exit 1;
+        fi
 
   post_build:
     commands:

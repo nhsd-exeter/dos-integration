@@ -44,10 +44,6 @@ resource "aws_codebuild_project" "task_env_deploy_and_test" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "PROFILE"
-      value = "dev"
-    }
-    environment_variable {
       name  = "CB_PROJECT_NAME"
       value = "${var.project_id}-${var.environment}-task-env-deploy-and-test"
     }
