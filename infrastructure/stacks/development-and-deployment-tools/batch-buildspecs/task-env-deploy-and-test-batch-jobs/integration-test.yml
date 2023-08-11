@@ -10,6 +10,8 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - make docker-hub-signin
       - make docker-pull NAME=tester VERSION=latest
+      - export BUILD_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
+
   build:
     commands:
       - make integration-test PROFILE=$PROFILE BUILD_BRANCH=$BUILD_BRANCH TAGS=$TAG PARALLEL_TEST_COUNT=20
