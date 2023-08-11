@@ -226,3 +226,12 @@ variable "send_email_bucket_name" {
   type        = string
   description = "Name of the bucket to temporarily store emails to be sent"
 }
+
+# ##############
+# # PARAMETER STORE
+# ##############
+
+variable "pharmacy_first_phase_one_parameter_name" {
+  type        = string
+  description = "The name of the parameter for the pharmacy first phase one feature flag"
+}

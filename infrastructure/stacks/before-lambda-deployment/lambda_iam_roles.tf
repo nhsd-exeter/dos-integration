@@ -196,11 +196,16 @@ module "service_matcher" {
     {
       "Effect": "Allow",
       "Action": [
-        "appconfig:GetConfiguration",
-        "appconfig:StartConfigurationSession",
-        "appconfig:GetLatestConfiguration"
-        ],
+        "ssm:DescribeParameters"
+      ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter"
+      ],
+      "Resource": "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/${var.pharmacy_first_phase_one_parameter_name}"
     }
   ]
 }

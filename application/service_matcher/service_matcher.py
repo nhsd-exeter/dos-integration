@@ -8,6 +8,7 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
+from aws_lambda_powertools.utilities import parameters
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
@@ -19,13 +20,13 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
+
 from common.constants import PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
-from common.appconfig import AppConfig
 
 logger = Logger()
 tracer = Tracer()
@@ -136,8 +137,6 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     # Check database for services with same first 5 digits of ODSCode
     logger.info(f"Getting matching DoS Services for odscode '{nhs_entity.odscode}'.")
     pharmacy_first_phase_one_feature_flag = get_pharmacy_first_phase_one_feature_flag()
-    logger.exception(f"pharmacy_first_phase_one_feature_flag: {pharmacy_first_phase_one_feature_flag}")
-    logger.exception(f"pharmacy_first_phase_one_feature_flag type: {type(pharmacy_first_phase_one_feature_flag)}")
     matching_services = get_matching_dos_services(nhs_entity.odscode, pharmacy_first_phase_one_feature_flag)
     logger.info(
         f"Found {len(matching_services)} services in DB with "
@@ -153,14 +152,13 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
     Returns:
         bool: True if the feature flag is enabled, False otherwise.
     """
-    app_config = AppConfig("service-matcher")
-    feature_flags = app_config.get_feature_flags()
-    pharmacy_first_phase_one: bool = feature_flags.evaluate(
-        name="pharmacy_first_phase_one",
-        default=False,
+    pharmacy_first_phase_one: str = parameters.get_parameter("uec-dos-int-ds-1161-pharmacy-first-phase-one")
+    pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001, S307
+    logger.debug(
+        "Got pharmacy first phase one feature flag",
+        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
     )
-
-    return pharmacy_first_phase_one
+    return pharmacy_first_phase_one_feature_flag
 
 
 def send_update_requests(
