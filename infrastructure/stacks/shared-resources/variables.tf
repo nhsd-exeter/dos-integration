@@ -250,3 +250,12 @@ variable "aws_sso_role" {
   type        = string
   description = "The name of the role to assume for AWS SSO"
 }
+
+# ##############
+# # PARAMETER STORE
+# ##############
+
+variable "pharmacy_first_phase_one_parameter_name" {
+  type        = string
+  description = "The name of the parameter for the pharmacy first phase one feature flag"
+}
