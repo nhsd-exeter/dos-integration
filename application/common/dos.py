@@ -95,12 +95,12 @@ class DoSService:
         return self.region
 
 
-def get_matching_dos_services(odscode: str, pharmacy_first_phases_one_feature_flag: bool) -> list[DoSService]:
+def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_flag: bool) -> list[DoSService]:
     """Retrieves DoS Services from DoS database.
 
     Args:
         odscode (str): ODScode to match on
-        pharmacy_first_phases_one_feature_flag (bool): Whether to include pharmacy first services
+        pharmacy_first_phase_one_feature_flag (bool): Whether to include pharmacy first services
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
@@ -114,9 +114,9 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phases_one_feature_fl
         "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
     }
 
-    if pharmacy_first_phases_one_feature_flag:  # Add pharmacy first condition
-        pharmacy_first_condition = " OR s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s AND s.statusid IN %(PHARMACY_FIRST_STATUSES)s"  # noqa: E501
-        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = (148, 149)
+    if pharmacy_first_phase_one_feature_flag:  # Add pharmacy first condition
+        pharmacy_first_condition = " OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
+        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = [148, 149]
         named_args["PHARMACY_FIRST_STATUSES"] = [ACTIVE_STATUS_ID, CLOSED_STATUS_ID, COMMISSIONING_STATUS_ID]
     else:
         pharmacy_first_condition = ""

@@ -136,7 +136,8 @@ TF_VAR_blue_green_deployment_previous_version_parameter_name := $(PROJECT_ID)-$(
 TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-current-version
 
 # Parameter Store (Application)
-TF_VAR_pharmacy_first_phase_one_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-pharmacy-first-phase-one
+PHARMACY_FIRST_PHASE_ONE_PARAMETER := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-pharmacy-first-phase-one
+TF_VAR_pharmacy_first_phase_one_parameter_name := $(PHARMACY_FIRST_PHASE_ONE_PARAMETER)
 
 # WAF
 TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl

@@ -2,7 +2,7 @@ from datetime import datetime
 from hashlib import sha256
 from json import dumps
 from operator import countOf
-from os import environ
+from os import environ, getenv
 from typing import Any
 
 from aws_embedded_metrics import metric_scope
@@ -152,7 +152,8 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
     Returns:
         bool: True if the feature flag is enabled, False otherwise.
     """
-    pharmacy_first_phase_one: str = parameters.get_parameter("uec-dos-int-ds-1161-pharmacy-first-phase-one")
+    parameter_name: str = getenv("PHARMACY_FIRST_PHASE_ONE_PARAMETER")
+    pharmacy_first_phase_one: str = parameters.get_parameter(parameter_name)
     pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001
     logger.debug(
         "Got pharmacy first phase one feature flag",

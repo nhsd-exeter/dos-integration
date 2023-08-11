@@ -1,8 +1,11 @@
 Feature: F001. Ensure valid change events are converted and sent to DoS
 
-  @complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches @wip
   Scenario Outline: F001SXX1. Changes are processed for acceptable service types
-    Given a pharmacy service is created with type "<service_type>"
+    Given an entry is created in the services table
+    And the service "service_type" is set to "<service_type>"
+    And the service "service_status" is set to "<status>"
+    And the entry is committed to the services table
     And the change event "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
@@ -10,14 +13,18 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     And the service history shows "postalcode" change type is "modify"
 
     Examples:
-      | service_type |
-      | 13           |
-      | 131          |
-      | 132          |
-      | 134          |
-      | 137          |
-      | 148          |
-      | 149          |
+      | service_type | status |
+      | 13           | 1      |
+      | 131          | 1      |
+      | 132          | 1      |
+      | 134          | 1      |
+      | 137          | 1      |
+      | 148          | 1      |
+      | 148          | 2      |
+      | 148          | 3      |
+      | 149          | 1      |
+      | 149          | 2      |
+      | 149          | 3      |
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001SXX2. A Changed event with aligned data does not save an update to DoS
