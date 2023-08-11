@@ -154,6 +154,12 @@ resource "aws_api_gateway_usage_plan" "di_endpoint_usage_plan" {
     api_id = aws_api_gateway_rest_api.di_endpoint.id
     stage  = aws_api_gateway_stage.di_endpoint_stage.stage_name
   }
+
+  throttle_settings {
+    burst_limit = 500
+    rate_limit  = 400
+  }
+
   tags = {
     "PublicFacing" = "Yes"
   }
