@@ -190,14 +190,14 @@ def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_d
             "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
             "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.odscode "
             "LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s "
-            "OR s.odscode LIKE %(ODS)s AND s.typeid IN %(PHARMACY_FIRST_SERVICE_TYPE_IDS)s "
-            "AND s.statusid IN %(PHARMACY_FIRST_STATUSES)s"
+            "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) "
+            "AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
         ),
         query_vars={
             "ODS": "FQ038%",
             "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
             "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
-            "PHARMACY_FIRST_SERVICE_TYPE_IDS": (148, 149),
+            "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
             "PHARMACY_FIRST_STATUSES": [1, 2, 3],
         },
     )
