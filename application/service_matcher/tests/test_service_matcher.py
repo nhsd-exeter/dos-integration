@@ -11,7 +11,12 @@ from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
+from application.service_matcher.service_matcher import (
+    get_matching_services,
+    get_pharmacy_first_phase_one_feature_flag,
+    lambda_handler,
+    send_update_requests,
+)
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 
@@ -47,7 +52,9 @@ def lambda_context():
 @patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
 def test_get_matching_services(
-    mock_get_matching_dos_services, mock_get_pharmacy_first_phase_one_feature_flag: MagicMock, change_event,
+    mock_get_matching_dos_services,
+    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
+    change_event,
 ):
     # Arrange
     nhs_entity = NHSEntity(change_event)
@@ -66,7 +73,9 @@ def test_get_matching_services(
 @patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
 def test_get_unmatching_services(
-    mock_get_matching_dos_services, mock_get_pharmacy_first_phase_one_feature_flag: MagicMock, change_event,
+    mock_get_matching_dos_services,
+    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
+    change_event,
 ):
     # Arrange
     nhs_entity = NHSEntity(change_event)
@@ -271,6 +280,20 @@ def test_lambda_handler_invalid_open_times(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.parameters.get_parameter")
+def test_get_pharmacy_first_phase_one_feature_flag(mock_get_parameter: MagicMock) -> None:
+    # Arrange
+    environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"] = environment_variable = "test"
+    mock_get_parameter.return_value = "True"
+    # Act
+    response = get_pharmacy_first_phase_one_feature_flag()
+    # Assert
+    assert response is True
+    mock_get_parameter.assert_called_once_with(environment_variable)
+    # Clean up
+    del environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"]
+
+
 def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context):
     # Arrange
     sqs_event = SQS_EVENT.copy()
@@ -288,7 +311,7 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
 @patch(f"{FILE_PATH}.sqs")
 @patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "info")
-def test_send_update_requests(mock_logger, get_correlation_id_mockm, mock_sqs):
+def test_send_update_requests(mock_logger, get_correlation_id_mock, mock_sqs):
     # Arrange
     q_name = "test-queue"
     environ["UPDATE_REQUEST_QUEUE_URL"] = q_name
