@@ -9,7 +9,7 @@ Feature: F002. Invalid change event Exception handling
     And the "service-matcher" lambda shows field "message" with value "No matching DOS services"
 
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F002SXX2. A Changed Event where OrganisationTypeID is NOT PHA or Dentist is reported and ignored
+  Scenario: F002SXX2. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
     Given a basic service is created
     And the change event "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
