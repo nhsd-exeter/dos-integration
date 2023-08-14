@@ -113,7 +113,7 @@ batch:
         - build_service_sync
         - build_slack_messenger
 
-    - identifier: integration_test
+    - identifier: integration_test_no_log_searches
       env:
         compute-type: BUILD_GENERAL1_LARGE
         image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
@@ -121,7 +121,20 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          TAG: pharmacy
+          TAG: pharmacy_no_log_searches
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
+      depend-on:
+        - deploy
+
+    - identifier: integration_test_cloudwatch_queries
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          TAG: pharmacy_cloudwatch_queries
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
