@@ -107,6 +107,9 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     if org_type_id == PHARMACY_ORG_TYPE_ID:
         conditions = "odscode LIKE %(ODS)s"
         named_args = {"ODS": f"{odscode[:5]}%"}
+    else:
+        conditions = "odscode = %(ODS)s"
+        named_args = {"ODS": f"{odscode}%"}
     # Safe as conditional is configurable but variables is inputted to psycopg as variables
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
