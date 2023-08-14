@@ -24,9 +24,6 @@ SQS_CLIENT = client("sqs", region_name="eu-west-2")
 DYNAMO_CLIENT = client("dynamodb")
 S3_CLIENT = client("s3", region_name="eu-west-2")
 
-PHARMACY_ODS_CODE_LIST = None
-DENTIST_ODS_CODE_LIST = None
-
 
 def process_payload(context: Context, valid_api_key: bool | None, correlation_id: str) -> Response:
     """Process payload.
