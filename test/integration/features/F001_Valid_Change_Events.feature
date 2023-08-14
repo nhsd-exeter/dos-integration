@@ -1,6 +1,6 @@
 Feature: F001. Ensure valid change events are converted and sent to DoS
 
-@complete @pharmacy_no_log_searches
+  @complete @pharmacy_no_log_searches
   Scenario Outline: F001SXX1. Changes are processed for acceptable service types
     Given an entry is created in the services table
     And the service "service_type" is set to "<service_type>"
@@ -26,8 +26,8 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 149          | 2      |
       | 149          | 3      |
 
-  @complete @dev @pharmacy_cloudwatch_queries @wip
-  Scenario Outline: F001SXX2 Check for Unmatched Pharmacy Report log
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SXX2 Checking invalid service types and statuses variations are not matched
     Given an entry is created in the services table
     And the service "service_type" is set to "<service_type>"
     And the service "service_status" is set to "<status>"
