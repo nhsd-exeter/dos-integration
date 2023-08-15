@@ -11,11 +11,10 @@ from application.common.nhs import (
     skip_if_key_is_none,
 )
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from common.constants import DENTIST_SERVICE_TYPE_IDS, PHARMACY_SERVICE_TYPE_IDS
+from common.constants import PHARMACY_SERVICE_TYPE_IDS
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 
 test_attr_names = ("odscode", "website", "PublicPhone", "Phone", "Postcode")
-DENTIST_SERVICE_ID = DENTIST_SERVICE_TYPE_IDS[0]
 PHARMACY_SERVICE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 
 
@@ -559,7 +558,7 @@ def test_is_spec_opening_json(open_time_json, expected):
     assert actual == expected, f"Spec time should be valid={expected} but wasn't. open_time={open_time_json}"
 
 
-def test_is_matching_dos_service():  # noqa: PLR0915
+def test_is_matching_dos_service():
     nhs_entity = NHSEntity({})
     dos_service = dummy_dos_service()
 
@@ -596,43 +595,8 @@ def test_is_matching_dos_service():  # noqa: PLR0915
     dos_service.odscode = "1ABCDEFGHI"
     assert nhs_entity.is_matching_dos_service(dos_service)
 
-    dos_service.typeid = DENTIST_SERVICE_TYPE_IDS[0]
-    assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = "1ABCDEFGHI"
-    assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service)
-
-    nhs_entity.odscode = "VBCDEU"
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-    nhs_entity.odscode = "V0ABCDE"
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service)
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service)
-
-    nhs_entity.odscode = ""
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = ""
-    assert nhs_entity.is_matching_dos_service(dos_service) is False
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = "VABCDEU123"
-    assert nhs_entity.is_matching_dos_service(dos_service)
-
-    nhs_entity.odscode = "VABCDEU"
-    dos_service.odscode = "VABCDEU123"
+    nhs_entity.odscode = "VABCDU"
+    dos_service.odscode = "VABCDU123"
     dos_service.typeid = 324634324
     assert nhs_entity.is_matching_dos_service(dos_service) is False
 

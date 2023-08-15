@@ -7,7 +7,6 @@ from aws_lambda_powertools.logging import Logger
 
 from common.constants import (
     CLOSED_AND_HIDDEN_STATUSES,
-    DENTIST_SERVICE_TYPE_IDS,
     NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
     PHARMACY_SERVICE_TYPE_IDS,
 )
@@ -192,12 +191,6 @@ class NHSEntity:
                 and len(self.odscode) >= 5  # noqa: PLR2004
                 and dos_service.odscode[:5] == self.odscode[:5]
             )
-
-        if dos_service.typeid in DENTIST_SERVICE_TYPE_IDS:
-            if len(dos_service.odscode) < 6 or len(self.odscode) < 7:  # noqa: PLR2004
-                return False
-            odscode_extra_0 = f"{dos_service.odscode[0]}0{dos_service.odscode[1:]}"
-            return self.odscode[:7] in (dos_service.odscode[:7], odscode_extra_0[:7])
 
         logger.warning(f"Failed nhs code match check for unknown typeid '{dos_service.typeid}'")
         return False
