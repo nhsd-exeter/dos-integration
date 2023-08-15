@@ -43,7 +43,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
             "nhsuk_service_status": nhs_entity.org_status,
             "nhsuk_service_type": nhs_entity.org_type,
             "nhsuk_sector": nhs_entity.org_sub_type,
-            "dos_service_status": VALID_STATUS_ID,
+            "dos_service_status": dos_service.status_name,
             "dos_service_type": dos_service.service_type_name,
             "dos_region": dos_service.get_region(),
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
