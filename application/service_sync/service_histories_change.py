@@ -81,7 +81,7 @@ class ServiceHistoriesChange:
             str: Change action - add, delete
         """
         new_value: dict[list[str]] = self.data
-        value = list(new_value.keys())[0]
+        value = next(iter(new_value.keys()))
         return "add" if value == "add" else "delete"
 
     def get_opening_times_change_action(self) -> str:

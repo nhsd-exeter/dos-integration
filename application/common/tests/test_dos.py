@@ -1,4 +1,4 @@
-from datetime import date, datetime, time, timezone
+from datetime import UTC, date, datetime, time
 from random import choices
 from unittest.mock import MagicMock, patch
 
@@ -714,8 +714,8 @@ def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa
         "parentid": 123486,
         "subregionid": 21813557,
         "statusid": 1,
-        "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=timezone.utc),
-        "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=timezone.utc),
+        "createdtime": datetime(2011, 8, 24, 9, 17, 24, tzinfo=UTC),
+        "modifiedtime": datetime(2019, 3, 13, 0, 37, 7, tzinfo=UTC),
         "publicphone": "0123 012 012",
         "publicname": None,
         "service_type_name": "my service",

@@ -1398,7 +1398,7 @@ def services_location_history_update_assertion(context: Context) -> None:
     """
     sleep(10)
     history_data = get_service_history(context.service_id)
-    history_data = history_data[list(history_data.keys())[0]]["new"]
+    history_data = history_data[next(iter(history_data.keys()))]["new"]
     history_list = [
         history_data["cmsorgtown"]["data"],
         history_data["postalcode"]["data"],

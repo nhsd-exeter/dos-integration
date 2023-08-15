@@ -2,12 +2,11 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from os import environ
 from time import time_ns
-from typing import Any
+from typing import Any, LiteralString
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection, Cursor, connect
 from psycopg.rows import DictRow, dict_row
-from typing_extensions import LiteralString
 
 from common.secretsmanager import get_secret
 

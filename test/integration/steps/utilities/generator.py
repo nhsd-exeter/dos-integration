@@ -93,7 +93,7 @@ def add_single_opening_day(context: Context) -> None:
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0]["id"]
     add_single_opening_time(context, time_id)
-    if "standard_openings" not in context.generator_data.keys():
+    if "standard_openings" not in context.generator_data:
         context.generator_data["standard_openings"] = []
     context.generator_data["standard_openings"].append(
         {"day": "Monday", "open": True, "opening_time": "09:00", "closing_time": "17:00"},
@@ -143,7 +143,7 @@ def add_single_specified_day(context: Context) -> None:
     response = loads(invoke_dos_db_handler_lambda(lambda_payload))
     time_id = literal_eval(response)[0]["id"]
     add_single_specified_time(context, time_id)
-    if "specified_openings" not in context.generator_data.keys():
+    if "specified_openings" not in context.generator_data:
         context.generator_data["specified_openings"] = []
     context.generator_data["specified_openings"].append(
         {"date": "Jan 02 2025", "open": True, "opening_time": "09:00", "closing_time": "17:00"},
@@ -466,7 +466,7 @@ def query_standard_opening_builder(
     else:
         times_obj = add_standard_opening_time(day, False, "", "")
 
-    if "standard_openings" not in context.generator_data.keys():
+    if "standard_openings" not in context.generator_data:
         context.generator_data["standard_openings"] = []
     else:
         # Make sure that a closed statement removes opening statements
@@ -525,7 +525,7 @@ def query_specified_opening_builder(
         times_obj = add_specified_opening_time(date, True, open_time, close_time)
     else:
         times_obj = add_specified_opening_time(date, False, "", "")
-    if "specified_openings" not in context.generator_data.keys():
+    if "specified_openings" not in context.generator_data:
         context.generator_data["specified_openings"] = []
     else:
         for entry in context.generator_data["specified_openings"]:

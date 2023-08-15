@@ -243,8 +243,7 @@ def build_change_rejection_email_contents(pending_change: PendingChange, file_na
     # Remove the placeholder row
     file_contents = file_contents.replace("{{row}}", " ")
     # Remove the \n characters from the HTML
-    file_contents = file_contents.replace("\n", " ")
-    return file_contents
+    return file_contents.replace("\n", " ")
 
 
 TABLE_ROW: str = """

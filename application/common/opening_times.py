@@ -56,7 +56,7 @@ class OpenPeriod:
         """
         return f"OpenPeriod({self})"
 
-    def __eq__(self, other: Any) -> bool:  # noqa: ANN401
+    def __eq__(self, other: object) -> bool:
         """Check if two OpenPeriod objects are equal.
 
         Args:
@@ -248,7 +248,7 @@ class SpecifiedOpeningTime:
         """
         return "OPEN" if self.is_open else "CLOSED"
 
-    def __eq__(self, other: Any) -> bool:  # noqa: ANN401
+    def __eq__(self, other: object) -> bool:
         """Checks equality between 2 SpecifiedOpeningTime objects.
 
         Args:

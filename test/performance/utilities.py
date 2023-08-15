@@ -13,8 +13,7 @@ def setup_change_event_request() -> dict[str, Any]:
     """Setup the request headers and json payload for the change event endpoint."""
     with open("resources/change_event.json", "r+") as file:
         payload = load(file)
-    payload = make_change_event_unique(payload)
-    return payload
+    return make_change_event_unique(payload)
 
 
 def setup_headers() -> dict[str, str]:

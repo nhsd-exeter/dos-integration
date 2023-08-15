@@ -17,8 +17,7 @@ def format_address(address: str) -> str:
         address,
     )  # Capitalise first letter of each word
     address = address.replace("'", "")  # Remove apostrophes
-    address = address.replace("&", "and")  # Replace '&' with 'and'
-    return address
+    return address.replace("&", "and")  # Replace '&' with 'and'
 
 
 def format_website(website: str) -> str:

@@ -70,9 +70,8 @@ def compare_nhs_uk_and_dos_data(
     # Compare and validate all opening_times
     changes_to_dos = compare_opening_times(changes_to_dos=changes_to_dos)
     # Compare palliative care
-    changes_to_dos = compare_palliative_care(changes_to_dos=changes_to_dos)
+    return compare_palliative_care(changes_to_dos=changes_to_dos)
 
-    return changes_to_dos
 
 
 def has_website_changed(changes: ChangesToDoS) -> bool:
