@@ -9,7 +9,7 @@ from application.ingest_change_event.change_event_validation import (
     validate_organisation_keys,
     validate_organisation_type_id,
 )
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID
+from common.constants import PHARMACY_ORG_TYPE_ID
 
 FILE_PATH = "application.ingest_change_event.change_event_validation"
 
@@ -34,41 +34,36 @@ def test_validate_change_event_missing_key(mock_check_ods_code_length, mock_vali
 
 
 @pytest.mark.parametrize(
-    ("odscode", "odscode_length"),
+    ("odscode"),
     [
-        ("FXXX1", 5),
-        ("AAAAA", 5),
-        ("00000", 5),
-        ("V001234", 7),
+        ("FXXX1"),
+        ("AAAAA"),
+        ("00000"),
     ],
 )
-def test_check_ods_code_length(odscode, odscode_length):
+def test_check_ods_code_length(odscode):
     # Act & Assert
-    check_ods_code_length(odscode, odscode_length)
+    check_ods_code_length(odscode)
 
 
 @pytest.mark.parametrize(
-    ("odscode", "odscode_length"),
+    ("odscode"),
     [
-        ("FXXX11", 5),
-        ("AAAA", 5),
-        ("V0345", 7),
-        ("V01234567", 7),
+        ("FXXX11"),
+        ("AAAA"),
+        ("V0345A"),
+        ("V01234567"),
     ],
 )
-def test_check_ods_code_length_incorrect_length(odscode, odscode_length):
+def test_check_ods_code_length_incorrect_length(odscode):
     # Act & Assert
     with pytest.raises(ValidationError):
-        check_ods_code_length(odscode, odscode_length)
+        check_ods_code_length(odscode)
 
 
 @pytest.mark.parametrize(
     ("org_type_id", "org_sub_type"),
     [
-        (
-            "Dentist",
-            "TBA",
-        ),
         (
             "PHA",
             "Community",
@@ -89,7 +84,7 @@ def test_validate_organisation_keys(
     ("org_type_id", "org_sub_type"),
     [
         (
-            "Dentist",
+            "GP",
             "RANDOM",
         ),
         (
@@ -110,7 +105,7 @@ def test_validate_organisation_keys_org_sub_type_id_exception(
     assert f"Unexpected Org Sub Type ID: '{org_sub_type}'" in str(exception.value)
 
 
-@pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID])
+@pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID])
 @patch(f"{FILE_PATH}.AppConfig")
 def test_validate_organisation_type_id(mock_app_config, org_type_id):
     # Arrange
@@ -127,7 +122,7 @@ def test_validate_organisation_type_id(mock_app_config, org_type_id):
     )
 
 
-@pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID, DENTIST_ORG_TYPE_ID])
+@pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID])
 @patch(f"{FILE_PATH}.AppConfig")
 def test_validate_organisation_type_id_wrong_org_type_id_exception(mock_app_config, org_type_id):
     # Arrange
