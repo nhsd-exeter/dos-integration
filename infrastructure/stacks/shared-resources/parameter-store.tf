@@ -3,6 +3,6 @@ resource "aws_ssm_parameter" "pharmacy_first_phase_one_parameter" {
   name        = var.pharmacy_first_phase_one_parameter_name
   description = "The feature flag for pharamcy first phase one"
   type        = "String"
-  value       = "False"
+  value       = "True"
 
 }

@@ -192,6 +192,20 @@ module "service_matcher" {
         "kms:Decrypt"
       ],
       "Resource": "${data.aws_kms_key.signing_key.arn}"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:DescribeParameters"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter"
+      ],
+      "Resource": "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/${var.pharmacy_first_phase_one_parameter_name}"
     }
   ]
 }
