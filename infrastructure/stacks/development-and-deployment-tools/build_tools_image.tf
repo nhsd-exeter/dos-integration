@@ -28,7 +28,7 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
 resource "aws_codebuild_project" "di_build_image" {
   for_each       = var.environment == "dev" ? local.independent_build_images : {}
   name           = "${var.project_id}-${var.environment}-build-${each.key}-stage"
-  description    = "Builds ${each.key} docker container image"
+  description    = "Builds ${each.key} x86 development docker container image"
   build_timeout  = "10"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
@@ -89,6 +89,6 @@ resource "aws_codebuild_project" "di_build_image" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-image-buildspec.yml")
+    buildspec       = file("buildspecs/build-tools-image-buildspec.yml")
   }
 }

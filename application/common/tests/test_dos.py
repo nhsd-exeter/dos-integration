@@ -19,7 +19,6 @@ from application.common.dos import (
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from application.conftest import dummy_dos_service
 from common.constants import (
-    DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
     PHARMACY_ORG_TYPE_ID,
@@ -190,41 +189,6 @@ def test_any_generic_bankholiday_open_periods():
 
     dos_service.standard_opening_times.generic_bankholiday = []
     assert dos_service.any_generic_bankholiday_open_periods() is False
-
-
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
-@patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_dentist_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
-    # Arrange
-    odscode = "V00393a"
-    name = "My Dental Practice"
-    service_id = 22851351399
-    db_return = [get_db_item(odscode, name, id=service_id)]
-    mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_cursor
-    ods6_code = "V0393a"
-    # Act
-    response = get_matching_dos_services(odscode, DENTIST_ORG_TYPE_ID)
-    # Assert
-    service = response[0]
-    assert service.odscode == odscode
-    assert service.id == service_id
-    assert service.name == name
-    mock_query_dos_db.assert_called_once_with(
-        connection=mock_connection,
-        query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, publicphone, publicname, st.name service_type_name "
-            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-            "WHERE odscode = %(ODS)s or odscode LIKE %(ODS7)s"
-        ),
-        query_vars={"ODS": f"{ods6_code}", "ODS7": f"{odscode}%"},
-    )
-    mock_cursor.fetchall.assert_called_with()
-    mock_cursor.close.assert_called_with()
 
 
 @patch(f"{FILE_PATH}.connect_to_dos_db_replica")

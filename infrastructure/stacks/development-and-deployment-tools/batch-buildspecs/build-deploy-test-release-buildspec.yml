@@ -1,0 +1,129 @@
+# For documentation see here - https://docs.aws.amazon.com/codebuild/latest/userguide/build-spec-ref.html
+version: 0.2
+
+batch:
+  fast-fail: false
+  build-graph:
+    - identifier: build_change_event_dlq_handler
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: change-event-dlq-handler
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_dos_db_handler
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: dos-db-handler
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_dos_db_update_dlq_handler
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: dos-db-update-dlq-handler
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_event_replay
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: event-replay
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_ingest_change_event
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: ingest-change-event
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_send_email
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: send-email
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_service_matcher
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: service-matcher
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_service_sync
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: service-sync
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: build_slack_messenger
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: slack-messenger
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+
+    - identifier: deploy
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/deploy-set-environment.yml
+      depend-on:
+        - build_change_event_dlq_handler
+        - build_dos_db_handler
+        - build_dos_db_update_dlq_handler
+        - build_event_replay
+        - build_ingest_change_event
+        - build_service_matcher
+        - build_service_sync
+        - build_slack_messenger
+
+    - identifier: integration_test
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
+          TAG: pharmacy
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/integration-test.yml
+      depend-on:
+        - deploy

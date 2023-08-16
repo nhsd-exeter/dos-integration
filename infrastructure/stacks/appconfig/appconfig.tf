@@ -3,18 +3,18 @@ resource "aws_appconfig_application" "di_lambdas" {
   description = "DoS Integration AppConfig Application"
 }
 
+resource "aws_appconfig_environment" "lambdas_environment" {
+  name           = var.environment
+  description    = "AppConfig Environment for ${var.environment}"
+  application_id = aws_appconfig_application.di_lambdas.id
+}
+
 resource "aws_appconfig_configuration_profile" "ingest_change_event" {
   application_id = aws_appconfig_application.di_lambdas.id
   name           = "ingest-change-event"
   description    = "AppConfig Configuration Profile for Ingest Change Event lambda"
   location_uri   = "hosted"
   type           = "AWS.Freeform"
-}
-
-resource "aws_appconfig_environment" "lambdas_environment" {
-  name           = var.environment
-  description    = "AppConfig Environment for ${var.environment}"
-  application_id = aws_appconfig_application.di_lambdas.id
 }
 
 resource "aws_appconfig_hosted_configuration_version" "ingest_change_event_version" {
@@ -43,7 +43,7 @@ resource "aws_appconfig_hosted_configuration_version" "ingest_change_event_versi
   )
 }
 
-resource "aws_appconfig_deployment" "deployment" {
+resource "aws_appconfig_deployment" "ingest_change_event_deployment" {
   application_id           = aws_appconfig_application.di_lambdas.id
   configuration_profile_id = aws_appconfig_configuration_profile.ingest_change_event.configuration_profile_id
   configuration_version    = aws_appconfig_hosted_configuration_version.ingest_change_event_version.version_number

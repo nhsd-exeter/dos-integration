@@ -6,12 +6,9 @@ from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidati
 
 from .appconfig import AppConfig
 from common.constants import (
-    DENTIST_ORG_TYPE_ID,
-    ODSCODE_LENGTH_KEY,
-    ORGANISATION_SUB_TYPES_KEY,
+    PHARMACY_ODSCODE_LENGTH,
     PHARMACY_ORG_TYPE_ID,
-    SERVICE_TYPES,
-    SERVICE_TYPES_ALIAS_KEY,
+    PHARMACY_ORGANISATION_SUB_TYPES,
 )
 from common.errors import ValidationError
 
@@ -30,11 +27,13 @@ def validate_change_event(event: dict[str, Any]) -> None:
     except SchemaValidationError as exception:
         raise ValidationError(exception) from exception
     validate_organisation_keys(event.get("OrganisationTypeId"), event.get("OrganisationSubType"))
-    check_ods_code_length(event["ODSCode"], SERVICE_TYPES[event["OrganisationTypeId"]][ODSCODE_LENGTH_KEY])
+    check_ods_code_length(event["ODSCode"])
     logger.info("Event has been validated")
 
 
-def check_ods_code_length(odscode: str, odscode_length: int) -> None:
+def check_ods_code_length(
+    odscode: str,
+) -> None:
     """Check ODS code length as expected, exception raise if error.
 
     Note: ods code type is checked by schema validation
@@ -44,8 +43,8 @@ def check_ods_code_length(odscode: str, odscode_length: int) -> None:
         odscode_length (int): expected length of odscode.
     """
     logger.debug(f"Checking ODSCode {odscode} length")
-    if len(odscode) != odscode_length:
-        msg = f"ODSCode Wrong Length, '{odscode}' is not length {odscode_length}."
+    if len(odscode) != PHARMACY_ODSCODE_LENGTH:
+        msg = f"ODSCode Wrong Length, '{odscode}' is not length {PHARMACY_ODSCODE_LENGTH}."
         raise ValidationError(msg)
 
 
@@ -60,7 +59,7 @@ def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
         ValidationError: Either Org Type ID or Org Sub Type is not part of the valid list
     """
     validate_organisation_type_id(org_type_id)
-    if org_sub_type in SERVICE_TYPES[org_type_id][ORGANISATION_SUB_TYPES_KEY]:
+    if org_sub_type in PHARMACY_ORGANISATION_SUB_TYPES:
         logger.info(f"Subtype type id: {org_sub_type} validated")
     else:
         msg = f"Unexpected Org Sub Type ID: '{org_sub_type}'"
@@ -81,15 +80,9 @@ def validate_organisation_type_id(org_type_id: str) -> None:
         default=False,
     )
     logger.debug(f"Accepted org types: {in_accepted_org_types}")
-    if (
-        org_type_id == PHARMACY_ORG_TYPE_ID
-        and in_accepted_org_types
-        or org_type_id == DENTIST_ORG_TYPE_ID
-        and in_accepted_org_types
-    ):
-        logger.append_keys(service_type_alias=SERVICE_TYPES[org_type_id][SERVICE_TYPES_ALIAS_KEY])
+    if org_type_id == PHARMACY_ORG_TYPE_ID and in_accepted_org_types:
         logger.info(
-            f"Org type id: {org_type_id} validated",
+            f"Org type id: {org_type_id} validated as a pharmacy",
             extra={"in_accepted_org_types": in_accepted_org_types},
         )
     else:

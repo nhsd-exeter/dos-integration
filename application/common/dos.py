@@ -7,7 +7,6 @@ from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
 
 from .constants import (
-    DENTIST_ORG_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
     PHARMACY_ORG_TYPE_ID,
@@ -108,9 +107,6 @@ def get_matching_dos_services(odscode: str, org_type_id: str) -> list[DoSService
     if org_type_id == PHARMACY_ORG_TYPE_ID:
         conditions = "odscode LIKE %(ODS)s"
         named_args = {"ODS": f"{odscode[:5]}%"}
-    elif org_type_id == DENTIST_ORG_TYPE_ID:
-        conditions = "odscode = %(ODS)s or odscode LIKE %(ODS7)s"
-        named_args = {"ODS": f"{odscode[0] + odscode[2:]}", "ODS7": f"{odscode[:7]}%"}
     else:
         conditions = "odscode = %(ODS)s"
         named_args = {"ODS": f"{odscode}%"}

@@ -88,7 +88,7 @@ resource "aws_codebuild_project" "di_build_image_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/build-buildspec.yml")
+    buildspec = file("buildspecs/build-arm-image-in-pipeline-buildspec.yml")
   }
 }
 

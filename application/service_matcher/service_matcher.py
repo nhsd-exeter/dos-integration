@@ -20,8 +20,7 @@ from .reporting import (
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
-from .service_type import get_valid_service_types
-from common.constants import DENTIST_ORG_TYPE_ID, PHARMACY_ORG_TYPE_ID, PHARMACY_SERVICE_TYPE_ID
+from common.constants import PHARMACY_SERVICE_TYPE_ID, PHARMACY_SERVICE_TYPE_IDS
 from common.dos import VALID_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
@@ -140,7 +139,7 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
 
     # Filter for matched and unmatched service types and valid status
     matching_services, non_matching_services = [], []
-    valid_service_types = get_valid_service_types(nhs_entity.org_type_id)
+    valid_service_types = PHARMACY_SERVICE_TYPE_IDS
     for service in matching_dos_services:
         if int(service.statusid) == VALID_STATUS_ID:
             if int(service.typeid) in valid_service_types:
@@ -150,17 +149,9 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     if non_matching_services:
         log_unmatched_service_types(nhs_entity, non_matching_services)
 
-    if nhs_entity.org_type_id == PHARMACY_ORG_TYPE_ID:
-        logger.info(
-            f"Found {len(matching_dos_services)} services in DB with "
-            f"matching first 5 chars of ODSCode: {matching_dos_services}",
-        )
-    elif nhs_entity.org_type_id == DENTIST_ORG_TYPE_ID:
-        logger.info(f"Found {len(matching_dos_services)} services in DB with matching ODSCode: {matching_dos_services}")
     logger.info(
-        f"Found {len(matching_services)} services with typeid in "
-        f"allowlist {valid_service_types} and status id = "
-        f"{VALID_STATUS_ID}: {matching_services}",
+        f"Found {len(matching_dos_services)} services in DB with "
+        f"matching first 5 chars of ODSCode: {matching_dos_services}",
     )
 
     return matching_services
