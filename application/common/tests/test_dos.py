@@ -150,7 +150,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
             "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
             "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
             "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
@@ -190,7 +190,7 @@ def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_d
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
             "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
             "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
             "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
@@ -260,7 +260,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
             "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
             "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
             "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
