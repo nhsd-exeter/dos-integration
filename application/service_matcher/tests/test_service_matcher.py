@@ -199,6 +199,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     service.web = "www.fakesite.com"
     service.publicphone = "01462622435"
     service.postcode = "S45 1AB"
+    service.statusid = 1
 
     change_event["OrganisationStatus"] = "closed"
     mock_entity = NHSEntity(change_event)
@@ -242,6 +243,7 @@ def test_lambda_handler_invalid_open_times(
     service.web = "www.fakesite.com"
     service.publicphone = "01462622435"
     service.postcode = "S45 1AB"
+    service.statusid = 1
 
     change_event["OpeningTimes"] = [
         {
@@ -416,6 +418,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
     service.typeid = 13
+    service.statusid=1
     mock_get_matching_services.return_value = [service, service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -463,6 +466,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
     service.typeid = 131
+    service.statusid = 1
     mock_get_matching_services.return_value = [service, service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"

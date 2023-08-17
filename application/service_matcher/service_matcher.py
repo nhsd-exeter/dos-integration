@@ -72,9 +72,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
     matching_services = get_matching_services(nhs_entity)
 
-    active_services = next((True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False)
-    logger.warning("Check for active services", active_services=active_services)
-    if len(matching_services) == 0: #Check active_services here next session
+    if (len(matching_services) == 0
+        or not next((True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False)):
         log_unmatched_nhsuk_service(nhs_entity)
         return
 
