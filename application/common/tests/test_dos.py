@@ -40,6 +40,7 @@ def test_field_names():
         "web",
         "typeid",
         "statusid",
+        "status_name",
         "publicphone",
         "publicname",
         "service_type_name",
@@ -149,10 +150,12 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE "
-            "s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-            "AND s.statusid = %(ACTIVE_STATUS_ID)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
+            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
+            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
+            "AND s.statusid = %(ACTIVE_STATUS_ID)s "
         ),
         query_vars={
             "ODS": "FQ038%",
@@ -187,11 +190,13 @@ def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_d
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.odscode "
-            "LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s "
-            "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) "
-            "AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
+            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
+            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
+            "AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s AND s.typeid = "
+            "ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
         ),
         query_vars={
             "ODS": "FQ038%",
@@ -255,9 +260,12 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, publicphone, publicname, "
-            "st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id WHERE s.odscode "
-            "LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
+            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
+            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
+            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
+            "AND s.statusid = %(ACTIVE_STATUS_ID)s "
         ),
         query_vars={
             "ODS": f"{odscode[:5]}%",

@@ -39,6 +39,7 @@ class DoSService:
     web: str
     typeid: int
     statusid: int
+    status_name: str
     publicphone: str
     publicname: str
     service_type_name: str
@@ -115,7 +116,7 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
     }
 
     if pharmacy_first_phase_one_feature_flag:  # Add pharmacy first condition
-        pharmacy_first_condition = " OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
+        pharmacy_first_condition = "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
         named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = [148, 149]
         named_args["PHARMACY_FIRST_STATUSES"] = [ACTIVE_STATUS_ID, CLOSED_STATUS_ID, COMMISSIONING_STATUS_ID]
     else:
@@ -123,10 +124,11 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
 
     sql_query = (
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
-        "statusid, publicphone, publicname, st.name service_type_name"
-        " FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id"
-        " WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s"  # noqa: E501
-        f"{pharmacy_first_condition}"
+        "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
+        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
+        "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
+        "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
+        f"AND s.statusid = %(ACTIVE_STATUS_ID)s {pharmacy_first_condition}"
     )
     with connect_to_dos_db_replica() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)
