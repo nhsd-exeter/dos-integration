@@ -59,12 +59,12 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
   @complete @dev @pharmacy_no_log_searches
   Scenario Outline: F001SXX3. If any matched service is active update all services
     Given an entry is created in the services table
-    And the service "odscode" is set to "FXXX3"
+    And the service "odscode" is set to "<odscode>"
     And the service "service_type" is set to "<active_service_type>"
     And the service "service_status" is set to "1"
     And the entry is committed to the services table
     And an entry is created in the services table
-    And the service "odscode" is set to "FXXX3001"
+    And the service "odscode" is set to "<odscode>1"
     And the service "service_type" is set to "<service_type>"
     And the service "service_status" is set to "<status>"
     And the entry is committed to the services table
@@ -73,13 +73,13 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     Then the "Postcode" is updated within the DoS DB
 
     Examples:
-      | active_service_type | service_type | status |
-      | 13                  | 148          | 2      |
-      | 13                  | 148          | 3      |
-      | 13                  | 149          | 2      |
-      | 13                  | 149          | 3      |
-      | 148                 | 149          | 2      |
-      | 149                 | 148          | 3      |
+      | odscode | active_service_type | service_type | status |
+      | FXXXA   | 13                  | 148          | 2      |
+      | FXXXB   | 13                  | 148          | 3      |
+      | FXXXC   | 13                  | 149          | 2      |
+      | FXXXD   | 13                  | 149          | 3      |
+      | FXXXE   | 148                 | 149          | 2      |
+      | FXXXF   | 149                 | 148          | 3      |
 
   @complete @dev @pharmacy_cloudwatch_queries
   Scenario: F001SXX4. A Changed event with aligned data does not save an update to DoS
