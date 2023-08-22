@@ -236,6 +236,13 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
     return context
 
 
+@given("an entry is created in the services table with a derivative odscode", target_fixture="context")
+def _(context: Context) -> Context:
+    odscode = f"{context.generator_data['odscode']}A"
+    context = a_service_table_entry_is_created(context=context, ods_code=odscode)
+    return context
+
+
 @given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
 def service_standard_opening_set(service_status: str, day: str, context: Context) -> Context:
     """Set the service standard opening times.
