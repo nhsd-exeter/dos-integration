@@ -94,8 +94,8 @@ class NHSEntity:
             None,
         )
 
-    def extract_uec_service(self, service_code: str) -> bool | None:
-        """Extracts the UEC service from the payload (e.g. Palliative Care).
+    def check_for_uec_service(self, service_code: str) -> bool | None:
+        """Checks if the UEC service exists in the payload.
 
         Args:
             service_code (str): NHS UK Service Code of the UEC service to extract if exists
@@ -103,8 +103,22 @@ class NHSEntity:
         Returns:
             Union[bool, None]: True if the service exists, False otherwise
         """
-        if isinstance(self.entity_data.get("UecServices", []), list):
-            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
+        return self._extract_service_from_list("UecServices", service_code)
+
+    def check_for_service(self, service_code: str) -> bool | None:
+        """Checks if the service exists in the payload.
+
+        Args:
+            service_code (str): NHS UK Service Code of the service to extract if exists
+
+        Returns:
+            Union[bool, None]: True if the service exists, False otherwise
+        """
+        return self._extract_service_from_list("Services", service_code)
+
+    def _extract_service_from_list(self, list_name: str, service_code: str) -> bool | None:
+        if isinstance(self.entity_data.get(list_name, []), list):
+            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get(list_name, []))
         return None
 
     def check_for_service(self, service_code: str) -> bool | None:

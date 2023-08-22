@@ -24,6 +24,7 @@ class ChangesToDoS:
     standard_opening_times_changes: dict[int | None, Any] = field(default_factory=dict)
     specified_opening_times_changes: bool = False
     palliative_care_changes: bool = False
+    blood_pressure_changes: bool = False
 
     # New value to be saved to the database
     new_address: str | None = None
@@ -32,6 +33,7 @@ class ChangesToDoS:
     new_specified_opening_times: list[SpecifiedOpeningTime] | None = None
     new_website: str | None = None
     new_palliative_care: bool | None = None
+    new_blood_pressure: bool | None = None
 
     # Existing DoS data for use building service history
     current_address: str | None = None
@@ -40,6 +42,7 @@ class ChangesToDoS:
     current_specified_opening_times: list[SpecifiedOpeningTime] | None = None
     current_website: str | None = None
     current_palliative_care: bool | None = None
+    current_blood_pressure: bool | None = None
 
     # Each day that has changed will have a current and new value in the format below
     # new_day_opening_times e.g. new_monday_opening_times

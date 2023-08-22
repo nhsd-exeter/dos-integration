@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 
 from application.common.constants import (
+    DOS_ACTIVE_STATUS_ID,
     DOS_ADDRESS_CHANGE_KEY,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
@@ -16,18 +17,21 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_THURSDAY_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_TUESDAY_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_WEDNESDAY_CHANGE_KEY,
+    DOS_STATUS_CHANGE_KEY,
     DOS_WEBSITE_CHANGE_KEY,
 )
 from application.common.opening_times import WEEKDAYS
 from application.conftest import dummy_dos_location
 from application.service_sync.changes_to_dos import ChangesToDoS
 from application.service_sync.compare_data import (
+    compare_blood_pressure,
     compare_location_data,
     compare_nhs_uk_and_dos_data,
     compare_opening_times,
     compare_palliative_care,
     compare_public_phone,
     compare_website,
+    has_blood_pressure_changed,
     has_location_changed,
     has_palliative_care_changed,
     has_public_phone_changed,
@@ -117,7 +121,6 @@ def test_has_website_changed_add_website(
     assert nhs_website == changes_to_dos.new_website
     mock_format_website.assert_not_called()
     mock_validate_website.assert_called_once_with(nhs_entity, nhs_website, dos_service)
-
 
 
 @patch(f"{FILE_PATH}.validate_website")
@@ -785,3 +788,89 @@ def test_compare_palliative_care_invalid(
         dos_palliative_care=dos_palliative_care,
         dos_service=dos_service,
     )
+
+
+def test_has_blood_pressure_changed_no_changes() -> None:
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.blood_pressure = True
+    nhs_entity.blood_pressure = True
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service,
+        nhs_entity=nhs_entity,
+        service_histories=service_histories,
+    )
+    # Act
+    response = has_blood_pressure_changed(changes=changes_to_dos)
+    # Assert
+    assert False is response
+
+
+def test_has_blood_pressure_changed_valid_z_code() -> None:
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.blood_pressure = True
+    nhs_entity.blood_pressure = False
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service,
+        nhs_entity=nhs_entity,
+        service_histories=service_histories,
+    )
+    # Act
+    response = has_blood_pressure_changed(changes=changes_to_dos)
+    # Assert
+    assert True is response
+
+
+@patch(f"{FILE_PATH}.set_up_for_services_table_change")
+@patch(f"{FILE_PATH}.has_blood_pressure_changed")
+def test_compare_blood_pressure(
+    mock_has_blood_pressure_changed: MagicMock,
+    mock_set_up_for_services_table_change: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.typeid = 148
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    mock_has_blood_pressure_changed.return_value = True
+    # Act
+    compare_blood_pressure(changes_to_dos=changes_to_dos)
+    # Assert
+    mock_has_blood_pressure_changed.assert_called_once_with(changes=changes_to_dos)
+    mock_set_up_for_services_table_change.assert_called_once_with(
+        changes_to_dos=changes_to_dos,
+        change_key=DOS_STATUS_CHANGE_KEY,
+        new_value=DOS_ACTIVE_STATUS_ID,
+        previous_value=changes_to_dos.dos_service.statusid,
+        service_table_field_name="statusid",
+    )
+
+
+@patch(f"{FILE_PATH}.set_up_for_services_table_change")
+@patch(f"{FILE_PATH}.has_blood_pressure_changed")
+def test_compare_blood_pressure_no_changes(
+    mock_has_blood_pressure_changed: MagicMock,
+    mock_set_up_for_services_table_change: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.typeid = 148
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = False
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    mock_has_blood_pressure_changed.return_value = False
+    # Act
+    compare_blood_pressure(changes_to_dos=changes_to_dos)
+    # Assert
+    mock_has_blood_pressure_changed.assert_called_once_with(changes=changes_to_dos)
+    mock_set_up_for_services_table_change.assert_not_called()

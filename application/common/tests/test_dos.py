@@ -3,7 +3,6 @@ from random import choices
 from unittest.mock import MagicMock, patch
 
 from application.common.dos import (
-    ACTIVE_STATUS_ID,
     DoSService,
     db_rows_to_spec_open_times,
     db_rows_to_spec_open_times_map,
@@ -15,11 +14,13 @@ from application.common.dos import (
     get_specified_opening_times_from_db,
     get_standard_opening_times_from_db,
     get_valid_dos_location,
+    has_blood_pressure,
     has_palliative_care,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from application.conftest import dummy_dos_service
 from common.constants import (
+    DOS_ACTIVE_STATUS_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
 )
@@ -160,7 +161,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
         query_vars={
             "ODS": "FQ038%",
             "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
-            "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
         },
     )
     mock_cursor.fetchall.assert_called_with()
@@ -201,7 +202,7 @@ def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_d
         query_vars={
             "ODS": "FQ038%",
             "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
-            "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
             "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
             "PHARMACY_FIRST_STATUSES": [1, 2, 3],
         },
@@ -270,7 +271,7 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
         query_vars={
             "ODS": f"{odscode[:5]}%",
             "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
-            "ACTIVE_STATUS_ID": 1,
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
         },
     )
     mock_cursor.fetchall.assert_called_with()
@@ -730,13 +731,13 @@ def test_has_palliative_care(mock_query_dos_db: MagicMock):
     connection = MagicMock()
     expected_sql_command = """SELECT sgsds.id as z_code from servicesgsds sgsds
             WHERE sgsds.serviceid = %(SERVICE_ID)s
-            AND sgsds.sgid = %(PALIATIVE_CARE_SYMPTOM_GROUP)s
-            AND sgsds.sdid  = %(PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR)s
+            AND sgsds.sgid = %(PALLIATIVE_CARE_SYMPTOM_GROUP)s
+            AND sgsds.sdid  = %(PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR)s
             """
     expected_named_args = {
         "SERVICE_ID": dos_service.id,
-        "PALIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
-        "PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+        "PALLIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        "PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     }
     # Act
     assert True is has_palliative_care(dos_service, connection)
@@ -758,6 +759,24 @@ def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock):
     assert False is has_palliative_care(dos_service, connection)
     # Assert
     mock_query_dos_db.assert_not_called()
+
+
+def test_has_blood_pressure():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 148
+    dos_service.statusid = 1
+    # Act & Assert
+    assert True is has_blood_pressure(dos_service)
+
+
+def test_has_blood_pressure_not_correct_type():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 13
+    dos_service.statusid = 1
+    # Act & Assert
+    assert False is has_blood_pressure(dos_service)
 
 
 @patch(f"{FILE_PATH}.query_dos_db")

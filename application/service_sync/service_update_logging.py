@@ -11,7 +11,6 @@ from .reporting import log_service_updated
 from .service_histories import ServiceHistories
 from common.constants import (
     DOS_INTEGRATION_USER_NAME,
-    DOS_PALLIATIVE_CARE_SGSDID,
     DOS_SGSDID_CHANGE_KEY,
     DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
@@ -280,22 +279,26 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
         change_values: dict[str, Any]
         if change_key == DOS_SPECIFIED_OPENING_TIMES_CHANGE_KEY:
             service_update_logger.log_specified_opening_times_service_update(
-                action=change_values.get("changetype", "UNKOWN"),
+                action=change_values.get("changetype", "UNKNOWN"),
                 previous_value=changes_to_dos.current_specified_opening_times,
                 new_value=changes_to_dos.new_specified_opening_times,
             )
         elif change_key in DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST:
             service_update_logger.log_standard_opening_times_service_update_for_weekday(
                 data_field_modified=change_key,
-                action=change_values.get("changetype", "UNKOWN"),
+                action=change_values.get("changetype", "UNKNOWN"),
                 previous_value=changes_to_dos.dos_service.standard_opening_times,
                 new_value=changes_to_dos.nhs_entity.standard_opening_times,
                 weekday=change_key.removeprefix("cmsopentime"),
             )
         elif change_key == DOS_SGSDID_CHANGE_KEY:
+            logger.critical("change_values", extra={"change_values": change_values})
             service_update_logger.log_sgsdid_service_update(
-                action=change_values.get("changetype", "UNKOWN"),
-                new_value=DOS_PALLIATIVE_CARE_SGSDID,
+                action=change_values.get("changetype", "UNKNOWN"),
+                new_value=change_values.get("data", {}).get(
+                    "add" if change_values.get("changetype") != "delete" else "remove",
+                    ["UNKNOWN"],
+                )[0],
             )
         else:
             service_update_logger.log_service_update(

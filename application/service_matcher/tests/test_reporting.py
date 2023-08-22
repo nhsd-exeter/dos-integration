@@ -19,8 +19,7 @@ from application.service_matcher.reporting import (
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
-from common.constants import PHARMACY_SERVICE_TYPE_ID
-from common.dos import VALID_STATUS_ID
+from common.constants import DOS_ACTIVE_STATUS_ID
 from common.nhs import NHSEntity
 from common.service_type import BLOOD_PRESSURE
 
@@ -178,7 +177,7 @@ def test_log_unmatched_service_types(mock_logger):
             "dos_service_uid": dos_service.uid,
             "dos_service_id": dos_service.id,
             "dos_service_publicname": dos_service.name,
-            "dos_service_status": VALID_STATUS_ID,
+            "dos_service_status": DOS_ACTIVE_STATUS_ID,
             "dos_service_typeid": dos_service.typeid,
             "dos_service_type_name": dos_service.service_type_name,
         },
