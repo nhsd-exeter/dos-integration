@@ -4,7 +4,6 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.validation import validate
 from aws_lambda_powertools.utilities.validation.exceptions import SchemaValidationError
 
-from .appconfig import AppConfig
 from common.constants import (
     PHARMACY_ODSCODE_LENGTH,
     PHARMACY_ORG_TYPE_ID,
@@ -72,21 +71,12 @@ def validate_organisation_type_id(org_type_id: str) -> None:
     Args:
         org_type_id (str): organisation type id
     """
-    app_config = AppConfig("ingest-change-event")
-    feature_flags = app_config.get_feature_flags()
-    in_accepted_org_types: bool = feature_flags.evaluate(
-        name="accepted_org_types",
-        context={"org_type": org_type_id},
-        default=False,
-    )
-    logger.debug(f"Accepted org types: {in_accepted_org_types}")
-    if org_type_id == PHARMACY_ORG_TYPE_ID and in_accepted_org_types:
-        logger.info(
+    if org_type_id == PHARMACY_ORG_TYPE_ID:
+        logger.debug(
             f"Org type id: {org_type_id} validated as a pharmacy",
-            extra={"in_accepted_org_types": in_accepted_org_types},
         )
     else:
-        logger.append_keys(in_accepted_org_types=in_accepted_org_types, app_config=app_config.get_raw_configuration())
+        logger.error(f"Org type id: {org_type_id} is not a pharmacy", org_type_id=org_type_id)
         msg = f"Unexpected Org Type ID: '{org_type_id}'"
         raise ValidationError(msg)
 
