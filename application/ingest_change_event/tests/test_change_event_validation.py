@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -106,37 +106,16 @@ def test_validate_organisation_keys_org_sub_type_id_exception(
 
 
 @pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID])
-@patch(f"{FILE_PATH}.AppConfig")
-def test_validate_organisation_type_id(mock_app_config, org_type_id):
-    # Arrange
-    feature_flags = MagicMock()
-    mock_app_config().get_feature_flags.return_value = feature_flags
-    feature_flags.evaluate.return_value = True
+def test_validate_organisation_type_id(org_type_id):
     # Act
-    validate_organisation_type_id(org_type_id)
+    response = validate_organisation_type_id(org_type_id)
     # Assert
-    feature_flags.evaluate.assert_called_once_with(
-        name="accepted_org_types",
-        context={"org_type": org_type_id},
-        default=False,
-    )
+    assert response is None
 
 
-@pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID])
-@patch(f"{FILE_PATH}.AppConfig")
-def test_validate_organisation_type_id_wrong_org_type_id_exception(mock_app_config, org_type_id):
-    # Arrange
-    feature_flags = MagicMock()
-    mock_app_config().get_feature_flags.return_value = feature_flags
-    feature_flags.evaluate.return_value = False
-    # Act
+@pytest.mark.parametrize("org_type_id", ["GP", "DEN", "TEST1"])
+def test_validate_organisation_type_id_wrong_org_type_id_exception(org_type_id):
+    # Act & Assert
     with pytest.raises(ValidationError) as exception:
         validate_organisation_type_id(org_type_id)
     assert f"Unexpected Org Type ID: '{org_type_id}'" in str(exception.value)
-    # Assert
-    feature_flags.evaluate.assert_called_once_with(
-        name="accepted_org_types",
-        context={"org_type": org_type_id},
-        default=False,
-    )
-    mock_app_config().get_raw_configuration.assert_called_once_with()
