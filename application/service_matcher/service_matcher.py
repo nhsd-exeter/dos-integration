@@ -18,10 +18,11 @@ from pytz import timezone
 from .reporting import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_missing_dos_service_for_a_given_type,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
-from common.constants import BLOOD_PRESSURE, CONTRACEPTION, PHARMACY_SERVICE_TYPE_ID
+from common.constants import BLOOD_PRESSURE, CONTRACEPTION, PHARMACY_SERVICE_TYPE_ID, SubServiceConstants
 from common.dos import ACTIVE_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
@@ -105,8 +106,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
             reason="No 'Pharmacy' type services found (type 13)",
         )
 
-    log_missing_dos_profiling(nhs_entity, matching_services, BLOOD_PRESSURE)
-    log_missing_dos_profiling(nhs_entity, matching_services, CONTRACEPTION)
+    log_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
+    log_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)
 
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
@@ -119,21 +120,23 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         sequence_number=holding_queue_change_event_item["sequence_number"],
     )
 
-def log_missing_dos_profiling(nhs_entity: NHSEntity, matching: list[DoSService], service_const: dict[str,str]) -> None:
-    """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+def log_missing_dos_services(nhs_entity: NHSEntity, matching: list[DoSService],
+                            service_const: SubServiceConstants) -> None:
+    """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
         matching (List[DosService]): The matching DoS service to check for the
         service_const (dict[str, str]): Dictionary of service constants to identify the service
     """
-    if (nhs_entity.check_for_service(service_const["nhs_uk_service_code"])
-        and not next((True for service in matching if service.typeid == service_const["dos_type_id"]), False)):
-        log_unexpected_pharmacy_profiling(
+    if (nhs_entity.check_for_service(service_const.NHS_UK_SERVICE_CODE)
+        and not next((True for service in matching if service.typeid == service_const.DOS_TYPE_ID), False)):
+            log_missing_dos_service_for_a_given_type(
             nhs_entity=nhs_entity,
             matching_services=matching,
-            reason= f"""No '{service_const['name']}' type services found in DoS even though its specified
-            in the NHS UK Change Event (dos type {service_const['dos_type_id']} )""",
+            missing_type=service_const,
+            reason= f"No '{service_const.TYPE_NAME}' type services found in DoS even though its specified"
+            f" in the NHS UK Change Event (dos type {service_const.DOS_TYPE_ID})",
         )
 
 

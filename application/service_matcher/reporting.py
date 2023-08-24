@@ -5,6 +5,7 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
+from common.constants import DOS_ACTIVE_STATUS_ID, SubServiceConstants
 from common.dos import VALID_STATUS_ID, DoSService
 from common.nhs import NHSEntity
 
@@ -15,6 +16,7 @@ UNMATCHED_PHARMACY_REPORT_ID = "UNMATCHED_PHARMACY"
 INVALID_OPEN_TIMES_REPORT_ID = "INVALID_OPEN_TIMES"
 UNMATCHED_SERVICE_TYPE_REPORT_ID = "UNMATCHED_SERVICE_TYPE"
 UNEXPECTED_PHARMACY_PROFILING_REPORT_ID = "UNEXPECTED_PHARMACY_PROFILING"
+MISSING_SERVICE_TYPE_REPORT_ID = "MISSING_SERVICE_TYPE"
 
 
 def log_closed_or_hidden_services(
@@ -150,7 +152,9 @@ def log_unexpected_pharmacy_profiling(
         reason (str): The reason for the report
     """
     for service in matching_services:
-        logger.warning(
+        if service.statusid == 1:
+
+            logger.warning(
             "Pharmacy profiling is incorrect",
             extra={
                 "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
@@ -160,6 +164,44 @@ def log_unexpected_pharmacy_profiling(
                 "dos_service_postcode": service.postcode,
                 "dos_service_type": service.service_type_name,
                 "dos_region": service.get_region(),
+                "reason": reason,
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+            },
+        )
+
+
+def log_missing_dos_service_for_a_given_type(
+    nhs_entity: NHSEntity,
+    matching_services: list[DoSService],
+    missing_type: SubServiceConstants,
+    reason: str,
+) -> None:
+    """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        matching_services (list[DoSService]): The DoS services to report
+        missing_type (SubServiceConstants): The subtype being reported as missing descriptors
+        reason (str): The reason for the report
+    """
+    first_active_service = None
+    for service in matching_services:
+        if service.statusid == DOS_ACTIVE_STATUS_ID:
+            first_active_service = service
+
+        logger.warning(
+            "Missing DoS service for a certain type associated with a NHS UK Service Code",
+            extra={
+                "report_key": MISSING_SERVICE_TYPE_REPORT_ID,
+                "nhsuk_odscode": nhs_entity.odscode,
+                "nhsuk_organisation_name": nhs_entity.org_name,
+                "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+                "nhsuk_organisation_status": nhs_entity.org_status,
+                "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+                "dos_missing_service_type": missing_type.TYPE_NAME,
+                "dos_service_address": first_active_service.address,
+                "dos_service_postcode": first_active_service.postcode,
+                "dos_region": first_active_service.get_region(),
                 "reason": reason,
                 "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
             },
