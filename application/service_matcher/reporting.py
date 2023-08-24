@@ -152,8 +152,6 @@ def log_unexpected_pharmacy_profiling(
         reason (str): The reason for the report
     """
     for service in matching_services:
-        if service.statusid == 1:
-
             logger.warning(
             "Pharmacy profiling is incorrect",
             extra={
