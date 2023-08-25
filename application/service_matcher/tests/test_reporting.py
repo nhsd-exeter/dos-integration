@@ -8,15 +8,18 @@ from application.conftest import dummy_dos_service
 from application.service_matcher.reporting import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
+    MISSING_SERVICE_TYPE_REPORT_ID,
     UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     UNMATCHED_SERVICE_TYPE_REPORT_ID,
     log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_missing_dos_service_for_a_given_type,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
+from common.constants import BLOOD_PRESSURE
 from common.dos import VALID_STATUS_ID
 from common.nhs import NHSEntity
 
@@ -202,3 +205,55 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
         },
     )
+
+@patch.object(Logger, "warning")
+def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
+    dos_service = dummy_dos_service()
+    dos_service.statusid = 1
+    reason = "reason 123"
+    nhs_entity = NHSEntity(
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"},
+    )
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    nhs_entity.org_type_id = "PHA"
+    nhs_entity.org_status = "OrganisationStatus"
+    nhs_entity.org_sub_type = "OrganisationSubType"
+    nhs_entity.postcode = "MK2 XXX"
+    log_missing_dos_service_for_a_given_type(nhs_entity, [dos_service], BLOOD_PRESSURE, reason)
+    assert MISSING_SERVICE_TYPE_REPORT_ID == "MISSING_SERVICE_TYPE"
+    mock_logger.assert_called_with(
+            "Missing DoS service for a certain type associated with a NHS UK Service Code",
+            extra={
+                "report_key": MISSING_SERVICE_TYPE_REPORT_ID,
+                "nhsuk_odscode": nhs_entity.odscode,
+                "nhsuk_organisation_name": nhs_entity.org_name,
+                "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+                "nhsuk_organisation_status": nhs_entity.org_status,
+                "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+                "dos_missing_service_type": BLOOD_PRESSURE.TYPE_NAME,
+                "dos_service_address": dos_service.address,
+                "dos_service_postcode": dos_service.postcode,
+                "dos_region": dos_service.get_region(),
+                "reason": reason,
+                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+            },
+        )
+
+@patch.object(Logger, "warning")
+def test_log_missing_dos_service_for_a_given_type__no_active_dos_services(mock_logger: MagicMock):
+    dos_service = dummy_dos_service()
+    dos_service.statusid = 3
+    reason = "reason 123"
+    nhs_entity = NHSEntity(
+        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"},
+    )
+    nhs_entity.odscode = "SLC4X"
+    nhs_entity.org_name = "OrganisationName"
+    nhs_entity.org_type_id = "PHA"
+    nhs_entity.org_status = "OrganisationStatus"
+    nhs_entity.org_sub_type = "OrganisationSubType"
+    nhs_entity.postcode = "MK2 XXX"
+    log_missing_dos_service_for_a_given_type(nhs_entity, [dos_service], BLOOD_PRESSURE, reason)
+    assert MISSING_SERVICE_TYPE_REPORT_ID == "MISSING_SERVICE_TYPE"
+    mock_logger.assert_not_called()

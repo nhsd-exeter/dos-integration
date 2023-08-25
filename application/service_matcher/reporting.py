@@ -187,20 +187,23 @@ def log_missing_dos_service_for_a_given_type(
         if service.statusid == DOS_ACTIVE_STATUS_ID:
             first_active_service = service
 
-        logger.warning(
-            "Missing DoS service for a certain type associated with a NHS UK Service Code",
-            extra={
-                "report_key": MISSING_SERVICE_TYPE_REPORT_ID,
-                "nhsuk_odscode": nhs_entity.odscode,
-                "nhsuk_organisation_name": nhs_entity.org_name,
-                "nhsuk_organisation_typeid": nhs_entity.org_type_id,
-                "nhsuk_organisation_status": nhs_entity.org_status,
-                "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
-                "dos_missing_service_type": missing_type.TYPE_NAME,
-                "dos_service_address": first_active_service.address,
-                "dos_service_postcode": first_active_service.postcode,
-                "dos_region": first_active_service.get_region(),
-                "reason": reason,
-                "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+    if first_active_service is None:
+        return
+
+    logger.warning(
+        "Missing DoS service for a certain type associated with a NHS UK Service Code",
+        extra={
+            "report_key": MISSING_SERVICE_TYPE_REPORT_ID,
+            "nhsuk_odscode": nhs_entity.odscode,
+            "nhsuk_organisation_name": nhs_entity.org_name,
+            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
+            "nhsuk_organisation_status": nhs_entity.org_status,
+            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
+            "dos_missing_service_type": missing_type.TYPE_NAME,
+            "dos_service_address": first_active_service.address,
+            "dos_service_postcode": first_active_service.postcode,
+            "dos_region": first_active_service.get_region(),
+            "reason": reason,
+            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
             },
         )

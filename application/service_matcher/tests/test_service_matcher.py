@@ -112,10 +112,10 @@ def test_log_missing_dos_services__missing(mock_log_missing_dos_service_for_a_gi
     # Arrange
     entity = MagicMock()
     entity.check_for_service.return_value = True
-    service = dummy_dos_service
+    service = dummy_dos_service()
     service.typeid = 13
     service.statusid = 1
-    matching_dos_services = [dummy_dos_service]
+    matching_dos_services = [service]
 
     # Act
     log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
@@ -128,6 +128,46 @@ def test_log_missing_dos_services__missing(mock_log_missing_dos_service_for_a_gi
         missing_type=BLOOD_PRESSURE,
         reason= f"No '{BLOOD_PRESSURE.TYPE_NAME}' type services found in DoS even though its specified"
             f" in the NHS UK Change Event (dos type {BLOOD_PRESSURE.DOS_TYPE_ID})")
+
+@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
+def test_log_missing_dos_services__not_missing(mock_log_missing_dos_service_for_a_given_type, change_event):
+    # Arrange
+    entity = MagicMock()
+    entity.check_for_service.return_value = True
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    service_two = dummy_dos_service()
+    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
+    service_two.statusid = 1
+    matching_dos_services = [service, service_two]
+
+    # Act
+    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
+
+    #Assert
+    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
+    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
+
+@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
+def test_log_missing_dos_services__not_on_nhs_entity(mock_log_missing_dos_service_for_a_given_type, change_event):
+    # Arrange
+    entity = MagicMock()
+    entity.check_for_service.return_value = False
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    service_two = dummy_dos_service()
+    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
+    service_two.statusid = 1
+    matching_dos_services = [service, service_two]
+
+    # Act
+    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
+
+    #Assert
+    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
+    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
 
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
