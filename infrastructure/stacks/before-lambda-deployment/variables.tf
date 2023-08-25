@@ -53,6 +53,7 @@ variable "dos_db_sg_name" {
 variable "dos_db_replica_sg_name" {
   type        = string
   description = "Name of db dos replica security group to connect to"
+  default     = ""
 }
 
 # ############################

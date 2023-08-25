@@ -55,5 +55,6 @@ data "aws_security_group" "dos_db_sg" {
 }
 
 data "aws_security_group" "dos_db_replica_sg" {
-  name = var.dos_db_replica_sg_name
+  count = var.dos_db_replica_sg_name != "" ? 1 : 0
+  name  = var.dos_db_replica_sg_name
 }

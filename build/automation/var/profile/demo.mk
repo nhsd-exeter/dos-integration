@@ -22,7 +22,6 @@ DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
 DOS_DB_SG_NAME := live-lk8s-prod-core-dos-db-put-rds-postgres-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
 
 # DB Secrets
 DB_SECRET_NAME := core-dos-uet-database-upgrade/deployment

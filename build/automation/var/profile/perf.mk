@@ -20,8 +20,7 @@ DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DOS_DB_SG_NAME := uec-core-dos-performance-datastore-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance-db-12-replica-di-sg
+DOS_DB_SG_NAME := uec-core-dos-performance-datastore-di-sg
 
 # DB Secrets
 DB_SECRET_NAME := uec-core-dos-performance-db-di-readwrite-user-password
