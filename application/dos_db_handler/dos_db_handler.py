@@ -49,8 +49,7 @@ def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noq
             raise ValueError(msg)
         with connect_to_dos_db() as connection:
             standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
-            result = standard_opening_times.export_test_format()
-            return result
+            return standard_opening_times.export_test_format()
     elif request["type"] == "change_event_specified_opening_times":
         service_id = request.get("service_id")
         if service_id is None:
@@ -58,8 +57,7 @@ def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noq
             raise ValueError(msg)
         with connect_to_dos_db() as connection:
             specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
-            result = SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
-            return result
+            return SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
     else:
         # add comment
         msg = "Unsupported request"

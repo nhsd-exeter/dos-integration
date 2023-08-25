@@ -1,3 +1,4 @@
+from ast import literal_eval
 from datetime import datetime
 from hashlib import sha256
 from json import dumps
@@ -72,8 +73,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
     matching_services = get_matching_services(nhs_entity)
 
-    if (len(matching_services) == 0
-        or not next((True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False)):
+    if len(matching_services) == 0 or not next(
+        (True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False,
+    ):
         log_unmatched_nhsuk_service(nhs_entity)
         return
 
@@ -155,7 +157,7 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
     """
     parameter_name: str = getenv("PHARMACY_FIRST_PHASE_ONE_PARAMETER")
     pharmacy_first_phase_one: str = parameters.get_parameter(parameter_name)
-    pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001
+    pharmacy_first_phase_one_feature_flag = literal_eval(pharmacy_first_phase_one)
     logger.debug(
         "Got pharmacy first phase one feature flag",
         extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},

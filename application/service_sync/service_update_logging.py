@@ -271,7 +271,7 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
         odscode=str(changes_to_dos.nhs_entity.odscode),
         dos_service=changes_to_dos.dos_service,
     )
-    most_recent_service_history_entry = list(service_histories.service_history.keys())[0]
+    most_recent_service_history_entry = next(iter(service_histories.service_history.keys()))
     service_history_changes: dict[str, str] = service_histories.service_history[most_recent_service_history_entry][
         "new"
     ]

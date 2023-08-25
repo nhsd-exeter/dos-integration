@@ -438,8 +438,7 @@ def get_address_string(context: Context) -> str:
     address = "$".join(address_lines)
     address = sub(r"[A-Za-z]+('[A-Za-z]+)?", lambda word: word.group(0).capitalize(), address)
     address = address.replace("'", "")
-    address = address.replace("&", "and")
-    return address
+    return address.replace("&", "and")
 
 
 def check_service_history(
@@ -450,7 +449,7 @@ def check_service_history(
 ) -> None:
     """Check the service history for the expected data and previous data is removed."""
     service_history = get_service_history(service_id)
-    first_key_in_service_history = list(service_history.keys())[0]
+    first_key_in_service_history = next(iter(service_history.keys()))
     changes = service_history[first_key_in_service_history]["new"]
     change_key = get_service_history_data_key(plain_english_field_name)
     if change_key not in changes:
@@ -462,7 +461,7 @@ def check_service_history(
     ), f"Expected data: {expected_data}, Expected data type: {type(expected_data)}, Actual data: {changes[change_key]['data']}"  # noqa: E501
 
     if "previous" in changes[change_key] and previous_data != "unknown":
-        if previous_data != "":  # noqa: PLC1901
+        if previous_data != "":  # noqa: PLC1901, RUF100
             assert changes[change_key]["previous"] == str(
                 previous_data,
             ), f"Expected previous data: {previous_data}, Actual data: {changes[change_key]}"
@@ -485,7 +484,7 @@ def service_history_negative_check(service_id: str) -> str:
     if service_history == []:
         return "Not Updated"
 
-    first_key_in_service_history = list(service_history.keys())[0]
+    first_key_in_service_history = next(iter(service_history.keys()))
     if check_recent_event(first_key_in_service_history) is False:
         return "Not Updated"
     return "Updated"
@@ -503,10 +502,10 @@ def check_service_history_change_type(service_id: str, change_type: str, field_n
         str: Returns a string based on the result of the check
     """
     service_history = get_service_history(service_id)
-    first_key_in_service_history = list(service_history.keys())[0]
+    first_key_in_service_history = next(iter(service_history.keys()))
     if field_name is None:
         change_status = service_history[first_key_in_service_history]["new"][
-            list(service_history[first_key_in_service_history]["new"].keys())[0]
+            next(iter(service_history[first_key_in_service_history]["new"].keys()))
         ]["changetype"]
     else:
         change_status = service_history[first_key_in_service_history]["new"][field_name]["changetype"]
@@ -527,7 +526,7 @@ def get_service_history_specified_opening_times(service_id: str) -> dict:
         specified_open_times (dict): Specified opening times from service history
     """
     service_history = get_service_history(service_id)
-    return service_history[list(service_history.keys())[0]]["new"]["cmsopentimespecified"]
+    return service_history[next(iter(service_history.keys()))]["new"]["cmsopentimespecified"]
 
 
 def get_service_history_standard_opening_times(service_id: str) -> list:
@@ -541,8 +540,8 @@ def get_service_history_standard_opening_times(service_id: str) -> list:
     """
     service_history = get_service_history(service_id)
     return [
-        {entry: service_history[list(service_history.keys())[0]]["new"][entry]}
-        for entry in service_history[list(service_history.keys())[0]]["new"]
+        {entry: service_history[next(iter(service_history.keys()))]["new"][entry]}
+        for entry in service_history[next(iter(service_history.keys()))]["new"]
         if entry.endswith("day")
     ]
 
@@ -621,7 +620,7 @@ def assert_standard_openings(
     counter = 0
     valid_change_types = ["add", "modify"]
     for entry in dos_times:
-        currentday = list(entry.keys())[0]
+        currentday = next(iter(entry.keys()))
         for dates in ce_times:
             if dates["name"] == currentday:
                 assert entry[currentday]["data"]["add"][0] == dates["times"], "ERROR: Dates do not match"
@@ -652,7 +651,7 @@ def assert_standard_closing(dos_times: list, ce_times: list[dict]) -> int:
         if entry["times"] == "closed":
             currentday = entry["name"]
             for dates in dos_times:
-                if currentday == list(dates.keys())[0]:
+                if currentday == next(iter(dates.keys())):
                     assert dates[currentday]["changetype"] == "delete", "Open when expected closed"
                     assert (
                         "add" not in dates[currentday]["data"]

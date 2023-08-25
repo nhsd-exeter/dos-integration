@@ -239,8 +239,7 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
 @given("an entry is created in the services table with a derivative odscode", target_fixture="context")
 def _(context: Context) -> Context:
     odscode = f"{context.generator_data['odscode']}A"
-    context = a_service_table_entry_is_created(context=context, ods_code=odscode)
-    return context
+    return a_service_table_entry_is_created(context=context, ods_code=odscode)
 
 
 @given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
@@ -1398,7 +1397,7 @@ def services_location_history_update_assertion(context: Context) -> None:
     """
     sleep(10)
     history_data = get_service_history(context.service_id)
-    history_data = history_data[list(history_data.keys())[0]]["new"]
+    history_data = history_data[next(iter(history_data.keys()))]["new"]
     history_list = [
         history_data["cmsorgtown"]["data"],
         history_data["postalcode"]["data"],
