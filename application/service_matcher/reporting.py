@@ -5,7 +5,7 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
-from common.constants import DOS_ACTIVE_STATUS_ID, SubServiceConstants
+from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID, SubServiceConstants
 from common.dos import VALID_STATUS_ID, DoSService
 from common.nhs import NHSEntity
 
@@ -182,12 +182,12 @@ def log_missing_dos_service_for_a_given_type(
         missing_type (SubServiceConstants): The subtype being reported as missing descriptors
         reason (str): The reason for the report
     """
-    first_active_service = None
+    active_pharmacy_service = None
     for service in matching_services:
-        if service.statusid == DOS_ACTIVE_STATUS_ID:
-            first_active_service = service
+        if service.statusid == DOS_ACTIVE_STATUS_ID and service.typeid == PHARMACY_SERVICE_TYPE_ID:
+            active_pharmacy_service = service
 
-    if first_active_service is None:
+    if active_pharmacy_service is None:
         return
 
     logger.warning(
@@ -200,9 +200,9 @@ def log_missing_dos_service_for_a_given_type(
             "nhsuk_organisation_status": nhs_entity.org_status,
             "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
             "dos_missing_service_type": missing_type.TYPE_NAME,
-            "dos_service_address": first_active_service.address,
-            "dos_service_postcode": first_active_service.postcode,
-            "dos_region": first_active_service.get_region(),
+            "dos_service_address": active_pharmacy_service.address,
+            "dos_service_postcode": active_pharmacy_service.postcode,
+            "dos_region": active_pharmacy_service.get_region(),
             "reason": reason,
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
             },

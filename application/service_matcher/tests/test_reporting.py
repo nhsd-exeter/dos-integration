@@ -19,7 +19,7 @@ from application.service_matcher.reporting import (
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
-from common.constants import BLOOD_PRESSURE
+from common.constants import BLOOD_PRESSURE, PHARMACY_SERVICE_TYPE_ID
 from common.dos import VALID_STATUS_ID
 from common.nhs import NHSEntity
 
@@ -209,6 +209,7 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
 @patch.object(Logger, "warning")
 def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
     dos_service = dummy_dos_service()
+    dos_service.typeid = PHARMACY_SERVICE_TYPE_ID
     dos_service.statusid = 1
     reason = "reason 123"
     nhs_entity = NHSEntity(
