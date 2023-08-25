@@ -202,8 +202,22 @@ def create_basic_service_entry(context: Context) -> Context:
         Context: The context object.
     """
     context = a_service_table_entry_is_created(context)
-    context = service_table_entry_is_committed(context)
-    return context
+    return service_table_entry_is_committed(context)
+
+
+@given(parse('a pharmacy service is created with type "{service_type:d}"'), target_fixture="context")
+def _(context: Context, service_type: int) -> Context:
+    """Create a basic service with a specific service type.
+
+    Args:
+        context (Context): The context object.
+        service_type (int): The service type to use.
+
+    Returns:
+        Context: The context object.
+    """
+    context = a_service_table_entry_is_created(context, service_type=service_type)
+    return service_table_entry_is_committed(context)
 
 
 @given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
@@ -219,6 +233,13 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
         Context: The context object.
     """
     context.generator_data[field_name] = values
+    return context
+
+
+@given("an entry is created in the services table with a derivative odscode", target_fixture="context")
+def _(context: Context) -> Context:
+    odscode = f"{context.generator_data['odscode']}A"
+    context = a_service_table_entry_is_created(context=context, ods_code=odscode)
     return context
 
 

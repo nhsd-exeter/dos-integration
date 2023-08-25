@@ -32,14 +32,14 @@ resource "aws_cloudwatch_query_definition" "search_by_correlation_id" {
   ]
 
   query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
+fields @timestamp, message
 | filter correlation_id == 'REPLACE'
 | sort @timestamp
 EOF
 }
 
-resource "aws_cloudwatch_query_definition" "search_by_correlation_id_simple" {
-  name = "${var.project_id}/${var.blue_green_environment}/search-by-correlation-id-simple"
+resource "aws_cloudwatch_query_definition" "search_by_correlation_id_expanded" {
+  name = "${var.project_id}/${var.blue_green_environment}/search-by-correlation-id-expanded"
 
   log_group_names = [
     "/aws/lambda/${var.change_event_dlq_handler_lambda_name}",
@@ -52,7 +52,7 @@ resource "aws_cloudwatch_query_definition" "search_by_correlation_id_simple" {
   ]
 
   query_string = <<EOF
-fields @timestamp, message
+fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
 | filter correlation_id == 'REPLACE'
 | sort @timestamp
 EOF
@@ -72,14 +72,14 @@ resource "aws_cloudwatch_query_definition" "search_by_odscode" {
   ]
 
   query_string = <<EOF
-fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
+fields @timestamp, message
 | filter ods_code == 'REPLACE'
 | sort @timestamp
 EOF
 }
 
-resource "aws_cloudwatch_query_definition" "search_by_odscode_simple" {
-  name = "${var.project_id}/${var.blue_green_environment}/search-by-odscode-simple"
+resource "aws_cloudwatch_query_definition" "search_by_odscode_expanded" {
+  name = "${var.project_id}/${var.blue_green_environment}/search-by-odscode-expanded"
 
   log_group_names = [
     "/aws/lambda/${var.change_event_dlq_handler_lambda_name}",
@@ -92,12 +92,11 @@ resource "aws_cloudwatch_query_definition" "search_by_odscode_simple" {
   ]
 
   query_string = <<EOF
-fields @timestamp, message
+fields @timestamp,correlation_id,ods_code,level,message_received,function_name, message
 | filter ods_code == 'REPLACE'
 | sort @timestamp
 EOF
 }
-
 
 resource "aws_cloudwatch_query_definition" "search_for_invalid_postcode" {
   name = "${var.project_id}/${var.blue_green_environment}/search-for-invalid-postcode"

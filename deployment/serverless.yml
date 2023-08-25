@@ -191,6 +191,7 @@ functions:
       DB_REPLICA_SECRET_NAME: ${env:DB_REPLICA_SECRET_NAME}
       DB_REPLICA_SERVER: ${env:DB_REPLICA_SERVER}
       DB_SCHEMA: ${env:DB_SCHEMA}
+      PHARMACY_FIRST_PHASE_ONE_PARAMETER: ${env:PHARMACY_FIRST_PHASE_ONE_PARAMETER}
     vpcDiscovery:
       vpcName: "${env:AWS_VPC_NAME}"
       subnets:

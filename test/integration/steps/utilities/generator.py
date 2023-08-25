@@ -609,3 +609,21 @@ def set_up_palliative_care_in_db() -> None:
             "query_vars": None,
         },
     )
+
+
+def set_up_common_condition_service_types() -> None:
+    """This function sets up the common condition service types."""
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": """INSERT INTO pathwaysdos.servicetypes (id, "name", nationalranking, searchcapacitystatus, capacitymodel, capacityreset) VALUES(148, 'NHS Community Blood Pressure Check service', '1', true, NULL, 'interval') ON CONFLICT DO NOTHING RETURNING id""",  # noqa: E501
+            "query_vars": None,
+        },
+    )
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": """INSERT INTO pathwaysdos.servicetypes (id, "name", nationalranking, searchcapacitystatus, capacitymodel, capacityreset) VALUES(149, 'NHS Community Pharmacy Contraception service', '1', true, NULL, 'interval') ON CONFLICT DO NOTHING RETURNING id""",  # noqa: E501
+            "query_vars": None,
+        },
+    )

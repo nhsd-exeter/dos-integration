@@ -1,23 +1,90 @@
-Feature: F001. Ensure valid change events are converted and sent to DOS
+Feature: F001. Ensure valid change events are converted and sent to DoS
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SXX1. A valid change event is processed and accepted by DOS
-    Given a basic service is created
+  Scenario Outline: F001SXX1. Changes are processed for acceptable service types
+    Given an entry is created in the services table
+    And the service "service_type" is set to "<service_type>"
+    And the service "service_status" is set to "<status>"
+    And the entry is committed to the services table
     And the change event "Postcode" is set to "CT1 1AA"
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
     And the service history is updated with the "Postcode"
     And the service history shows "postalcode" change type is "modify"
 
+    Examples:
+      | service_type | status |
+      | 13           | 1      |
+      | 131          | 1      |
+      | 132          | 1      |
+      | 134          | 1      |
+      | 137          | 1      |
+      | 148          | 1      |
+      | 149          | 1      |
+
   @complete @dev @pharmacy_cloudwatch_queries
-  Scenario: F001SXX2. A Changed event with aligned data does not save an update to DoS
+  Scenario Outline: F001SXX2 Checking invalid service types and statuses variations are not matched
+    Given an entry is created in the services table
+    And the service "service_type" is set to "<service_type>"
+    And the service "service_status" is set to "<status>"
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with value "UNMATCHED_PHARMACY"
+    And the service history is not updated
+
+    Examples:
+      | service_type | status |
+      | 19           | 1      |
+      | 13           | 2      |
+      | 13           | 6      |
+      | 13           | 7      |
+      | 131          | 2      |
+      | 132          | 2      |
+      | 134          | 2      |
+      | 137          | 2      |
+      | 13           | 3      |
+      | 131          | 3      |
+      | 132          | 3      |
+      | 134          | 3      |
+      | 137          | 3      |
+      | 148          | 2      |
+      | 148          | 3      |
+      | 149          | 2      |
+      | 149          | 3      |
+      | 148          | 4      |
+      | 149          | 4      |
+      | 148          | 5      |
+      | 149          | 5      |
+
+  @complete @dev @pharmacy_no_log_searches
+  Scenario Outline: F001SXX3. If any matched service is active update all services
+    Given a pharmacy service is created with type "<active_service_type>"
+    And an entry is created in the services table with a derivative odscode
+    And the service "service_type" is set to "<service_type>"
+    And the service "service_status" is set to "<status>"
+    And the entry is committed to the services table
+    And the change event "Postcode" is set to "W1A 1AA"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "Postcode" is updated within the DoS DB
+
+    Examples:
+      | active_service_type | service_type | status |
+      | 13                  | 148          | 2      |
+      | 13                  | 148          | 3      |
+      | 13                  | 149          | 2      |
+      | 13                  | 149          | 3      |
+      | 148                 | 149          | 2      |
+      | 149                 | 148          | 3      |
+
+  @complete @dev @pharmacy_cloudwatch_queries
+  Scenario: F001SXX4. A Changed event with aligned data does not save an update to DoS
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "No changes to save"
     And the service history is not updated
 
   @complete @pharmacy_no_log_searches
-  Scenario Outline: F001SXX3. A valid change event with changed field is processed and captured by DOS
+  Scenario Outline: F001SXX5. A valid change event with changed field is processed and captured by DOS
     Given a basic service is created
     And the "<field>" is changed and is valid
     When the Changed Event is sent for processing with "valid" api key
@@ -32,7 +99,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
       | address  |
 
   @complete @pharmacy_no_log_searches
-  Scenario Outline: F001SXX5. A valid CE without a contact field
+  Scenario Outline: F001SXX6. A valid CE without a contact field
     Given a basic service is created
     And the "<field>" value has been unset
     When the Changed Event is sent for processing with "valid" api key
@@ -47,7 +114,6 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
   @complete @pharmacy_cloudwatch_queries
   Scenario: F001SXX7. A duplicate sequence number is allowed
     Given a basic service is created
-    #This below has been updated
     And the ODS has an entry in dynamodb
     When the Changed Event is sent for processing with a duplicate sequence id
     Then the Changed Event is stored in dynamo db
@@ -89,7 +155,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
 
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SX10 Changed Event with updated postcode to verify location changes
+  Scenario: F001SXX10 Changed Event with updated postcode to verify location changes
     Given a basic service is created
     And the change event "Postcode" is set to "PR4 2BE"
     When the Changed Event is sent for processing with "valid" api key
@@ -114,7 +180,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the service history table has been updated with locations data
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SX15 To check the emails sending
+  Scenario: F001SX13 To check the emails sending
     Given a basic service is created
     And the correlation-id is "email"
     And the change event "Address1" is set to "Test Address"
@@ -124,7 +190,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the changes table shows change is now rejected
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX16 Past Specified Opening Times on Dos are removed and updated
+  Scenario: F001SX14 Past Specified Opening Times on Dos are removed and updated
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2020"
     And the entry is committed to the services table
@@ -133,7 +199,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SX17 All specified opening times are removed from DoS
+  Scenario: F001SX15 All specified opening times are removed from DoS
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2020"
     And the entry is committed to the services table
@@ -142,13 +208,13 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the DoS DB has no open date in "2020"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX18 Empty Specified opening times results in no change and no error
+  Scenario: F001SX16 Empty Specified opening times results in no change and no error
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "No valid pending changes found"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX19 Empty CE Specified opening times removes all SP times in DoS
+  Scenario: F001SX17 Empty CE Specified opening times removes all SP times in DoS
     Given an entry is created in the services table
     And the service is "open" on date "Dec 25 2022"
     And the entry is committed to the services table
@@ -157,14 +223,14 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "service-sync" lambda shows field "message" with value "Deleting all specified opening times"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX20 CE Specified Opening Times with future dates replaces empty Dos SP times
+  Scenario: F001SX18 CE Specified Opening Times with future dates replaces empty Dos SP times
     Given a basic service is created
     And the specified opening date is set to "future" date
     When the Changed Event is sent for processing with "valid" api key
     Then the DoS service has been updated with the specified date and time is captured by DoS
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX21. No Staff field in CE doesn't cause errors
+  Scenario: F001SX19. No Staff field in CE doesn't cause errors
     Given a basic service is created
     And the change event "Postcode" is set to "CT1 1AA"
     And the change event has no staff field
@@ -172,7 +238,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     Then the "Postcode" is updated within the DoS DB
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX22. Palliative Care Service with unchanged data not flagged
+  Scenario: F001SX20. Palliative Care Service with unchanged data not flagged
     Given a basic service is created
     And the service in DoS supports palliative care
     And the change event has a palliative care entry
@@ -181,7 +247,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service history is not updated
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SX23. Palliative Care Service with changed data flagged (removed)
+  Scenario: F001SX21. Palliative Care Service with changed data flagged (removed)
     Given a basic service is created
     And the service in DoS supports palliative care
     When the Changed Event is sent for processing with "valid" api key
@@ -189,7 +255,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service history shows "cmssgsdid" change type is "delete"
 
   @complete @pharmacy_no_log_searches
-  Scenario: F001SX24. Palliative Care Service with changed data flagged (added)
+  Scenario: F001SX22. Palliative Care Service with changed data flagged (added)
     Given a basic service is created
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
@@ -197,7 +263,7 @@ Feature: F001. Ensure valid change events are converted and sent to DOS
     And the service history shows "cmssgsdid" change type is "add"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX25. Palliative Care. Non primary pharmacy service no check message
+  Scenario: F001SX23. Palliative Care. Non primary pharmacy service no check message
     Given an entry is created in the services table
     And the service "service_type" is set to "131"
     And the entry is committed to the services table

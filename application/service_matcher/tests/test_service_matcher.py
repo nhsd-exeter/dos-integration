@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from json import dumps
 from os import environ
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
@@ -11,7 +11,12 @@ from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from application.service_matcher.service_matcher import get_matching_services, lambda_handler, send_update_requests
+from application.service_matcher.service_matcher import (
+    get_matching_services,
+    get_pharmacy_first_phase_one_feature_flag,
+    lambda_handler,
+    send_update_requests,
+)
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 
@@ -44,35 +49,43 @@ def lambda_context():
     return LambdaContext()
 
 
+@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-@patch(f"{FILE_PATH}.log_unmatched_service_types")
-def test_get_matching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
+def test_get_matching_services(
+    mock_get_matching_dos_services,
+    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
+    change_event,
+):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
     service.typeid = 13
     service.statusid = 1
     mock_get_matching_dos_services.return_value = [service]
+    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
     # Act
     matching_services = get_matching_services(nhs_entity)
     # Assert
     assert matching_services == [service]
-    mock_log_unmatched_service_types.assert_not_called()
+    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
 
 
+@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-@patch(f"{FILE_PATH}.log_unmatched_service_types")
-def test_get_unmatching_services(mock_log_unmatched_service_types, mock_get_matching_dos_services, change_event):
+def test_get_unmatching_services(
+    mock_get_matching_dos_services,
+    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
+    change_event,
+):
     # Arrange
     nhs_entity = NHSEntity(change_event)
-    service = dummy_dos_service()
-    service.typeid = 999
-    service.statusid = 1
-    mock_get_matching_dos_services.return_value = [service]
+    mock_get_matching_dos_services.return_value = []
+    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
     # Act
-    get_matching_services(nhs_entity)
+    response = get_matching_services(nhs_entity)
     # Assert
-    mock_log_unmatched_service_types.assert_called_once()
+    assert response == []
+    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
 
 
 def get_message_attributes(
@@ -186,6 +199,7 @@ def test_lambda_handler_hidden_or_closed_pharmacies(
     service.web = "www.fakesite.com"
     service.publicphone = "01462622435"
     service.postcode = "S45 1AB"
+    service.statusid = 1
 
     change_event["OrganisationStatus"] = "closed"
     mock_entity = NHSEntity(change_event)
@@ -229,6 +243,7 @@ def test_lambda_handler_invalid_open_times(
     service.web = "www.fakesite.com"
     service.publicphone = "01462622435"
     service.postcode = "S45 1AB"
+    service.statusid = 1
 
     change_event["OpeningTimes"] = [
         {
@@ -267,6 +282,20 @@ def test_lambda_handler_invalid_open_times(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.parameters.get_parameter")
+def test_get_pharmacy_first_phase_one_feature_flag(mock_get_parameter: MagicMock) -> None:
+    # Arrange
+    environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"] = environment_variable = "test"
+    mock_get_parameter.return_value = "True"
+    # Act
+    response = get_pharmacy_first_phase_one_feature_flag()
+    # Assert
+    assert response is True
+    mock_get_parameter.assert_called_once_with(environment_variable)
+    # Clean up
+    del environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"]
+
+
 def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context):
     # Arrange
     sqs_event = SQS_EVENT.copy()
@@ -284,7 +313,7 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
 @patch(f"{FILE_PATH}.sqs")
 @patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "info")
-def test_send_update_requests(mock_logger, get_correlation_id_mockm, mock_sqs):
+def test_send_update_requests(mock_logger, get_correlation_id_mock, mock_sqs):
     # Arrange
     q_name = "test-queue"
     environ["UPDATE_REQUEST_QUEUE_URL"] = q_name
@@ -389,6 +418,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
     service.typeid = 13
+    service.statusid=1
     mock_get_matching_services.return_value = [service, service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -436,6 +466,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
     service.typeid = 131
+    service.statusid = 1
     mock_get_matching_services.return_value = [service, service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"

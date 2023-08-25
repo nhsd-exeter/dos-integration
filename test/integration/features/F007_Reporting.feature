@@ -86,25 +86,7 @@ Feature: F007. Report Logging
     And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX07 Check for Unmatched Service Type Report log
-    Given a basic service is created
-    And the change event "ODSCode" is set to "TP68G"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "report_key" with value "UNMATCHED_SERVICE_TYPE"
-    And "nhsuk_odscode" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "nhsuk_organisation_name" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "nhsuk_organisation_typeid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "nhsuk_organisation_subtype" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "nhsuk_organisation_status" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "dos_service_uid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "dos_service_typeid" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "dos_service_publicname" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "dos_service_status" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_SERVICE_TYPE" report in "service-matcher" logs
-    And the service history is not updated
-
-  @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX08 Check for Blank Opening Times Report log
+  Scenario: F007SX07 Check for Blank Opening Times Report log
     Given a basic service is created
     And the Changed Event has blank opening times
     When the Changed Event is sent for processing with "valid" api key
@@ -117,7 +99,7 @@ Feature: F007. Report Logging
 
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX09 Check for Hidden Or Closed Report log
+  Scenario Outline: F007SX08 Check for Hidden Or Closed Report log
     Given a basic service is created
     And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
     When the Changed Event is sent for processing with "valid" api key
@@ -141,7 +123,7 @@ Feature: F007. Report Logging
       | Hidden             |
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX010 Check for Invalid Postcode Report log
+  Scenario: F007SX09 Check for Invalid Postcode Report log
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
     When the Changed Event is sent for processing with "valid" api key
