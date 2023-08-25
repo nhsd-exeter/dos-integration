@@ -12,7 +12,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: change-event-dlq-handler
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_dos_db_handler
       env:
@@ -22,7 +22,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: dos-db-handler
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_dos_db_update_dlq_handler
       env:
@@ -32,7 +32,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: dos-db-update-dlq-handler
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_event_replay
       env:
@@ -42,7 +42,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: event-replay
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_ingest_change_event
       env:
@@ -52,7 +52,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: ingest-change-event
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_send_email
       env:
@@ -62,7 +62,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: send-email
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_service_matcher
       env:
@@ -72,7 +72,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: service-matcher
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_service_sync
       env:
@@ -82,7 +82,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: service-sync
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: build_slack_messenger
       env:
@@ -92,7 +92,7 @@ batch:
         privileged-mode: true
         variables:
           LAMBDA: slack-messenger
-      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/common-batch-jobs/build-arm-image.yml
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
     - identifier: deploy
       env:
