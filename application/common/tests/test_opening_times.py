@@ -215,7 +215,6 @@ def test_open_period__lt__gt__():
     "opening_period_2",
     [
         OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
-        OpenPeriod(time(8, 0, 0), time(12, 0, 0)),
         OpenPeriod(datetime(1970, 1, 1, 8, 0, 0).time(), time(12, 0, 0)),
         OpenPeriod(datetime.strptime("8:00", "%H:%M").time(), time(12, 0, 0)),
         OpenPeriod(time(8, 0, 0), datetime.strptime("12:00:00", "%H:%M:%S").time()),

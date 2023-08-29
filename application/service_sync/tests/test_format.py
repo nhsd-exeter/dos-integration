@@ -33,7 +33,6 @@ def test_format_address(address: str, formatted_address: str):
     ("website", "formatted_website"),
     [
         ("www.test.com", "www.test.com"),
-        ("www.test.com", "www.test.com"),
         ("www.Test.com", "www.test.com"),
         ("www.test.com/", "www.test.com/"),
         ("www.TEST.Com", "www.test.com"),
