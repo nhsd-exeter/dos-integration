@@ -22,10 +22,11 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
-from common.constants import BLOOD_PRESSURE, CONTRACEPTION, PHARMACY_SERVICE_TYPE_ID, SubServiceConstants
+from common.constants import PHARMACY_SERVICE_TYPE_ID
 from common.dos import ACTIVE_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
+from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
 
@@ -75,7 +76,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     matching_services = get_matching_services(nhs_entity)
 
     if len(matching_services) == 0 or not next(
-        (True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False,
+        (True for service in matching_services if service.statusid == ACTIVE_STATUS_ID),
+        False,
     ):
         log_unmatched_nhsuk_service(nhs_entity)
         return
@@ -120,23 +122,29 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         sequence_number=holding_queue_change_event_item["sequence_number"],
     )
 
-def log_missing_dos_services(nhs_entity: NHSEntity, matching: list[DoSService],
-                            service_const: SubServiceConstants) -> None:
+
+def log_missing_dos_services(
+    nhs_entity: NHSEntity,
+    matching: list[DoSService],
+    service_classification: ServiceType,
+) -> None:
     """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
         matching (List[DosService]): The matching DoS service to check for the
-        service_const (dict[str, str]): Dictionary of service constants to identify the service
+        service_classification (ServiceType): Various constants for the service type
     """
-    if (nhs_entity.check_for_service(service_const.NHS_UK_SERVICE_CODE)
-        and not next((True for service in matching if service.typeid == service_const.DOS_TYPE_ID), False)):
-            log_missing_dos_service_for_a_given_type(
+    if nhs_entity.check_for_service(service_classification.NHS_UK_SERVICE_CODE) and not next(
+        (True for service in matching if service.typeid == service_classification.DOS_TYPE_ID),
+        False,
+    ):
+        log_missing_dos_service_for_a_given_type(
             nhs_entity=nhs_entity,
             matching_services=matching,
-            missing_type=service_const,
-            reason= f"No '{service_const.TYPE_NAME}' type services found in DoS even though its specified"
-            f" in the NHS UK Change Event (dos type {service_const.DOS_TYPE_ID})",
+            missing_type=service_classification,
+            reason=f"No '{service_classification.TYPE_NAME}' type services found in DoS even though its specified"
+            f" in the NHS UK Change Event (dos type {service_classification.DOS_TYPE_ID})",
         )
 
 
