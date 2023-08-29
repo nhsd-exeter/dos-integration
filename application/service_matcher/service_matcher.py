@@ -126,25 +126,25 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 def log_missing_dos_services(
     nhs_entity: NHSEntity,
     matching: list[DoSService],
-    service_classification: ServiceType,
+    service_type: ServiceType,
 ) -> None:
     """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
         matching (List[DosService]): The matching DoS service to check for the
-        service_classification (ServiceType): Various constants for the service type
+        service_type (ServiceType): Various constants for the service type
     """
-    if nhs_entity.check_for_service(service_classification.NHS_UK_SERVICE_CODE) and not next(
-        (True for service in matching if service.typeid == service_classification.DOS_TYPE_ID),
+    if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
+        (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),
         False,
     ):
         log_missing_dos_service_for_a_given_type(
             nhs_entity=nhs_entity,
             matching_services=matching,
-            missing_type=service_classification,
-            reason=f"No '{service_classification.TYPE_NAME}' type services found in DoS even though its specified"
-            f" in the NHS UK Change Event (dos type {service_classification.DOS_TYPE_ID})",
+            missing_type=service_type,
+            reason=f"No '{service_type.TYPE_NAME}' type services found in DoS even though its specified"
+            f" in the NHS UK Change Event (dos type {service_type.DOS_TYPE_ID})",
         )
 
 
