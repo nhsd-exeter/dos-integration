@@ -6,9 +6,9 @@ DEPLOYMENT_SECRETS = $(PROJECT_ID)-demo/deployment # Move to project.mk when non
 
 LOG_LEVEL:= INFO
 
-DB_SERVER_NAME := uec-core-dos-put-db-12
+DB_SERVER_NAME := uec-core-dos-put-cluster-14-one
 DB_ROUTE_53 := uec-core-dos-put-primary.dos-db-put
-DB_REPLICA_SERVER_NAME := uec-core-dos-put-db-12-replica-di
+DB_REPLICA_SERVER_NAME := uec-core-dos-put-cluster-14-two
 DB_REPLICA_53 := uec-core-dos-put-db-replica-di.dos-db-put
 DB_PORT := 5432
 DB_NAME := pathwaysdos_uat2

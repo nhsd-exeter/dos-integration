@@ -290,7 +290,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             view : "timeSeries",
             stacked : false,
             metrics : [
-              ["AWS/RDS", "ReplicaLag", "DBInstanceIdentifier", var.dos_db_replica_name]
+              ["AWS/RDS", "AuroraReplicaLag", "DBClusterIdentifier", var.dos_db_replica_name]
             ],
             region : var.aws_region,
             timezone : "LOCAL"
