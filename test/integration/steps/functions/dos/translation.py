@@ -1,4 +1,4 @@
-from .constants import (
+from integration.steps.functions.constants import (
     DOS_ADDRESS_FIELD_NAME,
     DOS_ADDRESS_SERVICE_HISTORY_KEY,
     DOS_POSTCODE_FIELD_NAME,

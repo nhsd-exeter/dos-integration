@@ -1,23 +1,14 @@
 from ast import literal_eval
 from datetime import datetime
 from json import loads
-from os import getenv
 from random import randrange
 from re import fullmatch
 from typing import Any
 
-from boto3 import client
 from pytz import timezone
 
 from .context import Context
 from .utils import invoke_dos_db_handler_lambda
-
-URL = getenv("HTTPS_DOS_INTEGRATION_URL")
-DYNAMO_DB_TABLE = getenv("DYNAMO_DB_TABLE")
-LAMBDA_CLIENT_FUNCTIONS = client("lambda")
-SQS_CLIENT = client("sqs", region_name="eu-west-2")
-DYNAMO_CLIENT = client("dynamodb")
-S3_CLIENT = client("s3", region_name="eu-west-2")
 
 
 # Commit new services to DOS
@@ -28,7 +19,7 @@ def commit_new_service_to_dos(context: Context) -> str:
         context (Context): Test context object.
 
     Returns:
-        str: The response from the lambda.
+        str: Service ID
     """
     qv = context.generator_data
     query_vars = (
@@ -277,6 +268,8 @@ def build_change_event(context: Context) -> None:
         "OrganisationType": "Pharmacy",
         "OrganisationTypeId": "PHA",
         "UniqueKey": generate_unique_key(),
+        "UecServices": [],
+        "Services": [],
         "ParentOrganisation": {"ODSCode": "TES", "OrganisationName": "Fake Pharmacy Corporation"},
         "Staff": [],
     }

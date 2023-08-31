@@ -11,9 +11,20 @@ from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 from pytz import timezone
 
-from .utilities.cloudwatch import get_logs, negative_log_check
-from .utilities.context import Context
-from .utilities.generator import (
+from .functions.api import process_payload, process_payload_with_sequence
+from .functions.aws.aws_lambda import re_process_payload
+from .functions.aws.cloudwatch import get_logs, negative_log_check
+from .functions.aws.dynamodb import get_latest_sequence_id_for_a_given_odscode, get_stored_events_from_dynamo_db
+from .functions.context import Context
+from .functions.dos.get_data import (
+    get_change_event_specified_opening_times,
+    get_change_event_standard_opening_times,
+    get_locations_table_data,
+    get_service_id,
+    get_services_table_location_data,
+)
+from .functions.dos.translation import get_service_table_field_name
+from .functions.generator import (
     add_single_opening_day,
     add_specified_openings_to_dos,
     add_standard_openings_to_dos,
@@ -28,8 +39,7 @@ from .utilities.generator import (
     query_standard_opening_builder,
     valid_change_event,
 )
-from .utilities.translation import get_service_table_field_name
-from .utilities.utils import (
+from .functions.utils import (
     assert_standard_closing,
     assert_standard_openings,
     check_pending_service_is_rejected,
@@ -41,26 +51,16 @@ from .utilities.utils import (
     generate_correlation_id,
     generate_random_int,
     get_address_string,
-    get_change_event_specified_opening_times,
-    get_change_event_standard_opening_times,
     get_expected_data,
-    get_latest_sequence_id_for_a_given_odscode,
-    get_locations_table_data,
     get_palliative_care,
     get_s3_email_file,
     get_service_history,
     get_service_history_specified_opening_times,
     get_service_history_standard_opening_times,
-    get_service_id,
     get_service_table_field,
-    get_services_table_location_data,
-    get_stored_events_from_dynamo_db,
     post_to_change_event_dlq,
     post_ur_fifo,
     post_ur_sqs,
-    process_payload,
-    process_payload_with_sequence,
-    re_process_payload,
     service_history_negative_check,
     slack_retry,
     wait_for_service_update,

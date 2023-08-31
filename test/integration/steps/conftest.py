@@ -1,7 +1,7 @@
 import pytest
 
-from .utilities.context import Context
-from .utilities.generator import set_up_common_condition_service_types, set_up_palliative_care_in_db
+from .functions.context import Context
+from .functions.generator import set_up_common_condition_service_types, set_up_palliative_care_in_db
 
 
 def log_test_summary(step, request) -> None:
