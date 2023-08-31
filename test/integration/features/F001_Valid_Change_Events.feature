@@ -263,11 +263,20 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     And the service history shows "cmssgsdid" change type is "add"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX23. Palliative Care. Non primary pharmacy service no check message
+  Scenario Outline: F001SX23. Palliative Care. Non primary pharmacy service no check message
     Given an entry is created in the services table
-    And the service "service_type" is set to "131"
+    And the service "service_type" is set to "<service_type>"
     And the entry is committed to the services table
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Not suitable for palliative care comparison"
     And the service history is not updated
+
+    Examples:
+      | service_type |
+      | 131          |
+      | 132          |
+      | 134          |
+      | 137          |
+      | 148          |
+      | 149          |
