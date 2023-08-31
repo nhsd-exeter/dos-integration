@@ -5,7 +5,7 @@ from time import time_ns
 
 from boto3 import client
 
-from .context import Context
+from integration.steps.functions.context import Context
 
 SQS_CLIENT = client("sqs", region_name="eu-west-2")
 

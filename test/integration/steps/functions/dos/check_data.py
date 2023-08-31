@@ -1,9 +1,10 @@
 from typing import Any
 
 from integration.steps.functions.aws.aws_lambda import invoke_dos_db_handler_lambda
-from integration.steps.functions.utils import check_recent_event, get_service_history_data_key
+from integration.steps.functions.utils import check_recent_event
 
 from .get_data import get_service_history
+from .translation import get_service_history_data_key
 
 
 def check_pending_service_is_rejected(service_id: str) -> Any:

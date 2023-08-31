@@ -1,17 +1,13 @@
-from datetime import datetime, timedelta
 from json import dumps
 from os import getenv
 from random import randint, randrange
 from re import sub
-from time import sleep, time, time_ns
+from time import time, time_ns
 from typing import Any
-
-from pytz import UTC, timezone
 
 from .aws.aws_lambda import invoke_dos_db_handler_lambda
 from .aws.dynamodb import get_latest_sequence_id_for_a_given_odscode
 from .context import Context
-from .dos.get_data import get_service_table_field
 
 
 def generate_unique_sequence_number(odscode: str) -> str:
@@ -77,22 +73,6 @@ def create_pending_change_for_service(service_id: str) -> None:
     )
     lambda_payload = {"type": "write", "query": query, "query_vars": query_vars}
     invoke_dos_db_handler_lambda(lambda_payload)
-
-
-def wait_for_service_update(service_id: str) -> Any:
-    """Wait for the service to be updated by checking modifiedtime."""
-    for _ in range(12):
-        sleep(10)
-        updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
-        updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
-        updated_date_time = updated_date_time.replace(tzinfo=UTC)
-        two_mins_ago = datetime.now(tz=timezone("Europe/London")) - timedelta(minutes=2)
-        two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
-        if updated_date_time > two_mins_ago:
-            break
-    else:
-        msg = f"Service not updated, service_id: {service_id}"
-        raise ValueError(msg)
 
 
 def get_expected_data(context: Context, changed_data_name: str) -> Any:

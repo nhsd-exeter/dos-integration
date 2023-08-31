@@ -12,16 +12,31 @@ from pytest_bdd.parsers import parse
 from pytz import timezone
 
 from .functions.api import process_payload, process_payload_with_sequence
+from .functions.assertions import assert_standard_closing, assert_standard_openings
 from .functions.aws.aws_lambda import re_process_payload
 from .functions.aws.cloudwatch import get_logs, negative_log_check
 from .functions.aws.dynamodb import get_latest_sequence_id_for_a_given_odscode, get_stored_events_from_dynamo_db
+from .functions.aws.s3 import get_s3_email_file
+from .functions.aws.sqs import post_to_change_event_dlq, post_ur_fifo, post_ur_sqs
 from .functions.context import Context
+from .functions.dos.check_data import (
+    check_pending_service_is_rejected,
+    check_service_history,
+    check_service_history_change_type,
+    service_history_negative_check,
+)
 from .functions.dos.get_data import (
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_locations_table_data,
+    get_palliative_care,
+    get_service_history,
+    get_service_history_specified_opening_times,
+    get_service_history_standard_opening_times,
     get_service_id,
+    get_service_table_field,
     get_services_table_location_data,
+    wait_for_service_update,
 )
 from .functions.dos.translation import get_service_table_field_name
 from .functions.generator import (
@@ -39,12 +54,8 @@ from .functions.generator import (
     query_standard_opening_builder,
     valid_change_event,
 )
+from .functions.slack import slack_retry
 from .functions.utils import (
-    assert_standard_closing,
-    assert_standard_openings,
-    check_pending_service_is_rejected,
-    check_service_history,
-    check_service_history_change_type,
     convert_specified_opening,
     convert_standard_opening,
     create_pending_change_for_service,
@@ -52,18 +63,6 @@ from .functions.utils import (
     generate_random_int,
     get_address_string,
     get_expected_data,
-    get_palliative_care,
-    get_s3_email_file,
-    get_service_history,
-    get_service_history_specified_opening_times,
-    get_service_history_standard_opening_times,
-    get_service_table_field,
-    post_to_change_event_dlq,
-    post_ur_fifo,
-    post_ur_sqs,
-    service_history_negative_check,
-    slack_retry,
-    wait_for_service_update,
 )
 
 scenarios(

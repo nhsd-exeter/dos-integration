@@ -4,7 +4,7 @@ from time import sleep
 
 from boto3 import client, resource
 
-from .context import Context
+from integration.steps.functions.context import Context
 
 S3_CLIENT = client("s3", region_name="eu-west-2")
 

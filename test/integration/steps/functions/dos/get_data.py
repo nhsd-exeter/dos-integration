@@ -1,10 +1,28 @@
 from ast import literal_eval
+from datetime import datetime, timedelta
 from json import loads
 from time import sleep
 from typing import Any
 
+from pytz import UTC, timezone
+
 from integration.steps.functions.aws.aws_lambda import invoke_dos_db_handler_lambda
-from integration.steps.functions.utils import wait_for_service_update
+
+
+def wait_for_service_update(service_id: str) -> Any:
+    """Wait for the service to be updated by checking modifiedtime."""
+    for _ in range(12):
+        sleep(10)
+        updated_date_time_str: str = get_service_table_field(service_id, "modifiedtime")
+        updated_date_time = datetime.strptime(updated_date_time_str, "%Y-%m-%d %H:%M:%S%z")
+        updated_date_time = updated_date_time.replace(tzinfo=UTC)
+        two_mins_ago = datetime.now(tz=timezone("Europe/London")) - timedelta(minutes=2)
+        two_mins_ago = two_mins_ago.replace(tzinfo=UTC)
+        if updated_date_time > two_mins_ago:
+            break
+    else:
+        msg = f"Service not updated, service_id: {service_id}"
+        raise ValueError(msg)
 
 
 def get_locations_table_data(postcode: str) -> list:
