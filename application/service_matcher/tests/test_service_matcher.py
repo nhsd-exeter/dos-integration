@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import date
 from json import dumps
 from os import environ
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
@@ -15,10 +15,12 @@ from application.service_matcher.service_matcher import (
     get_matching_services,
     get_pharmacy_first_phase_one_feature_flag,
     lambda_handler,
+    log_missing_dos_services,
     send_update_requests,
 )
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
+from common.service_type import BLOOD_PRESSURE, CONTRACEPTION
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
@@ -104,6 +106,72 @@ def get_message_attributes(
         "message_deduplication_id": {"DataType": "String", "StringValue": message_deduplication_id},
         "message_group_id": {"DataType": "String", "StringValue": message_group_id},
     }
+
+
+@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
+def test_log_missing_dos_services__missing(mock_log_missing_dos_service_for_a_given_type, change_event):
+    # Arrange
+    entity = MagicMock()
+    entity.check_for_service.return_value = True
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    matching_dos_services = [service]
+
+    # Act
+    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
+
+    # Assert
+    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
+    mock_log_missing_dos_service_for_a_given_type.assert_called_once_with(
+        nhs_entity=entity,
+        matching_services=matching_dos_services,
+        missing_type=BLOOD_PRESSURE,
+        reason=f"No '{BLOOD_PRESSURE.TYPE_NAME}' type services found in DoS even though its specified"
+        f" in the NHS UK Change Event (dos type {BLOOD_PRESSURE.DOS_TYPE_ID})",
+    )
+
+
+@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
+def test_log_missing_dos_services__not_missing(mock_log_missing_dos_service_for_a_given_type, change_event):
+    # Arrange
+    entity = MagicMock()
+    entity.check_for_service.return_value = True
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    service_two = dummy_dos_service()
+    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
+    service_two.statusid = 1
+    matching_dos_services = [service, service_two]
+
+    # Act
+    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
+
+    # Assert
+    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
+    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
+def test_log_missing_dos_services__not_on_nhs_entity(mock_log_missing_dos_service_for_a_given_type, change_event):
+    # Arrange
+    entity = MagicMock()
+    entity.check_for_service.return_value = False
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    service_two = dummy_dos_service()
+    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
+    service_two.statusid = 1
+    matching_dos_services = [service, service_two]
+
+    # Act
+    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
+
+    # Assert
+    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
+    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.get_matching_services")
@@ -392,6 +460,7 @@ def test_lambda_handler_invalid_existing_dos_opening_times(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.log_missing_dos_services")
 @patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
@@ -407,6 +476,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_send_update_requests,
     mock_get_matching_services,
     mock_log_unexpected_pharmacy_profiling,
+    mock_log_missing_dos_services,
     change_event,
     lambda_context,
 ):
@@ -418,7 +488,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
     service.typeid = 13
-    service.statusid=1
+    service.statusid = 1
     mock_get_matching_services.return_value = [service, service]
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         environ[env] = "test"
@@ -429,6 +499,9 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_get_matching_services.assert_called_once_with(mock_entity)
+    mock_log_missing_dos_services.assert_has_calls(
+        [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
+    )
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
         nhs_entity=mock_entity,
@@ -440,6 +513,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
         del environ[env]
 
 
+@patch(f"{FILE_PATH}.log_missing_dos_services")
 @patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
@@ -455,6 +529,7 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_send_update_requests,
     mock_get_matching_services,
     mock_log_unexpected_pharmacy_profiling,
+    mock_log_missing_dos_services,
     change_event,
     lambda_context,
 ):
@@ -477,6 +552,9 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
     mock_nhs_entity.assert_called_once_with(change_event)
     mock_get_matching_services.assert_called_once_with(mock_entity)
+    mock_log_missing_dos_services.assert_has_calls(
+        [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
+    )
     mock_send_update_requests.assert_called()
     mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
         nhs_entity=mock_entity,

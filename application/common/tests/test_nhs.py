@@ -455,17 +455,6 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "OpeningTime": "10:00",
-                "ClosingTime": "17:00",
-                "OpeningTimeType": "General",
-                "AdditionalOpeningDate": "Apr 14 2021",
-                "IsOpen": True,
-            },
-            False,
-        ),
-        (
-            {
-                "Weekday": "",
                 "OpeningTime": "",
                 "ClosingTime": "",
                 "OpeningTimeType": "Additional",
@@ -632,7 +621,6 @@ def test_extract_uec_service(input_value, output_value):
         ("", False),
         ("V012345", False),
         (False, False),
-        ("V012345", False),
     ],
 )
 def test_skip_if_key_is_none(input_value, output_value):

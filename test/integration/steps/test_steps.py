@@ -1,4 +1,5 @@
 import ast
+from ast import literal_eval
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
@@ -46,6 +47,7 @@ from .functions.generator import (
     build_change_event,
     build_change_event_contacts,
     build_change_event_opening_times,
+    build_change_event_services,
     commit_new_service_to_dos,
     create_palliative_care_entry_ce,
     create_palliative_care_entry_dos,
@@ -137,6 +139,8 @@ def a_service_table_entry_is_created(context: Context, ods_code: int = 0, servic
         "postcode": "NG11GS",
         "publicphone": f"{randint(10000000000, 99999999999)!s}",
         "web": "www.google.com",
+        "blood pressure": False,
+        "contraception": False,
     }
     context.generator_data = query_values
     return context
@@ -426,6 +430,12 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
         context.previous_value = context.generator_data["publicphone"]
         context.generator_data["publicphone"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
+    elif field_name.lower() == "blood pressure":
+        context.generator_data["blood pressure"] = literal_eval(values)
+        context.change_event["Services"] = build_change_event_services(context)
+    elif field_name.lower() == "contraception":
+        context.generator_data["contraception"] = literal_eval(values)
+        context.change_event["Services"] = build_change_event_services(context)
     else:
         context.previous_value = context.change_event[field_name]
         context.change_event[field_name] = values

@@ -325,6 +325,35 @@ def build_change_event_contacts(context: Context) -> list:
     return contacts
 
 
+def build_change_event_services(context: Context) -> list:
+    """Build services for change event.
+
+    Args:
+        context (Context): Test context
+
+    Returns:
+        list: List of change event services
+    """
+    services = []
+    if context.generator_data["blood pressure"] is not None:
+        services.append(
+            {
+                "ServiceName": "NHS Community Blood Pressure Check service",
+                "ServiceDescription": None,
+                "ServiceCode": "SRV0560",
+            },
+        )
+    if context.generator_data["contraception"] is not None:
+        services.append(
+            {
+                "ServiceName": "NHS Community Pharmacy Contraception service",
+                "ServiceDescription": None,
+                "ServiceCode": "SRV2000",
+            },
+        )
+    return services
+
+
 def build_change_event_opening_times(context: Context) -> list:
     """Build opening times for change event.
 
