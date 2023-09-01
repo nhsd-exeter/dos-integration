@@ -5,6 +5,7 @@ from integration.steps.functions.constants import (
     DOS_POSTCODE_SERVICE_HISTORY_KEY,
     DOS_PUBLIC_PHONE_FIELD_NAME,
     DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY,
+    DOS_STATUS_ID_FIELD_NAME,
     DOS_TOWN_EASTING_NAME,
     DOS_TOWN_FIELD_NAME,
     DOS_TOWN_LATITUDE_NAME,
@@ -37,6 +38,8 @@ def get_service_table_field_name(plain_english_field_name: str) -> str:
             field_name = DOS_TOWN_LATITUDE_NAME
         case "longitude":
             field_name = DOS_TOWN_LONGITUDE_NAME
+        case "status":
+            field_name = DOS_STATUS_ID_FIELD_NAME
         case _:
             msg = f"Error!.. Input parameter '{plain_english_field_name}' not compatible"
             raise ValueError(msg)
