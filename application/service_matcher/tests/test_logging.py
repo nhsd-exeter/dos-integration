@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from aws_lambda_powertools.logging import Logger
 
 from application.conftest import dummy_dos_service
-from application.service_matcher.reporting import (
+from application.service_matcher.logging import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     MISSING_SERVICE_TYPE_REPORT_ID,

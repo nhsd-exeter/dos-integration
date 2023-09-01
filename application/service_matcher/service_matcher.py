@@ -15,7 +15,7 @@ from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
 from pytz import timezone
 
-from .reporting import (
+from .logging import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_missing_dos_service_for_a_given_type,
@@ -26,7 +26,7 @@ from common.constants import PHARMACY_SERVICE_TYPE_ID
 from common.dos import ACTIVE_STATUS_ID, DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
-from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
+from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, PALLIATIVE_CARE, ServiceType
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
 
@@ -90,26 +90,12 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         log_invalid_open_times(nhs_entity, matching_services)
 
     # Check for correct pharmacy profiling
-    dos_matching_service_types = [service.typeid for service in matching_services]
-    logger.debug(f"Matching service types: {dos_matching_service_types}")
-    if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
-        type_13_matching_services = [
-            service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
-        ]
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=type_13_matching_services,
-            reason="Multiple 'Pharmacy' type services found (type 13)",
-        )
-    elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=matching_services,
-            reason="No 'Pharmacy' type services found (type 13)",
-        )
-
-    log_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
-    log_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)
+    report_missing_pharmacy_dos_service_type(nhs_entity, matching_services)
+    report_multiple_of_dos_service_type(nhs_entity, matching_services, PALLIATIVE_CARE)
+    report_multiple_of_dos_service_type(nhs_entity, matching_services, BLOOD_PRESSURE)
+    report_multiple_of_dos_service_type(nhs_entity, matching_services, CONTRACEPTION)
+    report_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
+    report_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)
 
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
@@ -123,28 +109,69 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     )
 
 
-def log_missing_dos_services(
+def report_missing_dos_services(
     nhs_entity: NHSEntity,
-    matching: list[DoSService],
+    matching_services: list[DoSService],
     service_type: ServiceType,
 ) -> None:
-    """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+    """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
-        matching (List[DosService]): The matching DoS service to check for the
+        matching_services (List[DosService]): The matching DoS service to check for the
         service_type (ServiceType): Various constants for the service type
     """
     if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
-        (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),
+        (True for service in matching_services if service.typeid == service_type.DOS_TYPE_ID),
         False,
     ):
         log_missing_dos_service_for_a_given_type(
             nhs_entity=nhs_entity,
-            matching_services=matching,
+            matching_services=matching_services,
             missing_type=service_type,
             reason=f"No '{service_type.TYPE_NAME}' type services found in DoS even though its specified"
             f" in the NHS UK Change Event (dos type {service_type.DOS_TYPE_ID})",
+        )
+
+
+def report_multiple_of_dos_service_type(
+    nhs_entity: NHSEntity,
+    matching_services: list[DoSService],
+    service_type: ServiceType,
+) -> None:
+    """Reports when matching DoS services have multiple of the same type.
+
+    Args:
+        nhs_entity (NHSEntity): The nhs entity to check for the service
+        matching_services (List[DosService]): The matching DoS service to check for the
+        service_type (ServiceType): Various constants for the service type
+    """
+    matching_service_types = [service for service in matching_services if service.typeid == service_type.DOS_TYPE_ID]
+    if len(matching_service_types) > 1:
+        log_unexpected_pharmacy_profiling(
+            nhs_entity=nhs_entity,
+            matching_services=matching_service_types,
+            reason=f"Multiple '{service_type.TYPE_NAME}' type services found (type {service_type.DOS_TYPE_ID})",
+        )
+
+
+def report_missing_pharmacy_dos_service_type(
+    nhs_entity: NHSEntity,
+    matching_services: list[DoSService],
+) -> None:
+    """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+
+    Args:
+        nhs_entity (NHSEntity): The nhs entity to check for the service
+        matching_services (List[DosService]): The matching DoS service to check for the
+    """
+    dos_matching_service_types = [service.typeid for service in matching_services]
+    logger.debug(f"Matching service types: {dos_matching_service_types}")
+    if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
+        log_unexpected_pharmacy_profiling(
+            nhs_entity=nhs_entity,
+            matching_services=matching_services,
+            reason="No 'Pharmacy' type services found (type 13)",
         )
 
 

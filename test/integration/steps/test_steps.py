@@ -174,21 +174,23 @@ def add_palliative_care_to_ce(context: Context) -> Context:
     return context
 
 
-@given(parse('"{count}" basic services are created'), target_fixture="context")
-def create_multiple_basic_service_entry(context: Context, count: str) -> Context:
+@given(parse('"{count:d}" basic services are created with service type "{service_type:d}'), target_fixture="context")
+def create_multiple_basic_service_entry(context: Context, count: int, service_type: int) -> Context:
     """Create multiple basic services.
 
     Args:
         context (Context): The context object.
         count (str): The number of services to create.
+        service_type (int): The service type to use.
 
     Returns:
         Context: The context object.
     """
     context = a_service_table_entry_is_created(context)
+    context.generator_data["service_type"] = service_type
     context = service_table_entry_is_committed(context)
     ods_code = context.generator_data["odscode"]
-    for _ in range(int(count) - 1):
+    for _ in range(count - 1):
         context = a_service_table_entry_is_created(context, ods_code)
         context = service_table_entry_is_committed(context)
     return context

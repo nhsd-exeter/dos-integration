@@ -88,11 +88,15 @@ Feature: F002. Invalid change event Exception handling
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F002SX12. A service with multiple entries as pharmacies raises alerts
-    Given "<count>" basic services are created
+    Given "<count>" basic services are created with service type "<service_type>"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows "<count>" of "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
 
     Examples:
-      | count |
-      | 2     |
-      | 4     |
+      | count | service_type |
+      | 2     | 13           |
+      | 4     | 13           |
+      | 2     | 148          |
+      | 4     | 148          |
+      | 2     | 149          |
+      | 4     | 149          |
