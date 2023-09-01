@@ -627,23 +627,19 @@ def add_blood_pressure_to_change_event(context: Context) -> None:
     )
 
 
-def set_up_palliative_care_z_code_in_db() -> None:
-    """This function sets up the palliative care symptom discriminator.
+def add_contraception_to_change_event(context: Context) -> None:
+    """This function creates an entry in the Change Event containing a blood pressure service.
 
-    Setup in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
+    Args:
+        context (Context): The context object that contains the change event to be updated.
     """
-    invoke_dos_db_handler_lambda(
+    if "Services" not in context.change_event:
+        context.change_event["Services"] = []
+    context.change_event["Services"].append(
         {
-            "type": "insert",
-            "query": "INSERT INTO pathwaysdos.symptomdiscriminators (id, description) VALUES (14167, 'Pharmacy Palliative Care Medication Stockholder') ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
-            "query_vars": None,
-        },
-    )
-    invoke_dos_db_handler_lambda(
-        {
-            "type": "insert",
-            "query": "INSERT INTO pathwaysdos.symptomgroupsymptomdiscriminators (id, symptomgroupid, symptomdiscriminatorid) VALUES (10000, 360, 14167) ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
-            "query_vars": None,
+            "ServiceName": "NHS Community Pharmacy Contraception service",
+            "ServiceDescription": None,
+            "ServiceCode": "SRV2000",
         },
     )
 

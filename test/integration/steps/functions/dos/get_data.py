@@ -157,6 +157,19 @@ def get_blood_pressure_sgsd(service_id: str) -> bool:
     return get_service_sgsd(service_id, 360, 14207)
 
 
+def get_contraception_sgsd(service_id: str) -> bool:
+    """Get blood pressure sgsd from DoS.
+
+    Args:
+        service_id (str): Service ID
+
+    Returns:
+        bool: True if blood pressure sgsd is found, False otherwise
+    """
+    wait_for_service_update(service_id)
+    return get_service_sgsd(service_id, 360, 14210)
+
+
 def get_service_history(service_id: str) -> list[dict[str, Any]]:
     """Gets the service history from the database.
 

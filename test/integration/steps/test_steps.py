@@ -30,6 +30,7 @@ from .functions.dos.get_data import (
     get_blood_pressure_sgsd,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
+    get_contraception_sgsd,
     get_locations_table_data,
     get_palliative_care,
     get_service_history,
@@ -43,6 +44,7 @@ from .functions.dos.get_data import (
 from .functions.dos.translation import get_service_table_field_name
 from .functions.generator import (
     add_blood_pressure_to_change_event,
+    add_contraception_to_change_event,
     add_palliative_care_to_change_event,
     add_single_opening_day,
     add_specified_openings_to_dos,
@@ -187,6 +189,20 @@ def _(context: Context) -> Context:
         Context: The context object.
     """
     add_blood_pressure_to_change_event(context)
+    return context
+
+
+@given("the change event has a contraception entry", target_fixture="context")
+def _(context: Context) -> Context:
+    """Add a contraception service entry to the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    add_contraception_to_change_event(context)
     return context
 
 
@@ -1547,4 +1563,20 @@ def _(context: Context) -> Context:
     """
     blood_pressure = get_blood_pressure_sgsd(context.service_id)
     assert blood_pressure is True, "ERROR Blood Pressure not correctly applied to DoS service"
+    return context
+
+
+@then(parse("contraception Z Code is added to the service"), target_fixture="context")
+def _(context: Context) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    contraception = get_contraception_sgsd(context.service_id)
+    assert contraception is True, "ERROR Contraception not correctly applied to DoS service"
     return context
