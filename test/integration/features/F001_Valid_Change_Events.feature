@@ -237,14 +237,13 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     When the Changed Event is sent for processing with "valid" api key
     Then the "Postcode" is updated within the DoS DB
 
-  @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX20. Palliative Care Service with unchanged data not flagged
+  @complete @pharmacy_no_log_searches
+  Scenario: F001SX20. Palliative Care Service with changed data flagged (added)
     Given a basic service is created
-    And the service in DoS supports palliative care
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with value "Palliative Care is equal"
-    And the service history is not updated
+    Then palliative care is "added" to the service
+    And the service history shows "cmssgsdid" change type is "add"
 
   @complete @pharmacy_no_log_searches
   Scenario: F001SX21. Palliative Care Service with changed data flagged (removed)
@@ -254,20 +253,103 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     Then palliative care is "removed" to the service
     And the service history shows "cmssgsdid" change type is "delete"
 
-  @complete @pharmacy_no_log_searches
-  Scenario: F001SX22. Palliative Care Service with changed data flagged (added)
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX22. Palliative Care Service with unchanged data not flagged
     Given a basic service is created
+    And the service in DoS supports palliative care
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    Then palliative care is "added" to the service
-    And the service history shows "cmssgsdid" change type is "add"
+    Then the "service-sync" lambda shows field "message" with value "Palliative Care is equal"
+    And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F001SX23. Palliative Care. Non primary pharmacy service no check message
+  Scenario Outline: F001SX23. Palliative Care. Non primary pharmacy service no check message
     Given an entry is created in the services table
-    And the service "service_type" is set to "131"
+    And the service "service_type" is set to "<service_type>"
     And the entry is committed to the services table
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Not suitable for palliative care comparison"
     And the service history is not updated
+
+    Examples:
+      | service_type |
+      | 131          |
+      | 132          |
+      | 134          |
+      | 137          |
+
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001SX24. Blood Pressure Service with changed data flagged (added)
+    Given a pharmacy service is created with type "13"
+    And an entry is created in the services table with a derivative odscode
+    And the service "service_type" is set to "148"
+    And the service "service_status" is set to "<service_status>"
+    And the entry is committed to the services table
+    And the change event has a blood pressure entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then DoS has "1" in the "status" field
+    And the service history shows "cmsorgstatus" change type is "modify"
+    And blood pressure Z Code is added to the service
+    And the service history shows "cmssgsdid" change type is "add"
+
+    Examples:
+      | service_status |
+      | 2              |
+      | 3              |
+
+  @complete @pharmacy_no_log_searches
+  Scenario Outline: F001SX25. Blood Pressure Service with changed data flagged (removed)
+    Given an entry is created in the services table
+    And the service "service_type" is set to "148"
+    And the service "service_status" is set to "1"
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then DoS has "2" in the "status" field
+    And the service history shows "cmsorgstatus" change type is "modify"
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SX26. Blood Pressure Service with unchanged data (active)
+    Given an entry is created in the services table
+    And the service "service_type" is set to "148"
+    And the service "service_status" is set to "1"
+    And the entry is committed to the services table
+    And the change event has a blood pressure entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Blood Pressure is equal"
+    And the service history is not updated
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SX27. Blood Pressure Service with unchanged data (inactive)
+    Given a pharmacy service is created with type "13"
+    And an entry is created in the services table with a derivative service
+    And the service "service_type" is set to "148"
+    And the service "service_status" is set to "<service_status>"
+    And the entry is committed to the services table
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Blood Pressure is equal"
+    And the service history is not updated
+
+    Examples:
+      | service_status |
+      | 2              |
+      | 3              |
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SX28. Blood Pressure not checked for non blood pressure service
+    Given an entry is created in the services table
+    And the service "service_type" is set to "<service_type>"
+    And the entry is committed to the services table
+    And the change event has a blood pressure entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Not Suitable for blood pressure comparison"
+    And the service history is not updated
+
+    Examples:
+      | service_type |
+      | 13           |
+      | 131          |
+      | 132          |
+      | 134          |
+      | 137          |
+      | 149          |

@@ -578,7 +578,7 @@ def valid_change_event(context: Context) -> bool:
     )
 
 
-def create_palliative_care_entry_dos(context: Context) -> int:
+def apply_palliative_care_to_service(context: Context) -> int:
     """This function creates an entry in DOS DB that will flag the service as having palliative care service.
 
     Args:
@@ -593,23 +593,38 @@ def create_palliative_care_entry_dos(context: Context) -> int:
     return loads(invoke_dos_db_handler_lambda(lambda_payload))
 
 
-def create_palliative_care_entry_ce(context: Context) -> None:
+def add_palliative_care_to_change_event(context: Context) -> None:
     """This function creates an entry in the Change Event containing a palliative care service.
 
     Args:
         context (Context): The context object that contains the change event to be updated.
     """
-    context.change_event["UecServices"] = [
+    if "UecServices" not in context.change_event:
+        context.change_event["UecServices"] = []
+    context.change_event["UecServices"].append(
         {
             "ServiceName": "Pharmacy palliative care medication stockholder",
             "ServiceDescription": None,
             "ServiceCode": "SRV0559",
-            "Contacts": [],
-            "Treatments": [],
-            "OpeningTimes": [],
-            "AgeRange": [],
         },
-    ]
+    )
+
+
+def add_blood_pressure_to_change_event(context: Context) -> None:
+    """This function creates an entry in the Change Event containing a blood pressure service.
+
+    Args:
+        context (Context): The context object that contains the change event to be updated.
+    """
+    if "Services" not in context.change_event:
+        context.change_event["Services"] = []
+    context.change_event["Services"].append(
+        {
+            "ServiceName": "NHS Community Blood Pressure Check service",
+            "ServiceDescription": None,
+            "ServiceCode": "SRV0560",
+        },
+    )
 
 
 def set_up_palliative_care_z_code_in_db() -> None:
