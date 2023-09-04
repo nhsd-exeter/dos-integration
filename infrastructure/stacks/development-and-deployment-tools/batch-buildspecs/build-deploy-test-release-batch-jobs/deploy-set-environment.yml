@@ -31,5 +31,4 @@ phases:
       - echo AWS_ACCOUNT=$AWS_ACCOUNT
       - echo ENVIRONMENT=$ENVIRONMENT
       - echo PROFILE=$PROFILE
-      - echo VERSION = $(make commit-date-hash-tag)
-      - make deploy VERSION=$(make commit-date-hash-tag) PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
+      - make deploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
