@@ -30,10 +30,10 @@ TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
-# DOS DB
+# DOS DB (Aurora)
 TF_VAR_dos_db_cluster_name:= $(DB_CLUSTER_NAME)
-TF_VAR_dos_db_name := $(DB_SERVER_NAME)
-TF_VAR_dos_db_replica_name := $(DB_REPLICA_SERVER_NAME)
+TF_VAR_dos_db_writer_name := $(DB_WRITER_NAME)
+TF_VAR_dos_db_reader_name := $(DB_READER_NAME)
 
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 
@@ -168,8 +168,8 @@ TF_VAR_waf_aws_sqli_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-s
 
 # Lambda Security Group
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-lambda-sg
-TF_VAR_dos_db_sg_name := $(DOS_DB_SG_NAME)
-TF_VAR_dos_db_replica_sg_name := $(DOS_DB_REPLICA_SG_NAME)
+TF_VAR_db_writer_sg_name := $(DB_WRITER_SG_NAME)
+TF_VAR_db_reader_sg_name := $(DB_READER_SG_NAME)
 
 # SQS Queues
 TF_VAR_holding_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo

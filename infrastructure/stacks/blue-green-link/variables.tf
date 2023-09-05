@@ -60,14 +60,14 @@ variable "dos_db_cluster_name" {
   description = "Name of db dos cluster to connect to"
 }
 
-variable "dos_db_name" {
+variable "dos_db_writer_name" {
   type        = string
-  description = "Name of db dos instance to connect to"
+  description = "Name of db dos writer to connect to"
 }
 
-variable "dos_db_replica_name" {
+variable "dos_db_reader_name" {
   type        = string
-  description = "Name of db dos replica to connect to"
+  description = "Name of db dos reader to connect to"
 }
 
 # ######################

@@ -22,15 +22,15 @@ def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
         Generator[connection, None, None]: Connection to the database
     """
     # Use AWS secret values, or failing that check env for DB password
-    if "DB_REPLICA_SECRET_NAME" in environ and "DB_REPLICA_SECRET_KEY" in environ:
-        db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
-        db_password = db_secret[environ["DB_REPLICA_SECRET_KEY"]]
+    if "DB_READER_SECRET_NAME" in environ and "DB_READER_SECRET_KEY" in environ:
+        db_secret = get_secret(environ["DB_READER_SECRET_NAME"])
+        db_password = db_secret[environ["DB_READER_SECRET_KEY"]]
     else:
         db_password = environ["DB_SECRET"]
 
     # Before the context manager is entered, the connection is created
     db_connection = connection_to_db(
-        server=environ["DB_REPLICA_SERVER"],
+        server=environ["DB_READER_SERVER"],
         port=environ["DB_PORT"],
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
@@ -51,14 +51,14 @@ def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
         Generator[connection, None, None]: Connection to the database
     """
     # Before the context manager is entered, the connection is created
-    db_secret = get_secret(environ["DB_SECRET_NAME"])
+    db_secret = get_secret(environ["DB_WRITER_SECRET_NAME"])
     db_connection = connection_to_db(
-        server=environ["DB_SERVER"],
+        server=environ["DB_WRITER_SERVER"],
         port=environ["DB_PORT"],
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
         db_user=environ["DB_READ_AND_WRITE_USER_NAME"],
-        db_password=db_secret[environ["DB_SECRET_KEY"]],
+        db_password=db_secret[environ["DB_WRITER_SECRET_KEY"]],
     )
     # Yield the connection object to the context manager
     yield db_connection
@@ -121,7 +121,8 @@ def query_dos_db(
     cursor = connection.cursor(row_factory=dict_row)
 
     logger.info(
-        "Query to execute", extra={"query": query, "vars": query_vars if log_vars else "Vars have been redacted."},
+        "Query to execute",
+        extra={"query": query, "vars": query_vars if log_vars else "Vars have been redacted."},
     )
 
     time_start = time_ns() // 1000000

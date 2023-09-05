@@ -35,24 +35,14 @@ variable "lambda_security_group_name" {
   description = "Name of the lambda security group"
 }
 
-variable "dos_db_name" {
+variable "db_writer_sg_name" {
   type        = string
-  description = "Name of db dos instance to connect to"
+  description = "Name of db dos writer security group to connect to"
 }
 
-variable "dos_db_replica_name" {
+variable "db_reader_sg_name" {
   type        = string
-  description = "Name of db dos read replica instance to connect to"
-}
-
-variable "dos_db_sg_name" {
-  type        = string
-  description = "Name of db dos security group to connect to"
-}
-
-variable "dos_db_replica_sg_name" {
-  type        = string
-  description = "Name of db dos replica security group to connect to"
+  description = "Name of db dos reader security group to connect to"
 }
 
 # ############################

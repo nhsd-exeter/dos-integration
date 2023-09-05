@@ -52,8 +52,8 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 
 populate-deployment-variables:
 	echo "unset AWS_PROFILE"
-	echo "export DB_SERVER=$(DB_ROUTE_53)"
-	echo "export DB_REPLICA_SERVER=$(DB_REPLICA_53)"
+	echo "export DB_WRITER_SERVER=$(DB_WRITER_ROUTE_53)"
+	echo "export DB_READER_SERVER=$(DB_READER_ROUTE_53)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
 	echo "export DB_READ_AND_WRITE_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
 	echo "export DB_READ_ONLY_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
