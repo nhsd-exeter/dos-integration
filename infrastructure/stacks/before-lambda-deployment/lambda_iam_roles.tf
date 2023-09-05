@@ -445,15 +445,6 @@ module "ingest_change_event" {
     {
       "Effect": "Allow",
       "Action": [
-        "appconfig:GetConfiguration",
-        "appconfig:StartConfigurationSession",
-        "appconfig:GetLatestConfiguration"
-        ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
         "dynamodb:BatchGetItem",
         "dynamodb:GetItem",
         "dynamodb:Query",
