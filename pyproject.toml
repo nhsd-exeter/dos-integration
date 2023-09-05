@@ -160,4 +160,10 @@ target-version = "py311"
 convention = "google" # Use Google docstring convention.
 
 [tool.ruff.isort]
-known-local-folder = ["application", "common"]
+known-local-folder = [
+  "application",
+  "common",
+  "functions",
+  "tests",
+  "integration",
+]
