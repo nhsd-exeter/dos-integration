@@ -14,7 +14,7 @@ from .constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
     PHARMACY_SERVICE_TYPE_IDS,
 )
-from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
+from .dos_db_connection import connect_to_db_reader, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
@@ -145,7 +145,7 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
         "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
         f"AND s.statusid = %(ACTIVE_STATUS_ID)s {pharmacy_first_condition}"
     )
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)
         # Create list of DoSService objects from returned rows
         services = [DoSService(row) for row in cursor.fetchall()]
@@ -179,7 +179,7 @@ def get_dos_locations(postcode: str | None = None, try_cache: bool = True) -> li
         # Safe as conditional is configurable but variables is inputted to psycopg as variables
     )
 
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         cursor = query_dos_db(
             connection=connection,
             query=sql_command,
@@ -397,7 +397,7 @@ def get_region(dos_service_id: str) -> str:
     Returns:
         The region of the service
     """
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         logger.debug("Getting region for service")
         sql_command = """WITH
 RECURSIVE servicetree as

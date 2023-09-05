@@ -178,7 +178,7 @@ To add an IP address to the IP allow lists and deploy the allow list to environm
 
 ### DoS Database Connection
 
-The following vars are required for the project to establish a connection to the DoS database (or a replica).
+The following vars are required for the project to establish a connection to the DoS writer database (or a Reader).
 `Host, Port, Database, Username, Password, Schema`
 These variable will be stored in AWS Secrets Manager and will be retrieved by the project at either deployment or runtime.
 
@@ -544,16 +544,16 @@ You can use a make command. Either specifying PROFILE, or a full set of DoS DB d
 or
 
     make create-dentist-reports \
-      DB_SERVER_NAME= server_name \
+      DB_WRITER_SERVER=server_name \
       DB_PORT=5432 \
       DB_NAME=name_of_the_db \
       DB_USER_NAME_SECRET_NAME=some_db_name \
       DB_USER_NAME_SECRET_KEY=some_key \
-      DB_SECRET_NAME=secret_name_for_secret_manager \
-      DB_SECRET_KEY=DB_USER_PASSWORD \
+      DB_WRITER_SECRET_NAME=secret_name_for_secret_manager \
+      DB_WRITER_SECRET_KEY=DB_USER_PASSWORD \
       DB_SCHEMA=pathwaysdos
 
-These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
+These can also be run directly with Python if the required packages are installed. Ensure you have the needed environmental variables (DB_WRITER_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_WRITER_SECRET_NAME, DB_WRITER_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
 
     python3 comparison_reporting/run_dentist_reports.py
 

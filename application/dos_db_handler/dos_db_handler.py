@@ -5,7 +5,7 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 
 from common.dos import SpecifiedOpeningTime, get_specified_opening_times_from_db, get_standard_opening_times_from_db
-from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dos_db_connection import connect_to_db_writer, query_dos_db
 from common.middlewares import unhandled_exception_logging
 
 logger = Logger()
@@ -47,7 +47,7 @@ def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noq
         if service_id is None:
             msg = "Missing service_id"
             raise ValueError(msg)
-        with connect_to_dos_db() as connection:
+        with connect_to_db_writer() as connection:
             standard_opening_times = get_standard_opening_times_from_db(connection=connection, service_id=service_id)
             return standard_opening_times.export_test_format()
     elif request["type"] == "change_event_specified_opening_times":
@@ -55,7 +55,7 @@ def lambda_handler(event: dict[str, Any], context: LambdaContext) -> str:  # noq
         if service_id is None:
             msg = "Missing service_id"
             raise ValueError(msg)
-        with connect_to_dos_db() as connection:
+        with connect_to_db_writer() as connection:
             specified_opening_times = get_specified_opening_times_from_db(connection=connection, service_id=service_id)
             return SpecifiedOpeningTime.export_test_format_list(specified_opening_times)
     else:
@@ -75,7 +75,7 @@ def run_query(query: str, query_vars: dict) -> list:
         list: Query result
     """
     logger.info("Running query", query=query)
-    with connect_to_dos_db() as connection:
+    with connect_to_db_writer() as connection:
         cursor = query_dos_db(connection=connection, query=query, query_vars=query_vars)
         query_result = cursor.fetchall()
         connection.commit()

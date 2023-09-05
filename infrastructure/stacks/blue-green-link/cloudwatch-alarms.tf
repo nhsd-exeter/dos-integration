@@ -63,14 +63,14 @@ resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
   threshold                 = "0"
 }
 
-resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
+resource "aws_cloudwatch_metric_alarm" "dos_writer_db_cpu_utilisation_alert" {
   count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS DB has too high CPU Utilisation"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB CPU Utilisation"
+  alarm_description         = "Alert when the DoS Writer DB has too high CPU Utilisation"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Writer CPU  Utilisation"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_name }
+  dimensions                = { DBInstanceIdentifier = var.dos_db_writer_name }
   evaluation_periods        = "1"
   insufficient_data_actions = []
   metric_name               = "CPUUtilization"
@@ -82,14 +82,14 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "dos_db_replica_cpu_utilisation_alert" {
+resource "aws_cloudwatch_metric_alarm" "dos_reader_db_cpu_utilisation_alert" {
   count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS DI Replica DB has too high CPU Utilisation"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Replica CPU Utilisation"
+  alarm_description         = "Alert when the DoS Reader DB has too high CPU Utilisation"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Reader CPU Utilisation"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_replica_name }
+  dimensions                = { DBInstanceIdentifier = var.dos_db_reader_name }
   evaluation_periods        = "1"
   insufficient_data_actions = []
   metric_name               = "CPUUtilization"
