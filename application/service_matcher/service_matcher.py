@@ -76,7 +76,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     matching_services = get_matching_services(nhs_entity)
 
     if len(matching_services) == 0 or not next(
-        (True for service in matching_services if service.statusid == ACTIVE_STATUS_ID),
+        (True for service in matching_services if service.statusid == DOS_ACTIVE_STATUS_ID),
         False,
     ):
         log_unmatched_nhsuk_service(nhs_entity)

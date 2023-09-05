@@ -19,7 +19,7 @@ from application.service_matcher.reporting import (
     log_unmatched_nhsuk_service,
     log_unmatched_service_types,
 )
-from common.constants import DOS_ACTIVE_STATUS_ID
+from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
 from common.nhs import NHSEntity
 from common.service_type import BLOOD_PRESSURE
 
