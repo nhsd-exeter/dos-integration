@@ -1,7 +1,7 @@
 import pytest
 
-from .utilities.context import Context
-from .utilities.generator import (
+from .functions.context import Context
+from .functions.generator import (
     set_up_blood_pressure_z_code_in_db,
     set_up_common_condition_service_types,
     set_up_palliative_care_z_code_in_db,
