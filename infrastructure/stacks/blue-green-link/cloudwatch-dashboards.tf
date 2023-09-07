@@ -15,31 +15,26 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
         },
         {
           "height" : 6,
-          "width" : 13,
+          "width" : 4,
           "y" : 0,
           "x" : 3,
           "type" : "metric",
           "properties" : {
             "view" : "gauge",
             "metrics" : [
-              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", "test", { "region" : "eu-west-2" }]
+              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
             ],
             "yAxis" : {
               "left" : {
                 "min" : 0,
-                "max" : 300000
+                "max" : 120000
               }
             },
             "region" : var.aws_region,
-            "period" : 300,
+            "start" : "-PT5M",
+            "end" : "P0D"
             "annotations" : {
               "horizontal" : [
-                {
-                  "color" : "#2ca02c",
-                  "label" : "Below SLA",
-                  "value" : 120000,
-                  "fill" : "below"
-                },
                 {
                   "color" : "#d62728",
                   "label" : "Above SLA",
@@ -48,16 +43,91 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
                 }
               ]
             },
+            "timezone" : "LOCAL"
             "setPeriodToTimeRange" : true,
-            "title" : "Message Latency Last 5 Minutes"
+            "title" : "Message Latency"
+          }
+        },
+        {
+          "height" : 6,
+          "width" : 4,
+          "y" : 0,
+          "x" : 7,
+          "type" : "metric",
+          "properties" : {
+            "metrics" : [
+              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
+            ],
+            "annotations" : {
+              "horizontal" : [
+                {
+                  "color" : "#d62728",
+                  "label" : "Above SLA",
+                  "value" : 120000,
+                  "fill" : "above"
+                }
+              ]
+            },
+            "start" : "-PT1H",
+            "end" : "P0D",
+            "period" : 3600,
+            "region" : var.aws_region
+            "setPeriodToTimeRange" : true,
+            "title" : "Message Latency",
+            "view" : "gauge",
+            "yAxis" : {
+              "left" : {
+                "max" : 120000,
+                "min" : 0
+              }
+            },
+            "stat" : "Average",
+            "timezone" : "LOCAL"
+          }
+        },
+        {
+          "height" : 6,
+          "width" : 4,
+          "y" : 0,
+          "x" : 11,
+          "type" : "metric",
+          "properties" : {
+            "metrics" : [
+              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
+            ],
+            "annotations" : {
+              "horizontal" : [
+                {
+                  "color" : "#d62728",
+                  "label" : "Above SLA",
+                  "value" : 120000,
+                  "fill" : "above"
+                }
+              ]
+            },
+            "period" : 86400,
+            "start" : "-PT24H",
+            "end" : "P0D",
+            "region" : var.aws_region
+            "setPeriodToTimeRange" : true,
+            "title" : "Message Latency",
+            "view" : "gauge",
+            "yAxis" : {
+              "left" : {
+                "max" : 120000,
+                "min" : 0
+              }
+            },
+            "stat" : "Average"
+            "timezone" : "LOCAL"
           }
         },
         {
           "type" : "metric",
-          "x" : 16,
-          "y" : 0,
-          "width" : 8,
           "height" : 6,
+          "width" : 9,
+          "y" : 0,
+          "x" : 15,
           "properties" : {
             "sparkline" : true,
             "view" : "singleValue",
@@ -71,7 +141,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             "region" : var.aws_region,
             "period" : 3600,
             "stat" : "Sum",
-            "title" : "System Health (Per Hour)",
+            "title" : "System Health",
             "timezone" : "LOCAL"
           }
         },
@@ -109,7 +179,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "type" : "metric",
           "properties" : {
             "metrics" : [
-              ["AWS/ApiGateway", "Count", "ApiName", "uec-dos-int-ds-1328-di-endpoint", "Stage", "ds-1328"]
+              ["AWS/ApiGateway", "Count", "ApiName", var.di_endpoint_api_gateway_name]
             ],
             "period" : 60,
             "stat" : "Sum",
@@ -170,6 +240,15 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
                 "label" : "Percentage",
                 "showUnits" : false
             } },
+            "annotations" : {
+              "horizontal" : [
+                {
+                  "label" : "Too Many Errors",
+                  "value" : 0.01,
+                  "fill" : "above"
+                }
+              ]
+            }
             "timezone" : "LOCAL"
           }
         },
