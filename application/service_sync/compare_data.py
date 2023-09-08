@@ -15,7 +15,10 @@ from .validation import validate_opening_times, validate_website
 from common.constants import (
     DI_LATITUDE_CHANGE_KEY,
     DI_LONGITUDE_CHANGE_KEY,
+    DOS_ACTIVE_STATUS_ID,
     DOS_ADDRESS_CHANGE_KEY,
+    DOS_BLOOD_PRESSURE_TYPE_ID,
+    DOS_CLOSED_STATUS_ID,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
     DOS_PALLIATIVE_CARE_SGSDID,
@@ -25,6 +28,7 @@ from common.constants import (
     DOS_POSTCODE_CHANGE_KEY,
     DOS_PUBLIC_PHONE_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
+    DOS_STATUS_CHANGE_KEY,
     DOS_WEBSITE_CHANGE_KEY,
     NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
 )
@@ -70,8 +74,9 @@ def compare_nhs_uk_and_dos_data(
     # Compare and validate all opening_times
     changes_to_dos = compare_opening_times(changes_to_dos=changes_to_dos)
     # Compare palliative care
-    return compare_palliative_care(changes_to_dos=changes_to_dos)
-
+    changes_to_dos = compare_palliative_care(changes_to_dos=changes_to_dos)
+    # Compare blood pressure
+    return compare_blood_pressure(changes_to_dos=changes_to_dos)
 
 
 def has_website_changed(changes: ChangesToDoS) -> bool:
@@ -360,7 +365,11 @@ def compare_opening_times(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
         logger.info("Opening times are valid")
-        for weekday, dos_weekday_key, day_id in zip(WEEKDAYS, DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST, DAY_IDS):  # noqa: B905, E501
+        for weekday, dos_weekday_key, day_id in zip(  # noqa: B905
+            WEEKDAYS,
+            DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
+            DAY_IDS,
+        ):
             if has_standard_opening_times_changed(changes=changes_to_dos, weekday=weekday):
                 changes_to_dos.standard_opening_times_changes[day_id] = getattr(
                     changes_to_dos,
@@ -459,7 +468,7 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
         ChangesToDoS: ChangesToDoS holder object
     """
     skip_palliative_care_check = skip_if_key_is_none(
-        changes_to_dos.nhs_entity.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
+        changes_to_dos.nhs_entity.check_for_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
     )
     logger.info(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
@@ -497,4 +506,62 @@ def compare_palliative_care(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
                 "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
             },
         )
+    return changes_to_dos
+
+
+def has_blood_pressure_changed(changes: ChangesToDoS) -> bool:
+    """Compares the blood pressure of from the dos_service and nhs_entity.
+
+    Returns:
+        bool: True if the blood pressure is different, False if not
+    """
+    changes.current_blood_pressure = changes.dos_service.blood_pressure
+    changes.new_blood_pressure = changes.nhs_entity.blood_pressure
+
+    if changes.current_blood_pressure != changes.new_blood_pressure:
+        logger.info(
+            f"Blood Pressure is not equal, DoS='{changes.current_blood_pressure}' != NHS UK='{changes.new_blood_pressure}'",  # noqa: E501
+            extra={
+                "dos_blood_pressure": changes.current_blood_pressure,
+                "nhsuk_blood_pressure": changes.new_blood_pressure,
+            },
+        )
+        return True
+    logger.info(
+        f"Blood Pressure is equal, DoS='{changes.current_blood_pressure}' == NHSUK='{changes.new_blood_pressure}'",
+    )
+    return False
+
+
+def compare_blood_pressure(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares blood pressure.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
+    if changes_to_dos.dos_service.typeid != DOS_BLOOD_PRESSURE_TYPE_ID:
+        logger.info("Not Suitable for blood pressure comparison", dos_service_type_id=changes_to_dos.dos_service.typeid)
+        return changes_to_dos
+
+    if has_blood_pressure_changed(changes=changes_to_dos):
+        changes_to_dos.blood_pressure_changes = True
+        set_up_for_services_table_change(
+            changes_to_dos=changes_to_dos,
+            change_key=DOS_STATUS_CHANGE_KEY,
+            new_value=DOS_ACTIVE_STATUS_ID if changes_to_dos.nhs_entity.blood_pressure else DOS_CLOSED_STATUS_ID,
+            previous_value=changes_to_dos.dos_service.statusid,
+            service_table_field_name="statusid",
+        )
+
+    else:
+        logger.info(
+            "No change to blood pressure",
+            dos_service_type_id=changes_to_dos.dos_service.typeid,
+            nhs_uk_blood_pressure=changes_to_dos.nhs_entity.blood_pressure,
+            dos_blood_pressure=changes_to_dos.dos_service.status_name,
+        )
+
     return changes_to_dos

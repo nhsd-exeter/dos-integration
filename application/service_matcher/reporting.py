@@ -6,7 +6,7 @@ from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
-from common.dos import VALID_STATUS_ID, DoSService
+from common.dos import DoSService
 from common.nhs import NHSEntity
 from common.service_type import ServiceType
 
@@ -133,7 +133,7 @@ def log_unmatched_service_types(
                 "dos_service_uid": unmatched_service.uid,
                 "dos_service_id": unmatched_service.id,
                 "dos_service_publicname": unmatched_service.name,
-                "dos_service_status": VALID_STATUS_ID,
+                "dos_service_status": DOS_ACTIVE_STATUS_ID,
                 "dos_service_typeid": unmatched_service.typeid,
                 "dos_service_type_name": unmatched_service.service_type_name,
             },

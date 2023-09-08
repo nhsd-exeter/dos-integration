@@ -3,15 +3,21 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
+from application.common.constants import (
+    DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
+    DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
+    DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+    DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+)
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from application.service_sync.dos_data import (
     get_dos_service_and_history,
+    save_blood_pressure_into_db,
     save_demographics_into_db,
     save_palliative_care_into_db,
     save_specified_opening_times_into_db,
     save_standard_opening_times_into_db,
     update_dos_data,
-    validate_dos_palliative_care_z_code_exists,
 )
 
 FILE_PATH = "application.service_sync.dos_data"
@@ -258,21 +264,28 @@ def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMoc
     assert True is response
 
 
-@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_insert(
     mock_query_dos_db: MagicMock,
-    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
     palliative_care = True
-    mock_validate_dos_palliative_care_z_code_exists.return_value = True
+    mock_validate_dos_z_code_exists.return_value = True
     # Act
     response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert True is response
+    mock_validate_dos_z_code_exists.assert_called_once_with(
+        connection=mock_connection,
+        dos_service=dos_service,
+        symptom_group_id=DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        symptom_discriminator_id=DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+        z_code_alias="Palliative Care",
+    )
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="INSERT INTO servicesgsds (serviceid, sdid, sgid) VALUES (%(SERVICE_ID)s, %(SDID)s, %(SGID)s);",
@@ -280,21 +293,28 @@ def test_save_palliative_care_into_db_insert(
     )
 
 
-@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_delete(
     mock_query_dos_db: MagicMock,
-    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
     palliative_care = False
-    mock_validate_dos_palliative_care_z_code_exists.return_value = True
+    mock_validate_dos_z_code_exists.return_value = True
     # Act
     response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert True is response
+    mock_validate_dos_z_code_exists.assert_called_once_with(
+        connection=mock_connection,
+        dos_service=dos_service,
+        symptom_group_id=DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        symptom_discriminator_id=DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+        z_code_alias="Palliative Care",
+    )
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query="DELETE FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sdid=%(SDID)s AND sgid=%(SGID)s;",
@@ -303,66 +323,77 @@ def test_save_palliative_care_into_db_delete(
 
 
 @patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_no_z_code(
     mock_query_dos_db: MagicMock,
-    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
     mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
     palliative_care = True
-    mock_validate_dos_palliative_care_z_code_exists.return_value = False
+    mock_validate_dos_z_code_exists.return_value = False
     # Act
     response = save_palliative_care_into_db(mock_connection, dos_service, True, palliative_care)
     # Assert
     assert False is response
+    mock_validate_dos_z_code_exists.assert_called_once_with(
+        connection=mock_connection,
+        dos_service=dos_service,
+        symptom_group_id=DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+        symptom_discriminator_id=DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+        z_code_alias="Palliative Care",
+    )
     mock_add_metric.assert_called_once_with("DoSPalliativeCareZCodeDoesNotExist")
     mock_query_dos_db.assert_not_called()
 
 
 @patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.validate_dos_palliative_care_z_code_exists")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_palliative_care_into_db_no_change(
+def test_save_palliative_care_into_db_no_changes(
     mock_query_dos_db: MagicMock,
-    mock_validate_dos_palliative_care_z_code_exists: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
     mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
     palliative_care = True
-    mock_validate_dos_palliative_care_z_code_exists.return_value = True
     # Act
     response = save_palliative_care_into_db(mock_connection, dos_service, False, palliative_care)
     # Assert
     assert False is response
+    mock_validate_dos_z_code_exists.assert_not_called()
     mock_add_metric.assert_not_called()
     mock_query_dos_db.assert_not_called()
 
 
+@patch(f"{FILE_PATH}.check_blood_pressure_z_code_exists_on_service")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock):
+def test_save_blood_pressure_into_db_insert(
+    mock_query_dos_db: MagicMock,
+    mock_check_blood_pressure_z_code_exists_on_service: MagicMock,
+):
     # Arrange
     mock_connection = MagicMock()
-    mock_query_dos_db.return_value.rowcount = 1
     dos_service = MagicMock()
+    dos_service.typeid = 148
+    blood_pressure = True
+    service_histories = MagicMock()
+    mock_check_blood_pressure_z_code_exists_on_service.return_value = True
     # Act
-    response = validate_dos_palliative_care_z_code_exists(mock_connection, dos_service)
+    response = save_blood_pressure_into_db(mock_connection, dos_service, True, blood_pressure, service_histories)
     # Assert
-    assert True is response
+    assert response == (True, service_histories)
     mock_query_dos_db.assert_has_calls(
         calls=[
             call(
                 connection=mock_connection,
-                query=(
-                    "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
-                    "AND symptomdiscriminatorid=%(SDID)s;"
-                ),
-                query_vars={"SGID": 360, "SDID": 14167},
+                query="UPDATE services SET statusid=%(STATUS_ID)s WHERE id=%(SERVICE_ID)s;",
+                query_vars={"STATUS_ID": 1, "SERVICE_ID": dos_service.id},
             ),
             call().close(),
         ],
@@ -370,25 +401,119 @@ def test_validate_dos_palliative_care_z_code_exists(mock_query_dos_db: MagicMock
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_dos_palliative_care_z_code_exists_does_not_exist(mock_query_dos_db: MagicMock):
+def test_save_blood_pressure_into_db_delete(mock_query_dos_db: MagicMock):
     # Arrange
     mock_connection = MagicMock()
-    mock_query_dos_db.return_value.rowcount = 0
     dos_service = MagicMock()
+    dos_service.typeid = 148
+    blood_pressure = False
+    service_histories = MagicMock()
     # Act
-    response = validate_dos_palliative_care_z_code_exists(mock_connection, dos_service)
+    response = save_blood_pressure_into_db(mock_connection, dos_service, True, blood_pressure, service_histories)
     # Assert
-    assert False is response
+    assert response == (True, service_histories)
     mock_query_dos_db.assert_has_calls(
         calls=[
             call(
                 connection=mock_connection,
-                query=(
-                    "SELECT id FROM symptomgroupsymptomdiscriminators WHERE symptomgroupid=%(SGID)s "
-                    "AND symptomdiscriminatorid=%(SDID)s;"
-                ),
-                query_vars={"SGID": 360, "SDID": 14167},
+                query="UPDATE services SET statusid=%(STATUS_ID)s WHERE id=%(SERVICE_ID)s;",
+                query_vars={"STATUS_ID": 2, "SERVICE_ID": dos_service.id},
             ),
             call().close(),
         ],
     )
+
+
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_blood_pressure_into_db_no_changes(mock_query_dos_db: MagicMock):
+    # Arrange
+    mock_connection = MagicMock()
+    dos_service = MagicMock()
+    dos_service.typeid = 148
+    blood_pressure = False
+    service_histories = MagicMock()
+    # Act
+    response = save_blood_pressure_into_db(mock_connection, dos_service, False, blood_pressure, service_histories)
+    # Assert
+    assert response == (False, service_histories)
+    mock_query_dos_db.assert_not_called()
+
+
+@patch(f"{FILE_PATH}.save_sgsdid_update")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
+@patch(f"{FILE_PATH}.check_blood_pressure_z_code_exists_on_service")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_blood_pressure_into_db_z_code_not_exist(
+    mock_query_dos_db: MagicMock,
+    mock_check_blood_pressure_z_code_exists_on_service: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
+    mock_save_sgsdid_update: MagicMock,
+):
+    # Arrange
+    mock_connection = MagicMock()
+    dos_service = MagicMock()
+    dos_service.typeid = 148
+    blood_pressure = True
+    service_histories = MagicMock()
+    mock_check_blood_pressure_z_code_exists_on_service.return_value = False
+    mock_validate_dos_z_code_exists.return_value = True
+    # Act
+    response = save_blood_pressure_into_db(mock_connection, dos_service, True, blood_pressure, service_histories)
+    # Assert
+    assert response == (True, service_histories)
+    mock_query_dos_db.assert_has_calls(
+        calls=[
+            call(
+                connection=mock_connection,
+                query="UPDATE services SET statusid=%(STATUS_ID)s WHERE id=%(SERVICE_ID)s;",
+                query_vars={"STATUS_ID": 1, "SERVICE_ID": dos_service.id},
+            ),
+            call().close(),
+        ],
+    )
+    mock_save_sgsdid_update.assert_called_once_with(
+        name="blood pressure",
+        value=blood_pressure,
+        sdid=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
+        sgid=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
+        dos_service=dos_service,
+        connection=mock_connection,
+    )
+
+
+@patch(f"{FILE_PATH}.add_metric")
+@patch(f"{FILE_PATH}.save_sgsdid_update")
+@patch(f"{FILE_PATH}.validate_dos_z_code_exists")
+@patch(f"{FILE_PATH}.check_blood_pressure_z_code_exists_on_service")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_save_blood_pressure_into_db_z_not_valid(
+    mock_query_dos_db: MagicMock,
+    mock_check_blood_pressure_z_code_exists_on_service: MagicMock,
+    mock_validate_dos_z_code_exists: MagicMock,
+    mock_save_sgsdid_update: MagicMock,
+    mock_add_metric: MagicMock,
+):
+    # Arrange
+    mock_connection = MagicMock()
+    dos_service = MagicMock()
+    dos_service.typeid = 148
+    blood_pressure = True
+    service_histories = MagicMock()
+    mock_check_blood_pressure_z_code_exists_on_service.return_value = False
+    mock_validate_dos_z_code_exists.return_value = False
+    # Act
+    response = save_blood_pressure_into_db(mock_connection, dos_service, True, blood_pressure, service_histories)
+    # Assert
+    assert response == (False, service_histories)
+    mock_query_dos_db.assert_has_calls(
+        calls=[
+            call(
+                connection=mock_connection,
+                query="UPDATE services SET statusid=%(STATUS_ID)s WHERE id=%(SERVICE_ID)s;",
+                query_vars={"STATUS_ID": 1, "SERVICE_ID": dos_service.id},
+            ),
+            call().close(),
+        ],
+    )
+    mock_save_sgsdid_update.assert_not_called()
+    mock_add_metric.assert_called_once_with("DoSBloodPressureZCodeDoesNotExist")

@@ -612,7 +612,7 @@ def create_palliative_care_entry_ce(context: Context) -> None:
     ]
 
 
-def set_up_palliative_care_in_db() -> None:
+def set_up_palliative_care_z_code_in_db() -> None:
     """This function sets up the palliative care symptom discriminator.
 
     Setup in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
@@ -628,6 +628,27 @@ def set_up_palliative_care_in_db() -> None:
         {
             "type": "insert",
             "query": "INSERT INTO pathwaysdos.symptomgroupsymptomdiscriminators (id, symptomgroupid, symptomdiscriminatorid) VALUES (10000, 360, 14167) ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
+            "query_vars": None,
+        },
+    )
+
+
+def set_up_blood_pressure_z_code_in_db() -> None:
+    """This function sets up the blood pressure symptom discriminator.
+
+    Setup in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
+    """
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": "INSERT INTO pathwaysdos.symptomdiscriminators (id, description) VALUES (14207, 'Blood Pressure') ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
+            "query_vars": None,
+        },
+    )
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": "INSERT INTO pathwaysdos.symptomgroupsymptomdiscriminators (id, symptomgroupid, symptomdiscriminatorid) VALUES (10001, 360, 14207) ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
             "query_vars": None,
         },
     )

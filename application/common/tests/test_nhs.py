@@ -609,9 +609,33 @@ def test_is_matching_dos_service():
         ),
     ],
 )
-def test_extract_uec_service(input_value, output_value):
+def test_check_for_uec_service(input_value, output_value):
     entity = NHSEntity({"ODSCode": "V012345", "UecServices": input_value})
-    assert entity.extract_uec_service("SRV0559") == output_value
+    assert entity.check_for_uec_service("SRV0559") == output_value
+
+
+@pytest.mark.parametrize(
+    ("input_value", "output_value"),
+    [
+        ("", None),
+        (None, None),
+        ([], False),
+        ({}, None),
+        (
+            [
+                {
+                    "ServiceName": "Pharmacy palliative care medication stockholder",
+                    "ServiceDescription": None,
+                    "ServiceCode": "SRV0559",
+                },
+            ],
+            True,
+        ),
+    ],
+)
+def test_check_for_service(input_value, output_value):
+    entity = NHSEntity({"ODSCode": "V012345", "Services": input_value})
+    assert entity.check_for_service("SRV0559") == output_value
 
 
 @pytest.mark.parametrize(

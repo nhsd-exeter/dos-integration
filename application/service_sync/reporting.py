@@ -140,24 +140,6 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str, dos_servi
     )
 
 
-def log_palliative_care_z_code_does_not_exist(
-    symptom_group_symptom_discriminator_combo_rowcount: int,
-    dos_service: DoSService,
-) -> None:
-    """Log a service found to have an invalid website.
-
-    Args:
-        symptom_group_symptom_discriminator_combo_rowcount (int): The number of rows returned from the database query
-        dos_service (DoSService): The DoS service to report
-    """
-    log_generic_change_event_error(
-        "Palliative care Z code does not exist in the DoS database",
-        "Palliative care Z code does not exist",
-        f"symptom_group_symptom_discriminator={bool(symptom_group_symptom_discriminator_combo_rowcount)}",
-        dos_service,
-    )
-
-
 def log_generic_change_event_error(
     message: str,
     error_reason: str,

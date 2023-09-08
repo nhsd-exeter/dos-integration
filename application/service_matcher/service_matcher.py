@@ -22,8 +22,8 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
-from common.constants import PHARMACY_SERVICE_TYPE_ID
-from common.dos import ACTIVE_STATUS_ID, DoSService, get_matching_dos_services
+from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
+from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
@@ -76,7 +76,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     matching_services = get_matching_services(nhs_entity)
 
     if len(matching_services) == 0 or not next(
-        (True for service in matching_services if service.statusid == ACTIVE_STATUS_ID),
+        (True for service in matching_services if service.statusid == DOS_ACTIVE_STATUS_ID),
         False,
     ):
         log_unmatched_nhsuk_service(nhs_entity)

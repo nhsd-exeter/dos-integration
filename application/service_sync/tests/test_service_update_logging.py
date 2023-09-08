@@ -341,7 +341,7 @@ def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock
         time_stamp: {
             "new": {
                 change_key: {
-                    "changetype": DOS_SGSDID_CHANGE_KEY,
+                    "changetype": "delete",
                     "data": {"remove": [DOS_PALLIATIVE_CARE_SGSDID]},
                     "area": "clinical",
                     "previous": "",
@@ -365,6 +365,6 @@ def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock
     )
 
     mock_service_update_logger.return_value.log_sgsdid_service_update.assert_called_once_with(
-        action="cmssgsdid",
+        action="delete",
         new_value=DOS_PALLIATIVE_CARE_SGSDID,
     )
