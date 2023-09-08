@@ -2,6 +2,27 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
   dashboard_name = var.cloudwatch_monitoring_dashboard_name
   dashboard_body = jsonencode(
     {
+      "variables" : [
+        {
+          "type" : "pattern",
+          "pattern" : "((?<=\")|(?<=-))${var.blue_green_environment}",
+          "inputType" : "select",
+          "id" : "CloudWatchVersionVariable",
+          "label" : "BlueGreenVersion",
+          "defaultValue" : var.blue_green_environment,
+          "visible" : true,
+          "values" : [
+            {
+              "value" : var.blue_green_environment,
+              "label" : var.blue_green_environment
+            },
+            {
+              "value" : var.previous_blue_green_environment,
+              "label" : var.previous_blue_green_environment
+            }
+          ]
+        }
+      ],
       "widgets" : [
         {
           "type" : "text",
