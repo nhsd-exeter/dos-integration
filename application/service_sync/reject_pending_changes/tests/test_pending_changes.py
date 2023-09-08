@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from pytz import timezone
 
-from application.service_sync.pending_changes import (
+from application.service_sync.reject_pending_changes.pending_changes import (
     PendingChange,
     build_change_rejection_email_contents,
     check_and_remove_pending_dos_changes,
@@ -16,7 +16,7 @@ from application.service_sync.pending_changes import (
     send_rejection_emails,
 )
 
-FILE_PATH = "application.service_sync.pending_changes"
+FILE_PATH = "application.service_sync.reject_pending_changes.pending_changes"
 ROW = {
     "id": "".join(choices("ABCDEFGHIJKLM", k=8)),
     "type": "".join(choices("ABCDEFGHIJKLM", k=8)),

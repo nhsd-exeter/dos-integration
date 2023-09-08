@@ -15,6 +15,7 @@ from application.common.dos import (
     get_standard_opening_times_from_db,
     get_valid_dos_location,
     has_blood_pressure,
+    has_contraception,
     has_palliative_care,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
@@ -777,6 +778,24 @@ def test_has_blood_pressure_not_correct_type():
     dos_service.statusid = 1
     # Act & Assert
     assert False is has_blood_pressure(dos_service)
+
+
+def test_has_contraception():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 149
+    dos_service.statusid = 1
+    # Act & Assert
+    assert True is has_contraception(dos_service)
+
+
+def test_has_contraception_not_correct_type():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.typeid = 13
+    dos_service.statusid = 1
+    # Act & Assert
+    assert False is has_contraception(dos_service)
 
 
 @patch(f"{FILE_PATH}.query_dos_db")

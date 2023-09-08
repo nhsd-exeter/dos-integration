@@ -669,6 +669,27 @@ def set_up_blood_pressure_z_code_in_db() -> None:
     )
 
 
+def set_up_contraception_z_code_in_db() -> None:
+    """This function sets up the blood pressure symptom discriminator.
+
+    Setup in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
+    """
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": "INSERT INTO pathwaysdos.symptomdiscriminators (id, description) VALUES (14210, 'Contraception') ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
+            "query_vars": None,
+        },
+    )
+    invoke_dos_db_handler_lambda(
+        {
+            "type": "insert",
+            "query": "INSERT INTO pathwaysdos.symptomgroupsymptomdiscriminators (id, symptomgroupid, symptomdiscriminatorid) VALUES (10002, 360, 14210) ON CONFLICT DO NOTHING RETURNING id",  # noqa: E501
+            "query_vars": None,
+        },
+    )
+
+
 def set_up_common_condition_service_types() -> None:
     """This function sets up the common condition service types."""
     invoke_dos_db_handler_lambda(

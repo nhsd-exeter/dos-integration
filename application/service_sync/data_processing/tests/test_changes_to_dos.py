@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
-from application.service_sync.changes_to_dos import ChangesToDoS
+from application.service_sync.data_processing.changes_to_dos import ChangesToDoS
 
-FILE_PATH = "application.service_sync.changes_to_dos"
+FILE_PATH = "application.service_sync.data_processing.changes_to_dos"
 
 
 def test_changes_to_dos():

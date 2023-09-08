@@ -10,10 +10,10 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from application.service_sync.service_histories import ServiceHistories
-from application.service_sync.service_histories_change import ServiceHistoriesChange
+from application.service_sync.data_processing.service_histories import ServiceHistories
+from application.service_sync.data_processing.service_histories_change import ServiceHistoriesChange
 
-FILE_PATH = "application.service_sync.service_histories"
+FILE_PATH = "application.service_sync.data_processing.service_histories"
 SERVICE_ID = 1
 
 

@@ -10,9 +10,10 @@ from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 
-from .compare_data import compare_nhs_uk_and_dos_data
-from .dos_data import get_dos_service_and_history, update_dos_data
-from .pending_changes import check_and_remove_pending_dos_changes
+from .data_processing.check_for_change import compare_nhs_uk_and_dos_data
+from .data_processing.get_data import get_dos_service_and_history
+from .data_processing.update_dos import update_dos_data
+from .reject_pending_changes.pending_changes import check_and_remove_pending_dos_changes
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import UpdateRequest

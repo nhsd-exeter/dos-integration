@@ -10,8 +10,8 @@ from psycopg import Connection
 from psycopg.rows import DictRow
 from pytz import timezone
 
+from ..service_update_logger import ServiceUpdateLogger
 from .s3 import put_content_to_s3
-from .service_update_logging import ServiceUpdateLogger
 from common.constants import DI_CHANGE_ITEMS, DOS_INTEGRATION_USER_NAME
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.types import EmailFile, EmailMessage
@@ -223,7 +223,7 @@ def build_change_rejection_email_contents(pending_change: PendingChange, file_na
     Returns:
         str: The contents of the email
     """
-    with open("service_sync/rejection-email.html") as email_template:
+    with open("service_sync/reject_pending_changes/rejection-email.html") as email_template:
         file_contents = email_template.read()
         email_template.close()
     email_correlation_id = f"{pending_change.uid}-{time_ns()}"

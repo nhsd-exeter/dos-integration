@@ -352,4 +352,3 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 132          |
       | 134          |
       | 137          |
-      | 149          |
