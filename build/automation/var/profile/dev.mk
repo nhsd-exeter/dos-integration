@@ -6,9 +6,9 @@
 LOG_LEVEL:= DEBUG
 
 # DB Name
-DB_CLUSTER_NAME := NA
-DB_SERVER_NAME := uec-core-dos-regression-db-12
-DB_REPLICA_SERVER_NAME := uec-core-dos-regression-db-12-replica-di
+DB_CLUSTER_NAME := uec-core-dos-regression-cluster-14
+DB_SERVER_NAME := uec-core-dos-regression-cluster-14-one
+DB_REPLICA_SERVER_NAME := uec-core-dos-regression-cluster-14-two
 
 # DB Route 53s
 DB_ROUTE_53 := core-dos-regression-master.dos-db-rds
