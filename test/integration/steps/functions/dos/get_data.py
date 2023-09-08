@@ -141,15 +141,20 @@ def get_palliative_care(service_id: str) -> bool:
         bool: True if palliative care is found, False otherwise
     """
     wait_for_service_update(service_id)
-    query = """SELECT sgsds.id as z_code from servicesgsds sgsds
-            WHERE sgsds.serviceid = %(SERVICE_ID)s
-            AND sgsds.sgid = 360
-            AND sgsds.sdid  = 14167
-            """
-    lambda_payload = {"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}}
-    response = invoke_dos_db_handler_lambda(lambda_payload)
-    response = loads(loads(response))
-    return len(response) > 0
+    return get_service_sgsd(service_id, 360, 14167)
+
+
+def get_blood_pressure_sgsd(service_id: str) -> bool:
+    """Get blood pressure sgsd from DoS.
+
+    Args:
+        service_id (str): Service ID
+
+    Returns:
+        bool: True if blood pressure sgsd is found, False otherwise
+    """
+    wait_for_service_update(service_id)
+    return get_service_sgsd(service_id, 360, 14207)
 
 
 def get_service_history(service_id: str) -> list[dict[str, Any]]:
@@ -203,3 +208,29 @@ def get_service_history_standard_opening_times(service_id: str) -> list:
         for entry in service_history[next(iter(service_history.keys()))]["new"]
         if entry.endswith("day")
     ]
+
+
+def get_service_sgsd(service_id: str, sgid: int, sdid: int) -> bool:
+    """Get service sgsd from DoS.
+
+    Args:
+        service_id (str): Service ID
+        sgid (int): Service Group ID
+        sdid (int): Service Definition ID
+
+    Returns:
+        bool: True if service sgsd is found, False otherwise
+    """
+    query = """SELECT sgsds.id as z_code from servicesgsds sgsds
+            WHERE sgsds.serviceid = %(SERVICE_ID)s
+            AND sgsds.sgid = %(SG_ID)s
+            AND sgsds.sdid  = %(SD_ID)s
+            """
+    lambda_payload = {
+        "type": "read",
+        "query": query,
+        "query_vars": {"SERVICE_ID": service_id, "SG_ID": sgid, "SD_ID": sdid},
+    }
+    response = invoke_dos_db_handler_lambda(lambda_payload)
+    response = loads(loads(response))
+    return len(response) > 0

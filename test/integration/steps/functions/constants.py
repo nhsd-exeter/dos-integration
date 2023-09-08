@@ -9,6 +9,7 @@ DOS_TOWN_EASTING_NAME = "easting"
 DOS_TOWN_NORTHING_NAME = "northing"
 DOS_TOWN_LATITUDE_NAME = "latitude"
 DOS_TOWN_LONGITUDE_NAME = "longitude"
+DOS_STATUS_ID_FIELD_NAME = "statusid"
 # DoS Service History Table Key Names
 DOS_POSTCODE_SERVICE_HISTORY_KEY = "postalcode"
 DOS_PUBLIC_PHONE_SERVICE_HISTORY_KEY = "cmstelephoneno"

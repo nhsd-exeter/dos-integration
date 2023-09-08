@@ -27,6 +27,7 @@ from .functions.dos.check_data import (
     service_history_negative_check,
 )
 from .functions.dos.get_data import (
+    get_blood_pressure_sgsd,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
     get_locations_table_data,
@@ -41,16 +42,17 @@ from .functions.dos.get_data import (
 )
 from .functions.dos.translation import get_service_table_field_name
 from .functions.generator import (
+    add_blood_pressure_to_change_event,
+    add_palliative_care_to_change_event,
     add_single_opening_day,
     add_specified_openings_to_dos,
     add_standard_openings_to_dos,
+    apply_palliative_care_to_service,
     build_change_event,
     build_change_event_contacts,
     build_change_event_opening_times,
     build_change_event_services,
     commit_new_service_to_dos,
-    create_palliative_care_entry_ce,
-    create_palliative_care_entry_dos,
     generate_staff,
     query_specified_opening_builder,
     query_standard_opening_builder,
@@ -156,13 +158,13 @@ def add_palliative_care_to_dos(context: Context) -> Context:
     Returns:
         Context: The context object.
     """
-    context.other = create_palliative_care_entry_dos(context)
+    context.other = apply_palliative_care_to_service(context)
     return context
 
 
 @given("the change event has a palliative care entry", target_fixture="context")
-def add_palliative_care_to_ce(context: Context) -> Context:
-    """Add a palliative care entry to the change event.
+def _(context: Context) -> Context:
+    """Add a palliative care uecservice to the change event.
 
     Args:
         context (Context): The context object.
@@ -170,7 +172,21 @@ def add_palliative_care_to_ce(context: Context) -> Context:
     Returns:
         Context: The context object.
     """
-    create_palliative_care_entry_ce(context)
+    add_palliative_care_to_change_event(context)
+    return context
+
+
+@given("the change event has a blood pressure entry", target_fixture="context")
+def _(context: Context) -> Context:
+    """Add a blood pressure service entry to the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    add_blood_pressure_to_change_event(context)
     return context
 
 
@@ -243,6 +259,14 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
 def _(context: Context) -> Context:
     odscode = f"{context.generator_data['odscode']}A"
     return a_service_table_entry_is_created(context=context, ods_code=odscode)
+
+
+@given("an entry is created in the services table with a derivative service", target_fixture="context")
+def _(context: Context) -> Context:
+    context.generator_data["odscode"] = f"{context.generator_data['odscode']}A"
+    context.generator_data["id"] = f"{context.generator_data['id']}1"
+    context.generator_data["uid"] = f"{context.generator_data['uid']}1"
+    return context
 
 
 @given(parse('the service is "{service_status}" on "{day}"'), target_fixture="context")
@@ -860,7 +884,7 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
-    if plain_english_service_table_field in {"easting", "northing"}:
+    if plain_english_service_table_field in {"easting", "northing", "status"}:
         expected_data = int(expected_data)
     elif plain_english_service_table_field in {"latitude", "longitude"}:
         expected_data = float(expected_data)
@@ -1507,4 +1531,20 @@ def _(context: Context, action: str) -> Context:
 
     palliative_care = get_palliative_care(context.service_id)
     assert palliative_care == applied, "ERROR: Palliative care not correctly applied/removed to DoS service"
+    return context
+
+
+@then(parse("blood pressure Z Code is added to the service"), target_fixture="context")
+def _(context: Context) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    blood_pressure = get_blood_pressure_sgsd(context.service_id)
+    assert blood_pressure is True, "ERROR Blood Pressure not correctly applied to DoS service"
     return context
