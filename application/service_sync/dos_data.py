@@ -371,7 +371,7 @@ def save_sgsdid_update(  # noqa: PLR0913
         logger.debug(f"Setting {name} to false for service id {dos_service.id}")
     cursor = query_dos_db(connection=connection, query=query, query_vars=query_vars)
     cursor.close()
-    logger.info(f"Saving {name} changes for service id {dos_service.id}", extra={"value": value})
+    logger.info(f"Saving {name} Z code changes for service id {dos_service.id}", extra={"value": value})
 
 
 def save_palliative_care_into_db(
@@ -456,6 +456,7 @@ def save_blood_pressure_into_db(
             query_vars={"STATUS_ID": status, "SERVICE_ID": dos_service.id},
         )
         cursor.close()
+        logger.info(f"Saving Blood Pressure status changes for service id {dos_service.id}", extra={"status": status})
 
     if dos_service.typeid != DOS_BLOOD_PRESSURE_TYPE_ID:
         logger.info(

@@ -292,7 +292,6 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 weekday=change_key.removeprefix("cmsopentime"),
             )
         elif change_key == DOS_SGSDID_CHANGE_KEY:
-            logger.critical("change_values", extra={"change_values": change_values})
             service_update_logger.log_sgsdid_service_update(
                 action=change_values.get("changetype", "UNKNOWN"),
                 new_value=change_values.get("data", {}).get(
