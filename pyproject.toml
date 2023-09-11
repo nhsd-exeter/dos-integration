@@ -156,8 +156,15 @@ target-version = "py311"
   "S311", # Allow Standard pseudo-random generators are not suitable for cryptographic purposes in tests.
 ]
 
+
 [tool.ruff.pydocstyle]
 convention = "google" # Use Google docstring convention.
 
 [tool.ruff.isort]
-known-local-folder = ["application", "common"]
+known-local-folder = [
+  "application",
+  "common",
+  "functions",
+  "tests",
+  "integration",
+]

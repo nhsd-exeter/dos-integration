@@ -1,40 +1,156 @@
-from typing import Any
+from typing import Self
 
-from locust import FastHttpUser, task
-from utilities import get_api_key, send_invalid_change_event, send_valid_change_event
+from locust import task
+
+from functions.api import send_change_event
+from functions.change_event import ChangeEvent
+from functions.dos_integration_fast_http_user import DoSIntegrationFastHttpUser
 
 
-class AllChangesChangeEvent(FastHttpUser):
-    """This class is to test a working change event."""
+class AllChangesChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with all changes."""
 
-    weight = 19
-    trace_id: str | None = None
-    headers: dict[str, str] | None = None
-    payload: dict[str, Any] | None = None
-
-    def on_start(self) -> None:
-        """Get the api key before starting the test."""
-        self.api_key = get_api_key()
+    weight = 3
 
     @task
-    def change_event(self) -> None:
-        """Send a change event."""
-        self = send_valid_change_event(self)
+    def change_event(self: Self) -> None:
+        """Send a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_contact_updates()
+        change_event.cause_location_updates()
+        change_event.cause_opening_times_updates()
+        # change_event.cause_palliative_care_updates()
+        change_event.cause_blood_pressure_updates()
+        change_event.cause_contraception_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="AllChangesChangeEvent", request=self, valid_ods_code=True)
 
 
-class OdscodeDoesNotExistInDoS(FastHttpUser):
-    """This class is to test a change event with an ods code that doesn't exist in DoS."""
+class ContactChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with contact changes."""
 
     weight = 1
-    trace_id: str | None = None
-    headers: dict[str, str] | None = None
-    payload: dict[str, Any] | None = None
-
-    def on_start(self) -> None:
-        """Get the api key before starting the test."""
-        self.api_key = get_api_key()
 
     @task
-    def change_event(self) -> None:
-        """Send a change event."""
-        self = send_invalid_change_event(self)
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_contact_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="ContactChangeEvent", request=self, valid_ods_code=True)
+
+
+class LocationChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with location changes."""
+
+    weight = 1
+
+    @task
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_location_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="LocationChangeEvent", request=self, valid_ods_code=True)
+
+
+class OpeningTimesChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with opening times changes."""
+
+    weight = 2
+
+    @task
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_opening_times_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="OpeningTimesChangeEvent", request=self, valid_ods_code=True)
+
+
+# Palliative care is not currently supported in the performance environments
+# class PalliativeCareChangeEvent(DoSIntegrationFastHttpUser):
+#     """This class is to send a change event with palliative care changes."""
+
+#     weight = 1
+
+#     @task
+#     def change_event(self: Self) -> None:
+#         """Generates and sends a change event.
+
+#         Args:
+#             self (Self): The class
+#         """
+#         change_event = ChangeEvent()
+#         change_event.cause_palliative_care_updates()
+#         self.payload = change_event.create_change_event_json()
+#         send_change_event(request_name="PalliativeCareChangeEvent", request=self, valid_ods_code=True)
+
+
+class BloodPressureChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with blood pressure changes."""
+
+    weight = 1
+
+    @task
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_blood_pressure_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="BloodPressureChangeEvent", request=self, valid_ods_code=True)
+
+
+class ContraceptionChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to send a change event with contraception changes."""
+
+    weight = 1
+
+    @task
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        change_event.cause_contraception_updates()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="ContraceptionChangeEvent", request=self, valid_ods_code=True)
+
+
+class NoMatchChangeEvent(DoSIntegrationFastHttpUser):
+    """This class is to s end a change event with no match."""
+
+    weight = 1
+
+    @task
+    def change_event(self: Self) -> None:
+        """Generates and sends a change event.
+
+        Args:
+            self (Self): The class
+        """
+        change_event = ChangeEvent()
+        self.payload = change_event.create_change_event_json()
+        send_change_event(request_name="NoMatchChangeEvent", request=self, valid_ods_code=False)
