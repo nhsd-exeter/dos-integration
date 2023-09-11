@@ -19,7 +19,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task(3)
     def all_updates_change_event(self: Self) -> None:
-        """Send a change event.
+        """Send an all changes change event.
 
         Args:
             self (Self): The class
@@ -36,7 +36,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task
     def contact_updates_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send a contact change event.
 
         Args:
             self (Self): The class
@@ -48,7 +48,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task
     def location_updates_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send a location change event.
 
         Args:
             self (Self): The class
@@ -60,7 +60,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task(2)
     def opening_times_updates_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send an opening times change event.
 
         Args:
             self (Self): The class
@@ -73,7 +73,7 @@ class SendChangeEvent(FastHttpUser):
     # Palliative care is not currently supported in the performance environments
     # @task
     # def palliative_care_changes_change_event(self: Self) -> None:
-    #     """Generates and sends a change event.
+    #     """Send a palliative care change event.
 
     #     Args:
     #         self (Self): The class
@@ -85,7 +85,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task
     def blood_pressure_updates_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send a blood pressure change event.
 
         Args:
             self (Self): The class
@@ -97,7 +97,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task
     def contraception_updates_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send a contraception change event.
 
         Args:
             self (Self): The class
@@ -109,7 +109,7 @@ class SendChangeEvent(FastHttpUser):
 
     @task
     def no_match_change_event(self: Self) -> None:
-        """Generates and sends a change event.
+        """Send a no match change event.
 
         Args:
             self (Self): The class
