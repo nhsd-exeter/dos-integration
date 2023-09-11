@@ -377,7 +377,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 	PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 5 --run-time 10m)
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python -m locust -f stress_test_locustfile.py --headless \
+		CMD="python -m locust -f stress_test.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
@@ -385,7 +385,7 @@ stress-test: # Create change events for stress performance testing - mandatory: 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	make -s docker-run-tools \
 		IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="python -m locust -f load_test_locustfile.py --headless \
+		CMD="python -m locust -f load_test.py --headless \
 			--users 50 --spawn-rate 5 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
