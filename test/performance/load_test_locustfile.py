@@ -1,20 +1,25 @@
-from typing import Self
+from typing import Any, Self
 
-from locust import constant_pacing, task
+from locust import FastHttpUser, constant_pacing, task
 
 from functions.api import send_change_event
 from functions.change_event import ChangeEvent
-from functions.dos_integration_fast_http_user import DoSIntegrationFastHttpUser
+from functions.utilities import get_api_key
 
 
-class AllChangesChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with all changes."""
+class SendChangeEvent(FastHttpUser):
+    """This class is to send a change event with changes."""
 
-    weight = 3
     wait_time = constant_pacing(10)
+    headers: dict[str, str]
+    payload: dict[str, Any]
 
-    @task
-    def change_event(self: Self) -> None:
+    def on_start(self) -> None:
+        """Get the api key before starting the test."""
+        self.api_key = get_api_key()
+
+    @task(3)
+    def all_updates_change_event(self: Self) -> None:
         """Send a change event.
 
         Args:
@@ -30,15 +35,8 @@ class AllChangesChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="AllChangesChangeEvent", request=self, valid_ods_code=True)
 
-
-class ContactChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with contact changes."""
-
-    weight = 1
-    wait_time = constant_pacing(10)
-
     @task
-    def change_event(self: Self) -> None:
+    def contact_updates_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
@@ -49,15 +47,8 @@ class ContactChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="ContactChangeEvent", request=self, valid_ods_code=True)
 
-
-class LocationChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with location changes."""
-
-    weight = 1
-    wait_time = constant_pacing(10)
-
     @task
-    def change_event(self: Self) -> None:
+    def location_updates_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
@@ -68,15 +59,8 @@ class LocationChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="LocationChangeEvent", request=self, valid_ods_code=True)
 
-
-class OpeningTimesChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with opening times changes."""
-
-    weight = 2
-    wait_time = constant_pacing(10)
-
-    @task
-    def change_event(self: Self) -> None:
+    @task(2)
+    def opening_times_updates_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
@@ -87,35 +71,21 @@ class OpeningTimesChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="OpeningTimesChangeEvent", request=self, valid_ods_code=True)
 
+    # Palliative care is not currently supported in the performance environments
+    # @task
+    # def palliative_care_changes_change_event(self: Self) -> None:
+    #     """Generates and sends a change event.
 
-# Palliative care is not currently supported in the performance environments
-# class PalliativeCareChangeEvent(DoSIntegrationFastHttpUser):
-#     """This class is to send a change event with palliative care changes."""
-
-#     weight = 1
-#     wait_time = constant_pacing(10)
-
-#     @task
-#     def change_event(self: Self) -> None:
-#         """Generates and sends a change event.
-
-#         Args:
-#             self (Self): The class
-#         """
-#         change_event = ChangeEvent()
-#         change_event.cause_palliative_care_updates()
-#         self.payload = change_event.create_change_event_json()
-#         send_change_event(request_name="PalliativeCareChangeEvent", request=self, valid_ods_code=True)
-
-
-class BloodPressureChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with blood pressure changes."""
-
-    weight = 1
-    wait_time = constant_pacing(10)
+    #     Args:
+    #         self (Self): The class
+    #     """
+    #     change_event = ChangeEvent()
+    #     change_event.cause_palliative_care_updates()
+    #     self.payload = change_event.create_change_event_json()
+    #     send_change_event(request_name="PalliativeCareChangeEvent", request=self, valid_ods_code=True)
 
     @task
-    def change_event(self: Self) -> None:
+    def blood_pressure_updates_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
@@ -126,15 +96,8 @@ class BloodPressureChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="BloodPressureChangeEvent", request=self, valid_ods_code=True)
 
-
-class ContraceptionChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to send a change event with contraception changes."""
-
-    weight = 1
-    wait_time = constant_pacing(10)
-
     @task
-    def change_event(self: Self) -> None:
+    def contraception_updates_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
@@ -145,15 +108,8 @@ class ContraceptionChangeEvent(DoSIntegrationFastHttpUser):
         self.payload = change_event.create_change_event_json()
         send_change_event(request_name="ContraceptionChangeEvent", request=self, valid_ods_code=True)
 
-
-class NoMatchChangeEvent(DoSIntegrationFastHttpUser):
-    """This class is to s end a change event with no match."""
-
-    weight = 1
-    wait_time = constant_pacing(10)
-
     @task
-    def change_event(self: Self) -> None:
+    def no_match_change_event(self: Self) -> None:
         """Generates and sends a change event.
 
         Args:
