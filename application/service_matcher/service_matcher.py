@@ -82,6 +82,20 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         log_unmatched_nhsuk_service(nhs_entity)
         return
 
+    remove_service_if_not_on_change_event(
+        matching_services=matching_services,
+        nhs_entity=nhs_entity,
+        nhs_uk_key="blood_pressure",
+        service_type=BLOOD_PRESSURE,
+    )
+
+    remove_service_if_not_on_change_event(
+        matching_services=matching_services,
+        nhs_entity=nhs_entity,
+        nhs_uk_key="contraception",
+        service_type=CONTRACEPTION,
+    )
+
     if nhs_entity.is_status_hidden_or_closed():
         log_closed_or_hidden_services(nhs_entity, matching_services)
         return
@@ -91,7 +105,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]
-    logger.debug(f"Matching service types: {dos_matching_service_types}")
+    logger.debug(f"Matched service types: {dos_matching_service_types}", extra={"matched": matching_services})
     if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
         type_13_matching_services = [
             service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
@@ -121,6 +135,40 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         record_id=holding_queue_change_event_item["dynamo_record_id"],
         sequence_number=holding_queue_change_event_item["sequence_number"],
     )
+
+
+def remove_service_if_not_on_change_event(
+    matching_services: list[DoSService],
+    nhs_entity: NHSEntity,
+    nhs_uk_key: str,
+    service_type: ServiceType,
+) -> list[DoSService]:
+    """Removes a service from the matching services list if it is not on the change event.
+
+    Args:
+        matching_services (list[DoSService]): The list of matching services
+        nhs_entity (NHSEntity): The nhs entity to check for the service
+        nhs_uk_key (str): The key to check for the service on the nhs entity
+        service_type (ServiceType): Various constants for the service type
+
+    Returns:
+        list[DoSService]: The list of matching services with the service removed if it is not on the change event
+    """
+    if remove_matched_services := [
+        service
+        for service in matching_services
+        if service.statusid != DOS_ACTIVE_STATUS_ID
+        and not getattr(nhs_entity, nhs_uk_key)
+        and service.typeid == service_type.DOS_TYPE_ID
+    ]:
+        for service in remove_matched_services:
+            matching_services.remove(service)
+        logger.info(
+            f"Removing matched {service_type.TYPE_NAME.lower()} services",
+            remove_matched_services=remove_matched_services,
+            matched=matching_services,
+        )
+    return matching_services
 
 
 def log_missing_dos_services(
