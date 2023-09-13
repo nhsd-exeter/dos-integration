@@ -223,7 +223,7 @@ resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "300"
   statistic                 = "Average"
-  threshold                 = "1800000" # 30 Minutes
+  threshold                 = "120000" # 2 Minutes
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
@@ -242,7 +242,7 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "300"
   statistic                 = "Maximum"
-  threshold                 = "7200000" # 2 Hours
+  threshold                 = "120000" # 2 Minutes
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
