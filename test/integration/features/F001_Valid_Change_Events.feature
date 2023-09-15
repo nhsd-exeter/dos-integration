@@ -434,3 +434,24 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 148          | 3              |
       | 149          | 2              |
       | 149          | 3              |
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SX28. Blood Pressure not checked for non blood pressure service
+    Given an entry is created in the services table
+    And the service "service_type" is set to "149"
+    And the entry is committed to the services table
+    And the change event has a contraception entry
+    And the change event has a blood pressure entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Not Suitable for blood pressure comparison"
+    And the service history is not updated
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario: F001SX35. Contraception not checked for non contraception service
+    Given an entry is created in the services table
+    And the service "service_type" is set to "148"
+    And the entry is committed to the services table
+    And the change event has a contraception entry
+    And the change event has a blood pressure entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Not Suitable for contraception comparison"
+    And the service history is not updated
