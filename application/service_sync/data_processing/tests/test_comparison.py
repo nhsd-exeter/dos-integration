@@ -382,7 +382,7 @@ def test_compare_blood_pressure_not_valid_z_code(
     # Act
     response = compare_blood_pressure(changes=changes_to_dos)
     # Assert
-    assert False is response
+    assert True is response
     mock_validate_z_code_exists.assert_called_once_with(
         connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
         dos_service=changes_to_dos.dos_service,
@@ -478,7 +478,7 @@ def test_compare_contraception_not_valid_z_code(
     # Act
     response = compare_contraception(changes=changes_to_dos)
     # Assert
-    assert False is response
+    assert True is response
     mock_validate_z_code_exists.assert_called_once_with(
         connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
         dos_service=changes_to_dos.dos_service,

@@ -216,12 +216,6 @@ def compare_blood_pressure(changes: ChangesToDoS) -> bool:
             z_code_alias="Blood Pressure",
         ):
             add_metric("DoSBloodPressureZCodeDoesNotExist")
-            logger.error(
-                f"Unable to save blood pressure changes for service id {changes.dos_service.id} as the "
-                "blood pressure Z code does not exist in the DoS database",
-                extra={"current_blood_pressure": changes.current_blood_pressure},
-            )
-            return False
 
     if changes.current_blood_pressure != changes.new_blood_pressure:
         logger.info(
@@ -256,12 +250,6 @@ def compare_contraception(changes: ChangesToDoS) -> bool:
             z_code_alias="Contraception",
         ):
             add_metric("DoSContraceptionZCodeDoesNotExist")
-            logger.error(
-                f"Unable to save contraception changes for service id {changes.dos_service.id} as the "
-                "contraception Z code does not exist in the DoS database",
-                extra={"current_contraception": changes.current_contraception},
-            )
-            return False
 
     if changes.current_contraception != changes.new_contraception:
         logger.info(
