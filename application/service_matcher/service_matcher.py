@@ -96,6 +96,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         service_type=CONTRACEPTION,
     )
 
+    logger.info("Matched DoS Services after services filtered", extra={"matched": matching_services})
+
     if nhs_entity.is_status_hidden_or_closed():
         log_closed_or_hidden_services(nhs_entity, matching_services)
         return
