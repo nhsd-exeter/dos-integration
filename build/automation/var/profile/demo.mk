@@ -17,7 +17,7 @@ DB_REPLICA_53 := uec-core-dos-put-db-replica-di.dos-db-put
 
 # DB Connection Variables
 DB_PORT := 5432
-DB_NAME := pathwaysdos_uat2
+DB_NAME := pathwaysdos_uat3
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
