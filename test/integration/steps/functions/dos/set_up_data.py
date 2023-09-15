@@ -1,7 +1,7 @@
 from integration.steps.functions.utils import invoke_dos_db_handler_lambda
 
 
-def set_up_palliative_care_in_db() -> None:
+def set_up_palliative_care_z_code_in_db() -> None:
     """This function sets up the palliative care symptom discriminator.
 
     Setup in the symptomdisciminators table and in the symptomgroupsymptomdiscriminators table.
