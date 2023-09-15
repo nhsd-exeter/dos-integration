@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from application.service_sync.service_histories_change import ServiceHistoriesChange
+from application.service_sync.data_processing.service_histories_change import ServiceHistoriesChange
 from common.constants import (
     DOS_DEMOGRAPHICS_AREA_TYPE,
     DOS_SERVICES_TABLE_CHANGE_TYPE_LIST,
@@ -17,7 +17,7 @@ from common.constants import (
     DOS_WEBSITE_CHANGE_KEY,
 )
 
-FILE_PATH = "application.service_sync.service_histories_change"
+FILE_PATH = "application.service_sync.data_processing.service_histories_change"
 DATA = "New value to be added to db"
 PREVIOUS_VALUE = "Old value to be removed from db"
 

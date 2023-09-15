@@ -49,6 +49,7 @@ ignore = [
   "G004",   # Logging statement uses f-string
   "ANN101", # Missing type annotation for self in method,
   "DTZ007", # Allow Datetime used as timezone in tests.
+  "TID252", # Allow Relative imports from parent modules
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.

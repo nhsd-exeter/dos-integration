@@ -13,7 +13,7 @@ from application.common.constants import (
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
 )
 from application.common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from application.service_sync.service_update_logging import ServiceUpdateLogger, log_service_updates
+from application.service_sync.service_update_logger import ServiceUpdateLogger, log_service_updates
 
 SERVICE_UID = "12345"
 SERVICE_NAME = "Test Service"
@@ -24,7 +24,7 @@ EXAMPLE_ACTION = "update"
 EXAMPLE_PREVIOUS_VALUE = "test_value"
 EXAMPLE_NEW_VALUE = "new_test_value"
 NULL_VALUE = "NULL"
-FILE_PATH = "application.service_sync.service_update_logging"
+FILE_PATH = "application.service_sync.service_update_logger"
 
 
 @pytest.fixture()
@@ -34,7 +34,7 @@ def service_update_logger():
 
 def test_dos_logger(service_update_logger: ServiceUpdateLogger):
     # Assert
-    assert service_update_logger.logger.name == "service_undefined.application.service_sync.service_update_logging"
+    assert service_update_logger.logger.name == "service_undefined.application.service_sync.service_update_logger"
     assert service_update_logger.dos_logger.name == "dos_logger"
     assert service_update_logger.dos_logger.level == INFO
     assert (

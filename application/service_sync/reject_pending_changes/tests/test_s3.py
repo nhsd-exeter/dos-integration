@@ -1,9 +1,9 @@
 from os import environ
 from unittest.mock import patch
 
-from application.service_sync.s3 import put_content_to_s3
+from application.service_sync.reject_pending_changes.s3 import put_content_to_s3
 
-FILE_PATH = "application.service_sync.s3"
+FILE_PATH = "application.service_sync.reject_pending_changes.s3"
 
 
 @patch(f"{FILE_PATH}.client")

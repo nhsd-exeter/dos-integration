@@ -1,12 +1,11 @@
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
-from psycopg.rows import DictRow
 from psycopg.sql import SQL, Identifier, Literal
 
+from ..service_update_logger import log_service_updates
 from .changes_to_dos import ChangesToDoS
 from .service_histories import ServiceHistories
-from .service_update_logging import log_service_updates
-from .validate_dos_data import validate_dos_z_code_exists
+from .validation import validate_z_code_exists, validate_z_code_exists_on_service
 from common.constants import (
     DOS_ACTIVE_STATUS_ID,
     DOS_BLOOD_PRESSURE_SGSDID,
@@ -14,76 +13,19 @@ from common.constants import (
     DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
     DOS_BLOOD_PRESSURE_TYPE_ID,
     DOS_CLOSED_STATUS_ID,
+    DOS_CONTRACEPTION_SGSDID,
+    DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
+    DOS_CONTRACEPTION_SYMPTOM_GROUP,
+    DOS_CONTRACEPTION_TYPE_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
 )
-from common.dos import (
-    DoSService,
-    get_specified_opening_times_from_db,
-    get_standard_opening_times_from_db,
-    has_blood_pressure,
-    has_palliative_care,
-)
+from common.dos import DoSService
 from common.dos_db_connection import connect_to_dos_db, query_dos_db
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from common.utilities import add_metric
 
 logger = Logger(child=True)
-
-
-def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHistories]:
-    """Retrieves DoS Services from DoS database.
-
-    Args:
-        service_id (str): Id of service to retrieve
-
-    Returns:
-        Tuple[DoSService, ServiceHistories]: Tuple of DoS service and service history
-
-    """
-    sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, town, postcode, web, typeid, statusid, ss.name status_name, "
-        "publicphone, publicname, st.name service_type_name, easting, northing, latitude, longitude FROM services s "
-        "LEFT JOIN servicetypes st ON s.typeid = st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-        "WHERE s.id = %(SERVICE_ID)s"
-    )
-    query_vars = {"SERVICE_ID": service_id}
-    # Connect to the DoS database
-    with connect_to_dos_db() as connection:
-        # Query the DoS database for the service
-        cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
-        rows: list[DictRow] = cursor.fetchall()
-        if len(rows) == 1:
-            # Select first row (service) and create DoSService object
-            service = DoSService(rows[0])
-            logger.append_keys(service_name=service.name)
-            logger.append_keys(service_uid=service.uid)
-            logger.append_keys(type_id=service.typeid)
-        elif not rows:
-            msg = f"Service ID {service_id} not found"
-            raise ValueError(msg)
-        else:
-            msg = f"Multiple services found for Service Id: {service_id}"
-            raise ValueError(msg)
-        # Set up remaining service data
-        service.standard_opening_times = get_standard_opening_times_from_db(
-            connection=connection,
-            service_id=service_id,
-        )
-        service.specified_opening_times = get_specified_opening_times_from_db(
-            connection=connection,
-            service_id=service_id,
-        )
-        # Set up palliative care flag
-        service.palliative_care = has_palliative_care(service=service, connection=connection)
-        # Set up blood pressure flag
-        service.blood_pressure = has_blood_pressure(service=service)
-        # Set up service history
-        service_histories = ServiceHistories(service_id=service_id)
-        service_histories.get_service_history_from_db(connection)
-        service_histories.create_service_histories_entry()
-        # Connection closed by context manager
-    return service, service_histories
 
 
 def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histories: ServiceHistories) -> None:
@@ -127,6 +69,13 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                 blood_pressure=changes_to_dos.nhs_entity.blood_pressure,
                 service_histories=service_histories,
             )
+            is_contraception_changes, service_histories = save_contraception_into_db(
+                connection=connection,
+                dos_service=changes_to_dos.dos_service,
+                is_changes=changes_to_dos.contraception_changes,
+                contraception=changes_to_dos.nhs_entity.contraception,
+                service_histories=service_histories,
+            )
             # If there are any changes, update the service history and commit the changes to the database
             if any(
                 [
@@ -135,6 +84,7 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
                     is_specified_opening_times_changes,
                     is_palliative_care_changes,
                     is_blood_pressure_changes,
+                    is_contraception_changes,
                 ],
             ):
                 service_histories.save_service_histories(connection=connection)
@@ -339,8 +289,8 @@ def save_specified_opening_times_into_db(
 def save_sgsdid_update(  # noqa: PLR0913
     name: str,
     value: bool,
-    sdid: str,
-    sgid: str,
+    sdid: int,
+    sgid: int,
     dos_service: DoSService,
     connection: Connection,
 ) -> None:
@@ -349,8 +299,8 @@ def save_sgsdid_update(  # noqa: PLR0913
     Args:
         name (str): The name of the change
         value (bool): True if the change is to set the value to be added, False if the change is to remove the value
-        sdid (str): The symptom discriminator id
-        sgid (str): The symptom group id
+        sdid (int): The symptom discriminator id
+        sgid (int): The symptom group id
         dos_service (DoSService): The dos service to update
         connection (Connection): Connection to the DoS database
 
@@ -371,7 +321,7 @@ def save_sgsdid_update(  # noqa: PLR0913
         logger.debug(f"Setting {name} to false for service id {dos_service.id}")
     cursor = query_dos_db(connection=connection, query=query, query_vars=query_vars)
     cursor.close()
-    logger.info(f"Saving {name} Z code changes for service id {dos_service.id}", extra={"value": value})
+    logger.info(f"Saving {name} changes for service id {dos_service.id}", extra={"value": value})
 
 
 def save_palliative_care_into_db(
@@ -399,7 +349,7 @@ def save_palliative_care_into_db(
         )
         return False
 
-    if validate_dos_z_code_exists(
+    if validate_z_code_exists(
         connection=connection,
         dos_service=dos_service,
         symptom_group_id=DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
@@ -456,7 +406,6 @@ def save_blood_pressure_into_db(
             query_vars={"STATUS_ID": status, "SERVICE_ID": dos_service.id},
         )
         cursor.close()
-        logger.info(f"Saving Blood Pressure status changes for service id {dos_service.id}", extra={"status": status})
 
     if dos_service.typeid != DOS_BLOOD_PRESSURE_TYPE_ID:
         logger.info(
@@ -474,8 +423,14 @@ def save_blood_pressure_into_db(
         return False, service_histories
 
     save_service_status_update()
-    if blood_pressure and not check_blood_pressure_z_code_exists_on_service(connection, dos_service):
-        if not validate_dos_z_code_exists(
+    if blood_pressure and not validate_z_code_exists_on_service(
+        connection=connection,
+        dos_service=dos_service,
+        symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
+        symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
+        z_code_alias="Blood Pressure",
+    ):
+        if not validate_z_code_exists(
             connection=connection,
             dos_service=dos_service,
             symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
@@ -506,31 +461,86 @@ def save_blood_pressure_into_db(
     return True, service_histories
 
 
-def check_blood_pressure_z_code_exists_on_service(connection: Connection, dos_service: DoSService) -> bool:
-    """Checks if the blood pressure z code exists in the DoS database.
+def save_contraception_into_db(
+    connection: Connection,
+    dos_service: DoSService,
+    is_changes: bool,
+    contraception: bool,
+    service_histories: ServiceHistories,
+) -> tuple[bool, ServiceHistories]:
+    """Saves the contraception changes to the DoS database.
 
     Args:
         connection (connection): Connection to the DoS database
         dos_service (DoSService): The dos service to update
+        is_changes (bool): True if changes should be made to the database, False if no changes need to be made
+        contraception (bool): Set contraception in db to true or false
+        service_histories (ServiceHistories): Service history of the service
 
     Returns:
-        bool: True if the blood pressure z code exists, False otherwise
+        bool: True if changes were made to the database, False if no changes were made
+        service_histories (ServiceHistories): Service history of the service
     """
-    cursor = query_dos_db(
+
+    def save_service_status_update() -> None:
+        status = DOS_ACTIVE_STATUS_ID if contraception else DOS_CLOSED_STATUS_ID
+        query = "UPDATE services SET statusid=%(STATUS_ID)s WHERE id=%(SERVICE_ID)s;"
+        cursor = query_dos_db(
+            connection=connection,
+            query=query,
+            query_vars={"STATUS_ID": status, "SERVICE_ID": dos_service.id},
+        )
+        cursor.close()
+
+    if dos_service.typeid != DOS_CONTRACEPTION_TYPE_ID:
+        logger.info(
+            f"No contraception changes to save for service id {dos_service.id} as the "
+            "service is not a contraception service",
+            extra={"current_contraception": contraception},
+        )
+        return False, service_histories
+    # If no changes, return false
+    if not is_changes:
+        logger.info(
+            f"No contraception changes to save for service id {dos_service.id}",
+            extra={"current_contraception": contraception},
+        )
+        return False, service_histories
+
+    save_service_status_update()
+    if contraception and not validate_z_code_exists_on_service(
         connection=connection,
-        query=("SELECT id FROM servicesgsds WHERE serviceid=%(SERVICE_ID)s AND sgid=%(SGID)s AND sdid=%(SDID)s;"),
-        query_vars={
-            "SERVICE_ID": dos_service.id,
-            "SGID": DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-            "SDID": DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-        },
-    )
-    service_sgsd_rowcount = cursor.rowcount
-    cursor.close()
+        dos_service=dos_service,
+        symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
+        symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
+        z_code_alias="Contraception",
+    ):
+        if not validate_z_code_exists(
+            connection=connection,
+            dos_service=dos_service,
+            symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
+            symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
+            z_code_alias="Contraception",
+        ):
+            add_metric("DoSContraceptionZCodeDoesNotExist")
+            logger.error(
+                f"Unable to save z code contraception changes for service id {dos_service.id} as the "
+                "contraception Z code does not exist in the DoS database",
+                extra={"new_contraception_status": contraception},
+            )
+            return False, service_histories
 
-    if service_sgsd_rowcount == 1:
-        logger.info("Blood pressure Service's Z code exists in the DoS database")
-        return True
+        save_sgsdid_update(
+            name="contraception",
+            value=contraception,
+            sdid=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
+            sgid=DOS_CONTRACEPTION_SYMPTOM_GROUP,
+            dos_service=dos_service,
+            connection=connection,
+        )
+        service_histories.add_sgsdid_change(
+            sgsdid=DOS_CONTRACEPTION_SGSDID,
+            new_value=contraception,
+        )
 
-    logger.info("Blood pressure Service's Z code does not exist in the DoS database")
-    return False
+    return True, service_histories

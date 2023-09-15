@@ -8,7 +8,6 @@ from psycopg import Connection
 
 from .constants import (
     DOS_ACTIVE_STATUS_ID,
-    DOS_BLOOD_PRESSURE_TYPE_ID,
     DOS_CLOSED_STATUS_ID,
     DOS_COMMISSIONING_STATUS_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
@@ -18,6 +17,7 @@ from .constants import (
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
+from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
 
 logger = Logger(child=True)
 dos_location_cache = {}
@@ -65,6 +65,7 @@ class DoSService:
         self.specified_opening_times = None
         self.palliative_care = False
         self.blood_pressure = False
+        self.contraception = False
 
     def __repr__(self) -> str:
         """Returns a string representation of this object."""
@@ -340,14 +341,38 @@ def has_blood_pressure(service: DoSService) -> bool:
 
     Args:
         service: The service to check
-        connection: The database connection to use
 
     Returns:
         True if the service has blood pressure, False otherwise
     """
-    if service.typeid == DOS_BLOOD_PRESSURE_TYPE_ID:
+    return has_service(service, BLOOD_PRESSURE)
+
+
+def has_contraception(service: DoSService) -> bool:
+    """Checks if a service has contraception.
+
+    Args:
+        service: The service to check
+
+    Returns:
+        True if the service has contraception, False otherwise
+    """
+    return has_service(service, CONTRACEPTION)
+
+
+def has_service(service: DoSService, service_type: ServiceType) -> bool:
+    """Checks if a service has a given service type.
+
+    Args:
+        service: The service to check
+        service_type: The service type to check for
+
+    Returns:
+        True if the service has the given service type, False otherwise
+    """
+    if service.typeid == service_type.DOS_TYPE_ID:
         status = service.statusid == DOS_ACTIVE_STATUS_ID
-        logger.debug("Checked if service has blood pressure", has_blood_pressure=status)
+        logger.debug("Checked if service has {service_type.TYPE_NAME.lower()}", service_status=status)
         return status
     return False
 

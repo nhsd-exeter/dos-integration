@@ -1,6 +1,6 @@
 import pytest
 
-from application.service_sync.format import format_address, format_website
+from application.service_sync.data_processing.formatting import format_address, format_website
 
 
 @pytest.mark.parametrize(

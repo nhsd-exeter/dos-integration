@@ -25,6 +25,7 @@ class ChangesToDoS:
     specified_opening_times_changes: bool = False
     palliative_care_changes: bool = False
     blood_pressure_changes: bool = False
+    contraception_changes: bool = False
 
     # New value to be saved to the database
     new_address: str | None = None
@@ -34,6 +35,7 @@ class ChangesToDoS:
     new_website: str | None = None
     new_palliative_care: bool | None = None
     new_blood_pressure: bool | None = None
+    new_contraception: bool | None = None
 
     # Existing DoS data for use building service history
     current_address: str | None = None
@@ -43,6 +45,7 @@ class ChangesToDoS:
     current_website: str | None = None
     current_palliative_care: bool | None = None
     current_blood_pressure: bool | None = None
+    current_contraception: bool | None = None
 
     # Each day that has changed will have a current and new value in the format below
     # new_day_opening_times e.g. new_monday_opening_times

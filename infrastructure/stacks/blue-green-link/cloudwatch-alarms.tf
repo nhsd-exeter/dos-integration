@@ -284,3 +284,22 @@ resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
+
+resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist" {
+  count                     = var.profile == "dev" ? 0 : 1
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when the DoS Contraception Z Code does not exist"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Contraception Z Code Does Not Exist !!!"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DoSContraceptionZCodeDoesNotExist"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "0"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+}

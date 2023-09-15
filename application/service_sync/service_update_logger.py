@@ -6,9 +6,9 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
-from .changes_to_dos import ChangesToDoS
+from .data_processing.changes_to_dos import ChangesToDoS
+from .data_processing.service_histories import ServiceHistories
 from .reporting import log_service_updated
-from .service_histories import ServiceHistories
 from common.constants import (
     DOS_INTEGRATION_USER_NAME,
     DOS_SGSDID_CHANGE_KEY,
