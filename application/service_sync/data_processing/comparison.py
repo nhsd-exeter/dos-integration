@@ -3,22 +3,15 @@ from aws_lambda_powertools.logging import Logger
 from ..reporting import log_invalid_nhsuk_postcode
 from .changes_to_dos import ChangesToDoS
 from .formatting import format_address, format_website
-from .validation import validate_website, validate_z_code_exists
-from common.constants import (
-    DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-    DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-    DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-    DOS_CONTRACEPTION_SYMPTOM_GROUP,
-)
+from .validation import validate_website
 from common.dos import get_valid_dos_location
-from common.dos_db_connection import connect_to_dos_db
 from common.dos_location import DoSLocation
 from common.opening_times import (
     SpecifiedOpeningTime,
     StandardOpeningTimes,
     opening_period_times_from_list,
 )
-from common.utilities import add_metric, is_val_none_or_empty
+from common.utilities import is_val_none_or_empty
 
 logger = Logger(child=True)
 
@@ -207,15 +200,6 @@ def compare_blood_pressure(changes: ChangesToDoS) -> bool:
     """
     changes.current_blood_pressure = changes.dos_service.blood_pressure
     changes.new_blood_pressure = changes.nhs_entity.blood_pressure
-    with connect_to_dos_db() as connection:
-        if not validate_z_code_exists(
-            connection=connection,
-            dos_service=changes.dos_service,
-            symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-            symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-            z_code_alias="Blood Pressure",
-        ):
-            add_metric("DoSBloodPressureZCodeDoesNotExist")
 
     if changes.current_blood_pressure != changes.new_blood_pressure:
         logger.info(
@@ -240,16 +224,6 @@ def compare_contraception(changes: ChangesToDoS) -> bool:
     """
     changes.current_contraception = changes.dos_service.contraception
     changes.new_contraception = changes.nhs_entity.contraception
-
-    with connect_to_dos_db() as connection:
-        if not validate_z_code_exists(
-            connection=connection,
-            dos_service=changes.dos_service,
-            symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
-            symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-            z_code_alias="Contraception",
-        ):
-            add_metric("DoSContraceptionZCodeDoesNotExist")
 
     if changes.current_contraception != changes.new_contraception:
         logger.info(
