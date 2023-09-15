@@ -1,7 +1,7 @@
 import pytest
 
 from .functions.context import Context
-from .functions.generator import (
+from .functions.dos.set_up_data import (
     set_up_blood_pressure_z_code_in_db,
     set_up_common_condition_service_types,
     set_up_contraception_z_code_in_db,
