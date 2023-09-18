@@ -63,7 +63,7 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> dict[str, Any]:
         f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
         f"#dashboards/dashboard/uec-dos-int-{environment}-monitoring-dashboard"
     )
-    splunk_dashboard_link = "test"
+    splunk_dashboard_link = "https://nhsdigital.splunkcloud.com/en-GB/app/nhsd_uec_pu_all_sh_all_viz/dos_integration_test_monitoring__update_request_summary_dashboard"
 
     emoji = ":white_check_mark:" if new_state == "OK" else ":rotating_light:"
     logger.append_keys(alarm_name=alarm_name, alarm_description=alarm_description)
@@ -86,9 +86,9 @@ def get_message_for_cloudwatch_event(event: SNSEvent) -> dict[str, Any]:
                 "fields": [
                     {
                         "value": (
-                            f"• *Name*: <{link}|{alarm_name}> \n"
-                            f"• *Description*: {alarm_description} \n• *State*: {new_state.capitalize()} \n"
-                            f"• *Dashboards*: <{cloudwatch_dashboard_link}|CloudWatch Monitoring Dashboard> | "
+                            f"*Name*: <{link}|{alarm_name}> | *State*: {new_state.capitalize()}\n"
+                            f"*Description*: {alarm_description}\n"
+                            f"<{cloudwatch_dashboard_link}|CloudWatch Monitoring Dashboard> | "
                             f"<{splunk_dashboard_link}|Splunk Dashboard>"
                         ),
                         "short": False,
