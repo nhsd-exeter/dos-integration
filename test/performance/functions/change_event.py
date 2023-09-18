@@ -106,7 +106,7 @@ class ChangeEvent:
         ]
         opening_times.extend(
             {
-                "Weekday": date,
+                "AdditionalOpeningDate": date,
                 "OpeningTime": times["OpeningTime"],
                 "ClosingTime": times["ClosingTime"],
                 "OpeningTimeType": "Additional",
