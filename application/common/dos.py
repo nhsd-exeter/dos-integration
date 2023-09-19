@@ -81,6 +81,17 @@ class DoSService:
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
 
+    def __eq__(self, other) -> bool:  # noqa: ANN001
+        """Checks DoS service equality using service id.
+
+        Args:
+            other (DoSService): DoS service to compare too
+
+        Returns:
+            bool: True if equal, False if not
+        """
+        return self.id == other.id
+
     def normal_postcode(self) -> str:
         """Returns the postcode with no spaces and in uppercase."""
         return self.postcode.replace(" ", "").upper()

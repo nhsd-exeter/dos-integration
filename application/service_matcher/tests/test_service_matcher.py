@@ -16,6 +16,7 @@ from application.service_matcher.service_matcher import (
     get_pharmacy_first_phase_one_feature_flag,
     lambda_handler,
     log_missing_dos_services,
+    remove_service_if_not_on_change_event,
     send_update_requests,
 )
 from common.nhs import NHSEntity
@@ -376,6 +377,23 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
+
+
+def test_remove_service_if_not_on_change_event() -> None:
+    # Arrange
+    service = dummy_dos_service()
+    service.typeid = 13
+    service.statusid = 1
+    service2 = dummy_dos_service()
+    service2.typeid = 148
+    service2.statusid = 2
+    matching_services = [service, service2]
+    nhs_entity = NHSEntity(PHARMACY_STANDARD_EVENT)
+    nhs_entity.blood_pressure = False
+    # Act
+    response = remove_service_if_not_on_change_event(matching_services, nhs_entity, "blood_pressure", BLOOD_PRESSURE)
+    # Assert
+    assert response == [service]
 
 
 @patch(f"{FILE_PATH}.sqs")
