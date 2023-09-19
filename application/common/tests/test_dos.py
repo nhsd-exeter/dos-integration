@@ -106,6 +106,19 @@ def test__init__no_name():
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
+def test__eq__():
+    # Arrange
+    dos_service = dummy_dos_service()
+    dos_service.id = 1
+    dos_service.uid = 1
+    dos_service2 = dummy_dos_service()
+    dos_service2.id = 1
+    dos_service2.uid = 2
+    # Act
+    assert dos_service == dos_service2
+    # Assert
+
+
 def test_dos_service_get_region():
     # Arrange
     dos_service = dummy_dos_service()
