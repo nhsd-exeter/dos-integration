@@ -882,5 +882,4 @@ docker-repo-list-tags: ### List repository tags - mandatory: REPO=[repository na
 	docker-image-get-digest \
 	docker-image-get-version \
 	docker-image-set-version \
-	docker-login \
 	docker-repo-list-tags
