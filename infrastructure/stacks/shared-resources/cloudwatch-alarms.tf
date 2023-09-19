@@ -1,4 +1,4 @@
-resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" {
+resource "aws_cloudwatch_metric_alarm" "di_endpoint_endpoint_4xx_errors_alert" {
   alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Change events from NHS UK have been rejected"
   alarm_name          = "${var.project_id} | ${var.shared_environment} | DI 4XX Endpoint Errors"
@@ -21,7 +21,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_4xx_errors_alert" 
   ]
 }
 
-resource "aws_cloudwatch_metric_alarm" "change_event_endpoint_5xx_errors_alert" {
+resource "aws_cloudwatch_metric_alarm" "di_endpoint_endpoint_5xx_errors_alert" {
   alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Change events from NHS UK have been rejected"
   alarm_name          = "${var.project_id} | ${var.shared_environment} | DI 5XX Endpoint Errors"

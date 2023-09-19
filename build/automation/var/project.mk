@@ -142,8 +142,10 @@ PHARMACY_FIRST_PHASE_ONE_PARAMETER := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-pharma
 TF_VAR_pharmacy_first_phase_one_parameter_name := $(PHARMACY_FIRST_PHASE_ONE_PARAMETER)
 
 # WAF
+TF_VAR_waf_enabled := $(WAF_ENABLED)
 TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl
 TF_VAR_waf_log_group_name := aws-waf-logs-$(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-group
+TF_VAR_waf_log_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-subscription-filter
 TF_VAR_waf_ip_set_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-set
 
 TF_VAR_waf_aws_common_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-rule
@@ -153,15 +155,6 @@ TF_VAR_waf_ip_allow_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip
 TF_VAR_waf_rate_based_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-rule
 TF_VAR_waf_aws_known_bad_inputs_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-rule
 TF_VAR_waf_aws_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-rule
-
-TF_VAR_waf_aws_common_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-common-metric
-TF_VAR_ip_reputation_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-ip-reputation-list-metric
-TF_VAR_non_gb_rule_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-non-gb-rule-metric
-TF_VAR_waf_ip_allow_list_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip-allow-list-metric
-TF_VAR_waf_rate_based_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-metric
-TF_VAR_waf_aws_known_bad_inputs_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-metric
-TF_VAR_waf_acl_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl-metric
-TF_VAR_waf_aws_sqli_metric_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-metric
 
 # -------------------------------
 # BLUE/GREEN ENVIRONMENT VARIABLES
