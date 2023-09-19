@@ -1,3 +1,4 @@
+from application.common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION
 from application.common.constants import (
     DOS_BLOOD_PRESSURE_SGSDID,
     DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
@@ -8,7 +9,6 @@ from application.common.constants import (
     DOS_CONTRACEPTION_SYMPTOM_GROUP,
     DOS_CONTRACEPTION_TYPE_ID,
 )
-from application.common.service_type import BLOOD_PRESSURE, CONTRACEPTION
 
 
 def test_blood_pressure_service_type():

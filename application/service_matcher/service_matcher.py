@@ -22,11 +22,11 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
 from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
-from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
 
@@ -176,7 +176,7 @@ def remove_service_if_not_on_change_event(
 def log_missing_dos_services(
     nhs_entity: NHSEntity,
     matching: list[DoSService],
-    service_type: ServiceType,
+    service_type: CommissionedServiceType,
 ) -> None:
     """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 

@@ -5,10 +5,10 @@ from typing import Any
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
+from common.commissioned_service_type import CommissionedServiceType
 from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService
 from common.nhs import NHSEntity
-from common.service_type import ServiceType
 
 logger = Logger(child=True)
 
@@ -173,7 +173,7 @@ def log_unexpected_pharmacy_profiling(
 def log_missing_dos_service_for_a_given_type(
     nhs_entity: NHSEntity,
     matching_services: list[DoSService],
-    missing_type: ServiceType,
+    missing_type: CommissionedServiceType,
     reason: str,
 ) -> None:
     """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
