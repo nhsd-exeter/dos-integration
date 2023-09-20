@@ -199,7 +199,7 @@ def compare_commissioned_service(changes: ChangesToDoS, service_type: Commission
     Returns:
         bool: True if the sub service is different, False if not
     """
-    type_name = str.lower(str.replace(" ", "_",service_type.TYPE_NAME))
+    type_name = service_type.TYPE_NAME.replace(" ", "_").lower()
     current_sub_service = getattr(changes.dos_service, type_name, None)
     setattr(changes, "current_" + type_name, current_sub_service)
     new_sub_service = getattr(changes.nhs_entity, type_name, None)

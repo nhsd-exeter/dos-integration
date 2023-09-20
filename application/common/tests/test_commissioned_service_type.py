@@ -34,7 +34,7 @@ def test_contraception_commissioned_service_type():
 
 
 def test_pallative_care_commissioned_service_type():
-    assert PALLIATIVE_CARE.TYPE_NAME == "Pallivative Care"
+    assert PALLIATIVE_CARE.TYPE_NAME == "Palliative Care"
     assert PALLIATIVE_CARE.NHS_UK_SERVICE_CODE == "SRV0559"
     assert PALLIATIVE_CARE.DOS_TYPE_ID == DOS_PALLIATIVE_CARE_TYPE_ID
     assert PALLIATIVE_CARE.DOS_SYMPTOM_GROUP == DOS_PALLIATIVE_CARE_SYMPTOM_GROUP
