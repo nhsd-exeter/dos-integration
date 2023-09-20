@@ -123,8 +123,8 @@ Feature: F007. Report Logging
       | 13           | Hidden             |
       | 148          | Closed             |
       | 148          | Hidden             |
-      | 148          | Closed             |
-      | 148          | Hidden             |
+      | 149          | Closed             |
+      | 149          | Hidden             |
 
 
   @complete @pharmacy_cloudwatch_queries

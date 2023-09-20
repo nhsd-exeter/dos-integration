@@ -417,13 +417,12 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 137          |
 
   @complete @pharmacy_no_log_searches
-  Scenario Outline: F001SX33.
+  Scenario Outline: F001SX33. Test only active or going to active services appear on the hidden or closed report
     Given a pharmacy service is created with type "13"
     And an entry is created in the services table with a derivative odscode
     And the service "service_type" is set to "<service_type>"
     And the service "service_status" is set to "<service_status>"
     And the entry is committed to the services table
-    And the change event has a contraception entry
     And the change event "OrganisationStatus" is set to "Closed"
     When the Changed Event is sent for processing with "valid" api key
     Then Hidden or Closed logs does not show closed services or not going to active services
