@@ -169,44 +169,6 @@ def compare_specified_opening_times(changes: ChangesToDoS) -> bool:
     changes.new_specified_opening_times = future_nhs_spec_open_dates
     return True
 
-
-# def compare_palliative_care(changes: ChangesToDoS) -> bool:
-#     """Compares the palliative care of from the dos_service and nhs_entity.
-
-#     Returns:
-#         bool: True if the palliative care is different, False if not
-#     """
-#     if changes.current_palliative_care != changes.new_palliative_care:
-#         logger.info(
-#             },
-#     logger.info(
-
-
-# def compare_blood_pressure(changes: ChangesToDoS) -> bool:
-#     """Compares the blood pressure of from the dos_service and nhs_entity.
-
-#     Returns:
-#         bool: True if the blood pressure is different, False if not
-#     """
-
-#     if changes.current_blood_pressure != changes.new_blood_pressure:
-#         logger.info(
-#             },
-#     logger.info(
-
-
-# def compare_contraception(changes: ChangesToDoS) -> bool:
-#     """Compares the blood pressure services of the dos_service and nhs_entity.
-
-#     Returns:
-#         bool: True if the blood pressure is different, False if not
-#     """
-
-#     if changes.current_contraception != changes.new_contraception:
-#         logger.info(
-#             },
-#     logger.info(
-
 def compare_palliative_care(changes: ChangesToDoS) -> bool:
     """Compares the palliative care of from the dos_service and nhs_entity.
 
