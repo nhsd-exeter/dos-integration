@@ -143,7 +143,7 @@ def remove_service_if_not_on_change_event(
     matching_services: list[DoSService],
     nhs_entity: NHSEntity,
     nhs_uk_key: str,
-    service_type: ServiceType,
+    service_type: CommissionedServiceType,
 ) -> list[DoSService]:
     """Removes a service from the matching services list if it is not on the change event.
 
@@ -151,7 +151,7 @@ def remove_service_if_not_on_change_event(
         matching_services (list[DoSService]): The list of matching services
         nhs_entity (NHSEntity): The nhs entity to check for the service
         nhs_uk_key (str): The key to check for the service on the nhs entity
-        service_type (ServiceType): Various constants for the service type
+        service_type (CommissionedServiceType): Various constants for the service type
 
     Returns:
         list[DoSService]: The list of matching services with the service removed if it is not on the change event

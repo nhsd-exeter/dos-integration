@@ -435,7 +435,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 149          | 2              |
       | 149          | 3              |
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F001SX28. Blood Pressure not checked for non blood pressure service
+  Scenario Outline: F001SX34. Blood Pressure not checked for non blood pressure service
     Given an entry is created in the services table
     And the service "service_type" is set to "149"
     And the entry is committed to the services table
