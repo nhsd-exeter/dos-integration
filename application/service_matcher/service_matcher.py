@@ -183,7 +183,7 @@ def log_missing_dos_services(
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
         matching (List[DosService]): The matching DoS service to check for the
-        service_type (ServiceType): Various constants for the service type
+        service_type (CommissionedServiceType): Various constants for the service type
     """
     if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
         (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),

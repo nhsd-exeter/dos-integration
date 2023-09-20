@@ -200,21 +200,21 @@ def compare_commissioned_service(changes: ChangesToDoS, service_type: Commission
         bool: True if the sub service is different, False if not
     """
     type_name = service_type.TYPE_NAME.replace(" ", "_").lower()
-    current_sub_service = getattr(changes.dos_service, type_name, None)
-    setattr(changes, "current_" + type_name, current_sub_service)
-    new_sub_service = getattr(changes.nhs_entity, type_name, None)
-    setattr(changes, "new_" + type_name, new_sub_service)
+    current_comm_service = getattr(changes.dos_service, type_name, None)
+    setattr(changes, "current_" + type_name, current_comm_service)
+    new_comm_service = getattr(changes.nhs_entity, type_name, None)
+    setattr(changes, "new_" + type_name, new_comm_service)
 
-    if current_sub_service != new_sub_service:
+    if current_comm_service != new_comm_service:
         logger.info(
-            f"{service_type.TYPE_NAME} is not equal, DoS='{current_sub_service}' != NHS UK='{new_sub_service}'",  # noqa: E501
+            f"{service_type.TYPE_NAME} is not equal, DoS='{current_comm_service}' != NHS UK='{new_comm_service}'",  # noqa: E501
             extra={
-                f"dos_{service_type.TYPE_NAME}": current_sub_service,
-                f"nhsuk_{service_type.TYPE_NAME}": new_sub_service,
+                f"dos_{service_type.TYPE_NAME}": current_comm_service,
+                f"nhsuk_{service_type.TYPE_NAME}": new_comm_service,
             },
         )
         return True
     logger.info(
-        f"{service_type.TYPE_NAME} is equal, DoS='{current_sub_service}' == NHSUK='{new_sub_service}'",
+        f"{service_type.TYPE_NAME} is equal, DoS='{current_comm_service}' == NHS UK='{new_comm_service}'",
     )
     return False

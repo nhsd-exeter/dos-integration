@@ -181,7 +181,7 @@ def log_missing_dos_service_for_a_given_type(
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         matching_services (list[DoSService]): The DoS services to report
-        missing_type (ServiceType): The subtype being reported as missing descriptors
+        missing_type (CommissionedServiceType): The subtype being reported as missing descriptors
         reason (str): The reason for the report
     """
     active_pharmacy_service = None
