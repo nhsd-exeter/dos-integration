@@ -1580,3 +1580,21 @@ def _(context: Context) -> Context:
     contraception = get_contraception_sgsd(context.service_id)
     assert contraception is True, "ERROR Contraception not correctly applied to DoS service"
     return context
+
+
+@then(
+    parse("Hidden or Closed logs does not show closed services or not going to active services"),
+    target_fixture="context",
+)
+def _(context: Context) -> Context:
+    logs = get_logs(
+        query=f"fields @message | filter report_key == 'HIDDEN_OR_CLOSED' | filter correlation_id == '{context.correlation_id}' | sort @timestamp",  # noqa: E501
+        lambda_name="service-matcher",
+        start_time=context.start_time,
+    )
+    results = loads(logs)["results"]
+    value = loads(results[0][0]["value"])
+    count = [result["value"] for result in results[0] if result["field"] == "@message"]
+    assert value["dos_service_typeid"] == 13, "ERROR: Incorrect service type id found"
+    assert len(count) == 1, "ERROR: More than one log entry found"
+    return context

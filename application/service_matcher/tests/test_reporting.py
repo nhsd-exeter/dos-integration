@@ -50,6 +50,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
             "dos_service_type": dos_service.service_type_name,
             "dos_region": dos_service.get_region(),
             "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
+            "dos_service_typeid": dos_service.typeid,
         },
     )
 

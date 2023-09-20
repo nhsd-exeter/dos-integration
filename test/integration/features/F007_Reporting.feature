@@ -100,7 +100,7 @@ Feature: F007. Report Logging
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX08 Check for Hidden Or Closed Report log
-    Given a basic service is created
+    Given a pharmacy service is created with type "<service_type>"
     And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with value "NHS Service marked as closed or hidden"
@@ -118,9 +118,14 @@ Feature: F007. Report Logging
     And the service history is not updated
 
     Examples:
-      | OrganisationStatus |
-      | Closed             |
-      | Hidden             |
+      | service_type | OrganisationStatus |
+      | 13           | Closed             |
+      | 13           | Hidden             |
+      | 148          | Closed             |
+      | 148          | Hidden             |
+      | 149          | Closed             |
+      | 149          | Hidden             |
+
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX09 Check for Invalid Postcode Report log
