@@ -7,7 +7,7 @@ batch:
     - identifier: build_change_event_dlq_handler
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -17,7 +17,7 @@ batch:
     - identifier: build_dos_db_handler
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -27,7 +27,7 @@ batch:
     - identifier: build_dos_db_update_dlq_handler
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -37,7 +37,7 @@ batch:
     - identifier: build_event_replay
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -47,7 +47,7 @@ batch:
     - identifier: build_ingest_change_event
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -57,7 +57,7 @@ batch:
     - identifier: build_send_email
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -67,7 +67,7 @@ batch:
     - identifier: build_service_matcher
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -77,7 +77,7 @@ batch:
     - identifier: build_service_sync
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -87,7 +87,7 @@ batch:
     - identifier: build_slack_messenger
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        image: aws/codebuild/amazonlinux2-aarch64-standard:3.0
         type: ARM_CONTAINER
         privileged-mode: true
         variables:
@@ -97,7 +97,7 @@ batch:
     - identifier: deploy
       env:
         compute-type: BUILD_GENERAL1_SMALL
-        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         type: LINUX_CONTAINER
         privileged-mode: true
         variables:
@@ -117,7 +117,7 @@ batch:
     - identifier: integration_test
       env:
         compute-type: BUILD_GENERAL1_LARGE
-        image: aws/codebuild/amazonlinux2-x86_64-standard:4.0
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         type: LINUX_CONTAINER
         privileged-mode: true
         variables:
