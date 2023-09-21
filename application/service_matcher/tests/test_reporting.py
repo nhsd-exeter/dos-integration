@@ -194,17 +194,15 @@ def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
     assert UNEXPECTED_PHARMACY_PROFILING_REPORT_ID == "UNEXPECTED_PHARMACY_PROFILING"
     mock_logger.assert_called_with(
         "Pharmacy profiling is incorrect",
-        extra={
-            "report_key": UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
-            "dos_service_uid": dos_service.uid,
-            "dos_service_name": dos_service.name,
-            "dos_service_address": dos_service.address,
-            "dos_service_postcode": dos_service.postcode,
-            "dos_service_type": dos_service.service_type_name,
-            "dos_region": dos_service.get_region(),
-            "reason": reason,
-            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
-        },
+        report_key=UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
+        dos_service_uid=dos_service.uid,
+        dos_service_name=dos_service.name,
+        dos_service_address=dos_service.address,
+        dos_service_postcode=dos_service.postcode,
+        dos_service_type=dos_service.service_type_name,
+        dos_region=dos_service.get_region(),
+        reason=reason,
+        nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
     )
 
 
@@ -227,20 +225,18 @@ def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
     assert MISSING_SERVICE_TYPE_REPORT_ID == "MISSING_SERVICE_TYPE"
     mock_logger.assert_called_with(
         "Missing DoS service for a certain type associated with a NHS UK Service Code",
-        extra={
-            "report_key": MISSING_SERVICE_TYPE_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.odscode,
-            "nhsuk_organisation_name": nhs_entity.org_name,
-            "nhsuk_organisation_typeid": nhs_entity.org_type_id,
-            "nhsuk_organisation_status": nhs_entity.org_status,
-            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
-            "dos_missing_service_type": BLOOD_PRESSURE.TYPE_NAME,
-            "dos_service_address": dos_service.address,
-            "dos_service_postcode": dos_service.postcode,
-            "dos_region": dos_service.get_region(),
-            "reason": reason,
-            "nhsuk_parent_organisation_name": nhs_entity.parent_org_name,
-        },
+        report_key=MISSING_SERVICE_TYPE_REPORT_ID,
+        nhsuk_odscode=nhs_entity.odscode,
+        nhsuk_organisation_name=nhs_entity.org_name,
+        nhsuk_organisation_typeid=nhs_entity.org_type_id,
+        nhsuk_organisation_status=nhs_entity.org_status,
+        nhsuk_organisation_subtype=nhs_entity.org_sub_type,
+        dos_missing_service_type=BLOOD_PRESSURE.TYPE_NAME,
+        dos_service_address=dos_service.address,
+        dos_service_postcode=dos_service.postcode,
+        dos_region=dos_service.get_region(),
+        reason=reason,
+        nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
     )
 
 

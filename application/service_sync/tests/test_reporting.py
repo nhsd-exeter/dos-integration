@@ -36,20 +36,18 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
     ), f"Report ID should be BLANK_STANDARD_OPENINGS but was {BLANK_STANDARD_OPENINGS_REPORT_ID}"
     mock_logger.assert_called_with(
         "NHS Service has matching DoS services but no given standard opening times.",
-        extra={
-            "report_key": BLANK_STANDARD_OPENINGS_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.odscode,
-            "dos_service_id": dos_service.id,
-            "dos_service_uid": dos_service.uid,
-            "dos_service_name": dos_service.name,
-            "nhsuk_service_status": nhs_entity.org_status,
-            "nhsuk_service_type": nhs_entity.org_type,
-            "nhsuk_sector": nhs_entity.org_sub_type,
-            "dos_service_status": dos_service.statusid,
-            "dos_service_type": dos_service.typeid,
-            "dos_service_type_name": dos_service.service_type_name,
-            "dos_region": dos_service.region,
-        },
+        report_key=BLANK_STANDARD_OPENINGS_REPORT_ID,
+        nhsuk_odscode=nhs_entity.odscode,
+        dos_service_id=dos_service.id,
+        dos_service_uid=dos_service.uid,
+        dos_service_name=dos_service.name,
+        nhsuk_service_status=nhs_entity.org_status,
+        nhsuk_service_type=nhs_entity.org_type,
+        nhsuk_sector=nhs_entity.org_sub_type,
+        dos_service_status=dos_service.statusid,
+        dos_service_type=dos_service.typeid,
+        dos_service_type_name=dos_service.service_type_name,
+        dos_region=dos_service.get_region(),
     )
 
 
@@ -78,23 +76,21 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
     ), f"Log ID should be INVALID_POSTCODE but was {INVALID_POSTCODE_REPORT_ID}"
     mock_logger.assert_called_with(
         f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!",
-        extra={
-            "report_key": INVALID_POSTCODE_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.odscode,
-            "nhsuk_organisation_type": nhs_entity.org_type,
-            "nhsuk_organisation_subtype": nhs_entity.org_sub_type,
-            "nhsuk_address1": nhs_entity.address_lines[0],
-            "nhsuk_address2": nhs_entity.address_lines[1],
-            "nhsuk_address3": nhs_entity.address_lines[2],
-            "nhsuk_city": city,
-            "nhsuk_postcode": nhs_entity.postcode,
-            "nhsuk_county": county,
-            "validation_error_reason": "Postcode not valid/found on DoS",
-            "dos_service": dos_service.uid,
-            "dos_service_type_name": dos_service.service_type_name,
-            "dos_region": dos_service.get_region(),
-            "dos_service_name": dos_service.name,
-        },
+        report_key=INVALID_POSTCODE_REPORT_ID,
+        nhsuk_odscode=nhs_entity.odscode,
+        nhsuk_organisation_type=nhs_entity.org_type,
+        nhsuk_organisation_subtype=nhs_entity.org_sub_type,
+        nhsuk_address1=nhs_entity.entity_data.get("Address1", ""),
+        nhsuk_address2=nhs_entity.entity_data.get("Address2", ""),
+        nhsuk_address3=nhs_entity.entity_data.get("Address3", ""),
+        nhsuk_city=nhs_entity.entity_data.get("City", ""),
+        nhsuk_county=nhs_entity.entity_data.get("County", ""),
+        nhsuk_postcode=nhs_entity.postcode,
+        validation_error_reason="Postcode not valid/found on DoS",
+        dos_service=dos_service.uid,
+        dos_service_type_name=dos_service.service_type_name,
+        dos_region=dos_service.get_region(),
+        dos_service_name=dos_service.name,
     )
     # Clean up
     del environ["ENV"]
@@ -114,17 +110,15 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
     # Assert
     mock_logger.assert_called_with(
         f"DoS Service uid={dos_service.uid} has a generic BankHoliday Standard opening time set in DoS",
-        extra={
-            "report_key": GENERIC_BANK_HOLIDAY_REPORT_ID,
-            "nhsuk_odscode": nhs_entity.odscode,
-            "nhsuk_organisation_name": nhs_entity.org_name,
-            "dos_service_uid": dos_service.uid,
-            "dos_service_name": dos_service.name,
-            "bank_holiday_opening_times": OpenPeriod.list_string(open_periods),
-            "nhsuk_parent_org": nhs_entity.parent_org_name,
-            "dos_service_type_name": dos_service.service_type_name,
-            "dos_region": dos_service.get_region(),
-        },
+        report_key=GENERIC_BANK_HOLIDAY_REPORT_ID,
+        nhsuk_odscode=nhs_entity.odscode,
+        nhsuk_organisation_name=nhs_entity.org_name,
+        dos_service_uid=dos_service.uid,
+        dos_service_name=dos_service.name,
+        bank_holiday_opening_times=OpenPeriod.list_string(open_periods),
+        nhsuk_parent_org=nhs_entity.parent_org_name,
+        dos_service_type_name=dos_service.service_type_name,
+        dos_region=dos_service.get_region(),
     )
 
 
@@ -202,11 +196,9 @@ def test_log_incorrect_palliative_stockholder_type(mock_logger: MagicMock):
     assert INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID == "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
     mock_logger.assert_called_with(
         "Palliative care on wrong service type",
-        extra={
-            "report_key": INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
-            "dos_palliative_care": expected_dos_palliative_care,
-            "nhsuk_palliative_care": expected_nhsuk_palliative_care,
-            "dos_service_type_name": dos_service.service_type_name,
-            "dos_region": dos_service.get_region(),
-        },
+        report_key=INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
+        dos_palliative_care=expected_dos_palliative_care,
+        nhsuk_palliative_care=expected_nhsuk_palliative_care,
+        dos_service_type_name=dos_service.service_type_name,
+        dos_region=dos_service.get_region(),
     )

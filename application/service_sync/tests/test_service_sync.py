@@ -161,7 +161,7 @@ def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info:
         QueueUrl=update_request_queue_url,
         ReceiptHandle=RECEIPT_HANDLE,
     )
-    mock_logger_info.assert_called_once_with("Removed SQS message from queue", extra={"receipt_handle": RECEIPT_HANDLE})
+    mock_logger_info.assert_called_once_with("Removed SQS message from queue", receipt_handle=RECEIPT_HANDLE)
     # Cleanup
     del environ["UPDATE_REQUEST_QUEUE_URL"]
 
