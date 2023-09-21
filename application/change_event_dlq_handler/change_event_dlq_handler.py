@@ -61,12 +61,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     error_msg = attributes["error_msg"]
     logger.warning(
         "Change Event Dead Letter Queue Handler received event",
-        extra={
-            "report_key": CHANGE_EVENT_DLQ_HANDLER_EVENT,
-            "error_msg": f"Message Abandoned: {error_msg}",
-            "error_msg_http_code": attributes["error_msg_http_code"],
-            "payload": change_event,
-        },
+        report_key=CHANGE_EVENT_DLQ_HANDLER_EVENT,
+        error_msg=f"Message Abandoned: {error_msg}",
+        error_msg_http_code=attributes["error_msg_http_code"],
+        payload=change_event,
     )
     metrics.set_namespace("AWS/SQS")
     metrics.set_property("level", "WARNING")
