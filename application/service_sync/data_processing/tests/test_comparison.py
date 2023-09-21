@@ -1,18 +1,15 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from aws_lambda_powertools.logging import Logger
 
-from application.common.constants import (
-    DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-    DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-    DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-    DOS_CONTRACEPTION_SYMPTOM_GROUP,
-)
+from application.common.commissioned_service_type import CommissionedServiceType
 from application.common.dos_location import DoSLocation
 from application.common.opening_times import WEEKDAYS
 from application.service_sync.data_processing.changes_to_dos import ChangesToDoS
 from application.service_sync.data_processing.comparison import (
     compare_blood_pressure,
+    compare_commissioned_service,
     compare_contraception,
     compare_location,
     compare_palliative_care,
@@ -297,12 +294,7 @@ def test_compare_palliative_care_no_change():
     assert False is response
 
 
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_blood_pressure_no_changes(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-) -> None:
+def test_compare_blood_pressure_no_changes() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -314,26 +306,13 @@ def test_compare_blood_pressure_no_changes(
         nhs_entity=nhs_entity,
         service_histories=service_histories,
     )
-    mock_validate_z_code_exists.return_value = True
     # Act
     response = compare_blood_pressure(changes=changes_to_dos)
     # Assert
     assert False is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Blood Pressure",
-    )
 
 
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_blood_pressure_valid_z_code(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-) -> None:
+def test_compare_blood_pressure() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -345,60 +324,14 @@ def test_compare_blood_pressure_valid_z_code(
         nhs_entity=nhs_entity,
         service_histories=service_histories,
     )
-    mock_validate_z_code_exists.return_value = True
+
     # Act
     response = compare_blood_pressure(changes=changes_to_dos)
     # Assert
     assert True is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Blood Pressure",
-    )
 
 
-@patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_blood_pressure_not_valid_z_code(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-    mock_add_metric: MagicMock,
-) -> None:
-    # Arrange
-    dos_service = MagicMock()
-    nhs_entity = MagicMock()
-    service_histories = MagicMock()
-    dos_service.blood_pressure = True
-    nhs_entity.blood_pressure = False
-    changes_to_dos = ChangesToDoS(
-        dos_service=dos_service,
-        nhs_entity=nhs_entity,
-        service_histories=service_histories,
-    )
-    mock_validate_z_code_exists.return_value = False
-    # Act
-    response = compare_blood_pressure(changes=changes_to_dos)
-    # Assert
-    assert True is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Blood Pressure",
-    )
-    mock_add_metric.assert_called_once_with("DoSBloodPressureZCodeDoesNotExist")
-
-
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_contraception_pressure_no_changes(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-) -> None:
+def test_compare_contraception_pressure_no_changes() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -410,26 +343,13 @@ def test_compare_contraception_pressure_no_changes(
         nhs_entity=nhs_entity,
         service_histories=service_histories,
     )
-    mock_validate_z_code_exists.return_value = True
     # Act
     response = compare_contraception(changes=changes_to_dos)
     # Assert
     assert False is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Contraception",
-    )
 
 
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_contraception_valid_z_code(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-) -> None:
+def test_compare_contraception() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -441,49 +361,68 @@ def test_compare_contraception_valid_z_code(
         nhs_entity=nhs_entity,
         service_histories=service_histories,
     )
-    mock_validate_z_code_exists.return_value = True
     # Act
     response = compare_contraception(changes=changes_to_dos)
     # Assert
     assert True is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Contraception",
-    )
 
 
-@patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.validate_z_code_exists")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
-def test_compare_contraception_not_valid_z_code(
-    mock_connect_to_dos_db: MagicMock,
-    mock_validate_z_code_exists: MagicMock,
-    mock_add_metric: MagicMock,
-) -> None:
-    # Arrange
+@patch.object(Logger, "info")
+def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
+        # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
-    dos_service.contraception = True
-    nhs_entity.contraception = False
+    stub_service_type = CommissionedServiceType(
+        TYPE_NAME="Stub Type",
+        NHS_UK_SERVICE_CODE="SN000",
+        DOS_TYPE_ID=999,
+        DOS_SYMPTOM_GROUP=360,
+        DOS_SYMPTOM_DISCRIMINATOR=9999,
+        DOS_SG_SD_ID="360=9999",
+    )
+    dos_service.stub_type = True
+    nhs_entity.stub_type = False
     changes_to_dos = ChangesToDoS(
         dos_service=dos_service,
         nhs_entity=nhs_entity,
         service_histories=service_histories,
     )
-    mock_validate_z_code_exists.return_value = False
     # Act
-    response = compare_contraception(changes=changes_to_dos)
+    response = compare_commissioned_service(changes=changes_to_dos, service_type=stub_service_type)
     # Assert
+    mock_logger.assert_called_once_with(
+        f"{stub_service_type.TYPE_NAME} is not equal, DoS='{dos_service.stub_type}' != NHS UK='{nhs_entity.stub_type}'",
+        extra={f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
+            f"nhsuk_{stub_service_type.TYPE_NAME}": nhs_entity.stub_type,
+            },
+        )
     assert True is response
-    mock_validate_z_code_exists.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
-        dos_service=changes_to_dos.dos_service,
-        symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
-        symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-        z_code_alias="Contraception",
+
+@patch.object(Logger, "info")
+def test_compare_commissioned_service_no_change(mock_logger: MagicMock) -> None:
+        # Arrange
+    dos_service = MagicMock()
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    stub_service_type = CommissionedServiceType(
+        TYPE_NAME="Stub Type",
+        NHS_UK_SERVICE_CODE="SN000",
+        DOS_TYPE_ID=999,
+        DOS_SYMPTOM_GROUP=360,
+        DOS_SYMPTOM_DISCRIMINATOR=9999,
+        DOS_SG_SD_ID="360=9999",
     )
-    mock_add_metric.assert_called_once_with("DoSContraceptionZCodeDoesNotExist")
+    dos_service.stub_type = True
+    nhs_entity.stub_type = True
+    changes_to_dos = ChangesToDoS(
+        dos_service=dos_service,
+        nhs_entity=nhs_entity,
+        service_histories=service_histories,
+    )
+    # Act
+    response = compare_commissioned_service(changes=changes_to_dos, service_type=stub_service_type)
+    # Assert
+    mock_logger.assert_called_once_with(
+        f"{stub_service_type.TYPE_NAME} is equal, DoS='{dos_service.stub_type}' == NHS UK='{nhs_entity.stub_type}'")
+    assert False is response

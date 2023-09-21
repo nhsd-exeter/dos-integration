@@ -17,7 +17,7 @@ from .constants import (
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
 
 logger = Logger(child=True)
 dos_location_cache = {}
@@ -371,7 +371,7 @@ def has_contraception(service: DoSService) -> bool:
     return has_service(service, CONTRACEPTION)
 
 
-def has_service(service: DoSService, service_type: ServiceType) -> bool:
+def has_service(service: DoSService, service_type: CommissionedServiceType) -> bool:
     """Checks if a service has a given service type.
 
     Args:

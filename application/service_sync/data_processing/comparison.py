@@ -3,22 +3,16 @@ from aws_lambda_powertools.logging import Logger
 from ..reporting import log_invalid_nhsuk_postcode
 from .changes_to_dos import ChangesToDoS
 from .formatting import format_address, format_website
-from .validation import validate_website, validate_z_code_exists
-from common.constants import (
-    DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-    DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-    DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-    DOS_CONTRACEPTION_SYMPTOM_GROUP,
-)
+from .validation import validate_website
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, PALLIATIVE_CARE, CommissionedServiceType
 from common.dos import get_valid_dos_location
-from common.dos_db_connection import connect_to_dos_db
 from common.dos_location import DoSLocation
 from common.opening_times import (
     SpecifiedOpeningTime,
     StandardOpeningTimes,
     opening_period_times_from_list,
 )
-from common.utilities import add_metric, is_val_none_or_empty
+from common.utilities import is_val_none_or_empty
 
 logger = Logger(child=True)
 
@@ -175,29 +169,13 @@ def compare_specified_opening_times(changes: ChangesToDoS) -> bool:
     changes.new_specified_opening_times = future_nhs_spec_open_dates
     return True
 
-
 def compare_palliative_care(changes: ChangesToDoS) -> bool:
     """Compares the palliative care of from the dos_service and nhs_entity.
 
     Returns:
         bool: True if the palliative care is different, False if not
     """
-    changes.current_palliative_care = changes.dos_service.palliative_care
-    changes.new_palliative_care = changes.nhs_entity.palliative_care
-    if changes.current_palliative_care != changes.new_palliative_care:
-        logger.info(
-            f"Palliative Care is not equal, DoS='{changes.current_palliative_care}' != NHS UK='{changes.new_palliative_care}'",  # noqa: E501
-            extra={
-                "dos_palliative_care": changes.current_palliative_care,
-                "nhsuk_palliative_care": changes.new_palliative_care,
-            },
-        )
-        return True
-    logger.info(
-        f"Palliative Care is equal, DoS='{changes.current_palliative_care}' == NHSUK='{changes.new_palliative_care}'",  # noqa: E501
-    )
-    return False
-
+    return compare_commissioned_service(changes=changes, service_type=PALLIATIVE_CARE)
 
 def compare_blood_pressure(changes: ChangesToDoS) -> bool:
     """Compares the blood pressure of from the dos_service and nhs_entity.
@@ -205,62 +183,38 @@ def compare_blood_pressure(changes: ChangesToDoS) -> bool:
     Returns:
         bool: True if the blood pressure is different, False if not
     """
-    changes.current_blood_pressure = changes.dos_service.blood_pressure
-    changes.new_blood_pressure = changes.nhs_entity.blood_pressure
-    with connect_to_dos_db() as connection:
-        if not validate_z_code_exists(
-            connection=connection,
-            dos_service=changes.dos_service,
-            symptom_group_id=DOS_BLOOD_PRESSURE_SYMPTOM_GROUP,
-            symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
-            z_code_alias="Blood Pressure",
-        ):
-            add_metric("DoSBloodPressureZCodeDoesNotExist")
-
-    if changes.current_blood_pressure != changes.new_blood_pressure:
-        logger.info(
-            f"Blood Pressure is not equal, DoS='{changes.current_blood_pressure}' != NHS UK='{changes.new_blood_pressure}'",  # noqa: E501
-            extra={
-                "dos_blood_pressure": changes.current_blood_pressure,
-                "nhsuk_blood_pressure": changes.new_blood_pressure,
-            },
-        )
-        return True
-    logger.info(
-        f"Blood Pressure is equal, DoS='{changes.current_blood_pressure}' == NHSUK='{changes.new_blood_pressure}'",
-    )
-    return False
-
+    return compare_commissioned_service(changes=changes, service_type=BLOOD_PRESSURE)
 
 def compare_contraception(changes: ChangesToDoS) -> bool:
-    """Compares the blood pressure of from the dos_service and nhs_entity.
+    """Compares the blood pressure services of the dos_service and nhs_entity.
 
     Returns:
         bool: True if the blood pressure is different, False if not
     """
-    changes.current_contraception = changes.dos_service.contraception
-    changes.new_contraception = changes.nhs_entity.contraception
+    return compare_commissioned_service(changes=changes, service_type=CONTRACEPTION)
 
-    with connect_to_dos_db() as connection:
-        if not validate_z_code_exists(
-            connection=connection,
-            dos_service=changes.dos_service,
-            symptom_group_id=DOS_CONTRACEPTION_SYMPTOM_GROUP,
-            symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
-            z_code_alias="Contraception",
-        ):
-            add_metric("DoSContraceptionZCodeDoesNotExist")
+def compare_commissioned_service(changes: ChangesToDoS, service_type: CommissionedServiceType) -> bool:
+    """Compares the same sub service of the dos_service and nhs_entity.
 
-    if changes.current_contraception != changes.new_contraception:
+    Returns:
+        bool: True if the sub service is different, False if not
+    """
+    type_name = service_type.TYPE_NAME.replace(" ", "_").lower()
+    current_comm_service = getattr(changes.dos_service, type_name, None)
+    setattr(changes, "current_" + type_name, current_comm_service)
+    new_comm_service = getattr(changes.nhs_entity, type_name, None)
+    setattr(changes, "new_" + type_name, new_comm_service)
+
+    if current_comm_service != new_comm_service:
         logger.info(
-            f"Contraception is not equal, DoS='{changes.current_contraception}' != NHS UK='{changes.new_contraception}'",  # noqa: E501
+            f"{service_type.TYPE_NAME} is not equal, DoS='{current_comm_service}' != NHS UK='{new_comm_service}'",  # noqa: E501
             extra={
-                "dos_contraception": changes.current_contraception,
-                "nhsuk_contraception": changes.new_contraception,
+                f"dos_{service_type.TYPE_NAME}": current_comm_service,
+                f"nhsuk_{service_type.TYPE_NAME}": new_comm_service,
             },
         )
         return True
     logger.info(
-        f"Contraception is equal, DoS='{changes.current_contraception}' == NHSUK='{changes.new_contraception}'",
+        f"{service_type.TYPE_NAME} is equal, DoS='{current_comm_service}' == NHS UK='{new_comm_service}'",
     )
     return False

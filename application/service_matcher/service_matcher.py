@@ -22,11 +22,11 @@ from .reporting import (
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
 from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
 from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
-from common.service_type import BLOOD_PRESSURE, CONTRACEPTION, ServiceType
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
 from common.utilities import extract_body
 
@@ -143,7 +143,7 @@ def remove_service_if_not_on_change_event(
     matching_services: list[DoSService],
     nhs_entity: NHSEntity,
     nhs_uk_key: str,
-    service_type: ServiceType,
+    service_type: CommissionedServiceType,
 ) -> list[DoSService]:
     """Removes a service from the matching services list if it is not on the change event.
 
@@ -151,7 +151,7 @@ def remove_service_if_not_on_change_event(
         matching_services (list[DoSService]): The list of matching services
         nhs_entity (NHSEntity): The nhs entity to check for the service
         nhs_uk_key (str): The key to check for the service on the nhs entity
-        service_type (ServiceType): Various constants for the service type
+        service_type (CommissionedServiceType): Various constants for the service type
 
     Returns:
         list[DoSService]: The list of matching services with the service removed if it is not on the change event
@@ -176,14 +176,14 @@ def remove_service_if_not_on_change_event(
 def log_missing_dos_services(
     nhs_entity: NHSEntity,
     matching: list[DoSService],
-    service_type: ServiceType,
+    service_type: CommissionedServiceType,
 ) -> None:
     """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
 
     Args:
         nhs_entity (NHSEntity): The nhs entity to check for the service
         matching (List[DosService]): The matching DoS service to check for the
-        service_type (ServiceType): Various constants for the service type
+        service_type (CommissionedServiceType): Various constants for the service type
     """
     if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
         (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),

@@ -19,9 +19,9 @@ from application.service_matcher.service_matcher import (
     remove_service_if_not_on_change_event,
     send_update_requests,
 )
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION
 from common.nhs import NHSEntity
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.service_type import BLOOD_PRESSURE, CONTRACEPTION
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
