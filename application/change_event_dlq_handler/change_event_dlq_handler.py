@@ -49,7 +49,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     else:
         # This is when a message comes from the holding queue
         attributes = handle_sqs_msg_attributes(record.message_attributes)
-        logger.info("Message received from holding queue", extra={"body": record.body})
+        logger.info("Message received from holding queue", body=record.body)
         change_event = body["change_event"]
         correlation_id = body.get("correlation_id")
         logger.set_correlation_id(correlation_id)
