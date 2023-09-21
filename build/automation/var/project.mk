@@ -30,6 +30,8 @@ TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
+# DOS DB
+TF_VAR_dos_db_cluster_name:= $(DB_CLUSTER_NAME)
 TF_VAR_dos_db_name := $(DB_SERVER_NAME)
 TF_VAR_dos_db_replica_name := $(DB_REPLICA_SERVER_NAME)
 

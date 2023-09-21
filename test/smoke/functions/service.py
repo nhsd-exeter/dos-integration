@@ -197,7 +197,7 @@ def check_demographic_field_updated(field: str, service_history_key: str, expect
 
     def assert_field_updated_in_history() -> None:
         history = get_service_history(service_id)
-        first_key_in_service_history = list(history.keys())[0]
+        first_key_in_service_history = next(iter(history.keys()))
         new_history = history[first_key_in_service_history]["new"]
         assert (
             expected_value == new_history[service_history_key]["data"]
@@ -238,7 +238,7 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
 
     def assert_field_updated_in_history() -> None:
         history = get_service_history(service_id)
-        first_key = list(history.keys())[0]
+        first_key = next(iter(history.keys()))
         new_history = history[first_key]["new"]
 
         for expected_value_time_periods in expected_value:
@@ -289,7 +289,7 @@ def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
 
     def assert_field_updated_in_history() -> None:
         history = get_service_history(service_id)
-        first_key = list(history.keys())[0]
+        first_key = next(iter(history.keys()))
         specified_opening_times_key = "cmsopentimespecified"
         new_history = history[first_key]["new"]
         expected_specified_opening_times = [

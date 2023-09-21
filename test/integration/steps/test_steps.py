@@ -1,4 +1,5 @@
 import ast
+from ast import literal_eval
 from datetime import datetime as dt
 from decimal import Decimal
 from json import loads
@@ -11,59 +12,63 @@ from pytest_bdd import given, scenarios, then, when
 from pytest_bdd.parsers import parse
 from pytz import timezone
 
-from .utilities.cloudwatch import get_logs, negative_log_check
-from .utilities.context import Context
-from .utilities.generator import (
-    add_single_opening_day,
-    add_specified_openings_to_dos,
-    add_standard_openings_to_dos,
-    build_change_event,
-    build_change_event_contacts,
-    build_change_event_opening_times,
-    commit_new_service_to_dos,
-    create_palliative_care_entry_ce,
-    create_palliative_care_entry_dos,
-    generate_staff,
-    query_specified_opening_builder,
-    query_standard_opening_builder,
-    valid_change_event,
-)
-from .utilities.translation import get_service_table_field_name
-from .utilities.utils import (
-    assert_standard_closing,
-    assert_standard_openings,
+from .functions.api import process_payload, process_payload_with_sequence
+from .functions.assertions import assert_standard_closing, assert_standard_openings
+from .functions.aws.aws_lambda import re_process_payload
+from .functions.aws.cloudwatch import get_logs, negative_log_check
+from .functions.aws.dynamodb import get_latest_sequence_id_for_a_given_odscode, get_stored_events_from_dynamo_db
+from .functions.aws.s3 import get_s3_email_file
+from .functions.aws.sqs import post_to_change_event_dlq, post_ur_fifo, post_ur_sqs
+from .functions.context import Context
+from .functions.dos.check_data import (
     check_pending_service_is_rejected,
     check_service_history,
     check_service_history_change_type,
-    convert_specified_opening,
-    convert_standard_opening,
-    create_pending_change_for_service,
-    generate_correlation_id,
-    generate_random_int,
-    get_address_string,
+    service_history_negative_check,
+)
+from .functions.dos.get_data import (
+    get_blood_pressure_sgsd,
     get_change_event_specified_opening_times,
     get_change_event_standard_opening_times,
-    get_expected_data,
-    get_latest_sequence_id_for_a_given_odscode,
+    get_contraception_sgsd,
     get_locations_table_data,
     get_palliative_care,
-    get_s3_email_file,
     get_service_history,
     get_service_history_specified_opening_times,
     get_service_history_standard_opening_times,
     get_service_id,
     get_service_table_field,
     get_services_table_location_data,
-    get_stored_events_from_dynamo_db,
-    post_to_change_event_dlq,
-    post_ur_fifo,
-    post_ur_sqs,
-    process_payload,
-    process_payload_with_sequence,
-    re_process_payload,
-    service_history_negative_check,
-    slack_retry,
     wait_for_service_update,
+)
+from .functions.dos.translation import get_service_table_field_name
+from .functions.generator import (
+    add_blood_pressure_to_change_event,
+    add_contraception_to_change_event,
+    add_palliative_care_to_change_event,
+    add_single_opening_day,
+    add_specified_openings_to_dos,
+    add_standard_openings_to_dos,
+    apply_palliative_care_to_service,
+    build_change_event,
+    build_change_event_contacts,
+    build_change_event_opening_times,
+    build_change_event_services,
+    commit_new_service_to_dos,
+    generate_staff,
+    query_specified_opening_builder,
+    query_standard_opening_builder,
+    valid_change_event,
+)
+from .functions.slack import slack_retry
+from .functions.utils import (
+    convert_specified_opening,
+    convert_standard_opening,
+    create_pending_change_for_service,
+    generate_correlation_id,
+    generate_random_int,
+    get_address_string,
+    get_expected_data,
 )
 
 scenarios(
@@ -138,6 +143,8 @@ def a_service_table_entry_is_created(context: Context, ods_code: int = 0, servic
         "postcode": "NG11GS",
         "publicphone": f"{randint(10000000000, 99999999999)!s}",
         "web": "www.google.com",
+        "blood pressure": False,
+        "contraception": False,
     }
     context.generator_data = query_values
     return context
@@ -153,13 +160,13 @@ def add_palliative_care_to_dos(context: Context) -> Context:
     Returns:
         Context: The context object.
     """
-    context.other = create_palliative_care_entry_dos(context)
+    context.other = apply_palliative_care_to_service(context)
     return context
 
 
 @given("the change event has a palliative care entry", target_fixture="context")
-def add_palliative_care_to_ce(context: Context) -> Context:
-    """Add a palliative care entry to the change event.
+def _(context: Context) -> Context:
+    """Add a palliative care uecservice to the change event.
 
     Args:
         context (Context): The context object.
@@ -167,7 +174,35 @@ def add_palliative_care_to_ce(context: Context) -> Context:
     Returns:
         Context: The context object.
     """
-    create_palliative_care_entry_ce(context)
+    add_palliative_care_to_change_event(context)
+    return context
+
+
+@given("the change event has a blood pressure entry", target_fixture="context")
+def _(context: Context) -> Context:
+    """Add a blood pressure service entry to the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    add_blood_pressure_to_change_event(context)
+    return context
+
+
+@given("the change event has a contraception entry", target_fixture="context")
+def _(context: Context) -> Context:
+    """Add a contraception service entry to the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    add_contraception_to_change_event(context)
     return context
 
 
@@ -239,7 +274,14 @@ def service_values_updated_in_context(field_name: str, values: str, context: Con
 @given("an entry is created in the services table with a derivative odscode", target_fixture="context")
 def _(context: Context) -> Context:
     odscode = f"{context.generator_data['odscode']}A"
-    context = a_service_table_entry_is_created(context=context, ods_code=odscode)
+    return a_service_table_entry_is_created(context=context, ods_code=odscode)
+
+
+@given("an entry is created in the services table with a derivative service", target_fixture="context")
+def _(context: Context) -> Context:
+    context.generator_data["odscode"] = f"{context.generator_data['odscode']}A"
+    context.generator_data["id"] = f"{context.generator_data['id']}1"
+    context.generator_data["uid"] = f"{context.generator_data['uid']}1"
     return context
 
 
@@ -428,6 +470,12 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
         context.previous_value = context.generator_data["publicphone"]
         context.generator_data["publicphone"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
+    elif field_name.lower() == "blood pressure":
+        context.generator_data["blood pressure"] = literal_eval(values)
+        context.change_event["Services"] = build_change_event_services(context)
+    elif field_name.lower() == "contraception":
+        context.generator_data["contraception"] = literal_eval(values)
+        context.change_event["Services"] = build_change_event_services(context)
     else:
         context.previous_value = context.change_event[field_name]
         context.change_event[field_name] = values
@@ -852,7 +900,7 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
     wait_for_service_update(context.service_id)
     field_name = get_service_table_field_name(plain_english_service_table_field)
     field_data = get_service_table_field(service_id=context.service_id, field_name=field_name)
-    if plain_english_service_table_field in {"easting", "northing"}:
+    if plain_english_service_table_field in {"easting", "northing", "status"}:
         expected_data = int(expected_data)
     elif plain_english_service_table_field in {"latitude", "longitude"}:
         expected_data = float(expected_data)
@@ -1398,7 +1446,7 @@ def services_location_history_update_assertion(context: Context) -> None:
     """
     sleep(10)
     history_data = get_service_history(context.service_id)
-    history_data = history_data[list(history_data.keys())[0]]["new"]
+    history_data = history_data[next(iter(history_data.keys()))]["new"]
     history_list = [
         history_data["cmsorgtown"]["data"],
         history_data["postalcode"]["data"],
@@ -1499,4 +1547,54 @@ def _(context: Context, action: str) -> Context:
 
     palliative_care = get_palliative_care(context.service_id)
     assert palliative_care == applied, "ERROR: Palliative care not correctly applied/removed to DoS service"
+    return context
+
+
+@then(parse("blood pressure Z Code is added to the service"), target_fixture="context")
+def _(context: Context) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    blood_pressure = get_blood_pressure_sgsd(context.service_id)
+    assert blood_pressure is True, "ERROR Blood Pressure not correctly applied to DoS service"
+    return context
+
+
+@then(parse("contraception Z Code is added to the service"), target_fixture="context")
+def _(context: Context) -> Context:
+    """Assert the error messages do not show Staff data.
+
+    Args:
+        context (Context): The context object.
+        action (str): The action.
+
+    Returns:
+        Context: The context object.
+    """
+    contraception = get_contraception_sgsd(context.service_id)
+    assert contraception is True, "ERROR Contraception not correctly applied to DoS service"
+    return context
+
+
+@then(
+    parse("Hidden or Closed logs does not show closed services or not going to active services"),
+    target_fixture="context",
+)
+def _(context: Context) -> Context:
+    logs = get_logs(
+        query=f"fields @message | filter report_key == 'HIDDEN_OR_CLOSED' | filter correlation_id == '{context.correlation_id}' | sort @timestamp",  # noqa: E501
+        lambda_name="service-matcher",
+        start_time=context.start_time,
+    )
+    results = loads(logs)["results"]
+    value = loads(results[0][0]["value"])
+    count = [result["value"] for result in results[0] if result["field"] == "@message"]
+    assert value["dos_service_typeid"] == 13, "ERROR: Incorrect service type id found"
+    assert len(count) == 1, "ERROR: More than one log entry found"
     return context

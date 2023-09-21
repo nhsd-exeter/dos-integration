@@ -13,7 +13,7 @@ jobs:
   check-code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Tester Build
@@ -38,5 +38,5 @@ jobs:
             -Dsonar.projectKey=uec-dos-int
             -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/dos_db_handler/**,test/**,scripts/**,application/conftest.py
             -Dsonar.python.coverage.reportPaths=coverage.xml
-            -Dsonar.python.version=3.10
+            -Dsonar.python.version=3.11
             -Dsonar.exclusions=application/**/tests/**

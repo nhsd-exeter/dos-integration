@@ -102,7 +102,7 @@ The main components you will need for _basic_ development work, are your OS vers
 
 - A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
-- Python (The project currenly runs on 3.10)
+- Python (The project currenly runs on 3.11)
 - AWS CLI
 - Docker
 

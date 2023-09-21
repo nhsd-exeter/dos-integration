@@ -455,17 +455,6 @@ def test_is_std_opening_json(open_time_json, expected):
         (
             {
                 "Weekday": "",
-                "OpeningTime": "10:00",
-                "ClosingTime": "17:00",
-                "OpeningTimeType": "General",
-                "AdditionalOpeningDate": "Apr 14 2021",
-                "IsOpen": True,
-            },
-            False,
-        ),
-        (
-            {
-                "Weekday": "",
                 "OpeningTime": "",
                 "ClosingTime": "",
                 "OpeningTimeType": "Additional",
@@ -620,9 +609,33 @@ def test_is_matching_dos_service():
         ),
     ],
 )
-def test_extract_uec_service(input_value, output_value):
+def test_check_for_uec_service(input_value, output_value):
     entity = NHSEntity({"ODSCode": "V012345", "UecServices": input_value})
-    assert entity.extract_uec_service("SRV0559") == output_value
+    assert entity.check_for_uec_service("SRV0559") == output_value
+
+
+@pytest.mark.parametrize(
+    ("input_value", "output_value"),
+    [
+        ("", None),
+        (None, None),
+        ([], False),
+        ({}, None),
+        (
+            [
+                {
+                    "ServiceName": "Pharmacy palliative care medication stockholder",
+                    "ServiceDescription": None,
+                    "ServiceCode": "SRV0559",
+                },
+            ],
+            True,
+        ),
+    ],
+)
+def test_check_for_service(input_value, output_value):
+    entity = NHSEntity({"ODSCode": "V012345", "Services": input_value})
+    assert entity.check_for_service("SRV0559") == output_value
 
 
 @pytest.mark.parametrize(
@@ -632,7 +645,6 @@ def test_extract_uec_service(input_value, output_value):
         ("", False),
         ("V012345", False),
         (False, False),
-        ("V012345", False),
     ],
 )
 def test_skip_if_key_is_none(input_value, output_value):

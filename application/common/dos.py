@@ -7,6 +7,9 @@ from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
 
 from .constants import (
+    DOS_ACTIVE_STATUS_ID,
+    DOS_CLOSED_STATUS_ID,
+    DOS_COMMISSIONING_STATUS_ID,
     DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
     PHARMACY_SERVICE_TYPE_IDS,
@@ -14,12 +17,7 @@ from .constants import (
 from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
-
-VALID_STATUS_ID = 1
-
-ACTIVE_STATUS_ID = 1
-CLOSED_STATUS_ID = 2
-COMMISSIONING_STATUS_ID = 3
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
 
 logger = Logger(child=True)
 dos_location_cache = {}
@@ -66,6 +64,8 @@ class DoSService:
         self.standard_opening_times = None
         self.specified_opening_times = None
         self.palliative_care = False
+        self.blood_pressure = False
+        self.contraception = False
 
     def __repr__(self) -> str:
         """Returns a string representation of this object."""
@@ -80,6 +80,17 @@ class DoSService:
             f"<DoSService: name='{name[:16]}' id={self.id} uid={self.uid} "
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
+
+    def __eq__(self, other) -> bool:  # noqa: ANN001
+        """Checks DoS service equality using service id.
+
+        Args:
+            other (DoSService): DoS service to compare too
+
+        Returns:
+            bool: True if equal, False if not
+        """
+        return self.id == other.id
 
     def normal_postcode(self) -> str:
         """Returns the postcode with no spaces and in uppercase."""
@@ -112,13 +123,17 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
     named_args = {
         "ODS": f"{odscode[:5]}%",
         "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
-        "ACTIVE_STATUS_ID": ACTIVE_STATUS_ID,
+        "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
     }
 
     if pharmacy_first_phase_one_feature_flag:  # Add pharmacy first condition
         pharmacy_first_condition = "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
         named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = [148, 149]
-        named_args["PHARMACY_FIRST_STATUSES"] = [ACTIVE_STATUS_ID, CLOSED_STATUS_ID, COMMISSIONING_STATUS_ID]
+        named_args["PHARMACY_FIRST_STATUSES"] = [
+            DOS_ACTIVE_STATUS_ID,
+            DOS_CLOSED_STATUS_ID,
+            DOS_COMMISSIONING_STATUS_ID,
+        ]
     else:
         pharmacy_first_condition = ""
 
@@ -317,17 +332,59 @@ def has_palliative_care(service: DoSService, connection: Connection) -> bool:
     if service.typeid in PHARMACY_SERVICE_TYPE_IDS:
         sql_command = """SELECT sgsds.id as z_code from servicesgsds sgsds
             WHERE sgsds.serviceid = %(SERVICE_ID)s
-            AND sgsds.sgid = %(PALIATIVE_CARE_SYMPTOM_GROUP)s
-            AND sgsds.sdid  = %(PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR)s
+            AND sgsds.sgid = %(PALLIATIVE_CARE_SYMPTOM_GROUP)s
+            AND sgsds.sdid  = %(PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR)s
             """
         named_args = {
             "SERVICE_ID": service.id,
-            "PALIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
-            "PALIATIVE_CARE_SYMPTOM_DESCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
+            "PALLIATIVE_CARE_SYMPTOM_GROUP": DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
+            "PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR": DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
         }
         cursor = query_dos_db(connection=connection, query=sql_command, query_vars=named_args)
         cursor.fetchall()
+        logger.debug("Checked if service has palliative care", has_palliative_care=cursor.rowcount != 0)
         return cursor.rowcount != 0
+    return False
+
+
+def has_blood_pressure(service: DoSService) -> bool:
+    """Checks if a service has blood pressure.
+
+    Args:
+        service: The service to check
+
+    Returns:
+        True if the service has blood pressure, False otherwise
+    """
+    return has_service(service, BLOOD_PRESSURE)
+
+
+def has_contraception(service: DoSService) -> bool:
+    """Checks if a service has contraception.
+
+    Args:
+        service: The service to check
+
+    Returns:
+        True if the service has contraception, False otherwise
+    """
+    return has_service(service, CONTRACEPTION)
+
+
+def has_service(service: DoSService, service_type: CommissionedServiceType) -> bool:
+    """Checks if a service has a given service type.
+
+    Args:
+        service: The service to check
+        service_type: The service type to check for
+
+    Returns:
+        True if the service has the given service type, False otherwise
+    """
+    if service.typeid == service_type.DOS_TYPE_ID:
+        status = service.statusid == DOS_ACTIVE_STATUS_ID
+        logger.debug("Checked if service has {service_type.TYPE_NAME.lower()}", service_status=status)
+        return status
     return False
 
 

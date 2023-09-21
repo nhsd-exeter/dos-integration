@@ -7,6 +7,8 @@ from aws_lambda_powertools.logging import Logger
 
 from common.constants import (
     CLOSED_AND_HIDDEN_STATUSES,
+    NHS_UK_BLOOD_PRESSURE_SERVICE_CODE,
+    NHS_UK_CONTRACEPTION_SERVICE_CODE,
     NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
     PHARMACY_SERVICE_TYPE_IDS,
 )
@@ -38,6 +40,8 @@ class NHSEntity:
     standard_opening_times: StandardOpeningTimes | None
     specified_opening_times: list[SpecifiedOpeningTime] | None
     palliative_care: bool
+    blood_pressure: bool
+    contraception: bool
 
     def __init__(self, entity_data: dict) -> None:
         """Initialise the object with the entity data."""
@@ -61,7 +65,9 @@ class NHSEntity:
         self.specified_opening_times = self._get_specified_opening_times()
         self.phone = self.extract_contact("Telephone")
         self.website = self.extract_contact("Website")
-        self.palliative_care = self.extract_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+        self.palliative_care = self.check_for_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE)
+        self.blood_pressure = self.check_for_service(NHS_UK_BLOOD_PRESSURE_SERVICE_CODE)
+        self.contraception = self.check_for_service(NHS_UK_CONTRACEPTION_SERVICE_CODE)
 
         logger.append_keys(nhsuk_organisation_typeid=self.org_type_id, nhsuk_organisation_name=self.org_name)
 
@@ -88,8 +94,8 @@ class NHSEntity:
             None,
         )
 
-    def extract_uec_service(self, service_code: str) -> bool | None:
-        """Extracts the UEC service from the payload (e.g. Palliative Care).
+    def check_for_uec_service(self, service_code: str) -> bool | None:
+        """Checks if the UEC service exists in the payload.
 
         Args:
             service_code (str): NHS UK Service Code of the UEC service to extract if exists
@@ -97,8 +103,22 @@ class NHSEntity:
         Returns:
             Union[bool, None]: True if the service exists, False otherwise
         """
-        if isinstance(self.entity_data.get("UecServices", []), list):
-            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get("UecServices", []))
+        return self._extract_service_from_list("UecServices", service_code)
+
+    def check_for_service(self, service_code: str) -> bool | None:
+        """Checks if the service exists in the payload.
+
+        Args:
+            service_code (str): NHS UK Service Code of the service to extract if exists
+
+        Returns:
+            Union[bool, None]: True if the service exists, False otherwise
+        """
+        return self._extract_service_from_list("Services", service_code)
+
+    def _extract_service_from_list(self, list_name: str, service_code: str) -> bool | None:
+        if isinstance(self.entity_data.get(list_name, []), list):
+            return any(item.get("ServiceCode") == service_code for item in self.entity_data.get(list_name, []))
         return None
 
     def _get_standard_opening_times(self) -> StandardOpeningTimes:

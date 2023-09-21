@@ -100,7 +100,7 @@ Feature: F007. Report Logging
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX08 Check for Hidden Or Closed Report log
-    Given a basic service is created
+    Given a pharmacy service is created with type "<service_type>"
     And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-matcher" lambda shows field "message" with value "NHS Service marked as closed or hidden"
@@ -118,9 +118,14 @@ Feature: F007. Report Logging
     And the service history is not updated
 
     Examples:
-      | OrganisationStatus |
-      | Closed             |
-      | Hidden             |
+      | service_type | OrganisationStatus |
+      | 13           | Closed             |
+      | 13           | Hidden             |
+      | 148          | Closed             |
+      | 148          | Hidden             |
+      | 149          | Closed             |
+      | 149          | Hidden             |
+
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX09 Check for Invalid Postcode Report log
@@ -139,3 +144,24 @@ Feature: F007. Report Logging
     And "dos_service_name" attribute is identified in the "INVALID_POSTCODE" report in "service-sync" logs
     And the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
     And the service history is not updated
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX10 Check for missing dos service type
+    Given a basic service is created
+    And the change event "<service_type>" is set to "True"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-matcher" lambda shows field "report_key" with value "MISSING_SERVICE_TYPE"
+    And "ods_code" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "org_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "org_sub_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_status" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_missing_service_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_address" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_postcode" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_region" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+
+    Examples:
+      | service_type   |
+      | Blood Pressure |
+      | Contraception  |

@@ -2,17 +2,17 @@
 extend = "../pyproject.toml"
 
 ignore = [
-  "D100", # Missing docstring in public module
-  "D104", # Missing docstring in public package
-  "PTH123", # Use `pathlib.Path` instead of `os.path`,
-  "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
-  "T201", #`print` found
-  "ANN401", # Dynamically typed expressions (typing.Any) are disallowed in `expected_data`
-  "FBT001", # Boolean positional arg in function definition
-  "FBT002", # Boolean keyword arg in function definition
-  "FBT003", # Boolean positional value in function call
+  "D100",    # Missing docstring in public module
+  "D104",    # Missing docstring in public package
+  "PTH123",  # Use `pathlib.Path` instead of `os.path`,
+  "S311",    # Standard pseudo-random generators are not suitable for cryptographic purposes
+  "T201",    #`print` found
+  "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed in `expected_data`
+  "FBT001",  # Boolean positional arg in function definition
+  "FBT002",  # Boolean keyword arg in function definition
+  "FBT003",  # Boolean positional value in function call
   "PLR2004", # Magic value used in comparison, consider replacing value with a constant variable
-  "DTZ007", # the use of `datetime.datetime.strptime()` without %z must be followed by `.replace(tzinfo=)` or `.astimezone()`
+  "DTZ007",  # the use of `datetime.datetime.strptime()` without %z must be followed by `.replace(tzinfo=)` or `.astimezone()`
 ]
 
 # Set python version to 3.11.
@@ -22,7 +22,16 @@ target-version = "py311"
 "**test_*.py" = ["S101"] # Allow `assert` in tests.
 "integration**.py" = ["S101"] # Allow `assert` in tests.
 "smoke**.py" = ["S101"] # Allow `assert` in tests.
-"conftest.py" = ["ANN001","PLR0913","ARG001","BLE001"] # Conftest files break many rules.
+"conftest.py" = [
+  "ANN001",
+  "PLR0913",
+  "ARG001",
+  "BLE001",
+] # Conftest files break many rules.
+
+"performance/functions/performance_test.py" = [
+  "ERA001",
+] # Allow commented out code in performance tests.
 
 [tool.ruff.pydocstyle]
 convention = "google" # Use Google docstring convention.

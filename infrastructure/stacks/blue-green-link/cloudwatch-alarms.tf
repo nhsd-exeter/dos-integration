@@ -223,7 +223,7 @@ resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "300"
   statistic                 = "Average"
-  threshold                 = "1800000" # 30 Minutes
+  threshold                 = "120000" # 2 Minutes
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
@@ -242,7 +242,7 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
   namespace                 = "UEC-DOS-INT"
   period                    = "300"
   statistic                 = "Maximum"
-  threshold                 = "7200000" # 2 Hours
+  threshold                 = "120000" # 2 Minutes
   treat_missing_data        = "notBreaching"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
@@ -250,7 +250,7 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
 resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exist" {
   count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert for when the DoS Palliative Care SymptomGroupSymptomDiscriminator does not exist"
+  alarm_description         = "Alert for when the DoS Palliative Care Z Code does not exist"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Palliative Care Z Code Does Not Exist !!!"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
@@ -258,6 +258,44 @@ resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exis
   evaluation_periods        = "1"
   insufficient_data_actions = []
   metric_name               = "DoSPalliativeCareZCodeDoesNotExist"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "0"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist" {
+  count                     = var.profile == "dev" ? 0 : 1
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when the DoS Blood Pressure Z Code does not exist"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Blood Pressure Z Code Does Not Exist !!!"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DoSBloodPressureZCodeDoesNotExist"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Maximum"
+  threshold                 = "0"
+  treat_missing_data        = "notBreaching"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist" {
+  count                     = var.profile == "dev" ? 0 : 1
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description         = "Alert for when the DoS Contraception Z Code does not exist"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Contraception Z Code Does Not Exist !!!"
+  comparison_operator       = "GreaterThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "DoSContraceptionZCodeDoesNotExist"
   namespace                 = "UEC-DOS-INT"
   period                    = "60"
   statistic                 = "Maximum"

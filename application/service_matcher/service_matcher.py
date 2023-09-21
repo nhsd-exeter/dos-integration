@@ -1,3 +1,4 @@
+from ast import literal_eval
 from datetime import datetime
 from hashlib import sha256
 from json import dumps
@@ -17,11 +18,13 @@ from pytz import timezone
 from .reporting import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_missing_dos_service_for_a_given_type,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
-from common.constants import PHARMACY_SERVICE_TYPE_ID
-from common.dos import ACTIVE_STATUS_ID, DoSService, get_matching_dos_services
+from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
+from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
+from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
@@ -72,10 +75,28 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
     matching_services = get_matching_services(nhs_entity)
 
-    if (len(matching_services) == 0
-        or not next((True for service in matching_services if service.statusid == ACTIVE_STATUS_ID), False)):
+    if len(matching_services) == 0 or not next(
+        (True for service in matching_services if service.statusid == DOS_ACTIVE_STATUS_ID),
+        False,
+    ):
         log_unmatched_nhsuk_service(nhs_entity)
         return
+
+    remove_service_if_not_on_change_event(
+        matching_services=matching_services,
+        nhs_entity=nhs_entity,
+        nhs_uk_key="blood_pressure",
+        service_type=BLOOD_PRESSURE,
+    )
+
+    remove_service_if_not_on_change_event(
+        matching_services=matching_services,
+        nhs_entity=nhs_entity,
+        nhs_uk_key="contraception",
+        service_type=CONTRACEPTION,
+    )
+
+    logger.info("Matched DoS Services after services filtered", extra={"matched": matching_services})
 
     if nhs_entity.is_status_hidden_or_closed():
         log_closed_or_hidden_services(nhs_entity, matching_services)
@@ -86,7 +107,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]
-    logger.debug(f"Matching service types: {dos_matching_service_types}")
+    logger.debug(f"Matched service types: {dos_matching_service_types}", extra={"matched": matching_services})
     if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
         type_13_matching_services = [
             service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
@@ -103,6 +124,9 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
             reason="No 'Pharmacy' type services found (type 13)",
         )
 
+    log_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
+    log_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)
+
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
     ]
@@ -113,6 +137,65 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         record_id=holding_queue_change_event_item["dynamo_record_id"],
         sequence_number=holding_queue_change_event_item["sequence_number"],
     )
+
+
+def remove_service_if_not_on_change_event(
+    matching_services: list[DoSService],
+    nhs_entity: NHSEntity,
+    nhs_uk_key: str,
+    service_type: CommissionedServiceType,
+) -> list[DoSService]:
+    """Removes a service from the matching services list if it is not on the change event.
+
+    Args:
+        matching_services (list[DoSService]): The list of matching services
+        nhs_entity (NHSEntity): The nhs entity to check for the service
+        nhs_uk_key (str): The key to check for the service on the nhs entity
+        service_type (CommissionedServiceType): Various constants for the service type
+
+    Returns:
+        list[DoSService]: The list of matching services with the service removed if it is not on the change event
+    """
+    if remove_matched_services := [
+        service
+        for service in matching_services
+        if service.statusid != DOS_ACTIVE_STATUS_ID
+        and not getattr(nhs_entity, nhs_uk_key)
+        and service.typeid == service_type.DOS_TYPE_ID
+    ]:
+        for service in remove_matched_services:
+            matching_services.remove(service)
+        logger.info(
+            f"Removing matched {service_type.TYPE_NAME.lower()} services",
+            remove_matched_services=remove_matched_services,
+            matched=matching_services,
+        )
+    return matching_services
+
+
+def log_missing_dos_services(
+    nhs_entity: NHSEntity,
+    matching: list[DoSService],
+    service_type: CommissionedServiceType,
+) -> None:
+    """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+
+    Args:
+        nhs_entity (NHSEntity): The nhs entity to check for the service
+        matching (List[DosService]): The matching DoS service to check for the
+        service_type (CommissionedServiceType): Various constants for the service type
+    """
+    if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
+        (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),
+        False,
+    ):
+        log_missing_dos_service_for_a_given_type(
+            nhs_entity=nhs_entity,
+            matching_services=matching,
+            missing_type=service_type,
+            reason=f"No '{service_type.TYPE_NAME}' type services found in DoS even though its specified"
+            f" in the NHS UK Change Event (dos type {service_type.DOS_TYPE_ID})",
+        )
 
 
 def divide_chunks(to_chunk: list, chunk_size: int) -> Any:  # noqa: ANN401
@@ -155,7 +238,7 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
     """
     parameter_name: str = getenv("PHARMACY_FIRST_PHASE_ONE_PARAMETER")
     pharmacy_first_phase_one: str = parameters.get_parameter(parameter_name)
-    pharmacy_first_phase_one_feature_flag = eval(pharmacy_first_phase_one)  # noqa: PGH001
+    pharmacy_first_phase_one_feature_flag = literal_eval(pharmacy_first_phase_one)
     logger.debug(
         "Got pharmacy first phase one feature flag",
         extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
