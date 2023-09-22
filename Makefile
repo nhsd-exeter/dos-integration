@@ -80,8 +80,7 @@ unit-test-local:
 
 unit-test:
 	FOLDER_PATH=$$(make -s get-unit-test-path)
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	make -s docker-run-tester \
 	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
@@ -124,8 +123,7 @@ integration-test-autoflags-cloudwatch-logs: # End to end test DI project - manda
 integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
 	echo RUN_ID=$$RUN_ID
-	make -s docker-run-python \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
+	make -s docker-run-tester \
 	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
@@ -135,8 +133,7 @@ integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[compl
 
 production-smoke-test: # Smoke test DI project - mandatory: PROFILE; optional: ENVIRONMENT
 	if [ "$(PROFILE)" != "live" ]; then
-		make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		make -s docker-run-tester \
 		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
 		DIR=./test/smoke \
 		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
@@ -375,16 +372,14 @@ tester-clean:
 
 stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
 	PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 5 --run-time 10m)
-	make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester \
+	make -s docker-run-tester \
 		CMD="python -m locust -f stress_test.py --headless \
 			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
-	make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester \
+	make -s docker-run-tester \
 		CMD="python -m locust -f load_test.py --headless \
 			--users 50 --spawn-rate 5 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
@@ -600,6 +595,35 @@ wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist
 		sleep 10
 	done
 		echo "..Lambda images ready"
+
+docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
+	make docker-config > /dev/null 2>&1
+	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
+	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
+	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
+	docker run --interactive $(_TTY) --rm \
+		--name $$container \
+		--user $$(id -u):$$(id -g) \
+		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
+		--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
+		--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+		--env HOME=/tmp \
+		--env PIP_TARGET=/tmp/.packages \
+		--env PYTHONPATH=/tmp/.packages \
+		--env XDG_CACHE_HOME=/tmp/.cache \
+		--volume $(PROJECT_DIR):/project \
+		--volume $(HOME)/.aws:/tmp/.aws \
+		--volume $(HOME)/bin:/tmp/bin \
+		--volume $(HOME)/etc:/tmp/etc \
+		--volume $(HOME)/usr:/tmp/usr \
+		$$lib_volume_mount \
+		--network $(DOCKER_NETWORK) \
+		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+		$(ARGS) \
+		$$(make _docker-get-reg)/tester:latest \
+			$(CMD)
+
 
 # ==============================================================================
 # Ruff
