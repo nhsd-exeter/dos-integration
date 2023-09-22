@@ -703,6 +703,10 @@ docker-run-postgres: ### Run postgres container - mandatory: CMD; optional: DIR,
 
 docker-run-tools: ### Run tools (Python) container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
 	make docker-config > /dev/null 2>&1
+	if [ ! -z $(CODEBUILD_BUILD_ID)	]; then
+		$(CMD)
+		exit 0
+	fi
 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
 	mkdir -p $(HOME)/.aws
 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
