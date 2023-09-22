@@ -538,10 +538,15 @@ docker-run-python: ### Run python container - mandatory: CMD; optional: SH=true,
 			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
 			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+			--env HOME=/tmp \
 			--env PIP_TARGET=/tmp/.packages \
 			--env PYTHONPATH=/tmp/.packages \
 			--env XDG_CACHE_HOME=/tmp/.cache \
 			--volume $(PROJECT_DIR):/project \
+			--volume $(HOME)/.aws:/tmp/.aws \
+			--volume $(HOME)/bin:/tmp/bin \
+			--volume $(HOME)/etc:/tmp/etc \
+			--volume $(HOME)/usr:/tmp/usr \
 			$$lib_volume_mount \
 			--network $(DOCKER_NETWORK) \
 			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
@@ -556,10 +561,15 @@ docker-run-python: ### Run python container - mandatory: CMD; optional: SH=true,
 			--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
 			--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
 			--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+			--env HOME=/tmp \
 			--env PIP_TARGET=/tmp/.packages \
 			--env PYTHONPATH=/tmp/.packages \
 			--env XDG_CACHE_HOME=/tmp/.cache \
 			--volume $(PROJECT_DIR):/project \
+			--volume $(HOME)/.aws:/tmp/.aws \
+			--volume $(HOME)/bin:/tmp/bin \
+			--volume $(HOME)/etc:/tmp/etc \
+			--volume $(HOME)/usr:/tmp/usr \
 			$$lib_volume_mount \
 			--network $(DOCKER_NETWORK) \
 			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
