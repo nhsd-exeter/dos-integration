@@ -50,7 +50,7 @@ resource "aws_codebuild_project" "di_unit_tests_stage" {
 resource "aws_codebuild_project" "di_build_image_stage" {
   name           = "${var.project_id}-${var.environment}-build-image-stage"
   description    = "Builds docker container image"
-  build_timeout  = "5"
+  build_timeout  = "15"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
