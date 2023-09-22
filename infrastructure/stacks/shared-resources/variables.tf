@@ -129,6 +129,11 @@ variable "change_event_gateway_subscription_filter_name" {
   description = "Log filter name for change event api gateway logs"
 }
 
+variable "waf_log_subscription_filter_name" {
+  type        = string
+  description = "Log filter name for waf logs"
+}
+
 variable "dos_integration_firehose" {
   type        = string
   description = "The firehose delivery stream name"
@@ -142,6 +147,11 @@ variable "di_firehose_role" {
 # ##############
 # # WAF
 # ##############
+
+variable "waf_enabled" {
+  type        = bool
+  description = "Whether to enable WAF"
+}
 
 variable "waf_acl_name" {
   type        = string
@@ -195,51 +205,6 @@ variable "waf_aws_known_bad_inputs_rule_name" {
 variable "waf_aws_sqli_rule_name" {
   type        = string
   description = "WAF AWS SQLi rule name"
-}
-
-
-# ##############
-# # WAF METRICS
-# ##############
-
-variable "waf_aws_common_metric_name" {
-  type        = string
-  description = "AWS common metric name"
-}
-
-variable "ip_reputation_list_metric_name" {
-  type        = string
-  description = "IP Reputation List metric name"
-}
-
-variable "non_gb_rule_metric_name" {
-  type        = string
-  description = "Non GB rule metric name"
-}
-
-variable "waf_ip_allow_list_metric_name" {
-  type        = string
-  description = "WAF IP Allow List metric name"
-}
-
-variable "waf_rate_based_metric_name" {
-  type        = string
-  description = "WAF rate based metric name"
-}
-
-variable "waf_aws_known_bad_inputs_metric_name" {
-  type        = string
-  description = "WAF AWS known bad inputs metric name"
-}
-
-variable "waf_acl_metric_name" {
-  type        = string
-  description = "WAF ACL metric name"
-}
-
-variable "waf_aws_sqli_metric_name" {
-  type        = string
-  description = "WAF AWS SQLi metric name"
 }
 
 # ##############

@@ -44,6 +44,9 @@ SLACK_ALERT_CHANNEL := dos-integration-dev-status
 # Tag Secrets
 TAG_SECRET_MANAGER := uec-dos-int-dev/deployment
 
+# WAF
+WAF_ENABLED := false
+
 # ==============================================================================
 # Performance variables
 
