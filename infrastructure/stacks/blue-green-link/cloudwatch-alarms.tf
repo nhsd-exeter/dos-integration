@@ -1,35 +1,33 @@
 resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_postcode_alert" {
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Events received from NHS UK with invalid postcodes"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Invalid Postcode"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "InvalidPostcode"
-  namespace                 = "UEC-DOS-INT"
-  period                    = "60" #1 min
-  statistic                 = "Sum"
-  threshold                 = "0"
-  treat_missing_data        = "notBreaching"
+  alarm_actions       = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description   = "Events received from NHS UK with invalid postcodes"
+  alarm_name          = "${var.project_id} | ${var.blue_green_environment} | Invalid Postcode"
+  comparison_operator = "GreaterThanThreshold"
+  datapoints_to_alarm = "1"
+  dimensions          = { ENV = var.blue_green_environment }
+  evaluation_periods  = "1"
+  metric_name         = "InvalidPostcode"
+  namespace           = "UEC-DOS-INT"
+  period              = "60" #1 min
+  statistic           = "Sum"
+  threshold           = "0"
+  treat_missing_data  = "notBreaching"
 }
 
 resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_alert" {
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Events received from NHS UK with invalid opening times"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Invalid Opening Times"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "InvalidOpenTimes"
-  namespace                 = "UEC-DOS-INT"
-  period                    = "60" # 1 min
-  statistic                 = "Sum"
-  threshold                 = "0"
-  treat_missing_data        = "notBreaching"
+  alarm_actions       = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description   = "Events received from NHS UK with invalid opening times"
+  alarm_name          = "${var.project_id} | ${var.blue_green_environment} | Invalid Opening Times"
+  comparison_operator = "GreaterThanThreshold"
+  datapoints_to_alarm = "1"
+  dimensions          = { ENV = var.blue_green_environment }
+  evaluation_periods  = "1"
+  metric_name         = "InvalidOpenTimes"
+  namespace           = "UEC-DOS-INT"
+  period              = "60" # 1 min
+  statistic           = "Sum"
+  threshold           = "0"
+  treat_missing_data  = "notBreaching"
 }
 
 resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
@@ -65,46 +63,8 @@ resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
   threshold                 = "0"
 }
 
-resource "aws_cloudwatch_metric_alarm" "dos_db_db_connections_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS DB has too many connections"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Connections"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_name }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "DatabaseConnections"
-  namespace                 = "AWS/RDS"
-  period                    = "60"
-  statistic                 = "Maximum"
-  threshold                 = "250"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "dos_db_replica_db_connections_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS DI Replica DB has too many connections"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Replica Connections"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_replica_name }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "DatabaseConnections"
-  namespace                 = "AWS/RDS"
-  period                    = "60"
-  statistic                 = "Maximum"
-  threshold                 = "250"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-}
-
 resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DB has too high CPU Utilisation"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB CPU Utilisation"
@@ -123,7 +83,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_cpu_utilisation_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_db_replica_cpu_utilisation_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DoS DI Replica DB has too high CPU Utilisation"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Replica CPU Utilisation"
@@ -150,7 +110,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
+  evaluation_periods        = "3"
   insufficient_data_actions = []
   metric_name               = "ChangeEventReceived"
   namespace                 = "UEC-DOS-INT"
@@ -166,7 +126,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
   alarm_description         = "Alert for when DI is waiting to process update requests in service sync"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests Waiting"
   comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "2"
+  datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.update_request_queue_name }
   evaluation_periods        = "3"
   insufficient_data_actions = []
@@ -193,29 +153,13 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
   threshold                 = "1"
 }
 
-resource "aws_cloudwatch_metric_alarm" "high_number_emails_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert for when DI is sending many emails"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Number of Emails Sent"
-  comparison_operator       = "GreaterThanOrEqualToThreshold"
-  dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "EmailSent"
-  namespace                 = "UEC-DOS-INT"
-  period                    = "86400" # 1 Day
-  statistic                 = "Sum"
-  threshold                 = "2"
-}
-
 resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
   count                     = var.profile == "dev" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Average Message Latency"
   comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "2"
+  datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.blue_green_environment }
   evaluation_periods        = "6"
   insufficient_data_actions = []
@@ -255,15 +199,13 @@ resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exis
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
+  evaluation_periods        = "10"
   insufficient_data_actions = []
   metric_name               = "DoSPalliativeCareZCodeDoesNotExist"
   namespace                 = "UEC-DOS-INT"
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "0"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist" {
@@ -274,15 +216,13 @@ resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
+  evaluation_periods        = "10"
   insufficient_data_actions = []
   metric_name               = "DoSBloodPressureZCodeDoesNotExist"
   namespace                 = "UEC-DOS-INT"
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "0"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist" {
@@ -293,13 +233,11 @@ resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "1"
   dimensions                = { ENV = var.blue_green_environment }
-  evaluation_periods        = "1"
+  evaluation_periods        = "10"
   insufficient_data_actions = []
   metric_name               = "DoSContraceptionZCodeDoesNotExist"
   namespace                 = "UEC-DOS-INT"
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "0"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 }
