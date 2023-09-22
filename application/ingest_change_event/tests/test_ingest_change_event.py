@@ -1,57 +1,16 @@
-from dataclasses import dataclass
 from json import dumps
 from os import environ
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from application.common.types import HoldingQueueChangeEventItem
+from application.conftest import InvocationTracker
 from application.ingest_change_event.ingest_change_event import add_change_event_received_metric, lambda_handler
 
 FILE_PATH = "application.ingest_change_event.ingest_change_event"
-
-
-@pytest.fixture(autouse=True)
-def _mock_metric_logger() -> None:
-    InvocationTracker.reset()
-
-    async def flush(self) -> None:
-        InvocationTracker.record()
-
-    MetricsLogger.flush = flush
-
-
-class InvocationTracker:
-    """Tracks the number of times a function has been invoked."""
-
-    invocations = 0
-
-    @staticmethod
-    def record() -> None:
-        """Record an invocation."""
-        InvocationTracker.invocations += 1
-
-    @staticmethod
-    def reset() -> None:
-        """Reset the invocation count."""
-        InvocationTracker.invocations = 0
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "ingest-change-event"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:ingest-change-event"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 @patch(f"{FILE_PATH}.sqs")

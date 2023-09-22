@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from decimal import Decimal
 from json import dumps
 from os import environ
@@ -23,20 +22,6 @@ FILE_PATH = "application.event_replay.event_replay"
 @pytest.fixture()
 def event() -> dict[str, Any]:
     return {"odscode": "FXXX1", "sequence_number": "1"}
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "event-replay"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:event-replay"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 @pytest.fixture()

@@ -1,5 +1,4 @@
 import hashlib
-from dataclasses import dataclass
 from datetime import date
 from json import dumps
 from os import environ
@@ -26,30 +25,6 @@ from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 FILE_PATH = "application.service_matcher.service_matcher"
 
 SERVICE_MATCHER_ENVIRONMENT_VARIABLES = ["ENV"]
-
-
-@pytest.fixture(autouse=True)
-def _mock_metric_logger() -> None:
-    InvocationTracker.reset()
-
-    async def flush(self) -> None:
-        InvocationTracker.record()
-
-    MetricsLogger.flush = flush
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "service-matcher"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:service-matcher"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 @patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
@@ -614,19 +589,3 @@ SQS_EVENT = {
         },
     ],
 }
-
-
-class InvocationTracker:
-    """Tracks the number of times a function has been invoked."""
-
-    invocations = 0
-
-    @staticmethod
-    def record() -> None:
-        """Record an invocation."""
-        InvocationTracker.invocations += 1
-
-    @staticmethod
-    def reset() -> None:
-        """Reset the invocation count."""
-        InvocationTracker.invocations = 0
