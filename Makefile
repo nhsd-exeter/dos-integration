@@ -79,9 +79,8 @@ unit-test-local:
 	python -m pytest --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
-	FOLDER_PATH=$$(make -s get-unit-test-path)
 	make -s docker-run-tester \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
+	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -93,13 +92,6 @@ coverage-html:
 	make -s docker-run-tools CMD="coverage html" DIR=/ \
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		ARGS=$(UNIT_TEST_ARGS)
-
-get-unit-test-path:
-	if [ -z "$(LAMBDA_FOLDER_NAME)" ]; then
-		echo application
-	else
-		echo application/$(LAMBDA_FOLDER_NAME)
-	fi
 
 UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \

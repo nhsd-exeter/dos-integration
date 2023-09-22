@@ -63,9 +63,7 @@ def lambda_context():
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.time_ns")
 def test_lambda_handler(
-    mock_time_ns: MagicMock,
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
@@ -85,7 +83,6 @@ def test_lambda_handler(
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = queue_url = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
     sqs_timestamp = 1642619743522
-    mock_time_ns.return_value = 123456789
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 1
     mock_get_sequence_number.return_value = sequence_number = 2
     mock_add_change_event_to_dynamodb.return_value = dynamodb_record = "1234567890"
@@ -100,7 +97,6 @@ def test_lambda_handler(
     response = lambda_handler(event, lambda_context)
     # Assert
     assert response is None
-    mock_time_ns.assert_called_once()
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
@@ -136,9 +132,7 @@ def test_lambda_handler(
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
-@patch(f"{FILE_PATH}.time_ns")
 def test_lambda_handler_with_sensitive_staff_key(
-    mock_time_ns: MagicMock,
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
@@ -157,7 +151,6 @@ def test_lambda_handler_with_sensitive_staff_key(
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = queue_url = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
     sqs_timestamp = 1642619743522
-    mock_time_ns.return_value = 123456789
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 1
     mock_get_sequence_number.return_value = sequence_number = 2
     mock_add_change_event_to_dynamodb.return_value = dynamodb_record = "1234567890"
@@ -172,7 +165,6 @@ def test_lambda_handler_with_sensitive_staff_key(
     response = lambda_handler(event, lambda_context)
     # Assert
     assert response is None
-    mock_time_ns.assert_called_once()
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
@@ -209,9 +201,7 @@ def test_lambda_handler_with_sensitive_staff_key(
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.time_ns")
 def test_lambda_handler_no_sequence_number(
-    mock_time_ns: MagicMock,
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
@@ -232,7 +222,6 @@ def test_lambda_handler_no_sequence_number(
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
     sqs_timestamp = 1642619743522
-    mock_time_ns.return_value = 123456789
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 1
     mock_get_sequence_number.return_value = sequence_number = None
     mock_add_change_event_to_dynamodb.return_value = "1234567890"
@@ -247,7 +236,6 @@ def test_lambda_handler_no_sequence_number(
     response = lambda_handler(event, lambda_context)
     # Assert
     assert response is None
-    mock_time_ns.assert_called_once()
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
@@ -276,9 +264,7 @@ def test_lambda_handler_no_sequence_number(
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.time_ns")
 def test_lambda_handler_less_than_latest_sequence_number(
-    mock_time_ns: MagicMock,
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
@@ -299,7 +285,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
     sqs_timestamp = 1642619743522
-    mock_time_ns.return_value = 123456789
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = db_latest_sequence_number = 2
     mock_get_sequence_number.return_value = sequence_number = 1
     mock_add_change_event_to_dynamodb.return_value = "1234567890"
@@ -314,7 +299,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
     response = lambda_handler(event, lambda_context)
     # Assert
     assert response is None
-    mock_time_ns.assert_called_once()
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
@@ -329,7 +313,8 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_sqs.send_message.assert_not_called()
     mock_logger_error.assert_called_once_with(
         "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
-        extra={"incoming_sequence_number": sequence_number, "db_latest_sequence_number": db_latest_sequence_number},
+        incoming_sequence_number=sequence_number,
+        db_latest_sequence_number=db_latest_sequence_number,
     )
     # Cleanup
     del environ["ENV"]
@@ -345,9 +330,7 @@ def test_lambda_handler_less_than_latest_sequence_number(
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
-@patch(f"{FILE_PATH}.time_ns")
 def test_lambda_handler_mutiple_records(
-    mock_time_ns: MagicMock,
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
@@ -368,7 +351,6 @@ def test_lambda_handler_mutiple_records(
     mock_extract_body.return_value = change_event
     environ["ENV"] = "test"
     environ["HOLDING_QUEUE_URL"] = "https://sqs.eu-west-1.amazonaws.com/000000000000/holding-queue"
-    mock_time_ns.return_value = 123456789
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.return_value = 2
     mock_get_sequence_number.return_value = 1
     mock_add_change_event_to_dynamodb.return_value = "1234567890"
@@ -383,7 +365,6 @@ def test_lambda_handler_mutiple_records(
     with pytest.raises(ValueError, match="3 records found in event. Expected 1."):
         lambda_handler(event, lambda_context)
     # Assert
-    mock_time_ns.assert_called_once()
     mock_extract_body.assert_not_called()
     mock_validate_change_event.assert_not_called()
     mock_add_change_event_received_metric.assert_not_called()
