@@ -16,126 +16,6 @@ logger = Logger()
 tracer = Tracer()
 
 
-def get_message_for_cloudwatch_event(event: SNSEvent) -> dict[str, Any]:
-    """Get message for cloudwatch event.
-
-    Args:
-        event (SNSEvent): SNS event
-
-    Returns:
-        dict[str, Any]: Message for slack
-    """
-
-    def is_expression_alarm() -> bool:
-        logger.debug(
-            "Checking if alarm is an expression alarm",
-            extra={
-                "alarm_name": alarm_name,
-                "trigger": trigger,
-                "expression": "Expression" in str(trigger),
-            },
-        )
-        return "Expression" in str(trigger)
-
-    def get_attachments_fields() -> list[dict[str, Any]]:
-        fields = [
-            {
-                "title": "Alarm Name",
-                "value": alarm_name,
-                "short": True,
-            },
-            {
-                "title": "Alarm State",
-                "value": new_state,
-                "short": True,
-            },
-            {
-                "title": "Alarm Description",
-                "value": alarm_description,
-                "short": False,
-            },
-        ]
-        if not is_expression_alarm():
-            logger.append_keys(metric_name=metric_name)
-            fields.append(
-                {
-                    "title": "Trigger",
-                    "value": f"{trigger['Statistic']} {metric_name} {trigger['ComparisonOperator']} "
-                    f"{trigger['Threshold']!s} for {trigger['EvaluationPeriods']!s} period(s) "
-                    f" of {trigger['Period']!s} seconds.",
-                    "short": False,
-                },
-            )
-        return fields
-
-    record = next(event.records)
-    timestamp = datetime.strptime(record.sns.timestamp, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
-    message = loads(record.sns.message)
-    region = record.event_subscription_arn.split(":")[3]
-    alarm_name: str = message["AlarmName"]
-
-    trigger = message.get("Trigger", "")
-    metric_name = trigger.get("MetricName", "")
-    new_state = message.get("NewStateValue", "")
-    alarm_description = message.get("AlarmDescription", "")
-
-    logger.append_keys(alarm_name=alarm_name, alarm_description=alarm_description)
-
-    if new_state == "ALARM":
-        colour = "#e01e5a"
-    elif new_state == "OK":
-        colour = "good"
-    else:
-        colour = "warning"
-    link = (
-        "https://console.aws.amazon.com/cloudwatch/home"
-        f"?region={region}#alarm:alarmFilter=ANY;name={quote(alarm_name.encode('utf-8'))}"
-    )
-    return {
-        "blocks": [
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f":rotating_light:  *<{link}|{alarm_name}>*",
-                },
-            },
-        ],
-        "attachments": [
-            {
-                "color": colour,
-                "fields": get_attachments_fields(),
-                "ts": timestamp,
-            },
-        ],
-    }
-
-
-def send_msg_slack(message: dict[str, Any]) -> None:
-    """Send message to slack.
-
-    Args:
-        message (dict[str, Any]): Message to send to slack
-    """
-    url = environ["SLACK_WEBHOOK_URL"]
-    channel = environ["SLACK_ALERT_CHANNEL"]
-    headers: dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
-
-    message["channel"] = channel
-    message["icon_emoji"] = ""
-
-    resp = post(
-        url=url,
-        headers=headers,
-        json=message,
-        timeout=5,
-    )
-    logger.info(
-        "Message sent to slack",
-        extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
-    )
-
-
 @unhandled_exception_logging()
 @tracer.capture_lambda_handler()
 @event_source(data_class=SNSEvent)
@@ -154,3 +34,98 @@ def lambda_handler(event: SNSEvent, _context: LambdaContext) -> None:
     message = get_message_for_cloudwatch_event(event)
     logger.info("Sending alert to slack.", extra={"slack_message": message})
     send_msg_slack(message)
+
+
+def get_message_for_cloudwatch_event(event: SNSEvent) -> dict[str, Any]:
+    """Get message for CloudWatch event.
+
+    Args:
+        event (SNSEvent): SNS event
+
+    Returns:
+        dict[str, Any]: Message for slack
+    """
+    # Get Event
+    record = next(event.records)
+    timestamp = datetime.strptime(record.sns.timestamp, "%Y-%m-%dT%H:%M:%S.%fZ").timestamp()
+    message = loads(record.sns.message)
+    environment = environ["SHARED_ENVIRONMENT"]
+    # Get Alarm Info
+    region = record.event_subscription_arn.split(":")[3]
+    alarm_name: str = message["AlarmName"]
+    new_state = message.get("NewStateValue", "")
+    alarm_description = message.get("AlarmDescription", "")
+    link = (
+        "https://console.aws.amazon.com/cloudwatch/home"
+        f"?region={region}#alarm:alarmFilter=ANY;name={quote(alarm_name.encode('utf-8'))}"
+    )
+    cloudwatch_dashboard_link = (
+        f"https://{region}.console.aws.amazon.com/cloudwatch/home?region={region}"
+        f"#dashboards/dashboard/uec-dos-int-{environment}-monitoring-dashboard"
+    )
+    splunk_dashboard_link = "https://nhsdigital.splunkcloud.com/en-GB/app/nhsd_uec_pu_all_sh_all_viz/dos_integration_test_monitoring__update_request_summary_dashboard"
+
+    emoji = ":white_check_mark:" if new_state == "OK" else ":rotating_light:"
+    logger.append_keys(alarm_name=alarm_name, alarm_description=alarm_description)
+    short_name = alarm_name.split("|")[2]
+
+    return {
+        "blocks": [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f"{emoji} {short_name}",
+                    "emoji": True,
+                },
+            },
+        ],
+        "attachments": [
+            {
+                "color": get_alarm_colour(new_state),
+                "fields": [
+                    {
+                        "value": (
+                            f"*Name*: <{link}|{alarm_name}> | *State*: {new_state.capitalize()}\n"
+                            f"*Description*: {alarm_description}\n"
+                            f"<{cloudwatch_dashboard_link}|CloudWatch Monitoring Dashboard> | "
+                            f"<{splunk_dashboard_link}|Splunk Dashboard>"
+                        ),
+                        "short": False,
+                    },
+                ],
+                "ts": timestamp,
+            },
+        ],
+    }
+
+
+def get_alarm_colour(new_state: str) -> str:
+    """Get alarm colour.
+
+    Args:
+        new_state (str): New state of the alarm
+
+    Returns:
+        str: Color of the alarm
+    """
+    if new_state == "ALARM":
+        return "#e01e5a"
+    return "good" if new_state == "OK" else "warning"
+
+
+def send_msg_slack(message: dict[str, Any]) -> None:
+    """Send message to slack.
+
+    Args:
+        message (dict[str, Any]): Message to send to slack
+    """
+    url = environ["SLACK_WEBHOOK_URL"]
+    channel = environ["SLACK_ALERT_CHANNEL"]
+    headers: dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
+    message["channel"] = channel
+    resp = post(url=url, headers=headers, json=message, timeout=5)
+    logger.info(
+        "Message sent to slack",
+        extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
+    )

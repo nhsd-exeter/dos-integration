@@ -31,7 +31,7 @@ LAMBDA_INVOKE_RESPONSE = {
     "ResponseMetadata": {},
 }
 MESSAGE = {
-    "AlarmName": "Invalid Postcodes Test",
+    "AlarmName": "uec-dos-int | test |Invalid Postcodes Test",
     "AlarmDescription": "Testing alarm for invalid postcodes",
     "AWSAccountId": "000000000000",
     "AlarmConfigurationUpdatedTimestamp": "2022-02-22T12:22:09.734+0000",
@@ -129,7 +129,7 @@ def test_send_message(mock_post, lambda_context):
     mock_post.assert_called_once_with(
         url=WEBHOOK_URL,
         headers={"Content-Type": "application/json", "Accept": "application/json"},
-        json={"text": "hello dave", "channel": "channel5", "icon_emoji": ""},
+        json={"text": "hello dave", "channel": "channel5"},
         timeout=5,
     )
     # Clean Up
@@ -137,11 +137,16 @@ def test_send_message(mock_post, lambda_context):
 
 
 @pytest.mark.parametrize(
-    ("new_state_value", "colour"),
-    [("ALARM", "#e01e5a"), ("OK", "good"), ("INSUFFICIENT_DATA", "warning")],
+    ("new_state_value", "colour", "emoji"),
+    [
+        ("ALARM", "#e01e5a", ":rotating_light:"),
+        ("OK", "good", ":white_check_mark:"),
+        ("INSUFFICIENT_DATA", "warning", ":rotating_light:"),
+    ],
 )
-def test_get_message_from_event(new_state_value, colour):
+def test_get_message_from_event(new_state_value: str, colour: str, emoji: str):
     # Arrange
+    environ["SHARED_ENVIRONMENT"] = "test"
     sns_event_dict = SNS_EVENT.copy()
     message = MESSAGE.copy()
     message["NewStateValue"] = new_state_value
@@ -156,24 +161,8 @@ def test_get_message_from_event(new_state_value, colour):
                 "color": colour,
                 "fields": [
                     {
-                        "short": True,
-                        "title": "Alarm Name",
-                        "value": "Invalid Postcodes Test",
-                    },
-                    {
-                        "short": True,
-                        "title": "Alarm State",
-                        "value": new_state_value,
-                    },
-                    {
                         "short": False,
-                        "title": "Alarm Description",
-                        "value": "Testing alarm for invalid postcodes",
-                    },
-                    {
-                        "short": False,
-                        "title": "Trigger",
-                        "value": "SUM InvalidPostcode GreaterThanThreshold 0.0 for 1 period(s)  of 300 seconds.",
+                        "value": f"*Name*: <https://console.aws.amazon.com/cloudwatch/home?region=eu-west-2#alarm:alarmFilter=ANY;name=uec-dos-int%20%7C%20test%20%7CInvalid%20Postcodes%20Test|uec-dos-int | test |Invalid Postcodes Test> | *State*: {new_state_value.capitalize()}\n*Description*: Testing alarm for invalid postcodes\n<https://eu-west-2.console.aws.amazon.com/cloudwatch/home?region=eu-west-2#dashboards/dashboard/uec-dos-int-test-monitoring-dashboard|CloudWatch Monitoring Dashboard> | <https://nhsdigital.splunkcloud.com/en-GB/app/nhsd_uec_pu_all_sh_all_viz/dos_integration_test_monitoring__update_request_summary_dashboard|Splunk Dashboard>",  # noqa: E501
                     },
                 ],
                 "ts": 1646393939.038,
@@ -181,12 +170,10 @@ def test_get_message_from_event(new_state_value, colour):
         ],
         "blocks": [
             {
-                "text": {
-                    "text": ":rotating_light:  *<https://console.aws.amazon.com/cloudwatch/home?"
-                    "region=eu-west-2#alarm:alarmFilter=ANY;name=Invalid%20Postcodes%20Test|Invalid Postcodes Test>*",
-                    "type": "mrkdwn",
-                },
-                "type": "section",
+                "text": {"emoji": True, "text": f"{emoji} Invalid Postcodes Test", "type": "plain_text"},
+                "type": "header",
             },
         ],
     }
+    # Clean Up
+    del environ["SHARED_ENVIRONMENT"]
