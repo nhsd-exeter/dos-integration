@@ -242,10 +242,8 @@ def check_opening_times_for_changes(changes_to_dos: ChangesToDoS) -> ChangesToDo
     else:
         logger.info(
             "Opening times are not valid",
-            extra={
-                "nhs_uk_standard_opening_times": changes_to_dos.nhs_entity.standard_opening_times,
-                "nhs_uk_specified_opening_times": changes_to_dos.nhs_entity.specified_opening_times,
-            },
+            nhs_uk_standard_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
+            nhs_uk_specified_opening_times=changes_to_dos.nhs_entity.specified_opening_times,
         )
     return changes_to_dos
 
@@ -290,13 +288,11 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
     else:
         logger.info(
             "No change / Not suitable for palliative care comparison",
-            extra={
-                "nhs_uk_palliative_care": get_palliative_care_log_value(
-                    changes_to_dos.nhs_entity.palliative_care,
-                    skip_palliative_care_check,
-                ),
-                "dos_palliative_care": changes_to_dos.dos_service.palliative_care,
-            },
+            nhs_uk_palliative_care=get_palliative_care_log_value(
+                changes_to_dos.nhs_entity.palliative_care,
+                skip_palliative_care_check,
+            ),
+            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
         )
     return changes_to_dos
 

@@ -74,11 +74,11 @@ def run_query(query: str, query_vars: dict) -> list:
     Returns:
         list: Query result
     """
-    logger.info("Running query", extra={"query": query})
+    logger.info("Running query", query=query)
     with connect_to_dos_db() as connection:
         cursor = query_dos_db(connection=connection, query=query, query_vars=query_vars)
         query_result = cursor.fetchall()
         connection.commit()
         cursor.close()
-        logger.warning("Query result", extra={"query_result": query_result})
+        logger.warning("Query result", query_result=query_result)
     return query_result

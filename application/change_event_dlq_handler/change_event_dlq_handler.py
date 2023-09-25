@@ -49,7 +49,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     else:
         # This is when a message comes from the holding queue
         attributes = handle_sqs_msg_attributes(record.message_attributes)
-        logger.info("Message received from holding queue", extra={"body": record.body})
+        logger.info("Message received from holding queue", body=record.body)
         change_event = body["change_event"]
         correlation_id = body.get("correlation_id")
         logger.set_correlation_id(correlation_id)
@@ -61,12 +61,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     error_msg = attributes["error_msg"]
     logger.warning(
         "Change Event Dead Letter Queue Handler received event",
-        extra={
-            "report_key": CHANGE_EVENT_DLQ_HANDLER_EVENT,
-            "error_msg": f"Message Abandoned: {error_msg}",
-            "error_msg_http_code": attributes["error_msg_http_code"],
-            "payload": change_event,
-        },
+        report_key=CHANGE_EVENT_DLQ_HANDLER_EVENT,
+        error_msg=f"Message Abandoned: {error_msg}",
+        error_msg_http_code=attributes["error_msg_http_code"],
+        payload=change_event,
     )
     metrics.set_namespace("AWS/SQS")
     metrics.set_property("level", "WARNING")

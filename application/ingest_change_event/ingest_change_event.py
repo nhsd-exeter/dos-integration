@@ -1,6 +1,6 @@
 from json import dumps
 from os import environ
-from time import gmtime, strftime, time_ns
+from time import gmtime, strftime
 from typing import Any
 
 from aws_embedded_metrics import metric_scope
@@ -43,7 +43,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 
     Event: The event payload should contain an Update Request
     """
-    time_start_ns = time_ns()
     if len(list(event.records)) != 1:
         msg = f"{len(list(event.records))} records found in event. Expected 1."
         raise ValueError(msg)
@@ -57,18 +56,18 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     s, ms = divmod(sqs_timestamp, 1000)
-    message_received_pretty = "%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms)
-    logger.append_keys(message_received=message_received_pretty, sequence_number=sequence_number)
+
     change_event_for_log = remove_given_keys_from_dict_by_msg_limit(change_event, ["Facilities", "Metrics"], 10000)
-    logger.info("Change Event received", extra={"change-event": change_event_for_log})
+    logger.info(
+        "Change Event received",
+        change_event=change_event_for_log,
+        sequence_number=sequence_number,
+        message_received="%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms),
+    )
     logger.debug("Getting latest sequence number")
     db_latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(ods_code)
     logger.info("Writing change event to dynamo")
     record_id = add_change_event_to_dynamodb(change_event, sequence_number, sqs_timestamp)
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.set_property("dynamo_record_id", record_id)
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QueueToMessageGrouperLatency", (time_start_ns // 1000000) - sqs_timestamp, "Milliseconds")
     logger.append_keys(dynamo_record_id=record_id)
 
     if sequence_number is None:
@@ -77,7 +76,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     elif sequence_number < db_latest_sequence_number:  # noqa: RET505
         logger.error(
             "Sequence id is smaller than the existing one in db for a given odscode, so will be ignored",
-            extra={"incoming_sequence_number": sequence_number, "db_latest_sequence_number": db_latest_sequence_number},
+            incoming_sequence_number=sequence_number,
+            db_latest_sequence_number=db_latest_sequence_number,
         )
         return
     holding_queue_change_event_item = HoldingQueueChangeEventItem(
@@ -87,7 +87,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         dynamo_record_id=record_id,
         correlation_id=logger.get_correlation_id(),
     )
-    logger.debug("Change event validated", extra={"holding_queue_change_event_item": holding_queue_change_event_item})
+    logger.debug("Change event validated", holding_queue_change_event_item=holding_queue_change_event_item)
     sqs.send_message(
         QueueUrl=environ["HOLDING_QUEUE_URL"],
         MessageBody=dumps(holding_queue_change_event_item),

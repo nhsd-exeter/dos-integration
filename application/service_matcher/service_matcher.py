@@ -72,7 +72,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.append_keys(org_type=nhs_entity.org_type)
     logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
     metrics.set_property("ods_code", nhs_entity.odscode)
-    logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
+    logger.info("Created NHS Entity for processing", nhs_entity=nhs_entity)
     matching_services = get_matching_services(nhs_entity)
 
     if len(matching_services) == 0 or not next(
@@ -96,7 +96,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         service_type=CONTRACEPTION,
     )
 
-    logger.info("Matched DoS Services after services filtered", extra={"matched": matching_services})
+    logger.info("Matched DoS Services after services filtered", matched=matching_services)
 
     if nhs_entity.is_status_hidden_or_closed():
         log_closed_or_hidden_services(nhs_entity, matching_services)
@@ -107,7 +107,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
 
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]
-    logger.debug(f"Matched service types: {dos_matching_service_types}", extra={"matched": matching_services})
+    logger.debug(f"Matched service types: {dos_matching_service_types}", matched=matching_services)
     if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
         type_13_matching_services = [
             service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
@@ -224,7 +224,7 @@ def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
     logger.info(
         f"Found {len(matching_services)} services in DB with "
         f"matching first 5 chars of ODSCode: {matching_services}",
-        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
+        pharmacy_first_phase_one_feature_flag=pharmacy_first_phase_one_feature_flag,
     )
 
     return matching_services
@@ -241,7 +241,7 @@ def get_pharmacy_first_phase_one_feature_flag() -> bool:
     pharmacy_first_phase_one_feature_flag = literal_eval(pharmacy_first_phase_one)
     logger.debug(
         "Got pharmacy first phase one feature flag",
-        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
+        pharmacy_first_phase_one_feature_flag=pharmacy_first_phase_one_feature_flag,
     )
     return pharmacy_first_phase_one_feature_flag
 
@@ -264,14 +264,12 @@ def send_update_requests(
         entry_id = f"{service_id}-{sequence_number}"
         logger.debug(
             "Update request to send",
-            extra={
-                "update_request": update_request,
-                "entry_id": entry_id,
-                "hashed_payload": f"{len(hashed_payload)} - {hashed_payload}",
-                "message_deduplication_id": message_deduplication_id,
-                "message_group_id": message_group_id,
-                "sequence_number": str(sequence_number),
-            },
+            update_request=update_request,
+            entry_id=entry_id,
+            hashed_payload=f"{len(hashed_payload)} - {hashed_payload}",
+            message_deduplication_id=message_deduplication_id,
+            message_group_id=message_group_id,
+            sequence_number=str(sequence_number),
         )
         messages.append(
             {
@@ -297,5 +295,5 @@ def send_update_requests(
         # TODO: Handle errors?
         logger.debug(f"Sending off message chunk {i+1}/{len(chunks)}")
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
-        logger.info("Response received", extra={"response": response})
+        logger.info("Response received", response=response)
         logger.info(f"Sent off update request for id={service_id}")

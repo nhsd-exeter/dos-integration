@@ -119,11 +119,7 @@ def query_dos_db(
         DictRow: Cursor to the query results
     """
     cursor = connection.cursor(row_factory=dict_row)
-
-    logger.info(
-        "Query to execute", extra={"query": query, "vars": query_vars if log_vars else "Vars have been redacted."},
-    )
-
+    logger.info("Query to execute", query=query, vars=query_vars if log_vars else "Vars have been redacted.")
     time_start = time_ns() // 1000000
     cursor.execute(query=query, params=query_vars)
     logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")

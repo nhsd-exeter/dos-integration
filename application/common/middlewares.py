@@ -12,7 +12,7 @@ logger = Logger(child=True)
 
 
 @lambda_handler_decorator(trace_execution=True)
-def redact_staff_key_from_event(handler, event, context: LambdaContext) -> Any:    # noqa: ANN001, ANN401
+def redact_staff_key_from_event(handler, event, context: LambdaContext) -> Any:  # noqa: ANN001, ANN401
     """Lambda middleware to remove the 'Staff' key from the Change Event payload.
 
     Args:
@@ -48,15 +48,15 @@ def unhandled_exception_logging(handler, event, context: LambdaContext) -> Any: 
     try:
         return handler(event, context)
     except ValidationError as error:
-        logger.exception(f"Validation Error - {error}", extra={"event": event})  # noqa: TRY401
+        logger.exception(f"Validation Error - {error}", event=event)  # noqa: TRY401
         return None
     except ClientError as err:
         error_code = err.response["Error"]["Code"]
         error_msg = err.response["Error"]["Message"]
-        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", extra={"error": err, "event": event})
+        logger.exception(f"Boto3 Client Error - '{error_code}': {error_msg}", error=err, event=event)
         raise
     except BaseException:
-        logger.exception("Error Occurred", extra={"event": event})
+        logger.exception("Error Occurred", event=event)
         raise
 
 

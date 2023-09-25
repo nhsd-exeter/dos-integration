@@ -80,7 +80,7 @@ def remove_sqs_message_from_queue(receipt_handle: str) -> None:
     """
     sqs = client("sqs")
     sqs.delete_message(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], ReceiptHandle=receipt_handle)
-    logger.info("Removed SQS message from queue", extra={"receipt_handle": receipt_handle})
+    logger.info("Removed SQS message from queue", receipt_handle=receipt_handle)
 
 
 @metric_scope

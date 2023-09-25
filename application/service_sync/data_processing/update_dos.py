@@ -115,7 +115,7 @@ def save_demographics_into_db(connection: Connection, service_id: int, demograph
         # Update the service demographics
         logger.info(
             f"Demographics changes found for service id {service_id}",
-            extra={"demographics_changes": demographics_changes},
+            demographics_changes=demographics_changes,
         )
         columns_and_values = [
             SQL("{} = {}").format(Identifier(key), Literal(value)).as_string(connection)
@@ -321,7 +321,7 @@ def save_sgsdid_update(  # noqa: PLR0913
         logger.debug(f"Setting {name} to false for service id {dos_service.id}")
     cursor = query_dos_db(connection=connection, query=query, query_vars=query_vars)
     cursor.close()
-    logger.info(f"Saving {name} changes for service id {dos_service.id}", extra={"value": value})
+    logger.info(f"Saving {name} changes for service id {dos_service.id}", value=value)
 
 
 def save_palliative_care_into_db(
@@ -345,7 +345,7 @@ def save_palliative_care_into_db(
     if not is_changes:
         logger.info(
             f"No palliative care changes to save for service id {dos_service.id}",
-            extra={"palliative_care_is_set_to": palliative_care},
+            palliative_care_is_set_to=palliative_care,
         )
         return False
 
@@ -371,7 +371,7 @@ def save_palliative_care_into_db(
     logger.error(
         f"Unable to save palliative care changes for service id {dos_service.id} as the "
         "palliative care Z code does not exist in the DoS database",
-        extra={"palliative_care_is_set_to": palliative_care},
+        palliative_care_is_set_to=palliative_care,
     )
     return False
 
@@ -411,14 +411,14 @@ def save_blood_pressure_into_db(
         logger.info(
             f"No blood pressure changes to save for service id {dos_service.id} as the "
             "service is not a blood pressure service",
-            extra={"current_blood_pressure": blood_pressure},
+            current_blood_pressure=blood_pressure,
         )
         return False, service_histories
     # If no changes, return false
     if not is_changes:
         logger.info(
             f"No blood pressure changes to save for service id {dos_service.id}",
-            extra={"current_blood_pressure": blood_pressure},
+            current_blood_pressure=blood_pressure,
         )
         return False, service_histories
 
@@ -441,7 +441,7 @@ def save_blood_pressure_into_db(
             logger.error(
                 f"Unable to save z code blood pressure changes for service id {dos_service.id} as the "
                 "blood pressure Z code does not exist in the DoS database",
-                extra={"new_blood_pressure_status": blood_pressure},
+                new_blood_pressure_status=blood_pressure,
             )
             return False, service_histories
 
@@ -496,14 +496,14 @@ def save_contraception_into_db(
         logger.info(
             f"No contraception changes to save for service id {dos_service.id} as the "
             "service is not a contraception service",
-            extra={"current_contraception": contraception},
+            current_contraception=contraception,
         )
         return False, service_histories
     # If no changes, return false
     if not is_changes:
         logger.info(
             f"No contraception changes to save for service id {dos_service.id}",
-            extra={"current_contraception": contraception},
+            current_contraception=contraception,
         )
         return False, service_histories
 
@@ -526,7 +526,7 @@ def save_contraception_into_db(
             logger.error(
                 f"Unable to save z code contraception changes for service id {dos_service.id} as the "
                 "contraception Z code does not exist in the DoS database",
-                extra={"new_contraception_status": contraception},
+                new_contraception_status=contraception,
             )
             return False, service_histories
 

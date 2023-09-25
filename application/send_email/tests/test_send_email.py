@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from os import environ
 from smtplib import SMTPException
 from unittest.mock import MagicMock, patch
@@ -25,20 +24,6 @@ EVENT = EmailMessage(
     change_id="change_id",
     s3_filename="s3_filename",
 )
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "send-email"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:send-email"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 @patch(f"{FILE_PATH}.send_email")

@@ -32,7 +32,7 @@ def lambda_handler(event: SNSEvent, _context: LambdaContext) -> None:
     Some code may need to be changed if the exact input format is changed.
     """
     message = get_message_for_cloudwatch_event(event)
-    logger.info("Sending alert to slack.", extra={"slack_message": message})
+    logger.info("Sending alert to slack.", slack_message=message)
     send_msg_slack(message)
 
 
@@ -125,7 +125,4 @@ def send_msg_slack(message: dict[str, Any]) -> None:
     headers: dict[str, str] = {"Content-Type": "application/json", "Accept": "application/json"}
     message["channel"] = channel
     resp = post(url=url, headers=headers, json=message, timeout=5)
-    logger.info(
-        "Message sent to slack",
-        extra={"slack_message": message, "status_code": resp.status_code, "response": resp.text},
-    )
+    logger.info("Message sent to slack", slack_message=message, status_code=resp.status_code, response=resp.text)

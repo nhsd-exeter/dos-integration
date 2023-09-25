@@ -219,7 +219,7 @@ class ServiceHistories:
         self.service_history[current_epoch_time]["approver"]["timestamp"] = current_date_time
         # Merge the new history changes into the existing history changes
         json_service_history = dumps(self.service_history | self.existing_service_history)
-        logger.debug("Service history to be saved", extra={"service_history": json_service_history})
+        logger.debug("Service history to be saved", service_history=json_service_history)
         cursor = query_dos_db(
             connection=connection,
             query=(

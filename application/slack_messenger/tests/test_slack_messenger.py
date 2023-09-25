@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from json import dumps
 from os import environ
 from unittest.mock import patch
@@ -9,20 +8,6 @@ from aws_lambda_powertools.utilities.data_classes import SNSEvent
 from application.slack_messenger.slack_messenger import get_message_for_cloudwatch_event, lambda_handler, send_msg_slack
 
 FILE_PATH = "application.slack_messenger.slack_messenger"
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "slack-messenger"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:slack-messenger"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 LAMBDA_INVOKE_RESPONSE = {

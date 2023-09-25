@@ -40,12 +40,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.append_keys(ods_code=get_sqs_msg_attribute(record.message_attributes, "ods_code"))
     logger.warning(
         "DoS DB Update DLQ Handler hit",
-        extra={
-            "report_key": DOS_DB_UPDATE_DLQ_HANDLER_EVENT,
-            "error_msg": f"Message Abandoned: {error_msg}",
-            "error_msg_http_code": get_sqs_msg_attribute(record.message_attributes, "error_msg_http_code"),
-            "change_payload": body,
-        },
+        report_key=DOS_DB_UPDATE_DLQ_HANDLER_EVENT,
+        error_msg=f"Message Abandoned: {error_msg}",
+        error_msg_http_code=get_sqs_msg_attribute(record.message_attributes, "error_msg_http_code"),
+        change_payload=body,
     )
     metrics.set_namespace("AWS/SQS")
     metrics.set_property("level", "WARNING")

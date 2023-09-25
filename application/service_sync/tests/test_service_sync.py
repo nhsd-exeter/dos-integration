@@ -1,9 +1,7 @@
-from dataclasses import dataclass
 from json import dumps
 from os import environ
 from unittest.mock import MagicMock, call, patch
 
-import pytest
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
@@ -41,20 +39,6 @@ SQS_EVENT = {
         },
     ],
 }
-
-
-@pytest.fixture()
-def lambda_context():
-    @dataclass
-    class LambdaContext:
-        """Mock LambdaContext - All dummy values."""
-
-        function_name: str = "service-sync"
-        memory_limit_in_mb: int = 128
-        invoked_function_arn: str = "arn:aws:lambda:eu-west-1:000000000:function:service-sync"
-        aws_request_id: str = "52fdfc07-2182-154f-163f-5f0f9a621d72"
-
-    return LambdaContext()
 
 
 @patch(f"{FILE_PATH}.check_and_remove_pending_dos_changes")
@@ -161,7 +145,7 @@ def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info:
         QueueUrl=update_request_queue_url,
         ReceiptHandle=RECEIPT_HANDLE,
     )
-    mock_logger_info.assert_called_once_with("Removed SQS message from queue", extra={"receipt_handle": RECEIPT_HANDLE})
+    mock_logger_info.assert_called_once_with("Removed SQS message from queue", receipt_handle=RECEIPT_HANDLE)
     # Cleanup
     del environ["UPDATE_REQUEST_QUEUE_URL"]
 
