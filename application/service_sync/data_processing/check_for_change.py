@@ -207,30 +207,32 @@ def check_opening_times_for_changes(changes_to_dos: ChangesToDoS) -> ChangesToDo
     Returns:
         ChangesToDoS: ChangesToDoS holder object
     """
-    if changes_to_dos.nhs_entity.standard_opening_times.fully_closed():
-        log_blank_standard_opening_times(nhs_entity=changes_to_dos.nhs_entity, dos_service=changes_to_dos.dos_service)
-    else:
-        logger.info("Standard opening times are not blank")
-
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
-        # Compare standard opening times
         logger.info("Opening times are valid")
-        for weekday, dos_weekday_key, day_id in zip(  # noqa: B905
-            WEEKDAYS,
-            DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
-            DAY_IDS,
-        ):
-            if compare_standard_opening_times(changes=changes_to_dos, weekday=weekday):
-                changes_to_dos.standard_opening_times_changes[day_id] = getattr(
-                    changes_to_dos,
-                    f"new_{weekday}_opening_times",
-                )
-                changes_to_dos.service_histories.add_standard_opening_times_change(
-                    current_opening_times=changes_to_dos.dos_service.standard_opening_times,
-                    new_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
-                    dos_weekday_change_key=dos_weekday_key,
-                    weekday=weekday,
-                )
+        if changes_to_dos.nhs_entity.standard_opening_times.fully_closed():
+            log_blank_standard_opening_times(
+                nhs_entity=changes_to_dos.nhs_entity,
+                dos_service=changes_to_dos.dos_service,
+            )
+        else:
+            logger.debug("Standard opening times are not blank")
+            # Compare standard opening times
+            for weekday, dos_weekday_key, day_id in zip(  # noqa: B905
+                WEEKDAYS,
+                DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
+                DAY_IDS,
+            ):
+                if compare_standard_opening_times(changes=changes_to_dos, weekday=weekday):
+                    changes_to_dos.standard_opening_times_changes[day_id] = getattr(
+                        changes_to_dos,
+                        f"new_{weekday}_opening_times",
+                    )
+                    changes_to_dos.service_histories.add_standard_opening_times_change(
+                        current_opening_times=changes_to_dos.dos_service.standard_opening_times,
+                        new_opening_times=changes_to_dos.nhs_entity.standard_opening_times,
+                        dos_weekday_change_key=dos_weekday_key,
+                        weekday=weekday,
+                    )
 
         if compare_specified_opening_times(changes=changes_to_dos):
             changes_to_dos.specified_opening_times_changes = True
