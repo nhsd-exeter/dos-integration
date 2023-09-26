@@ -10,7 +10,7 @@ from common.dos import (
     has_contraception,
     has_palliative_care,
 )
-from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dos_db_connection import connect_to_db_writer, query_dos_db
 
 logger = Logger(child=True)
 
@@ -33,7 +33,7 @@ def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHis
     )
     query_vars = {"SERVICE_ID": service_id}
     # Connect to the DoS database
-    with connect_to_dos_db() as connection:
+    with connect_to_db_writer() as connection:
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
         rows: list[DictRow] = cursor.fetchall()

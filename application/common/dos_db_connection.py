@@ -15,22 +15,22 @@ db_connection = None
 
 
 @contextmanager
-def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
-    """Creates a new connection to the DoS DB Replica.
+def connect_to_db_reader() -> Generator[Connection, None, None]:
+    """Creates a new connection to the DoS DB Reader.
 
     Yields:
         Generator[connection, None, None]: Connection to the database
     """
     # Use AWS secret values, or failing that check env for DB password
-    if "DB_REPLICA_SECRET_NAME" in environ and "DB_REPLICA_SECRET_KEY" in environ:
-        db_secret = get_secret(environ["DB_REPLICA_SECRET_NAME"])
-        db_password = db_secret[environ["DB_REPLICA_SECRET_KEY"]]
+    if "DB_READER_SECRET_NAME" in environ and "DB_READER_SECRET_KEY" in environ:
+        db_secret = get_secret(environ["DB_READER_SECRET_NAME"])
+        db_password = db_secret[environ["DB_READER_SECRET_KEY"]]
     else:
         db_password = environ["DB_SECRET"]
 
     # Before the context manager is entered, the connection is created
     db_connection = connection_to_db(
-        server=environ["DB_REPLICA_SERVER"],
+        server=environ["DB_READER_SERVER"],
         port=environ["DB_PORT"],
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
@@ -44,21 +44,21 @@ def connect_to_dos_db_replica() -> Generator[Connection, None, None]:
 
 
 @contextmanager
-def connect_to_dos_db() -> Generator[Connection[DictRow], None, None]:
-    """Creates a new connection to the DoS DB.
+def connect_to_db_writer() -> Generator[Connection[DictRow], None, None]:
+    """Creates a new connection to the DoS DB Writer.
 
     Yields:
         Generator[connection, None, None]: Connection to the database
     """
     # Before the context manager is entered, the connection is created
-    db_secret = get_secret(environ["DB_SECRET_NAME"])
+    db_secret = get_secret(environ["DB_WRITER_SECRET_NAME"])
     db_connection = connection_to_db(
-        server=environ["DB_SERVER"],
+        server=environ["DB_WRITER_SERVER"],
         port=environ["DB_PORT"],
         db_name=environ["DB_NAME"],
         db_schema=environ["DB_SCHEMA"],
         db_user=environ["DB_READ_AND_WRITE_USER_NAME"],
-        db_password=db_secret[environ["DB_SECRET_KEY"]],
+        db_password=db_secret[environ["DB_WRITER_SECRET_KEY"]],
     )
     # Yield the connection object to the context manager
     yield db_connection

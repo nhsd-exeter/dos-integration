@@ -13,7 +13,7 @@ from pytz import timezone
 from ..service_update_logger import ServiceUpdateLogger
 from .s3 import put_content_to_s3
 from common.constants import DI_CHANGE_ITEMS, DOS_INTEGRATION_USER_NAME
-from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dos_db_connection import connect_to_db_writer, query_dos_db
 from common.types import EmailFile, EmailMessage
 
 logger = Logger(child=True)
@@ -83,7 +83,7 @@ def check_and_remove_pending_dos_changes(service_id: str) -> None:
     Args:
         service_id (str): The ID of the service to check
     """
-    with connect_to_dos_db() as connection:
+    with connect_to_db_writer() as connection:
         pending_changes = get_pending_changes(connection=connection, service_id=service_id)
         if pending_changes != [] and pending_changes is not None:
             logger.info("Pending Changes to be rejected", pending_changes=pending_changes)

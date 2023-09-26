@@ -21,7 +21,7 @@ from common.constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
 )
 from common.dos import DoSService
-from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dos_db_connection import connect_to_db_writer, query_dos_db
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 from common.utilities import add_metric
 
@@ -39,7 +39,7 @@ def update_dos_data(changes_to_dos: ChangesToDoS, service_id: int, service_histo
     connection = None
     try:
         # Save all the changes to the DoS database with a single transaction
-        with connect_to_dos_db() as connection:
+        with connect_to_db_writer() as connection:
             is_demographic_changes = save_demographics_into_db(
                 connection=connection,
                 service_id=service_id,
