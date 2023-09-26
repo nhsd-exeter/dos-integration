@@ -13,6 +13,7 @@ from application.common.dos_db_connection import (
 FILE_PATH = "application.common.dos_db_connection"
 
 DB_WRITER_SERVER = "test.db"
+DB_READER_SERVER = "test.db"
 DB_PORT = "5432"
 DB_NAME = "my-db"
 DB_SCHEMA = "db_schema"
@@ -26,7 +27,7 @@ def test_connect_to_db_reader(mock_get_secret, mock_connection_to_db):
     # Arrange
     mock_get_secret.return_value = {"DB_READER_SECRET_KEY": DB_PASSWORD}
     environ["DB_READER_SECRET_NAME"] = "my_secret_name"
-    environ["DB_READER_SERVER"] = DB_WRITER_SERVER
+    environ["DB_READER_SERVER"] = DB_READER_SERVER
     environ["DB_PORT"] = DB_PORT
     environ["DB_NAME"] = DB_NAME
     environ["DB_SCHEMA"] = DB_SCHEMA
@@ -38,7 +39,7 @@ def test_connect_to_db_reader(mock_get_secret, mock_connection_to_db):
         # Assert
         assert db_connection is not None
     mock_connection_to_db.assert_called_with(
-        server=DB_WRITER_SERVER,
+        server=DB_READER_SERVER,
         port=DB_PORT,
         db_name=DB_NAME,
         db_schema=DB_SCHEMA,

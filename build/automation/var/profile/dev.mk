@@ -7,8 +7,8 @@ LOG_LEVEL:= DEBUG
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-regression-cluster-14
-DB_WRITER_NAME := uec-core-dos-regression-db-12
-DB_READER_NAME := uec-core-dos-regression-db-12-replica-di
+DB_WRITER_NAME := uec-core-dos-regression-cluster-14-one
+DB_READER_NAME := ec-core-dos-regression-cluster-14-two
 
 # DB Route 53s
 DB_WRITER_ROUTE_53 := core-dos-regression-master.dos-db-rds
