@@ -278,6 +278,7 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
                 skip_palliative_care_check,
             ),
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
+            dos_odscode=changes_to_dos.dos_service.odscode,
         )
     return changes_to_dos
 
