@@ -455,3 +455,18 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Not Suitable for contraception comparison"
     And the service history is not updated
+
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F001SX36. Palliative Care remains unchanged with longer than 5 character odscode
+    Given a basic service is created with "<odscode_character_length>" character odscode
+    And the service in DoS supports palliative care
+    And the change event has a palliative care entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then palliative care is "applied" to the service
+    And the "service-sync" lambda shows field "message" with value "No change / Not suitable for palliative care comparison"
+    And the service history is not updated
+
+    Examples:
+      | odscode_character_length |
+      | 6                        |
+      | 8                        |

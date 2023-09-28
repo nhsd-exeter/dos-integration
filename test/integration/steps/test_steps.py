@@ -255,6 +255,32 @@ def _(context: Context, service_type: int) -> Context:
     return service_table_entry_is_committed(context)
 
 
+@given(
+    parse('a basic service is created with "{odscode_character_length:d}" character odscode'),
+    target_fixture="context",
+)
+def _(context: Context, odscode_character_length: int) -> Context:
+    """Create a basic service with a specific osdcode length.
+
+    Args:
+        context (Context): The context object.
+        odscode_character_length (int): The length of the odscode to use.
+
+    Returns:
+        Context: The context object.
+    """
+    min_value = f"1{'0'* (odscode_character_length-1)} "
+    max_value = "9" * odscode_character_length
+    odscode = randint(int(min_value), int(max_value))
+    context = a_service_table_entry_is_created(context, ods_code=odscode)
+    context = service_table_entry_is_committed(context)
+    short_odscode = str(odscode)[:5]
+    context.ods_code = short_odscode
+    context.generator_data["odscode"] = short_odscode
+    context.change_event["ODSCode"] = short_odscode
+    return context
+
+
 @given(parse('the service "{field_name}" is set to "{values}"'), target_fixture="context")
 def service_values_updated_in_context(field_name: str, values: str, context: Context) -> Context:
     """Update the service values in the context object.
@@ -761,10 +787,7 @@ def post_an_sqs_message(queue_type: str, context: Context) -> None:
             raise ValueError(msg)
 
 
-@when(
-    parse('the Changed Event is sent for processing with "{valid_or_invalid}" api key'),
-    target_fixture="context",
-)
+@when(parse('the Changed Event is sent for processing with "{valid_or_invalid}" api key'), target_fixture="context")
 def the_change_event_is_sent_for_processing(context: Context, valid_or_invalid: str) -> Context:
     """Send the change event for processing.
 
@@ -1527,7 +1550,7 @@ def error_contains_no_staff(context: Context) -> Context:
 
 @then(parse('palliative care is "{action}" to the service'), target_fixture="context")
 def _(context: Context, action: str) -> Context:
-    """Assert the error messages do not show Staff data.
+    """Assert palliative care is applied to the service.
 
     Args:
         context (Context): The context object.
@@ -1539,13 +1562,20 @@ def _(context: Context, action: str) -> Context:
     match action:
         case "added":
             applied = True
+            palliative_care = get_palliative_care(context.service_id)
         case "removed":
             applied = False
+            palliative_care = get_palliative_care(context.service_id)
+        case "applied":
+            applied = True
+            palliative_care = get_palliative_care(context.service_id, wait_for_update=False)
+        case "not applied":
+            applied = False
+            palliative_care = get_palliative_care(context.service_id, wait_for_update=False)
         case _:
             msg = f"Unexpected action: {action}"
             raise ValueError(msg)
 
-    palliative_care = get_palliative_care(context.service_id)
     assert palliative_care == applied, "ERROR: Palliative care not correctly applied/removed to DoS service"
     return context
 
