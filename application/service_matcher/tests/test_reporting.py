@@ -11,16 +11,14 @@ from application.service_matcher.reporting import (
     MISSING_SERVICE_TYPE_REPORT_ID,
     UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
-    UNMATCHED_SERVICE_TYPE_REPORT_ID,
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_missing_dos_service_for_a_given_type,
     log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
-    log_unmatched_service_types,
 )
 from common.commissioned_service_type import BLOOD_PRESSURE
-from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
+from common.constants import PHARMACY_SERVICE_TYPE_ID
 from common.nhs import NHSEntity
 
 
@@ -135,46 +133,6 @@ def test_log_invalid_open_times(mock_logger):
     )
     # Clean up
     del environ["ENV"]
-
-
-@patch.object(Logger, "warning")
-def test_log_unmatched_service_types(mock_logger):
-    # Arrange
-    nhs_entity = NHSEntity(
-        {"Address1": "address1", "Address2": "address2", "Address3": "address3", "City": "city", "County": "county"},
-    )
-    nhs_entity.odscode = "SLC4X"
-    nhs_entity.org_name = "OrganisationName"
-    nhs_entity.org_type_id = "PHA"
-    nhs_entity.org_status = "OrganisationStatus"
-    nhs_entity.org_sub_type = "OrganisationSubType"
-    nhs_entity.postcode = "MK2 XXX"
-
-    dos_service = dummy_dos_service()
-    dos_service.typeid = 999
-    unmatched_service_types = [dos_service]
-    # Act
-    log_unmatched_service_types(nhs_entity, unmatched_service_types)
-    # Assert
-    assert (
-        UNMATCHED_SERVICE_TYPE_REPORT_ID == "UNMATCHED_SERVICE_TYPE"
-    ), f"Log ID should be UNMATCHED_SERVICE_TYPE but was {UNMATCHED_SERVICE_TYPE_REPORT_ID}"
-    mock_logger.assert_called_with(
-        f"NHS entity '{nhs_entity.odscode}' service type '{ dos_service.typeid}' is not valid!",
-        report_ket=UNMATCHED_SERVICE_TYPE_REPORT_ID,
-        nhsuk_odscode=nhs_entity.odscode,
-        nhsuk_organisation_name=nhs_entity.org_name,
-        nhsuk_organisation_typeid=nhs_entity.org_type_id,
-        nhsuk_organisation_status=nhs_entity.org_status,
-        nhsuk_organisation_subtype=nhs_entity.org_sub_type,
-        nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
-        dos_service_uid=dos_service.uid,
-        dos_service_id=dos_service.id,
-        dos_service_publicname=dos_service.name,
-        dos_service_status=DOS_ACTIVE_STATUS_ID,
-        dos_service_typeid=dos_service.typeid,
-        dos_service_type_name=dos_service.service_type_name,
-    )
 
 
 @patch.object(Logger, "warning")
