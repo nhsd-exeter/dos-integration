@@ -1,80 +1,28 @@
 import hashlib
-from datetime import date
 from json import dumps
 from os import environ
-from unittest.mock import MagicMock, call, patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from application.service_matcher.service_matcher import (
-    get_matching_services,
-    get_pharmacy_first_phase_one_feature_flag,
-    lambda_handler,
-    log_missing_dos_services,
-    remove_service_if_not_on_change_event,
-    send_update_request_metric,
-    send_update_requests,
-)
-from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION
+from application.service_matcher.service_matcher import lambda_handler, send_update_requests
 from common.nhs import NHSEntity
-from common.opening_times import OpenPeriod, SpecifiedOpeningTime
 
 FILE_PATH = "application.service_matcher.service_matcher"
 
-SERVICE_MATCHER_ENVIRONMENT_VARIABLES = ["ENV"]
 
-
-@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
-@patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_matching_services(
-    mock_get_matching_dos_services,
-    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
-    change_event,
-):
-    # Arrange
-    nhs_entity = NHSEntity(change_event)
-    service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    mock_get_matching_dos_services.return_value = [service]
-    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
-    # Act
-    matching_services = get_matching_services(nhs_entity)
-    # Assert
-    assert matching_services == [service]
-    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
-
-
-@patch(f"{FILE_PATH}.get_pharmacy_first_phase_one_feature_flag")
-@patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_unmatching_services(
-    mock_get_matching_dos_services,
-    mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
-    change_event,
-):
-    # Arrange
-    nhs_entity = NHSEntity(change_event)
-    mock_get_matching_dos_services.return_value = []
-    mock_get_pharmacy_first_phase_one_feature_flag.return_value = True
-    # Act
-    response = get_matching_services(nhs_entity)
-    # Assert
-    assert response == []
-    mock_get_pharmacy_first_phase_one_feature_flag.assert_called_once()
-
-
-def get_message_attributes(
+def _get_message_attributes(
     correlation_id: str,
     message_received: int,
     record_id: str,
     ods_code: str,
     message_deduplication_id: str,
     message_group_id: str,
-):
+) -> dict[str, Any]:
     return {
         "correlation_id": {"DataType": "String", "StringValue": correlation_id},
         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
@@ -85,81 +33,53 @@ def get_message_attributes(
     }
 
 
-@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_log_missing_dos_services__missing(mock_log_missing_dos_service_for_a_given_type, change_event):
+@patch(f"{FILE_PATH}.review_matches")
+@patch(f"{FILE_PATH}.get_matching_services")
+@patch(f"{FILE_PATH}.send_update_requests")
+@patch(f"{FILE_PATH}.NHSEntity")
+@patch(f"{FILE_PATH}.extract_body")
+def test_lambda_handler(
+    mock_extract_body,
+    mock_nhs_entity,
+    mock_send_update_requests,
+    mock_get_matching_services,
+    mock_review_matches,
+    change_event,
+    lambda_context,
+):
     # Arrange
-    entity = MagicMock()
-    entity.check_for_service.return_value = True
+    mock_entity = NHSEntity(change_event)
+    sqs_event = SQS_EVENT.copy()
+    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
+    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
+    mock_nhs_entity.return_value = mock_entity
     service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    matching_dos_services = [service]
-
+    mock_get_matching_services.return_value = [service]
+    mock_review_matches.return_value = [service]
+    environ["ENV"] = "test"
     # Act
-    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
-
+    response = lambda_handler(sqs_event, lambda_context)
     # Assert
-    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
-    mock_log_missing_dos_service_for_a_given_type.assert_called_once_with(
-        nhs_entity=entity,
-        matching_services=matching_dos_services,
-        missing_type=BLOOD_PRESSURE,
-        reason=f"No '{BLOOD_PRESSURE.TYPE_NAME}' type services found in DoS even though its specified"
-        f" in the NHS UK Change Event (dos type {BLOOD_PRESSURE.DOS_TYPE_ID})",
+    assert response is None, f"Response should be None but is {response}"
+    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
+    mock_nhs_entity.assert_called_once_with(change_event)
+    mock_get_matching_services.assert_called_once_with(mock_entity)
+    mock_review_matches.assert_called_once_with([service], mock_entity)
+    mock_send_update_requests.assert_called_once_with(
+        update_requests=[{"change_event": change_event, "service_id": service.id}],
+        message_received=HOLDING_QUEUE_CHANGE_EVENT_ITEM["message_received"],
+        record_id=HOLDING_QUEUE_CHANGE_EVENT_ITEM["dynamo_record_id"],
+        sequence_number=HOLDING_QUEUE_CHANGE_EVENT_ITEM["sequence_number"],
     )
-
-
-@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_log_missing_dos_services__not_missing(mock_log_missing_dos_service_for_a_given_type, change_event):
-    # Arrange
-    entity = MagicMock()
-    entity.check_for_service.return_value = True
-    service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    service_two = dummy_dos_service()
-    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
-    service_two.statusid = 1
-    matching_dos_services = [service, service_two]
-
-    # Act
-    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
-
-    # Assert
-    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
-    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
-
-
-@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_log_missing_dos_services__not_on_nhs_entity(mock_log_missing_dos_service_for_a_given_type, change_event):
-    # Arrange
-    entity = MagicMock()
-    entity.check_for_service.return_value = False
-    service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    service_two = dummy_dos_service()
-    service_two.typeid = BLOOD_PRESSURE.DOS_TYPE_ID
-    service_two.statusid = 1
-    matching_dos_services = [service, service_two]
-
-    # Act
-    log_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
-
-    # Assert
-    entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
-    mock_log_missing_dos_service_for_a_given_type.assert_not_called()
+    # Clean up
+    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
-@patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_unmatched_service(
-    mock_set_dimension,
-    mock_put_metric,
     mock_extract_body,
     mock_nhs_entity,
     mock_send_update_requests,
@@ -174,8 +94,7 @@ def test_lambda_handler_unmatched_service(
     mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
     mock_nhs_entity.return_value = mock_entity
     mock_get_matching_services.return_value = []
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
+    environ["ENV"] = "test"
     # Act
     response = lambda_handler(sqs_event, lambda_context)
     # Assert
@@ -185,191 +104,19 @@ def test_lambda_handler_unmatched_service(
     mock_get_matching_services.assert_called_once_with(mock_entity)
     mock_send_update_requests.assert_not_called()
     # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.log_unmatched_nhsuk_service")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_no_matching_dos_services(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_log_unmatched_nhsuk_service,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    mock_get_matching_services.return_value = []
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    lambda_handler(sqs_event, lambda_context)
-    # Assert
-    mock_log_unmatched_nhsuk_service.assert_called_once()
-    mock_send_update_requests.assert_not_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.log_closed_or_hidden_services")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_hidden_or_closed_pharmacies(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_log_closed_or_hidden_services,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    service = dummy_dos_service()
-    service.id = 1
-    service.uid = 101
-    service.odscode = "SLC4501"
-    service.web = "www.fakesite.com"
-    service.publicphone = "01462622435"
-    service.postcode = "S45 1AB"
-    service.statusid = 1
-
-    change_event["OrganisationStatus"] = "closed"
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    mock_get_matching_services.return_value = [service]
-
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    lambda_handler(sqs_event, lambda_context)
-    # Assert
-    mock_log_closed_or_hidden_services.assert_called_once()
-    mock_send_update_requests.assert_not_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.log_invalid_open_times")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_invalid_open_times(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_get_matching_services,
-    mock_log_invalid_open_times,
-    mock_send_update_requests,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    service = dummy_dos_service()
-    service.id = 1
-    service.uid = 101
-    service.odscode = "SLC4501"
-    service.web = "www.fakesite.com"
-    service.publicphone = "01462622435"
-    service.postcode = "S45 1AB"
-    service.statusid = 1
-
-    change_event["OpeningTimes"] = [
-        {
-            "Weekday": "Monday",
-            "OpeningTime": "09:00",
-            "ClosingTime": "13:00",
-            "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "",
-            "IsOpen": True,
-        },
-        {
-            "Weekday": "Monday",
-            "OpeningTime": "12:00",
-            "ClosingTime": "17:30",
-            "OpeningTimeType": "General",
-            "AdditionalOpeningDate": "",
-            "IsOpen": True,
-        },
-    ]
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    mock_get_matching_services.return_value = [service]
-
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    lambda_handler(sqs_event, lambda_context)
-    # Assert
-    mock_log_invalid_open_times.assert_called_once()
-    mock_send_update_requests.assert_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.parameters.get_parameter")
-def test_get_pharmacy_first_phase_one_feature_flag(mock_get_parameter: MagicMock) -> None:
-    # Arrange
-    environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"] = environment_variable = "test"
-    mock_get_parameter.return_value = "True"
-    # Act
-    response = get_pharmacy_first_phase_one_feature_flag()
-    # Assert
-    assert response is True
-    mock_get_parameter.assert_called_once_with(environment_variable)
-    # Clean up
-    del environ["PHARMACY_FIRST_PHASE_ONE_PARAMETER"]
+    del environ["ENV"]
 
 
 def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context):
     # Arrange
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"] = []
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
+    environ["ENV"] = "test"
     # Act / Assert
     with pytest.raises(StopIteration):
         lambda_handler(sqs_event, lambda_context)
     # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-def test_remove_service_if_not_on_change_event() -> None:
-    # Arrange
-    service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    service2 = dummy_dos_service()
-    service2.typeid = 148
-    service2.statusid = 2
-    matching_services = [service, service2]
-    nhs_entity = NHSEntity(PHARMACY_STANDARD_EVENT)
-    nhs_entity.blood_pressure = False
-    # Act
-    response = remove_service_if_not_on_change_event(matching_services, nhs_entity, "blood_pressure", BLOOD_PRESSURE)
-    # Assert
-    assert response == [service]
+    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.send_update_request_metric")
@@ -406,7 +153,7 @@ def test_send_update_requests(
         "MessageBody": payload,
         "MessageDeduplicationId": f"1-{hashed_payload}",
         "MessageGroupId": "1",
-        "MessageAttributes": get_message_attributes(
+        "MessageAttributes": _get_message_attributes(
             "1",
             message_received,
             record_id,
@@ -423,143 +170,6 @@ def test_send_update_requests(
     mock_send_update_request_metric.assert_called_once()
     # Clean up
     del environ["UPDATE_REQUEST_QUEUE_URL"]
-
-
-def test_send_update_request_metric():
-    # Arrange
-    environ["ENV"] = "environment"
-    # Act
-    send_update_request_metric()
-    # Cleanup
-    del environ["ENV"]
-
-
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.log_invalid_open_times")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler_invalid_existing_dos_opening_times(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_get_matching_services,
-    mock_log_invalid_open_times,
-    mock_send_update_requests,
-    change_event,
-    lambda_context,
-):
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    holding_queue_change_event_item = HOLDING_QUEUE_CHANGE_EVENT_ITEM.copy()
-    holding_queue_change_event_item["change_event"] = change_event
-    mock_extract_body.return_value = holding_queue_change_event_item
-    mock_nhs_entity.return_value = mock_entity
-
-    service = dummy_dos_service()
-    spec_open_time = SpecifiedOpeningTime([OpenPeriod.from_string("12:00-16:00")], date(2023, 3, 1), True)
-    service.specified_opening_times = [spec_open_time, spec_open_time]
-    mock_get_matching_services.return_value = [service]
-
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    lambda_handler(sqs_event, lambda_context)
-    # Assert
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.log_missing_dos_services")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-@patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "set_dimensions")
-def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
-    mock_set_dimension,
-    mock_put_metric,
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_log_missing_dos_services,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    service = dummy_dos_service()
-    service.typeid = 13
-    service.statusid = 1
-    mock_get_matching_services.return_value = [service, service]
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(sqs_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
-    mock_nhs_entity.assert_called_once_with(change_event)
-    mock_get_matching_services.assert_called_once_with(mock_entity)
-    mock_log_missing_dos_services.assert_has_calls(
-        [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
-    )
-    mock_send_update_requests.assert_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
-
-
-@patch(f"{FILE_PATH}.log_missing_dos_services")
-@patch(f"{FILE_PATH}.get_matching_services")
-@patch(f"{FILE_PATH}.send_update_requests")
-@patch(f"{FILE_PATH}.NHSEntity")
-@patch(f"{FILE_PATH}.extract_body")
-@patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "set_dimensions")
-def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
-    mock_set_dimension,
-    mock_put_metric,
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_log_missing_dos_services,
-    change_event,
-    lambda_context,
-):
-    # Arrange
-    mock_entity = NHSEntity(change_event)
-    sqs_event = SQS_EVENT.copy()
-    sqs_event["Records"][0]["body"] = dumps(HOLDING_QUEUE_CHANGE_EVENT_ITEM)
-    mock_extract_body.return_value = HOLDING_QUEUE_CHANGE_EVENT_ITEM
-    mock_nhs_entity.return_value = mock_entity
-    service = dummy_dos_service()
-    service.typeid = 131
-    service.statusid = 1
-    mock_get_matching_services.return_value = [service, service]
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        environ[env] = "test"
-    # Act
-    response = lambda_handler(sqs_event, lambda_context)
-    # Assert
-    assert response is None, f"Response should be None but is {response}"
-    mock_extract_body.assert_called_once_with(sqs_event["Records"][0]["body"])
-    mock_nhs_entity.assert_called_once_with(change_event)
-    mock_get_matching_services.assert_called_once_with(mock_entity)
-    mock_log_missing_dos_services.assert_has_calls(
-        [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
-    )
-    mock_send_update_requests.assert_called()
-    # Clean up
-    for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
-        del environ[env]
 
 
 HOLDING_QUEUE_CHANGE_EVENT_ITEM = HoldingQueueChangeEventItem(
