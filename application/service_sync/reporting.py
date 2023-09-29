@@ -13,7 +13,6 @@ logger = Logger(child=True)
 BLANK_STANDARD_OPENINGS_REPORT_ID = "BLANK_STANDARD_OPENINGS"
 GENERIC_BANK_HOLIDAY_REPORT_ID = "GENERIC_BANK_HOLIDAY"
 GENERIC_CHANGE_EVENT_ERROR_REPORT_ID = "GENERIC_CHANGE_EVENT_ERROR"
-INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID = "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
 INVALID_POSTCODE_REPORT_ID = "INVALID_POSTCODE"
 SERVICE_UPDATE_REPORT_ID = "SERVICE_UPDATE"
 
@@ -195,26 +194,4 @@ def log_service_updated(  # noqa: PLR0913
             "type_id": type_id,
             "dos_region": dos_service.get_region(),
         },
-    )
-
-
-def log_incorrect_palliative_stockholder_type(
-    nhs_uk_palliative_care: bool | str,
-    dos_palliative_care: bool,
-    dos_service: DoSService,
-) -> None:
-    """Log a service found to have an invalid website.
-
-    Args:
-        nhs_uk_palliative_care (bool): The NHS website to report
-        dos_palliative_care (bool): The NHS entity to report
-        dos_service (DoSService): The DoS service to report
-    """
-    logger.warning(
-        "Palliative care on wrong service type",
-        report_key=INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
-        dos_palliative_care=dos_palliative_care,
-        nhsuk_palliative_care=nhs_uk_palliative_care,
-        dos_service_type_name=dos_service.service_type_name,
-        dos_region=dos_service.get_region(),
     )

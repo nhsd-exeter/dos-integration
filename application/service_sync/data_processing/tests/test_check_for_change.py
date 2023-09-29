@@ -421,10 +421,7 @@ def test_check_public_phone_for_change_no_change(
     assert response == changes_to_dos
 
 
-@patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
-def test_check_palliative_care_for_change_unequal(
-    mock_log_incorrect_palliative_stockholder_type: MagicMock,
-):
+def test_check_palliative_care_for_change_unequal():
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -438,34 +435,6 @@ def test_check_palliative_care_for_change_unequal(
     response = check_palliative_care_for_change(changes_to_dos)
     # Assert
     assert response == changes_to_dos
-    mock_log_incorrect_palliative_stockholder_type.assert_not_called()
-
-
-@patch(f"{FILE_PATH}.get_palliative_care_log_value")
-@patch(f"{FILE_PATH}.log_incorrect_palliative_stockholder_type")
-def test_check_palliative_care_for_change_invalid(
-    mock_log_incorrect_palliative_stockholder_type: MagicMock,
-    mock_get_palliative_care_log_value: MagicMock,
-):
-    # Arrange
-    dos_service = MagicMock()
-    nhs_entity = MagicMock()
-    service_histories = MagicMock()
-    dos_service.typeid = 131
-    dos_service.palliative_care = dos_palliative_care = True
-    nhs_entity.palliative_care = nhs_palliative_care = False
-    mock_get_palliative_care_log_value.return_value = nhs_palliative_care
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
-
-    # Act
-    response = check_palliative_care_for_change(changes_to_dos)
-    # Assert
-    assert response == changes_to_dos
-    mock_log_incorrect_palliative_stockholder_type.assert_called_once_with(
-        nhs_uk_palliative_care=nhs_palliative_care,
-        dos_palliative_care=dos_palliative_care,
-        dos_service=dos_service,
-    )
 
 
 @patch(f"{FILE_PATH}.services_change")
