@@ -2,10 +2,7 @@ from typing import Any
 
 from aws_lambda_powertools.logging import Logger
 
-from ..reporting import (
-    log_blank_standard_opening_times,
-    log_incorrect_palliative_stockholder_type,
-)
+from ..reporting import log_blank_standard_opening_times
 from .changes_to_dos import ChangesToDoS
 from .comparison import (
     compare_blood_pressure,
@@ -32,7 +29,6 @@ from common.constants import (
     DOS_NORTHING_CHANGE_KEY,
     DOS_PALLIATIVE_CARE_SGSDID,
     DOS_PALLIATIVE_CARE_TYPE_ID,
-    DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES,
     DOS_POSTAL_TOWN_CHANGE_KEY,
     DOS_POSTCODE_CHANGE_KEY,
     DOS_PUBLIC_PHONE_CHANGE_KEY,
@@ -271,19 +267,6 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
         changes_to_dos.service_histories.add_sgsdid_change(
             sgsdid=DOS_PALLIATIVE_CARE_SGSDID,
             new_value=changes_to_dos.nhs_entity.palliative_care,
-        )
-    elif (
-        changes_to_dos.dos_service.typeid in DOS_PHARMACY_NO_PALLIATIVE_CARE_TYPES
-        and changes_to_dos.dos_service.palliative_care is True
-    ):
-        nhs_uk_palliative_care = get_palliative_care_log_value(
-            changes_to_dos.nhs_entity.palliative_care,
-            skip_palliative_care_check,
-        )
-        log_incorrect_palliative_stockholder_type(
-            nhs_uk_palliative_care=nhs_uk_palliative_care,
-            dos_palliative_care=changes_to_dos.dos_service.palliative_care,
-            dos_service=changes_to_dos.dos_service,
         )
     else:
         logger.info(

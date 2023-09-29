@@ -26,19 +26,7 @@ Feature: F007. Report Logging
     And "dos_region" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX03 Check for Incorrect Palliative Stockholder Type log
-    Given an entry is created in the services table
-    And the service "service_type" is set to "131"
-    And the entry is committed to the services table
-    And the service in DoS supports palliative care
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with value "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
-    And "dos_service_type_name" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
-    And "type_id" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
-    And "service_name" attribute is identified in the "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE" report in "service-sync" logs
-
-  @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX04 Check for services with generic bank holiday openings log
+  Scenario: F007SX03 Check for services with generic bank holiday openings log
     Given a basic service is created
     And the change event "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
@@ -53,7 +41,7 @@ Feature: F007. Report Logging
     And "dos_region" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX05 Check for Unmatched Pharmacy Report log
+  Scenario: F007SX04 Check for Unmatched Pharmacy Report log
     Given a basic service is created
     And the change event "ODSCode" is set to "FXXX1"
     When the Changed Event is sent for processing with "valid" api key
@@ -70,7 +58,7 @@ Feature: F007. Report Logging
     And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F007SX06 Check for Blank Opening Times Report log
+  Scenario: F007SX05 Check for Blank Opening Times Report log
     Given a basic service is created
     And the Changed Event has blank opening times
     When the Changed Event is sent for processing with "valid" api key
@@ -81,9 +69,8 @@ Feature: F007. Report Logging
     And "dos_service_uid" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_service_type_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
 
-
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX07 Check for Hidden Or Closed Report log
+  Scenario Outline: F007SX06 Check for Hidden Or Closed Report log
     Given a pharmacy service is created with type "<service_type>"
     And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
     When the Changed Event is sent for processing with "valid" api key
@@ -130,7 +117,7 @@ Feature: F007. Report Logging
     And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F007SX9 Check for missing dos service type
+  Scenario Outline: F007SX09 Check for missing dos service type
     Given a basic service is created
     And the change event "<service_type>" is set to "True"
     When the Changed Event is sent for processing with "valid" api key

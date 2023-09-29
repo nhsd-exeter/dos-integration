@@ -8,11 +8,9 @@ from application.service_sync.reporting import (
     BLANK_STANDARD_OPENINGS_REPORT_ID,
     GENERIC_BANK_HOLIDAY_REPORT_ID,
     GENERIC_CHANGE_EVENT_ERROR_REPORT_ID,
-    INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
     INVALID_POSTCODE_REPORT_ID,
     SERVICE_UPDATE_REPORT_ID,
     log_blank_standard_opening_times,
-    log_incorrect_palliative_stockholder_type,
     log_invalid_nhsuk_postcode,
     log_service_updated,
     log_service_with_generic_bank_holiday,
@@ -181,24 +179,4 @@ def test_log_service_updated(mock_logger: MagicMock):
             "type_id": type_id,
             "dos_region": dos_service.get_region(),
         },
-    )
-
-
-@patch.object(Logger, "warning")
-def test_log_incorrect_palliative_stockholder_type(mock_logger: MagicMock):
-    # Arrange
-    expected_dos_palliative_care = True
-    expected_nhsuk_palliative_care = False
-    dos_service = dummy_dos_service()
-    # Act
-    log_incorrect_palliative_stockholder_type(expected_nhsuk_palliative_care, expected_dos_palliative_care, dos_service)
-    # Assert
-    assert INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID == "INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE"
-    mock_logger.assert_called_with(
-        "Palliative care on wrong service type",
-        report_key=INCORRECT_PALLIATIVE_STOCKHOLDER_TYPE_REPORT_ID,
-        dos_palliative_care=expected_dos_palliative_care,
-        nhsuk_palliative_care=expected_nhsuk_palliative_care,
-        dos_service_type_name=dos_service.service_type_name,
-        dos_region=dos_service.get_region(),
     )
