@@ -15,7 +15,6 @@ logger = Logger(child=True)
 HIDDEN_OR_CLOSED_REPORT_ID = "HIDDEN_OR_CLOSED"
 UNMATCHED_PHARMACY_REPORT_ID = "UNMATCHED_PHARMACY"
 INVALID_OPEN_TIMES_REPORT_ID = "INVALID_OPEN_TIMES"
-UNEXPECTED_PHARMACY_PROFILING_REPORT_ID = "UNEXPECTED_PHARMACY_PROFILING"
 MISSING_SERVICE_TYPE_REPORT_ID = "MISSING_SERVICE_TYPE"
 
 
@@ -99,33 +98,6 @@ def log_invalid_open_times(
     metrics.set_property("message", error_msg)
     metrics.set_dimensions({"ENV": environ["ENV"]})
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
-
-
-def log_unexpected_pharmacy_profiling(
-    nhs_entity: NHSEntity,
-    matching_services: list[DoSService],
-    reason: str,
-) -> None:
-    """Log a service found to have an invalid website.
-
-    Args:
-        nhs_entity (NHSEntity): The NHS entity to report
-        matching_services (list[DoSService]): The DoS services to report
-        reason (str): The reason for the report
-    """
-    for service in matching_services:
-        logger.warning(
-            "Pharmacy profiling is incorrect",
-            report_key=UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
-            dos_service_uid=service.uid,
-            dos_service_name=service.name,
-            dos_service_address=service.address,
-            dos_service_postcode=service.postcode,
-            dos_service_type=service.service_type_name,
-            dos_region=service.get_region(),
-            reason=reason,
-            nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
-        )
 
 
 def log_missing_dos_service_for_a_given_type(

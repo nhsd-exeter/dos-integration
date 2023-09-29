@@ -9,12 +9,10 @@ from application.service_matcher.reporting import (
     HIDDEN_OR_CLOSED_REPORT_ID,
     INVALID_OPEN_TIMES_REPORT_ID,
     MISSING_SERVICE_TYPE_REPORT_ID,
-    UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
     UNMATCHED_PHARMACY_REPORT_ID,
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_missing_dos_service_for_a_given_type,
-    log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
 from common.commissioned_service_type import BLOOD_PRESSURE
@@ -133,27 +131,6 @@ def test_log_invalid_open_times(mock_logger):
     )
     # Clean up
     del environ["ENV"]
-
-
-@patch.object(Logger, "warning")
-def test_log_unexpected_pharmacy_profiling(mock_logger: MagicMock):
-    dos_service = dummy_dos_service()
-    reason = "reason 123"
-    nhs_entity = NHSEntity({})
-    log_unexpected_pharmacy_profiling(nhs_entity, [dos_service], reason)
-    assert UNEXPECTED_PHARMACY_PROFILING_REPORT_ID == "UNEXPECTED_PHARMACY_PROFILING"
-    mock_logger.assert_called_with(
-        "Pharmacy profiling is incorrect",
-        report_key=UNEXPECTED_PHARMACY_PROFILING_REPORT_ID,
-        dos_service_uid=dos_service.uid,
-        dos_service_name=dos_service.name,
-        dos_service_address=dos_service.address,
-        dos_service_postcode=dos_service.postcode,
-        dos_service_type=dos_service.service_type_name,
-        dos_region=dos_service.get_region(),
-        reason=reason,
-        nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
-    )
 
 
 @patch.object(Logger, "warning")

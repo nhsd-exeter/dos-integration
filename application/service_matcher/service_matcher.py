@@ -2,7 +2,6 @@ from ast import literal_eval
 from datetime import datetime
 from hashlib import sha256
 from json import dumps
-from operator import countOf
 from os import environ, getenv
 from typing import Any
 
@@ -19,11 +18,10 @@ from .reporting import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
     log_missing_dos_service_for_a_given_type,
-    log_unexpected_pharmacy_profiling,
     log_unmatched_nhsuk_service,
 )
 from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
-from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
+from common.constants import DOS_ACTIVE_STATUS_ID
 from common.dos import DoSService, get_matching_dos_services
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
@@ -108,21 +106,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     # Check for correct pharmacy profiling
     dos_matching_service_types = [service.typeid for service in matching_services]
     logger.debug(f"Matched service types: {dos_matching_service_types}", matched=matching_services)
-    if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
-        type_13_matching_services = [
-            service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
-        ]
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=type_13_matching_services,
-            reason="Multiple 'Pharmacy' type services found (type 13)",
-        )
-    elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=matching_services,
-            reason="No 'Pharmacy' type services found (type 13)",
-        )
 
     log_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
     log_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)

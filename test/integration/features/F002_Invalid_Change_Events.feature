@@ -85,14 +85,3 @@ Feature: F002. Invalid change event Exception handling
     And the change event has no standard opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
-
-  @complete @pharmacy_cloudwatch_queries
-  Scenario Outline: F002SX12. A service with multiple entries as pharmacies raises alerts
-    Given "<count>" basic services are created
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows "<count>" of "report_key" with value "UNEXPECTED_PHARMACY_PROFILING"
-
-    Examples:
-      | count |
-      | 2     |
-      | 4     |
