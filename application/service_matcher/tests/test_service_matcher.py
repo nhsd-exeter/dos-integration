@@ -454,7 +454,6 @@ def test_lambda_handler_invalid_existing_dos_opening_times(
 
 
 @patch(f"{FILE_PATH}.log_missing_dos_services")
-@patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -468,7 +467,6 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
     mock_nhs_entity,
     mock_send_update_requests,
     mock_get_matching_services,
-    mock_log_unexpected_pharmacy_profiling,
     mock_log_missing_dos_services,
     change_event,
     lambda_context,
@@ -496,18 +494,12 @@ def test_lambda_handler_unexpected_pharmacy_profiling_multiple_type_13s(
         [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
     )
     mock_send_update_requests.assert_called()
-    mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        nhs_entity=mock_entity,
-        matching_services=[service, service],
-        reason="Multiple 'Pharmacy' type services found (type 13)",
-    )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
 
 
 @patch(f"{FILE_PATH}.log_missing_dos_services")
-@patch(f"{FILE_PATH}.log_unexpected_pharmacy_profiling")
 @patch(f"{FILE_PATH}.get_matching_services")
 @patch(f"{FILE_PATH}.send_update_requests")
 @patch(f"{FILE_PATH}.NHSEntity")
@@ -521,7 +513,6 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
     mock_nhs_entity,
     mock_send_update_requests,
     mock_get_matching_services,
-    mock_log_unexpected_pharmacy_profiling,
     mock_log_missing_dos_services,
     change_event,
     lambda_context,
@@ -549,11 +540,6 @@ def test_lambda_handler_unexpected_pharmacy_profiling_no_type_13s(
         [call(mock_entity, [service, service], BLOOD_PRESSURE), call(mock_entity, [service, service], CONTRACEPTION)],
     )
     mock_send_update_requests.assert_called()
-    mock_log_unexpected_pharmacy_profiling.assert_called_once_with(
-        nhs_entity=mock_entity,
-        matching_services=[service, service],
-        reason="No 'Pharmacy' type services found (type 13)",
-    )
     # Clean up
     for env in SERVICE_MATCHER_ENVIRONMENT_VARIABLES:
         del environ[env]
