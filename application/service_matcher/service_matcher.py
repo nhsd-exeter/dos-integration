@@ -273,6 +273,7 @@ def send_update_requests(
                 },
             },
         )
+        send_update_request_metric()
     chunks = list(divide_chunks(messages, 10))
     for i, chunk in enumerate(chunks):
         # TODO: Handle errors?
@@ -280,3 +281,15 @@ def send_update_requests(
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
         logger.info("Response received", response=response)
         logger.info(f"Sent off update request for id={service_id}")
+
+
+@metric_scope
+def send_update_request_metric(metrics: Any) -> None:  # noqa: ANN401
+    """Send metric for update request sent.
+
+    Args:
+        metrics (Any): The custom metrics collection
+    """
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.put_metric("UpdateRequestSent", 1, "Count")
