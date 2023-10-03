@@ -16,6 +16,7 @@ from application.service_matcher.service_matcher import (
     lambda_handler,
     log_missing_dos_services,
     remove_service_if_not_on_change_event,
+    send_update_request_metric,
     send_update_requests,
 )
 from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION
@@ -371,10 +372,16 @@ def test_remove_service_if_not_on_change_event() -> None:
     assert response == [service]
 
 
+@patch(f"{FILE_PATH}.send_update_request_metric")
 @patch(f"{FILE_PATH}.sqs")
 @patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "info")
-def test_send_update_requests(mock_logger, get_correlation_id_mock, mock_sqs):
+def test_send_update_requests(
+    mock_logger,
+    get_correlation_id_mock,
+    mock_sqs,
+    mock_send_update_request_metric: MagicMock,
+) -> None:
     # Arrange
     q_name = "test-queue"
     environ["UPDATE_REQUEST_QUEUE_URL"] = q_name
@@ -413,8 +420,18 @@ def test_send_update_requests(mock_logger, get_correlation_id_mock, mock_sqs):
         Entries=[entry_details],
     )
     mock_logger.assert_called_with("Sent off update request for id=1")
+    mock_send_update_request_metric.assert_called_once()
     # Clean up
     del environ["UPDATE_REQUEST_QUEUE_URL"]
+
+
+def test_send_update_request_metric():
+    # Arrange
+    environ["ENV"] = "environment"
+    # Act
+    send_update_request_metric()
+    # Cleanup
+    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.send_update_requests")

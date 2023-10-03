@@ -156,6 +156,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
               ["UEC-DOS-INT", "UpdateRequestSuccess", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#2ca02c", "label" : "DoS Service Update Success" }],
               [".", "UpdateRequestFailed", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#d62728", "label" : "DoS Service Update Failed" }],
               [".", "ChangeEventReceived", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#1f77b4", "label" : "Change Event Received" }],
+              [".", "UpdateRequestSent", ".", var.blue_green_environment, { "label" : "Update Requests Sent", "color" : "#b088f5" }],
               [".", "DoSAllServiceUpdates", ".", var.blue_green_environment, { "label" : "All DoS Data Item Updates", "color" : "#000000" }],
             ],
             "stacked" : false,
