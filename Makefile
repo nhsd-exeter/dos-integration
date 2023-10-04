@@ -363,11 +363,10 @@ tester-clean:
 # Performance Testing
 
 stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
-	PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 5 --run-time 10m)
 	make -s docker-run-tester \
 		CMD="python -m locust -f stress_test.py --headless \
-			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
-			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			--users 12 --spawn-rate 10 --run-time 12m  \
+			--stop-timeout 10 --exit-code-on-error 0 -H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
