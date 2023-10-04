@@ -1,0 +1,15 @@
+{
+  "aliveStatusCodes": [
+    200,
+    403
+  ],
+  "ignorePatterns": [
+    {
+      "pattern": "^https://nhsd-confluence.digital.nhs.uk/"
+    },
+    {
+      "pattern": "^https://nhsd-jira.digital.nhs.uk/"
+    }
+  ],
+  "timeout": "5s"
+}
