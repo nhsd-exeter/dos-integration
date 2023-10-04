@@ -207,7 +207,7 @@ def check_opening_times_for_changes(changes_to_dos: ChangesToDoS) -> ChangesToDo
     if changes_to_dos.nhs_entity.standard_opening_times.fully_closed():
         log_blank_standard_opening_times(nhs_entity=changes_to_dos.nhs_entity, dos_service=changes_to_dos.dos_service)
     else:
-        logger.debug("Standard opening times are not blank")
+        logger.info("Standard opening times are not blank")
 
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
         # Compare standard opening times
