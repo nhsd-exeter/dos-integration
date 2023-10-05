@@ -424,13 +424,33 @@ def test_check_public_phone_for_change_no_change(
 def test_check_palliative_care_for_change_unequal():
     # Arrange
     dos_service = MagicMock()
+    dos_service.odscode = "12345"
     nhs_entity = MagicMock()
     service_histories = MagicMock()
     dos_service.typeid = 13
     dos_service.palliative_care = True
     nhs_entity.palliative_care = False
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
+    # Act
+    response = check_palliative_care_for_change(changes_to_dos)
+    # Assert
+    assert response == changes_to_dos
 
+
+@patch(f"{FILE_PATH}.get_palliative_care_log_value")
+def test_check_palliative_care_for_change_incorrect_odscode_length(
+    mock_get_palliative_care_log_value: MagicMock,
+):
+    # Arrange
+    dos_service = MagicMock()
+    dos_service.odscode = "123456"
+    nhs_entity = MagicMock()
+    service_histories = MagicMock()
+    dos_service.typeid = 131
+    dos_service.palliative_care = True
+    nhs_entity.palliative_care = nhs_palliative_care = False
+    mock_get_palliative_care_log_value.return_value = nhs_palliative_care
+    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     # Act
     response = check_palliative_care_for_change(changes_to_dos)
     # Assert

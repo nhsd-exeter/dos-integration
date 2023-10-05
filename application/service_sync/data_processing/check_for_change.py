@@ -35,6 +35,7 @@ from common.constants import (
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
     DOS_STATUS_CHANGE_KEY,
     DOS_WEBSITE_CHANGE_KEY,
+    MAIN_PHARMACY_ODSCODE_LENGTH,
     NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
 )
 from common.dos import DoSService
@@ -259,6 +260,7 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
     logger.info(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
+        and len(changes_to_dos.dos_service.odscode) == MAIN_PHARMACY_ODSCODE_LENGTH
         and compare_palliative_care(changes=changes_to_dos)
         and skip_palliative_care_check is False
     ):
@@ -276,6 +278,7 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
                 skip_palliative_care_check,
             ),
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
+            dos_odscode=changes_to_dos.dos_service.odscode,
         )
     return changes_to_dos
 
