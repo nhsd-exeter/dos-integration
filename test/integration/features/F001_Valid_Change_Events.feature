@@ -470,3 +470,48 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | odscode_character_length |
       | 6                        |
       | 8                        |
+
+
+  @complete @pharmacy_cloudwatch_queries @wip
+  Scenario Outline: F001SX37. Palliative Care remains unchanged with longer than 5 character odscode
+    Given a basic service is created with "<odscode_character_length>" character odscode
+    And the service in DoS supports palliative care
+    And the change event has no palliative care entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then palliative care is "applied" to the service
+    # We need to revisit to the above line to make it more appropriate
+    And the "service-sync" lambda shows field "message" with value "No change / Not suitable for palliative care comparison"
+    And the service history is not updated
+
+    Examples:
+      | odscode_character_length |
+      | 6                        |
+      | 8                        |
+
+  @complete @pharmacy_cloudwatch_queries @wip
+  Scenario Outline: F001SX38. Palliative Care remains unchanged with longer than 5 character odscode
+    Given a basic service is created with "<odscode_character_length>" character odscode
+    And the change event has a palliative care entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then palliative care is "not applied" to the service
+    And the "service-sync" lambda shows field "message" with value "No change / Not suitable for palliative care comparison"
+    And the service history is not updated
+
+    Examples:
+      | odscode_character_length |
+      | 6                        |
+      | 8                        |
+
+  @complete @pharmacy_cloudwatch_queries @wip
+  Scenario Outline: F001SX39. Palliative Care remains unchanged with longer than 5 character odscode
+    Given a basic service is created with "<odscode_character_length>" character odscode
+    And the change event has no palliative care entry
+    When the Changed Event is sent for processing with "valid" api key
+    Then palliative care is "not applied" to the service
+    And the "service-sync" lambda shows field "message" with value "No change / Not suitable for palliative care comparison"
+    And the service history is not updated
+
+    Examples:
+      | odscode_character_length |
+      | 6                        |
+      | 8                        |

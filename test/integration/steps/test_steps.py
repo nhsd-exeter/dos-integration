@@ -58,6 +58,7 @@ from .functions.generator import (
     generate_staff,
     query_specified_opening_builder,
     query_standard_opening_builder,
+    remove_palliative_care_to_change_event,
     valid_change_event,
 )
 from .functions.slack import slack_retry
@@ -175,6 +176,20 @@ def _(context: Context) -> Context:
         Context: The context object.
     """
     add_palliative_care_to_change_event(context)
+    return context
+
+
+@given("the change event has no palliative care entry", target_fixture="context")
+def _(context: Context) -> Context:
+    """Remove a palliative care uecservice to the change event.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    remove_palliative_care_to_change_event(context)
     return context
 
 
