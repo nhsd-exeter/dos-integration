@@ -609,6 +609,16 @@ def add_palliative_care_to_change_event(context: Context) -> None:
         },
     )
 
+def remove_palliative_care_to_change_event(context: Context) -> None:
+    """This function removes an entry in the Change Event containing a palliative care service.
+
+    Args:
+        context (Context): The context object that contains the change event to be updated.
+    """
+    if "UecServices"  in context.change_event:
+        context.change_event["UecServices"] = []
+
+
 
 def add_blood_pressure_to_change_event(context: Context) -> None:
     """This function creates an entry in the Change Event containing a blood pressure service.
