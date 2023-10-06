@@ -472,7 +472,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 8                        |
 
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F001SX37. Palliative Care remains unchanged with longer than 5 character odscode
     Given a basic service is created with "<odscode_character_length>" character odscode
     And the service in DoS supports palliative care
@@ -488,7 +488,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 6                        |
       | 8                        |
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F001SX38. Palliative Care remains unchanged with longer than 5 character odscode
     Given a basic service is created with "<odscode_character_length>" character odscode
     And the change event has a palliative care entry
@@ -502,7 +502,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 6                        |
       | 8                        |
 
-  @complete @pharmacy_cloudwatch_queries @wip
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F001SX39. Palliative Care remains unchanged with longer than 5 character odscode
     Given a basic service is created with "<odscode_character_length>" character odscode
     And the change event has no palliative care entry
