@@ -86,10 +86,8 @@ def test_check_for_missing_dos_services__missing(mock_log_missing_dos_service_fo
     service.typeid = 13
     service.statusid = 1
     matching_dos_services = [service]
-
     # Act
     check_for_missing_dos_services(entity, matching_dos_services, BLOOD_PRESSURE)
-
     # Assert
     entity.check_for_service.assert_called_once_with(BLOOD_PRESSURE.NHS_UK_SERVICE_CODE)
     mock_log_missing_dos_service_for_a_given_type.assert_called_once_with(
@@ -159,8 +157,8 @@ def test_remove_service_if_not_on_change_event() -> None:
     assert response == [service]
 
 
-@patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_check_for_missing_palliative_care_service(mock_log_missing_dos_service_for_a_given_type: MagicMock) -> None:
+@patch(f"{FILE_PATH}.log_missing_dos_service")
+def test_check_for_missing_palliative_care_service(mock_log_missing_dos_service: MagicMock) -> None:
     # Arrange
     service = dummy_dos_service()
     service.typeid = 131
@@ -171,9 +169,9 @@ def test_check_for_missing_palliative_care_service(mock_log_missing_dos_service_
     # Act
     check_for_missing_palliative_care_service(nhs_entity, matching_services)
     # Assert
-    mock_log_missing_dos_service_for_a_given_type.assert_called_once_with(
+    mock_log_missing_dos_service.assert_called_once_with(
         nhs_entity=nhs_entity,
-        matching_services=matching_services,
+        dos_service=service,
         missing_type=PALLIATIVE_CARE,
         reason="No Active Pharmacy with 5 Character ODSCode",
     )

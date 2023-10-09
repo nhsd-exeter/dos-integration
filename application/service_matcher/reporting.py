@@ -122,6 +122,28 @@ def log_missing_dos_service_for_a_given_type(
     if active_pharmacy_service is None:
         return
 
+    log_missing_dos_service(
+        nhs_entity=nhs_entity,
+        dos_service=active_pharmacy_service,
+        missing_type=missing_type,
+        reason=reason,
+    )
+
+
+def log_missing_dos_service(
+    nhs_entity: NHSEntity,
+    dos_service: DoSService,
+    missing_type: CommissionedServiceType,
+    reason: str,
+) -> None:
+    """Reports when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
+
+    Args:
+        nhs_entity (NHSEntity): The NHS entity to report
+        dos_service (DoSService): The DoS service to report
+        missing_type (CommissionedServiceType): The subtype being reported as missing descriptors
+        reason (str): The reason for the report
+    """
     logger.warning(
         "Missing DoS service for a certain type associated with a NHS UK Service Code",
         report_key=MISSING_SERVICE_TYPE_REPORT_ID,
@@ -131,9 +153,9 @@ def log_missing_dos_service_for_a_given_type(
         nhsuk_organisation_status=nhs_entity.org_status,
         nhsuk_organisation_subtype=nhs_entity.org_sub_type,
         dos_missing_service_type=missing_type.TYPE_NAME,
-        dos_service_address=active_pharmacy_service.address,
-        dos_service_postcode=active_pharmacy_service.postcode,
-        dos_region=active_pharmacy_service.get_region(),
+        dos_service_address=dos_service.address,
+        dos_service_postcode=dos_service.postcode,
+        dos_region=dos_service.get_region(),
         reason=reason,
         nhsuk_parent_organisation_name=nhs_entity.parent_org_name,
     )

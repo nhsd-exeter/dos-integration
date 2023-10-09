@@ -3,6 +3,7 @@ from aws_lambda_powertools.logging import Logger
 from .reporting import (
     log_closed_or_hidden_services,
     log_invalid_open_times,
+    log_missing_dos_service,
     log_missing_dos_service_for_a_given_type,
     log_unmatched_nhsuk_service,
 )
@@ -137,9 +138,9 @@ def check_for_missing_palliative_care_service(nhs_entity: NHSEntity, matching_se
         ),
         False,
     ):
-        log_missing_dos_service_for_a_given_type(
+        log_missing_dos_service(
             nhs_entity=nhs_entity,
-            matching_services=matching_services,
+            dos_service=matching_services[0],
             missing_type=PALLIATIVE_CARE,
             reason="No Active Pharmacy with 5 Character ODSCode",
         )
