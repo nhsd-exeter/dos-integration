@@ -32,6 +32,8 @@ from common.constants import (
     DOS_POSTAL_TOWN_CHANGE_KEY,
     DOS_POSTCODE_CHANGE_KEY,
     DOS_PUBLIC_PHONE_CHANGE_KEY,
+    DOS_SERVICE_HISTORY_ACTIVE_STATUS,
+    DOS_SERVICE_HISTORY_CLOSED_STATUS,
     DOS_STANDARD_OPENING_TIMES_CHANGE_KEY_LIST,
     DOS_STATUS_CHANGE_KEY,
     DOS_WEBSITE_CHANGE_KEY,
@@ -298,14 +300,11 @@ def check_blood_pressure_for_change(changes_to_dos: ChangesToDoS) -> ChangesToDo
 
     if compare_blood_pressure(changes=changes_to_dos):
         changes_to_dos.blood_pressure_changes = True
-        services_change(
+        status_id_change(
             changes_to_dos=changes_to_dos,
-            change_key=DOS_STATUS_CHANGE_KEY,
-            new_value=DOS_ACTIVE_STATUS_ID if changes_to_dos.nhs_entity.blood_pressure else DOS_CLOSED_STATUS_ID,
-            previous_value=changes_to_dos.dos_service.statusid,
-            service_table_field_name="statusid",
+            new_value=changes_to_dos.nhs_entity.blood_pressure,
+            previous_value=changes_to_dos.dos_service.status_name,
         )
-
     else:
         logger.info(
             "No change to blood pressure",
@@ -332,14 +331,11 @@ def check_contraception_for_change(changes_to_dos: ChangesToDoS) -> ChangesToDoS
 
     if compare_contraception(changes=changes_to_dos):
         changes_to_dos.contraception_changes = True
-        services_change(
+        status_id_change(
             changes_to_dos=changes_to_dos,
-            change_key=DOS_STATUS_CHANGE_KEY,
-            new_value=DOS_ACTIVE_STATUS_ID if changes_to_dos.nhs_entity.contraception else DOS_CLOSED_STATUS_ID,
-            previous_value=changes_to_dos.dos_service.statusid,
-            service_table_field_name="statusid",
+            new_value=changes_to_dos.nhs_entity.contraception,
+            previous_value=changes_to_dos.dos_service.status_name,
         )
-
     else:
         logger.info(
             "No change to contraception",
@@ -384,4 +380,33 @@ def services_change(  # noqa: PLR0913
                 change_key=change_key,
             ),
         )
+    return changes_to_dos
+
+
+def status_id_change(changes_to_dos: ChangesToDoS, new_value: bool, previous_value: str) -> ChangesToDoS:
+    """Runs the prerequisites for a change to the services table.
+
+    Including adding the change to the change object, and updating the service history.
+
+    Args:
+        changes_to_dos (ChangesToDoS): The changes to dos object
+        new_value (int): The new value to set the service table field to
+        previous_value (str): The previous value of the service table field
+
+    Returns:
+        ChangesToDoS: The changes to dos object
+    """
+    status_id, status_name = (
+        DOS_ACTIVE_STATUS_ID if new_value else DOS_CLOSED_STATUS_ID,
+        DOS_SERVICE_HISTORY_ACTIVE_STATUS if new_value else DOS_SERVICE_HISTORY_CLOSED_STATUS,
+    )
+    changes_to_dos.demographic_changes["statusid"] = status_id
+    changes_to_dos.service_histories.add_change(
+        dos_change_key=DOS_STATUS_CHANGE_KEY,
+        change=ServiceHistoriesChange(
+            data=status_name,
+            previous_value=previous_value,
+            change_key=DOS_STATUS_CHANGE_KEY,
+        ),
+    )
     return changes_to_dos
