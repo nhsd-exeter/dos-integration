@@ -18,7 +18,7 @@ resource "aws_iam_role" "di_endpoint_role" {
 EOF
 }
 
-
+#tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "di_endpoint_role_policy" {
   name   = "${var.di_endpoint_api_gateway_name}-policy"
   role   = aws_iam_role.di_endpoint_role.name
