@@ -527,7 +527,7 @@ MFA to the right AWS account using the following command
 
 The pipelines terraform stack must be deployed
 
-    make  deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
+    make deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
 
 ## Creating Batch Comparison Reports
 
