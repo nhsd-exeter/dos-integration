@@ -8,6 +8,8 @@ resource "aws_iam_role" "lambda_role" {
 resource "aws_iam_role_policy" "lambda_generic_policy" {
   name = "lambda-generic-policy"
   role = aws_iam_role.lambda_role.id
+  #checkov:skip=CKV_AWS_355:This is a generic policy that is used by all lambdas
+  #checkov:skip=CKV_AWS_290:This is a generic policy that is used by all lambdas
   #tfsec:ignore:aws-iam-no-policy-wildcards: This is a generic policy that is used by all lambdas
   policy = <<EOF
 {

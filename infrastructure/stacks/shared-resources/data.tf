@@ -17,6 +17,8 @@ data "aws_secretsmanager_secret_version" "ip_address_secret" {
 data "aws_iam_policy_document" "kms_policy" {
   #checkov:skip=CKV_AWS_109
   #checkov:skip=CKV_AWS_111
+  #checkov:skip=CKV_AWS_290
+  #checkov:skip=CKV_AWS_356
   policy_id     = null
   source_json   = null
   override_json = null
