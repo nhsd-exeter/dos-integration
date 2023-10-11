@@ -17,8 +17,7 @@
   - [Development](#development)
     - [Add IP Address to IP Allow List](#add-ip-address-to-ip-allow-list)
     - [DoS Database Connection](#dos-database-connection)
-    - [Code Formatting](#code-formatting)
-    - [Code Quality](#code-quality)
+    - [Python Code Formatting \& Quality](#python-code-formatting--quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
       - [Where are the unit tests run?](#where-are-the-unit-tests-run)
@@ -53,8 +52,6 @@
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
     - [Prerequisites](#prerequisites)
-  - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
-    - [Dentists](#dentists)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
     - [Observability](#observability)
@@ -182,26 +179,13 @@ The following vars are required for the project to establish a connection to the
 `Host, Port, Database, Username, Password, Schema`
 These variable will be stored in AWS Secrets Manager and will be retrieved by the project at either deployment or runtime.
 
-### Code Formatting
+### Python Code Formatting & Quality
 
-Code quality checks can be done with the pip installed 'black' module and run with the command.
+Python code is required be formatted and linted by Ruff.
 
-    python -m black --line-length 120
+To run ruff on you branch:
 
-This is also wrapped in a function
-To format all python files in the project run the following commands:
-
-    make python-code-format FILES=./application
-    make python-code-format FILES=./test
-
-### Code Quality
-
-Code quality checks can be done with the pip installed 'flake8' module and run with the command.
-python3 -m flake8 --max-line-length=120
-
-This is also wrapped in a function:
-
-    make python-linting
+  make python-ruff-fix
 
 ## Testing
 
@@ -289,8 +273,8 @@ To run a stress test
 
     make tester-build
     make stress-test PROFILE=perf ENVIRONMENT=perf START_TIME=$(date +%Y-%m-%d_%H-%M-%S)
-    Wait for the test to complete
-    make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+    # Wait for the test to complete
+    # Collect data from performance testing
 
 Note: if you have any errors consider reducing number of users or increasing the docker resources
 
@@ -298,8 +282,8 @@ To run a load test
 
     make tester-build
     make load-test PROFILE=perf ENVIRONMENT=perf START_TIME=$(date +%Y-%m-%d_%H-%M-%S)
-    Wait for the test to complete
-    make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+    # Wait for the test to complete
+    # Collect data from performance testing
 
 #### Where are the performance tests run?
 
@@ -330,10 +314,7 @@ Deployment images are instead tagged with the commit hash of the commit it was b
 
 <img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
 
-All `test` CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
-
-- uec-dos-int-tools-stress-test-stage
-- uec-dos-int-tools-load-test-stage
+All `test` CodeBuild automations can be found in the AWS CodePipeline/CodeBuild areas in the `Texas` `mgmt` account.
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
@@ -356,8 +337,6 @@ Once a branch which meets this criteria has been pushed then it will run a build
 ### Branch Naming to not automatically deploy
 
 For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DS-123_My_fix_branch`
-
----
 
 ## Blue/Green Deployments
 
@@ -529,33 +508,6 @@ The pipelines terraform stack must be deployed
 
     make deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
 
-## Creating Batch Comparison Reports
-
-Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
-
-### Dentists
-
-To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
-
-You can use a make command. Either specifying PROFILE, or a full set of DoS DB details.
-
-    make create-dentist-reports PROFILE=dev
-
-or
-
-    make create-dentist-reports \
-      DB_WRITER_SERVER=server_name \
-      DB_PORT=5432 \
-      DB_NAME=name_of_the_db \
-      DB_USER_NAME_SECRET_NAME=some_db_name \
-      DB_USER_NAME_SECRET_KEY=some_key \
-      DB_WRITER_SECRET_NAME=secret_name_for_secret_manager \
-      DB_WRITER_SECRET_KEY=DB_USER_PASSWORD \
-      DB_SCHEMA=pathwaysdos
-
-These can also be run directly with Python if the required packages are installed. Ensure you have the needed environmental variables (DB_WRITER_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_WRITER_SECRET_NAME, DB_WRITER_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
-
-    python3 comparison_reporting/run_dentist_reports.py
 
 ### Guiding Principles
 
