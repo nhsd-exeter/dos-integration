@@ -385,29 +385,6 @@ performance-test-clean: # Clean up performance test results
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/results/*.csv
 
-stress-test-in-pipeline: # An all in one stress test make target
-	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
-	make stress-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 4.5h
-	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_END_TIME=$$(date +%FT%TZ)
-	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
-
-load-test-in-pipeline: # An all in one load test make target
-	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
-	make load-test START_TIME=$$START_TIME
-	sleep 10m
-	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_END_TIME=$$(date +%FT%TZ)
-	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
-
-send-performance-dashboard-slack-message:
-	make slack-codebuild-notification PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PIPELINE_NAME="$(PERF_TEST_TITLE) Tests Codebuild Stage" CODEBUILD_PROJECT_NAME=$(CB_PROJECT_NAME) CODEBUILD_BUILD_ID=$(CODEBUILD_BUILD_ID) SLACK_MESSAGE="Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)"
-
 # -----------------------------
 # Other
 
