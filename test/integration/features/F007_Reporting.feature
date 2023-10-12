@@ -59,7 +59,9 @@ Feature: F007. Report Logging
 
   @complete @pharmacy_cloudwatch_queries
   Scenario: F007SX05 Check for Blank Opening Times Report log
-    Given a basic service is created
+    Given an entry is created in the services table
+    And the service is "open" on "Monday"
+    And the entry is committed to the services table
     And the Changed Event has blank opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"
@@ -68,6 +70,7 @@ Feature: F007. Report Logging
     And "dos_region" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_service_uid" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And "dos_service_type_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
+    And the service history is not updated
 
   @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F007SX06 Check for Hidden Or Closed Report log

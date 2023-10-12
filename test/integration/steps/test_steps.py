@@ -1069,6 +1069,7 @@ def check_service_history_not_updated(context: Context) -> Context:
     """
     service_history_status = service_history_negative_check(context.service_id)
     assert service_history_status == "Not Updated", "ERROR: Service history was unexpectedly updated"
+    #will revisit to change the assertion type to boolean rather string
     return context
 
 
