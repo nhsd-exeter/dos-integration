@@ -20,8 +20,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "event_replay_policy" {
-  name   = "event_replay_policy"
-  role   = aws_iam_role.event_replay_role.id
+  name = "event_replay_policy"
+  role = aws_iam_role.event_replay_role.id
+  #checkov:skip=CKV_AWS_355:This is a generic policy that is used by all lambdas
+  #checkov:skip=CKV_AWS_290:This is a generic policy that is used by all lambdas
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -106,8 +108,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "slack_messenger_policy" {
-  name   = "slack_messenger_policy"
-  role   = aws_iam_role.slack_messenger_role.id
+  name = "slack_messenger_policy"
+  role = aws_iam_role.slack_messenger_role.id
+  #checkov:skip=CKV_AWS_355:This is a generic policy that is used by all lambdas
+  #checkov:skip=CKV_AWS_290:This is a generic policy that is used by all lambdas
   policy = <<EOF
 {
   "Version": "2012-10-17",
