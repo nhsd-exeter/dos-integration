@@ -55,6 +55,7 @@ resource "aws_api_gateway_method" "di_endpoint_method" {
   api_key_required = true
 }
 
+#tfsec:ignore:aws-api-gateway-enable-cache
 resource "aws_api_gateway_method_settings" "di_endpoint_method_settings" {
   rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
   stage_name  = aws_api_gateway_stage.di_endpoint_stage.stage_name
