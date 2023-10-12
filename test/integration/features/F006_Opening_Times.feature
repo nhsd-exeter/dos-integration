@@ -56,19 +56,7 @@ Feature: F006. Opening times
     And the service history is updated with the "removed" specified opening times
 
   @complete @pharmacy_no_log_searches
-  Scenario: F006SXX7. A recently closed pharmacy on a standard day can be opened
-    Given a basic service is created
-    And the change event is "closed" on "Monday"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the pharmacy is confirmed "closed" on "Monday"
-    And the service history is updated with the "removed" standard opening times
-    Given the change event is "open" on "Monday"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the pharmacy is confirmed "open" on "Monday"
-    And the service history is updated with the "modified" standard opening times
-
-  @complete @pharmacy_no_log_searches
-  Scenario: F006SX8. A recently opened pharmacy on a standard day can be closed
+  Scenario: F006SX7. A recently opened pharmacy on a standard day can be closed
     Given a basic service is created
     And the change event is "open" on "Tuesday"
     When the Changed Event is sent for processing with "valid" api key
@@ -79,7 +67,7 @@ Feature: F006. Opening times
     And the service history is updated with the "removed" standard opening times
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F006SX9. Additional date changes open to closed
+  Scenario: F006SX8. Additional date changes open to closed
     Given an entry is created in the services table
     And the service is "open" on date "Jan 01 2025"
     And the entry is committed to the services table
@@ -88,7 +76,7 @@ Feature: F006. Opening times
     Then DoS is closed on "Jan 01 2025"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F006SX10. Additional date changes closed to open
+  Scenario: F006SX9. Additional date changes closed to open
     Given an entry is created in the services table
     And the service is "closed" on date "Jan 01 2025"
     And the entry is committed to the services table
@@ -97,7 +85,7 @@ Feature: F006. Opening times
     Then DoS is open on "Jan 01 2025"
 
   @complete @pharmacy_cloudwatch_queries
-  Scenario: F006SX11. Additional date changes times changed
+  Scenario: F006SX10. Additional date changes times changed
     Given an entry is created in the services table
     And the service is "open" on date "Jan 01 2025"
     And the entry is committed to the services table

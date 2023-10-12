@@ -228,6 +228,7 @@ def test_check_opening_times_for_changes(
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
+    nhs_entity.standard_opening_times.fully_closed.return_value = False
     service_histories = MagicMock()
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
     changes_to_dos.new_monday_opening_times = "new_monday_opening_times"
