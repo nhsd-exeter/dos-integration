@@ -45,6 +45,9 @@ SLACK_ALERT_CHANNEL := dos-integration-live-status
 # Tag Secrets
 TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 
+# WAF
+WAF_ENABLED := true
+
 # ==============================================================================
 # Organisation Types Feature Flags
 

@@ -3,14 +3,11 @@ from unittest.mock import MagicMock, call, patch
 from application.common.constants import (
     DOS_ACTIVE_STATUS_ID,
     DOS_ADDRESS_CHANGE_KEY,
-    DOS_CLOSED_STATUS_ID,
     DOS_EASTING_CHANGE_KEY,
     DOS_NORTHING_CHANGE_KEY,
     DOS_POSTAL_TOWN_CHANGE_KEY,
     DOS_POSTCODE_CHANGE_KEY,
     DOS_PUBLIC_PHONE_CHANGE_KEY,
-    DOS_SERVICE_HISTORY_ACTIVE_STATUS,
-    DOS_SERVICE_HISTORY_CLOSED_STATUS,
     DOS_STANDARD_OPENING_TIMES_FRIDAY_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_MONDAY_CHANGE_KEY,
     DOS_STANDARD_OPENING_TIMES_SATURDAY_CHANGE_KEY,
@@ -33,7 +30,6 @@ from application.service_sync.data_processing.check_for_change import (
     check_website_for_change,
     compare_nhs_uk_and_dos_data,
     services_change,
-    status_id_change,
 )
 
 FILE_PATH = "application.service_sync.data_processing.check_for_change"
@@ -472,11 +468,11 @@ def test_check_palliative_care_for_change_invalid(
     )
 
 
-@patch(f"{FILE_PATH}.status_id_change")
+@patch(f"{FILE_PATH}.services_change")
 @patch(f"{FILE_PATH}.compare_blood_pressure")
 def test_check_blood_pressure_for_change(
     mock_compare_blood_pressure: MagicMock,
-    mock_status_id_change: MagicMock,
+    mock_services_change: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -491,18 +487,20 @@ def test_check_blood_pressure_for_change(
     check_blood_pressure_for_change(changes_to_dos=changes_to_dos)
     # Assert
     mock_compare_blood_pressure.assert_called_once_with(changes=changes_to_dos)
-    mock_status_id_change.assert_called_once_with(
+    mock_services_change.assert_called_once_with(
         changes_to_dos=changes_to_dos,
-        new_value=changes_to_dos.nhs_entity.blood_pressure,
-        previous_value=changes_to_dos.dos_service.status_name,
+        change_key=DOS_STATUS_CHANGE_KEY,
+        new_value=DOS_ACTIVE_STATUS_ID,
+        previous_value=changes_to_dos.dos_service.statusid,
+        service_table_field_name="statusid",
     )
 
 
-@patch(f"{FILE_PATH}.status_id_change")
+@patch(f"{FILE_PATH}.services_change")
 @patch(f"{FILE_PATH}.compare_contraception")
 def test_check_contraception_for_change(
     mock_compare_contraception: MagicMock,
-    mock_status_id_change: MagicMock,
+    mock_services_change: MagicMock,
 ):
     # Arrange
     dos_service = MagicMock()
@@ -517,10 +515,12 @@ def test_check_contraception_for_change(
     check_contraception_for_change(changes_to_dos=changes_to_dos)
     # Assert
     mock_compare_contraception.assert_called_once_with(changes=changes_to_dos)
-    mock_status_id_change.assert_called_once_with(
+    mock_services_change.assert_called_once_with(
         changes_to_dos=changes_to_dos,
-        new_value=changes_to_dos.nhs_entity.contraception,
-        previous_value=changes_to_dos.dos_service.status_name,
+        change_key=DOS_STATUS_CHANGE_KEY,
+        new_value=DOS_ACTIVE_STATUS_ID,
+        previous_value=changes_to_dos.dos_service.statusid,
+        service_table_field_name="statusid",
     )
 
 
@@ -583,61 +583,3 @@ def test_services_change_no_service_history_update(mock_service_histories_change
     assert changes_to_dos.demographic_changes == {service_table_field_name: new_value}
     mock_service_histories_change.assert_not_called()
     changes_to_dos.service_histories.add_change.assert_not_called()
-
-
-@patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_status_id_change__active(mock_service_histories_change: MagicMock):
-    # Arrange
-    dos_service = MagicMock()
-    nhs_entity = MagicMock()
-    service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
-    new_value = True
-    previous_value = "previous_value"
-    # Act
-    response = status_id_change(
-        changes_to_dos=changes_to_dos,
-        new_value=new_value,
-        previous_value=previous_value,
-    )
-    # Assert
-    assert response == changes_to_dos
-    assert changes_to_dos.demographic_changes == {"statusid": DOS_ACTIVE_STATUS_ID}
-    mock_service_histories_change.assert_called_once_with(
-        data=DOS_SERVICE_HISTORY_ACTIVE_STATUS,
-        previous_value=previous_value,
-        change_key=DOS_STATUS_CHANGE_KEY,
-    )
-    changes_to_dos.service_histories.add_change.assert_called_once_with(
-        dos_change_key=DOS_STATUS_CHANGE_KEY,
-        change=mock_service_histories_change.return_value,
-    )
-
-
-@patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_status_id_change__closed(mock_service_histories_change: MagicMock):
-    # Arrange
-    dos_service = MagicMock()
-    nhs_entity = MagicMock()
-    service_histories = MagicMock()
-    changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
-    new_value = False
-    previous_value = "previous_value"
-    # Act
-    response = status_id_change(
-        changes_to_dos=changes_to_dos,
-        new_value=new_value,
-        previous_value=previous_value,
-    )
-    # Assert
-    assert response == changes_to_dos
-    assert changes_to_dos.demographic_changes == {"statusid": DOS_CLOSED_STATUS_ID}
-    mock_service_histories_change.assert_called_once_with(
-        data=DOS_SERVICE_HISTORY_CLOSED_STATUS,
-        previous_value=previous_value,
-        change_key=DOS_STATUS_CHANGE_KEY,
-    )
-    changes_to_dos.service_histories.add_change.assert_called_once_with(
-        dos_change_key=DOS_STATUS_CHANGE_KEY,
-        change=mock_service_histories_change.return_value,
-    )

@@ -1,4 +1,5 @@
 resource "aws_wafv2_web_acl" "di_endpoint_waf" {
+  count = var.waf_enabled ? 1 : 0
   #checkov:skip=CKV_AWS_192
   name        = var.waf_acl_name
   description = "WAF ACL for the DoS Integration API Gateway"
@@ -13,14 +14,14 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     priority = 1
 
     action {
-      count {}
+      block {}
     }
 
     statement {
       not_statement {
         statement {
           ip_set_reference_statement {
-            arn = aws_wafv2_ip_set.di_endpoint_ip_set.arn
+            arn = aws_wafv2_ip_set.di_endpoint_ip_set[0].arn
           }
         }
       }
@@ -28,7 +29,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_ip_allow_list_metric_name
+      metric_name                = var.waf_ip_allow_list_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -36,7 +37,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
   rule {
     name = var.waf_rate_based_rule_name
     action {
-      count {}
+      block {}
     }
     priority = 2
 
@@ -47,7 +48,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     }
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_rate_based_metric_name
+      metric_name                = var.waf_rate_based_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -57,19 +58,22 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     priority = 3
 
     override_action {
-      count {}
+      none {}
     }
-
     statement {
       managed_rule_group_statement {
         name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
+
+        excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_aws_common_metric_name
+      metric_name                = var.waf_aws_common_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -78,7 +82,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     name     = var.waf_non_gb_rule_name
     priority = 4
     action {
-      count {}
+      block {}
     }
     statement {
       not_statement {
@@ -91,7 +95,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     }
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.non_gb_rule_metric_name
+      metric_name                = var.waf_non_gb_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -103,7 +107,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     priority = 5
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -114,7 +118,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     }
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_aws_known_bad_inputs_metric_name
+      metric_name                = var.waf_aws_known_bad_inputs_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -124,7 +128,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     priority = 6
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -136,7 +140,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_aws_sqli_metric_name
+      metric_name                = var.waf_aws_sqli_rule_name
       sampled_requests_enabled   = true
     }
   }
@@ -146,7 +150,7 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     priority = 7
 
     override_action {
-      count {}
+      none {}
     }
 
     statement {
@@ -158,23 +162,24 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = var.ip_reputation_list_metric_name
+      metric_name                = var.waf_ip_reputation_list_rule_name
       sampled_requests_enabled   = true
     }
   }
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = var.waf_acl_metric_name
+    metric_name                = var.waf_acl_name
     sampled_requests_enabled   = true
   }
 
   depends_on = [
-    aws_wafv2_ip_set.di_endpoint_ip_set
+    aws_wafv2_ip_set.di_endpoint_ip_set[0]
   ]
 }
 
 resource "aws_wafv2_ip_set" "di_endpoint_ip_set" {
+  count              = var.waf_enabled ? 1 : 0
   name               = var.waf_ip_set_name
   description        = "IP set for the DoS Integration API Gateway"
   scope              = "REGIONAL"
@@ -182,18 +187,19 @@ resource "aws_wafv2_ip_set" "di_endpoint_ip_set" {
   addresses          = toset(local.ip_addresses)
 }
 
-resource "aws_wafv2_web_acl_logging_configuration" "waf_acl_lc" {
+resource "aws_wafv2_web_acl_logging_configuration" "waf_acl_logging_configuration" {
+  count                   = var.waf_enabled ? 1 : 0
   log_destination_configs = [aws_cloudwatch_log_group.waf_logs.arn]
-  resource_arn            = aws_wafv2_web_acl.di_endpoint_waf.arn
+  resource_arn            = aws_wafv2_web_acl.di_endpoint_waf[0].arn
 }
 
 resource "aws_wafv2_web_acl_association" "di_endpoint_waf_association" {
+  count        = var.waf_enabled ? 1 : 0
   resource_arn = aws_api_gateway_stage.di_endpoint_stage.arn
-  web_acl_arn  = aws_wafv2_web_acl.di_endpoint_waf.arn
-
+  web_acl_arn  = aws_wafv2_web_acl.di_endpoint_waf[0].arn
   depends_on = [
     aws_api_gateway_stage.di_endpoint_stage,
-    aws_wafv2_web_acl.di_endpoint_waf
+    aws_wafv2_web_acl.di_endpoint_waf[0]
   ]
 
 }
