@@ -57,8 +57,10 @@ Feature: F007. Report Logging
     And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And the service history is not updated
 
-  @complete @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries @wip
   Scenario: F007SX05 Check for Blank Opening Times Report log
+    # Given a basic service is created
+    # And the service is "open" on "Monday"
     Given an entry is created in the services table
     And the service is "open" on "Monday"
     And the entry is committed to the services table
