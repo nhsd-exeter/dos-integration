@@ -139,3 +139,23 @@ Feature: F007. Report Logging
       | service_type   |
       | Blood Pressure |
       | Contraception  |
+
+  @complete @pharmacy_cloudwatch_queries @wip
+  Scenario: F007SX10 Check for missing dos service type without bp and contraception
+    Given an entry is created in the services table
+    And the service "service_type" is set to "131"
+    And the entry is committed to the services table
+    And the change event has a palliative care entry
+    When the Changed Event is sent for processing with "valid" api key
+    #Then the "service-sync" lambda shows field "message" with value "Not Suitable for blood pressure comparison"
+    #Then the "service-sync" lambda shows field "message" with value "Not Suitable for Contraception comparison"
+    Then the "service-matcher" lambda shows field "report_key" with value "MISSING_SERVICE_TYPE"
+    And "ods_code" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "org_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "org_sub_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_organisation_status" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_missing_service_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_address" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_service_postcode" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "nhsuk_parent_organisation_name" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "dos_region" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
