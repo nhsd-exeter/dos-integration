@@ -142,9 +142,8 @@ Feature: F007. Report Logging
 
   @complete @pharmacy_cloudwatch_queries @wip
   Scenario: F007SX10 Check for missing dos service type without bp and contraception
-    Given an entry is created in the services table
-    And the service "service_type" is set to "131"
-    And the entry is committed to the services table
+    Given a pharmacy service is created with type "131"
+    # And the entry is committed to the services table
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
     #Then the "service-sync" lambda shows field "message" with value "Not Suitable for blood pressure comparison"
