@@ -42,10 +42,7 @@ SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment := $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment := $(SHARED_ENVIRONMENT)
 
-
 AWS_SSO_ROLE_KEY := AWS_SSO_ROLE
-# AppConfig
-TF_VAR_accepted_org_types = $(ACCEPTED_ORG_TYPES)
 
 # Development and Deployment Tools
 TF_VAR_cicd_blue_green_deployment_pipeline_artefact_bucket := $(PROJECT_ID)-$(ENVIRONMENT)-cicd-blue-green-deployment-artefacts

@@ -31,7 +31,7 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,shared-resources,before-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
@@ -41,7 +41,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=blue-green-link,after-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources,appconfig
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -478,7 +478,7 @@ checkov-secret-scanning:
 
 deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources
+	make terraform-apply-auto-approve STACKS=api-key,shared-resources
 
 deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
@@ -497,7 +497,7 @@ link-blue-green-environment: # Links blue green environment - mandatory: PROFILE
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
+	make terraform-destroy-auto-approve STACKS=shared-resources
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
