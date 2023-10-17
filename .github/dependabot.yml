@@ -48,12 +48,6 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/appconfig"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/before-lambda-deployment"
     schedule:
       interval: "monthly"

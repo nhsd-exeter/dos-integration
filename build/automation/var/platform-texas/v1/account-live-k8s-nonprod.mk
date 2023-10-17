@@ -17,11 +17,6 @@ TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-dev/deployment # Move to project.mk when nonprod profiles are merged
 
 SERVERLESS_DISABLE_ROLLBACK := false
-# ==============================================================================
-# Organisation Types Feature Flags
-
-ACCEPTED_ORG_TYPES := PHA
-
 
 # ==============================================================================
 
