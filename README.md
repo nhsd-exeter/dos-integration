@@ -508,7 +508,6 @@ The pipelines terraform stack must be deployed
 
     make deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
 
-
 ### Guiding Principles
 
 List of the high level principles that a product /development team must adhere to:
