@@ -134,20 +134,18 @@ Feature: F007. Report Logging
     And "dos_service_postcode" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
     And "nhsuk_parent_organisation_name" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
     And "dos_region" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "reason" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
 
     Examples:
       | service_type   |
       | Blood Pressure |
       | Contraception  |
 
-  @complete @pharmacy_cloudwatch_queries @wip
-  Scenario: F007SX10 Check for missing dos service type without bp and contraception
-    Given a pharmacy service is created with type "131"
-    # And the entry is committed to the services table
+  @complete @pharmacy_cloudwatch_queries
+  Scenario Outline: F007SX10 Check for missing dos service type without bp and contraception
+    Given a pharmacy service is created with "6" character odscode and type "<service_type>"
     And the change event has a palliative care entry
     When the Changed Event is sent for processing with "valid" api key
-    #Then the "service-sync" lambda shows field "message" with value "Not Suitable for blood pressure comparison"
-    #Then the "service-sync" lambda shows field "message" with value "Not Suitable for Contraception comparison"
     Then the "service-matcher" lambda shows field "report_key" with value "MISSING_SERVICE_TYPE"
     And "ods_code" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
     And "org_type" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
@@ -158,3 +156,14 @@ Feature: F007. Report Logging
     And "dos_service_postcode" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
     And "nhsuk_parent_organisation_name" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
     And "dos_region" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+    And "reason" attribute is identified in the "MISSING_SERVICE_TYPE" report in "service-matcher" logs
+
+    Examples:
+      | service_type |
+      | 13           |
+      | 131          |
+      | 132          |
+      | 134          |
+      | 137          |
+      | 148          |
+      | 149          |
