@@ -297,13 +297,14 @@ def _(context: Context, odscode_character_length: int) -> Context:
     return context
 
 
-@given(parse('a pharmacy service is created with "{odscode_character_length:d}" character odscode and type "{service_type:d}"'),
-    target_fixture="context")
+@given(parse('a pharmacy service is created with "{odscode_character_length:d}" character odscode '
+        'and type "{service_type:d}"'), target_fixture="context")
 def _(context: Context, odscode_character_length: int, service_type: int) -> Context:
     """Create a basic service with a specific service type and an ods code of a certain length.
 
     Args:
         context (Context): The context object.
+        odscode_character_length (int): The length of the odscode to use.
         service_type (int): The service type to use.
 
     Returns:
