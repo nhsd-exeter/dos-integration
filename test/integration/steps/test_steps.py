@@ -280,6 +280,7 @@ def _(context: Context, odscode_character_length: int) -> Context:
     Args:
         context (Context): The context object.
         odscode_character_length (int): The length of the odscode to use.
+        service_type (int): The service type to use.
 
     Returns:
         Context: The context object.
@@ -288,6 +289,31 @@ def _(context: Context, odscode_character_length: int) -> Context:
     max_value = "9" * odscode_character_length
     odscode = randint(int(min_value), int(max_value))
     context = a_service_table_entry_is_created(context, ods_code=odscode)
+    context = service_table_entry_is_committed(context)
+    short_odscode = str(odscode)[:5]
+    context.ods_code = short_odscode
+    context.generator_data["odscode"] = short_odscode
+    context.change_event["ODSCode"] = short_odscode
+    return context
+
+
+@given(parse('a pharmacy service is created with "{odscode_character_length:d}" character odscode '
+        'and type "{service_type:d}"'), target_fixture="context")
+def _(context: Context, odscode_character_length: int, service_type: int) -> Context:
+    """Create a basic service with a specific service type and an ods code of a certain length.
+
+    Args:
+        context (Context): The context object.
+        odscode_character_length (int): The length of the odscode to use.
+        service_type (int): The service type to use.
+
+    Returns:
+        Context: The context object.
+    """
+    min_value = f"1{'0'* (odscode_character_length-1)} "
+    max_value = "9" * odscode_character_length
+    odscode = randint(int(min_value), int(max_value))
+    context = a_service_table_entry_is_created(context, ods_code=odscode, service_type=service_type)
     context = service_table_entry_is_committed(context)
     short_odscode = str(odscode)[:5]
     context.ods_code = short_odscode
