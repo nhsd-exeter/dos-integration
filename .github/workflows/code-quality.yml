@@ -57,7 +57,6 @@ jobs:
           use-quiet-mode: "yes"
           config-file: .github/workflows/configs/markdown-check-links.json
           base-branch: develop
-          file-path: "./README.md"
           check-modified-files-only: "yes"
 
   check-python-code-quality:
