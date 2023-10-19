@@ -29,6 +29,7 @@
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
     - [Artefacts Versioning](#artefacts-versioning)
+      - [Docker Images](#docker-images)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
     - [Branching Strategy](#branching-strategy)
@@ -310,6 +311,12 @@ All standard releases are considered major releases. Minor releases are used for
 
 Deployment images are instead tagged with the commit hash of the commit it was built from. Standard non deployment images are tagged with the timestamp and commit hash of the commit they were built from.
 
+#### Docker Images
+
+Docker images for releases are tagged with the version of the pipeline.
+
+However in the task deploy and test codebuild uses a timestamp and commit hash tag.
+
 ### CI/CD Pipelines
 
 ![CI/CD Pipelines](./documentation/diagrams/DevOps-Pipelines%20and%20Automation.drawio.png)
@@ -478,9 +485,9 @@ Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID
 ### AWS Access
 
 To be able to interact with a remote environment, please make sure you have set up your AWS CLI credentials and
-MFA to the right AWS account using the following command
+Assume the right AWS account using the following command
 
-    tx-mfa
+    assume
 
 ## Production Deployment
 
@@ -488,7 +495,7 @@ MFA to the right AWS account using the following command
 
 The pipelines terraform stack must be deployed
 
-    make deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
+    make deploy-development-and-deployment-tools ENVIRONMENT=dev
 
 ### Guiding Principles
 
@@ -558,16 +565,11 @@ The runbooks for this project can be found on the DI confluence.
     - Handy tips on how to get started as part of the DoS Integration team
   - Full Development Team (Private: Ask for invite) `dos-integration-devs`
     - For team conversations and team notifications
-  - Devs/Tests Only (Private: Ask for invite) `di-coders`
-    - For technical conversation without distracting the non technical team members
   - Swarming Channel (Public) `dos-integration-swarming`
     - For team meetings and swarming sessions. Generally used for huddles.
 - TO DO SLACK CHANNELS
-  - CI/CD and data pipelines, processes, e.g. `[service-name]-automation`
-  - Service status, e.g. `[service-name]-status`
+  - CI/CD and data pipelines, processes & Service status, `dos-integration-dev-status` and `dos-integration-live-status`
 - Email addresses in use, e.g. `[service.name]@nhs.net`
-
-All of the above can be service, product, application or even team specific.
 
 ### Documentation
 
