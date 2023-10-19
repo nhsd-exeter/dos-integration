@@ -450,22 +450,19 @@ This will undeploy the shared resources environment and is intended to be used w
 Note: No blue/green environments can exist for this shared resources environment when running this command.
 If they do the blue/green environments must be unlinked and undeployed first.
 
-```bash
-make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
+    make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
 
-# Example
-make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
-```
+    - Example
+    make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
 
 #### Rollback Blue/Green Environment
 
 This will rollback the blue/green environment to the previous version. It's best to use the commit of the version you are intending to rollback to ensure the Terraform works correctly together.
 
-```bash
-make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
-# Example
-make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMENT=cicd-test COMMIT=c951156
-```
+    make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
+
+    - Example
+    make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMENT=cicd-test COMMIT=c951156
 
 ### Quick Re-deploy
 
