@@ -126,8 +126,8 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
   alarm_description         = "Alert for when DI is waiting to process update requests in service sync"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests Waiting"
   comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { ENV = var.update_request_queue_name }
+  datapoints_to_alarm       = "2"
+  dimensions                = { ENV = var.update_request_queue }
   evaluation_periods        = "3"
   insufficient_data_actions = []
   metric_name               = "ApproximateNumberOfMessagesDelayed"
@@ -240,4 +240,40 @@ resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist"
   period                    = "60"
   statistic                 = "Maximum"
   threshold                 = "0"
+}
+
+resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_completed" {
+  count                     = var.profile == "dev" ? 0 : 1
+  alarm_description         = "Alert for when the Quality Checker has completed"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Quality Checker Has Completed"
+  comparison_operator       = "LessThanThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "QualityCheckerFinished"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Sum"
+  threshold                 = "1"
+  treat_missing_data        = "missing"
+  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_errorred" {
+  count                     = var.profile == "dev" ? 0 : 1
+  alarm_description         = "Alert for when the Quality Checker has errorred"
+  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Quality Checker Has Errorred"
+  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  datapoints_to_alarm       = "1"
+  dimensions                = { ENV = var.blue_green_environment }
+  evaluation_periods        = "1"
+  insufficient_data_actions = []
+  metric_name               = "QualityCheckerErrored"
+  namespace                 = "UEC-DOS-INT"
+  period                    = "60"
+  statistic                 = "Sum"
+  threshold                 = "1"
+  treat_missing_data        = "notBreaching"
 }

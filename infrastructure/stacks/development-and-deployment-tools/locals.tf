@@ -31,7 +31,7 @@ locals {
       "AWS_ACCOUNT"        = "PROD"
     }
   }
-  to_build              = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event"])
+  to_build                 = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event", "quality-checker"])
   integration_test_tags = toset(["pharmacy_no_log_searches", "pharmacy_cloudwatch_queries"])
   independent_build_images = {
     tester = {
