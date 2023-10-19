@@ -235,8 +235,8 @@ resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" 
   }
 }
 
-resource "aws_codebuild_project" "di_integration_tests_autoflags" {
-  for_each       = local.integration_make_targets
+resource "aws_codebuild_project" "di_integration_tests" {
+  for_each       = local.integration_test_tags
   name           = "${var.project_id}-${var.environment}-${each.key}"
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
@@ -260,7 +260,7 @@ resource "aws_codebuild_project" "di_integration_tests_autoflags" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "INTEGRATION_MAKE_TARGET"
+      name  = "TAG"
       value = each.key
     }
     dynamic "environment_variable" {

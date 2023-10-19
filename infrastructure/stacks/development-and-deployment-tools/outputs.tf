@@ -5,5 +5,5 @@ output "codestarconnection_arn" {
 
 output "integration_test_make_targets" {
   description = "Integration Test Make Targets"
-  value       = local.integration_make_targets
+  value       = local.integration_test_tags
 }

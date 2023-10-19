@@ -99,7 +99,7 @@ resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
       }
     }
     dynamic "action" {
-      for_each = local.integration_make_targets
+      for_each = local.integration_test_tags
       content {
         name            = "Integration_Test_${action.key}"
         category        = "Build"
@@ -109,7 +109,7 @@ resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
         version         = "1"
         run_order       = 2
         configuration = {
-          ProjectName = aws_codebuild_project.di_integration_tests_autoflags[action.key].name
+          ProjectName = aws_codebuild_project.di_integration_tests[action.key].name
           EnvironmentVariables = jsonencode([
             {
               name  = "PROFILE"
@@ -327,7 +327,7 @@ resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
     module.cicd_blue_green_deployment_pipeline_artefact_bucket,
     aws_codebuild_project.di_unit_tests_stage,
     aws_codebuild_project.di_build_image_stage,
-    aws_codebuild_project.di_integration_tests_autoflags,
+    aws_codebuild_project.di_integration_tests,
     aws_codebuild_project.di_deploy_blue_green_environment_stage,
   ]
 }
