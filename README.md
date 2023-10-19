@@ -74,7 +74,7 @@ The DoS Integration project aims to keep any updates made on NHS.uk consistent w
 
 ### Architecture
 
-<img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
+![Architecture](./documentation/diagrams/DoS%20Integration-Components.drawio.png)
 
 ### Technology Stack
 
@@ -82,7 +82,7 @@ The current technology stack is:
 
 - Python - Main programming language
 - AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS, S3
-- Serverless Framework - (Where supported)
+- Serverless Framework - Lambda
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
 ## Quick Start
@@ -119,7 +119,7 @@ Instructions and tips for basic authentication for AWS can be found online. Any 
 
 There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
 
-    tx-mfa
+    assume
 
 ### Mac setup
 
@@ -238,7 +238,7 @@ This testing is generally done by a tester
 
 Prerequisites
 
-    tx-mfa
+    assume # Granted assume AWS Role
     Sign into Non-Prod VPN # To connect to lambdas within the VPC
     IP is in the IP Allow List # To connect to the API Gateway
     make tester-build
@@ -312,7 +312,7 @@ Deployment images are instead tagged with the commit hash of the commit it was b
 
 ### CI/CD Pipelines
 
-<img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
+![CI/CD Pipelines](./documentation/diagrams/DevOps-Pipelines%20and%20Automation.drawio.png)
 
 All `test` CodeBuild automations can be found in the AWS CodePipeline/CodeBuild areas in the `Texas` `mgmt` account.
 
@@ -326,7 +326,7 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
-<img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
+![Branching Strategy](./documentation/diagram/../diagrams/DoS%20Integration-GitHub.drawio.png)
 
 ### Branch Naming for Automatic Deployments
 
@@ -344,7 +344,7 @@ For a branch that is meant for testing or another purpose and you don't want it 
 
 To deploy a new version of the application in a blue green way it uses multiple components. Such as resources that should persist between deployments, such as the database, and resources that should be recreated with each deployment, such as the lambda functions.
 
-<img src="./documentation/diagrams/DoS Integration-Blue-Green-Deployments.drawio.png" width="1024" /><br /><br />
+![Blue/Green Deployment Strategy](./documentation/diagrams/DoS%20Integration-Blue-Green-Deployments.drawio.png)
 
 ### Blue/Green Deployment Process
 
@@ -624,7 +624,3 @@ All of the above can be service, product, application or even team specific.
 - Ways of working
 
   <https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working>
-
-```
-
-```
