@@ -199,6 +199,29 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=application VERSION=$(BUILD_TAG)
 
+build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
+	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
+	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
+	eval "$$(make -s get-lambda-versions-from-terraform-stack)"
+
+deploy-application-with-same-image-versions: # Deploy application with same image versions - mandatory: PROFILE, ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s get-lambda-versions-from-terraform-stack)"
+	make terraform-apply-auto-approve STACKS=application
+
+get-lambda-versions-from-terraform-stack:
+	VERSIONS=$$(make -s terraform-output STACKS=application OPTS='-json lambda_versions' | tail -n1)
+	echo "export CHANGE_EVENT_DLQ_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.change_event_dlq_handler')"
+	echo "export DOS_DB_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.dos_db_handler')"
+	echo "export DOS_DB_UPDATE_DLQ_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.dos_db_update_dlq_handler')"
+	echo "export EVENT_REPLAY_VERSION=$$(echo $$VERSIONS | jq -r '.event_replay')"
+	echo "export INGEST_CHANGE_EVENT_VERSION=$$(echo $$VERSIONS | jq -r '.ingest_change_event')"
+	echo "export SEND_EMAIL_VERSION=$$(echo $$VERSIONS | jq -r '.send_email')"
+	echo "export SERVICE_MATCHER_VERSION=$$(echo $$VERSIONS | jq -r '.service_matcher')"
+	echo "export SERVICE_SYNC_VERSION=$$(echo $$VERSIONS | jq -r '.service_sync')"
+	echo "export SLACK_MESSENGER_VERSION=$$(echo $$VERSIONS | jq -r '.slack_messenger')"
+	echo "export QUALITY_CHECKER_VERSION=$$(echo $$VERSIONS | jq -r '.quality_checker')"
+
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
 		make docker-push NAME=$$IMAGE_NAME
