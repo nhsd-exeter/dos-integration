@@ -68,6 +68,9 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
         excluded_rule {
           name = "NoUserAgent_HEADER"
         }
+        excluded_rule {
+          name = "SizeRestrictions_BODY"
+        }
       }
     }
 
