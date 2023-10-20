@@ -106,17 +106,11 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
 		"
 
-integration-test-autoflags-no-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	make integration-test TAGS="pharmacy_no_log_searches" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
-
-integration-test-autoflags-cloudwatch-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	make integration-test TAGS="pharmacy_cloudwatch_queries" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
-
-integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+integration-test: # End to end test DI project - mandatory: PROFILE, TAG=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tester \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
+	CMD="pytest steps -k $(TAG) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
 		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
