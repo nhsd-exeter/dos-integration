@@ -118,11 +118,6 @@ resource "aws_codebuild_project" "di_full_deploy_stage" {
         value = environment_variable.value
       }
     }
-
-    environment_variable {
-      name  = "SERVERLESS_BUILD_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-serverless-stage"
-    }
   }
 
   logs_config {

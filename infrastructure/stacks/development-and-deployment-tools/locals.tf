@@ -37,9 +37,6 @@ locals {
     tester = {
       "filematch" = "requirement"
     }
-    serverless = {
-      "filematch" = "serverless.yml"
-    }
   }
   default_environment_variables = {
     "AWS_DEFAULT_REGION"         = var.aws_region

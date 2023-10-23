@@ -54,10 +54,7 @@ resource "aws_codebuild_project" "di_destroy_nonprod_environment_on_pr_merged" {
       }
     }
 
-    environment_variable {
-      name  = "SERVERLESS_BUILD_PROJECT_NAME"
-      value = "${var.project_id}-${var.environment}-build-serverless-stage"
-    }
+
   }
   logs_config {
     cloudwatch_logs {

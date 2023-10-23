@@ -86,6 +86,8 @@ The current technology stack is:
 - Serverless Framework - Lambda
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
+- Terraform - Infrastructure as code tool
+
 ## Quick Start
 
 ### Development Requirements
