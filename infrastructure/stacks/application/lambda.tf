@@ -75,7 +75,7 @@ module "dos_db_handler_lambda" {
     "IMAGE_VERSION"                      = var.dos_db_handler_version
     "DB_NAME"                            = var.dos_db_name
     "DB_PORT"                            = var.dos_db_port
-    "DB_READ_ONLY_USER_NAME"             = var.dos_db_read_only_user_name
+    "DB_READ_ONLY_USER_NAME"             = local.dos_db_read_only_user_name
     "DB_READER_SECRET_NAME"              = var.dos_db_reader_secret_name
     "DB_READER_SECRET_KEY"               = var.dos_db_reader_secret_key
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
@@ -83,7 +83,7 @@ module "dos_db_handler_lambda" {
     "DB_SCHEMA"                          = var.dos_db_schema
     "DB_WRITER_SECRET_NAME"              = var.dos_db_writer_secret_name
     "DB_WRITER_SECRET_KEY"               = var.dos_db_writer_secret_key
-    "DB_READ_AND_WRITE_USER_NAME"        = var.dos_db_read_and_write_user_name
+    "DB_READ_AND_WRITE_USER_NAME"        = local.dos_db_read_and_write_user_name
   }
 }
 
@@ -234,7 +234,7 @@ module "send_email_lambda" {
     "LOG_LEVEL"                          = var.log_level
     "IMAGE_VERSION"                      = var.send_email_version
     "AWS_ACCOUNT_NAME"                   = var.aws_account_name
-    "SYSTEM_EMAIL_ADDRESS"               = var.project_system_email_address
+    "SYSTEM_EMAIL_ADDRESS"               = local.project_system_email_address
     "EMAIL_SECRET_NAME"                  = var.project_deployment_secrets
   }
 }
@@ -280,7 +280,7 @@ module "service_matcher_lambda" {
     "UPDATE_REQUEST_QUEUE_URL"           = aws_sqs_queue.update_request_queue.url
     "DB_NAME"                            = var.dos_db_name
     "DB_PORT"                            = var.dos_db_port
-    "DB_READ_ONLY_USER_NAME"             = var.dos_db_read_only_user_name
+    "DB_READ_ONLY_USER_NAME"             = local.dos_db_read_only_user_name
     "DB_READER_SECRET_NAME"              = var.dos_db_reader_secret_name
     "DB_READER_SECRET_KEY"               = var.dos_db_reader_secret_key
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
@@ -331,7 +331,7 @@ module "service_sync_lambda" {
     "UPDATE_REQUEST_QUEUE_URL"           = aws_sqs_queue.update_request_queue.url
     "DB_NAME"                            = var.dos_db_name
     "DB_PORT"                            = var.dos_db_port
-    "DB_READ_ONLY_USER_NAME"             = var.dos_db_read_only_user_name
+    "DB_READ_ONLY_USER_NAME"             = local.dos_db_read_only_user_name
     "DB_READER_SECRET_NAME"              = var.dos_db_reader_secret_name
     "DB_READER_SECRET_KEY"               = var.dos_db_reader_secret_key
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
@@ -339,10 +339,10 @@ module "service_sync_lambda" {
     "DB_SCHEMA"                          = var.dos_db_schema
     "DB_WRITER_SECRET_NAME"              = var.dos_db_writer_secret_name
     "DB_WRITER_SECRET_KEY"               = var.dos_db_writer_secret_key
-    "DB_READ_AND_WRITE_USER_NAME"        = var.dos_db_read_and_write_user_name
+    "DB_READ_AND_WRITE_USER_NAME"        = local.dos_db_read_and_write_user_name
     "SEND_EMAIL_BUCKET_NAME"             = var.send_email_bucket_name
-    "TEAM_EMAIL_ADDRESS"                 = var.project_team_email_address
-    "SYSTEM_EMAIL_ADDRESS"               = var.project_system_email_address
+    "TEAM_EMAIL_ADDRESS"                 = local.project_team_email_address
+    "SYSTEM_EMAIL_ADDRESS"               = local.project_system_email_address
     "SEND_EMAIL_LAMBDA_NAME"             = var.send_email_lambda
   }
 }
@@ -381,7 +381,7 @@ module "slack_messenger_lambda" {
     "LOG_LEVEL"                          = var.log_level
     "IMAGE_VERSION"                      = var.slack_messenger_version
     "SLACK_ALERT_CHANNEL"                = var.slack_alert_channel
-    "SLACK_WEBHOOK_URL"                  = var.slack_webhook_url
+    "SLACK_WEBHOOK_URL"                  = local.slack_webhook_url
   }
 }
 
@@ -420,7 +420,7 @@ module "quality_checker_lambda" {
     "IMAGE_VERSION"                      = var.quality_checker_version
     "DB_NAME"                            = var.dos_db_name
     "DB_PORT"                            = var.dos_db_port
-    "DB_READ_ONLY_USER_NAME"             = var.dos_db_read_only_user_name
+    "DB_READ_ONLY_USER_NAME"             = local.dos_db_read_only_user_name
     "DB_READER_SECRET_NAME"              = var.dos_db_reader_secret_name
     "DB_READER_SECRET_KEY"               = var.dos_db_reader_secret_key
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
@@ -428,6 +428,6 @@ module "quality_checker_lambda" {
     "DB_SCHEMA"                          = var.dos_db_schema
     "DB_WRITER_SECRET_NAME"              = var.dos_db_writer_secret_name
     "DB_WRITER_SECRET_KEY"               = var.dos_db_writer_secret_key
-    "DB_READ_AND_WRITE_USER_NAME"        = var.dos_db_read_and_write_user_name
+    "DB_READ_AND_WRITE_USER_NAME"        = local.dos_db_read_and_write_user_name
   }
 }
