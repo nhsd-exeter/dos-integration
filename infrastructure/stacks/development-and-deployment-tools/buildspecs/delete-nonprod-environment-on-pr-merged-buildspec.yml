@@ -8,7 +8,6 @@ phases:
       - yum localinstall -y gh_2.6.0_linux_amd64.rpm
   pre_build:
     commands:
-      - make wait-for-codebuild-to-finish PROJECT_NAME=$SERVERLESS_BUILD_PROJECT_NAME
       - export GH_TOKEN=$(make secret-fetch NAME=uec-dos-int-tools/deployment | jq -r '.GITHUB_TOKEN')
       - echo $GH_TOKEN
       - temp_role=$(aws sts assume-role --role-arn "arn:aws:iam::$AWS_ACCOUNT_ID_NONPROD:role/$PIPELINE_BUILD_ROLE" --role-session-name "CodeBuildSession")
@@ -17,7 +16,6 @@ phases:
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - aws sts get-caller-identity
       - make docker-hub-signin
-      - make docker-pull NAME=serverless VERSION=latest
   build:
     commands:
       - chown -R 999:999 $CODEBUILD_SRC_DIR

@@ -5,7 +5,6 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # Development workflow targets
 
 setup: project-config # Set up project
-	make serverless-build
 	make tester-build
 
 build: # Build lambdas
@@ -31,17 +30,11 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,shared-resources,before-lambda-deployment
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
+	make terraform-apply-auto-approve STACKS=api-key,shared-resources,application,blue-green-link
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=blue-green-link,after-lambda-deployment
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources
+	make terraform-destroy-auto-approve STACKS=blue-green-link,application,shared-resources VERSION=any
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -52,31 +45,16 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 
 populate-deployment-variables:
 	echo "unset AWS_PROFILE"
-	echo "export DB_WRITER_SERVER=$(DB_WRITER_ROUTE_53)"
-	echo "export DB_READER_SERVER=$(DB_READER_ROUTE_53)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
-	echo "export DB_READ_AND_WRITE_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
-	echo "export DB_READ_ONLY_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
-	echo "export SLACK_WEBHOOK_URL=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SLACK_WEBHOOK_SECRET_KEY)')"
-	echo "export PROJECT_SYSTEM_EMAIL_ADDRESS=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SYSTEM_EMAIL_KEY)')"
-	echo "export PROJECT_TEAM_EMAIL_ADDRESS=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(TEAM_EMAIL_KEY)')"
-	echo "export PROJECT_SERVICE_CATEGORY=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
-	echo "export PROJECT_DATA_CLASSIFICATION=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
-	echo "export PROJECT_DISTRIBUTION_LIST=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
+	echo "export TF_VAR_slack_webhook_url=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SLACK_WEBHOOK_SECRET_KEY)')"
+	echo "export TF_VAR_project_system_email_address=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SYSTEM_EMAIL_KEY)')"
+	echo "export TF_VAR_project_team_email_address=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(TEAM_EMAIL_KEY)')"
 	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
 	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
 	echo "export TF_VAR_aws_sso_role=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(AWS_SSO_ROLE_KEY)')"
-
-populate-serverless-variables:
-	echo "unset AWS_PROFILE"
-	echo "export TERRAFORM_KMS_KEY_ID=$$(aws kms describe-key --key-id alias/$(TF_VAR_signing_key_alias) --query KeyMetadata.KeyId --output text)"
-
-unit-test-local:
-	pyenv local .venv
-	pip install -r application/requirements-dev.txt -r application/service_matcher/requirements.txt -r application/event_replay/requirements.txt -r application/service_sync/requirements.txt -r application/change_event_dlq_handler/requirements.txt
-	cd application
-	python -m pytest --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=. -vv
+	echo "export TF_VAR_dos_db_read_and_write_user_name=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
+	echo "export TF_VAR_dos_db_read_only_user_name=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
 
 unit-test:
 	make -s docker-run-tester \
@@ -135,7 +113,6 @@ clean: # Runs whole project clean
 	make \
 		docker-clean \
 		terraform-clean \
-		serverless-clean \
 		python-clean \
 		tester-clean \
 		performance-test-clean
@@ -216,22 +193,11 @@ quality-checker-build-and-deploy: ### Build and deploy quality checker lambda do
 # ==============================================================================
 # Deployments
 
-sls-only-deploy: # Deploys all lambdas - mandatory: PROFILE, VERSION=[commit hash-timestamp/latest]
-	eval "$$(make -s populate-deployment-variables)"
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-deploy
-
 quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE, ENVIRONMENT
 	make -s build VERSION=$(BUILD_TAG)
 	make -s push-images VERSION=$(BUILD_TAG)
-	make -s sls-only-deploy VERSION=$(BUILD_TAG)
-
-build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
-	make build-lambda GENERIC_IMAGE_NAME=lambda VERSION=$(BUILD_TAG) NAME=$(FUNCTION_NAME)
-	make docker-push NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-deploy-single-function FUNCTION_NAME=$(FUNCTION_NAME) VERSION=$(BUILD_TAG)
+	make terraform-apply-auto-approve STACKS=application VERSION=$(BUILD_TAG)
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
@@ -443,7 +409,6 @@ create-ecr-repositories:
 	make docker-create-repository NAME=service-sync
 	make docker-create-repository NAME=slack-messenger
 	make docker-create-repository NAME=tester
-	make docker-create-repository NAME=serverless
 
 terraform-security:
 	make docker-run-terraform-tfsec DIR=infrastructure CMD="tfsec"
@@ -453,9 +418,6 @@ terraform-security:
 
 docker-best-practices:
 	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--framework dockerfile --skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
-
-serverless-best-practices:
-	make docker-run-checkov DIR=/deployment CHECKOV_OPTS="--framework serverless"
 
 terraform-best-practices:
 	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_7,CKV_AWS_115,CKV_AWS_116,CKV_AWS_117,CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_158,CKV_AWS_173,CKV_AWS_219,CKV_AWS_225,CKV2_AWS_29,CKV_AWS_338,CKV_AWS_316,CKV_AWS_337,CKV_TF_1"
@@ -475,10 +437,7 @@ deploy-shared-resources: # Deploys shared resources (Only intended to run in pip
 
 deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=before-lambda-deployment
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-deploy
-	make terraform-apply-auto-approve STACKS=after-lambda-deployment
+	make terraform-apply-auto-approve STACKS=application
 
 build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	make build-and-push VERSION=$(BUILD_TAG)
@@ -497,10 +456,7 @@ undeploy-shared-resources: # Undeploys shared resources (Only intended to run in
 
 undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=after-lambda-deployment
-	eval "$$(make -s populate-serverless-variables)"
-	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment
+	make terraform-destroy-auto-approve STACKS=application
 
 unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
@@ -523,39 +479,6 @@ tag-commit-to-rollback-blue-green-environment: # Tags commit to rollback blue/gr
 
 commit-date-hash-tag:
 	echo "$(BUILD_COMMIT_DATETIME)-$(BUILD_COMMIT_HASH)"
-
-check-ecr-image-tag-exist: ### Check image with tag exists in ECR - mandatory: REPO=[repository name],TAG=[string to match tag of an image]
-	if [ $$(aws ecr batch-get-image --repository-name $(REPO) --image-ids imageTag=$(TAG) --registry-id=$(AWS_ACCOUNT_ID_MGMT) | jq '.images | length') == 1 ];
-	then
-		echo true
-	else
-		echo false
-	fi
-
-check-ecr-lambda-images-exist-for-tag: ### Check all lambda images with given tag exist in ECR - mandatory: TAG=[string to match tag of an image]
-	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
-		IMAGE_STATUS=$$(make check-ecr-image-tag-exist REPO=uec-dos/int/$$IMAGE_NAME)
-		if [[ "$$IMAGE_STATUS" == "false" ]]; then
-			echo false
-			exit
-		fi
-	done
-	echo true
-
-wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist with given tag in ECR or timeout - mandatory: TAG=[string to match tag of an image]
-	TIMEOUT=600
-	START_TS=$$(date +%s)
-	echo "Checking lambda images are ready.."
-	while [ $$(make check-ecr-lambda-images-exist-for-tag) == "false" ]; do
-		ELAPSED_TIME=$$(expr $$(date +%s) - $$START_TS )
-		if [ "$$ELAPSED_TIME" -gt "$$TIMEOUT" ]; then
-			echo "Failed to find Lambda images in given timeout $$TIMEOUT secs"
-			exit 1
-		fi
-		echo "..Lambda images not ready, waiting 10 second before checking again.."
-		sleep 10
-	done
-		echo "..Lambda images ready"
 
 docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
 	make docker-config > /dev/null 2>&1
@@ -597,8 +520,7 @@ docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 python-ruff-fix: # Auto fixes ruff warnings
 	make docker-run-ruff RUFF_OPTS="--fix"
 
+# ==============================================================================
+
 .SILENT: docker-run-ruff \
 	commit-date-hash-tag \
-	check-ecr-image-tag-exist \
-	wait-for-ecr-lambda-images-to-exist-for-tag \
-	check-ecr-lambda-images-exist-for-tag
