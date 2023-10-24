@@ -22,7 +22,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 148          | 1      |
       | 149          | 1      |
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario Outline: F001SXX2. Checking invalid service types and statuses variations are not matched
     Given an entry is created in the services table
     And the service "service_type" is set to "<service_type>"
@@ -57,7 +57,7 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | 149          | 5      |
 
 
-  @complete @dev @pharmacy_cloudwatch_queries
+  @complete @pharmacy_cloudwatch_queries
   Scenario: F001SXX3. A Changed event with aligned data does not save an update to DoS
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
