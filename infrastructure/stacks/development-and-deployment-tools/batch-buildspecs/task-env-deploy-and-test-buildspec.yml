@@ -121,7 +121,7 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          TAG: pharmacy_no_log_searches
+          TAG: no_log_searches
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
@@ -134,7 +134,7 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          TAG: pharmacy_cloudwatch_queries
+          TAG: cloudwatch_queries
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy

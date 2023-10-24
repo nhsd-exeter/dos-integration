@@ -251,8 +251,8 @@ To run unit tests run the following commands
 Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
 
 - pharmacy - All Tests that check pharmacy functionality
-- pharmacy_no_log_searches - Pharmacy tests that do not use the AWS CloudWatch Log Insights search functionality. These tests are fast as they check the database directly
-- pharmacy_cloudwatch_queries - Pharmacy tests that use the AWS CloudWatch Log Insights search functionality. These tests are slow as they check the CloudWatch Logs.
+- no_log_searches - Pharmacy tests that do not use the AWS CloudWatch Log Insights search functionality. These tests are fast as they check the database directly
+- cloudwatch_queries - Pharmacy tests that use the AWS CloudWatch Log Insights search functionality. These tests are slow as they check the CloudWatch Logs.
 
 #### Where are the integration tests run?
 
