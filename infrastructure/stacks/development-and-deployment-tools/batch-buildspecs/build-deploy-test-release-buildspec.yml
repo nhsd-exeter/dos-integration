@@ -123,7 +123,7 @@ batch:
         variables:
           PROFILE: dev
           ENVIRONMENT: release
-          TAG: pharmacy
+          TAG: complete
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/integration-test.yml
       depend-on:
         - deploy

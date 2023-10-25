@@ -54,11 +54,11 @@ The test suite is setup to be run with a series of tags, that enable the runner 
 E.g.
 `TAGS=pharmacy`
 will run the following tags:
-@pharmacy_no_log_searches
-@pharmacy_cloudwatch_queries
-where `TAGS=pharmacy_cloudwatch_queries`
+@no_log_searches
+@cloudwatch_queries
+where `TAGS=cloudwatch_queries`
 will only run the following:
-@pharmacy_cloudwatch_queries
+@cloudwatch_queries
 
 ### Environment
 
