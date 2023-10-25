@@ -30,20 +30,6 @@ Feature: F006. Opening times
     When the Changed Event is sent for processing with "valid" api key
     Then opening times with two breaks are updated in DoS
 
-  # Refactor to read values from DB to confirm change
-  @complete @cloudwatch_queries
-  Scenario Outline: F006SXX5. Pharmacy with one off opening date set to closed
-    Given a basic service is created
-    And the change event is "<open_or_closed>" on date "<date>"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda does not show "report_key" with value "INVALID_OPEN_TIMES"
-
-    Examples:
-      | open_or_closed | date        |
-      | closed         | Dec 25 2025 |
-      | closed         | Jan 1 2025  |
-      | open           | Dec 25 2025 |
-
   @complete @no_log_searches
   Scenario: F006SXX6. Confirm recently added specified opening date can be removed from Dos
     Given a basic service is created

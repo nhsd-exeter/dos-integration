@@ -1,6 +1,6 @@
 Feature: F007. Report Logging
 
-  @complete @cloudwatch_queries
+  @complete @reporting
   Scenario: F007SX01. Check for Invalid Open Times log
     Given an entry is created in the services table
     And the service is "open" on "Monday"
@@ -14,8 +14,21 @@ Feature: F007. Report Logging
     And "dos_service_type_name" attribute is identified in the "INVALID_OPEN_TIMES" report in "service-matcher" logs
     And "dos_services" attribute is identified in the "INVALID_OPEN_TIMES" report in "service-matcher" logs
 
-  @complete @cloudwatch_queries
-  Scenario: F007SX02 Check for generic change event error log
+  @complete @reporting
+  Scenario Outline: F007SX02. Pharmacy with one off opening date set to closed
+    Given a basic service is created
+    And the change event is "<open_or_closed>" on date "<date>"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda does not show "report_key" with value "INVALID_OPEN_TIMES"
+
+    Examples:
+      | open_or_closed | date        |
+      | closed         | Dec 25 2025 |
+      | closed         | Jan 1 2025  |
+      | open           | Dec 25 2025 |
+
+  @complete @reporting
+  Scenario: F007SX03 Check for generic change event error log
     Given a basic service is created
     And the change event "website" is set to "test@test.com"
     When the Changed Event is sent for processing with "valid" api key
@@ -25,8 +38,8 @@ Feature: F007. Report Logging
     And "error_info" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
     And "dos_region" attribute is identified in the "GENERIC_CHANGE_EVENT_ERROR" report in "service-sync" logs
 
-  @complete @cloudwatch_queries
-  Scenario: F007SX03 Check for services with generic bank holiday openings log
+  @complete @reporting
+  Scenario: F007SX04 Check for services with generic bank holiday openings log
     Given a basic service is created
     And the change event "ODSCode" is set to "FJQ49"
     When the Changed Event is sent for processing with "valid" api key
@@ -40,8 +53,8 @@ Feature: F007. Report Logging
     And "nhsuk_parent_org" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
     And "dos_region" attribute is identified in the "GENERIC_BANK_HOLIDAY" report in "service-sync" logs
 
-  @complete @cloudwatch_queries
-  Scenario: F007SX04 Check for Unmatched Pharmacy Report log
+  @complete @reporting
+  Scenario: F007SX05 Check for Unmatched Pharmacy Report log
     Given a basic service is created
     And the change event "ODSCode" is set to "FXXX1"
     When the Changed Event is sent for processing with "valid" api key
@@ -57,8 +70,8 @@ Feature: F007. Report Logging
     And "nhsuk_parent_organisation_name" attribute is identified in the "UNMATCHED_PHARMACY" report in "service-matcher" logs
     And the service history is not updated
 
-  @complete @cloudwatch_queries
-  Scenario: F007SX05 Check for Blank Opening Times Report log
+  @complete @reporting
+  Scenario: F007SX06 Check for Blank Opening Times Report log
     Given an entry is created in the services table
     And the service is "open" on "Monday"
     And the entry is committed to the services table
@@ -72,8 +85,8 @@ Feature: F007. Report Logging
     And "dos_service_type_name" attribute is identified in the "BLANK_STANDARD_OPENINGS" report in "service-sync" logs
     And the service history is not updated
 
-  @complete @cloudwatch_queries
-  Scenario Outline: F007SX06 Check for Hidden Or Closed Report log
+  @complete @reporting
+  Scenario Outline: F007SX07 Check for Hidden Or Closed Report log
     Given a pharmacy service is created with type "<service_type>"
     And the change event "OrganisationStatus" is set to "<OrganisationStatus>"
     When the Changed Event is sent for processing with "valid" api key
@@ -100,8 +113,7 @@ Feature: F007. Report Logging
       | 149          | Closed             |
       | 149          | Hidden             |
 
-
-  @complete @cloudwatch_queries
+  @complete @reporting
   Scenario: F007SX08 Check for Invalid Postcode Report log
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
@@ -119,7 +131,7 @@ Feature: F007. Report Logging
     And the Slack channel shows an alert saying "Invalid Postcode" from "BLUE_GREEN_ENVIRONMENT"
     And the service history is not updated
 
-  @complete @cloudwatch_queries
+  @complete @reporting
   Scenario Outline: F007SX09 Check for missing dos service type
     Given a basic service is created
     And the change event "<service_type>" is set to "True"
@@ -141,7 +153,7 @@ Feature: F007. Report Logging
       | Blood Pressure |
       | Contraception  |
 
-  @complete @cloudwatch_queries
+  @complete @reporting
   Scenario Outline: F007SX10 Check for missing dos service type without bp and contraception
     Given a pharmacy service is created with "6" character odscode and type "<service_type>"
     And the change event has a palliative care entry
