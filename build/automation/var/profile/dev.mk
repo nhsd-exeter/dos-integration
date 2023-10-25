@@ -50,8 +50,8 @@ WAF_ENABLED := false
 # ==============================================================================
 # Performance variables
 
-SERVICE_MATCHER_MAX_CONCURRENCY := 10
-SERVICE_SYNC_MAX_CONCURRENCY := 10
+SERVICE_MATCHER_MAX_CONCURRENCY := 20
+SERVICE_SYNC_MAX_CONCURRENCY := 20
 
 # ==============================================================================
 # DoS DB Handler
