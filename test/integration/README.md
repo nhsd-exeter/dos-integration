@@ -23,7 +23,7 @@ The integration test suite is contained within test/integration and comprises a 
     - [Given an entry is created in the services table](#given-an-entry-is-created-in-the-services-table)
     - [Given the change event field is set to value](#given-the-change-event-field-is-set-to-value)
     - [When the Changed Event is sent for processing with "valid" api key](#when-the-changed-event-is-sent-for-processing-with-valid-api-key)
-    - [Then the "lambda" lambda shows field "field" with value "message"](#then-the-lambda-lambda-shows-field-field-with-message-message)
+    - [Then the "lambda" lambda shows field "field" with value "message"](#then-the-lambda-lambda-shows-field-field-with-value-message)
     - [Then DoS has "value" in the "field" field](#then-dos-has-value-in-the-field-field)
 - [Data Generation](#data-generation)
   - [Data Generation variable contents](#data-generation-variable-contents)
@@ -50,15 +50,8 @@ The test suite also requires `tx-mfa` to be setup for the AWS account being used
 
 ### Tags
 
-The test suite is setup to be run with a series of tags, that enable the runner to choose the tests being selected. Tags do not have to match exactly, they are matched as if they are followed by a wildcard, so for example, it is possible to run all pharmacy related tests with the TAGS=pharmacy variable set, despite no tags matching pharmacy exactly. The suite does not, however, support all Cucumber tag functionality, as the tags are passed through as a variable from the run command without the '@' symbol.
-E.g.
-`TAGS=pharmacy`
-will run the following tags:
-@pharmacy_no_log_searches
-@pharmacy_cloudwatch_queries
-where `TAGS=pharmacy_cloudwatch_queries`
-will only run the following:
-@pharmacy_cloudwatch_queries
+The test suite is setup to be run with a series of tags, that enable the runner to choose the tests being selected. Tags do not have to match exactly, they are matched as if they are followed by a wildcard, so for example, it is possible to run all pharmacy related tests with the TAGS=complete variable set. The suite does not, however, support all Cucumber tag functionality, as the tags are passed through as a variable from the run command without the '@' symbol.
+E.g. `TAGS=complete`
 
 ### Environment
 

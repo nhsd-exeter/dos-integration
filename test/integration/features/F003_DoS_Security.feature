@@ -1,6 +1,6 @@
 Feature: F003. Endpoint security and reporting
 
-  @complete @security @pharmacy_no_log_searches
+  @complete @slack_and_infrastructure
   Scenario: F003S001. No api key sent to change event endpoint
     Given a basic service is created
     When the Changed Event is sent for processing with "invalid" api key
