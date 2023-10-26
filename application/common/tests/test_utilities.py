@@ -12,7 +12,6 @@ from application.common.utilities import (
     handle_sqs_msg_attributes,
     is_val_none_or_empty,
     json_str_body,
-    remove_given_keys_from_dict_by_msg_limit,
 )
 
 
@@ -120,25 +119,6 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
 @pytest.mark.parametrize(("val", "expected"), [("", True), ("    ", True), (None, True), ("True val", False)])
 def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
-
-
-@pytest.mark.parametrize(
-    ("input_dict", "keys_tobe_removed", "msg_limit", "expected"),
-    [
-        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address"], 20, {"Name": "John", "Age": 34}),
-        ({"Name": "John", "Address": ["2", "4"], "Age": 34}, ["Address", "Age"], 20, {"Name": "John"}),
-        (
-            {"Name": "John", "Address": ["2", "4"], "Age": 34},
-            [""],
-            20,
-            {"Name": "John", "Address": ["2", "4"], "Age": 34},
-        ),
-        ({"Name": "John", "Age": 34}, ["Age"], 120, {"Name": "John", "Age": 34}),
-    ],
-)
-def test_remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit, expected):
-    event = remove_given_keys_from_dict_by_msg_limit(input_dict, keys_tobe_removed, msg_limit)
-    assert event == expected, f"Change event should be {expected} but is {event}"
 
 
 def test_add_metric():

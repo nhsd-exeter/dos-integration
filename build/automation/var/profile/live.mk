@@ -5,7 +5,7 @@
 
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-live/deployment # Move to project.mk when nonprod profiles are merged
 
-LOG_LEVEL:= INFO
+LOG_LEVEL := INFO
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-live-cluster-14

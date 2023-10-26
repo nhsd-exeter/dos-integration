@@ -65,7 +65,7 @@ def compare_location(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation | N
     """  # noqa: E501
     before_title_case_address = changes.nhs_entity.address_lines
     changes.nhs_entity.address_lines = list(map(format_address, changes.nhs_entity.address_lines))
-    logger.info(
+    logger.debug(
         f"Address after title casing: {changes.nhs_entity.address_lines}",
         before=before_title_case_address,
         after=changes.nhs_entity.address_lines,

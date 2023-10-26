@@ -87,8 +87,10 @@ def connection_to_db(  # noqa: PLR0913
     Returns:
         connection: Connection to the database
     """
-    logger.info(f"Attempting connection to database '{server}'")
-    logger.debug(f"host={server}, port={port}, dbname={db_name}, schema={db_schema}, user={db_user}")
+    logger.debug(
+        f"Attempting connection to database: '{server}', host={server}, port={port}, "
+        f"dbname={db_name}, schema={db_schema}, user={db_user}",
+    )
     return connect(
         host=server,
         port=port,
@@ -105,7 +107,6 @@ def query_dos_db(
     connection: Connection,
     query: LiteralString,
     query_vars: dict[str, Any] | None = None,
-    log_vars: bool = True,
 ) -> Cursor[DictRow]:
     """Queries the database given in the connection object.
 
@@ -113,14 +114,13 @@ def query_dos_db(
         connection (Connection): Connection to the database
         query (str): Query to execute
         query_vars (Optional[Dict[str, Any]], optional): Variables to use in the query. Defaults to None.
-        log_vars (bool, optional): Whether to log the query variables. Defaults to True.
 
     Returns:
         DictRow: Cursor to the query results
     """
     cursor = connection.cursor(row_factory=dict_row)
-    logger.info("Query to execute", query=query, vars=query_vars if log_vars else "Vars have been redacted.")
+    logger.debug("Query to execute", query=query, vars=query_vars)
     time_start = time_ns() // 1000000
     cursor.execute(query=query, params=query_vars)
-    logger.info(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
+    logger.debug(f"DoS DB query completed in {(time_ns() // 1000000) - time_start}ms")
     return cursor

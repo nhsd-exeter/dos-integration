@@ -3,7 +3,7 @@
 # ==============================================================================
 # Service variables
 
-LOG_LEVEL:= DEBUG
+LOG_LEVEL := DEBUG
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-regression-cluster-14
