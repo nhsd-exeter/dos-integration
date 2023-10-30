@@ -15,6 +15,9 @@ module "change_event_dlq_handler_lambda" {
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
 
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
+
   role_name        = "${var.change_event_dlq_handler_lambda}-role"
   role_description = "Role for Lambda function ${var.change_event_dlq_handler_lambda}"
 
@@ -52,6 +55,9 @@ module "dos_db_handler_lambda" {
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
 
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
+
   role_name        = "${var.dos_db_handler_lambda}-role"
   role_description = "Role for Lambda function ${var.dos_db_handler_lambda}"
 
@@ -61,7 +67,6 @@ module "dos_db_handler_lambda" {
 
   vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
   vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
-
 
   environment_variables = {
     "PROFILE"                            = var.profile,
@@ -104,6 +109,9 @@ module "dos_db_update_dlq_handler_lambda" {
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
 
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
+
   role_name        = "${var.dos_db_update_dlq_handler_lambda}-role"
   role_description = "Role for Lambda function ${var.dos_db_update_dlq_handler_lambda}"
 
@@ -139,6 +147,9 @@ module "event_replay_lambda" {
   kms_key_arn            = data.aws_kms_key.signing_key.arn
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
+
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
 
   role_name        = "${var.event_replay_lambda}-role"
   role_description = "Role for Lambda function ${var.event_replay_lambda}"
@@ -179,6 +190,9 @@ module "ingest_change_event_lambda" {
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
 
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
+
   role_name        = "${var.ingest_change_event_lambda}-role"
   role_description = "Role for Lambda function ${var.ingest_change_event_lambda}"
 
@@ -216,6 +230,9 @@ module "send_email_lambda" {
   kms_key_arn            = data.aws_kms_key.signing_key.arn
   tracing_mode           = "Active"
   maximum_retry_attempts = 2
+
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
 
   role_name        = "${var.send_email_lambda}-role"
   role_description = "Role for Lambda function ${var.send_email_lambda}"
@@ -256,6 +273,9 @@ module "service_matcher_lambda" {
   tracing_mode                   = "Active"
   maximum_retry_attempts         = 0
   reserved_concurrent_executions = var.service_matcher_max_concurrency
+
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
 
   role_name        = "${var.service_matcher_lambda}-role"
   role_description = "Role for Lambda function ${var.service_matcher_lambda}"
@@ -307,6 +327,9 @@ module "service_sync_lambda" {
   tracing_mode                   = "Active"
   maximum_retry_attempts         = 0
   reserved_concurrent_executions = var.service_sync_max_concurrency
+
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
 
   role_name        = "${var.service_sync_lambda}-role"
   role_description = "Role for Lambda function ${var.service_sync_lambda}"
@@ -364,6 +387,9 @@ module "slack_messenger_lambda" {
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
 
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
+
   role_name        = "${var.slack_messenger_lambda}-role"
   role_description = "Role for Lambda function ${var.slack_messenger_lambda}"
 
@@ -401,6 +427,9 @@ module "quality_checker_lambda" {
   kms_key_arn            = data.aws_kms_key.signing_key.arn
   tracing_mode           = "Active"
   maximum_retry_attempts = 0
+
+  cloudwatch_logs_kms_key_id        = data.aws_kms_key.signing_key.arn
+  cloudwatch_logs_retention_in_days = 30
 
   role_name        = "${var.quality_checker_lambda}-role"
   role_description = "Role for Lambda function ${var.quality_checker_lambda}"
