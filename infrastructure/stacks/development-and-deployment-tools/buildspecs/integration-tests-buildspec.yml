@@ -17,7 +17,7 @@ phases:
   build:
     commands:
       - echo $BLUE_GREEN_ENVIRONMENT
-      - make integration-test PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT TAGS=$TAG PARALLEL_TEST_COUNT=20
+      - make integration-test PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT TAG=$TAG PARALLEL_TEST_COUNT=20
 reports:
   PytestIntegrationReport:
     files:
