@@ -439,7 +439,7 @@ docker-best-practices:
 	make docker-run-checkov DIR=/build/docker CHECKOV_OPTS="--framework dockerfile --skip-check CKV_DOCKER_2,CKV_DOCKER_3,CKV_DOCKER_4"
 
 terraform-best-practices:
-	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_7,CKV_AWS_115,CKV_AWS_116,CKV_AWS_117,CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_158,CKV_AWS_173,CKV_AWS_219,CKV_AWS_225,CKV2_AWS_29,CKV_AWS_338,CKV_AWS_316,CKV_AWS_337,CKV_TF_1"
+	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_225,CKV_AWS_338,CKV_AWS_316,CKV_AWS_337,CKV_TF_1"
 
 github-actions-best-practices:
 	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
