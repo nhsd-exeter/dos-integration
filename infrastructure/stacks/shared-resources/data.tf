@@ -21,48 +21,32 @@ data "aws_secretsmanager_secret_version" "deployment_secrets" {
 data "aws_iam_policy_document" "kms_policy" {
   #checkov:skip=CKV_AWS_109
   #checkov:skip=CKV_AWS_111
-  #checkov:skip=CKV_AWS_290
   #checkov:skip=CKV_AWS_356
-  policy_id     = null
-  source_json   = null
-  override_json = null
-  version       = "2012-10-17"
+  version = "2012-10-17"
   statement {
-    sid    = null
     effect = "Allow"
     principals {
-      identifiers = [
+      identifiers = var.aws_account_name != "prod" ? [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.aws_sso_role}"
+        ] : [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.aws_sso_role}",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.aws_sso_read_write_role}",
       ]
       type = "AWS"
     }
-    actions = [
-      "kms:*"
-    ]
-    not_actions = []
-    resources = [
-      "*"
-    ]
-    not_resources = []
+    actions   = ["kms:*"]
+    resources = ["*"]
   }
   statement {
-    sid    = null
     effect = "Allow"
     principals {
-      identifiers = [
-        "cloudwatch.amazonaws.com"
-      ]
-      type = "Service"
+      identifiers = ["cloudwatch.amazonaws.com"]
+      type        = "Service"
     }
-    actions = [
-      "kms:*"
-    ]
-    not_actions = []
-    resources = [
-      "*"
-    ]
-    not_resources = []
+    actions   = ["kms:*"]
+    resources = ["*"]
   }
 }
 
