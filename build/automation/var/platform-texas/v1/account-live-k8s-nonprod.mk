@@ -16,8 +16,6 @@ TF_VAR_texas_hosted_zone = $(TEXAS_HOSTED_ZONE)
 TF_VAR_ip_address_secret := uec-dos-int-dev-ip-addresses-allowlist
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-dev/deployment # Move to project.mk when nonprod profiles are merged
 
-SERVERLESS_DISABLE_ROLLBACK := false
-
 # ==============================================================================
 
 include $(VAR_DIR)/platform-texas/platform-texas-v1.mk

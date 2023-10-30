@@ -33,10 +33,10 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.sources=application,deployment,infrastructure,scripts,test,build/docker
+            -Dsonar.sources=application,infrastructure,scripts,test,build/docker
             -Dsonar.organization=nhsd-exeter
             -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**,deployment,infrastructure,application/dos_db_handler/**,test/**,scripts/**,application/conftest.py
+            -Dsonar.coverage.exclusions=tests/**,**/tests/**,infrastructure,application/dos_db_handler/**,test/**,scripts/**,application/conftest.py
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.11
             -Dsonar.exclusions=application/**/tests/**
