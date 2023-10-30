@@ -37,8 +37,6 @@ SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment := $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment := $(SHARED_ENVIRONMENT)
 
-AWS_SSO_ROLE_KEY := AWS_SSO_ROLE
-
 # Development and Deployment Tools
 TF_VAR_cicd_blue_green_deployment_pipeline_artefact_bucket := $(PROJECT_ID)-$(ENVIRONMENT)-cicd-blue-green-deployment-artefacts
 TF_VAR_cicd_shared_resoures_deployment_pipeline_artefact_bucket := $(PROJECT_ID)-$(ENVIRONMENT)-cicd-shared-resources-deployment-artefacts
@@ -64,7 +62,6 @@ TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-ni
 TF_VAR_docker_registry := $(DOCKER_REGISTRY)
 
 # Tags
-TF_VAR_tags_secret_manager = $(TAG_SECRET_MANAGER)
 SERVICE_CATEGORY_KEY := DI_SERVICE_CATEGORY
 DATA_CLASSIFICATION_KEY := DI_DATA_CLASSIFICATION
 DISTRIBUTION_LIST_KEY := DI_DISTRIBUTION_LIST
@@ -256,3 +253,4 @@ TF_VAR_dos_db_reader_secret_name := $(DB_READER_SECRET_NAME)
 TF_VAR_dos_db_reader_secret_key := $(DB_READER_SECRET_KEY)
 TF_VAR_dos_db_read_only_user_name_secret_name := $(DB_READ_ONLY_USER_NAME_SECRET_NAME)
 TF_VAR_dos_db_read_only_user_name_secret_key := $(DB_READ_ONLY_USER_NAME_SECRET_KEY)
+TF_VAR_slack_webhook_secret_key := $(SLACK_WEBHOOK_SECRET_KEY)

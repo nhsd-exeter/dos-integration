@@ -492,38 +492,13 @@ variable "dos_db_reader_secret_key" {
   default     = ""
 }
 
-variable "dos_db_read_and_write_user_name" {
-  type        = string
-  description = "Name of the dos db read and write user name"
-  default     = ""
-}
-
-variable "dos_db_read_only_user_name" {
-  type        = string
-  description = "Name of the dos db read only user name"
-  default     = ""
-}
-
-variable "project_system_email_address" {
-  type        = string
-  description = "Email address of the project system"
-  default     = ""
-}
-
-variable "project_team_email_address" {
-  type        = string
-  description = "Email address of the project team"
-  default     = ""
-}
-
 variable "slack_alert_channel" {
   type        = string
   description = "The slack channel to send alerts to"
   default     = ""
 }
 
-variable "slack_webhook_url" {
+variable "dos_db_read_only_user_name_secret_key" {
   type        = string
-  description = "The slack webhook url to send alerts to"
-  default     = ""
+  description = "Key of the dos db read only user name secret"
 }

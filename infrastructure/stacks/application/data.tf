@@ -96,3 +96,11 @@ data "aws_iam_role" "di_firehose_role" {
 data "aws_iam_role" "dos_firehose_role" {
   name = var.dos_firehose_role
 }
+
+# ##############
+# # Secrets Manager
+# ##############
+
+data "aws_secretsmanager_secret_version" "deployment_secrets" {
+  secret_id = var.project_deployment_secrets
+}
