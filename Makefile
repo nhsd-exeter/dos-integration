@@ -97,6 +97,7 @@ UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
 		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
+		--volume $(APPLICATION_DIR)/dos_db_handler:/tmp/.packages/dos_db_handler \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
@@ -104,6 +105,7 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
+		--volume $(APPLICATION_DIR)/quality_checker:/tmp/.packages/quality_checker \
 		"
 
 integration-test: # End to end test DI project - mandatory: PROFILE, TAG=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
@@ -152,58 +154,64 @@ remove-development-environments: # Removes development environments - mandatory:
 	done
 
 # ==============================================================================
+# Change Event Dead Letter Queue Handler (change-event-dlq-handler)
+
+change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
+
+# ==============================================================================
+# DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler)
+
+dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
+
+# ==============================================================================
+# DoS DB Checker Handler (dos-db-handler)
+
+dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
+
+# ==============================================================================
+# Event Replay lambda (event-replay)
+
+event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=event-replay
+
+# ==============================================================================
+# Ingest Change Event
+
+ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+
+# ==============================================================================
+# Send Email
+
+send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=send-email
+
+# ==============================================================================
+# Service Matcher
+
+service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
+
+# ==============================================================================
 # Service Sync
 
-service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT
 	make build-and-deploy-single-function FUNCTION_NAME=service-sync
 
 # ==============================================================================
 # Slack Messenger
 
-slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
 
 # ==============================================================================
-# Service Matcher
+# Quality Checker
 
-service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
-
-# ==============================================================================
-# Change Event Dead Letter Queue Handler (change-event-dlq-handler)
-
-change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
-
-# ==============================================================================
-# DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler) Nonprod only
-
-dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
-
-# ==============================================================================
-# Event Replay lambda (event-replay)
-
-event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=event-replay
-
-# ==============================================================================
-# DoS DB Checker Handler (dos-db-handler)
-
-dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
-
-# ==============================================================================
-# Send Email
-
-send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=send-email
-
-# ==============================================================================
-# Ingest Change Event
-
-ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+quality-checker-build-and-deploy: ### Build and deploy quality checker lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=quality-checker
 
 # ==============================================================================
 # Deployments
@@ -232,15 +240,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 
 push-tester-image:
 	make docker-push NAME=tester
-
-# ==============================================================================
-# SES (Simple Email Service)
-
-deploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
-	make terraform-apply-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
-
-undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
-	make terraform-destroy-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
 
 # ==============================================================================
 # Development Tools

@@ -14,8 +14,7 @@ SERVICE_TAG = $(PROJECT_GROUP_SHORT)
 SERVICE_TAG_COMMON = texas
 
 PROJECT_TECH_STACK_LIST = python,terraform
-PROJECT_LAMBDAS_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(DOS_DB_HANDLER),$(INGEST_CHANGE_EVENT)
-PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
+PROJECT_LAMBDAS_LIST = $(CHANGE_EVENT_DLQ_HANDLER),$(DOS_DB_HANDLER),$(DOS_DB_UPDATE_DLQ_HANDLER),$(EVENT_REPLAY),$(INGEST_CHANGE_EVENT),$(SEND_EMAIL),$(SERVICE_MATCHER),$(SERVICE_SYNC),$(SLACK_MESSENGER),$(QUALITY_CHECKER)
 
 AWS_VPC_NAME = lk8s-$(AWS_ACCOUNT_NAME).texasplatform.uk
 TF_VAR_aws_vpc_name = $(AWS_VPC_NAME)
@@ -26,6 +25,7 @@ TF_VAR_programme = $(PROGRAMME)
 TF_VAR_environment = $(ENVIRONMENT)
 TF_VAR_aws_account_name = $(AWS_ACCOUNT_NAME)
 TF_VAR_deployment_secrets = $(DEPLOYMENT_SECRETS)
+PROJECT_DEPLOYMENT_SECRETS = $(DEPLOYMENT_SECRETS)
 TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
@@ -89,6 +89,7 @@ SEND_EMAIL := send-email
 SERVICE_MATCHER := service-matcher
 SERVICE_SYNC := service-sync
 SLACK_MESSENGER := slack-messenger
+QUALITY_CHECKER := quality-checker
 
 # -------------------------------
 # SHARED ENVIRONMENT VARIABLES
@@ -107,7 +108,7 @@ TF_VAR_di_endpoint_api_gateway_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-di-en
 TF_VAR_di_endpoint_api_gateway_stage := $(SHARED_ENVIRONMENT)
 
 # SQS Queues
-TF_VAR_change_event_queue_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-queue.fifo
+TF_VAR_change_event_queue := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-queue.fifo
 TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead-letter-queue.fifo
 
 # Dynamodb
@@ -162,60 +163,74 @@ TF_VAR_db_writer_sg_name := $(DB_WRITER_SG_NAME)
 TF_VAR_db_reader_sg_name := $(DB_READER_SG_NAME)
 
 # SQS Queues
-TF_VAR_holding_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo
-TF_VAR_update_request_queue_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-queue.fifo
-update_request_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue_name)
-holding_queue_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_holding_queue_name)
-update_request_dlq_url := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_dlq)
+TF_VAR_holding_queue := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo
+TF_VAR_update_request_queue := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-queue.fifo
+UPDATE_REQUEST_QUEUE_URL := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue)
+HOLDING_QUEUE_URL := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_holding_queue)
 TF_VAR_holding_queue_dlq := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue-dead-letter-queue.fifo
 TF_VAR_update_request_dlq := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-dead-letter-queue.fifo
 
 # Lambda names
-CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(CHANGE_EVENT_DLQ_HANDLER)
-DOS_DB_HANDLER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_HANDLER)
-DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_UPDATE_DLQ_HANDLER)
-EVENT_REPLAY_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(EVENT_REPLAY)
-INGEST_CHANGE_EVENT_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(INGEST_CHANGE_EVENT)
-SEND_EMAIL_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SEND_EMAIL)
-SERVICE_MATCHER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_MATCHER)
-SERVICE_SYNC_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_SYNC)
-SLACK_MESSENGER_LAMBDA_NAME := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SLACK_MESSENGER)
+CHANGE_EVENT_DLQ_HANDLER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(CHANGE_EVENT_DLQ_HANDLER)
+DOS_DB_HANDLER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_HANDLER)
+DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(DOS_DB_UPDATE_DLQ_HANDLER)
+EVENT_REPLAY_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(EVENT_REPLAY)
+INGEST_CHANGE_EVENT_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(INGEST_CHANGE_EVENT)
+SEND_EMAIL_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SEND_EMAIL)
+SERVICE_MATCHER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_MATCHER)
+SERVICE_SYNC_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SERVICE_SYNC)
+SLACK_MESSENGER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(SLACK_MESSENGER)
+QUALITY_CHECKER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(QUALITY_CHECKER)
 
-TF_VAR_change_event_dlq_handler_lambda_name := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME)
-TF_VAR_dos_db_handler_lambda_name := $(DOS_DB_HANDLER_LAMBDA_NAME)
-TF_VAR_dos_db_update_dlq_handler_lambda_name := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME)
-TF_VAR_event_replay_lambda_name := $(EVENT_REPLAY_LAMBDA_NAME)
-TF_VAR_ingest_change_event_lambda_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)
-TF_VAR_send_email_lambda_name := $(SEND_EMAIL_LAMBDA_NAME)
-TF_VAR_service_matcher_lambda_name := $(SERVICE_MATCHER_LAMBDA_NAME)
-TF_VAR_service_sync_lambda_name := $(SERVICE_SYNC_LAMBDA_NAME)
-TF_VAR_slack_messenger_lambda_name := $(SLACK_MESSENGER_LAMBDA_NAME)
+TF_VAR_change_event_dlq_handler_lambda := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA)
+TF_VAR_dos_db_handler_lambda := $(DOS_DB_HANDLER_LAMBDA)
+TF_VAR_dos_db_update_dlq_handler_lambda := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA)
+TF_VAR_event_replay_lambda := $(EVENT_REPLAY_LAMBDA)
+TF_VAR_ingest_change_event_lambda := $(INGEST_CHANGE_EVENT_LAMBDA)
+TF_VAR_send_email_lambda := $(SEND_EMAIL_LAMBDA)
+TF_VAR_service_matcher_lambda := $(SERVICE_MATCHER_LAMBDA)
+TF_VAR_service_sync_lambda := $(SERVICE_SYNC_LAMBDA)
+TF_VAR_slack_messenger_lambda := $(SLACK_MESSENGER_LAMBDA)
+TF_VAR_quality_checker_lambda := $(QUALITY_CHECKER_LAMBDA)
 
 # Lambda IAM Roles
-TF_VAR_change_event_dlq_handler_role_name := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME)-role
-TF_VAR_dos_db_handler_role_name := $(DOS_DB_HANDLER_LAMBDA_NAME)-role
-TF_VAR_dos_db_update_dlq_handler_role_name := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME)-role
-TF_VAR_event_replay_role_name := $(EVENT_REPLAY_LAMBDA_NAME)-role
-TF_VAR_ingest_change_event_role_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)-role
-TF_VAR_send_email_role_name := $(SEND_EMAIL_LAMBDA_NAME)-role
-TF_VAR_service_matcher_role_name := $(SERVICE_MATCHER_LAMBDA_NAME)-role
-TF_VAR_service_sync_role_name := $(SERVICE_SYNC_LAMBDA_NAME)-role
-TF_VAR_slack_messenger_role_name := $(SLACK_MESSENGER_LAMBDA_NAME)-role
+CHANGE_EVENT_DLQ_HANDLER_LAMBDA_ROLE_NAME := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA)-role
+DOS_DB_HANDLER_LAMBDA_ROLE_NAME := $(DOS_DB_HANDLER_LAMBDA)-role
+DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_ROLE_NAME := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA)-role
+EVENT_REPLAY_LAMBDA_ROLE_NAME := $(EVENT_REPLAY_LAMBDA)-role
+INGEST_CHANGE_EVENT_LAMBDA_ROLE_NAME := $(INGEST_CHANGE_EVENT_LAMBDA)-role
+SEND_EMAIL_LAMBDA_ROLE_NAME := $(SEND_EMAIL_LAMBDA)-role
+SERVICE_MATCHER_LAMBDA_ROLE_NAME := $(SERVICE_MATCHER_LAMBDA)-role
+SERVICE_SYNC_LAMBDA_ROLE_NAME := $(SERVICE_SYNC_LAMBDA)-role
+SLACK_MESSENGER_LAMBDA_ROLE_NAME := $(SLACK_MESSENGER_LAMBDA)-role
+QUALITY_CHECKER_LAMBDA_ROLE_NAME := $(QUALITY_CHECKER_LAMBDA)-role
+
+TF_VAR_change_event_dlq_handler_role := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA_ROLE_NAME)
+TF_VAR_dos_db_handler_role := $(DOS_DB_HANDLER_LAMBDA_ROLE_NAME)
+TF_VAR_dos_db_update_dlq_handler_role := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_ROLE_NAME)
+TF_VAR_event_replay_role := $(EVENT_REPLAY_LAMBDA_ROLE_NAME)
+TF_VAR_ingest_change_event_role := $(INGEST_CHANGE_EVENT_LAMBDA_ROLE_NAME)
+TF_VAR_send_email_role := $(SEND_EMAIL_LAMBDA_ROLE_NAME)
+TF_VAR_service_matcher_role := $(SERVICE_MATCHER_LAMBDA_ROLE_NAME)
+TF_VAR_service_sync_role := $(SERVICE_SYNC_LAMBDA_ROLE_NAME)
+TF_VAR_slack_messenger_role := $(SLACK_MESSENGER_LAMBDA_ROLE_NAME)
+TF_VAR_quality_checker_role := $(QUALITY_CHECKER_LAMBDA_ROLE_NAME)
 
 # Log Group Filters for Firehose
-TF_VAR_change_event_dlq_handler_subscription_filter_name := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(DOS_DB_HANDLER_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_event_replay_subscription_filter_name := $(EVENT_REPLAY_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_ingest_change_event_subscription_filter_name := $(INGEST_CHANGE_EVENT_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_send_email_subscription_filter_name := $(SEND_EMAIL_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_service_matcher_subscription_filter_name := $(SERVICE_MATCHER_LAMBDA_NAME)-cw-logs-firehose-subscription
-TF_VAR_service_sync_di_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-di-cw-logs-firehose-subscription
-TF_VAR_service_sync_dos_subscription_filter_name := $(SERVICE_SYNC_LAMBDA_NAME)-dos-cw-logs-firehose-subscription
-TF_VAR_slack_messenger_subscription_filter_name := $(SLACK_MESSENGER_LAMBDA_NAME)-cw-logs-firehose-subscription
+TF_VAR_change_event_dlq_handler_subscription_filter_name := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_dos_db_update_dlq_handler_subscription_filter_name := $(DOS_DB_HANDLER_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_event_replay_subscription_filter_name := $(EVENT_REPLAY_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_ingest_change_event_subscription_filter_name := $(INGEST_CHANGE_EVENT_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_send_email_subscription_filter_name := $(SEND_EMAIL_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_service_matcher_subscription_filter_name := $(SERVICE_MATCHER_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_service_sync_di_subscription_filter_name := $(SERVICE_SYNC_LAMBDA)-di-cw-logs-firehose-subscription
+TF_VAR_service_sync_dos_subscription_filter_name := $(SERVICE_SYNC_LAMBDA)-dos-cw-logs-firehose-subscription
+TF_VAR_slack_messenger_subscription_filter_name := $(SLACK_MESSENGER_LAMBDA)-cw-logs-firehose-subscription
+TF_VAR_quality_checker_subscription_filter_name := $(QUALITY_CHECKER_LAMBDA)-cw-logs-firehose-subscription
 
 # Cloudwatch dashboards
 TF_VAR_cloudwatch_monitoring_dashboard_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-monitoring-dashboard
 TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-sqs-dlq-recieved-msg-alert
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
-SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue_name)
+SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue)

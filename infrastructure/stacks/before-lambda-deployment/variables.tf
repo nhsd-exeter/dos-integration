@@ -44,83 +44,93 @@ variable "db_reader_sg_name" {
 # # IAM
 # ############################
 
-variable "change_event_dlq_handler_role_name" {
+variable "change_event_dlq_handler_role" {
   type        = string
   description = "Role name for change event dlq handler lambda"
 }
 
-variable "dos_db_update_dlq_handler_role_name" {
+variable "dos_db_update_dlq_handler_role" {
   type        = string
   description = "Role name for dos db update dlq handler lambda"
 }
 
-variable "slack_messenger_role_name" {
+variable "slack_messenger_role" {
   type        = string
   description = "Role name for slack messenger dlq handler lambda"
 }
 
-variable "event_replay_role_name" {
+variable "event_replay_role" {
   type        = string
   description = "Role name for event replay lambda"
 }
 
-variable "dos_db_handler_role_name" {
+variable "dos_db_handler_role" {
   type        = string
   description = "Role name for dos db handler lambda"
 }
 
-variable "send_email_role_name" {
+variable "send_email_role" {
   type        = string
   description = "Role name for send email lambda"
 }
 
-variable "ingest_change_event_role_name" {
+variable "ingest_change_event_role" {
   type        = string
   description = "Role name for ingest change event lambda"
 }
 
-# ##############
-# # LAMBDAS
-# ##############
+# ############################
+# # LAMBDA
+# ############################
 
-variable "slack_messenger_lambda_name" {
+variable "change_event_dlq_handler_lambda" {
   type        = string
-  description = "Name of slack messenger lambda"
+  description = "Name of fifo dlq handler lambda"
 }
 
-variable "service_matcher_lambda_name" {
+variable "dos_db_update_dlq_handler_lambda" {
   type        = string
-  description = "Name of service matcher lambda"
+  description = "Name of cr_fifo dlq handler lambda"
 }
 
-variable "service_sync_lambda_name" {
-  type        = string
-  description = "Name of service sync lambda"
-}
-
-variable "change_event_dlq_handler_lambda_name" {
-  type        = string
-  description = "Name of change event dlq handler lambda"
-}
-
-variable "dos_db_update_dlq_handler_lambda_name" {
-  type        = string
-  description = "Name of dos db update dlq handler lambda"
-}
-
-variable "dos_db_handler_lambda_name" {
+variable "dos_db_handler_lambda" {
   type        = string
   description = "Name of dos db handler lambda"
 }
 
-variable "send_email_lambda_name" {
+variable "event_replay_lambda" {
+  type        = string
+  description = "Name of event replay lambda"
+}
+
+variable "ingest_change_event_lambda" {
+  type        = string
+  description = "Name of ingest change event lambda"
+}
+
+variable "send_email_lambda" {
   type        = string
   description = "Name of send email lambda"
 }
 
-variable "ingest_change_event_lambda_name" {
+variable "service_matcher_lambda" {
   type        = string
-  description = "Name of ingest change event lambda"
+  description = "Name of event processor lambda"
+}
+
+variable "service_sync_lambda" {
+  type        = string
+  description = "Name of event sender lambda"
+}
+
+variable "slack_messenger_lambda" {
+  type        = string
+  description = "Name of slack messenger lambda"
+}
+
+variable "quality_checker_lambda" {
+  type        = string
+  description = "Name of quality checker lambda"
 }
 
 # ##############
@@ -136,17 +146,17 @@ variable "change_events_table_name" {
 # SQS
 ############
 
-variable "change_event_queue_name" {
+variable "change_event_queue" {
   type        = string
   description = "Change event SQS name"
 }
 
-variable "update_request_queue_name" {
+variable "update_request_queue" {
   type        = string
   description = "Update request SQS name"
 }
 
-variable "holding_queue_name" {
+variable "holding_queue" {
   type        = string
   description = "Holding queue SQS name"
 }
@@ -184,7 +194,7 @@ variable "route53_health_check_alarm_region_signing_key_alias" {
   description = "Alias of key used for signing in the alarm region"
 }
 
-variable "developer_role_name" {
+variable "developer_role" {
   type        = string
   description = "Role name of developer's role so that it can access the KMS key for the dbcloner"
 }

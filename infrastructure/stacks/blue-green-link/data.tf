@@ -3,15 +3,15 @@
 # ##############
 
 data "aws_lambda_function" "ingest_change_event" {
-  function_name = var.ingest_change_event_lambda_name
+  function_name = var.ingest_change_event_lambda
 }
 
 data "aws_lambda_function" "slack_messenger" {
-  function_name = var.slack_messenger_lambda_name
+  function_name = var.slack_messenger_lambda
 }
 
 data "aws_lambda_function" "change_event_dlq_handler" {
-  function_name = var.change_event_dlq_handler_lambda_name
+  function_name = var.change_event_dlq_handler_lambda
 }
 
 # ##############
@@ -19,7 +19,7 @@ data "aws_lambda_function" "change_event_dlq_handler" {
 # ##############
 
 data "aws_sqs_queue" "change_event_queue" {
-  name = var.change_event_queue_name
+  name = var.change_event_queue
 }
 
 data "aws_sqs_queue" "change_event_dlq" {
