@@ -69,7 +69,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> str:
     retries = 0
     while not response_status:
         response = lambda_client.invoke(
-            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA_NAME"),
+            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )

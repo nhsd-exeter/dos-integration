@@ -84,7 +84,7 @@ variable "blue_green_deployment_new_version_parameter_name" {
 # # OTHER
 # ##############
 
-variable "developer_role_name" {
+variable "developer_role" {
   type        = string
   description = "The name of the developer role"
 }

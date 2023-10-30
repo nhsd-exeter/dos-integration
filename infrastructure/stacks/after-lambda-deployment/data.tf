@@ -3,27 +3,27 @@
 # ##############
 
 data "aws_lambda_function" "service_matcher" {
-  function_name = var.service_matcher_lambda_name
+  function_name = var.service_matcher_lambda
 }
 
 data "aws_lambda_function" "service_sync" {
-  function_name = var.service_sync_lambda_name
+  function_name = var.service_sync_lambda
 }
 
 data "aws_lambda_function" "ingest_change_event" {
-  function_name = var.ingest_change_event_lambda_name
+  function_name = var.ingest_change_event_lambda
 }
 
 data "aws_lambda_function" "change_event_dlq_handler" {
-  function_name = var.change_event_dlq_handler_lambda_name
+  function_name = var.change_event_dlq_handler_lambda
 }
 
 data "aws_lambda_function" "dos_db_update_dlq_handler" {
-  function_name = var.dos_db_update_dlq_handler_lambda_name
+  function_name = var.dos_db_update_dlq_handler_lambda
 }
 
 data "aws_lambda_function" "send_email" {
-  function_name = var.send_email_lambda_name
+  function_name = var.send_email_lambda
 }
 
 # ##############
