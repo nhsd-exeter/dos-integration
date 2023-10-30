@@ -42,10 +42,16 @@ data "aws_iam_policy_document" "kms_policy" {
   statement {
     effect = "Allow"
     principals {
-      identifiers = ["cloudwatch.amazonaws.com"]
+      identifiers = ["cloudwatch.amazonaws.com", "logs.${var.aws_region}.amazonaws.com", "logs.${var.route53_health_check_alarm_region}.amazonaws.com"]
       type        = "Service"
     }
-    actions   = ["kms:*"]
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*"
+    ]
     resources = ["*"]
   }
 }
