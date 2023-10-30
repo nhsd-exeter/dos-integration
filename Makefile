@@ -134,61 +134,61 @@ remove-development-environments: # Removes development environments - mandatory:
 # Change Event Dead Letter Queue Handler (change-event-dlq-handler)
 
 change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
+	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler CHANGE_EVENT_DLQ_HANDLER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler)
 
 dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler DOS_DB_UPDATE_DLQ_HANDLER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # DoS DB Checker Handler (dos-db-handler)
 
 dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler DOS_DB_HANDLER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Event Replay lambda (event-replay)
 
 event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=event-replay
+	make build-and-deploy-single-function FUNCTION_NAME=event-replay EVENT_REPLAY_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Ingest Change Event
 
 ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event INGEST_CHANGE_EVENT_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Send Email
 
 send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=send-email
+	make build-and-deploy-single-function FUNCTION_NAME=send-email SEND_EMAIL_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Service Matcher
 
 service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
+	make build-and-deploy-single-function FUNCTION_NAME=service-matcher SERVICE_MATCHER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Service Sync
 
 service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=service-sync
+	make build-and-deploy-single-function FUNCTION_NAME=service-sync SERVICE_SYNC_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Slack Messenger
 
 slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
+	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger SLACK_MESSENGER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Quality Checker
 
 quality-checker-build-and-deploy: ### Build and deploy quality checker lambda docker image - mandatory: PROFILE, ENVIRONMENT
-	make build-and-deploy-single-function FUNCTION_NAME=quality-checker
+	make build-and-deploy-single-function FUNCTION_NAME=quality-checker QUALITY_CHECKER_VERSION=$(BUILD_TAG) VERSION=$(BUILD_TAG)
 
 # ==============================================================================
 # Deployments
@@ -198,6 +198,31 @@ quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redep
 	make -s push-images VERSION=$(BUILD_TAG)
 	eval "$$(make -s populate-deployment-variables)"
 	make terraform-apply-auto-approve STACKS=application VERSION=$(BUILD_TAG)
+
+build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
+	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$(FUNCTION_NAME)
+	make docker-push NAME=$(FUNCTION_NAME)
+	eval "$$(make -s get-lambda-versions-if-empty)"
+	eval "$$(make -s populate-deployment-variables)"
+	make terraform-apply-auto-approve STACKS=application
+
+deploy-application-with-same-image-versions: # Deploy application with same image versions - mandatory: PROFILE, ENVIRONMENT
+	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s get-lambda-versions-from-terraform-stack)"
+	make terraform-apply-auto-approve STACKS=application
+
+get-lambda-versions-if-empty:
+	VERSIONS=$$(make -s terraform-output STACKS=application OPTS='-json lambda_versions' | tail -n1)
+	[[ -z "$$CHANGE_EVENT_DLQ_HANDLER_VERSION" ]] && echo "export CHANGE_EVENT_DLQ_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.change_event_dlq_handler')"
+	[[ -z "$$DOS_DB_HANDLER_VERSION" ]] && echo "export DOS_DB_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.dos_db_handler')"
+	[[ -z "$$DOS_DB_UPDATE_DLQ_HANDLER_VERSION" ]] && echo "export DOS_DB_UPDATE_DLQ_HANDLER_VERSION=$$(echo $$VERSIONS | jq -r '.dos_db_update_dlq_handler')"
+	[[ -z "$$EVENT_REPLAY_VERSION" ]] && echo "export EVENT_REPLAY_VERSION=$$(echo $$VERSIONS | jq -r '.event_replay')"
+	[[ -z "$$INGEST_CHANGE_EVENT_VERSION" ]] && echo "export INGEST_CHANGE_EVENT_VERSION=$$(echo $$VERSIONS | jq -r '.ingest_change_event')"
+	[[ -z "$$SEND_EMAIL_VERSION" ]] && echo "export SEND_EMAIL_VERSION=$$(echo $$VERSIONS | jq -r '.send_email')"
+	[[ -z "$$SERVICE_MATCHER_VERSION" ]] && echo "export SERVICE_MATCHER_VERSION=$$(echo $$VERSIONS | jq -r '.service_matcher')"
+	[[ -z "$$SERVICE_SYNC_VERSION" ]] && echo "export SERVICE_SYNC_VERSION=$$(echo $$VERSIONS | jq -r '.service_sync')"
+	[[ -z "$$SLACK_MESSENGER_VERSION" ]] && echo "export SLACK_MESSENGER_VERSION=$$(echo $$VERSIONS | jq -r '.slack_messenger')"
+	[[ -z "$$QUALITY_CHECKER_VERSION" ]] && echo "export QUALITY_CHECKER_VERSION=$$(echo $$VERSIONS | jq -r '.quality_checker')"
 
 push-images: # Use VERSION=[] to push a perticular version otherwise with default to latest
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
