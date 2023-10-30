@@ -29,11 +29,11 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 	done
 
 deploy: # Deploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,shared-resources,application,blue-green-link
 
 undeploy: # Undeploys whole project - mandatory: PROFILE
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-destroy-auto-approve STACKS=blue-green-link,application,shared-resources VERSION=any
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
@@ -43,18 +43,12 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 	make build-and-push VERSION=$(BUILD_TAG)
 	make deploy VERSION=$(BUILD_TAG)
 
-populate-deployment-variables:
+populate-tagging-variables:
 	echo "unset AWS_PROFILE"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
-	echo "export TF_VAR_slack_webhook_url=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SLACK_WEBHOOK_SECRET_KEY)')"
-	echo "export TF_VAR_project_system_email_address=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SYSTEM_EMAIL_KEY)')"
-	echo "export TF_VAR_project_team_email_address=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(TEAM_EMAIL_KEY)')"
 	echo "export TF_VAR_service_category=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(SERVICE_CATEGORY_KEY)')"
 	echo "export TF_VAR_data_classification=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DATA_CLASSIFICATION_KEY)')"
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
-	echo "export TF_VAR_aws_sso_role=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(AWS_SSO_ROLE_KEY)')"
-	echo "export TF_VAR_dos_db_read_and_write_user_name=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
-	echo "export TF_VAR_dos_db_read_only_user_name=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
 
 unit-test:
 	make -s docker-run-tester \
@@ -196,18 +190,18 @@ quality-checker-build-and-deploy: ### Build and deploy quality checker lambda do
 quick-build-and-deploy: # Build and deploy lambdas only (meant to for fast redeployment of existing lambdas) - mandatory: PROFILE, ENVIRONMENT
 	make -s build VERSION=$(BUILD_TAG)
 	make -s push-images VERSION=$(BUILD_TAG)
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=application VERSION=$(BUILD_TAG)
 
 build-and-deploy-single-function: # Build and deploy single lambda only (meant to for fast redeployment of existing lambda) - mandatory: PROFILE, ENVIRONMENT
 	make build-lambda GENERIC_IMAGE_NAME=lambda NAME=$(FUNCTION_NAME)
 	make docker-push NAME=$(FUNCTION_NAME)
 	eval "$$(make -s get-lambda-versions-if-empty)"
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=application
 
 deploy-application-with-same-image-versions: # Deploy application with same image versions - mandatory: PROFILE, ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	eval "$$(make -s get-lambda-versions-from-terraform-stack)"
 	make terraform-apply-auto-approve STACKS=application
 
@@ -288,7 +282,7 @@ slack-codebuild-notification: ### Send codebuild pipeline notification - mandato
 		NAME=codebuild-pipeline-$(shell echo $(BUILD_STATUS) | tr '[:upper:]' '[:lower:]') \
 		BUILD_TIME=$$(( $$time / 60 ))m$$(( $$time % 60 ))s \
 		BUILD_URL=$$(echo https://$(AWS_REGION).console.aws.amazon.com/codesuite/codebuild/$(AWS_ACCOUNT_ID_MGMT)/projects/$(CODEBUILD_PROJECT_NAME)/build/$(CODEBUILD_BUILD_ID)/log?region=$(AWS_REGION)) \
-		SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(SLACK_WEBHOOK_SECRET_NAME) KEY=$(SLACK_WEBHOOK_SECRET_KEY))
+		SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=SLACK_WEBHOOK)
 
 aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g. service-sync,slack-messenger]
 	export THIS_YEAR=$$(date +%Y)
@@ -457,11 +451,11 @@ checkov-secret-scanning:
 # Blue/Green Deployment Targets
 
 deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=api-key,shared-resources
 
 deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=application
 
 build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
@@ -469,22 +463,22 @@ build-and-deploy-blue-green-environment: # Deploys blue/green resources - mandat
 	make deploy-blue-green-environment VERSION=$(BUILD_TAG)
 
 link-blue-green-environment: # Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-apply-auto-approve STACKS=blue-green-link
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-destroy-auto-approve STACKS=shared-resources
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
 
 undeploy-blue-green-environment: # Undeploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-destroy-auto-approve STACKS=application
 
 unlink-blue-green-environment: # Un-Links blue green environment - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
-	eval "$$(make -s populate-deployment-variables)"
+	eval "$$(make -s populate-tagging-variables)"
 	make terraform-destroy-auto-approve STACKS=blue-green-link
 
 tag-commit-to-deploy-blue-green-environment: # Tags commit to deploy blue/green environment - mandatory: COMMIT=[short commit hash]

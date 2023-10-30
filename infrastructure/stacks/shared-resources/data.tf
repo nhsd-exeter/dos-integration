@@ -10,6 +10,10 @@ data "aws_secretsmanager_secret_version" "ip_address_secret" {
   secret_id = var.ip_address_secret
 }
 
+data "aws_secretsmanager_secret_version" "deployment_secrets" {
+  secret_id = var.project_deployment_secrets
+}
+
 # ##############
 # # IAM
 # ##############
@@ -29,7 +33,7 @@ data "aws_iam_policy_document" "kms_policy" {
     principals {
       identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.aws_sso_role}"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${local.aws_sso_role}"
       ]
       type = "AWS"
     }

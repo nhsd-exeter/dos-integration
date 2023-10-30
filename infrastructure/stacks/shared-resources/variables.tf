@@ -78,6 +78,11 @@ variable "ip_address_secret" {
   description = "IP Address secret"
 }
 
+variable "project_deployment_secrets" {
+  type        = string
+  description = "Project deployment secrets"
+}
+
 # ############################
 # # ROUTE53
 # ############################
@@ -205,15 +210,6 @@ variable "waf_aws_known_bad_inputs_rule_name" {
 variable "waf_aws_sqli_rule_name" {
   type        = string
   description = "WAF AWS SQLi rule name"
-}
-
-# ##############
-# # IAM
-# ##############
-
-variable "aws_sso_role" {
-  type        = string
-  description = "The name of the role to assume for AWS SSO"
 }
 
 # ##############
