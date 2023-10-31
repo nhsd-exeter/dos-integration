@@ -14,7 +14,7 @@ from .change_event_validation import validate_change_event
 from common.dynamodb import add_change_event_to_dynamodb, get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 from common.middlewares import redact_staff_key_from_event, unhandled_exception_logging
 from common.types import HoldingQueueChangeEventItem
-from common.utilities import extract_body, get_sequence_number, remove_given_keys_from_dict_by_msg_limit
+from common.utilities import extract_body, get_sequence_number
 
 logger = Logger()
 tracer = Tracer()
@@ -56,11 +56,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     sequence_number = get_sequence_number(record)
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     s, ms = divmod(sqs_timestamp, 1000)
-
-    change_event_for_log = remove_given_keys_from_dict_by_msg_limit(change_event, ["Facilities", "Metrics"], 10000)
     logger.info(
         "Change Event received",
-        change_event=change_event_for_log,
         sequence_number=sequence_number,
         message_received="%s.%03d" % (strftime("%Y-%m-%d %H:%M:%S", gmtime(s)), ms),
     )

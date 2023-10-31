@@ -107,27 +107,6 @@ def handle_sqs_msg_attributes(msg_attributes: dict[str, Any]) -> dict[str, Any] 
     return None
 
 
-def remove_given_keys_from_dict_by_msg_limit(
-    event: dict[str, Any],
-    keys: list,
-    msg_limit: int = 10000,
-) -> dict[str, Any]:
-    """Removing given keys from the dictionary if the dictionary size is more than message limit.
-
-    Args:
-        event (Dict[str, Any]): Message body as a dictionary
-        keys (list): List of keys to be removed from the dictionary
-        msg_limit (int): Message limit in characters
-
-    Returns:
-        Dict[str, Any]: Message body as a dictionary.
-    """
-    msg_length = len(dumps(event).encode("utf-8"))
-    if msg_length > msg_limit:
-        return {k: v for k, v in event.items() if k not in keys}
-    return event
-
-
 @metric_scope
 def add_metric(metric_name: str, metrics: Any) -> None:  # noqa: ANN401
     """Adds a metric to the custom metrics collection.

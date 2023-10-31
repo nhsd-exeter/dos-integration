@@ -17,7 +17,6 @@ FILE_PATH = "application.ingest_change_event.ingest_change_event"
 @patch(f"{FILE_PATH}.HoldingQueueChangeEventItem")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.remove_given_keys_from_dict_by_msg_limit")
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
@@ -27,7 +26,6 @@ def test_lambda_handler(
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
-    mock_remove_given_keys_from_dict_by_msg_limit: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_holding_queue_change_event_item: MagicMock,
@@ -59,11 +57,6 @@ def test_lambda_handler(
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
-    mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event,
-        ["Facilities", "Metrics"],
-        10000,
-    )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_called_once_with(
@@ -87,7 +80,6 @@ def test_lambda_handler(
 @patch(f"{FILE_PATH}.HoldingQueueChangeEventItem")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.remove_given_keys_from_dict_by_msg_limit")
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
@@ -95,7 +87,6 @@ def test_lambda_handler_with_sensitive_staff_key(
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
-    mock_remove_given_keys_from_dict_by_msg_limit: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_holding_queue_change_event_item: MagicMock,
@@ -126,11 +117,6 @@ def test_lambda_handler_with_sensitive_staff_key(
     assert response is None
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
-    mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event,
-        ["Facilities", "Metrics"],
-        10000,
-    )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_called_once_with(
@@ -155,7 +141,6 @@ def test_lambda_handler_with_sensitive_staff_key(
 @patch(f"{FILE_PATH}.HoldingQueueChangeEventItem")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.remove_given_keys_from_dict_by_msg_limit")
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
@@ -165,7 +150,6 @@ def test_lambda_handler_no_sequence_number(
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
-    mock_remove_given_keys_from_dict_by_msg_limit: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_holding_queue_change_event_item: MagicMock,
@@ -198,11 +182,6 @@ def test_lambda_handler_no_sequence_number(
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
-    mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event,
-        ["Facilities", "Metrics"],
-        10000,
-    )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_not_called()
@@ -218,7 +197,6 @@ def test_lambda_handler_no_sequence_number(
 @patch(f"{FILE_PATH}.HoldingQueueChangeEventItem")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.remove_given_keys_from_dict_by_msg_limit")
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
@@ -228,7 +206,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
-    mock_remove_given_keys_from_dict_by_msg_limit: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_holding_queue_change_event_item: MagicMock,
@@ -261,11 +238,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
     mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
-    mock_remove_given_keys_from_dict_by_msg_limit.assert_called_once_with(
-        change_event,
-        ["Facilities", "Metrics"],
-        10000,
-    )
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_not_called()
@@ -284,7 +256,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
 @patch(f"{FILE_PATH}.HoldingQueueChangeEventItem")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
-@patch(f"{FILE_PATH}.remove_given_keys_from_dict_by_msg_limit")
 @patch(f"{FILE_PATH}.get_sequence_number")
 @patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
@@ -294,7 +265,6 @@ def test_lambda_handler_mutiple_records(
     mock_validate_change_event: MagicMock,
     mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
-    mock_remove_given_keys_from_dict_by_msg_limit: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_holding_queue_change_event_item: MagicMock,
@@ -327,7 +297,6 @@ def test_lambda_handler_mutiple_records(
     mock_extract_body.assert_not_called()
     mock_validate_change_event.assert_not_called()
     mock_add_change_event_received_metric.assert_not_called()
-    mock_remove_given_keys_from_dict_by_msg_limit.assert_not_called()
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_not_called()
     mock_add_change_event_to_dynamodb.assert_not_called()
     mock_holding_queue_change_event_item.assert_not_called()

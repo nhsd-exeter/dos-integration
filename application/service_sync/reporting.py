@@ -63,6 +63,7 @@ def log_invalid_nhsuk_postcode(
         report_key=INVALID_POSTCODE_REPORT_ID,
         nhsuk_odscode=nhs_entity.odscode,
         nhsuk_organisation_type=nhs_entity.org_type,
+        nhsuk_organisation_name=nhs_entity.org_name,
         nhsuk_organisation_subtype=nhs_entity.org_sub_type,
         nhsuk_address1=nhs_entity.entity_data.get("Address1", ""),
         nhsuk_address2=nhs_entity.entity_data.get("Address2", ""),

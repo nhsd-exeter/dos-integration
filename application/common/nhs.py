@@ -69,8 +69,6 @@ class NHSEntity:
         self.blood_pressure = self.check_for_service(NHS_UK_BLOOD_PRESSURE_SERVICE_CODE)
         self.contraception = self.check_for_service(NHS_UK_CONTRACEPTION_SERVICE_CODE)
 
-        logger.append_keys(nhsuk_organisation_typeid=self.org_type_id, nhsuk_organisation_name=self.org_name)
-
     def __repr__(self) -> str:
         """Returns a string representation of the object."""
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"

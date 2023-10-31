@@ -4,7 +4,7 @@
 # Service variables
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-demo/deployment # Move to project.mk when nonprod profiles are merged
 
-LOG_LEVEL:= INFO
+LOG_LEVEL := INFO
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-put-cluster-14

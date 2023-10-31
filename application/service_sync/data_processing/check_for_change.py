@@ -208,7 +208,7 @@ def check_opening_times_for_changes(changes_to_dos: ChangesToDoS) -> ChangesToDo
         ChangesToDoS: ChangesToDoS holder object
     """
     if validate_opening_times(dos_service=changes_to_dos.dos_service, nhs_entity=changes_to_dos.nhs_entity):
-        logger.info("Opening times are valid")
+        logger.debug("Opening times are valid")
         if changes_to_dos.nhs_entity.standard_opening_times.fully_closed():
             log_blank_standard_opening_times(
                 nhs_entity=changes_to_dos.nhs_entity,
@@ -261,7 +261,6 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
     skip_palliative_care_check = skip_if_key_is_none(
         changes_to_dos.nhs_entity.check_for_uec_service(NHS_UK_PALLIATIVE_CARE_SERVICE_CODE),
     )
-    logger.info(f"Skip palliative care check: {skip_palliative_care_check}")
     if (
         changes_to_dos.dos_service.typeid == DOS_PALLIATIVE_CARE_TYPE_ID
         and len(changes_to_dos.dos_service.odscode) == MAIN_PHARMACY_ODSCODE_LENGTH
@@ -283,6 +282,7 @@ def check_palliative_care_for_change(changes_to_dos: ChangesToDoS) -> ChangesToD
             ),
             dos_palliative_care=changes_to_dos.dos_service.palliative_care,
             dos_odscode=changes_to_dos.dos_service.odscode,
+            skip_palliative_care_check=skip_palliative_care_check,
         )
     return changes_to_dos
 
