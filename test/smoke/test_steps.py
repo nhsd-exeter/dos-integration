@@ -9,6 +9,8 @@ from pytz import timezone
 from .functions.change_event import ChangeEvent
 from .functions.change_event_request import send_change_event
 from .functions.service import (
+    check_blood_pressure_updated,
+    check_contraception_updated,
     check_demographic_field_updated,
     check_specified_opening_times_updated,
     check_standard_opening_times_updated,
@@ -44,6 +46,8 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
         phone=smoke_test_context.original_service.phone,
         standard_opening_times=smoke_test_context.original_service.standard_opening_times,
         specified_opening_times=smoke_test_context.original_service.specified_opening_times,
+        blood_pressure=smoke_test_context.original_service.blood_pressure,
+        contraception=smoke_test_context.original_service.contraception,
     )
     return smoke_test_context
 
@@ -93,11 +97,20 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
             },
         ]
 
+    def update_blood_pressure() -> None:
+        smoke_test_context.updated_service.blood_pressure = not smoke_test_context.updated_service.blood_pressure
+
+    def update_contraception() -> None:
+        smoke_test_context.updated_service.contraception = not smoke_test_context.updated_service.contraception
+
     update_address()
     update_website()
     update_phone()
     update_standard_opening_times()
     update_specified_opening_times()
+    update_blood_pressure()
+    update_contraception()
+
     return smoke_test_context
 
 
@@ -177,6 +190,9 @@ def _(smoke_test_context: SmokeTestContext) -> None:
         expected_value=smoke_test_context.updated_service.phone,
     )
     check_standard_opening_times_updated(
-        expected_value=smoke_test_context.updated_service.standard_opening_times, smoke_test_context=smoke_test_context,
+        expected_value=smoke_test_context.updated_service.standard_opening_times,
+        smoke_test_context=smoke_test_context,
     )
     check_specified_opening_times_updated(expected_value=smoke_test_context.updated_service.specified_opening_times)
+    check_blood_pressure_updated(expected_value=smoke_test_context.updated_service.blood_pressure)
+    check_contraception_updated(expected_value=smoke_test_context.updated_service.contraception)
