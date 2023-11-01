@@ -24,7 +24,7 @@ def test_search_for_pharmacy_ods_codes(mock_query_dos_db: MagicMock) -> None:
     # Act
     response = search_for_pharmacy_ods_codes(connection)
     # Assert
-    assert response == [odscode]
+    assert response == {odscode}
     mock_query_dos_db.assert_called_once_with(
         connection,
         "SELECT LEFT(odscode, 5) FROM services s WHERE s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
@@ -77,12 +77,15 @@ def test_search_for_matching_services(mock_query_dos_db: MagicMock) -> None:
     assert response == [dos_service]
     mock_query_dos_db.assert_called_once_with(
         connection,
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-        "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
-        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-        "WHERE s.odscode LIKE %(ODSCODE)s AND s.statusid = %(ACTIVE_STATUS_ID)s",
-        {"ODSCODE": odscode, "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID},
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, ss.name status_name, publicphone, "
+        "publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id LEFT JOIN "
+        "servicestatuses ss on s.statusid = ss.id WHERE s.odscode LIKE %(ODSCODE)s AND s.statusid = "
+        "%(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s)",
+        {
+            "ODSCODE": f"{odscode}%",
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS,
+        },
     )
 
 

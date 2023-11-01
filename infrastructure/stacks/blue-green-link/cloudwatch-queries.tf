@@ -205,3 +205,18 @@ fields @timestamp, correlation_id, message
 | sort @timestamp desc
 EOF
 }
+
+
+resource "aws_cloudwatch_query_definition" "search_for_quality_checker_logs_with_odscode" {
+  name = "${var.project_id}/${var.blue_green_environment}/search-for-quality-checker-logs-with-odscode"
+
+  log_group_names = [
+    "/aws/lambda/${var.quality_checker_lambda}"
+  ]
+
+  query_string = <<EOF
+fields @timestamp, level, message
+| filter odscode = 'TO_ADD'
+| sort @timestamp asc
+EOF
+}

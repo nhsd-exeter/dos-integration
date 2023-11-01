@@ -22,9 +22,12 @@ def check_pharmacy_profiling(connection: Connection) -> None:
     """
     odscodes = search_for_pharmacy_ods_codes(connection)
     for odscode in odscodes:
+        logger.append_keys(odscode=odscode)
+        logger.info(f"Checking pharmacy profiling for odscode '{odscode}'.")
         matched_services = search_for_matching_services(connection, odscode)
         check_for_multiple_of_service_type(matched_services, BLOOD_PRESSURE)
         check_for_multiple_of_service_type(matched_services, CONTRACEPTION)
+        logger.remove_keys("odscode")
 
 
 def check_for_zcode_profiling_on_incorrect_type(connection: Connection, service_type: CommissionedServiceType) -> None:
@@ -38,11 +41,6 @@ def check_for_zcode_profiling_on_incorrect_type(connection: Connection, service_
         connection,
         service_type,
     ):
-        logger.info(
-            f"Found {len(incorrectly_profiled_services)} incorrectly "
-            f"profiled {service_type.TYPE_NAME.lower()} services.",
-            services=incorrectly_profiled_services,
-        )
         log_to_quality_check_report(
             incorrectly_profiled_services,
             f"{service_type.TYPE_NAME} ZCode is on invalid service type",

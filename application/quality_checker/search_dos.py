@@ -24,7 +24,7 @@ def search_for_pharmacy_ods_codes(connection: Connection) -> list[str]:
         "AND s.statusid = %(ACTIVE_STATUS_ID)s AND LEFT(REPLACE(TRIM(odscode), CHR(9), ''), 1) IN ('F', 'f')",
         {"PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS, "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID},
     )
-    odscodes = [odscode_row["left"] for odscode_row in cursor.fetchall()]
+    odscodes = {odscode_row["left"] for odscode_row in cursor.fetchall()}
     cursor.close()
     logger.info(f"Found {len(odscodes)} pharmacy ODS codes.", odscodes=odscodes)
     return odscodes
@@ -46,8 +46,13 @@ def search_for_matching_services(connection: Connection, odscode: str) -> list[D
         "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
         "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-        "WHERE s.odscode LIKE %(ODSCODE)s AND s.statusid = %(ACTIVE_STATUS_ID)s",
-        {"ODSCODE": odscode, "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID},
+        "WHERE s.odscode LIKE %(ODSCODE)s AND s.statusid = %(ACTIVE_STATUS_ID)s "
+        "AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s)",
+        {
+            "ODSCODE": f"{odscode}%",
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS,
+        },
     )
     services = [DoSService(row) for row in cursor.fetchall()]
     cursor.close()
@@ -89,7 +94,11 @@ def search_for_incorrectly_profiled_z_code_on_incorrect_type(
     )
     services = [DoSService(row) for row in cursor.fetchall()]
     cursor.close()
-    logger.info(f"Found {len(services)} active offending services on incorrect type.", services=services)
+    logger.info(
+        f"Found {len(services)} {service_type.TYPE_NAME} active offending services on incorrect type .",
+        matchable_service_types=matchable_service_types,
+        services=services,
+    )
     return services
 
 
