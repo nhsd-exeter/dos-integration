@@ -11,3 +11,4 @@ class SmokeTestContext:
     original_service: ChangeEvent | None = None
     updated_service: ChangeEvent | None = None
     request_start_time: datetime | None = None
+    blank_opening_times: bool = False

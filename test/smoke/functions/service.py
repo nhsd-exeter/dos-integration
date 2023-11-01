@@ -6,6 +6,7 @@ from pytz import UTC
 
 from .aws import invoke_dos_db_handler_lambda
 from .change_event import ChangeEvent
+from .smoke_test_context import SmokeTestContext
 from .types import Demographics
 from .utilities import seconds_since_midnight
 
@@ -208,11 +209,12 @@ def check_demographic_field_updated(field: str, service_history_key: str, expect
     assert_field_updated_in_history()
 
 
-def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
+def check_standard_opening_times_updated(expected_value: list[dict], smoke_test_context: SmokeTestContext) -> None:
     """Check that the standard opening times were updated in the services table and in service history.
 
     Args:
         expected_value (list[dict]): The expected value of the standard opening times
+        smoke_test_context (SmokeTestContext): The smoke test context
     """
 
     def assert_field_updated() -> None:
@@ -254,9 +256,10 @@ def check_standard_opening_times_updated(expected_value: list[dict]) -> None:
                 seconds_str in new_history[cms_key]["data"]["add"]
             ), f"Expected data: {seconds_str}, Actual data: {new_history[cms_key]['data']['add']}"
 
-    service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
-    assert_field_updated()
-    assert_field_updated_in_history()
+    if not smoke_test_context.blank_opening_times:
+        service_id = get_service_id_for_ods_code(DEFAULT_ODS_CODE)
+        assert_field_updated()
+        assert_field_updated_in_history()
 
 
 def check_specified_opening_times_updated(expected_value: list[dict]) -> None:
