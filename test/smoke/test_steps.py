@@ -111,6 +111,11 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     Returns:
         SmokeTestContext: The smoke test context
     """
+    if not smoke_test_context.original_service.standard_opening_times:
+        smoke_test_context.blank_opening_times = True
+        smoke_test_context.original_service.standard_opening_times = (
+            smoke_test_context.updated_service.standard_opening_times
+        )
     smoke_test_context.updated_service = smoke_test_context.original_service
     return smoke_test_context
 
@@ -171,5 +176,7 @@ def _(smoke_test_context: SmokeTestContext) -> None:
         service_history_key="cmstelephoneno",
         expected_value=smoke_test_context.updated_service.phone,
     )
-    check_standard_opening_times_updated(expected_value=smoke_test_context.updated_service.standard_opening_times)
+    check_standard_opening_times_updated(
+        expected_value=smoke_test_context.updated_service.standard_opening_times, smoke_test_context=smoke_test_context,
+    )
     check_specified_opening_times_updated(expected_value=smoke_test_context.updated_service.specified_opening_times)

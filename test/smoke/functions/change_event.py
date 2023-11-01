@@ -26,7 +26,6 @@ class ChangeEvent:
         base_change_event = self._set_contact_details(base_change_event, "Telephone", self.phone)
         return self._set_opening_times(base_change_event)
 
-
     def _load_base_change_event(self) -> dict:
         """Load the base change event from the JSON file.
 
