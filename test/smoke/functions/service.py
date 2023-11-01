@@ -55,7 +55,7 @@ def get_main_service_id_for_ods_code(ods_code: str) -> str:
     return response[0]["id"]
 
 
-def get_service_id_for_ods_code_with_type_id(ods_code: str, type_id: int) -> str:
+def get_service_id_for_ods_code_with_type_id(ods_code: str, type_id: int) -> int:
     """Get the service ID for an ODS code.
 
     Args:
@@ -169,14 +169,14 @@ def get_contraception(odscode: str) -> bool:
     return get_service_status(service_id)
 
 
-def get_service_status(service_id: str) -> bool:
+def get_service_status(service_id: int) -> bool:
     """Get the service status for a service.
 
     Args:
         service_id (str): The service ID to get the service status for
 
     Returns:
-        bool: The service status for the service
+        bool: The service status for the service (True = active, False = closed/commissioning)
     """
     query = "SELECT statusid FROM services WHERE id = %(SERVICE_ID)s"
     response = invoke_dos_db_handler_lambda({"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}})
@@ -386,9 +386,9 @@ def check_blood_pressure_updated(expected_value: bool) -> None:
     Args:
         expected_value (bool): The expected value of the blood pressure status
     """
-    service_id = get_blood_pressure(DEFAULT_ODS_CODE)
+    service_id = get_service_id_for_ods_code_with_type_id(DEFAULT_ODS_CODE, DOS_BLOOD_PRESSURE_TYPE_ID)
     check_service_status_updated(expected_value, service_id)
-    check_service_status_history_updated(expected_value)
+    check_service_status_history_updated(expected_value, service_id)
 
 
 def check_contraception_updated(expected_value: bool) -> None:
@@ -397,9 +397,9 @@ def check_contraception_updated(expected_value: bool) -> None:
     Args:
         expected_value (bool): The expected value of the contraception status
     """
-    service_id = get_contraception(DEFAULT_ODS_CODE)
+    service_id = get_service_id_for_ods_code_with_type_id(DEFAULT_ODS_CODE, DOS_CONTRACEPTION_TYPE_ID)
     check_service_status_updated(expected_value, service_id)
-    check_service_status_history_updated(expected_value)
+    check_service_status_history_updated(expected_value, service_id)
 
 
 def check_service_status_updated(expected_value: bool, service_id: int) -> None:
@@ -409,19 +409,23 @@ def check_service_status_updated(expected_value: bool, service_id: int) -> None:
         expected_value (bool): The expected value of the service status
         service_id (int): The service ID to check the service status for
     """
-    query = "SELECT statusid FROM services WHERE id = %(SERVICE_ID)s"
-    response = invoke_dos_db_handler_lambda(
-        {"type": "read", "query": query, "query_vars": {"SERVICE_ID": service_id}},
-    )
-    response = loads(loads(response))
+    actual_status = get_service_status(service_id)
     assert (
-        response[0]["statuid"] == expected_value
-    ), f"Service status was not updated - expected: '{expected_value}', actual: '{response[0]['statuid']}'"
+        actual_status == expected_value
+    ), f"Service status was not updated - expected: '{expected_value}', actual: '{actual_status}'"
 
 
-def check_service_status_history_updated(expected_value: bool) -> None:  # noqa: ARG001
+def check_service_status_history_updated(expected_value: bool, service_id: int) -> None:
     """Check that the service status was updated in service history.
 
     Args:
         expected_value (bool): The expected value of the service status
+        service_id (int): The service ID to check the service status for
     """
+    history = get_service_history(service_id)
+    first_key = next(iter(history.keys()))
+    new_history = history[first_key]["new"]
+    expected_value_name = "active" if expected_value else "closed"
+    assert (
+        expected_value_name == new_history["cmsorgstatus"]["data"]
+    ), f"Expected data: {expected_value_name}, Actual data: {new_history['cmsorgstatus']['data']}"
