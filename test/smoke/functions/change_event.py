@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from json import load
 
+from .constants import NHS_UK_BLOOD_PRESSURE_SERVICE_CODE, NHS_UK_CONTRACEPTION_SERVICE_CODE
+
 
 @dataclass(init=True, repr=True)
 class ChangeEvent:
@@ -12,6 +14,8 @@ class ChangeEvent:
     phone: str  # Public phone number
     standard_opening_times: field(default_factory=list)
     specified_opening_times: field(default_factory=list)
+    blood_pressure: bool
+    contraception: bool
 
     def create_change_event(self) -> dict:
         """Create a change event from the base change event and set the attributes.
@@ -24,7 +28,17 @@ class ChangeEvent:
         base_change_event = self._set_address(base_change_event)
         base_change_event = self._set_contact_details(base_change_event, "Website", self.website)
         base_change_event = self._set_contact_details(base_change_event, "Telephone", self.phone)
-        return self._set_opening_times(base_change_event)
+        base_change_event = self._set_opening_times(base_change_event)
+        base_change_event = self._set_commissioned_services(
+            base_change_event,
+            self.blood_pressure,
+            NHS_UK_BLOOD_PRESSURE_SERVICE_CODE,
+        )
+        return self._set_commissioned_services(
+            base_change_event,
+            self.contraception,
+            NHS_UK_CONTRACEPTION_SERVICE_CODE,
+        )
 
     def _load_base_change_event(self) -> dict:
         """Load the base change event from the JSON file.
@@ -149,4 +163,25 @@ class ChangeEvent:
             }
             for specified_opening_date in self.specified_opening_times
         )
+        return base_change_event
+
+    def _set_commissioned_services(self, base_change_event: dict, service_enabled: bool, service_code: str) -> dict:
+        """Set the commissioned services on services attribute on the change event.
+
+        Args:
+            base_change_event (dict): The base change event
+            service_enabled (bool): Whether the service is enabled
+            service_code (str): The service code
+
+        Returns:
+            dict: The change event
+        """
+        if service_enabled:
+            base_change_event["Services"].append(
+                {
+                    "ServiceName": "Service name",
+                    "ServiceDescription": None,
+                    "ServiceCode": service_code,
+                },
+            )
         return base_change_event
