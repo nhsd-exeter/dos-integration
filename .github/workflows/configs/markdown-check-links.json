@@ -9,6 +9,9 @@
     },
     {
       "pattern": "^https://nhsd-jira.digital.nhs.uk/"
+    },
+    {
+      "pattern": "^https://ddc-exeter-data-clone-prod-ddc-data-clone.k8s-prod.texasplatform.uk/"
     }
   ],
   "timeout": "5s"
