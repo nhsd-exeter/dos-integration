@@ -270,7 +270,7 @@ This testing includes:
 
 This testing is generally done by a tester
 
-To run the performance tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
+To run the performance tests run the following commands after you have run `assume` to sign into Non-Prod
 
 To run a stress test
 
