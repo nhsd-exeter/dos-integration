@@ -345,7 +345,7 @@ def test_send_rejection_emails(
     mock_client: MagicMock,
 ):
     # Arrange
-    environ["SEND_EMAIL_LAMBDA_NAME"] = send_email_lambda_name = "test"
+    environ["SEND_EMAIL_LAMBDA"] = send_email_lambda_name = "test"
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
     mock_build_change_rejection_email_contents.return_value = file_contents = "test"
@@ -387,7 +387,7 @@ def test_send_rejection_emails(
         Payload=mock_dumps.return_value,
     )
     # Cleanup
-    del environ["SEND_EMAIL_LAMBDA_NAME"]
+    del environ["SEND_EMAIL_LAMBDA"]
 
 
 @patch("builtins.open")

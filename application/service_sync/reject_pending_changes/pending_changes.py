@@ -206,7 +206,7 @@ def send_rejection_emails(pending_changes: list[PendingChange]) -> None:
         )
         logger.debug("Email message created")
         client("lambda").invoke(
-            FunctionName=environ["SEND_EMAIL_LAMBDA_NAME"],
+            FunctionName=environ["SEND_EMAIL_LAMBDA"],
             InvocationType="Event",
             Payload=dumps(message),
         )

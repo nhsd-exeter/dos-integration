@@ -22,7 +22,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
     retries = 0
     while not response_status:
         response: Any = LAMBDA_CLIENT_FUNCTIONS.invoke(
-            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA_NAME"),
+            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
@@ -50,7 +50,7 @@ def re_process_payload(odscode: str, seq_number: str) -> str:
     """
     lambda_payload = {"odscode": odscode, "sequence_number": seq_number}
     response = LAMBDA_CLIENT_FUNCTIONS.invoke(
-        FunctionName=getenv("EVENT_REPLAY_LAMBDA_NAME"),
+        FunctionName=getenv("EVENT_REPLAY_LAMBDA"),
         InvocationType="RequestResponse",
         Payload=dumps(lambda_payload),
     )

@@ -84,22 +84,22 @@ custom:
 functions:
   change-event-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:CHANGE_EVENT_DLQ_HANDLER}:${env:VERSION}
-    name: ${env:CHANGE_EVENT_DLQ_HANDLER_LAMBDA_NAME}
-    description: ${sls:stage} Change Event DLQ Handler lambda
+    name: ${env:CHANGE_EVENT_DLQ_HANDLER_LAMBDA}
+    description: ${sls:stage} Change Event DLQ Handler
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_change_event_dlq_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_change_event_dlq_handler_role}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 0
 
   dos-db-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_HANDLER}:${env:VERSION}
-    name: ${env:DOS_DB_HANDLER_LAMBDA_NAME}
-    description: ${sls:stage} DoS DB Handler lambda for accessing DoS DB in Non-Live environments
+    name: ${env:DOS_DB_HANDLER_LAMBDA}
+    description: ${sls:stage} DoS DB Handler for accessing DoS DB in Non-Live environments
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_handler_role}
     environment:
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}
@@ -128,44 +128,44 @@ functions:
 
   dos-db-update-dlq-handler:
     image: ${env:DOCKER_REGISTRY}/${env:DOS_DB_UPDATE_DLQ_HANDLER}:${env:VERSION}
-    name: ${env:DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_NAME}
-    description: ${sls:stage} DoS DB Update DLQ Handler lambda
+    name: ${env:DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA}
+    description: ${sls:stage} DoS DB Update DLQ Handler
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_update_dlq_handler_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_dos_db_update_dlq_handler_role}
     maximumRetryAttempts: 0
 
   event-replay:
     image: ${env:DOCKER_REGISTRY}/${env:EVENT_REPLAY}:${env:VERSION}
-    name: ${env:EVENT_REPLAY_LAMBDA_NAME}
-    description: ${sls:stage} Event Replay lambda
+    name: ${env:EVENT_REPLAY_LAMBDA}
+    description: ${sls:stage} Event Replay
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_replay_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_event_replay_role}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      CHANGE_EVENT_SQS_NAME: ${env:TF_VAR_change_event_queue_name}
+      CHANGE_EVENT_SQS_NAME: ${env:TF_VAR_change_event_queue}
     maximumRetryAttempts: 0
 
   ingest-change-event:
     image: ${env:DOCKER_REGISTRY}/${env:INGEST_CHANGE_EVENT}:${env:VERSION}
-    name: ${env:INGEST_CHANGE_EVENT_LAMBDA_NAME}
-    description: ${sls:stage} Ingest Change Event lambda
+    name: ${env:INGEST_CHANGE_EVENT_LAMBDA}
+    description: ${sls:stage} Ingest Change Event
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_ingest_change_event_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_ingest_change_event_role}
     environment:
-      HOLDING_QUEUE_URL: ${env:holding_queue_url}
+      HOLDING_QUEUE_URL: ${env:HOLDING_QUEUE_URL}
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
     maximumRetryAttempts: 2
 
   send-email:
     image: ${env:DOCKER_REGISTRY}/${env:SEND_EMAIL}:${env:VERSION}
-    name: ${env:SEND_EMAIL_LAMBDA_NAME}
-    description: ${sls:stage} Send Email lambda
+    name: ${env:SEND_EMAIL_LAMBDA}
+    description: ${sls:stage} Send Email
     memorySize: 128
     timeout: 30
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_send_email_role}
     environment:
       AWS_ACCOUNT_NAME: ${env:AWS_ACCOUNT_NAME}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
@@ -174,16 +174,16 @@ functions:
 
   service-matcher:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_MATCHER}:${env:VERSION}
-    name: ${env:SERVICE_MATCHER_LAMBDA_NAME}
-    description: ${sls:stage} Service Matcher lambda
+    name: ${env:SERVICE_MATCHER_LAMBDA}
+    description: ${sls:stage} Service Matcher
     memorySize: 192
     timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_matcher_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_matcher_role}
     maximumRetryAttempts: 0
     reservedConcurrency: ${env:SERVICE_MATCHER_MAX_CONCURRENCY}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
+      UPDATE_REQUEST_QUEUE_URL: ${env:UPDATE_REQUEST_QUEUE_URL}
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}
       DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
@@ -207,14 +207,14 @@ functions:
 
   service-sync:
     image: ${env:DOCKER_REGISTRY}/${env:SERVICE_SYNC}:${env:VERSION}
-    name: ${env:SERVICE_SYNC_LAMBDA_NAME}
-    description: ${sls:stage} Service Sync lambda
+    name: ${env:SERVICE_SYNC_LAMBDA}
+    description: ${sls:stage} Service Sync
     memorySize: 512
     timeout: 20
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_sync_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_service_sync_role}
     environment:
       CHANGE_EVENTS_TABLE_NAME: ${env:TF_VAR_change_events_table_name}
-      UPDATE_REQUEST_QUEUE_URL: ${env:update_request_queue_url}
+      UPDATE_REQUEST_QUEUE_URL: ${env:UPDATE_REQUEST_QUEUE_URL}
       DB_NAME: ${env:DB_NAME}
       DB_PORT: ${env:DB_PORT}
       DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
@@ -229,7 +229,7 @@ functions:
       SEND_EMAIL_BUCKET_NAME: ${env:SEND_EMAIL_BUCKET_NAME}
       TEAM_EMAIL_ADDRESS: ${env:PROJECT_TEAM_EMAIL_ADDRESS}
       SYSTEM_EMAIL_ADDRESS: ${env:PROJECT_SYSTEM_EMAIL_ADDRESS}
-      SEND_EMAIL_LAMBDA_NAME: ${env:TF_VAR_send_email_lambda_name}
+      SEND_EMAIL_LAMBDA: ${env:TF_VAR_send_email_lambda}
     reservedConcurrency: ${env:SERVICE_SYNC_MAX_CONCURRENCY}
     maximumRetryAttempts: 0
     vpcDiscovery:
@@ -247,11 +247,11 @@ functions:
 
   slack-messenger:
     image: ${env:DOCKER_REGISTRY}/${env:SLACK_MESSENGER}:${env:VERSION}
-    name: ${env:SLACK_MESSENGER_LAMBDA_NAME}
-    description: ${sls:stage} Slack Messenger lambda
+    name: ${env:SLACK_MESSENGER_LAMBDA}
+    description: ${sls:stage} Slack Messenger
     memorySize: 128
     timeout: 10
-    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role_name}
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_slack_messenger_role}
     environment:
       SLACK_ALERT_CHANNEL: ${env:SLACK_ALERT_CHANNEL}
       SLACK_WEBHOOK_URL: ${env:SLACK_WEBHOOK_URL}
@@ -260,3 +260,41 @@ functions:
           arn: arn:aws:sns:${env:AWS_REGION}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_default_region}
       - sns:
           arn: arn:aws:sns:${env:TF_VAR_route53_health_check_alarm_region}:${env:AWS_ACCOUNT_ID}:${env:TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region}
+
+  quality-checker:
+    image: ${env:DOCKER_REGISTRY}/${env:QUALITY_CHECKER}:${env:VERSION}
+    name: ${env:QUALITY_CHECKER_LAMBDA}
+    description: ${sls:stage} Quality Checker
+    memorySize: 512
+    timeout: 900
+    role: arn:aws:iam::${env:AWS_ACCOUNT_ID}:role/${env:TF_VAR_quality_checker_role}
+    environment:
+      DB_NAME: ${env:DB_NAME}
+      DB_PORT: ${env:DB_PORT}
+      DB_READ_ONLY_USER_NAME: ${env:DB_READ_ONLY_USER_NAME}
+      DB_READER_SECRET_NAME: ${env:DB_READER_SECRET_NAME}
+      DB_READER_SECRET_KEY: ${env:DB_READER_SECRET_KEY}
+      DB_READER_SERVER: ${env:DB_READER_SERVER}
+      DB_WRITER_SERVER: ${env:DB_WRITER_SERVER}
+      DB_SCHEMA: ${env:DB_SCHEMA}
+      DB_WRITER_SECRET_KEY: ${env:DB_WRITER_SECRET_KEY}
+      DB_WRITER_SECRET_NAME: ${env:DB_WRITER_SECRET_NAME}
+      DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
+    maximumRetryAttempts: 0
+    events:
+      - schedule:
+          name: ${env:QUALITY_CHECKER_LAMBDA}-schedule
+          description: Quality Checker Schedule for triggering a DoS quality check
+          rate: cron(30 4 ? * MON *)
+    vpcDiscovery:
+      vpcName: "${env:AWS_VPC_NAME}"
+      subnets:
+        - tagKey: Name
+          tagValues:
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}a"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}b"
+            - "${env:AWS_VPC_NAME}-private-${env:AWS_REGION}c"
+      securityGroups:
+        - tagKey: Name
+          tagValues:
+            - "${env:TF_VAR_lambda_security_group_name}"

@@ -40,7 +40,7 @@ variable "route53_health_check_alarm_region_signing_key_alias" {
   description = "Alias of key used for signing in the alarm region"
 }
 
-variable "developer_role_name" {
+variable "developer_role" {
   type        = string
   description = "Role name of developer's role so that it can access the KMS key for the dbcloner"
 }
@@ -49,7 +49,7 @@ variable "developer_role_name" {
 # # SQS
 # ##############
 
-variable "change_event_queue_name" {
+variable "change_event_queue" {
   type        = string
   description = "Change event queue name"
 }

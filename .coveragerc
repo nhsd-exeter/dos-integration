@@ -5,4 +5,5 @@ omit =
   tests/*
   **/tests/*
   application/dos_db_handler/*.py
+  **/conftest.py
 branch = True

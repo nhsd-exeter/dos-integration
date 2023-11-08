@@ -74,7 +74,7 @@ resource "aws_api_gateway_integration" "di_endpoint_integration" {
   rest_api_id             = aws_api_gateway_rest_api.di_endpoint.id
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.aws_region}:sqs:path/${var.aws_account_id}/${var.change_event_queue_name}"
+  uri                     = "arn:aws:apigateway:${var.aws_region}:sqs:path/${var.aws_account_id}/${var.change_event_queue}"
   credentials             = aws_iam_role.di_endpoint_role.arn
   passthrough_behavior    = "NEVER"
   request_parameters = {
