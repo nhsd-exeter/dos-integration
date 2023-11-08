@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.11-arm64
+FROM public.ecr.aws/lambda/python:3.11.2023.11.01.21-arm64
 # Update all packages
 RUN yum update -y
 # Update Pip
