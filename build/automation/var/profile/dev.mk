@@ -59,3 +59,8 @@ SERVICE_SYNC_MAX_CONCURRENCY := 20
 DOS_DEPLOYMENT_SECRETS := core-dos-dev/deployment
 DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_RELEASE_USER_PASSWORD
 DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := pathwaysdos
+
+# ==============================================================================
+# Quality Checker Variables
+
+ODSCODE_STARTING_CHARACTER := A

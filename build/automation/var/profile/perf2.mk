@@ -59,3 +59,8 @@ SERVICE_SYNC_MAX_CONCURRENCY := 47
 DOS_DEPLOYMENT_SECRETS := null
 DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := null
 DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := null
+
+# ==============================================================================
+# Quality Checker Variables
+
+ODSCODE_STARTING_CHARACTER := F

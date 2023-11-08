@@ -14,7 +14,7 @@ LAMBDA_CLIENT_LOGS = client("logs")
 def get_logs(
     query: str,
     lambda_name: str,
-    start_time: Timestamp,
+    start_time: Timestamp | None = None,
     retry_count: int = 32,
     sleep_per_loop: int = 20,
 ) -> str:
@@ -43,7 +43,7 @@ def get_logs(
             )
         except ClientError as error:
             if error.response["Error"]["Code"] == "LimitExceededException":
-                sleep(sleep_per_loop)
+                sleep(sleep_per_loop * 3)
                 continue
             raise
         query_id = start_query_response["queryId"]
@@ -55,6 +55,7 @@ def get_logs(
         if response["results"] != []:
             logs_found = True
         elif counter == retry_count:
+            print(f"Log search retries exceeded.. no logs found for query: {query}")
             msg = "Log search retries exceeded.. no logs found"
             raise ValueError(msg)
     return dumps(response, indent=2)

@@ -1,3 +1,5 @@
+from os import getenv
+
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
 
@@ -9,20 +11,27 @@ from common.dos_db_connection import query_dos_db
 logger = Logger(child=True)
 
 
-def search_for_pharmacy_ods_codes(connection: Connection) -> list[str]:
+def search_for_pharmacy_ods_codes(connection: Connection) -> set[str]:
     """Search for pharmacy ODS codes in DoS DB.
 
     Args:
         connection (Connection): Connection to the DoS DB.
 
     Returns:
-        list[str]: List of pharmacy ODS codes.
+        set[str]: Unique set of pharmacy ODS codes.
     """
+    starting_character = getenv("ODSCODE_STARTING_CHARACTER") or "f"
     cursor = query_dos_db(
         connection,
         "SELECT LEFT(odscode, 5) FROM services s WHERE s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-        "AND s.statusid = %(ACTIVE_STATUS_ID)s AND LEFT(REPLACE(TRIM(odscode), CHR(9), ''), 1) IN ('F', 'f')",
-        {"PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS, "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID},
+        "AND s.statusid = %(ACTIVE_STATUS_ID)s AND LEFT(REPLACE(TRIM(odscode), CHR(9), ''), 1) IN "
+        "(%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)",
+        {
+            "PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS,
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": starting_character.upper(),
+            "ODSCODE_STARTING_CHARACTER": starting_character.lower(),
+        },
     )
     odscodes = {odscode_row["left"] for odscode_row in cursor.fetchall()}
     cursor.close()
@@ -75,6 +84,7 @@ def search_for_incorrectly_profiled_z_code_on_incorrect_type(
     """
     matchable_service_types = PHARMACY_SERVICE_TYPE_IDS.copy()
     matchable_service_types.remove(service_type.DOS_TYPE_ID)
+    starting_character = getenv("ODSCODE_STARTING_CHARACTER") or "f"
     cursor = query_dos_db(
         connection,
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, statusid, ss.name status_name, "
@@ -84,12 +94,14 @@ def search_for_incorrectly_profiled_z_code_on_incorrect_type(
         "LEFT JOIN servicesgsds sgsds on s.id = sgsds.serviceid "
         "WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s "
         "AND s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) "
-        "AND LEFT(s.odscode,1) in ('F', 'f')",
+        "AND LEFT(s.odscode,1) in (%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)",
         {
             "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
             "SERVICE_TYPE_IDS": matchable_service_types,
             "SYMPTOM_GROUP": service_type.DOS_SYMPTOM_GROUP,
             "SYMPTOM_DISCRIMINATOR": service_type.DOS_SYMPTOM_DISCRIMINATOR,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": starting_character.upper(),
+            "ODSCODE_STARTING_CHARACTER": starting_character.lower(),
         },
     )
     services = [DoSService(row) for row in cursor.fetchall()]
@@ -115,6 +127,7 @@ def search_for_incorrectly_profiled_z_code_on_correct_type(
     Returns:
         list[DoSService]: List of matching services.
     """
+    starting_character = getenv("ODSCODE_STARTING_CHARACTER") or "f"
     cursor = query_dos_db(
         connection,
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, statusid, ss.name status_name, "
@@ -124,12 +137,15 @@ def search_for_incorrectly_profiled_z_code_on_correct_type(
         "LEFT JOIN servicesgsds sgsds on s.id = sgsds.serviceid "
         "WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s "
         "AND s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) "
-        "AND LEFT(s.odscode,1) in ('F', 'f') AND LENGTH(s.odscode) > 5",
+        "AND LEFT(s.odscode,1) in (%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)"
+        "AND LENGTH(s.odscode) > 5",
         {
             "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
             "SERVICE_TYPE_IDS": [service_type.DOS_TYPE_ID],
             "SYMPTOM_GROUP": service_type.DOS_SYMPTOM_GROUP,
             "SYMPTOM_DISCRIMINATOR": service_type.DOS_SYMPTOM_DISCRIMINATOR,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": starting_character.upper(),
+            "ODSCODE_STARTING_CHARACTER": starting_character.lower(),
         },
     )
     services = [DoSService(row) for row in cursor.fetchall()]

@@ -1,4 +1,4 @@
-from json import dumps
+from json import dumps, loads
 from os import getenv
 from random import randint, randrange
 from re import sub
@@ -6,6 +6,7 @@ from time import time, time_ns
 from typing import Any
 
 from .aws.aws_lambda import invoke_dos_db_handler_lambda
+from .aws.cloudwatch import get_logs, negative_log_check
 from .aws.dynamodb import get_latest_sequence_id_for_a_given_odscode
 from .context import Context
 
@@ -216,3 +217,60 @@ def generate_correlation_id(suffix: None | str = None) -> str:
         correlation_id if len(correlation_id) < 80 else correlation_id[:79]
     )  # DoS API Gateway max reference is 100 characters
     return correlation_id.replace("'", "")
+
+
+def quality_checker_log_check(
+    request_id: str,
+    odscode: str,
+    reason: str,
+    start_time: str,
+    match_on_more_than_5_character_odscode: bool = False,
+) -> list[dict]:
+    """Check logs for quality checker.
+
+    Args:
+        request_id (str): Quality checker function request id
+        odscode (str): ODS code
+        reason (str): Reason for quality check
+        start_time (str): Start time for the query
+        match_on_more_than_5_character_odscode (bool): Match on more than 5 character odscode.  Defaults to False.
+
+    Returns:
+        list[dict]: logs
+    """
+    query = f"""fields message
+| filter function_request_id="{request_id}"
+| filter report_key="QUALITY_CHECK_REPORT_KEY"
+| filter {'dos_service_odscode' if match_on_more_than_5_character_odscode else 'odscode'}="{odscode}"
+| filter message="{reason}"
+| sort @timestamp asc"""
+    results = loads(get_logs(query=query, lambda_name="quality-checker", start_time=start_time))
+    return results["results"]
+
+
+def quality_checker_negative_log_check(
+    request_id: str,
+    odscode: str,
+    reason: str,
+    start_time: str,
+    match_on_more_than_5_character_odscode: bool = False,
+) -> bool:
+    """Check no logs for quality checker.
+
+    Args:
+        request_id (str): Quality checker function request id
+        odscode (str): ODS code
+        reason (str): Reason for quality check
+        start_time (str): Start time for the query
+        match_on_more_than_5_character_odscode (bool): Match on more than 5 character odscode.  Defaults to False.
+
+    Returns:
+        bool: True if no logs found
+    """
+    query = f"""fields message
+| filter function_request_id="{request_id}"
+| filter report_key="QUALITY_CHECK_REPORT_KEY"
+| filter {'dos_service_odscode' if match_on_more_than_5_character_odscode else 'odscode'}="{odscode}"
+| filter message="{reason}"
+| sort @timestamp asc"""
+    return negative_log_check(query=query, event_lambda="quality-checker", start_time=start_time)
