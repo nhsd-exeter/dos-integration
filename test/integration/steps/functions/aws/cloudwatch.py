@@ -33,6 +33,7 @@ def get_logs(
     log_group_name = get_log_group_name(lambda_name)
     logs_found = False
     counter = 0
+    limit_exceeded_timeout = 0
     while not logs_found:
         try:
             start_query_response = LAMBDA_CLIENT_LOGS.start_query(
@@ -43,7 +44,8 @@ def get_logs(
             )
         except ClientError as error:
             if error.response["Error"]["Code"] == "LimitExceededException":
-                sleep(sleep_per_loop * 3)
+                limit_exceeded_timeout += 30
+                sleep(limit_exceeded_timeout)
                 continue
             raise
         query_id = start_query_response["queryId"]
@@ -74,6 +76,7 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
     """
     log_group_name = get_log_group_name(event_lambda)
     logs_found = False
+    limit_exceeded_timeout = 0
     while not logs_found:
         try:
             start_query_response = LAMBDA_CLIENT_LOGS.start_query(
@@ -84,7 +87,8 @@ def negative_log_check(query: str, event_lambda: str, start_time: Timestamp) -> 
             )
         except ClientError as error:
             if error.response["Error"]["Code"] == "LimitExceededException":
-                sleep(20)
+                limit_exceeded_timeout += 30
+                sleep(limit_exceeded_timeout)
                 continue
             raise
         logs_found = True

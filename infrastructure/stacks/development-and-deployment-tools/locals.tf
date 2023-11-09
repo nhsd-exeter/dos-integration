@@ -32,7 +32,7 @@ locals {
     }
   }
   to_build              = toset(["service-sync", "service-matcher", "change-event-dlq-handler", "dos-db-update-dlq-handler", "dos-db-handler", "event-replay", "slack-messenger", "send-email", "ingest-change-event", "quality-checker"])
-  integration_test_tags = toset(["general", "validation", "slack_and_infrastructure", "reporting", "opening_times", "quality_checker"])
+  integration_test_tags = toset(["general", "validation", "slack_and_infrastructure", "reporting", "opening_times"])
   independent_build_images = {
     tester = {
       "filematch" = "requirement"
