@@ -280,6 +280,7 @@ functions:
       DB_WRITER_SECRET_KEY: ${env:DB_WRITER_SECRET_KEY}
       DB_WRITER_SECRET_NAME: ${env:DB_WRITER_SECRET_NAME}
       DB_READ_AND_WRITE_USER_NAME: ${env:DB_READ_AND_WRITE_USER_NAME}
+      ODSCODE_STARTING_CHARACTER: ${env:ODSCODE_STARTING_CHARACTER}
     maximumRetryAttempts: 0
     events:
       - schedule:

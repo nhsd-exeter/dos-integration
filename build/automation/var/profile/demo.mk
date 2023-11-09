@@ -60,3 +60,8 @@ SERVICE_SYNC_MAX_CONCURRENCY := 47
 DOS_DEPLOYMENT_SECRETS := core-dos-uet/deployment
 DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_DI_READWRITE_PASSWORD
 DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME = $(DB_READ_AND_WRITE_USER_NAME)
+
+# ==============================================================================
+# Quality Checker Variables
+
+ODSCODE_STARTING_CHARACTER := F

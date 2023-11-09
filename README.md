@@ -252,7 +252,7 @@ Tests are currently separated into many tags. These tags are used to run the tes
 
 - general: Tests that do not fall into other groups
 - validation: Tests that validate incorrect data is not processed
-- slack_and_infrastructure: Tests that validate slack alerts and infrastructure
+- slack_and_infrastructure: Tests that validate slack alerts and infrastructure (including quality checker tests)
 - reporting: Tests that validate reporting
 - opening_times: Tests that check/update opening times
 

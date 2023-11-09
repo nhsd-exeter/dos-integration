@@ -145,6 +145,7 @@ batch:
         variables:
           PROFILE: dev
           TAG: slack_and_infrastructure
+          PARALLEL_TEST_COUNT: 20
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
@@ -158,6 +159,7 @@ batch:
         variables:
           PROFILE: dev
           TAG: reporting
+          PARALLEL_TEST_COUNT: 20
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
@@ -171,6 +173,7 @@ batch:
         variables:
           PROFILE: dev
           TAG: validation
+          PARALLEL_TEST_COUNT: 40
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
@@ -184,6 +187,7 @@ batch:
         variables:
           PROFILE: dev
           TAG: opening_times
+          PARALLEL_TEST_COUNT: 40
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
@@ -197,6 +201,7 @@ batch:
         variables:
           PROFILE: dev
           TAG: general
+          PARALLEL_TEST_COUNT: 40
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy

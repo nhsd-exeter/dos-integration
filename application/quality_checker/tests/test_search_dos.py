@@ -27,9 +27,15 @@ def test_search_for_pharmacy_ods_codes(mock_query_dos_db: MagicMock) -> None:
     assert response == {odscode}
     mock_query_dos_db.assert_called_once_with(
         connection,
-        "SELECT LEFT(odscode, 5) FROM services s WHERE s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-        "AND s.statusid = %(ACTIVE_STATUS_ID)s AND LEFT(REPLACE(TRIM(odscode), CHR(9), ''), 1) IN ('F', 'f')",
-        {"PHARMACY_SERVICE_TYPE_IDS": PHARMACY_SERVICE_TYPE_IDS, "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID},
+        "SELECT LEFT(odscode, 5) FROM services s WHERE s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = "
+        "%(ACTIVE_STATUS_ID)s AND LEFT(REPLACE(TRIM(odscode), CHR(9), ''), 1) IN "
+        "(%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)",
+        {
+            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137, 148, 149],
+            "ACTIVE_STATUS_ID": 1,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": "F",
+            "ODSCODE_STARTING_CHARACTER": "f",
+        },
     )
 
 
@@ -103,18 +109,18 @@ def test_search_for_incorrectly_profiled_z_code_on_incorrect_type(mock_query_dos
     mock_query_dos_db.assert_called_once_with(
         connection,
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, statusid, ss.name status_name, "
-        "publicphone, publicname, st.name service_type_name "
-        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-        "LEFT JOIN servicesgsds sgsds on s.id = sgsds.serviceid "
-        "WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s "
-        "AND s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) "
-        "AND LEFT(s.odscode,1) in ('F', 'f')",
+        "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON "
+        "s.typeid = st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id LEFT JOIN servicesgsds sgsds on s.id = "
+        "sgsds.serviceid WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s AND "
+        "s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) AND LEFT(s.odscode,1) in "
+        "(%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)",
         {
-            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "ACTIVE_STATUS_ID": 1,
             "SERVICE_TYPE_IDS": [13, 131, 132, 134, 137, 149],
-            "SYMPTOM_GROUP": BLOOD_PRESSURE.DOS_SYMPTOM_GROUP,
-            "SYMPTOM_DISCRIMINATOR": BLOOD_PRESSURE.DOS_SYMPTOM_DISCRIMINATOR,
+            "SYMPTOM_GROUP": 360,
+            "SYMPTOM_DISCRIMINATOR": 14207,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": "F",
+            "ODSCODE_STARTING_CHARACTER": "f",
         },
     )
 
@@ -133,17 +139,17 @@ def test_search_for_incorrectly_profiled_z_code_on_correct_type(mock_query_dos_d
     mock_query_dos_db.assert_called_once_with(
         connection,
         "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid, statusid, ss.name status_name, "
-        "publicphone, publicname, st.name service_type_name "
-        "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-        "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-        "LEFT JOIN servicesgsds sgsds on s.id = sgsds.serviceid "
-        "WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s "
-        "AND s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) "
-        "AND LEFT(s.odscode,1) in ('F', 'f') AND LENGTH(s.odscode) > 5",
+        "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid = "
+        "st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id LEFT JOIN servicesgsds sgsds on s.id = "
+        "sgsds.serviceid WHERE sgsds.sgid = %(SYMPTOM_GROUP)s AND sgsds.sdid = %(SYMPTOM_DISCRIMINATOR)s AND "
+        "s.statusid = %(ACTIVE_STATUS_ID)s AND s.typeid = ANY(%(SERVICE_TYPE_IDS)s) AND LEFT(s.odscode,1) in "
+        "(%(ODSCODE_STARTING_CHARACTER_CAPITALISED)s, %(ODSCODE_STARTING_CHARACTER)s)AND LENGTH(s.odscode) > 5",
         {
-            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "ACTIVE_STATUS_ID": 1,
             "SERVICE_TYPE_IDS": [13],
-            "SYMPTOM_GROUP": PALLIATIVE_CARE.DOS_SYMPTOM_GROUP,
-            "SYMPTOM_DISCRIMINATOR": PALLIATIVE_CARE.DOS_SYMPTOM_DISCRIMINATOR,
+            "SYMPTOM_GROUP": 360,
+            "SYMPTOM_DISCRIMINATOR": 14167,
+            "ODSCODE_STARTING_CHARACTER_CAPITALISED": "F",
+            "ODSCODE_STARTING_CHARACTER": "f",
         },
     )

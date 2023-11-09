@@ -32,6 +32,7 @@ def test_log_to_quality_check_report(mock_warning_logger: MagicMock, mock_qualit
             "dos_region": dos_service.get_region(),
             "z-code": "",
             "reason": reason,
+            "odscode": dos_service.odscode[:5],
         },
     )
     mock_quality_check_report_metric.assert_called_once()

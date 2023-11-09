@@ -14,7 +14,7 @@ from pytz import timezone
 
 from .functions.api import process_payload, process_payload_with_sequence
 from .functions.assertions import assert_standard_closing, assert_standard_openings
-from .functions.aws.aws_lambda import re_process_payload
+from .functions.aws.aws_lambda import invoke_quality_checker_lambda, re_process_payload
 from .functions.aws.cloudwatch import get_logs, negative_log_check
 from .functions.aws.dynamodb import get_latest_sequence_id_for_a_given_odscode, get_stored_events_from_dynamo_db
 from .functions.aws.s3 import get_s3_email_file
@@ -41,7 +41,7 @@ from .functions.dos.get_data import (
     get_services_table_location_data,
     wait_for_service_update,
 )
-from .functions.dos.translation import get_service_table_field_name
+from .functions.dos.translation import get_service_table_field_name, get_status_id
 from .functions.generator import (
     add_blood_pressure_to_change_event,
     add_contraception_to_change_event,
@@ -49,6 +49,8 @@ from .functions.generator import (
     add_single_opening_day,
     add_specified_openings_to_dos,
     add_standard_openings_to_dos,
+    apply_blood_pressure_to_service,
+    apply_contraception_to_service,
     apply_palliative_care_to_service,
     build_change_event,
     build_change_event_contacts,
@@ -70,6 +72,8 @@ from .functions.utils import (
     generate_random_int,
     get_address_string,
     get_expected_data,
+    quality_checker_log_check,
+    quality_checker_negative_log_check,
 )
 
 scenarios(
@@ -80,6 +84,7 @@ scenarios(
     "../features/F005_Support_Functions.feature",
     "../features/F006_Opening_Times.feature",
     "../features/F007_Reporting.feature",
+    "../features/F008_Quality_Checker.feature",
 )
 FAKER = Faker("en_GB")
 
@@ -133,7 +138,6 @@ def a_service_table_entry_is_created(context: Context, ods_code: int = 0, servic
     if ods_code == 0:
         ods_code = str(randint(10000, 99999))
     query_values = {
-        "id": str(randint(100000, 999999)),
         "uid": f"test{randint(10000, 99999)!s}",
         "service_type": service_type,
         "service_status": 1,
@@ -297,8 +301,13 @@ def _(context: Context, odscode_character_length: int) -> Context:
     return context
 
 
-@given(parse('a pharmacy service is created with "{odscode_character_length:d}" character odscode '
-        'and type "{service_type:d}"'), target_fixture="context")
+@given(
+    parse(
+        'a pharmacy service is created with "{odscode_character_length:d}" character odscode '
+        'and type "{service_type:d}"',
+    ),
+    target_fixture="context",
+)
 def _(context: Context, odscode_character_length: int, service_type: int) -> Context:
     """Create a basic service with a specific service type and an ods code of a certain length.
 
@@ -501,8 +510,7 @@ def service_table_entry_is_committed(context: Context) -> Context:
     Returns:
         Context: The context object.
     """
-    service_id = commit_new_service_to_dos(context)
-    context.service_id = service_id
+    context = commit_new_service_to_dos(context)
     ce_state = False
     if "standard_openings" in context.generator_data:
         add_standard_openings_to_dos(context)
@@ -1095,7 +1103,7 @@ def check_service_history_not_updated(context: Context) -> Context:
     """
     service_history_status = service_history_negative_check(context.service_id)
     assert service_history_status == "Not Updated", "ERROR: Service history was unexpectedly updated"
-    #will revisit to change the assertion type to boolean rather string
+    # will revisit to change the assertion type to boolean rather string
     return context
 
 
@@ -1669,4 +1677,160 @@ def _(context: Context) -> Context:
     count = [result["value"] for result in results[0] if result["field"] == "@message"]
     assert value["dos_service_typeid"] == 13, "ERROR: Incorrect service type id found"
     assert len(count) == 1, "ERROR: More than one log entry found"
+    return context
+
+
+@given(
+    parse(
+        "{service_count:d} {service_status} services of type {service_type:d} for an odscode starting with {starting_character}",  # noqa: E501
+    ),
+    target_fixture="context",
+)
+def _(context: Context, service_count: int, service_status: str, service_type: int, starting_character: str) -> Context:
+    """Create number of services of a given type and status for an odscode starting with a specific starting character.
+
+    Args:
+        context (Context): The context object.
+        service_count (int): The number of services.
+        service_status (str): The service status.
+        service_type (int): The service type.
+        starting_character (str): The starting character.
+
+    Returns:
+        Context: The context object.
+    """
+    odscode = f"{starting_character.upper()}{randint(1000, 9999)}"
+    context.ods_code = odscode
+    for _ in range(service_count):
+        context = a_service_table_entry_is_created(context, odscode)
+        context.generator_data["service_status"] = get_status_id(service_status)
+        context.generator_data["service_type"] = service_type
+        context = service_table_entry_is_committed(context)
+    return context
+
+
+@given(
+    parse(
+        "an active service of type {service_type:d} for a {character_count:d} character odscode starting with {starting_character}",  # noqa: E501
+    ),
+    target_fixture="context",
+)
+def _(context: Context, service_type: int, character_count: int, starting_character: str) -> Context:
+    """Create an active service of given type for a defined length odscode starting with a specific starting character.
+
+    Args:
+        context (Context): The context object.
+        service_type (int): The service type.
+        character_count (int): The character count.
+        starting_character (str): The starting character.
+
+    Returns:
+        Context: The context object.
+    """
+    min_value = f"{'0'* (character_count-2)} "
+    max_value = "9" * (character_count - 1)
+    odscode = f"{starting_character}{randint(int(min_value), int(max_value))}"
+    context.ods_code = odscode
+    context = a_service_table_entry_is_created(context, odscode)
+    context.generator_data["service_type"] = service_type
+    return service_table_entry_is_committed(context)
+
+
+@given(parse("the DoS service has {commissioned_service} Z code"), target_fixture="context")
+def _(context: Context, commissioned_service: str) -> Context:
+    match commissioned_service.lower():
+        case "blood pressure":
+            apply_blood_pressure_to_service(context)
+        case "contraception":
+            apply_contraception_to_service(context)
+        case "palliative care":
+            apply_palliative_care_to_service(context)
+        case _:
+            msg = f"Unexpected commissioned service: {commissioned_service}"
+            raise ValueError(msg)
+    return context
+
+
+@when("the quality checker is run", target_fixture="context")
+def _(context: Context) -> Context:
+    """Run the quality checker.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    context.start_time = dt.now(tz=timezone("Europe/London")).timestamp()
+    context.response = invoke_quality_checker_lambda()
+    return context
+
+
+@then(parse("the following {reason} is reported {reason_count:d} times"), target_fixture="context")
+def _(context: Context, reason: str, reason_count: int) -> Context:
+    """Assert the quality checker reports the expected reason.
+
+    Args:
+        context (Context): The context object.
+        reason (str): The reason in the report.
+        reason_count (int): The number of times the reason is reported.
+
+    Returns:
+        Context: The context object.
+    """
+    logs = quality_checker_log_check(
+        request_id=context.response["ResponseMetadata"]["RequestId"],
+        odscode=context.ods_code or context.generator_data["odscode"],
+        reason=reason,
+        start_time=context.start_time,
+    )
+    logs = [log[0]["value"] for log in logs if log[0]["field"] == "message"]
+    assert len(logs) == reason_count, f"ERROR: Expected {reason_count} {reason} logs, found {len(logs)}"
+    return context
+
+
+@then(parse("the following {reason} is reported {reason_count:d} times with a long odscode"), target_fixture="context")
+def _(context: Context, reason: str, reason_count: int) -> Context:
+    """Assert the quality checker reports the expected reason.
+
+    Args:
+        context (Context): The context object.
+        reason (str): The reason in the report.
+        reason_count (int): The number of times the reason is reported.
+
+    Returns:
+        Context: The context object.
+    """
+    logs = quality_checker_log_check(
+        request_id=context.response["ResponseMetadata"]["RequestId"],
+        odscode=context.ods_code or context.generator_data["odscode"],
+        reason=reason,
+        start_time=context.start_time,
+        match_on_more_than_5_character_odscode=True,
+    )
+    logs = [log[0]["value"] for log in logs if log[0]["field"] == "message"]
+    assert len(logs) == reason_count, f"ERROR: Expected {reason_count} {reason} logs, found {len(logs)}"
+    return context
+
+
+@then(parse("the following {reason} is not reported"), target_fixture="context")
+def _(context: Context, reason: str) -> Context:
+    """Assert the quality checker reports the expected reason.
+
+    Args:
+        context (Context): The context object.
+        reason (str): The reason in the report.
+
+    Returns:
+        Context: The context object.
+    """
+    assert (
+        quality_checker_negative_log_check(
+            request_id=context.response["ResponseMetadata"]["RequestId"],
+            odscode=context.ods_code or context.generator_data["odscode"],
+            reason=reason,
+            start_time=context.start_time,
+        )
+        is True
+    ), f"ERROR: {reason} logs found"
     return context
