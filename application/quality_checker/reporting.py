@@ -36,6 +36,7 @@ def log_to_quality_check_report(
                 "dos_region": service.get_region(),
                 "z-code": z_code,
                 "reason": reason,
+                "odscode": service.odscode[:5],
             },
         )
         quality_check_report_metric()
