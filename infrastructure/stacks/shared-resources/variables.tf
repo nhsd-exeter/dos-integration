@@ -78,6 +78,11 @@ variable "ip_address_secret" {
   description = "IP Address secret"
 }
 
+variable "project_deployment_secrets" {
+  type        = string
+  description = "Project deployment secrets"
+}
+
 # ############################
 # # ROUTE53
 # ############################
@@ -208,19 +213,10 @@ variable "waf_aws_sqli_rule_name" {
 }
 
 # ##############
-# # IAM
-# ##############
-
-variable "aws_sso_role" {
-  type        = string
-  description = "The name of the role to assume for AWS SSO"
-}
-
-# ##############
 # # PARAMETER STORE
 # ##############
 
-variable "pharmacy_first_phase_one_parameter_name" {
+variable "pharmacy_first_phase_one_parameter" {
   type        = string
   description = "The name of the parameter for the pharmacy first phase one feature flag"
 }

@@ -28,7 +28,6 @@ DB_READER_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
 DB_WRITER_SECRET_NAME := core-dos-uet-database-upgrade/deployment
 DB_WRITER_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_USER_NAME_SECRET_NAME = uec-dos-int-demo/deployment
-DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
 DB_READER_SECRET_NAME := core-dos-uet-database-upgrade/deployment
 DB_READER_SECRET_KEY := DB_DI_READONLY_PASSWORD
 DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-demo/deployment
@@ -38,12 +37,7 @@ DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 TF_VAR_ip_address_secret := uec-dos-int-demo-ip-addresses-allowlist
 
 # Slack Secrets
-SLACK_WEBHOOK_SECRET_NAME = uec-dos-int-demo/deployment
-SLACK_WEBHOOK_SECRET_KEY = SLACK_WEBHOOK
 SLACK_ALERT_CHANNEL := dos-integration-dev-status
-
-# Tag Secrets
-TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 
 # WAF
 WAF_ENABLED := true

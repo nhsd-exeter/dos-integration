@@ -1,3 +1,10 @@
+resource "aws_cloudwatch_log_group" "waf_logs" {
+  name              = var.waf_log_group_name
+  retention_in_days = "30"
+  kms_key_id        = aws_kms_key.signing_key.arn
+}
+
+
 resource "aws_wafv2_web_acl" "di_endpoint_waf" {
   count = var.waf_enabled ? 1 : 0
   #checkov:skip=CKV_AWS_192

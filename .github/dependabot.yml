@@ -36,19 +36,7 @@ updates:
     target-branch: "develop"
 
   - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/after-lambda-deployment"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/api-key"
-    schedule:
-      interval: "monthly"
-    target-branch: "develop"
-
-  - package-ecosystem: "terraform"
-    directory: "/infrastructure/stacks/before-lambda-deployment"
     schedule:
       interval: "monthly"
     target-branch: "develop"
@@ -61,6 +49,12 @@ updates:
 
   - package-ecosystem: "terraform"
     directory: "/infrastructure/stacks/shared-resources"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+
+  - package-ecosystem: "terraform"
+    directory: "/infrastructure/stacks/application"
     schedule:
       interval: "monthly"
     target-branch: "develop"
