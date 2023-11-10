@@ -44,7 +44,7 @@ The integration test suite is contained within test/integration and comprises a 
 
 The initial setup of the test suite is the same as the DoS Integration project as a whole. Please follow the setup steps contained within README.md in order to have the correct python and docker environments setup locally, as well as the correct AWS credentials. Once setup, the test suite can be run.
 The test suite also requires a connection to the DoS nonprod VPN in order to validate changes made to the DOS DB.
-The test suite also requires `tx-mfa` to be setup for the AWS account being used, otherwise multi-threading of tests will not function.
+The test suite also requires `assume` to be setup for the AWS account being used, otherwise multi-threading of tests will not function.
 
 ## Running the test suite
 

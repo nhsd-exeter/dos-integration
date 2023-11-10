@@ -72,7 +72,7 @@ an appropriate name. After click next for the last time check the summary is doi
 
 ### **Getting the DI Extract**
 
-To get the DoS Integration (DI) extract open the terminal and `tx-mfa` into the Prod account then from a suitable directory run the following aws command:
+To get the DoS Integration (DI) extract open the terminal and `assume` into the Prod account then from a suitable directory run the following aws command:
 
     aws dynamodb scan --table-name [table_name] --index-name gsi_ods_sequence --output json > di_extract.json
 
