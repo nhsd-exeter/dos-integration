@@ -12,6 +12,9 @@
     },
     {
       "pattern": "^https://ddc-exeter-data-clone-prod-ddc-data-clone.k8s-prod.texasplatform.uk/"
+    },
+    {
+      "pattern": "^*@nhs.net"
     }
   ],
   "timeout": "5s"
