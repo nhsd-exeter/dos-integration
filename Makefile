@@ -419,21 +419,6 @@ trigger-dos-deployment-pipeline:
 	echo Jenkins Job expected to have finished
 	rm -rf jenkins.cookies
 
-python-linting:
-	make docker-run-ruff
-
-python-code-checks:
-	make python-check-dead-code
-	make python-linting
-	make unit-test
-	echo "Python code checks completed"
-
-python-check-dead-code:
-	make -s docker-run-python \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
-		DIR=$(APPLICATION_DIR) \
-		CMD="python -m vulture"
-
 create-ecr-repositories:
 	make docker-create-repository NAME=change-event-dlq-handler
 	make docker-create-repository NAME=dos-db-handler
@@ -587,15 +572,32 @@ docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,
 
 
 # ==============================================================================
-# Ruff
+# Python Targets (including Ruff)
+
+python-code-checks:
+	make python-check-dead-code
+	make python-run-ruff-checks
+	make unit-test
+	echo "Python code checks completed"
+
+python-check-dead-code:
+	make -s docker-run-python \
+		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		DIR=$(APPLICATION_DIR) \
+		CMD="python -m vulture"
 
 docker-run-ruff: # Runs ruff tests - mandatory: RUFF_OPTS=[options]
 	make -s docker-run \
 	IMAGE=$$(make _docker-get-reg)/tester \
-		CMD="ruff check . $(RUFF_OPTS)"
+		CMD="ruff $(RUFF_OPTS)"
 
-python-ruff-fix: # Auto fixes ruff warnings
-	make docker-run-ruff RUFF_OPTS="--fix"
+python-run-ruff-checks: # Auto fixes ruff warnings
+	make -s docker-run-ruff RUFF_OPTS="format --check ."
+	make docker-run-ruff RUFF_OPTS="check ."
+
+python-run-ruff-fixes: # Auto fixes ruff warnings
+	make -s docker-run-ruff RUFF_OPTS="format . "
+	make docker-run-ruff RUFF_OPTS="check . --fix"
 
 .SILENT: docker-run-ruff \
 	commit-date-hash-tag \

@@ -50,6 +50,8 @@ ignore = [
   "ANN101", # Missing type annotation for self in method,
   "DTZ007", # Allow Datetime used as timezone in tests.
   "TID252", # Allow Relative imports from parent modules
+  "COM812", # Ignore due to conflict with Ruff formatter
+  "ISC001", # Ignore due to conflict with Ruff formatter
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
@@ -76,9 +78,12 @@ fixable = [
   "EM",
   "ERA",
   "EXE",
+  "FLY",
   "FBT",
   "ICN",
   "INP",
+  "PERF",
+  "FURB",
   "ISC",
   "NPY",
   "PD",

@@ -68,9 +68,9 @@ jobs:
       - name: Tester Build
         run: |
           make tester-build
-      - name: Check Python Formatting
+      - name: Run Python Linting & Formatting
         run: |
-          make python-linting
+          make python-run-ruff-checks
       - name: Check for Python Dead Code
         run: |
           make python-check-dead-code
