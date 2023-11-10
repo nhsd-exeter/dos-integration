@@ -66,7 +66,6 @@ class ServiceHistories:
             self.history_already_exists = True
         else:
             # Change History does not exist in the database
-            logger.warning(f"Service history does not exist in the database for serviceid {self.service_id}")
             self.existing_service_history = {}
             self.history_already_exists = False
 
@@ -212,14 +211,13 @@ class ServiceHistories:
         # Get local datetime and format it to DoS date/time format
         current_date_time = datetime.now(timezone("Europe/London")).strftime("%Y-%m-%d %H:%M:%S")
         # Rename the new_change key to the current epoch time
-
         self.service_history[current_epoch_time] = self.service_history.pop("new_change")
         # Add the current time to the service_histories json
         self.service_history[current_epoch_time]["initiator"]["timestamp"] = current_date_time
         self.service_history[current_epoch_time]["approver"]["timestamp"] = current_date_time
         # Merge the new history changes into the existing history changes
         json_service_history = dumps(self.service_history | self.existing_service_history)
-        logger.debug("Service history to be saved", extra={"service_history": json_service_history})
+        logger.debug("Service history to be saved", service_history=json_service_history)
         cursor = query_dos_db(
             connection=connection,
             query=(
@@ -231,7 +229,6 @@ class ServiceHistories:
                 "CURRENT_DATE_TIME": current_date_time,
                 "SERVICE_ID": self.service_id,
             },
-            log_vars=False,
         )
         cursor.close()
         if self.history_already_exists:
@@ -242,7 +239,6 @@ class ServiceHistories:
                     """UPDATE servicehistories SET history = %(SERVICE_HISTORY)s WHERE serviceid = %(SERVICE_ID)s;"""
                 ),
                 query_vars={"SERVICE_HISTORY": json_service_history, "SERVICE_ID": self.service_id},
-                log_vars=False,
             )
             logger.info(f"Service history updated for serviceid {self.service_id}")
             cursor.close()
@@ -255,7 +251,6 @@ class ServiceHistories:
                     """VALUES (%(SERVICE_ID)s, %(SERVICE_HISTORY)s);"""
                 ),
                 query_vars={"SERVICE_ID": self.service_id, "SERVICE_HISTORY": json_service_history},
-                log_vars=False,
             )
             cursor.close()
             logger.warning(f"Service history created in the database for serviceid {self.service_id}")

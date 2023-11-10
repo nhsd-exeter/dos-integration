@@ -72,9 +72,7 @@ def validate_organisation_type_id(org_type_id: str) -> None:
         org_type_id (str): organisation type id
     """
     if org_type_id == PHARMACY_ORG_TYPE_ID:
-        logger.debug(
-            f"Org type id: {org_type_id} validated as a pharmacy",
-        )
+        logger.debug(f"Org type id: {org_type_id} validated as a pharmacy")
     else:
         logger.error(f"Org type id: {org_type_id} is not a pharmacy", org_type_id=org_type_id)
         msg = f"Unexpected Org Type ID: '{org_type_id}'"

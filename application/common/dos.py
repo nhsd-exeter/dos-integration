@@ -14,7 +14,7 @@ from .constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
     PHARMACY_SERVICE_TYPE_IDS,
 )
-from .dos_db_connection import connect_to_dos_db_replica, query_dos_db
+from .dos_db_connection import connect_to_db_reader, query_dos_db
 from .dos_location import DoSLocation
 from .opening_times import OpenPeriod, SpecifiedOpeningTime, StandardOpeningTimes
 from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
@@ -118,8 +118,6 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
         list[DoSService]: List of DoSService objects with matching first 5
         digits of odscode, taken from DoS database
     """
-    logger.info(f"Searching for Pharmacy DoS services with ODSCode that matches '{odscode}'")
-
     named_args = {
         "ODS": f"{odscode[:5]}%",
         "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
@@ -145,7 +143,7 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
         "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
         f"AND s.statusid = %(ACTIVE_STATUS_ID)s {pharmacy_first_condition}"
     )
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)
         # Create list of DoSService objects from returned rows
         services = [DoSService(row) for row in cursor.fetchall()]
@@ -164,7 +162,7 @@ def get_dos_locations(postcode: str | None = None, try_cache: bool = True) -> li
     Returns:
         list[DoSLocation]: List of DoSLocation objects with matching postcode, taken from DoS database
     """
-    logger.info(f"Searching for DoS locations with postcode of '{postcode}'")
+    logger.debug(f"Searching for DoS locations with postcode of '{postcode}'")
     norm_pc = postcode.replace(" ", "").upper()
     global dos_location_cache  # noqa: PLW0602
     if try_cache and norm_pc in dos_location_cache:
@@ -179,7 +177,7 @@ def get_dos_locations(postcode: str | None = None, try_cache: bool = True) -> li
         # Safe as conditional is configurable but variables is inputted to psycopg as variables
     )
 
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         cursor = query_dos_db(
             connection=connection,
             query=sql_command,
@@ -217,7 +215,7 @@ def get_specified_opening_times_from_db(connection: Connection, service_id: int)
         List[SpecifiedOpeningTime]: List of Specified Opening times with
         matching serviceid
     """
-    logger.info(f"Searching for specified opening times with serviceid that matches '{service_id}'")
+    logger.debug(f"Searching for specified opening times with serviceid that matches '{service_id}'")
 
     sql_query = (
         "SELECT ssod.serviceid, ssod.date, ssot.starttime, ssot.endtime, ssot.isclosed "
@@ -239,7 +237,7 @@ def get_standard_opening_times_from_db(connection: Connection, service_id: int) 
     If the service id does not even match any service this function will still return a blank StandardOpeningTime
     with no opening periods.
     """
-    logger.info(f"Searching for standard opening times with serviceid that matches '{service_id}'")
+    logger.debug(f"Searching for standard opening times with serviceid that matches '{service_id}'")
     sql_command = (
         "SELECT sdo.serviceid, sdo.dayid, otd.name, sdot.starttime, sdot.endtime "
         "FROM servicedayopenings sdo "
@@ -397,7 +395,7 @@ def get_region(dos_service_id: str) -> str:
     Returns:
         The region of the service
     """
-    with connect_to_dos_db_replica() as connection:
+    with connect_to_db_reader() as connection:
         logger.debug("Getting region for service")
         sql_command = """WITH
 RECURSIVE servicetree as

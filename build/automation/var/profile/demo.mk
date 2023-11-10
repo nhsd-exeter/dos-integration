@@ -4,16 +4,16 @@
 # Service variables
 DEPLOYMENT_SECRETS = $(PROJECT_ID)-demo/deployment # Move to project.mk when nonprod profiles are merged
 
-LOG_LEVEL:= INFO
+LOG_LEVEL := INFO
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-put-cluster-14
-DB_SERVER_NAME := uec-core-dos-put-cluster-14-one
-DB_REPLICA_SERVER_NAME := uec-core-dos-put-cluster-14-two
+DB_WRITER_NAME := uec-core-dos-put-cluster-14-one
+DB_READER_NAME := uec-core-dos-put-cluster-14-two
 
 # DB Route 53s
-DB_ROUTE_53 := uec-core-dos-put-primary.dos-db-put
-DB_REPLICA_53 := uec-core-dos-put-db-replica-di.dos-db-put
+DB_WRITER_ROUTE_53 := uec-core-dos-put-primary.dos-db-put
+DB_READER_ROUTE_53 := uec-core-dos-put-db-replica-di.dos-db-put
 
 # DB Connection Variables
 DB_PORT := 5432
@@ -21,16 +21,16 @@ DB_NAME := pathwaysdos_uat3
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DOS_DB_SG_NAME := live-lk8s-prod-core-dos-db-put-rds-postgres-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
+DB_WRITER_SG_NAME := live-lk8s-prod-core-dos-db-put-rds-postgres-sg
+DB_READER_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
 
 # DB Secrets
-DB_SECRET_NAME := core-dos-uet-database-upgrade/deployment
-DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
+DB_WRITER_SECRET_NAME := core-dos-uet-database-upgrade/deployment
+DB_WRITER_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_USER_NAME_SECRET_NAME = uec-dos-int-demo/deployment
 DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
-DB_REPLICA_SECRET_NAME := core-dos-uet-database-upgrade/deployment
-DB_REPLICA_SECRET_KEY := DB_DI_READONLY_PASSWORD
+DB_READER_SECRET_NAME := core-dos-uet-database-upgrade/deployment
+DB_READER_SECRET_KEY := DB_DI_READONLY_PASSWORD
 DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-demo/deployment
 DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
@@ -49,11 +49,6 @@ TAG_SECRET_MANAGER := uec-dos-int-live/deployment
 WAF_ENABLED := true
 
 # ==============================================================================
-# Organisation Types Feature Flags
-
-ACCEPTED_ORG_TYPES := PHA
-
-# ==============================================================================
 # Performance variables
 
 SERVICE_MATCHER_MAX_CONCURRENCY := 28
@@ -65,3 +60,8 @@ SERVICE_SYNC_MAX_CONCURRENCY := 47
 DOS_DEPLOYMENT_SECRETS := core-dos-uet/deployment
 DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := DB_DI_READWRITE_PASSWORD
 DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME = $(DB_READ_AND_WRITE_USER_NAME)
+
+# ==============================================================================
+# Quality Checker Variables
+
+ODSCODE_STARTING_CHARACTER := F

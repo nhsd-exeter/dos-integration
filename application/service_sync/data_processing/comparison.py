@@ -65,9 +65,10 @@ def compare_location(changes: ChangesToDoS) -> tuple[bool, bool, DoSLocation | N
     """  # noqa: E501
     before_title_case_address = changes.nhs_entity.address_lines
     changes.nhs_entity.address_lines = list(map(format_address, changes.nhs_entity.address_lines))
-    logger.info(
+    logger.debug(
         f"Address after title casing: {changes.nhs_entity.address_lines}",
-        extra={"before": before_title_case_address, "after": changes.nhs_entity.address_lines},
+        before=before_title_case_address,
+        after=changes.nhs_entity.address_lines,
     )
     nhs_uk_address_string = "$".join(changes.nhs_entity.address_lines)
     dos_address = changes.dos_service.address
@@ -152,22 +153,26 @@ def compare_specified_opening_times(changes: ChangesToDoS) -> bool:
     if len(nhs_spec_open_dates) != len(future_nhs_spec_open_dates):
         logger.info(
             "Removing Specified opening times that occur in the past",
-            extra={"all_nhs": nhs_spec_open_dates, "future_nhs": future_nhs_spec_open_dates},
+            all_nhs=nhs_spec_open_dates,
+            future_nhs=future_nhs_spec_open_dates,
         )
     if SpecifiedOpeningTime.equal_lists(dos_spec_open_dates, future_nhs_spec_open_dates):
         logger.info(
             "Specified opening times are equal, so no change",
-            extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+            dos=dos_spec_open_dates,
+            nhs=future_nhs_spec_open_dates,
         )
         return False
 
     logger.info(
         "Specified opening times not equal",
-        extra={"dos": dos_spec_open_dates, "nhs": future_nhs_spec_open_dates},
+        dos=dos_spec_open_dates,
+        nhs=future_nhs_spec_open_dates,
     )
     changes.current_specified_opening_times = dos_spec_open_dates
     changes.new_specified_opening_times = future_nhs_spec_open_dates
     return True
+
 
 def compare_palliative_care(changes: ChangesToDoS) -> bool:
     """Compares the palliative care of from the dos_service and nhs_entity.
@@ -177,6 +182,7 @@ def compare_palliative_care(changes: ChangesToDoS) -> bool:
     """
     return compare_commissioned_service(changes=changes, service_type=PALLIATIVE_CARE)
 
+
 def compare_blood_pressure(changes: ChangesToDoS) -> bool:
     """Compares the blood pressure of from the dos_service and nhs_entity.
 
@@ -184,6 +190,7 @@ def compare_blood_pressure(changes: ChangesToDoS) -> bool:
         bool: True if the blood pressure is different, False if not
     """
     return compare_commissioned_service(changes=changes, service_type=BLOOD_PRESSURE)
+
 
 def compare_contraception(changes: ChangesToDoS) -> bool:
     """Compares the blood pressure services of the dos_service and nhs_entity.
@@ -193,6 +200,7 @@ def compare_contraception(changes: ChangesToDoS) -> bool:
     """
     return compare_commissioned_service(changes=changes, service_type=CONTRACEPTION)
 
+
 def compare_commissioned_service(changes: ChangesToDoS, service_type: CommissionedServiceType) -> bool:
     """Compares the same sub service of the dos_service and nhs_entity.
 
@@ -201,20 +209,18 @@ def compare_commissioned_service(changes: ChangesToDoS, service_type: Commission
     """
     type_name = service_type.TYPE_NAME.replace(" ", "_").lower()
     current_comm_service = getattr(changes.dos_service, type_name, None)
-    setattr(changes, "current_" + type_name, current_comm_service)
+    setattr(changes, f"current_{type_name}", current_comm_service)
     new_comm_service = getattr(changes.nhs_entity, type_name, None)
-    setattr(changes, "new_" + type_name, new_comm_service)
+    setattr(changes, f"new_{type_name}", new_comm_service)
 
     if current_comm_service != new_comm_service:
         logger.info(
-            f"{service_type.TYPE_NAME} is not equal, DoS='{current_comm_service}' != NHS UK='{new_comm_service}'",  # noqa: E501
+            f"{service_type.TYPE_NAME} is not equal, DoS='{current_comm_service}' != NHS UK='{new_comm_service}'",
             extra={
                 f"dos_{service_type.TYPE_NAME}": current_comm_service,
                 f"nhsuk_{service_type.TYPE_NAME}": new_comm_service,
             },
         )
         return True
-    logger.info(
-        f"{service_type.TYPE_NAME} is equal, DoS='{current_comm_service}' == NHS UK='{new_comm_service}'",
-    )
+    logger.info(f"{service_type.TYPE_NAME} is equal, DoS='{current_comm_service}' == NHS UK='{new_comm_service}'")
     return False

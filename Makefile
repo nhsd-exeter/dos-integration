@@ -31,7 +31,7 @@ build-and-push: # Build lambda docker images and pushes them to ECR
 
 deploy: # Deploys whole project - mandatory: PROFILE
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources,before-lambda-deployment
+	make terraform-apply-auto-approve STACKS=api-key,shared-resources,before-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-deploy
 	make terraform-apply-auto-approve STACKS=after-lambda-deployment,blue-green-link
@@ -41,7 +41,7 @@ undeploy: # Undeploys whole project - mandatory: PROFILE
 	make terraform-destroy-auto-approve STACKS=blue-green-link,after-lambda-deployment
 	eval "$$(make -s populate-serverless-variables)"
 	make serverless-remove VERSION="any"
-	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources,appconfig
+	make terraform-destroy-auto-approve STACKS=before-lambda-deployment,shared-resources
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -52,8 +52,8 @@ build-and-deploy: # Builds and Deploys whole project - mandatory: PROFILE
 
 populate-deployment-variables:
 	echo "unset AWS_PROFILE"
-	echo "export DB_SERVER=$(DB_ROUTE_53)"
-	echo "export DB_REPLICA_SERVER=$(DB_REPLICA_53)"
+	echo "export DB_WRITER_SERVER=$(DB_WRITER_ROUTE_53)"
+	echo "export DB_READER_SERVER=$(DB_READER_ROUTE_53)"
 	DEPLOYMENT_SECRETS=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS))
 	echo "export DB_READ_AND_WRITE_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_USER_NAME_SECRET_KEY)')"
 	echo "export DB_READ_ONLY_USER_NAME=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DB_READ_ONLY_USER_NAME_SECRET_KEY)')"
@@ -79,10 +79,8 @@ unit-test-local:
 	python -m pytest --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=. -vv
 
 unit-test:
-	FOLDER_PATH=$$(make -s get-unit-test-path)
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="python -m pytest $$FOLDER_PATH --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
+	make -s docker-run-tester \
+	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
 coverage-report: # Runs whole project coverage unit tests
@@ -95,17 +93,11 @@ coverage-html:
 		IMAGE=$$(make _docker-get-reg)/tester:latest \
 		ARGS=$(UNIT_TEST_ARGS)
 
-get-unit-test-path:
-	if [ -z "$(LAMBDA_FOLDER_NAME)" ]; then
-		echo application
-	else
-		echo application/$(LAMBDA_FOLDER_NAME)
-	fi
-
 UNIT_TEST_ARGS=" \
 		-e POWERTOOLS_LOG_DEDUPLICATION_DISABLED="1" \
 		--volume $(APPLICATION_DIR)/common:/tmp/.packages/common \
 		--volume $(APPLICATION_DIR)/change_event_dlq_handler:/tmp/.packages/change_event_dlq_handler \
+		--volume $(APPLICATION_DIR)/dos_db_handler:/tmp/.packages/dos_db_handler \
 		--volume $(APPLICATION_DIR)/dos_db_update_dlq_handler:/tmp/.packages/dos_db_update_dlq_handler \
 		--volume $(APPLICATION_DIR)/event_replay:/tmp/.packages/event_replay \
 		--volume $(APPLICATION_DIR)/ingest_change_event:/tmp/.packages/ingest_change_event \
@@ -113,20 +105,14 @@ UNIT_TEST_ARGS=" \
 		--volume $(APPLICATION_DIR)/service_matcher:/tmp/.packages/service_matcher \
 		--volume $(APPLICATION_DIR)/service_sync:/tmp/.packages/service_sync \
 		--volume $(APPLICATION_DIR)/slack_messenger:/tmp/.packages/slack_messenger \
+		--volume $(APPLICATION_DIR)/quality_checker:/tmp/.packages/quality_checker \
 		"
 
-integration-test-autoflags-no-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	make integration-test TAGS="pharmacy_no_log_searches" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
-
-integration-test-autoflags-cloudwatch-logs: # End to end test DI project - mandatory: PROFILE; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
-	make integration-test TAGS="pharmacy_cloudwatch_queries" PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PARALLEL_TEST_COUNT=$(PARALLEL_TEST_COUNT)
-
-integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
+integration-test: # End to end test DI project - mandatory: PROFILE, TAG=[complete|dev]; optional: ENVIRONMENT, PARALLEL_TEST_COUNT
 	RUN_ID=$$RANDOM
 	echo RUN_ID=$$RUN_ID
-	make -s docker-run-tools \
-	IMAGE=$$(make _docker-get-reg)/tester:latest \
-	CMD="pytest steps -k $(TAGS) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
+	make -s docker-run-tester \
+	CMD="pytest steps -k $(TAG) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
 	DIR=./test/integration \
 	ARGS=" \
 		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
@@ -135,8 +121,7 @@ integration-test: # End to end test DI project - mandatory: PROFILE, TAGS=[compl
 
 production-smoke-test: # Smoke test DI project - mandatory: PROFILE; optional: ENVIRONMENT
 	if [ "$(PROFILE)" != "live" ]; then
-		make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester:latest \
+		make -s docker-run-tester \
 		CMD="pytest -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./results/testresults.json" \
 		DIR=./test/smoke \
 		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
@@ -169,58 +154,64 @@ remove-development-environments: # Removes development environments - mandatory:
 	done
 
 # ==============================================================================
+# Change Event Dead Letter Queue Handler (change-event-dlq-handler)
+
+change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
+
+# ==============================================================================
+# DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler)
+
+dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
+
+# ==============================================================================
+# DoS DB Checker Handler (dos-db-handler)
+
+dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
+
+# ==============================================================================
+# Event Replay lambda (event-replay)
+
+event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=event-replay
+
+# ==============================================================================
+# Ingest Change Event
+
+ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+
+# ==============================================================================
+# Send Email
+
+send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=send-email
+
+# ==============================================================================
+# Service Matcher
+
+service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
+
+# ==============================================================================
 # Service Sync
 
-service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+service-sync-build-and-deploy: ### Build and deploy service sync lambda docker image - mandatory: PROFILE, ENVIRONMENT
 	make build-and-deploy-single-function FUNCTION_NAME=service-sync
 
 # ==============================================================================
 # Slack Messenger
 
-slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
+slack-messenger-build-and-deploy: ### Build and deploy slack messenger lambda docker image - mandatory: PROFILE, ENVIRONMENT
 	make build-and-deploy-single-function FUNCTION_NAME=slack-messenger
 
 # ==============================================================================
-# Service Matcher
+# Quality Checker
 
-service-matcher-build-and-deploy: ### Build and deploy service matcher lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=service-matcher
-
-# ==============================================================================
-# Change Event Dead Letter Queue Handler (change-event-dlq-handler)
-
-change-event-dlq-handler-build-and-deploy: ### Build and deploy change event dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=change-event-dlq-handler
-
-# ==============================================================================
-# DoS DB Update Dead Letter Queue Handler (dos-db-update-dlq-handler) Nonprod only
-
-dos-db-update-dlq-handler-build-and-deploy: ### Build and deploy dos db update dlq handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-update-dlq-handler
-
-# ==============================================================================
-# Event Replay lambda (event-replay)
-
-event-replay-build-and-deploy: ### Build and deploy event replay lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=event-replay
-
-# ==============================================================================
-# DoS DB Checker Handler (dos-db-handler)
-
-dos-db-handler-build-and-deploy: ### Build and deploy test db checker handler lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=dos-db-handler
-
-# ==============================================================================
-# Send Email
-
-send-email-build-and-deploy: ### Build and deploy send email lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=send-email
-
-# ==============================================================================
-# Ingest Change Event
-
-ingest-change-event-build-and-deploy: ### Build and deploy ingest change event lambda docker image - mandatory: PROFILE, ENVIRONMENT, FUNCTION_NAME
-	make build-and-deploy-single-function FUNCTION_NAME=ingest-change-event
+quality-checker-build-and-deploy: ### Build and deploy quality checker lambda docker image - mandatory: PROFILE, ENVIRONMENT
+	make build-and-deploy-single-function FUNCTION_NAME=quality-checker
 
 # ==============================================================================
 # Deployments
@@ -249,15 +240,6 @@ push-images: # Use VERSION=[] to push a perticular version otherwise with defaul
 
 push-tester-image:
 	make docker-push NAME=tester
-
-# ==============================================================================
-# SES (Simple Email Service)
-
-deploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
-	make terraform-apply-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
-
-undeploy-email: # Deploys SES resources - mandatory: PROFILE=[live/test]
-	make terraform-destroy-auto-approve STACKS=email ENVIRONMENT=$(AWS_ACCOUNT_NAME)
 
 # ==============================================================================
 # Development Tools
@@ -374,17 +356,14 @@ tester-clean:
 # Performance Testing
 
 stress-test: # Create change events for stress performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
-	PERFORMANCE_ARGS=$$(echo --users 10 --spawn-rate 5 --run-time 10m)
-	make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester \
+	make -s docker-run-tester \
 		CMD="python -m locust -f stress_test.py --headless \
-			$$PERFORMANCE_ARGS --stop-timeout 10 --exit-code-on-error 0 \
-			-H $(HTTPS_DOS_INTEGRATION_URL) \
+			--users 12 --spawn-rate 10 --run-time 12m  \
+			--stop-timeout 10 --exit-code-on-error 0 -H $(HTTPS_DOS_INTEGRATION_URL) \
 			" $(PERFORMANCE_TEST_DIR_AND_ARGS)
 
 load-test: # Create change events for load performance testing - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
-	make -s docker-run-tools \
-		IMAGE=$$(make _docker-get-reg)/tester \
+	make -s docker-run-tester \
 		CMD="python -m locust -f load_test.py --headless \
 			--users 50 --spawn-rate 5 --exit-code-on-error 0 \
 			-H $(HTTPS_DOS_INTEGRATION_URL) \
@@ -398,29 +377,6 @@ performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
 	rm -rf $(PROJECT_DIR)/test/performance/results/*.csv
-
-stress-test-in-pipeline: # An all in one stress test make target
-	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
-	make stress-test START_TIME=$$START_TIME PIPELINE=true
-	sleep 4.5h
-	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_END_TIME=$$(date +%FT%TZ)
-	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
-
-load-test-in-pipeline: # An all in one load test make target
-	START_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_START_TIME=$$(date +%FT%TZ)
-	CODE_VERSION=$$($(AWSCLI) lambda get-function --function-name $(TF_VAR_service_matcher_lambda_name) | jq --raw-output '.Configuration.Environment.Variables.CODE_VERSION')
-	make load-test START_TIME=$$START_TIME
-	sleep 10m
-	END_TIME=$$(date +%Y-%m-%d_%H-%M-%S)
-	AWS_END_TIME=$$(date +%FT%TZ)
-	make send-performance-dashboard-slack-message START_DATE_TIME=$$AWS_START_TIME END_DATE_TIME=$$AWS_END_TIME
-
-send-performance-dashboard-slack-message:
-	make slack-codebuild-notification PROFILE=$(PROFILE) ENVIRONMENT=$(ENVIRONMENT) PIPELINE_NAME="$(PERF_TEST_TITLE) Tests Codebuild Stage" CODEBUILD_PROJECT_NAME=$(CB_PROJECT_NAME) CODEBUILD_BUILD_ID=$(CODEBUILD_BUILD_ID) SLACK_MESSAGE="Performance Dashboard Here - https://$(AWS_REGION).console.aws.amazon.com/cloudwatch/home?region=$(AWS_REGION)#dashboards:name=$(TF_VAR_cloudwatch_monitoring_dashboard_name);start=$(START_DATE_TIME);end=$(END_DATE_TIME)"
 
 # -----------------------------
 # Other
@@ -502,7 +458,7 @@ serverless-best-practices:
 	make docker-run-checkov DIR=/deployment CHECKOV_OPTS="--framework serverless"
 
 terraform-best-practices:
-	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_7,CKV_AWS_115,CKV_AWS_116,CKV_AWS_117,CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_158,CKV_AWS_173,CKV_AWS_219,CKV_AWS_225,CKV2_AWS_29"
+	make docker-run-checkov DIR=/infrastructure CHECKOV_OPTS="--framework terraform --skip-check CKV_AWS_7,CKV_AWS_115,CKV_AWS_116,CKV_AWS_117,CKV_AWS_120,CKV_AWS_147,CKV_AWS_149,CKV_AWS_158,CKV_AWS_173,CKV_AWS_219,CKV_AWS_225,CKV2_AWS_29,CKV_AWS_338,CKV_AWS_316,CKV_AWS_337,CKV_TF_1"
 
 github-actions-best-practices:
 	make docker-run-checkov DIR=/.github CHECKOV_OPTS="--skip-check CKV_GHA_2"
@@ -515,7 +471,7 @@ checkov-secret-scanning:
 
 deploy-shared-resources: # Deploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-apply-auto-approve STACKS=api-key,appconfig,shared-resources
+	make terraform-apply-auto-approve STACKS=api-key,shared-resources
 
 deploy-blue-green-environment: # Deploys blue/green resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
@@ -534,7 +490,7 @@ link-blue-green-environment: # Links blue green environment - mandatory: PROFILE
 
 undeploy-shared-resources: # Undeploys shared resources (Only intended to run in pipeline) - mandatory: PROFILE, ENVIRONMENT, SHARED_ENVIRONMENT, BLUE_GREEN_ENVIRONMENT
 	eval "$$(make -s populate-deployment-variables)"
-	make terraform-destroy-auto-approve STACKS=shared-resources,appconfig
+	make terraform-destroy-auto-approve STACKS=shared-resources
 	if [ "$(PROFILE)" != "live" ]; then
 		make terraform-destroy-auto-approve STACKS=api-key
 	fi
@@ -600,6 +556,35 @@ wait-for-ecr-lambda-images-to-exist-for-tag: ### Wait for lambda images to exist
 		sleep 10
 	done
 		echo "..Lambda images ready"
+
+docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
+	make docker-config > /dev/null 2>&1
+	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
+	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
+	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
+	docker run --interactive $(_TTY) --rm \
+		--name $$container \
+		--user $$(id -u):$$(id -g) \
+		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
+		--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
+		--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+		--env HOME=/tmp \
+		--env PIP_TARGET=/tmp/.packages \
+		--env PYTHONPATH=/tmp/.packages \
+		--env XDG_CACHE_HOME=/tmp/.cache \
+		--volume $(PROJECT_DIR):/project \
+		--volume $(HOME)/.aws:/tmp/.aws \
+		--volume $(HOME)/bin:/tmp/bin \
+		--volume $(HOME)/etc:/tmp/etc \
+		--volume $(HOME)/usr:/tmp/usr \
+		$$lib_volume_mount \
+		--network $(DOCKER_NETWORK) \
+		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+		$(ARGS) \
+		$$(make _docker-get-reg)/tester:latest \
+			$(CMD)
+
 
 # ==============================================================================
 # Ruff

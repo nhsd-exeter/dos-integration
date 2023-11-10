@@ -1,9 +1,7 @@
 [tool.vulture]
 make_whitelist = true
-paths=["."]
-exclude = [
-  "/tests",
-  ]
+paths = ["."]
+exclude = ["/tests"]
 sort_by_size = true
 min_confidence = 100
 ignore_names = [
@@ -16,4 +14,4 @@ ignore_names = [
   "metadata",
   "recipient_email_address",
   "recipient_id",
-  ]
+]

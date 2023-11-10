@@ -25,9 +25,9 @@ DOCKER_POSTGRES_VERSION = $(POSTGRES_VERSION)-alpine
 DOCKER_POSTMAN_NEWMAN_VERSION = $(POSTMAN_NEWMAN_VERSION)-alpine
 DOCKER_PYTHON_VERSION = $(PYTHON_VERSION)-alpine
 DOCKER_SONAR_SCANNER_CLI_VERSION = $(SONAR_SCANNER_CLI_VERSION)
-DOCKER_CHECKOV_VERSION = 2.3.0
+DOCKER_CHECKOV_VERSION = 2.5.6
 DOCKER_TERRAFORM_COMPLIANCE_VERSION = 1.3.33
-DOCKER_TERRAFORM_TFSEC_VERSION = v1.13.2-amd64
+DOCKER_TERRAFORM_TFSEC_VERSION = v1.28.4-amd64
 DOCKER_TERRAFORM_VERSION = $(TERRAFORM_VERSION)
 DOCKER_WIREMOCK_VERSION = $(WIREMOCK_VERSION)-alpine
 
@@ -703,6 +703,10 @@ docker-run-postgres: ### Run postgres container - mandatory: CMD; optional: DIR,
 
 docker-run-tools: ### Run tools (Python) container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
 	make docker-config > /dev/null 2>&1
+	if [ ! -z $(CODEBUILD_BUILD_ID)	]; then
+		$(CMD)
+		exit 0
+	fi
 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
 	mkdir -p $(HOME)/.aws
 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)

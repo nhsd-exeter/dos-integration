@@ -142,16 +142,16 @@ def test_dos_service_get_region_if_none(mock_get_region: MagicMock) -> None:
     mock_get_region.assert_called_once()
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
     service_id = 22851351399
     db_return = [get_db_item(odscode, name, id=service_id)]
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
@@ -182,16 +182,16 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_cursor.close.assert_called_with()
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
     service_id = 22851351399
     db_return = [get_db_item(odscode, name, id=service_id)]
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
@@ -257,14 +257,14 @@ def test_any_generic_bankholiday_open_periods():
     assert dos_service.any_generic_bankholiday_open_periods() is False
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     odscode = "FQ038"
     db_return = []
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
@@ -292,12 +292,12 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_cursor.close.assert_called_with()
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     db_return = [
         {
@@ -381,9 +381,9 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, m
     )
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     db_return = [
         {"serviceid": 28334, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
@@ -399,7 +399,7 @@ def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mo
     expected_std_opening_times.add_open_period(OpenPeriod(time(9, 0, 0), time(11, 30, 0)), "friday")
     expected_std_opening_times.add_open_period(OpenPeriod(time(13, 0, 0), time(15, 30, 0)), "friday")
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     # Act
     response = get_standard_opening_times_from_db(connection=mock_connection, service_id=service_id)
     # Assert
@@ -420,12 +420,12 @@ def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mo
     )
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     db_return = []
     mock_cursor.fetchall.return_value = db_return
@@ -451,12 +451,12 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
     )
 
 
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
+@patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_dos_locations(mock_query_dos_db, mock_connect_to_dos_db_replica):
+def test_get_dos_locations(mock_query_dos_db, mock_connect_to_db_reader):
     # Arrange
     mock_connection = MagicMock()
-    mock_connect_to_dos_db_replica.return_value.__enter__.return_value = mock_connection
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
     mock_cursor = MagicMock()
     postcode = "BA2 7AF"
     db_return = [
@@ -812,17 +812,17 @@ def test_has_contraception_not_correct_type():
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-@patch(f"{FILE_PATH}.connect_to_dos_db_replica")
-def test_get_region(mock_connect_to_dos_db_replica: MagicMock, mock_query_dos_db: MagicMock) -> None:
+@patch(f"{FILE_PATH}.connect_to_db_reader")
+def test_get_region(mock_connect_to_db_reader: MagicMock, mock_query_dos_db: MagicMock) -> None:
     # Arrange
-    mock_connect_to_dos_db_replica.return_value = mock_connection = MagicMock()
+    mock_connect_to_db_reader.return_value = mock_connection = MagicMock()
     mock_query_dos_db.return_value.fetchone.return_value = {"region": "South East"}
     service_id = 123
     # Act
     region = get_region(service_id)
     # Assert
     assert region == "South East"
-    mock_connect_to_dos_db_replica.assert_called_once()
+    mock_connect_to_db_reader.assert_called_once()
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection.__enter__.return_value,
         query="""WITH

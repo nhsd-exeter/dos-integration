@@ -69,7 +69,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> str:
     retries = 0
     while not response_status:
         response = lambda_client.invoke(
-            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA_NAME"),
+            FunctionName=getenv("DOS_DB_HANDLER_LAMBDA"),
             InvocationType="RequestResponse",
             Payload=dumps(lambda_payload),
         )
@@ -78,7 +78,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> str:
             return response_payload
 
         if retries > 6:
-            msg = f"Unable to run DoS db handler lambda successfully after {retries} retries"
+            msg = f"Unable to run DoS db handler lambda successfully after {retries} retries: {response_payload}"
             raise ValueError(msg)
         retries += 1
         sleep(10)

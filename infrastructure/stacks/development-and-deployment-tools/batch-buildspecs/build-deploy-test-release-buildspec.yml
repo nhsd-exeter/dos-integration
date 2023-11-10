@@ -94,6 +94,16 @@ batch:
           LAMBDA: slack-messenger
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
 
+    - identifier: build_quality_checker
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: quality-checker
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/build-arm-image.yml
+
     - identifier: deploy
       env:
         compute-type: BUILD_GENERAL1_SMALL
@@ -113,6 +123,7 @@ batch:
         - build_service_matcher
         - build_service_sync
         - build_slack_messenger
+        - build_quality_checker
 
     - identifier: integration_test
       env:
@@ -123,7 +134,7 @@ batch:
         variables:
           PROFILE: dev
           ENVIRONMENT: release
-          TAG: pharmacy
+          TAG: complete
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/integration-test.yml
       depend-on:
         - deploy

@@ -131,16 +131,18 @@ def get_service_table_field(service_id: str, field_name: str) -> Any:
     return data[0][field_name]
 
 
-def get_palliative_care(service_id: str) -> bool:
+def get_palliative_care(service_id: str, wait_for_update: bool = True) -> bool:
     """Get palliative care from DoS.
 
     Args:
         service_id (str): Service ID
+        wait_for_update (bool): Wait for service to update
 
     Returns:
         bool: True if palliative care is found, False otherwise
     """
-    wait_for_service_update(service_id)
+    if wait_for_update:
+        wait_for_service_update(service_id)
     return get_service_sgsd(service_id, 360, 14167)
 
 

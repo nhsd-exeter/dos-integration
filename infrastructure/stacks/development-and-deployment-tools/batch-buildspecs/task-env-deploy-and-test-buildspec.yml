@@ -94,6 +94,26 @@ batch:
           LAMBDA: slack-messenger
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/build-arm-image.yml
 
+    - identifier: build_quality_checker
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+        type: ARM_CONTAINER
+        privileged-mode: true
+        variables:
+          LAMBDA: quality-checker
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/build-arm-image.yml
+
+    - identifier: deploy_prerequisites
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/deploy-prerequisites.yml
+
     - identifier: deploy
       env:
         compute-type: BUILD_GENERAL1_SMALL
@@ -109,11 +129,14 @@ batch:
         - build_dos_db_update_dlq_handler
         - build_event_replay
         - build_ingest_change_event
+        - build_send_email
         - build_service_matcher
         - build_service_sync
         - build_slack_messenger
+        - build_quality_checker
+        - deploy_prerequisites
 
-    - identifier: integration_test_no_log_searches
+    - identifier: integration_test_slack_and_infrastructure
       env:
         compute-type: BUILD_GENERAL1_LARGE
         image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
@@ -121,12 +144,13 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          TAG: pharmacy_no_log_searches
+          TAG: slack_and_infrastructure
+          PARALLEL_TEST_COUNT: 20
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy
 
-    - identifier: integration_test_cloudwatch_queries
+    - identifier: integration_test_reporting
       env:
         compute-type: BUILD_GENERAL1_LARGE
         image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
@@ -134,7 +158,50 @@ batch:
         privileged-mode: true
         variables:
           PROFILE: dev
-          TAG: pharmacy_cloudwatch_queries
+          TAG: reporting
+          PARALLEL_TEST_COUNT: 20
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
+      depend-on:
+        - deploy
+
+    - identifier: integration_test_validation
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          TAG: validation
+          PARALLEL_TEST_COUNT: 40
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
+      depend-on:
+        - deploy
+
+    - identifier: integration_test_opening_times
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          TAG: opening_times
+          PARALLEL_TEST_COUNT: 40
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
+      depend-on:
+        - deploy
+
+    - identifier: integration_test_general
+      env:
+        compute-type: BUILD_GENERAL1_LARGE
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          TAG: general
+          PARALLEL_TEST_COUNT: 40
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-batch-jobs/integration-test.yml
       depend-on:
         - deploy

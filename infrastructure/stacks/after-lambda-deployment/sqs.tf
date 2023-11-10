@@ -1,5 +1,5 @@
 resource "aws_sqs_queue" "holding_queue" {
-  name                        = var.holding_queue_name
+  name                        = var.holding_queue
   fifo_queue                  = true
   content_based_deduplication = true
   deduplication_scope         = "messageGroup"
@@ -15,7 +15,7 @@ resource "aws_sqs_queue" "holding_queue" {
 }
 
 resource "aws_sqs_queue" "update_request_queue" {
-  name                        = var.update_request_queue_name
+  name                        = var.update_request_queue
   fifo_queue                  = true
   content_based_deduplication = true
   deduplication_scope         = "messageGroup"

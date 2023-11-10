@@ -9,7 +9,6 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - make docker-hub-signin
-
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
@@ -30,17 +29,5 @@ phases:
           echo "Not triggered by branch will stop deploying"
           exit
         fi
-      - make deploy VERSION=$(make commit-date-hash-tag) BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE TF_CLI_ARGS="-parallelism=30"
-    finally:
-      - |
-        if [ -n "$BUILD_BRANCH" ]; then
-          if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment"  BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Deploy Failed - Please investigate";
-            exit 1;
-          else
-            make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Succeeded";
-          fi
-        else
-          make slack-codebuild-notification BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE PIPELINE_NAME="Build and Test Environment" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Build Failed due to incorrect naming of branch. Please check the branch name.";
-          exit 1;
-        fi
+      - make deploy-blue-green-environment VERSION=$(make commit-date-hash-tag) BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE TF_CLI_ARGS="-parallelism=30"
+      - make link-blue-green-environment VERSION=$(make commit-date-hash-tag) BUILD_BRANCH=$BUILD_BRANCH PROFILE=$PROFILE TF_CLI_ARGS="-parallelism=30"

@@ -50,7 +50,7 @@ resource "aws_codebuild_project" "di_unit_tests_stage" {
 resource "aws_codebuild_project" "di_build_image_stage" {
   name           = "${var.project_id}-${var.environment}-build-image-stage"
   description    = "Builds docker container image"
-  build_timeout  = "5"
+  build_timeout  = "15"
   queued_timeout = "5"
   service_role   = data.aws_iam_role.pipeline_role.arn
 
@@ -235,9 +235,9 @@ resource "aws_codebuild_project" "di_deploy_shared_resources_environment_stage" 
   }
 }
 
-resource "aws_codebuild_project" "di_integration_tests_autoflags" {
-  for_each       = local.integration_make_targets
-  name           = "${var.project_id}-${var.environment}-${each.key}"
+resource "aws_codebuild_project" "di_integration_tests" {
+  for_each       = local.integration_test_tags
+  name           = "${var.project_id}-${var.environment}-integration-tests-${each.key}"
   description    = "Runs the integration tests for the DI Project"
   build_timeout  = "60"
   queued_timeout = "10"
@@ -260,7 +260,7 @@ resource "aws_codebuild_project" "di_integration_tests_autoflags" {
     privileged_mode             = true
 
     environment_variable {
-      name  = "INTEGRATION_MAKE_TARGET"
+      name  = "TAG"
       value = each.key
     }
     dynamic "environment_variable" {

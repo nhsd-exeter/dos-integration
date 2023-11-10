@@ -1,5 +1,5 @@
 resource "aws_sqs_queue" "change_event_queue" {
-  name                        = var.change_event_queue_name
+  name                        = var.change_event_queue
   fifo_queue                  = true
   content_based_deduplication = true
   deduplication_scope         = "messageGroup"

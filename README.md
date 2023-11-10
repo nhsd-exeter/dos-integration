@@ -17,8 +17,7 @@
   - [Development](#development)
     - [Add IP Address to IP Allow List](#add-ip-address-to-ip-allow-list)
     - [DoS Database Connection](#dos-database-connection)
-    - [Code Formatting](#code-formatting)
-    - [Code Quality](#code-quality)
+    - [Python Code Formatting \& Quality](#python-code-formatting--quality)
   - [Testing](#testing)
     - [Unit Testing](#unit-testing)
       - [Where are the unit tests run?](#where-are-the-unit-tests-run)
@@ -30,6 +29,7 @@
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
     - [Artefacts Versioning](#artefacts-versioning)
+      - [Docker Images](#docker-images)
     - [CI/CD Pipelines](#cicd-pipelines)
     - [Deployment From the Command-line](#deployment-from-the-command-line)
     - [Branching Strategy](#branching-strategy)
@@ -53,8 +53,6 @@
     - [AWS Access](#aws-access)
   - [Production Deployment](#production-deployment)
     - [Prerequisites](#prerequisites)
-  - [Creating Batch Comparison Reports](#creating-batch-comparison-reports)
-    - [Dentists](#dentists)
     - [Guiding Principles](#guiding-principles)
   - [Operation](#operation)
     - [Observability](#observability)
@@ -77,7 +75,7 @@ The DoS Integration project aims to keep any updates made on NHS.uk consistent w
 
 ### Architecture
 
-<img src="./documentation/diagrams/DoS Integration-Components.drawio.png" width="1024" /><br /><br />
+![Architecture](./documentation/diagrams/DoS%20Integration-Components.drawio.png)
 
 ### Technology Stack
 
@@ -85,7 +83,7 @@ The current technology stack is:
 
 - Python - Main programming language
 - AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS, S3
-- Serverless Framework - (Where supported)
+- Serverless Framework - Lambda
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
 ## Quick Start
@@ -122,7 +120,7 @@ Instructions and tips for basic authentication for AWS can be found online. Any 
 
 There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
 
-    tx-mfa
+    assume
 
 ### Mac setup
 
@@ -148,7 +146,7 @@ Here is the list of the development practices that have to be followed by the te
 - Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complies and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.
 
-Before starting any work, please read [CONTRIBUTING.md](documentation/CONTRIBUTING.md) for more detailed instructions.
+Before starting any work, please read [Contributing.md](./documentation/Contributing.md) for more detailed instructions.
 
 ## Development
 
@@ -178,30 +176,17 @@ To add an IP address to the IP allow lists and deploy the allow list to environm
 
 ### DoS Database Connection
 
-The following vars are required for the project to establish a connection to the DoS database (or a replica).
+The following vars are required for the project to establish a connection to the DoS writer database (or a Reader).
 `Host, Port, Database, Username, Password, Schema`
 These variable will be stored in AWS Secrets Manager and will be retrieved by the project at either deployment or runtime.
 
-### Code Formatting
+### Python Code Formatting & Quality
 
-Code quality checks can be done with the pip installed 'black' module and run with the command.
+Python code is required be formatted and linted by Ruff.
 
-    python -m black --line-length 120
+To run ruff on you branch:
 
-This is also wrapped in a function
-To format all python files in the project run the following commands:
-
-    make python-code-format FILES=./application
-    make python-code-format FILES=./test
-
-### Code Quality
-
-Code quality checks can be done with the pip installed 'flake8' module and run with the command.
-python3 -m flake8 --max-line-length=120
-
-This is also wrapped in a function:
-
-    make python-linting
+  make python-ruff-fix
 
 ## Testing
 
@@ -254,7 +239,7 @@ This testing is generally done by a tester
 
 Prerequisites
 
-    tx-mfa
+    assume # Granted assume AWS Role
     Sign into Non-Prod VPN # To connect to lambdas within the VPC
     IP is in the IP Allow List # To connect to the API Gateway
     make tester-build
@@ -265,9 +250,11 @@ To run unit tests run the following commands
 
 Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
 
-- pharmacy - All Tests that check pharmacy functionality
-- pharmacy_no_log_searches - Pharmacy tests that do not use the AWS CloudWatch Log Insights search functionality. These tests are fast as they check the database directly
-- pharmacy_cloudwatch_queries - Pharmacy tests that use the AWS CloudWatch Log Insights search functionality. These tests are slow as they check the CloudWatch Logs.
+- general: Tests that do not fall into other groups
+- validation: Tests that validate incorrect data is not processed
+- slack_and_infrastructure: Tests that validate slack alerts and infrastructure (including quality checker tests)
+- reporting: Tests that validate reporting
+- opening_times: Tests that check/update opening times
 
 #### Where are the integration tests run?
 
@@ -289,8 +276,8 @@ To run a stress test
 
     make tester-build
     make stress-test PROFILE=perf ENVIRONMENT=perf START_TIME=$(date +%Y-%m-%d_%H-%M-%S)
-    Wait for the test to complete
-    make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+    # Wait for the test to complete
+    # Collect data from performance testing
 
 Note: if you have any errors consider reducing number of users or increasing the docker resources
 
@@ -298,8 +285,8 @@ To run a load test
 
     make tester-build
     make load-test PROFILE=perf ENVIRONMENT=perf START_TIME=$(date +%Y-%m-%d_%H-%M-%S)
-    Wait for the test to complete
-    make performance-test-data-collection PROFILE=perf ENVIRONMENT=perf START_TIME=[Start Time from above command] END_TIME=$(date +%Y-%m-%d_%H-%M-%S)
+    # Wait for the test to complete
+    # Collect data from performance testing
 
 #### Where are the performance tests run?
 
@@ -326,14 +313,17 @@ All standard releases are considered major releases. Minor releases are used for
 
 Deployment images are instead tagged with the commit hash of the commit it was built from. Standard non deployment images are tagged with the timestamp and commit hash of the commit they were built from.
 
+#### Docker Images
+
+Docker images for releases are tagged with the version of the pipeline.
+
+However in the task deploy and test codebuild uses a timestamp and commit hash tag.
+
 ### CI/CD Pipelines
 
-<img src="./documentation/diagrams/DevOps-Pipelines and Automation.drawio.png" width="1024" /><br /><br />
+![CI/CD Pipelines](./documentation/diagrams/DevOps-Pipelines%20and%20Automation.drawio.png)
 
-All `test` CodeBuild automations can be found in the AWS CodePipeline app in the `Texas` `mgmt` account and included the following:
-
-- uec-dos-int-tools-stress-test-stage
-- uec-dos-int-tools-load-test-stage
+All `test` CodeBuild automations can be found in the AWS CodePipeline/CodeBuild areas in the `Texas` `mgmt` account.
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
@@ -345,7 +335,7 @@ More information can be found on DoS Integration's confluence workspace <https:/
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
-<img src="./documentation/diagrams/DoS Integration-GitHub.drawio.png" width="1024" /><br /><br />
+![Branching Strategy](./documentation/diagram/../diagrams/DoS%20Integration-GitHub.drawio.png)
 
 ### Branch Naming for Automatic Deployments
 
@@ -357,15 +347,13 @@ Once a branch which meets this criteria has been pushed then it will run a build
 
 For a branch that is meant for testing or another purpose and you don't want it to deploy on every push to the branch. It must be prefixed with one of these `spike|automation|test|bugfix|hotfix|fix|release|migration`. e.g. `fix/DS-123_My_fix_branch`
 
----
-
 ## Blue/Green Deployments
 
 ### Blue/Green Deployment Strategy
 
 To deploy a new version of the application in a blue green way it uses multiple components. Such as resources that should persist between deployments, such as the database, and resources that should be recreated with each deployment, such as the lambda functions.
 
-<img src="./documentation/diagrams/DoS Integration-Blue-Green-Deployments.drawio.png" width="1024" /><br /><br />
+![Blue/Green Deployment Strategy](./documentation/diagrams/DoS%20Integration-Blue-Green-Deployments.drawio.png)
 
 ### Blue/Green Deployment Process
 
@@ -378,30 +366,24 @@ bbbbbb - Commit Hash for the Blue Current Blue/Green Environment
 
 1. Create a new blue/green environment with the new version. This creates a new blue/green environment ready to be switched to.
 
-```bash
-make deploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment(short-commit-hash)] VERSION=[s3-file-version] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)]
+    make deploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment(short-commit-hash)] VERSION=[s3-file-version] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)]
 
-# Example
-make deploy-blue-green-environment PROFILE=live ENVIRONMENT=ggggggg VERSION=[s3-file-version] SHARED_ENVIRONMENT=[live] BLUE_GREEN_ENVIRONMENT=[ggggg]
-```
+    - Example
+    make deploy-blue-green-environment PROFILE=live ENVIRONMENT=ggggggg VERSION=[s3-file-version] SHARED_ENVIRONMENT=[live] BLUE_GREEN_ENVIRONMENT=[ggggg]
 
 2. Unlink the current blue/green environment from the shared resources. This will remove any links between the blue/green environment and the shared resources.
 
-```bash
-make unlink-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment]  SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)] TF_VAR_previous_blue_green_environment=[OPTIONAL: current-blue-green-environment(short-commit-hash)]
+    make unlink-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment]  SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment(short-commit-hash)] TF_VAR_previous_blue_green_environment=[OPTIONAL: current-blue-green-environment(short-commit-hash)]
 
-# Example
-make unlink-blue-green-environment PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg TF_VAR_previous_blue_green_environment=bbbbbbb
-```
+    - Example
+    make unlink-blue-green-environment PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg TF_VAR_previous_blue_green_environment=bbbbbbb
 
 3. Link the new blue/green environment to the shared resources. This will link the new blue/green environment to the shared resources.
 
-```bash
-make link-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[new-blue-green-environment]
+    make link-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[new-blue-green-environment]
 
-# Example
-make link-blue-green-environment PROFILE=live ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=gggggg
-```
+    - Example
+    make link-blue-green-environment PROFILE=live ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=gggggg
 
 ### Useful Blue/Green Deployment Commands
 
@@ -410,12 +392,10 @@ make link-blue-green-environment PROFILE=live ENVIRONMENT=live BLUE_GREEN_ENVIRO
 To update the shared resources run the following command.
 Note: The shared environment must be unlinked from the blue/green environment before running this command. Then the blue/green environment must be linked to the shared environment after running this command.
 
-```bash
-make deploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] SHARED_ENVIRONMENT=[shared-resources-environment]
+    make deploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[shared-resources-environment] SHARED_ENVIRONMENT=[shared-resources-environment]
 
-# Example
-make deploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live
-```
+    - Example
+    make deploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live
 
 #### Trigger Blue/Green Deployment Pipeline
 
@@ -427,12 +407,10 @@ This should only be done from main branch.
 
 An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
 
-```bash
-make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
+    make tag-commit-to-deploy-blue-green-environment COMMIT=[short-commit-hash]
 
-# Example
-make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
-```
+    - Example
+    make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
 
 #### Trigger Shared Resources Deployment Pipeline
 
@@ -444,12 +422,10 @@ This should only be done from main branch.
 
 An approval stage stops this command from automatically deploying to Live. But it will automatically apply to a dev and a demo environment.
 
-```bash
-make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
+    make tag-commit-to-deploy-shared-resources COMMIT=[short-commit-hash]
 
-# Example
-make tag-commit-to-deploy-shared-resources COMMIT=ggggggg
-```
+    - Example
+    make tag-commit-to-deploy-shared-resources COMMIT=ggggggg
 
 #### Undeploy Blue/Green Environment
 
@@ -457,12 +433,9 @@ This will undeploy the blue/green environment and is intended to be used when th
 
 Note: If the blue/green environment is linked to the shared resources environment then it must be unlinked before running this command.
 
-```bash
-make undeploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
-
-# Example
-make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
-```
+    make undeploy-blue-green-environment PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
+    - Example
+    make tag-commit-to-deploy-blue-green-environment COMMIT=ggggggg
 
 #### Undeploy Shared Resources Environment
 
@@ -471,22 +444,19 @@ This will undeploy the shared resources environment and is intended to be used w
 Note: No blue/green environments can exist for this shared resources environment when running this command.
 If they do the blue/green environments must be unlinked and undeployed first.
 
-```bash
-make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
+    make undeploy-shared-resources PROFILE=[live/demo] ENVIRONMENT=[blue-green-environment] SHARED_ENVIRONMENT=[shared-resources-environment] BLUE_GREEN_ENVIRONMENT=[blue-green-environment]
 
-# Example
-make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
-```
+    - Example
+    make undeploy-shared-resources PROFILE=live ENVIRONMENT=live SHARED_ENVIRONMENT=live BLUE_GREEN_ENVIRONMENT=ggggggg
 
 #### Rollback Blue/Green Environment
 
 This will rollback the blue/green environment to the previous version. It's best to use the commit of the version you are intending to rollback to ensure the Terraform works correctly together.
 
-```bash
-make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
-# Example
-make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMENT=cicd-test COMMIT=c951156
-```
+    make rollback-blue-green-environment PROFILE=[live/demo/dev] SHARED_ENVIRONMENT=[shared-resources-environment] COMMIT=[short-commit-hash]
+
+    - Example
+    make tag-commit-to-rollback-blue-green-environment PROFILE=dev SHARED_ENVIRONMENT=cicd-test COMMIT=c951156
 
 ### Quick Re-deploy
 
@@ -517,9 +487,9 @@ Where are the secrets located, i.e. AWS Secrets Manager, under the `$(PROJECT_ID
 ### AWS Access
 
 To be able to interact with a remote environment, please make sure you have set up your AWS CLI credentials and
-MFA to the right AWS account using the following command
+Assume the right AWS account using the following command
 
-    tx-mfa
+    assume
 
 ## Production Deployment
 
@@ -527,35 +497,7 @@ MFA to the right AWS account using the following command
 
 The pipelines terraform stack must be deployed
 
-    make  deploy-development-and-deployment-tools PROFILE=tools ENVIRONMENT=dev
-
-## Creating Batch Comparison Reports
-
-Batch comparison reports can be generated for whole datasets at once. Pulling a complete dataset from NHS.uk and a DoS DB of choice.
-
-### Dentists
-
-To run and generate the comparison reports for dentists. Ensure you are Authenticated to the correct AWS account and logged into the correct VPN for whichever DoS DB you are trying to use.
-
-You can use a make command. Either specifying PROFILE, or a full set of DoS DB details.
-
-    make create-dentist-reports PROFILE=dev
-
-or
-
-    make create-dentist-reports \
-      DB_SERVER_NAME= server_name \
-      DB_PORT=5432 \
-      DB_NAME=name_of_the_db \
-      DB_USER_NAME_SECRET_NAME=some_db_name \
-      DB_USER_NAME_SECRET_KEY=some_key \
-      DB_SECRET_NAME=secret_name_for_secret_manager \
-      DB_SECRET_KEY=DB_USER_PASSWORD \
-      DB_SCHEMA=pathwaysdos
-
-These can also be run directly with Python if the required packages are installed. Ensure you have the needed enviornmental variables (DB_SERVER, DB_PORT, DB_NAME, DB_USER_NAME, DB_SECRET_NAME, DB_SECRET_KEY, DB_SCHEMA). From the application/ directory run the following python command.
-
-    python3 comparison_reporting/run_dentist_reports.py
+    make deploy-development-and-deployment-tools ENVIRONMENT=dev
 
 ### Guiding Principles
 
@@ -625,16 +567,11 @@ The runbooks for this project can be found on the DI confluence.
     - Handy tips on how to get started as part of the DoS Integration team
   - Full Development Team (Private: Ask for invite) `dos-integration-devs`
     - For team conversations and team notifications
-  - Devs/Tests Only (Private: Ask for invite) `di-coders`
-    - For technical conversation without distracting the non technical team members
   - Swarming Channel (Public) `dos-integration-swarming`
     - For team meetings and swarming sessions. Generally used for huddles.
 - TO DO SLACK CHANNELS
-  - CI/CD and data pipelines, processes, e.g. `[service-name]-automation`
-  - Service status, e.g. `[service-name]-status`
+  - CI/CD and data pipelines, processes & Service status, `dos-integration-dev-status` and `dos-integration-live-status`
 - Email addresses in use, e.g. `[service.name]@nhs.net`
-
-All of the above can be service, product, application or even team specific.
 
 ### Documentation
 
@@ -673,7 +610,3 @@ All of the above can be service, product, application or even team specific.
 - Ways of working
 
   <https://nhsd-confluence.digital.nhs.uk/display/DI/DI+Ways+of+Working>
-
-```
-
-```

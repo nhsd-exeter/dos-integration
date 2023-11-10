@@ -306,7 +306,7 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 previous_value=change_values.get("previous", ""),
                 new_value=change_values["data"],
             )
-        logger.debug(f"Logging service update for change key {change_key}", extra={"change_values": change_values})
+        logger.debug(f"Logging service update for change key {change_key}", change_values=change_values)
 
 
 def add_service_updated_metric(data_field_modified: str) -> None:

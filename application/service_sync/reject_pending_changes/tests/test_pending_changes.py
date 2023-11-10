@@ -101,9 +101,9 @@ def test_pending_change_is_valid_exception():
 @patch(f"{FILE_PATH}.log_rejected_changes")
 @patch(f"{FILE_PATH}.reject_pending_changes")
 @patch(f"{FILE_PATH}.get_pending_changes")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
+@patch(f"{FILE_PATH}.connect_to_db_writer")
 def test_check_and_remove_pending_dos_changes(
-    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_db_writer: MagicMock,
     mock_get_pending_changes: MagicMock,
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
@@ -116,13 +116,13 @@ def test_check_and_remove_pending_dos_changes(
     response = check_and_remove_pending_dos_changes(service_id)
     # Assert
     assert None is response
-    mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_db_writer.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        connection=mock_connect_to_db_writer.return_value.__enter__.return_value,
         service_id=service_id,
     )
     mock_reject_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        connection=mock_connect_to_db_writer.return_value.__enter__.return_value,
         pending_changes=get_pending_changes_response,
     )
     mock_log_rejected_changes.assert_called_once_with(get_pending_changes_response)
@@ -133,9 +133,9 @@ def test_check_and_remove_pending_dos_changes(
 @patch(f"{FILE_PATH}.log_rejected_changes")
 @patch(f"{FILE_PATH}.reject_pending_changes")
 @patch(f"{FILE_PATH}.get_pending_changes")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
+@patch(f"{FILE_PATH}.connect_to_db_writer")
 def test_check_and_remove_pending_dos_changes_no_pending_changes(
-    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_db_writer: MagicMock,
     mock_get_pending_changes: MagicMock,
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
@@ -148,9 +148,9 @@ def test_check_and_remove_pending_dos_changes_no_pending_changes(
     response = check_and_remove_pending_dos_changes(service_id)
     # Assert
     assert None is response
-    mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_db_writer.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        connection=mock_connect_to_db_writer.return_value.__enter__.return_value,
         service_id=service_id,
     )
     mock_reject_pending_changes.assert_not_called()
@@ -162,9 +162,9 @@ def test_check_and_remove_pending_dos_changes_no_pending_changes(
 @patch(f"{FILE_PATH}.log_rejected_changes")
 @patch(f"{FILE_PATH}.reject_pending_changes")
 @patch(f"{FILE_PATH}.get_pending_changes")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
+@patch(f"{FILE_PATH}.connect_to_db_writer")
 def test_check_and_remove_pending_dos_changes_invalid_changes(
-    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_db_writer: MagicMock,
     mock_get_pending_changes: MagicMock,
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
@@ -177,9 +177,9 @@ def test_check_and_remove_pending_dos_changes_invalid_changes(
     response = check_and_remove_pending_dos_changes(service_id)
     # Assert
     assert None is response
-    mock_connect_to_dos_db.assert_called_once()
+    mock_connect_to_db_writer.assert_called_once()
     mock_get_pending_changes.assert_called_once_with(
-        connection=mock_connect_to_dos_db.return_value.__enter__.return_value,
+        connection=mock_connect_to_db_writer.return_value.__enter__.return_value,
         service_id=service_id,
     )
     mock_reject_pending_changes.assert_not_called()
@@ -321,7 +321,7 @@ def test_log_rejected_changes(capsys: pytest.CaptureFixture):
     assert None is response
     captured = capsys.readouterr()
     assert (
-        f"update|correlation_id|NULL|DOS_INTEGRATION|RejectDeleteChange|"
+        f"update|None|NULL|DOS_INTEGRATION|RejectDeleteChange|"
         f"request|success|action=reject|changeId={pending_change.id}|org_id={pending_change.uid}|"
         f"org_name={pending_change.name}|change_status=PENDING|info=change rejected|"
         "execution_time=NULL"
@@ -345,7 +345,7 @@ def test_send_rejection_emails(
     mock_client: MagicMock,
 ):
     # Arrange
-    environ["SEND_EMAIL_LAMBDA_NAME"] = send_email_lambda_name = "test"
+    environ["SEND_EMAIL_LAMBDA"] = send_email_lambda_name = "test"
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
     mock_build_change_rejection_email_contents.return_value = file_contents = "test"
@@ -358,7 +358,7 @@ def test_send_rejection_emails(
         calls=[
             call(
                 {
-                    "correlation_id": "correlation_id",
+                    "correlation_id": None,
                     "user_id": pending_change.user_id,
                     "email_body": mock_build_change_rejection_email_contents.return_value,
                     "email_subject": expected_subject,
@@ -373,7 +373,7 @@ def test_send_rejection_emails(
     )
     mock_email_message.assert_called_once_with(
         change_id=pending_change.id,
-        correlation_id="correlation_id",
+        correlation_id=None,
         recipient_email_address=pending_change.email,
         email_body=file_contents,
         email_subject=expected_subject,
@@ -387,7 +387,7 @@ def test_send_rejection_emails(
         Payload=mock_dumps.return_value,
     )
     # Cleanup
-    del environ["SEND_EMAIL_LAMBDA_NAME"]
+    del environ["SEND_EMAIL_LAMBDA"]
 
 
 @patch("builtins.open")

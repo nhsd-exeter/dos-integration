@@ -4,9 +4,9 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
     branches-ignore:
-      - 'dependabot/**'
-      - 'release/**'
-      - 'main'
+      - "dependabot/**"
+      - "release/**"
+      - "main"
 
 permissions:
   contents: read

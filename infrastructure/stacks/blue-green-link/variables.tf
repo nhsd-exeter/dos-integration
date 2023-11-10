@@ -50,24 +50,19 @@ variable "cloudwatch_monitoring_dashboard_name" {
   description = "Name of the dashboard to see the various performance metrics in AWS"
 }
 
-variable "cloudwatch_data_dashboard_name" {
-  type        = string
-  description = "Name of the dashboard to see the various data metrics in AWS"
-}
-
 variable "dos_db_cluster_name" {
   type        = string
   description = "Name of db dos cluster to connect to"
 }
 
-variable "dos_db_name" {
+variable "dos_db_writer_name" {
   type        = string
-  description = "Name of db dos instance to connect to"
+  description = "Name of db dos writer to connect to"
 }
 
-variable "dos_db_replica_name" {
+variable "dos_db_reader_name" {
   type        = string
-  description = "Name of db dos replica to connect to"
+  description = "Name of db dos reader to connect to"
 }
 
 # ######################
@@ -93,61 +88,66 @@ variable "sns_topic_app_alerts_for_slack_route53_health_check_alarm_region" {
 # # LAMBDAS
 # ##############
 
-variable "service_matcher_lambda_name" {
-  type        = string
-  description = "Name of event processor lambda"
-}
-
-variable "service_sync_lambda_name" {
-  type        = string
-  description = "Name of event sender lambda"
-}
-
-variable "change_event_dlq_handler_lambda_name" {
+variable "change_event_dlq_handler_lambda" {
   type        = string
   description = "Name of fifo dlq handler lambda"
 }
 
-variable "dos_db_update_dlq_handler_lambda_name" {
+variable "dos_db_update_dlq_handler_lambda" {
   type        = string
   description = "Name of cr_fifo dlq handler lambda"
 }
 
-variable "event_replay_lambda_name" {
+variable "event_replay_lambda" {
   type        = string
   description = "Name of event replay lambda"
 }
 
-variable "slack_messenger_lambda_name" {
+variable "ingest_change_event_lambda" {
   type        = string
-  description = "Name of slack messenger lambda"
+  description = "Name of ingest change event lambda"
 }
 
-variable "send_email_lambda_name" {
+variable "send_email_lambda" {
   type        = string
   description = "Name of send email lambda"
 }
 
-variable "ingest_change_event_lambda_name" {
+variable "service_matcher_lambda" {
   type        = string
-  description = "Name of ingest change event lambda"
+  description = "Name of event processor lambda"
+}
+
+variable "service_sync_lambda" {
+  type        = string
+  description = "Name of event sender lambda"
+}
+
+variable "slack_messenger_lambda" {
+  type        = string
+  description = "Name of slack messenger lambda"
+}
+
+variable "quality_checker_lambda" {
+  type        = string
+  description = "Name of quality checker lambda"
 }
 
 # ############################
 # SQS FIFO QUEUE
 # ############################
 
-variable "change_event_queue_name" {
+variable "change_event_queue" {
   type        = string
   description = "Change event queue name"
 }
 
-variable "holding_queue_name" {
+variable "holding_queue" {
   type        = string
   description = "Holding queue name"
 }
 
-variable "update_request_queue_name" {
+variable "update_request_queue" {
   type        = string
   description = "Update request queue name"
 }

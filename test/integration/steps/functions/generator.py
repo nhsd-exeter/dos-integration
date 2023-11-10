@@ -11,63 +11,42 @@ from .context import Context
 from .utils import invoke_dos_db_handler_lambda
 
 
-# Commit new services to DOS
-def commit_new_service_to_dos(context: Context) -> str:
+def commit_new_service_to_dos(context: Context) -> Context:
     """Commit new services to DoS.
 
     Args:
         context (Context): Test context object.
 
     Returns:
-        str: Service ID
+        Context: Test context object.
     """
     qv = context.generator_data
     query_vars = (
-        f"{qv['id']}",
         f"{qv['uid']}",
         f"{qv['name']}",
         f"{qv['odscode']}",
-        None,
-        "false",
-        "",
-        "false",
         "false",
         f"{qv['address']}${qv['town']}",
         f"{qv['town']}",
         f"{qv['postcode']}",
-        None,
-        None,
         f"{qv['publicphone']}",
-        None,
-        None,
-        None,
         f"{qv['web']}",
-        None,
         "2022-09-06 11:00:00.000 +0100",
-        None,
         "2022-09-06 11:00:00.000 +0100",
-        "0",
-        None,
         f"{qv['service_type']}",
-        None,
-        None,
         f"{qv['service_status']}",
-        None,
-        None,
-        "0",
-        None,
-        None,
     )
-    query = (
-        "INSERT INTO pathwaysdos.services VALUES "
-        "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-        "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"
-    )
+    query = """INSERT INTO pathwaysdos.services (uid, "name", odscode, openallhours, address, town, postcode,
+    publicphone, web, createdtime, modifiedtime, typeid, statusid)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id"""
+
     lambda_payload = {"type": "read", "query": query, "query_vars": query_vars}
     response = invoke_dos_db_handler_lambda(lambda_payload)
     data = loads(response)
     data = literal_eval(data)
-    return data[0]["id"]
+    context.generator_data["id"] = data[0]["id"]
+    context.service_id = data[0]["id"]
+    return context
 
 
 # Generic Opening days and times to DOS
@@ -593,6 +572,36 @@ def apply_palliative_care_to_service(context: Context) -> int:
     return loads(invoke_dos_db_handler_lambda(lambda_payload))
 
 
+def apply_blood_pressure_to_service(context: Context) -> int:
+    """This function creates an entry in DOS DB that will flag the service as having blood pressure service.
+
+    Args:
+        context (Context): The context object that contains the service ID to be flagged.
+
+    Returns:
+        int: The ID of the entry in the database.
+    """
+    srv = context.service_id
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14207, 360) RETURNING id"  # noqa: E501,S608
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    return loads(invoke_dos_db_handler_lambda(lambda_payload))
+
+
+def apply_contraception_to_service(context: Context) -> int:
+    """This function creates an entry in DOS DB that will flag the service as having contraception service.
+
+    Args:
+        context (Context): The context object that contains the service ID to be flagged.
+
+    Returns:
+        int: The ID of the entry in the database.
+    """
+    srv = context.service_id
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14210, 360) RETURNING id"  # noqa: E501,S608
+    lambda_payload = {"type": "read", "query": query, "query_vars": None}
+    return loads(invoke_dos_db_handler_lambda(lambda_payload))
+
+
 def add_palliative_care_to_change_event(context: Context) -> None:
     """This function creates an entry in the Change Event containing a palliative care service.
 
@@ -608,6 +617,16 @@ def add_palliative_care_to_change_event(context: Context) -> None:
             "ServiceCode": "SRV0559",
         },
     )
+
+
+def remove_palliative_care_to_change_event(context: Context) -> None:
+    """This function removes an entry in the Change Event containing a palliative care service.
+
+    Args:
+        context (Context): The context object that contains the change event to be updated.
+    """
+    if "UecServices" in context.change_event:
+        context.change_event["UecServices"] = []
 
 
 def add_blood_pressure_to_change_event(context: Context) -> None:

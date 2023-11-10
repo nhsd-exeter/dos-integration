@@ -28,9 +28,9 @@ FILE_PATH = "application.service_sync.data_processing.update_dos"
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_demographics_into_db")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
+@patch(f"{FILE_PATH}.connect_to_db_writer")
 def test_update_dos_data(
-    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_db_writer: MagicMock,
     mock_save_demographics_into_db: MagicMock,
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
@@ -45,30 +45,30 @@ def test_update_dos_data(
     update_dos_data(changes_to_dos, service_id, service_histories)
     # Assert
     mock_save_demographics_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         demographics_changes=changes_to_dos.demographic_changes,
     )
     mock_save_standard_opening_times_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         standard_opening_times_changes=changes_to_dos.standard_opening_times_changes,
     )
     mock_save_specified_opening_times_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         is_changes=changes_to_dos.specified_opening_times_changes,
         specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
     )
     mock_save_palliative_care_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         dos_service=changes_to_dos.dos_service,
         is_changes=changes_to_dos.palliative_care_changes,
         palliative_care=changes_to_dos.nhs_entity.palliative_care,
     )
-    service_histories.save_service_histories.assert_called_once_with(connection=mock_connect_to_dos_db().__enter__())
-    mock_connect_to_dos_db.return_value.__enter__.return_value.commit.assert_called_once()
-    mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
+    service_histories.save_service_histories.assert_called_once_with(connection=mock_connect_to_db_writer().__enter__())
+    mock_connect_to_db_writer.return_value.__enter__.return_value.commit.assert_called_once()
+    mock_connect_to_db_writer.return_value.__enter__.return_value.close.assert_called_once()
     mock_log_service_updates.assert_called_once_with(changes_to_dos=changes_to_dos, service_histories=service_histories)
 
 
@@ -76,9 +76,9 @@ def test_update_dos_data(
 @patch(f"{FILE_PATH}.save_specified_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_standard_opening_times_into_db")
 @patch(f"{FILE_PATH}.save_demographics_into_db")
-@patch(f"{FILE_PATH}.connect_to_dos_db")
+@patch(f"{FILE_PATH}.connect_to_db_writer")
 def test_update_dos_data_no_changes(
-    mock_connect_to_dos_db: MagicMock,
+    mock_connect_to_db_writer: MagicMock,
     mock_save_demographics_into_db: MagicMock,
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
@@ -96,29 +96,29 @@ def test_update_dos_data_no_changes(
     update_dos_data(changes_to_dos, service_id, service_histories)
     # Assert
     mock_save_demographics_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         demographics_changes=changes_to_dos.demographic_changes,
     )
     mock_save_standard_opening_times_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         standard_opening_times_changes=changes_to_dos.standard_opening_times_changes,
     )
     mock_save_specified_opening_times_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         service_id=service_id,
         is_changes=changes_to_dos.specified_opening_times_changes,
         specified_opening_times_changes=changes_to_dos.new_specified_opening_times,
     )
     mock_save_palliative_care_into_db.assert_called_once_with(
-        connection=mock_connect_to_dos_db().__enter__(),
+        connection=mock_connect_to_db_writer().__enter__(),
         dos_service=changes_to_dos.dos_service,
         is_changes=changes_to_dos.palliative_care_changes,
         palliative_care=changes_to_dos.nhs_entity.palliative_care,
     )
     service_histories.save_service_histories.assert_not_called()
-    mock_connect_to_dos_db.return_value.__enter__.return_value.close.assert_called_once()
+    mock_connect_to_db_writer.return_value.__enter__.return_value.close.assert_called_once()
 
 
 @patch(f"{FILE_PATH}.SQL")

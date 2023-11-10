@@ -1,30 +1,17 @@
-from ast import literal_eval
-from datetime import datetime
 from hashlib import sha256
 from json import dumps
-from operator import countOf
-from os import environ, getenv
+from os import environ
 from typing import Any
 
 from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
-from aws_lambda_powertools.utilities import parameters
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
 from boto3 import client
-from pytz import timezone
 
-from .reporting import (
-    log_closed_or_hidden_services,
-    log_invalid_open_times,
-    log_missing_dos_service_for_a_given_type,
-    log_unexpected_pharmacy_profiling,
-    log_unmatched_nhsuk_service,
-)
-from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, CommissionedServiceType
-from common.constants import DOS_ACTIVE_STATUS_ID, PHARMACY_SERVICE_TYPE_ID
-from common.dos import DoSService, get_matching_dos_services
+from .matching import get_matching_services
+from .review_matches import review_matches
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import HoldingQueueChangeEventItem, UpdateRequest
@@ -39,15 +26,13 @@ sqs = client("sqs")
 @tracer.capture_lambda_handler()
 @logger.inject_lambda_context(clear_state=True)
 @event_source(data_class=SQSEvent)
-@metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ANN401
+def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: ARG001
     """Entrypoint handler for the service_matcher lambda.
 
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
             Change Event has been validate by the ingest change event lambda
         context (LambdaContext): Lambda function context object
-        metrics (Any): Embedded metrics object
 
     Event: The event payload should contain a NHS Entity (Service)
     """
@@ -56,77 +41,14 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     logger.set_correlation_id(holding_queue_change_event_item["correlation_id"])
     change_event = holding_queue_change_event_item["change_event"]
 
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
-    metrics.set_property("function_name", context.function_name)
-
-    # Get Datetime from milliseconds
-    date_time = datetime.fromtimestamp(
-        holding_queue_change_event_item["message_received"] // 1000.0,
-        tz=timezone("Europe/London"),
-    )
-    metrics.set_property("message_received", date_time.strftime("%m/%d/%Y, %H:%M:%S"))
-
     nhs_entity = NHSEntity(change_event)
-    logger.append_keys(ods_code=nhs_entity.odscode)
-    logger.append_keys(org_type=nhs_entity.org_type)
-    logger.append_keys(org_sub_type=nhs_entity.org_sub_type)
-    metrics.set_property("ods_code", nhs_entity.odscode)
-    logger.info("Created NHS Entity for processing", extra={"nhs_entity": nhs_entity})
+    logger.append_keys(ods_code=nhs_entity.odscode, org_type=nhs_entity.org_type, org_sub_type=nhs_entity.org_sub_type)
+    logger.info("Created NHS Entity for processing", nhs_entity=nhs_entity)
+
     matching_services = get_matching_services(nhs_entity)
-
-    if len(matching_services) == 0 or not next(
-        (True for service in matching_services if service.statusid == DOS_ACTIVE_STATUS_ID),
-        False,
-    ):
-        log_unmatched_nhsuk_service(nhs_entity)
+    matching_services = review_matches(matching_services, nhs_entity)
+    if matching_services is None:
         return
-
-    remove_service_if_not_on_change_event(
-        matching_services=matching_services,
-        nhs_entity=nhs_entity,
-        nhs_uk_key="blood_pressure",
-        service_type=BLOOD_PRESSURE,
-    )
-
-    remove_service_if_not_on_change_event(
-        matching_services=matching_services,
-        nhs_entity=nhs_entity,
-        nhs_uk_key="contraception",
-        service_type=CONTRACEPTION,
-    )
-
-    logger.info("Matched DoS Services after services filtered", extra={"matched": matching_services})
-
-    if nhs_entity.is_status_hidden_or_closed():
-        log_closed_or_hidden_services(nhs_entity, matching_services)
-        return
-
-    if not nhs_entity.all_times_valid():
-        log_invalid_open_times(nhs_entity, matching_services)
-
-    # Check for correct pharmacy profiling
-    dos_matching_service_types = [service.typeid for service in matching_services]
-    logger.debug(f"Matched service types: {dos_matching_service_types}", extra={"matched": matching_services})
-    if countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) > 1:
-        type_13_matching_services = [
-            service for service in matching_services if service.typeid == PHARMACY_SERVICE_TYPE_ID
-        ]
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=type_13_matching_services,
-            reason="Multiple 'Pharmacy' type services found (type 13)",
-        )
-    elif countOf(dos_matching_service_types, PHARMACY_SERVICE_TYPE_ID) == 0:
-        log_unexpected_pharmacy_profiling(
-            nhs_entity=nhs_entity,
-            matching_services=matching_services,
-            reason="No 'Pharmacy' type services found (type 13)",
-        )
-
-    log_missing_dos_services(nhs_entity, matching_services, BLOOD_PRESSURE)
-    log_missing_dos_services(nhs_entity, matching_services, CONTRACEPTION)
-
     update_requests: list[UpdateRequest] = [
         {"change_event": change_event, "service_id": str(dos_service.id)} for dos_service in matching_services
     ]
@@ -139,111 +61,11 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     )
 
 
-def remove_service_if_not_on_change_event(
-    matching_services: list[DoSService],
-    nhs_entity: NHSEntity,
-    nhs_uk_key: str,
-    service_type: CommissionedServiceType,
-) -> list[DoSService]:
-    """Removes a service from the matching services list if it is not on the change event.
-
-    Args:
-        matching_services (list[DoSService]): The list of matching services
-        nhs_entity (NHSEntity): The nhs entity to check for the service
-        nhs_uk_key (str): The key to check for the service on the nhs entity
-        service_type (CommissionedServiceType): Various constants for the service type
-
-    Returns:
-        list[DoSService]: The list of matching services with the service removed if it is not on the change event
-    """
-    if remove_matched_services := [
-        service
-        for service in matching_services
-        if service.statusid != DOS_ACTIVE_STATUS_ID
-        and not getattr(nhs_entity, nhs_uk_key)
-        and service.typeid == service_type.DOS_TYPE_ID
-    ]:
-        for service in remove_matched_services:
-            matching_services.remove(service)
-        logger.info(
-            f"Removing matched {service_type.TYPE_NAME.lower()} services",
-            remove_matched_services=remove_matched_services,
-            matched=matching_services,
-        )
-    return matching_services
-
-
-def log_missing_dos_services(
-    nhs_entity: NHSEntity,
-    matching: list[DoSService],
-    service_type: CommissionedServiceType,
-) -> None:
-    """Logs when a Change Event has a Service Code defined and there isn't a corresponding DoS service.
-
-    Args:
-        nhs_entity (NHSEntity): The nhs entity to check for the service
-        matching (List[DosService]): The matching DoS service to check for the
-        service_type (CommissionedServiceType): Various constants for the service type
-    """
-    if nhs_entity.check_for_service(service_type.NHS_UK_SERVICE_CODE) and not next(
-        (True for service in matching if service.typeid == service_type.DOS_TYPE_ID),
-        False,
-    ):
-        log_missing_dos_service_for_a_given_type(
-            nhs_entity=nhs_entity,
-            matching_services=matching,
-            missing_type=service_type,
-            reason=f"No '{service_type.TYPE_NAME}' type services found in DoS even though its specified"
-            f" in the NHS UK Change Event (dos type {service_type.DOS_TYPE_ID})",
-        )
-
-
 def divide_chunks(to_chunk: list, chunk_size: int) -> Any:  # noqa: ANN401
     """Yield successive n-sized chunks from l."""
     # looping till length l
     for i in range(0, len(to_chunk), chunk_size):
         yield to_chunk[i : i + chunk_size]
-
-
-def get_matching_services(nhs_entity: NHSEntity) -> list[DoSService]:
-    """Gets the matching DoS services for the given nhs entity.
-
-    Using the nhs entity attributed to this object, it finds the
-    matching DoS services from the db and filters the results.
-
-    Args:
-        nhs_entity (NHSEntity): The nhs entity to match against.
-
-    Returns:
-        list[DoSService]: The list of matching DoS services.
-    """
-    # Check database for services with same first 5 digits of ODSCode
-    logger.info(f"Getting matching DoS Services for odscode '{nhs_entity.odscode}'.")
-    pharmacy_first_phase_one_feature_flag = get_pharmacy_first_phase_one_feature_flag()
-    matching_services = get_matching_dos_services(nhs_entity.odscode, pharmacy_first_phase_one_feature_flag)
-    logger.info(
-        f"Found {len(matching_services)} services in DB with "
-        f"matching first 5 chars of ODSCode: {matching_services}",
-        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
-    )
-
-    return matching_services
-
-
-def get_pharmacy_first_phase_one_feature_flag() -> bool:
-    """Gets the pharmacy first phase one feature flag.
-
-    Returns:
-        bool: True if the feature flag is enabled, False otherwise.
-    """
-    parameter_name: str = getenv("PHARMACY_FIRST_PHASE_ONE_PARAMETER")
-    pharmacy_first_phase_one: str = parameters.get_parameter(parameter_name)
-    pharmacy_first_phase_one_feature_flag = literal_eval(pharmacy_first_phase_one)
-    logger.debug(
-        "Got pharmacy first phase one feature flag",
-        extra={"pharmacy_first_phase_one_feature_flag": pharmacy_first_phase_one_feature_flag},
-    )
-    return pharmacy_first_phase_one_feature_flag
 
 
 def send_update_requests(
@@ -264,14 +86,12 @@ def send_update_requests(
         entry_id = f"{service_id}-{sequence_number}"
         logger.debug(
             "Update request to send",
-            extra={
-                "update_request": update_request,
-                "entry_id": entry_id,
-                "hashed_payload": f"{len(hashed_payload)} - {hashed_payload}",
-                "message_deduplication_id": message_deduplication_id,
-                "message_group_id": message_group_id,
-                "sequence_number": str(sequence_number),
-            },
+            update_request=update_request,
+            entry_id=entry_id,
+            hashed_payload=f"{len(hashed_payload)} - {hashed_payload}",
+            message_deduplication_id=message_deduplication_id,
+            message_group_id=message_group_id,
+            sequence_number=str(sequence_number),
         )
         messages.append(
             {
@@ -292,10 +112,23 @@ def send_update_requests(
                 },
             },
         )
+        send_update_request_metric()
     chunks = list(divide_chunks(messages, 10))
     for i, chunk in enumerate(chunks):
         # TODO: Handle errors?
         logger.debug(f"Sending off message chunk {i+1}/{len(chunks)}")
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
-        logger.info("Response received", extra={"response": response})
+        logger.info("Response received", response=response)
         logger.info(f"Sent off update request for id={service_id}")
+
+
+@metric_scope
+def send_update_request_metric(metrics: Any) -> None:  # noqa: ANN401
+    """Send metric for update request sent.
+
+    Args:
+        metrics (Any): The custom metrics collection
+    """
+    metrics.set_namespace("UEC-DOS-INT")
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.put_metric("UpdateRequestSent", 1, "Count")

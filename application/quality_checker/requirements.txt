@@ -1,0 +1,3 @@
+aws-embedded-metrics
+aws-lambda-powertools[tracer, validation] ~= 2.26.0
+psycopg[binary]

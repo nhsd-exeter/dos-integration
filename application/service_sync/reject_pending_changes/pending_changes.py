@@ -13,7 +13,7 @@ from pytz import timezone
 from ..service_update_logger import ServiceUpdateLogger
 from .s3 import put_content_to_s3
 from common.constants import DI_CHANGE_ITEMS, DOS_INTEGRATION_USER_NAME
-from common.dos_db_connection import connect_to_dos_db, query_dos_db
+from common.dos_db_connection import connect_to_db_writer, query_dos_db
 from common.types import EmailFile, EmailMessage
 
 logger = Logger(child=True)
@@ -83,10 +83,10 @@ def check_and_remove_pending_dos_changes(service_id: str) -> None:
     Args:
         service_id (str): The ID of the service to check
     """
-    with connect_to_dos_db() as connection:
+    with connect_to_db_writer() as connection:
         pending_changes = get_pending_changes(connection=connection, service_id=service_id)
         if pending_changes != [] and pending_changes is not None:
-            logger.info("Pending Changes to be rejected", extra={"pending_changes": pending_changes})
+            logger.info("Pending Changes to be rejected", pending_changes=pending_changes)
             reject_pending_changes(connection=connection, pending_changes=pending_changes)
             connection.commit()
             log_rejected_changes(pending_changes)
@@ -122,12 +122,12 @@ def get_pending_changes(connection: Connection, service_id: str) -> list[Pending
     pending_changes: list[PendingChange] = []
     for row in response_rows:
         pending_change = PendingChange(row)
-        logger.info(f"Pending change found: {pending_change}", extra={"pending_change": pending_change})
+        logger.info(f"Pending change found: {pending_change}", pending_change=pending_change)
         if pending_change.is_valid():
-            logger.debug(f"Pending change is valid: {pending_change.id}", extra={"pending_change": pending_change})
+            logger.debug(f"Pending change is valid: {pending_change.id}", pending_change=pending_change)
             pending_changes.append(pending_change)
         else:
-            logger.info(f"Pending change {pending_change.id} is invalid", extra={"pending_change": pending_change})
+            logger.info(f"Pending change {pending_change.id} is invalid", pending_change=pending_change)
 
     return pending_changes
 
@@ -156,7 +156,7 @@ def reject_pending_changes(connection: Connection, pending_changes: list[Pending
     }
     cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
     cursor.close()
-    logger.info("Rejected pending change/s", extra={"pending_changes": pending_changes})
+    logger.info("Rejected pending change/s", pending_changes=pending_changes)
 
 
 def log_rejected_changes(pending_changes: list[PendingChange]) -> None:
@@ -191,7 +191,7 @@ def send_rejection_emails(pending_changes: list[PendingChange]) -> None:
             email_subject=subject,
             user_id=pending_change.user_id,
         )
-        logger.info("Email file created", extra={"subject": subject, "user_id": pending_change.user_id})
+        logger.info("Email file created", subject=subject, user_id=pending_change.user_id)
         put_content_to_s3(content=dumps(email_file), s3_filename=file_name)
         logger.info("File contents uploaded to S3")
         file_contents = file_contents.replace("{{InitiatorName}}", pending_change.creatorsname)
@@ -206,7 +206,7 @@ def send_rejection_emails(pending_changes: list[PendingChange]) -> None:
         )
         logger.debug("Email message created")
         client("lambda").invoke(
-            FunctionName=environ["SEND_EMAIL_LAMBDA_NAME"],
+            FunctionName=environ["SEND_EMAIL_LAMBDA"],
             InvocationType="Event",
             Payload=dumps(message),
         )
@@ -231,7 +231,7 @@ def build_change_rejection_email_contents(pending_change: PendingChange, file_na
     file_contents = file_contents.replace("{{ServiceUid}}", pending_change.uid)
     file_contents = file_contents.replace("{{EmailCorrelationId}}", email_correlation_id)
     file_contents = file_contents.replace("{{DiTeamEmail}}", environ.get("TEAM_EMAIL_ADDRESS", ""))
-    logger.info("Email Correlation Id", extra={"email_correlation_id": email_correlation_id, "file_name": file_name})
+    logger.info("Email Correlation Id", email_correlation_id=email_correlation_id, file_name=file_name)
     json_value = loads(pending_change.value)
     for change_key, value in json_value["new"].items():
         # Add a new change row to the table in the email

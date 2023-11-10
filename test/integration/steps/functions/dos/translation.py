@@ -63,3 +63,18 @@ def get_service_history_data_key(plain_english_field_name: str) -> str:
             msg = f"Error!.. Input parameter '{plain_english_field_name}' not compatible"
             raise ValueError(msg)
     return field_name
+
+
+def get_status_id(status: str) -> int:
+    """Convert a plain English field name to the id of the status in the statuses table."""
+    match status.lower():
+        case "active":
+            status_id = 1
+        case "closed":
+            status_id = 2
+        case "commissioning":
+            status_id = 3
+        case _:
+            msg = f"Error!.. Input parameter '{status}' not compatible"
+            raise ValueError(msg)
+    return status_id

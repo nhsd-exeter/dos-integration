@@ -3,16 +3,16 @@
 # ==============================================================================
 # Service variables
 
-LOG_LEVEL:= DEBUG
+LOG_LEVEL := INFO
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-performance2-cluster-14
-DB_SERVER_NAME := uec-core-dos-performance2-cluster-14-one
-DB_REPLICA_SERVER_NAME := uec-core-dos-performance2-cluster-14-two
+DB_WRITER_NAME := uec-core-dos-performance2-cluster-14-one
+DB_READER_NAME := uec-core-dos-performance2-cluster-14-two
 
 # DB Route 53s
-DB_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
-DB_REPLICA_53 := uec-core-dos-performance2-di-replica.dos-db-sync-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
+DB_READER_ROUTE_53 := uec-core-dos-performance2-di-replica.dos-db-sync-rds
 
 # DB Connection Variables
 DB_PORT := 5432
@@ -20,16 +20,16 @@ DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DOS_DB_SG_NAME := uec-core-dos-performance2-datastore-sg
-DOS_DB_REPLICA_SG_NAME := uec-core-dos-performance2-db-12-replica-di-sg
+DB_WRITER_SG_NAME := uec-core-dos-performance2-datastore-sg
+DB_READER_SG_NAME := uec-core-dos-performance2-db-12-replica-di-sg
 
 # DB Secrets
-DB_SECRET_NAME := uec-core-dos-performance2-db-di-readwrite-user-password
-DB_SECRET_KEY := DB_DI_READWRITE_PASSWORD
+DB_WRITER_SECRET_NAME := uec-core-dos-performance2-db-di-readwrite-user-password
+DB_WRITER_SECRET_KEY := DB_DI_READWRITE_PASSWORD
 DB_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_USER_NAME_SECRET_KEY = DOS_DB_DI_USERNAME
-DB_REPLICA_SECRET_NAME := uec-core-dos-performance2-db-di-readonly-user-password
-DB_REPLICA_SECRET_KEY := DB_DI_READONLY_PASSWORD
+DB_READER_SECRET_NAME := uec-core-dos-performance2-db-di-readonly-user-password
+DB_READER_SECRET_KEY := DB_DI_READONLY_PASSWORD
 DB_READ_ONLY_USER_NAME_SECRET_NAME = uec-dos-int-dev/deployment
 DB_READ_ONLY_USER_NAME_SECRET_KEY = DOS_REPLICA_DI_USERNAME
 
@@ -59,3 +59,8 @@ SERVICE_SYNC_MAX_CONCURRENCY := 47
 DOS_DEPLOYMENT_SECRETS := null
 DOS_DEPLOYMENT_SECRETS_PASSWORD_KEY := null
 DOS_DB_HANDLER_DB_READ_AND_WRITE_USER_NAME := null
+
+# ==============================================================================
+# Quality Checker Variables
+
+ODSCODE_STARTING_CHARACTER := F

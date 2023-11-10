@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened]
     branches-ignore:
-      - 'dependabot/**'
+      - "dependabot/**"
 
 permissions:
   contents: read
@@ -38,6 +38,6 @@ jobs:
       - uses: tzkhan/pr-update-action@v2
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          head-branch-regex: '${{ env.BRANCH_DESIGNATOR }}/.*'
+          head-branch-regex: "${{ env.BRANCH_DESIGNATOR }}/.*"
           body-template: ${{ steps.template.outputs.result }}
-          body-update-action: 'replace'
+          body-update-action: "replace"
