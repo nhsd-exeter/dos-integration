@@ -30,6 +30,7 @@ class CommissionedServiceType:
     DOS_SYMPTOM_DISCRIMINATOR: int
     DOS_SG_SD_ID: str
 
+
 BLOOD_PRESSURE = CommissionedServiceType(
     TYPE_NAME="Blood Pressure",
     NHS_UK_SERVICE_CODE=NHS_UK_BLOOD_PRESSURE_SERVICE_CODE,
@@ -49,7 +50,7 @@ CONTRACEPTION = CommissionedServiceType(
 )
 
 PALLIATIVE_CARE = CommissionedServiceType(
-    TYPE_NAME= "Palliative Care",
+    TYPE_NAME="Palliative Care",
     NHS_UK_SERVICE_CODE=NHS_UK_PALLIATIVE_CARE_SERVICE_CODE,
     DOS_TYPE_ID=DOS_PALLIATIVE_CARE_TYPE_ID,
     DOS_SYMPTOM_GROUP=DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,

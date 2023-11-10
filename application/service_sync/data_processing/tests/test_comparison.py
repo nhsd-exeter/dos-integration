@@ -369,7 +369,7 @@ def test_compare_contraception() -> None:
 
 @patch.object(Logger, "info")
 def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
-        # Arrange
+    # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
@@ -393,15 +393,17 @@ def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
     # Assert
     mock_logger.assert_called_once_with(
         f"{stub_service_type.TYPE_NAME} is not equal, DoS='{dos_service.stub_type}' != NHS UK='{nhs_entity.stub_type}'",
-        extra={f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
+        extra={
+            f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
             f"nhsuk_{stub_service_type.TYPE_NAME}": nhs_entity.stub_type,
-            },
-        )
+        },
+    )
     assert True is response
+
 
 @patch.object(Logger, "info")
 def test_compare_commissioned_service_no_change(mock_logger: MagicMock) -> None:
-        # Arrange
+    # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
@@ -424,5 +426,6 @@ def test_compare_commissioned_service_no_change(mock_logger: MagicMock) -> None:
     response = compare_commissioned_service(changes=changes_to_dos, service_type=stub_service_type)
     # Assert
     mock_logger.assert_called_once_with(
-        f"{stub_service_type.TYPE_NAME} is equal, DoS='{dos_service.stub_type}' == NHS UK='{nhs_entity.stub_type}'")
+        f"{stub_service_type.TYPE_NAME} is equal, DoS='{dos_service.stub_type}' == NHS UK='{nhs_entity.stub_type}'"
+    )
     assert False is response

@@ -186,7 +186,7 @@ Python code is required be formatted and linted by Ruff.
 
 To run ruff on you branch:
 
-  make python-ruff-fix
+  make python-run-ruff-fixes
 
 ## Testing
 

@@ -281,7 +281,7 @@ def test_log_service_updates_standard_opening_times_change(mock_service_update_l
         odscode=str(changes_to_dos.nhs_entity.odscode),
         dos_service=changes_to_dos.dos_service,
     )
-    mock_service_update_logger.return_value.log_standard_opening_times_service_update_for_weekday.assert_called_once_with(  # noqa: E501
+    mock_service_update_logger.return_value.log_standard_opening_times_service_update_for_weekday.assert_called_once_with(
         data_field_modified=change_key,
         action=EXAMPLE_ACTION,
         previous_value=changes_to_dos.dos_service.standard_opening_times,
