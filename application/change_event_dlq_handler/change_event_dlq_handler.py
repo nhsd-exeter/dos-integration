@@ -1,3 +1,4 @@
+from os import environ
 from typing import Any
 
 from aws_embedded_metrics import metric_scope
@@ -67,9 +68,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         payload=change_event,
     )
     metrics.set_namespace("AWS/SQS")
-    metrics.set_property("level", "WARNING")
     metrics.set_property("message", error_msg)
     metrics.set_property("correlation_id", logger.get_correlation_id())
+    metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
     metrics.put_metric("NumberOfMessagesReceived", 1, "Count")
 
     sqs_timestamp = int(record.attributes["SentTimestamp"])

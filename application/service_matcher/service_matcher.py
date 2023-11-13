@@ -131,4 +131,5 @@ def send_update_request_metric(metrics: Any) -> None:  # noqa: ANN401
     """
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
     metrics.put_metric("UpdateRequestSent", 1, "Count")
