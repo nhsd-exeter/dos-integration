@@ -46,7 +46,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         change_payload=body,
     )
     metrics.set_namespace("AWS/SQS")
-    metrics.set_property("level", "WARNING")
     metrics.set_property("message", error_msg)
     metrics.set_property("correlation_id", logger.get_correlation_id())
     metrics.put_metric("NumberOfMessagesReceived", 1, "Count")

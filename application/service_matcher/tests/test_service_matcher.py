@@ -5,11 +5,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from application.service_matcher.service_matcher import lambda_handler, send_update_requests
+from application.service_matcher.service_matcher import lambda_handler, send_update_request_metric, send_update_requests
 from common.nhs import NHSEntity
 
 FILE_PATH = "application.service_matcher.service_matcher"
@@ -170,6 +171,20 @@ def test_send_update_requests(
     mock_send_update_request_metric.assert_called_once()
     # Clean up
     del environ["UPDATE_REQUEST_QUEUE_URL"]
+
+
+@patch.object(MetricsLogger, "set_dimensions")
+@patch.object(MetricsLogger, "put_metric")
+def test_send_update_request_metric(mock_put_metric, mock_set_dimensions):
+    # Arrange
+    environ["ENV"] = env = "test"
+    # Act
+    send_update_request_metric()
+    # Assert
+    mock_set_dimensions.assert_called_once_with({"ENV": env})
+    mock_put_metric.assert_called_once()
+    # Clean up
+    del environ["ENV"]
 
 
 HOLDING_QUEUE_CHANGE_EVENT_ITEM = HoldingQueueChangeEventItem(

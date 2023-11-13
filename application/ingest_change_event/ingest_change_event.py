@@ -102,5 +102,7 @@ def add_change_event_received_metric(ods_code: str, metrics: Any) -> None:  # no
     """
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_property("message", f"Change Event Received for ODSCode: {ods_code}")
-    metrics.put_metric("ChangeEventReceived", 1, "Count")
+    metrics.set_property("ods_code", ods_code)
     metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
+    metrics.put_metric("ChangeEventReceived", 1, "Count")

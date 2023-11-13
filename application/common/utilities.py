@@ -116,7 +116,7 @@ def add_metric(metric_name: str, metrics: Any) -> None:  # noqa: ANN401
         metrics (Class): Metrics class
     """
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "INFO")
     metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.put_metric(metric_name, 1, "Count")
     metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
+    metrics.put_metric(metric_name, 1, "Count")

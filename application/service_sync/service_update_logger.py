@@ -321,6 +321,7 @@ def add_service_updated_metric(data_field_modified: str) -> None:
         metrics.set_namespace("UEC-DOS-INT")
         metrics.set_property("correlation_id", logger.get_correlation_id())
         metrics.set_dimensions({"ENV": environ["ENV"], "field": data_field_modified})
+        metrics.set_property("level", "WARNING")
         metrics.put_metric("DoSServiceUpdate", 1, "Count")
 
     @metric_scope
@@ -328,6 +329,7 @@ def add_service_updated_metric(data_field_modified: str) -> None:
         metrics.set_namespace("UEC-DOS-INT")
         metrics.set_property("correlation_id", logger.get_correlation_id())
         metrics.set_dimensions({"ENV": environ["ENV"]})
+        metrics.set_property("level", "WARNING")
         metrics.put_metric("DoSAllServiceUpdates", 1, "Count")
 
     service_update_metric_field()

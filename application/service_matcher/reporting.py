@@ -94,9 +94,8 @@ def log_invalid_open_times(
         dos_services=", ".join(str(service.uid) for service in matching_services),
     )
     metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "WARNING")
-    metrics.set_property("message", error_msg)
     metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
     metrics.put_metric("InvalidOpenTimes", 1, "Count")
 
 

@@ -51,4 +51,5 @@ def quality_check_report_metric(metrics: Any) -> None:  # noqa: ANN401
     """
     metrics.set_namespace("UEC-DOS-INT")
     metrics.set_dimensions({"ENV": environ["ENV"]})
+    metrics.set_property("level", "WARNING")
     metrics.put_metric("QualityCheckerIssueFound", 1, "Count")
