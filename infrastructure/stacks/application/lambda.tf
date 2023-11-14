@@ -306,7 +306,6 @@ module "service_matcher_lambda" {
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
     "DB_WRITER_SERVER"                   = var.dos_db_writer_route_53
     "DB_SCHEMA"                          = var.dos_db_schema
-    "PHARMACY_FIRST_PHASE_ONE_PARAMETER" = var.pharmacy_first_phase_one_parameter
   }
 }
 

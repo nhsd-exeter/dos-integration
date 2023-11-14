@@ -145,15 +145,6 @@ variable "send_email_bucket_name" {
 }
 
 # ##############
-# # PARAMETER STORE
-# ##############
-
-variable "pharmacy_first_phase_one_parameter" {
-  type        = string
-  description = "The name of the parameter for the pharmacy first phase one feature flag"
-}
-
-# ##############
 # # FIREHOSE
 # ##############
 
