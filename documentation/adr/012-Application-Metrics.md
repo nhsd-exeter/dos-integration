@@ -13,6 +13,8 @@ How to generate metrics? - What is the best process?, Costs least and is easiest
 
 The DoS Integration project currently uses a Python library called aws-embedded-metrics to create metrics using AWS's system for generating metrics by embedding them into logs. However an alternative option is to use AWS CloudWatch Metric Filters. Is our current approach the best for creating AWS CloudWatch metrics?
 
+As well any decision can be used to inform any new applications that may be developed by this team in future.
+
 High level requirements
 
 * Generating Metrics should be cheap to create and store
@@ -34,7 +36,8 @@ Cons:
 * Embedded metrics use an untyped library requiring the any type to be used
 * Difficult to understand metrics class due to no types
 * Requires an additional Python library which must be install and imported
-* Library Doesn't currently have 3.12 wheels which breaks the docker build when set to run in Python 3.12
+* Library doesn't currently have 3.12 wheels which breaks the docker build when set to run in Python 3.12
+* Library isn't well supported in comparison to aws-lambda-powertools which also have metric generating features.
 
 #### Option 2 - Migrate Metrics to CloudWatch Metric Filters
 
@@ -45,7 +48,8 @@ Pros:
 * CloudWatch Metric Filters are free
   * Note: Metrics themselves still cost money
 * Allows earlier migration to Python 3.12
-* Reducing Application code increases performance of lambdas and application throughput
+* Reducing application code increases performance of lambdas and application throughput
+  * Reduces Python code complexity including unit test complexity
 * Less logs created
   * Easier to analyse logs due to less clutter
 * Doesn't require an additional Python library
