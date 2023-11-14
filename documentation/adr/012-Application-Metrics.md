@@ -11,7 +11,7 @@ How to generate metrics? - What is the best process?, Costs least and is easiest
 
 ## Context
 
-The DoS Integration project currently uses a Python library called aws-embedded-metrics to create metrics using AWS's system for generating metrics by embedding them into logs. However an alternative option is to use AWS CloudWatch Metric Filters. Is our current approach the best for creating AWS CloudWatch metrics?
+The DoS Integration project currently uses a Python library called aws-embedded-metrics to create metrics using AWS's system for generating metrics by embedding them into logs. However, an alternative cloud native option is to use AWS CloudWatch Metric Filters. Is our current approach the best for creating AWS CloudWatch metrics?
 
 As well any decision can be used to inform any new applications that may be developed by this team in future.
 
