@@ -2,15 +2,39 @@
 
 ## Overview
 
+How to generate metrics? - What is the best process?, Costs least and is easiest to maintain.
+
+* Date: 2023/11/14
+* Status:
+* Deciders: The DoS Integration development team
+
 
 ## Context
 
+The DoS Integration project currently uses a Python library called aws-embedded-metrics to create metrics using AWS's system for generating metrics by embedding them into logs. However an alternative option is to use AWS CloudWatch Metric Filters. Is our current approach the best for creating AWS CloudWatch metrics?
+
+High level requirements
+
+* Generating Metrics should be cheap to create and store
+* Generating Metrics should be maintainable
+* CloudWatch Metrics work with Splunk
 
 ### Detailed analysis of the options
 
 #### Option 1 - Maintain Metrics as Embedded Metrics
 
+This option is to remain with aws-embedded-metrics as the way for generating metrics.
 
+Pros:
+
+* Metrics are co-located next to logs
+
+Cons:
+
+* Embedded metrics use an untyped library requiring the any type to be used
+* Difficult to understand metrics class due to no types
+* Requires an additional Python library which must be install and imported
+* Library Doesn't currently have 3.12 wheels which breaks the docker build when set to run in Python 3.12
 
 #### Option 2 - Migrate Metrics to CloudWatch Metric Filters
 
@@ -19,16 +43,19 @@ This option is to replace the current Metric generation system with CloudWatch M
 Pros:
 
 * CloudWatch Metric Filters are free
-  * Note: Metrics which are already a known for still cost money
+  * Note: Metrics themselves still cost money
 * Allows earlier migration to Python 3.12
-* Reducing Application code should increase performance of lambdas
-  * Faster lambdas cost less
+* Reducing Application code increases performance of lambdas and application throughput
 * Less logs created
-  * Reduced Log Cost
   * Easier to analyse logs due to less clutter
+* Doesn't require an additional Python library
+* Logs and metrics are often duplicated
+
+Note: Reducing logs and lambda duration cost from estimates appears to reduces cost negligibly
 
 Cons:
 
 * Metrics code isn't co-located with logs
+* Metrics are defined by JSON matching, if the matching criteria no longer matches the log then no metric will be created
 
 ## Decision
