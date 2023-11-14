@@ -53,7 +53,6 @@ Pros:
 * Less logs created
   * Easier to analyse logs due to less clutter
 * Doesn't require an additional Python library
-* Logs and metrics are often duplicated
 
 Note: Reducing logs and lambda duration cost from estimates appears to reduces cost negligibly
 
@@ -63,3 +62,7 @@ Cons:
 * Metrics are defined by JSON matching, if the matching criteria no longer matches the log then no metric will be created
 
 ## Decision
+
+**The decision was made to go with option 2** as it provides many benefits such as reducing code complexity with few downsides. On of the downsides mentioned in this discussion is the chance for the metrics to be incorrectly set after a future change is made to ensure this doesn't happen the mitigation will be to add a new key on each log which suggests that the log is being used by a CloudWatch Metric Filter to reduce the likelihood of a breaking change.
+
+As such we will now transition all generation of metrics to AWS CloudWatch Metric Filters and remove any related code to aws-embedded-metrics.
