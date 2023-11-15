@@ -434,8 +434,12 @@ module "quality_checker_lambda" {
   role_name        = "${var.quality_checker_lambda}-role"
   role_description = "Role for Lambda function ${var.quality_checker_lambda}"
 
-  attach_policy_json = true
-  policy_json        = data.aws_iam_policy_document.quality_checker_policy.json
+  attach_policy_json    = true
+  policy_json           = data.aws_iam_policy_document.quality_checker_policy.json
+  attach_network_policy = true
+
+  vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
+  vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
 
   environment_variables = {
     "PROFILE"                            = var.profile
@@ -455,8 +459,6 @@ module "quality_checker_lambda" {
     "DB_READER_SERVER"                   = var.dos_db_reader_route_53
     "DB_WRITER_SERVER"                   = var.dos_db_writer_route_53
     "DB_SCHEMA"                          = var.dos_db_schema
-    "DB_WRITER_SECRET_NAME"              = var.dos_db_writer_secret_name
-    "DB_WRITER_SECRET_KEY"               = var.dos_db_writer_secret_key
-    "DB_READ_AND_WRITE_USER_NAME"        = local.dos_db_read_and_write_user_name
+    "ODSCODE_STARTING_CHARACTER"         = var.odscode_starting_character
   }
 }

@@ -502,3 +502,8 @@ variable "dos_db_read_only_user_name_secret_key" {
   type        = string
   description = "Key of the dos db read only user name secret"
 }
+
+variable "odscode_starting_character" {
+  type        = string
+  description = "The starting character of the ods code"
+}
