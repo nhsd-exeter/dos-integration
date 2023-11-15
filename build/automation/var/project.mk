@@ -30,19 +30,12 @@ TF_VAR_github_owner = nhsd-exeter
 TF_VAR_github_repo = dos-integration
 PARALLEL_TEST_COUNT := $(or $(PARALLEL_TEST_COUNT), auto)
 
-# DOS DB (Aurora)
-TF_VAR_dos_db_cluster_name:= $(DB_CLUSTER_NAME)
-TF_VAR_dos_db_writer_name := $(DB_WRITER_NAME)
-TF_VAR_dos_db_reader_name := $(DB_READER_NAME)
-
 UNACCEPTABLE_VULNERABILITY_LEVELS = CRITICAL,HIGH,MEDIUM
 
 BLUE_GREEN_ENVIRONMENT := $(or $(BLUE_GREEN_ENVIRONMENT), $(ENVIRONMENT))
 SHARED_ENVIRONMENT := $(or $(SHARED_ENVIRONMENT), $(ENVIRONMENT))
 TF_VAR_blue_green_environment := $(BLUE_GREEN_ENVIRONMENT)
 TF_VAR_shared_environment := $(SHARED_ENVIRONMENT)
-
-AWS_SSO_ROLE_KEY := AWS_SSO_ROLE
 
 # Development and Deployment Tools
 TF_VAR_cicd_blue_green_deployment_pipeline_artefact_bucket := $(PROJECT_ID)-$(ENVIRONMENT)-cicd-blue-green-deployment-artefacts
@@ -61,12 +54,14 @@ TF_VAR_pipeline_chatbot_channel := $(PROJECT_ID)-cicd-slk-channel
 TF_VAR_nightly_rule_name := $(PROJECT_ID)-$(ENVIRONMENT)-performance-pipeline-nightly-rule
 
 # ==============================================================================
-# Infrastructure variables (Terraform, Serverless, etc)
+# Infrastructure variables (Terraform, etc)
 # -------------------------------
 # Common variables for all environments
 
+# General
+TF_VAR_docker_registry := $(DOCKER_REGISTRY)
+
 # Tags
-TF_VAR_tags_secret_manager = $(TAG_SECRET_MANAGER)
 SERVICE_CATEGORY_KEY := DI_SERVICE_CATEGORY
 DATA_CLASSIFICATION_KEY := DI_DATA_CLASSIFICATION
 DISTRIBUTION_LIST_KEY := DI_DISTRIBUTION_LIST
@@ -137,7 +132,7 @@ TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(S
 
 # Parameter Store (Application)
 PHARMACY_FIRST_PHASE_ONE_PARAMETER := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-pharmacy-first-phase-one
-TF_VAR_pharmacy_first_phase_one_parameter_name := $(PHARMACY_FIRST_PHASE_ONE_PARAMETER)
+TF_VAR_pharmacy_first_phase_one_parameter:= $(PHARMACY_FIRST_PHASE_ONE_PARAMETER)
 
 # WAF
 TF_VAR_waf_enabled := $(WAF_ENABLED)
@@ -165,10 +160,20 @@ TF_VAR_db_reader_sg_name := $(DB_READER_SG_NAME)
 # SQS Queues
 TF_VAR_holding_queue := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo
 TF_VAR_update_request_queue := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-queue.fifo
-UPDATE_REQUEST_QUEUE_URL := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_update_request_queue)
-HOLDING_QUEUE_URL := https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_holding_queue)
 TF_VAR_holding_queue_dlq := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue-dead-letter-queue.fifo
 TF_VAR_update_request_dlq := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-update-request-dead-letter-queue.fifo
+
+# Docker Image Names
+TF_VAR_change_event_dlq_handler := $(CHANGE_EVENT_DLQ_HANDLER)
+TF_VAR_dos_db_handler := $(DOS_DB_HANDLER)
+TF_VAR_dos_db_update_dlq_handler := $(DOS_DB_UPDATE_DLQ_HANDLER)
+TF_VAR_event_replay := $(EVENT_REPLAY)
+TF_VAR_ingest_change_event := $(INGEST_CHANGE_EVENT)
+TF_VAR_send_email := $(SEND_EMAIL)
+TF_VAR_service_matcher := $(SERVICE_MATCHER)
+TF_VAR_service_sync := $(SERVICE_SYNC)
+TF_VAR_slack_messenger := $(SLACK_MESSENGER)
+TF_VAR_quality_checker := $(QUALITY_CHECKER)
 
 # Lambda names
 CHANGE_EVENT_DLQ_HANDLER_LAMBDA := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-$(CHANGE_EVENT_DLQ_HANDLER)
@@ -193,17 +198,17 @@ TF_VAR_service_sync_lambda := $(SERVICE_SYNC_LAMBDA)
 TF_VAR_slack_messenger_lambda := $(SLACK_MESSENGER_LAMBDA)
 TF_VAR_quality_checker_lambda := $(QUALITY_CHECKER_LAMBDA)
 
-# Lambda IAM Roles
-CHANGE_EVENT_DLQ_HANDLER_LAMBDA_ROLE_NAME := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA)-role
-DOS_DB_HANDLER_LAMBDA_ROLE_NAME := $(DOS_DB_HANDLER_LAMBDA)-role
-DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA_ROLE_NAME := $(DOS_DB_UPDATE_DLQ_HANDLER_LAMBDA)-role
-EVENT_REPLAY_LAMBDA_ROLE_NAME := $(EVENT_REPLAY_LAMBDA)-role
-INGEST_CHANGE_EVENT_LAMBDA_ROLE_NAME := $(INGEST_CHANGE_EVENT_LAMBDA)-role
-SEND_EMAIL_LAMBDA_ROLE_NAME := $(SEND_EMAIL_LAMBDA)-role
-SERVICE_MATCHER_LAMBDA_ROLE_NAME := $(SERVICE_MATCHER_LAMBDA)-role
-SERVICE_SYNC_LAMBDA_ROLE_NAME := $(SERVICE_SYNC_LAMBDA)-role
-SLACK_MESSENGER_LAMBDA_ROLE_NAME := $(SLACK_MESSENGER_LAMBDA)-role
-QUALITY_CHECKER_LAMBDA_ROLE_NAME := $(QUALITY_CHECKER_LAMBDA)-role
+# Lambda Versions
+TF_VAR_change_event_dlq_handler_version := $(or $(CHANGE_EVENT_DLQ_HANDLER_VERSION), $(VERSION))
+TF_VAR_dos_db_handler_version := $(or $(DOS_DB_HANDLER_VERSION), $(VERSION))
+TF_VAR_dos_db_update_dlq_handler_version := $(or $(DOS_DB_UPDATE_DLQ_HANDLER_VERSION), $(VERSION))
+TF_VAR_event_replay_version := $(or $(EVENT_REPLAY_VERSION), $(VERSION))
+TF_VAR_ingest_change_event_version := $(or $(INGEST_CHANGE_EVENT_VERSION), $(VERSION))
+TF_VAR_send_email_version := $(or $(SEND_EMAIL_VERSION), $(VERSION))
+TF_VAR_service_matcher_version := $(or $(SERVICE_MATCHER_VERSION), $(VERSION))
+TF_VAR_service_sync_version := $(or $(SERVICE_SYNC_VERSION), $(VERSION))
+TF_VAR_slack_messenger_version := $(or $(SLACK_MESSENGER_VERSION), $(VERSION))
+TF_VAR_quality_checker_version := $(or $(QUALITY_CHECKER_VERSION), $(VERSION))
 
 TF_VAR_change_event_dlq_handler_role := $(CHANGE_EVENT_DLQ_HANDLER_LAMBDA_ROLE_NAME)
 TF_VAR_dos_db_handler_role := $(DOS_DB_HANDLER_LAMBDA_ROLE_NAME)
@@ -234,3 +239,30 @@ TF_VAR_sqs_dlq_recieved_msg_alert_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT
 TF_VAR_sns_topic_app_alerts_for_slack_default_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-default-region
 TF_VAR_sns_topic_app_alerts_for_slack_route53_health_check_alarm_region := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-topic-app-alerts-for-slack-route53-health-check-alarm-region
 SQS_QUEUE_URL:= https://sqs.$(AWS_REGION).amazonaws.com/$(AWS_ACCOUNT_ID)/$(TF_VAR_change_event_queue)
+
+# Lambda Concurrency
+TF_VAR_service_matcher_max_concurrency := $(SERVICE_MATCHER_MAX_CONCURRENCY)
+TF_VAR_service_sync_max_concurrency := $(SERVICE_SYNC_MAX_CONCURRENCY)
+
+# Lambda Variables
+TF_VAR_log_level := $(LOG_LEVEL)
+TF_VAR_lambda_powertools_service_name := $(PROGRAMME)-$(TEAM_ID)-$(PROFILE)-$(BLUE_GREEN_ENVIRONMENT)
+TF_VAR_slack_alert_channel := $(SLACK_ALERT_CHANNEL)
+TF_VAR_dos_db_cluster_name := $(DB_CLUSTER_NAME)
+TF_VAR_dos_db_writer_name := $(DB_WRITER_NAME)
+TF_VAR_dos_db_reader_name := $(DB_READER_NAME)
+TF_VAR_dos_db_writer_route_53 := $(DB_WRITER_ROUTE_53)
+TF_VAR_dos_db_reader_route_53 := $(DB_READER_ROUTE_53)
+TF_VAR_dos_db_port := $(DB_PORT)
+TF_VAR_dos_db_name := $(DB_NAME)
+TF_VAR_dos_db_schema := $(DB_SCHEMA)
+TF_VAR_dos_db_writer_security_group_name := $(DB_WRITER_SG_NAME)
+TF_VAR_dos_db_reader_security_group_name := $(DB_READER_SG_NAME)
+TF_VAR_dos_db_writer_secret_name := $(DB_WRITER_SECRET_NAME)
+TF_VAR_dos_db_writer_secret_key := $(DB_WRITER_SECRET_KEY)
+TF_VAR_dos_db_reader_secret_name := $(DB_READER_SECRET_NAME)
+TF_VAR_dos_db_reader_secret_key := $(DB_READER_SECRET_KEY)
+TF_VAR_dos_db_read_only_user_name_secret_name := $(DB_READ_ONLY_USER_NAME_SECRET_NAME)
+TF_VAR_dos_db_read_only_user_name_secret_key := $(DB_READ_ONLY_USER_NAME_SECRET_KEY)
+TF_VAR_slack_webhook_secret_key := $(SLACK_WEBHOOK_SECRET_KEY)
+TF_VAR_odscode_starting_character := $(ODSCODE_STARTING_CHARACTER)

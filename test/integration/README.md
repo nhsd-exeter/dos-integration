@@ -50,8 +50,8 @@ The test suite also requires `assume` to be setup for the AWS account being used
 
 ### Tags
 
-The test suite is setup to be run with a series of tags, that enable the runner to choose the tests being selected. Tags do not have to match exactly, they are matched as if they are followed by a wildcard, so for example, it is possible to run all pharmacy related tests with the TAGS=complete variable set. The suite does not, however, support all Cucumber tag functionality, as the tags are passed through as a variable from the run command without the '@' symbol.
-E.g. `TAGS=complete`
+The test suite is setup to be run with a series of tags, that enable the runner to choose the tests being selected. Tags do not have to match exactly, they are matched as if they are followed by a wildcard, so for example, it is possible to run all pharmacy related tests with the TAG=complete variable set. The suite does not, however, support all Cucumber tag functionality, as the tags are passed through as a variable from the run command without the '@' symbol.
+E.g. `TAG=complete`
 
 ### Environment
 
@@ -64,7 +64,7 @@ Note: Your personal IP address may need to be white listed on the selected envir
 ### Running tests
 
 The test suite can therefore be run by using the following command:
-`make integration-test PROFILE=dev ENVIRONMENT={ENV_NAME} TAGS={TAGS}`
+`make integration-test PROFILE=dev ENVIRONMENT={ENV_NAME} TAG={TAGS}`
 
 This will run the test suite with all selected tagged tests being run against the selected environment.
 

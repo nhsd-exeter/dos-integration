@@ -86,6 +86,8 @@ The current technology stack is:
 - Serverless Framework - Lambda
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
+- Terraform - Infrastructure as code tool
+
 ## Quick Start
 
 ### Development Requirements
@@ -246,7 +248,7 @@ Prerequisites
 
 To run unit tests run the following commands
 
-    make integration-test PROFILE=dev TAGS=pharmacy PARALLEL_TEST_COUNT=10
+    make integration-test PROFILE=dev TAG=complete PARALLEL_TEST_COUNT=10
 
 Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
 

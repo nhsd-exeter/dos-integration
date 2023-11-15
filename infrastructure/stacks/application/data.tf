@@ -8,12 +8,27 @@ data "aws_vpc" "texas_vpc" {
   }
 }
 
+data "aws_subnets" "texas_vpc_private_subnets" {
+  filter {
+    name   = "tag:Name"
+    values = ["${var.aws_vpc_name}-private-${var.aws_region}a", "${var.aws_vpc_name}-private-${var.aws_region}b", "${var.aws_vpc_name}-private-${var.aws_region}c"]
+  }
+}
+
 # ##############
 # # KMS
 # ##############
 
 data "aws_kms_key" "signing_key" {
   key_id = "alias/${var.signing_key_alias}"
+}
+
+# ##############
+# # SQS
+# ##############
+
+data "aws_sqs_queue" "change_event_dlq" {
+  name = var.change_event_dlq
 }
 
 # ##############
@@ -56,4 +71,36 @@ data "aws_security_group" "db_writer_sg" {
 
 data "aws_security_group" "db_reader_sg" {
   name = var.db_reader_sg_name
+}
+
+# ##############
+# # KINESIS
+# ##############
+
+data "aws_kinesis_firehose_delivery_stream" "dos_integration_firehose" {
+  name = var.dos_integration_firehose
+}
+
+data "aws_kinesis_firehose_delivery_stream" "dos_firehose" {
+  name = var.dos_firehose
+}
+
+# ##############
+# # IAM
+# ##############
+
+data "aws_iam_role" "di_firehose_role" {
+  name = var.di_firehose_role
+}
+
+data "aws_iam_role" "dos_firehose_role" {
+  name = var.dos_firehose_role
+}
+
+# ##############
+# # Secrets Manager
+# ##############
+
+data "aws_secretsmanager_secret_version" "deployment_secrets" {
+  secret_id = var.project_deployment_secrets
 }
