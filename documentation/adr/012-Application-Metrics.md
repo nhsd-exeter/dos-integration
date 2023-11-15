@@ -4,8 +4,8 @@
 
 How to generate metrics? - What is the best process?, Costs least and is easiest to maintain.
 
-* Date: 2023/11/14
-* Status:
+* Date: 2023/11/15
+* Status: Decided
 * Deciders: The DoS Integration development team
 
 
