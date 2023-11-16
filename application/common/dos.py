@@ -107,12 +107,11 @@ class DoSService:
         return self.region
 
 
-def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_flag: bool) -> list[DoSService]:
+def get_matching_dos_services(odscode: str) -> list[DoSService]:
     """Retrieves DoS Services from DoS database.
 
     Args:
         odscode (str): ODScode to match on
-        pharmacy_first_phase_one_feature_flag (bool): Whether to include pharmacy first services
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
@@ -122,26 +121,17 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
         "ODS": f"{odscode[:5]}%",
         "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
         "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+        "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
+        "PHARMACY_FIRST_STATUSES": [DOS_ACTIVE_STATUS_ID, DOS_CLOSED_STATUS_ID, DOS_COMMISSIONING_STATUS_ID],
     }
-
-    if pharmacy_first_phase_one_feature_flag:  # Add pharmacy first condition
-        pharmacy_first_condition = "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
-        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = [148, 149]
-        named_args["PHARMACY_FIRST_STATUSES"] = [
-            DOS_ACTIVE_STATUS_ID,
-            DOS_CLOSED_STATUS_ID,
-            DOS_COMMISSIONING_STATUS_ID,
-        ]
-    else:
-        pharmacy_first_condition = ""
-
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
         "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
         "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
         "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-        f"AND s.statusid = %(ACTIVE_STATUS_ID)s {pharmacy_first_condition}"
+        "AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s "
+        "AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
     )
     with connect_to_db_reader() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)

@@ -276,25 +276,6 @@ data "aws_iam_policy_document" "service_matcher_policy" {
       data.aws_kms_key.signing_key.arn,
     ]
   }
-  statement {
-    effect = "Allow"
-    actions = [
-      "ssm:DescribeParameters",
-    ]
-    resources = [
-      "*",
-    ]
-  }
-  statement {
-    effect = "Allow"
-    actions = [
-      "ssm:GetParameter",
-    ]
-    resources = [
-      "arn:aws:ssm:${var.aws_region}:${var.aws_account_id}:parameter/${var.pharmacy_first_phase_one_parameter}",
-    ]
-  }
-
 }
 
 data "aws_iam_policy_document" "service_sync_policy" {
