@@ -15,7 +15,7 @@ FILE_PATH = "application.ingest_change_event.change_event_validation"
 
 
 @patch(f"{FILE_PATH}.validate_organisation_keys")
-def test_validate_change_event(mock_validate_organisation_keys: MagicMock, change_event: dict[str, str]):
+def test_validate_change_event(mock_validate_organisation_keys: MagicMock, change_event: dict[str, str]) -> None:
     # Act & Assert
     validate_change_event(change_event)
 
@@ -24,7 +24,7 @@ def test_validate_change_event(mock_validate_organisation_keys: MagicMock, chang
 @patch(f"{FILE_PATH}.check_ods_code_length")
 def test_validate_change_event_missing_key(
     mock_check_ods_code_length: MagicMock, mock_validate_organisation_keys: MagicMock, change_event: dict[str, str]
-):
+) -> None:
     # Arrange
     del change_event["ODSCode"]
     # Act
@@ -43,7 +43,7 @@ def test_validate_change_event_missing_key(
         ("00000"),
     ],
 )
-def test_check_ods_code_length(odscode: str):
+def test_check_ods_code_length(odscode: str) -> None:
     # Act & Assert
     check_ods_code_length(odscode)
 
@@ -57,7 +57,7 @@ def test_check_ods_code_length(odscode: str):
         ("V01234567"),
     ],
 )
-def test_check_ods_code_length_incorrect_length(odscode: str):
+def test_check_ods_code_length_incorrect_length(odscode: str) -> None:
     # Act & Assert
     with pytest.raises(ValidationError):
         check_ods_code_length(odscode)
@@ -77,7 +77,7 @@ def test_validate_organisation_keys(
     mock_validate_organisation_type_id: MagicMock,
     org_type_id: str,
     org_sub_type: str,
-):
+) -> None:
     # Act & Assert
     validate_organisation_keys(org_type_id, org_sub_type)
 
@@ -100,7 +100,7 @@ def test_validate_organisation_keys_org_sub_type_id_exception(
     mock_validate_organisation_type_id: MagicMock,
     org_type_id: str,
     org_sub_type: str,
-):
+) -> None:
     # Act & Assert
     with pytest.raises(ValidationError) as exception:
         validate_organisation_keys(org_type_id, org_sub_type)
@@ -108,7 +108,7 @@ def test_validate_organisation_keys_org_sub_type_id_exception(
 
 
 @pytest.mark.parametrize("org_type_id", [PHARMACY_ORG_TYPE_ID])
-def test_validate_organisation_type_id(org_type_id: str):
+def test_validate_organisation_type_id(org_type_id: str) -> None:
     # Act
     response = validate_organisation_type_id(org_type_id)
     # Assert
@@ -116,7 +116,7 @@ def test_validate_organisation_type_id(org_type_id: str):
 
 
 @pytest.mark.parametrize("org_type_id", ["GP", "DEN", "TEST1"])
-def test_validate_organisation_type_id_wrong_org_type_id_exception(org_type_id: str):
+def test_validate_organisation_type_id_wrong_org_type_id_exception(org_type_id: str) -> None:
     # Act & Assert
     with pytest.raises(ValidationError) as exception:
         validate_organisation_type_id(org_type_id)

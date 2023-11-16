@@ -29,7 +29,7 @@ def test_lambda_handler(
     mock_sqs: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -88,7 +88,7 @@ def test_lambda_handler_with_sensitive_staff_key(
     change_event_staff: dict,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event_staff.copy())
@@ -148,7 +148,7 @@ def test_lambda_handler_no_sequence_number(
     mock_logger_error: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -201,7 +201,7 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_logger_error: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -256,7 +256,7 @@ def test_lambda_handler_mutiple_records(
     mock_sqs: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     record = event["Records"][0]

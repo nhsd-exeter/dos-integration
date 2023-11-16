@@ -18,7 +18,7 @@ test_attr_names = ("odscode", "website", "PublicPhone", "Phone", "Postcode")
 PHARMACY_SERVICE_ID = PHARMACY_SERVICE_TYPE_IDS[0]
 
 
-def test__init__():
+def test__init__() -> None:
     # Arrange
     test_data = PHARMACY_STANDARD_EVENT
     # Act
@@ -40,7 +40,7 @@ def test__init__():
     ]
 
 
-def test_get_specified_opening_times():
+def test_get_specified_opening_times() -> None:
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -127,7 +127,7 @@ def test_get_specified_opening_times():
     ), f"Should return {len(expected)} , actually: {len(actual_spec_open_times)}"
 
 
-def test_get_standard_opening_times():
+def test_get_standard_opening_times() -> None:
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -190,7 +190,7 @@ def test_get_standard_opening_times():
 
 
 @pytest.mark.parametrize("organisation_status", ["Visible", "OTHER"])
-def test_is_status_hidden_or_closed_open_service(organisation_status: str):
+def test_is_status_hidden_or_closed_open_service(organisation_status: str) -> None:
     # Arrange
     test_data = {"OrganisationStatus": organisation_status}
     nhs_entity = NHSEntity(test_data)
@@ -201,7 +201,7 @@ def test_is_status_hidden_or_closed_open_service(organisation_status: str):
 
 
 @pytest.mark.parametrize("organisation_status", CLOSED_AND_HIDDEN_STATUSES)
-def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
+def test_is_status_hidden_or_closed_not_open_service(organisation_status: str) -> None:
     # Arrange
     test_data = {"OrganisationStatus": organisation_status}
     nhs_entity = NHSEntity(test_data)
@@ -373,7 +373,7 @@ def test_is_status_hidden_or_closed_not_open_service(organisation_status: str):
         ),
     ],
 )
-def test_is_std_opening_json(open_time_json: dict, expected: bool):
+def test_is_std_opening_json(open_time_json: dict, expected: bool) -> None:
     actual = is_std_opening_json(open_time_json)
     assert actual == expected, f"Std time should be valid={expected} but wasn't. open_time={open_time_json}"
 
@@ -542,12 +542,12 @@ def test_is_std_opening_json(open_time_json: dict, expected: bool):
         ),
     ],
 )
-def test_is_spec_opening_json(open_time_json: dict, expected: bool):
+def test_is_spec_opening_json(open_time_json: dict, expected: bool) -> None:
     actual = is_spec_opening_json(open_time_json)
     assert actual == expected, f"Spec time should be valid={expected} but wasn't. open_time={open_time_json}"
 
 
-def test_is_matching_dos_service():
+def test_is_matching_dos_service() -> None:
     nhs_entity = NHSEntity({})
     dos_service = dummy_dos_service()
 
@@ -609,7 +609,7 @@ def test_is_matching_dos_service():
         ),
     ],
 )
-def test_check_for_uec_service(input_value: str | bool | None, output_value: bool | dict):
+def test_check_for_uec_service(input_value: str | bool | None, output_value: bool | dict) -> None:
     entity = NHSEntity({"ODSCode": "V012345", "UecServices": input_value})
     assert entity.check_for_uec_service("SRV0559") == output_value
 
@@ -633,7 +633,7 @@ def test_check_for_uec_service(input_value: str | bool | None, output_value: boo
         ),
     ],
 )
-def test_check_for_service(input_value: str | bool | None, output_value: bool | dict):
+def test_check_for_service(input_value: str | bool | None, output_value: bool | dict) -> None:
     entity = NHSEntity({"ODSCode": "V012345", "Services": input_value})
     assert entity.check_for_service("SRV0559") == output_value
 
@@ -647,7 +647,7 @@ def test_check_for_service(input_value: str | bool | None, output_value: bool | 
         (False, False),
     ],
 )
-def test_skip_if_key_is_none(input_value: str | bool | None, output_value: bool):
+def test_skip_if_key_is_none(input_value: str | bool | None, output_value: bool) -> None:
     assert output_value == skip_if_key_is_none(input_value)
 
 
@@ -660,5 +660,7 @@ def test_skip_if_key_is_none(input_value: str | bool | None, output_value: bool)
         (False, True, "Never been updated on Profile Manager, skipped palliative care checks"),
     ],
 )
-def test_get_palliative_care_log_value(palliative_care: bool, skip_palliative_care: bool, output_value: bool | str):
+def test_get_palliative_care_log_value(
+    palliative_care: bool, skip_palliative_care: bool, output_value: bool | str
+) -> None:
     assert get_palliative_care_log_value(palliative_care, skip_palliative_care) == output_value

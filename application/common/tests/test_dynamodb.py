@@ -181,7 +181,7 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     assert latest_sequence_number == expected_latest_sequence_number
 
 
-def copy_and_modify_website(change_event: dict[str, str], new_website: str):
+def copy_and_modify_website(change_event: dict[str, str], new_website: str) -> None:
     copy = change_event.copy()
     copy["Contacts"][0]["ContactValue"] = new_website
     return copy

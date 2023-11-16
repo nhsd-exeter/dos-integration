@@ -25,7 +25,7 @@ def event() -> dict[str, str]:
 
 
 @pytest.fixture()
-def change_event():
+def change_event() -> None:
     return {
         "Address1": "Flat 619",
         "Address2": "62 Fake Street",
@@ -48,7 +48,7 @@ def test_lambda_handler(
     change_event: dict[str, str],
     event: dict[str, str],
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     correlation_id = "CORRELATION_ID"
     mock_build_correlation_id.return_value = correlation_id
@@ -70,12 +70,12 @@ def test_lambda_handler(
     )
 
 
-def test_validate_event(event: dict[str, str]):
+def test_validate_event(event: dict[str, str]) -> None:
     # Act & Assert
     validate_event(event)
 
 
-def test_validate_event_no_odscode(event: dict[str, str]):
+def test_validate_event_no_odscode(event: dict[str, str]) -> None:
     # Arrange
     del event["odscode"]
     # Act & Assert
@@ -83,7 +83,7 @@ def test_validate_event_no_odscode(event: dict[str, str]):
         validate_event(event)
 
 
-def test_validate_event_no_sequence_number(event: dict[str, str]):
+def test_validate_event_no_sequence_number(event: dict[str, str]) -> None:
     # Arrange
     del event["sequence_number"]
     # Act & Assert
@@ -92,7 +92,7 @@ def test_validate_event_no_sequence_number(event: dict[str, str]):
 
 
 @patch(f"{FILE_PATH}.time_ns")
-def test_build_correlation_id(mock_time_ns: MagicMock):
+def test_build_correlation_id(mock_time_ns: MagicMock) -> None:
     # Arrange
     time = "123456789"
     mock_time_ns.return_value = time
@@ -103,7 +103,7 @@ def test_build_correlation_id(mock_time_ns: MagicMock):
 
 
 @patch(f"{FILE_PATH}.client")
-def test_get_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]):
+def test_get_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]) -> None:
     # Arrange
     table_name = "my-table"
     environ["CHANGE_EVENTS_TABLE_NAME"] = table_name
@@ -133,7 +133,7 @@ def test_get_change_event(mock_client: MagicMock, change_event: dict[str, str], 
 @patch(f"{FILE_PATH}.client")
 def test_get_change_event_no_change_event_in_dynamodb(
     mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]
-):
+) -> None:
     # Arrange
     table_name = "my-table"
     environ["CHANGE_EVENTS_TABLE_NAME"] = table_name
@@ -159,7 +159,7 @@ def test_get_change_event_no_change_event_in_dynamodb(
 
 
 @patch(f"{FILE_PATH}.client")
-def test_send_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]):
+def test_send_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]) -> None:
     # Arrange
     correlation_id = "CORRELATION_ID"
     queue_name = "my-queue"

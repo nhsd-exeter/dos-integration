@@ -16,7 +16,7 @@ from application.common.utilities import extract_body
 from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
-def test_redact_staff_key_from_event_with_no_staff_key(caplog: pytest.LogCaptureFixture):
+def test_redact_staff_key_from_event_with_no_staff_key(caplog: pytest.LogCaptureFixture) -> None:
     @redact_staff_key_from_event()
     def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
@@ -32,7 +32,7 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog: pytest.LogCapture
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
 
-def test_redact_staff_key_from_event(caplog: pytest.LogCaptureFixture):
+def test_redact_staff_key_from_event(caplog: pytest.LogCaptureFixture) -> None:
     @redact_staff_key_from_event()
     def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
@@ -48,7 +48,7 @@ def test_redact_staff_key_from_event(caplog: pytest.LogCaptureFixture):
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
 
-def test_redact_staff_key_from_event_no_records(caplog: pytest.LogCaptureFixture):
+def test_redact_staff_key_from_event_no_records(caplog: pytest.LogCaptureFixture) -> None:
     @redact_staff_key_from_event()
     def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
@@ -63,7 +63,7 @@ def test_redact_staff_key_from_event_no_records(caplog: pytest.LogCaptureFixture
     assert len(result["Records"]) == 0
 
 
-def test_unhandled_exception_logging(caplog: pytest.LogCaptureFixture):
+def test_unhandled_exception_logging(caplog: pytest.LogCaptureFixture) -> None:
     @unhandled_exception_logging
     def client_error_func(event: dict[str, str], context: LambdaContext) -> None:
         raise ClientError({"Error": {"Code": "dummy_error", "Message": "dummy_message"}}, "op_name")
@@ -84,7 +84,7 @@ def test_unhandled_exception_logging(caplog: pytest.LogCaptureFixture):
             regular_error_func(None, None)
 
 
-def test_unhandled_exception_logging_no_error():
+def test_unhandled_exception_logging_no_error() -> None:
     @unhandled_exception_logging
     def dummy_handler(event: dict[str, str], context: LambdaContext) -> None:
         pass
@@ -96,7 +96,7 @@ def test_unhandled_exception_logging_no_error():
     dummy_handler(event, None)
 
 
-def test_unhandled_exception_logging_hidden_event(caplog: pytest.LogCaptureFixture):
+def test_unhandled_exception_logging_hidden_event(caplog: pytest.LogCaptureFixture) -> None:
     @unhandled_exception_logging_hidden_event
     def regular_error_func(event: dict[str, str], context: LambdaContext) -> None:
         msg = "dummy exception message"
@@ -108,7 +108,7 @@ def test_unhandled_exception_logging_hidden_event(caplog: pytest.LogCaptureFixtu
         assert "dummy_error" not in caplog.text
 
 
-def test_unhandled_exception_logging_hidden_event_no_error():
+def test_unhandled_exception_logging_hidden_event_no_error() -> None:
     @unhandled_exception_logging_hidden_event
     def dummy_handler(event: dict[str, str], context: LambdaContext) -> None:
         pass
