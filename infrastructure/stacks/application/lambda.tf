@@ -1,6 +1,6 @@
 module "change_event_dlq_handler_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.change_event_dlq_handler_lambda
   description   = "Change Event DLQ Handler lambda"
@@ -26,7 +26,7 @@ module "change_event_dlq_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -40,7 +40,7 @@ module "change_event_dlq_handler_lambda" {
 
 module "dos_db_handler_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.dos_db_handler_lambda
   description   = "DoS DB Handler lambda"
@@ -70,7 +70,7 @@ module "dos_db_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -94,7 +94,7 @@ module "dos_db_handler_lambda" {
 
 module "dos_db_update_dlq_handler_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.dos_db_update_dlq_handler_lambda
   description   = "DoS DB Update DLQ Handler lambda"
@@ -120,7 +120,7 @@ module "dos_db_update_dlq_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -133,7 +133,7 @@ module "dos_db_update_dlq_handler_lambda" {
 
 module "event_replay_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.event_replay_lambda
   description   = "Event Replay lambda"
@@ -159,7 +159,7 @@ module "event_replay_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -175,7 +175,7 @@ module "event_replay_lambda" {
 
 module "ingest_change_event_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.ingest_change_event_lambda
   description   = "Ingest Change Event lambda"
@@ -201,7 +201,7 @@ module "ingest_change_event_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -216,7 +216,7 @@ module "ingest_change_event_lambda" {
 
 module "send_email_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.send_email_lambda
   description   = "Send Email lambda"
@@ -242,7 +242,7 @@ module "send_email_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -258,7 +258,7 @@ module "send_email_lambda" {
 
 module "service_matcher_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.service_matcher_lambda
   description   = "Service Matcher lambda"
@@ -289,7 +289,7 @@ module "service_matcher_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -312,7 +312,7 @@ module "service_matcher_lambda" {
 
 module "service_sync_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.service_sync_lambda
   description   = "Service Sync lambda"
@@ -343,7 +343,7 @@ module "service_sync_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -372,7 +372,7 @@ module "service_sync_lambda" {
 
 module "slack_messenger_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.slack_messenger_lambda
   description   = "Slack Messenger lambda"
@@ -398,7 +398,7 @@ module "slack_messenger_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -413,7 +413,7 @@ module "slack_messenger_lambda" {
 
 module "quality_checker_lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "v6.0.1"
+  version = "v6.4.0"
 
   function_name = var.quality_checker_lambda
   description   = "Quality Checker lambda"
@@ -443,7 +443,7 @@ module "quality_checker_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true

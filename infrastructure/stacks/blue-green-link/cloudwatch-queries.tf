@@ -163,8 +163,8 @@ resource "aws_cloudwatch_query_definition" "search_by_update_request_failed" {
   ]
 
   query_string = <<EOF
-fields @timestamp, correlation_id
-| filter ServiceUpdateFailed == 1
+fields @timestamp, correlation_id, report_key
+| filter report_key == DOS_DB_UPDATE_DLQ_HANDLER_RECEIVED_EVENT
 | sort @timestamp desc
 EOF
 }
@@ -179,7 +179,7 @@ resource "aws_cloudwatch_query_definition" "search_by_dos_data_item_updates" {
   query_string = <<EOF
 fields @timestamp, correlation_id
 | filter DoSUpdate == 1
-| filter ENV == '${var.blue_green_environment}'
+| filter environment == '${var.blue_green_environment}'
 | filter field == 'REPLACE'
 | sort @timestamp desc
 EOF

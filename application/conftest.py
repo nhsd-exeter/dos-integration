@@ -5,7 +5,6 @@ from random import choices, randint, uniform
 from typing import Any
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import Session
 from moto import mock_dynamodb
@@ -21,32 +20,6 @@ with open(STD_EVENT_PATH, encoding="utf8") as file:
 STD_EVENT_STAFF_PATH = "application/test_resources/STANDARD_EVENT_WITH_STAFF.json"
 with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
-
-
-@pytest.fixture(autouse=True)
-def _mock_metric_logger() -> None:
-    InvocationTracker.reset()
-
-    async def flush(self) -> None:  # noqa: ARG001, ANN001
-        InvocationTracker.record()
-
-    MetricsLogger.flush = flush
-
-
-class InvocationTracker:
-    """Tracks the number of times a function has been invoked."""
-
-    invocations = 0
-
-    @staticmethod
-    def record() -> None:
-        """Record an invocation."""
-        InvocationTracker.invocations += 1
-
-    @staticmethod
-    def reset() -> None:
-        """Reset the invocation count."""
-        InvocationTracker.invocations = 0
 
 
 @pytest.fixture()

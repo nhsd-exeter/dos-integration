@@ -1,10 +1,8 @@
 from json import dumps
-from os import environ
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 
 from application.change_event_dlq_handler.change_event_dlq_handler import lambda_handler
 from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
@@ -130,11 +128,7 @@ def dead_letter_change_event_from_holding_queue():
 
 @patch(f"{FILE_PATH}.extract_body")
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
-@patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_event_from_change_event_queue(
-    mock_put_metric: MagicMock,
-    mock_set_dimensions: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     mock_extract_body: MagicMock,
     dead_letter_staff_change_event_from_change_event_queue: dict[str, Any],
@@ -142,7 +136,6 @@ def test_lambda_handler_event_from_change_event_queue(
     lambda_context,
 ):
     # Arrange
-    environ["ENV"] = "local"
     mock_extract_body.return_value = extracted_body = "Test message1."
     # Act
     assert "Staff" in dead_letter_staff_change_event_from_change_event_queue["Records"][0]["body"]
@@ -153,22 +146,14 @@ def test_lambda_handler_event_from_change_event_queue(
         dead_letter_change_event_from_change_event_queue["Records"][0]["attributes"]["SentTimestamp"],
     )
     mock_add_change_event_to_dynamodb.assert_called_once_with(extracted_body, 123456789, expected_timestamp)
-    # Clean up
-    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
-@patch.object(MetricsLogger, "put_metric")
-@patch.object(MetricsLogger, "set_dimensions")
 def test_lambda_handler_event_from_holding_queue(
-    mock_put_metric: MagicMock,
-    mock_set_dimensions: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
     dead_letter_change_event_from_holding_queue: dict[str, Any],
     lambda_context,
 ):
-    # Arrange
-    environ["ENV"] = "local"
     # Act
     lambda_handler(dead_letter_change_event_from_holding_queue, lambda_context)
     # Assert
@@ -178,5 +163,3 @@ def test_lambda_handler_event_from_holding_queue(
         CHANGE_EVENT_FROM_HOLDING_QUEUE["sequence_number"],
         expected_timestamp,
     )
-    # Clean up
-    del environ["ENV"]

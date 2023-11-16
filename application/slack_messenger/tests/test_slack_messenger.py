@@ -28,7 +28,7 @@ MESSAGE = {
     "OldStateValue": "INSUFFICIENT_DATA",
     "Trigger": {
         "MetricName": "InvalidPostcode",
-        "Namespace": "UEC-DOS-INT",
+        "Namespace": "uec-dos-int",
         "StatisticType": "Statistic",
         "Statistic": "SUM",
         "Unit": None,

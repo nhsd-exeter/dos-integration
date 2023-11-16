@@ -1,4 +1,3 @@
-from os import environ
 from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
@@ -52,7 +51,6 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
 @patch.object(Logger, "warning")
 def test_log_invalid_nhsuk_postcode(mock_logger):
     # Arrange
-    environ["ENV"] = "dev"
     county = "county"
     city = "city"
     nhs_entity = NHSEntity(
@@ -90,9 +88,9 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
         dos_service_type_name=dos_service.service_type_name,
         dos_region=dos_service.get_region(),
         dos_service_name=dos_service.name,
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="InvalidPostcode",
     )
-    # Clean up
-    del environ["ENV"]
 
 
 @patch.object(Logger, "warning")
@@ -179,5 +177,7 @@ def test_log_service_updated(mock_logger: MagicMock):
             "service_uid": service_uid,
             "type_id": type_id,
             "dos_region": dos_service.get_region(),
+            "environment": "local",
+            "cloudwatch_metric_filter_matching_attribute": "ServiceUpdate",
         },
     )

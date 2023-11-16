@@ -1,6 +1,5 @@
 from datetime import date, time
 from logging import INFO
-from os import environ
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -100,7 +99,6 @@ def test_service_update_logger_log_service_update(
     service_update_logger: ServiceUpdateLogger,
 ):
     # Arrange
-    environ["ENV"] = "UNKNOWN"
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     service_update_logger.dos_service = dos_service = MagicMock()
     # Act
@@ -127,10 +125,8 @@ def test_service_update_logger_log_service_update(
         f"{SERVICE_NAME}|{TYPE_ID}|{EXAMPLE_DATA_FIELD_MODIFIED}|{EXAMPLE_ACTION}|"
         f""""{EXAMPLE_PREVIOUS_VALUE}"|"{EXAMPLE_NEW_VALUE}"|{NULL_VALUE}|message=UpdateService|"""
         f"correlationId={correlation_id}|elapsedTime={NULL_VALUE}|execution_time={NULL_VALUE}",
-        extra={"environment": "UNKNOWN"},
+        extra={"environment": "LOCAL"},
     )
-    # Cleanup
-    del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger.log_service_update")

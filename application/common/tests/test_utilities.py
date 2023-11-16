@@ -1,11 +1,9 @@
 from json import loads
-from os import environ
 
 import pytest
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
 from application.common.utilities import (
-    add_metric,
     extract_body,
     get_sequence_number,
     get_sqs_msg_attribute,
@@ -119,15 +117,6 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
 @pytest.mark.parametrize(("val", "expected"), [("", True), ("    ", True), (None, True), ("True val", False)])
 def test_is_val_none_or_empty(val, expected):
     assert is_val_none_or_empty(val) == expected
-
-
-def test_add_metric():
-    # Arrange
-    environ["ENV"] = "test"
-    # Act
-    add_metric("test_metric")
-    # Cleanup
-    del environ["ENV"]
 
 
 SQS_EVENT = {

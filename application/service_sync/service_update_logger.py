@@ -1,9 +1,8 @@
 from itertools import chain
 from logging import INFO, Formatter, Logger, StreamHandler
-from os import environ, getenv
+from os import getenv
 from typing import Any
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
 from .data_processing.changes_to_dos import ChangesToDoS
@@ -63,7 +62,7 @@ class ServiceUpdateLogger:
         self.type_id = type_id
         self.odscode = odscode
         self.correlation_id = self.logger.get_correlation_id()
-        self.environment = getenv("ENV", "UNKNOWN").upper()
+        self.environment = getenv("ENVIRONMENT", "UNKNOWN").upper()
         self.dos_service = dos_service
 
     def get_opening_times_change(
@@ -123,7 +122,6 @@ class ServiceUpdateLogger:
             type_id=self.type_id,
             dos_service=self.dos_service,
         )
-        add_service_updated_metric(data_field_modified=data_field_modified)
 
         self.dos_logger.info(
             msg=(
@@ -307,30 +305,3 @@ def log_service_updates(changes_to_dos: ChangesToDoS, service_histories: Service
                 new_value=change_values["data"],
             )
         logger.debug(f"Logging service update for change key {change_key}", change_values=change_values)
-
-
-def add_service_updated_metric(data_field_modified: str) -> None:
-    """Adds a metric to the service updated metric.
-
-    Args:
-        data_field_modified (str): The data field modified
-    """
-
-    @metric_scope
-    def service_update_metric_field(metrics: Any) -> None:  # noqa: ANN401
-        metrics.set_namespace("UEC-DOS-INT")
-        metrics.set_property("correlation_id", logger.get_correlation_id())
-        metrics.set_dimensions({"ENV": environ["ENV"], "field": data_field_modified})
-        metrics.set_property("level", "WARNING")
-        metrics.put_metric("DoSServiceUpdate", 1, "Count")
-
-    @metric_scope
-    def service_update_metric_all(metrics: Any) -> None:  # noqa: ANN401
-        metrics.set_namespace("UEC-DOS-INT")
-        metrics.set_property("correlation_id", logger.get_correlation_id())
-        metrics.set_dimensions({"ENV": environ["ENV"]})
-        metrics.set_property("level", "WARNING")
-        metrics.put_metric("DoSAllServiceUpdates", 1, "Count")
-
-    service_update_metric_field()
-    service_update_metric_all()
