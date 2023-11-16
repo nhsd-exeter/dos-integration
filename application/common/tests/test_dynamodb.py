@@ -12,7 +12,7 @@ FILE_PATH = "application.common.dynamodb"
 
 def test_add_change_event_to_dynamodb(
     dynamodb_table_create: dict[str, str], change_event: dict[str, str], dynamodb_client: object
-):
+) -> None:
     from application.common.dynamodb import TTL, add_change_event_to_dynamodb, dict_hash
 
     # Arrange
@@ -40,7 +40,7 @@ def test_add_change_event_to_dynamodb(
 
 def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
     dynamodb_table_create: dict[str, str], change_event: dict[str, str], dynamodb_client: object
-):
+) -> None:
     from application.common.dynamodb import (
         add_change_event_to_dynamodb,
         get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
@@ -69,7 +69,7 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
 
 def test_same_sequence_id_and_same_change_event_multiple_times(
     dynamodb_table_create: dict[str, str], change_event: dict[str, str], dynamodb_client: object
-):
+) -> None:
     from application.common.dynamodb import (
         add_change_event_to_dynamodb,
         get_latest_sequence_id_for_a_given_odscode_from_dynamodb,
@@ -94,7 +94,7 @@ def test_same_sequence_id_and_same_change_event_multiple_times(
     assert latest_sequence_number == 3
 
 
-def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create: object, change_event: dict[str, str]):
+def test_no_records_in_db_for_a_given_odscode(dynamodb_table_create: object, change_event: dict[str, str]) -> None:
     from application.common.dynamodb import get_latest_sequence_id_for_a_given_odscode_from_dynamodb
 
     latest_sequence_number = get_latest_sequence_id_for_a_given_odscode_from_dynamodb(change_event["ODSCode"])
@@ -107,7 +107,7 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     dynamodb_table_create: object,
     change_event: dict[str, str],
     dynamodb_client: object,
-):
+) -> None:
     from application.common.dynamodb import (
         add_change_event_to_dynamodb,
         get_latest_sequence_id_for_a_given_odscode_from_dynamodb,

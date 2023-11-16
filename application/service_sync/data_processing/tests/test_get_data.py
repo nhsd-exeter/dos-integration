@@ -20,7 +20,7 @@ def test_get_dos_service_and_history(
     mock_get_standard_opening_times_from_db: MagicMock,
     mock_get_specified_opening_times_from_db: MagicMock,
     mock_service_histories: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = 12345
     mock_query_dos_db.return_value.fetchall.return_value = [["Test"]]
@@ -48,7 +48,7 @@ def test_get_dos_service_and_history(
 def test_get_dos_service_and_history_no_match(
     mock_connect_to_db_writer: MagicMock,
     mock_query_dos_db: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = 12345
     mock_query_dos_db.return_value.fetchall.return_value = []
@@ -63,7 +63,7 @@ def test_get_dos_service_and_history_no_match(
 def test_get_dos_service_and_history_mutiple_matches(
     mock_connect_to_db_writer: MagicMock,
     mock_query_dos_db: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = 12345
     mock_query_dos_db.return_value.fetchall.return_value = [["Test"], ["Test"]]

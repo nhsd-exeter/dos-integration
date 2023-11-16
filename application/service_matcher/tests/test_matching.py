@@ -12,7 +12,7 @@ def test_get_matching_services(
     mock_get_matching_dos_services: MagicMock,
     mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
     change_event: dict[str, str],
-):
+) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
@@ -30,7 +30,7 @@ def test_get_unmatching_services(
     mock_get_matching_dos_services: MagicMock,
     mock_get_pharmacy_first_phase_one_feature_flag: MagicMock,
     change_event: dict[str, str],
-):
+) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     mock_get_matching_dos_services.return_value = []

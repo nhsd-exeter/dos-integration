@@ -46,7 +46,7 @@ def test_lambda_handler(
     mock_review_matches: MagicMock,
     change_event: dict[str, str],
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
@@ -86,7 +86,7 @@ def test_lambda_handler_unmatched_service(
     mock_get_matching_services: MagicMock,
     change_event: dict[str, str],
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
@@ -107,7 +107,7 @@ def test_lambda_handler_unmatched_service(
     del environ["ENV"]
 
 
-def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context: LambdaContext):
+def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context: LambdaContext) -> None:
     # Arrange
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"] = []

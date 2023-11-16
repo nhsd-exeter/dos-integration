@@ -9,7 +9,7 @@ FILE_PATH = "application.dos_db_update_dlq_handler.dos_db_update_dlq_handler"
 
 
 @patch(f"{FILE_PATH}.extract_body")
-def test_lambda_handler(mock_extract_body: MagicMock, lambda_context: LambdaContext):
+def test_lambda_handler(mock_extract_body: MagicMock, lambda_context: LambdaContext) -> None:
     # Arrange
     change_request = {
         "reference": "Dummy correlation id",

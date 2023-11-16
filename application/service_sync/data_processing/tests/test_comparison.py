@@ -204,7 +204,7 @@ def test_compare_public_phone_no_change() -> None:
 
 
 @pytest.mark.parametrize("weekday", WEEKDAYS)
-def test_compare_standard_opening_times(weekday: str):
+def test_compare_standard_opening_times(weekday: str) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
