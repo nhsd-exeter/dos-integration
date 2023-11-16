@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Self
 
 from aws_lambda_powertools.logging import Logger
 
@@ -20,25 +20,21 @@ class ServiceHistoriesChange:
     """A change to be added to the servicehistories table."""
 
     data: str
-    previous_value: Any
+    previous_value: str
     change_key: str
     change_action: str
     area: str
 
     def __init__(
-        self,
-        data: Any,  # noqa: ANN401
-        previous_value: Any,  # noqa: ANN401
-        change_key: str,
-        area: str = DOS_DEMOGRAPHICS_AREA_TYPE,
+        self: Self, data: str, previous_value: str, change_key: str, area: str = DOS_DEMOGRAPHICS_AREA_TYPE
     ) -> None:
         """Initialises the ServiceHistoriesChange object.
 
         Args:
-            data (Any): The data to be added to the servicehistories table.
-            previous_value (Any): The previous value of the data to be added to the servicehistories table.
+            data (str): The data to be added to the servicehistories table.
+            previous_value (str): The previous value of the data to be added to the servicehistories table.
             change_key (str): The change key for the data to be added to the servicehistories table.
-            area (str, optional): The area of the data to be added to the servicehistories table.
+            area (str): The area of the data to be added to the servicehistories table.
             Defaults to DOS_DEMOGRAPHICS_AREA_TYPE.
         """
         self.data = data
@@ -59,7 +55,7 @@ class ServiceHistoriesChange:
             msg = "Unknown change key"
             raise ValueError(msg)
 
-    def get_demographics_change_action(self) -> str:
+    def get_demographics_change_action(self: Self) -> str:
         """Gets the change action for a demographics change.
 
         Returns:
@@ -74,7 +70,7 @@ class ServiceHistoriesChange:
         else:
             return "modify"
 
-    def get_sgsd_change_action(self) -> str:
+    def get_sgsd_change_action(self: Self) -> str:
         """Gets the change action for a sgsd change.
 
         Returns:
@@ -84,7 +80,7 @@ class ServiceHistoriesChange:
         value = next(iter(new_value.keys()))
         return "add" if value == "add" else "delete"
 
-    def get_opening_times_change_action(self) -> str:
+    def get_opening_times_change_action(self: Self) -> str:
         """Gets the change action for a opening times (specified or standard) change.
 
         Returns:
@@ -101,7 +97,7 @@ class ServiceHistoriesChange:
             msg = "Unknown change action"
             raise ValueError(msg)
 
-    def get_change(self) -> dict[str, Any]:
+    def get_change(self: Self) -> dict[str, Any]:
         """Gets the change to be added to the servicehistories table.
 
         Returns:

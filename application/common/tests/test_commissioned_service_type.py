@@ -15,7 +15,7 @@ from application.common.constants import (
 )
 
 
-def test_blood_pressure_commissioned_service_type():
+def test_blood_pressure_commissioned_service_type() -> None:
     assert BLOOD_PRESSURE.TYPE_NAME == "Blood Pressure"
     assert BLOOD_PRESSURE.NHS_UK_SERVICE_CODE == "SRV0560"
     assert BLOOD_PRESSURE.DOS_TYPE_ID == DOS_BLOOD_PRESSURE_TYPE_ID
@@ -24,7 +24,7 @@ def test_blood_pressure_commissioned_service_type():
     assert BLOOD_PRESSURE.DOS_SG_SD_ID == DOS_BLOOD_PRESSURE_SGSDID
 
 
-def test_contraception_commissioned_service_type():
+def test_contraception_commissioned_service_type() -> None:
     assert CONTRACEPTION.TYPE_NAME == "Contraception"
     assert CONTRACEPTION.NHS_UK_SERVICE_CODE == "SRV2000"
     assert CONTRACEPTION.DOS_TYPE_ID == DOS_CONTRACEPTION_TYPE_ID
@@ -33,7 +33,7 @@ def test_contraception_commissioned_service_type():
     assert CONTRACEPTION.DOS_SG_SD_ID == DOS_CONTRACEPTION_SGSDID
 
 
-def test_pallative_care_commissioned_service_type():
+def test_pallative_care_commissioned_service_type() -> None:
     assert PALLIATIVE_CARE.TYPE_NAME == "Palliative Care"
     assert PALLIATIVE_CARE.NHS_UK_SERVICE_CODE == "SRV0559"
     assert PALLIATIVE_CARE.DOS_TYPE_ID == DOS_PALLIATIVE_CARE_TYPE_ID

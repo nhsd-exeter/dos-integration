@@ -1,5 +1,6 @@
 from csv import reader
 from random import choice
+from typing import Self
 
 
 class OdsCodes:
@@ -8,7 +9,7 @@ class OdsCodes:
     invalid_ods_codes: list[list[str]] | None = None
     valid_ods_codes: list[list[str]] | None = None
 
-    def get_ods_codes_from_file(self, ods_code_file: str) -> list[list[str]]:
+    def get_ods_codes_from_file(self: Self, ods_code_file: str) -> list[list[str]]:
         """Get the ods codes from a file.
 
         Args:
@@ -22,7 +23,7 @@ class OdsCodes:
             return list(csv_reader)
 
     def generic_get_ods_code(
-        self,
+        self: Self,
         ods_code_file_name: str,
         odscode_list: list[list[str]] | None,
     ) -> tuple[str, list[list[str]]]:
@@ -41,7 +42,7 @@ class OdsCodes:
         odscode_list.remove(odscode_list_of_one)
         return odscode_list_of_one[0], odscode_list
 
-    def get_valid_ods_code(self) -> str:
+    def get_valid_ods_code(self: Self) -> str:
         """Get a valid pharmacy ods code.
 
         Returns:
@@ -50,7 +51,7 @@ class OdsCodes:
         odscode, self.valid_ods_codes = self.generic_get_ods_code("valid_ods_codes.csv", self.valid_ods_codes)
         return odscode
 
-    def get_invalid_ods_code(self) -> str:
+    def get_invalid_ods_code(self: Self) -> str:
         """Get an invalid pharmacy ods code.
 
         Returns:

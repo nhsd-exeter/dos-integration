@@ -66,7 +66,7 @@ def connect_to_db_writer() -> Generator[Connection[DictRow], None, None]:
     db_connection.close()
 
 
-def connection_to_db(  # noqa: PLR0913
+def connection_to_db(
     server: str,
     port: str,
     db_name: str,

@@ -1,11 +1,10 @@
 import json
+from collections.abc import Generator
 from dataclasses import dataclass
 from os import environ
 from random import choices, randint, uniform
-from typing import Any
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import Session
 from moto import mock_dynamodb
@@ -21,32 +20,6 @@ with open(STD_EVENT_PATH, encoding="utf8") as file:
 STD_EVENT_STAFF_PATH = "application/test_resources/STANDARD_EVENT_WITH_STAFF.json"
 with open(STD_EVENT_STAFF_PATH, encoding="utf8") as file:
     PHARMACY_STANDARD_EVENT_STAFF = json.load(file)
-
-
-@pytest.fixture(autouse=True)
-def _mock_metric_logger() -> None:
-    InvocationTracker.reset()
-
-    async def flush(self) -> None:  # noqa: ARG001, ANN001
-        InvocationTracker.record()
-
-    MetricsLogger.flush = flush
-
-
-class InvocationTracker:
-    """Tracks the number of times a function has been invoked."""
-
-    invocations = 0
-
-    @staticmethod
-    def record() -> None:
-        """Record an invocation."""
-        InvocationTracker.invocations += 1
-
-    @staticmethod
-    def reset() -> None:
-        """Reset the invocation count."""
-        InvocationTracker.invocations = 0
 
 
 @pytest.fixture()
@@ -73,7 +46,7 @@ def _reset_standard_change_event() -> None:
         PHARMACY_STANDARD_EVENT.update(json.load(file))
 
 
-def get_std_event(**kwargs: Any) -> dict:  # noqa: ANN401
+def get_std_event(**kwargs: str) -> dict:
     """Creates a standard event with random data for the unit testing."""
     event = PHARMACY_STANDARD_EVENT.copy()
     for name, value in kwargs.items():
@@ -82,7 +55,7 @@ def get_std_event(**kwargs: Any) -> dict:  # noqa: ANN401
     return event
 
 
-def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
+def dummy_dos_service(**kwargs: str) -> DoSService:
     """Creates a DoSService Object with random data for the unit testing."""
     test_data = {}
     for col in DoSService.field_names():
@@ -99,7 +72,7 @@ def dummy_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
     return dos_service
 
 
-def blank_dos_service(**kwargs: Any) -> DoSService:  # noqa: ANN401
+def blank_dos_service(**kwargs: str) -> DoSService:
     """Creates a DoSService Object with blank str data for the unit testing."""
     test_data = {col: "" for col in DoSService.field_names()}
     dos_service = DoSService(test_data)
@@ -148,19 +121,19 @@ def _aws_credentials() -> None:
 
 
 @pytest.fixture()
-def dynamodb_client(boto_session: Any) -> Any:  # noqa: ANN401,
+def dynamodb_client(boto_session: object) -> object:
     """DynamoDB Client Class."""
     return boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
 
 
 @pytest.fixture()
-def dynamodb_resource(boto_session: Any) -> Any:  # noqa: ANN401
+def dynamodb_resource(boto_session: object) -> object:
     """DynamoDB Resource Class."""
     return boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
 
 
 @pytest.fixture()
-def boto_session(_aws_credentials: Any) -> Any:  # noqa: ANN401
+def boto_session(_aws_credentials: None) -> Generator[object, None, None]:
     """Mocked AWS Credentials for moto."""
     with mock_dynamodb():
         yield Session()
@@ -228,7 +201,7 @@ def log_capture() -> LogCapture:
 
 
 @pytest.fixture()
-def dynamodb_table_create(dynamodb_client: Any) -> dict[str, Any]:  # noqa: ANN401
+def dynamodb_table_create(dynamodb_client: object) -> object:
     """Create a DynamoDB CHANGE_EVENTS_TABLE table pytest.fixture."""
     return dynamodb_client.create_table(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],

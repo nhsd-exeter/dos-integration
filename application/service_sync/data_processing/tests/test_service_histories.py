@@ -18,7 +18,7 @@ SERVICE_ID = 1
 
 
 @patch(f"{FILE_PATH}.time")
-def test_service_histories(mock_time: MagicMock):
+def test_service_histories(mock_time: MagicMock) -> None:
     # Arrange
     mock_time.return_value = time = 123
     # Act
@@ -32,7 +32,7 @@ def test_service_histories(mock_time: MagicMock):
     mock_time.assert_called_once()
 
 
-def test_service_histories_get_service_history_from_db_rows_returned():
+def test_service_histories_get_service_history_from_db_rows_returned() -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     mock_connection = MagicMock()
@@ -52,7 +52,7 @@ def test_service_histories_get_service_history_from_db_rows_returned():
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
 
-def test_service_histories_get_service_history_from_db_no_rows_returned():
+def test_service_histories_get_service_history_from_db_no_rows_returned() -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     mock_connection = MagicMock()
@@ -71,7 +71,7 @@ def test_service_histories_get_service_history_from_db_no_rows_returned():
     mock_connection.cursor.return_value.fetchall.assert_called_once()
 
 
-def test_service_histories_create_service_histories_entry_no_history_already_exists():
+def test_service_histories_create_service_histories_entry_no_history_already_exists() -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     # Act
@@ -86,7 +86,7 @@ def test_service_histories_create_service_histories_entry_no_history_already_exi
     } == service_history.service_history
 
 
-def test_service_histories_add_change():
+def test_service_histories_add_change() -> None:
     # Arrange
     change_key = "change_key"
     service_history = ServiceHistories(service_id=SERVICE_ID)
@@ -107,7 +107,7 @@ def test_service_histories_add_change():
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_service_histories_add_standard_opening_times_change(mock_service_histories_change: MagicMock):
+def test_service_histories_add_standard_opening_times_change(mock_service_histories_change: MagicMock) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -145,7 +145,9 @@ def test_service_histories_add_standard_opening_times_change(mock_service_histor
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_service_histories_add_standard_opening_times_change_no_change(mock_service_histories_change: MagicMock):
+def test_service_histories_add_standard_opening_times_change_no_change(
+    mock_service_histories_change: MagicMock
+) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -185,7 +187,7 @@ def test_service_histories_add_standard_opening_times_change_no_change(mock_serv
 def test_service_histories_add_specified_opening_times_change_modify(
     mock_service_histories_change: MagicMock,
     mock_get_formatted_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -225,7 +227,7 @@ def test_service_histories_add_specified_opening_times_change_modify(
 def test_service_histories_add_specified_opening_times_change_add(
     mock_service_histories_change: MagicMock,
     mock_get_formatted_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -260,7 +262,7 @@ def test_service_histories_add_specified_opening_times_change_add(
 def test_service_histories_add_specified_opening_times_change_remove(
     mock_service_histories_change: MagicMock,
     mock_get_formatted_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -297,7 +299,7 @@ def test_service_histories_add_specified_opening_times_change_remove(
 def test_service_histories_add_specified_opening_times_change_no_change(
     mock_service_histories_change: MagicMock,
     mock_get_formatted_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -319,7 +321,7 @@ def test_service_histories_add_specified_opening_times_change_no_change(
     )
 
 
-def test_service_histories_add_sgsdid_change():
+def test_service_histories_add_sgsdid_change() -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     service_history.add_change = mock_add_change = MagicMock()
@@ -338,7 +340,7 @@ def test_service_histories_add_sgsdid_change():
     )
 
 
-def test_service_histories_get_formatted_specified_opening_times():
+def test_service_histories_get_formatted_specified_opening_times() -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
     open_periods = [
@@ -361,7 +363,9 @@ def test_service_histories_get_formatted_specified_opening_times():
 
 @patch(f"{FILE_PATH}.datetime")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_service_histories_save_service_histories_insert(mock_query_dos_db: MagicMock, mock_datetime: MagicMock):
+def test_service_histories_save_service_histories_insert(
+    mock_query_dos_db: MagicMock, mock_datetime: MagicMock
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_datetime.now.return_value.strftime.return_value = "2022-12-26 12:00:00"
@@ -390,7 +394,9 @@ def test_service_histories_save_service_histories_insert(mock_query_dos_db: Magi
 
 @patch(f"{FILE_PATH}.datetime")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_service_histories_save_service_histories_update(mock_query_dos_db: MagicMock, mock_datetime: MagicMock):
+def test_service_histories_save_service_histories_update(
+    mock_query_dos_db: MagicMock, mock_datetime: MagicMock
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_datetime.now.return_value.strftime.return_value = "2022-12-26 12:00:00"

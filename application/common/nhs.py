@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import groupby
-from typing import Any
+from typing import Self
 
 from aws_lambda_powertools.logging import Logger
 
@@ -43,7 +43,7 @@ class NHSEntity:
     blood_pressure: bool
     contraception: bool
 
-    def __init__(self, entity_data: dict) -> None:
+    def __init__(self: Self, entity_data: dict) -> None:
         """Initialise the object with the entity data."""
         self.entity_data = entity_data
 
@@ -69,15 +69,15 @@ class NHSEntity:
         self.blood_pressure = self.check_for_service(NHS_UK_BLOOD_PRESSURE_SERVICE_CODE)
         self.contraception = self.check_for_service(NHS_UK_CONTRACEPTION_SERVICE_CODE)
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of the object."""
         return f"<NHSEntity: name={self.org_name} odscode={self.odscode}>"
 
-    def normal_postcode(self) -> str:
+    def normal_postcode(self: Self) -> str:
         """Returns the postcode in a normalised format."""
         return self.postcode.replace(" ", "").upper()
 
-    def extract_contact(self, contact_type: str) -> str | None:
+    def extract_contact(self: Self, contact_type: str) -> str | None:
         """Returns the nested contact value within the input payload."""
         return next(
             (
@@ -92,7 +92,7 @@ class NHSEntity:
             None,
         )
 
-    def check_for_uec_service(self, service_code: str) -> bool | None:
+    def check_for_uec_service(self: Self, service_code: str) -> bool | None:
         """Checks if the UEC service exists in the payload.
 
         Args:
@@ -103,7 +103,7 @@ class NHSEntity:
         """
         return self._extract_service_from_list("UecServices", service_code)
 
-    def check_for_service(self, service_code: str) -> bool | None:
+    def check_for_service(self: Self, service_code: str) -> bool | None:
         """Checks if the service exists in the payload.
 
         Args:
@@ -114,12 +114,12 @@ class NHSEntity:
         """
         return self._extract_service_from_list("Services", service_code)
 
-    def _extract_service_from_list(self, list_name: str, service_code: str) -> bool | None:
+    def _extract_service_from_list(self: Self, list_name: str, service_code: str) -> bool | None:
         if isinstance(self.entity_data.get(list_name, []), list):
             return any(item.get("ServiceCode") == service_code for item in self.entity_data.get(list_name, []))
         return None
 
-    def _get_standard_opening_times(self) -> StandardOpeningTimes:
+    def _get_standard_opening_times(self: Self) -> StandardOpeningTimes:
         """Get the standard opening times.
 
         Filters the raw opening times data for standard weekly opening
@@ -144,7 +144,7 @@ class NHSEntity:
 
         return std_opening_times
 
-    def _get_specified_opening_times(self) -> list[SpecifiedOpeningTime]:
+    def _get_specified_opening_times(self: Self) -> list[SpecifiedOpeningTime]:
         """Get all the Specified Opening Times.
 
         Args:
@@ -173,7 +173,7 @@ class NHSEntity:
 
         return specified_opening_times
 
-    def is_status_hidden_or_closed(self) -> bool:
+    def is_status_hidden_or_closed(self: Self) -> bool:
         """Check if the status is hidden or closed. If so, return True.
 
         Returns:
@@ -181,7 +181,7 @@ class NHSEntity:
         """
         return self.org_status.upper() in CLOSED_AND_HIDDEN_STATUSES
 
-    def all_times_valid(self) -> bool:
+    def all_times_valid(self: Self) -> bool:
         """Does checks on all opening times for correct format, business rules, overlaps."""
         # Check format matches either spec or std format
         for item in self.entity_data.get("OpeningTimes", []):
@@ -191,7 +191,7 @@ class NHSEntity:
         # Check validity of both types of open times
         return self.standard_opening_times.is_valid() and SpecifiedOpeningTime.valid_list(self.specified_opening_times)
 
-    def is_matching_dos_service(self, dos_service: DoSService) -> bool:
+    def is_matching_dos_service(self: Self, dos_service: DoSService) -> bool:
         """Check if the entity matches the DoS service.
 
         Args:
@@ -268,7 +268,7 @@ def is_spec_opening_json(item: dict) -> bool:
     )
 
 
-def skip_if_key_is_none(key: Any) -> bool:  # noqa: ANN401
+def skip_if_key_is_none(key: None | str | bool | int) -> bool:
     """If the key is None, skip the item."""
     return key is None
 

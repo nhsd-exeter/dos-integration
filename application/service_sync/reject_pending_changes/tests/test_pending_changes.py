@@ -36,7 +36,7 @@ EXPECTED_QUERY = (
 )
 
 
-def test_pending_change():
+def test_pending_change() -> None:
     # Act
     pending_change = PendingChange(ROW)
     # Assert
@@ -50,7 +50,7 @@ def test_pending_change():
     assert pending_change.user_id == ROW["user_id"]
 
 
-def test_pending_change__repr__():
+def test_pending_change__repr__() -> None:
     # Arrange
     row = ROW.copy()
     row_value = {"new": {"name": "test"}, "initiator": {"userid": "test"}, "approver": "test"}
@@ -67,7 +67,7 @@ def test_pending_change__repr__():
     ) == response
 
 
-def test_pending_change_is_valid_true():
+def test_pending_change_is_valid_true() -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_change.value = '{"new": {"cmsurl": "test"}}'
@@ -77,7 +77,7 @@ def test_pending_change_is_valid_true():
     assert True is is_valid
 
 
-def test_pending_change_is_valid_false():
+def test_pending_change_is_valid_false() -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_change.value = '{"new": {"name": "test"}}'
@@ -87,7 +87,7 @@ def test_pending_change_is_valid_false():
     assert False is is_valid
 
 
-def test_pending_change_is_valid_exception():
+def test_pending_change_is_valid_exception() -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_change.value = '{"new": {"name": "test"}'
@@ -108,7 +108,7 @@ def test_check_and_remove_pending_dos_changes(
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
     mock_send_rejection_emails: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = "test"
     mock_get_pending_changes.return_value = get_pending_changes_response = [PendingChange(ROW)]
@@ -140,7 +140,7 @@ def test_check_and_remove_pending_dos_changes_no_pending_changes(
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
     mock_send_rejection_emails: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = "test"
     mock_get_pending_changes.return_value = None
@@ -169,7 +169,7 @@ def test_check_and_remove_pending_dos_changes_invalid_changes(
     mock_reject_pending_changes: MagicMock,
     mock_log_rejected_changes: MagicMock,
     mock_send_rejection_emails: MagicMock,
-):
+) -> None:
     # Arrange
     service_id = "test"
     mock_get_pending_changes.return_value = []
@@ -194,7 +194,7 @@ def test_get_pending_changes_is_pending_changes_valid_changes(
     mock_query_dos_db: MagicMock,
     mock_is_valid: MagicMock,
     mock_repr: MagicMock,
-):
+) -> None:
     # Arrange
     connection = MagicMock()
     service_id = "test"
@@ -221,7 +221,7 @@ def test_get_pending_changes_is_pending_changes_invalid_changes(
     mock_query_dos_db: MagicMock,
     mock_is_valid: MagicMock,
     mock_repr: MagicMock,
-):
+) -> None:
     # Arrange
     connection = MagicMock()
     service_id = "test"
@@ -243,7 +243,7 @@ def test_get_pending_changes_is_pending_changes_invalid_changes(
 
 @patch(f"{FILE_PATH}.PendingChange.is_valid")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_pending_changes_no_changes(mock_query_dos_db: MagicMock, mock_is_valid: MagicMock):
+def test_get_pending_changes_no_changes(mock_query_dos_db: MagicMock, mock_is_valid: MagicMock) -> None:
     # Arrange
     connection = MagicMock()
     service_id = "test"
@@ -263,7 +263,7 @@ def test_get_pending_changes_no_changes(mock_query_dos_db: MagicMock, mock_is_va
 
 @patch(f"{FILE_PATH}.datetime")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_reject_pending_changes_single_rejection(mock_query_dos_db: MagicMock, mock_datetime: MagicMock):
+def test_reject_pending_changes_single_rejection(mock_query_dos_db: MagicMock, mock_datetime: MagicMock) -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
@@ -285,7 +285,7 @@ def test_reject_pending_changes_single_rejection(mock_query_dos_db: MagicMock, m
 
 @patch(f"{FILE_PATH}.datetime")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_reject_pending_changes_multiple_rejections(mock_query_dos_db: MagicMock, mock_datetime: MagicMock):
+def test_reject_pending_changes_multiple_rejections(mock_query_dos_db: MagicMock, mock_datetime: MagicMock) -> None:
     # Arrange
     pending_change1 = PendingChange(ROW)
     pending_change1.id = "Change1"
@@ -311,7 +311,7 @@ def test_reject_pending_changes_multiple_rejections(mock_query_dos_db: MagicMock
     )
 
 
-def test_log_rejected_changes(capsys: pytest.CaptureFixture):
+def test_log_rejected_changes(capsys: pytest.CaptureFixture) -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_changes = [pending_change]
@@ -343,7 +343,7 @@ def test_send_rejection_emails(
     mock_build_change_rejection_email_contents: MagicMock,
     mock_email_message: MagicMock,
     mock_client: MagicMock,
-):
+) -> None:
     # Arrange
     environ["SEND_EMAIL_LAMBDA"] = send_email_lambda_name = "test"
     pending_change = PendingChange(ROW)
@@ -391,7 +391,7 @@ def test_send_rejection_emails(
 
 
 @patch("builtins.open")
-def test_build_change_rejection_email_contents(mock_open: MagicMock):
+def test_build_change_rejection_email_contents(mock_open: MagicMock) -> None:
     # Arrange
     pending_change = PendingChange(ROW)
     pending_change.value = '{"new":{"cmsurl":{"previous":"test.com","data":"https://www.test.com"}}}'

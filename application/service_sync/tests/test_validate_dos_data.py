@@ -7,7 +7,7 @@ FILE_PATH = "application.service_sync.validate_dos_data"
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_dos_z_code_exists(mock_query_dos_db: MagicMock):
+def test_validate_dos_z_code_exists(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 1
@@ -38,7 +38,7 @@ def test_validate_dos_z_code_exists(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_dos_z_code_existss_does_not_exist(mock_query_dos_db: MagicMock):
+def test_validate_dos_z_code_existss_does_not_exist(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 0

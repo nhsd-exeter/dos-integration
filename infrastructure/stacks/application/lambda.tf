@@ -26,7 +26,7 @@ module "change_event_dlq_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -70,7 +70,7 @@ module "dos_db_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -120,7 +120,7 @@ module "dos_db_update_dlq_handler_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile,
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -159,7 +159,7 @@ module "event_replay_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -201,7 +201,7 @@ module "ingest_change_event_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -242,7 +242,7 @@ module "send_email_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -289,7 +289,7 @@ module "service_matcher_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -343,7 +343,7 @@ module "service_sync_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -398,7 +398,7 @@ module "slack_messenger_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true
@@ -443,7 +443,7 @@ module "quality_checker_lambda" {
 
   environment_variables = {
     "PROFILE"                            = var.profile
-    "ENV"                                = var.blue_green_environment
+    "ENVIRONMENT"                        = var.blue_green_environment
     "SHARED_ENVIRONMENT"                 = var.shared_environment
     "POWERTOOLS_SERVICE_NAME"            = var.lambda_powertools_service_name
     "POWERTOOLS_TRACER_CAPTURE_RESPONSE" = true

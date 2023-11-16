@@ -62,7 +62,7 @@ def build_correlation_id() -> str:
     Returns:
         str: The correlation id
     """
-    return f'{time_ns()}-{getenv("ENV")}-replayed-event'
+    return f'{time_ns()}-{getenv("ENVIRONMENT")}-replayed-event'
 
 
 def get_change_event(odscode: str, sequence_number: Decimal) -> dict[str, Any]:

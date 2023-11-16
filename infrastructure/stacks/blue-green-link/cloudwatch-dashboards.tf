@@ -43,7 +43,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "properties" : {
             "view" : "gauge",
             "metrics" : [
-              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
+              ["uec-dos-int", "QueueToDoSLatency", "environment", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
             ],
             "yAxis" : {
               "left" : {
@@ -77,7 +77,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "type" : "metric",
           "properties" : {
             "metrics" : [
-              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
+              ["uec-dos-int", "QueueToDoSLatency", "environment", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
             ],
             "annotations" : {
               "horizontal" : [
@@ -114,7 +114,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "type" : "metric",
           "properties" : {
             "metrics" : [
-              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
+              ["uec-dos-int", "QueueToDoSLatency", "environment", var.blue_green_environment, { "region" : var.aws_region, "color" : "#69ae34" }]
             ],
             "annotations" : {
               "horizontal" : [
@@ -153,7 +153,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             "sparkline" : true,
             "view" : "singleValue",
             "metrics" : [
-              ["UEC-DOS-INT", "UpdateRequestSuccess", "ENV", var.blue_green_environment, { "region" : var.aws_region, "color" : "#2ca02c", "label" : "DoS Service Update Success" }],
+              ["uec-dos-int", "UpdateRequestSuccess", "environment", var.blue_green_environment, { "region" : var.aws_region, "color" : "#2ca02c", "label" : "DoS Service Update Success" }],
               [".", "UpdateRequestFailed", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#d62728", "label" : "DoS Service Update Failed" }],
               [".", "ChangeEventReceived", ".", var.blue_green_environment, { "region" : var.aws_region, "color" : "#1f77b4", "label" : "Change Event Received" }],
               [".", "UpdateRequestSent", ".", var.blue_green_environment, { "label" : "Update Requests Sent", "color" : "#b088f5" }],
@@ -180,7 +180,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             "metrics" : [
               [{ "expression" : "m1/60000", "label" : "QueueToDoSLatency Average", "id" : "e1" }],
               [{ "expression" : "m2/60000", "label" : "QueueToDoSLatency Maximum", "id" : "e2" }],
-              ["UEC-DOS-INT", "QueueToDoSLatency", "ENV", var.blue_green_environment, { "id" : "m1", "visible" : false }],
+              ["uec-dos-int", "QueueToDoSLatency", "environment", var.blue_green_environment, { "id" : "m1", "visible" : false }],
               [".", ".", ".", var.blue_green_environment, { "stat" : "Maximum", "id" : "m2", "visible" : false }]
             ],
             "period" : 60,
@@ -538,7 +538,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "properties" : {
             "view" : "pie",
             "metrics" : [
-              ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsurl", { "label" : "Website", "id" : "m1", "visible" : false }],
+              ["uec-dos-int", "DoSServiceUpdate", "environment", var.blue_green_environment, "field", "cmsurl", { "label" : "Website", "id" : "m1", "visible" : false }],
               ["...", "postalcode", { "label" : "Postcode", "id" : "m2", "visible" : false }],
               ["...", "postaladdress", { "label" : "Address", "id" : "m3", "visible" : false }],
               ["...", "cmstelephoneno", { "label" : "Public Phone", "id" : "m4", "visible" : false }],
@@ -557,8 +557,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
               ["...", "cmsopentimesunday", { "label" : "Sunday", "id" : "m17", "visible" : false }],
               [{ "expression" : "m1+m2+m3+m4+m5+m6+m7+m8+m9+m10", "label" : "Demographic Updates", "color" : "#1f77b4" }],
               [{ "expression" : "m11+m12+m13+m14+m15+m16+m17", "label" : "Standard Opening Times", "color" : "#ff7f0e" }],
-              ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
-              ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmssgsdid", { "label" : "Clinical", "color" : "#9467bd" }],
+              ["uec-dos-int", "DoSServiceUpdate", "environment", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
+              ["uec-dos-int", "DoSServiceUpdate", "environment", var.blue_green_environment, "field", "cmssgsdid", { "label" : "Clinical", "color" : "#9467bd" }],
             ],
             "stacked" : false,
             "region" : var.aws_region,
@@ -578,7 +578,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             "sparkline" : true,
             "view" : "singleValue",
             "metrics" : [
-              ["UEC-DOS-INT", "DoSAllServiceUpdates", "ENV", var.blue_green_environment, { "label" : "All", "color" : "#000000" }],
+              ["uec-dos-int", "DoSAllServiceUpdates", "environment", var.blue_green_environment, { "label" : "All", "color" : "#000000" }],
               [".", "DoSServiceUpdate", ".", var.blue_green_environment, "field", "cmsurl", { "label" : "Website", "id" : "m1", "visible" : false }],
               ["...", "postalcode", { "label" : "Postcode", "id" : "m2", "visible" : false }],
               ["...", "postaladdress", { "label" : "Address", "id" : "m3", "visible" : false }],
@@ -598,7 +598,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
               ["...", "cmsopentimesunday", { "label" : "Sunday", "id" : "m17", "visible" : false }],
               [{ "expression" : "m1+m2+m3+m4+m5+m6+m7+m8+m9+m10", "label" : "Demographic Updates", "color" : "#1f77b4" }],
               [{ "expression" : "m11+m12+m13+m14+m15+m16+m17", "label" : "Standard Opening Times", "color" : "#ff7f0e" }],
-              ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
+              ["uec-dos-int", "DoSServiceUpdate", "environment", var.blue_green_environment, "field", "cmsopentimespecified", { "label" : "Specified Opening Times", "color" : "#2ca02c" }],
               ["...", "cmssgsdid", { "label" : "Clinical", "color" : "#9467bd" }],
             ],
             "stacked" : false,
@@ -618,7 +618,7 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
             "sparkline" : true,
             "view" : "singleValue",
             "metrics" : [
-              ["UEC-DOS-INT", "DoSServiceUpdate", "ENV", var.blue_green_environment, "field", "cmsurl", { "label" : "Website" }],
+              ["uec-dos-int", "DoSServiceUpdate", "environment", var.blue_green_environment, "field", "cmsurl", { "label" : "Website" }],
               ["...", "postalcode", { "label" : "Postcode" }],
               ["...", "postaladdress", { "label" : "Address" }],
               ["...", "cmstelephoneno", { "label" : "Public Phone", }],

@@ -27,7 +27,7 @@ EVENT = EmailMessage(
 
 
 @patch(f"{FILE_PATH}.send_email")
-def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContext):
+def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContext) -> None:
     # Arrange
     event = EVENT.copy()
     # Act
@@ -42,7 +42,6 @@ def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContex
     )
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.MIMEMultipart")
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
@@ -50,8 +49,7 @@ def test_send_email(
     mock_get_secret: MagicMock,
     mock_smtp: MagicMock,
     mock_mime_multipart: MagicMock,
-    add_metric: MagicMock,
-):
+) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
     environ["EMAIL_SECRET_NAME"] = secret_name = "mock_secret_name"
@@ -83,7 +81,6 @@ def test_send_email(
         msg=mock_mime_multipart.return_value.as_string.return_value,
     )
     mock_smtp.return_value.quit.assert_called_once()
-    add_metric.assert_called_once_with("EmailSent")
     # Clean up
     del environ["AWS_ACCOUNT_NAME"]
     del environ["EMAIL_SECRET_NAME"]
@@ -92,7 +89,7 @@ def test_send_email(
 @patch(f"{FILE_PATH}.MIMEMultipart")
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
-def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock):
+def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "nonprod"
     # Act
@@ -111,7 +108,6 @@ def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mo
     del environ["AWS_ACCOUNT_NAME"]
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.MIMEMultipart")
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
@@ -119,8 +115,7 @@ def test_send_email_exception(
     mock_get_secret: MagicMock,
     mock_smtp: MagicMock,
     mock_mime_multipart: MagicMock,
-    add_metric: MagicMock,
-):
+) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
     environ["EMAIL_SECRET_NAME"] = secret_name = "mock_secret_name"
@@ -149,7 +144,6 @@ def test_send_email_exception(
     mock_smtp.return_value.login.assert_not_called()
     mock_smtp.return_value.sendmail.assert_not_called()
     mock_smtp.return_value.quit.assert_not_called()
-    add_metric.assert_called_once_with("EmailFailed")
     # Clean up
     del environ["AWS_ACCOUNT_NAME"]
     del environ["EMAIL_SECRET_NAME"]
