@@ -20,7 +20,7 @@ from common.nhs import NHSEntity
 
 
 @patch.object(Logger, "warning")
-def test_log_closed_or_hidden_services(mock_logger, change_event):
+def test_log_closed_or_hidden_services(mock_logger: MagicMock, change_event: dict[str, str]):
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
@@ -49,7 +49,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_unmatched_nhsuk_service(mock_logger):
+def test_log_unmatched_nhsuk_service(mock_logger: MagicMock):
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -90,7 +90,7 @@ def test_log_unmatched_nhsuk_service(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_open_times(mock_logger):
+def test_log_invalid_open_times(mock_logger: MagicMock):
     # Arrange
     opening_times = [
         {

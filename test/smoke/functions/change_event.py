@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from json import load
+from typing import Self
 
 from .constants import NHS_UK_BLOOD_PRESSURE_SERVICE_CODE, NHS_UK_CONTRACEPTION_SERVICE_CODE
 
@@ -17,7 +18,7 @@ class ChangeEvent:
     blood_pressure: bool
     contraception: bool
 
-    def create_change_event(self) -> dict:
+    def create_change_event(self: Self) -> dict:
         """Create a change event from the base change event and set the attributes.
 
         Returns:
@@ -40,7 +41,7 @@ class ChangeEvent:
             NHS_UK_CONTRACEPTION_SERVICE_CODE,
         )
 
-    def _load_base_change_event(self) -> dict:
+    def _load_base_change_event(self: Self) -> dict:
         """Load the base change event from the JSON file.
 
         Returns:
@@ -49,7 +50,7 @@ class ChangeEvent:
         with open("./functions/base_change_event.json") as base_change_event_file:
             return load(base_change_event_file)
 
-    def _set_address(self, base_change_event: dict) -> dict:
+    def _set_address(self: Self, base_change_event: dict) -> dict:
         """Set the address attributes on the change event.
 
         Args:
@@ -66,7 +67,7 @@ class ChangeEvent:
         base_change_event["County"] = county
         return base_change_event
 
-    def _set_contact_details(self, base_change_event: dict, change_event_name: str, value: str) -> dict:
+    def _set_contact_details(self: Self, base_change_event: dict, change_event_name: str, value: str) -> dict:
         """Set the contact details attributes on the change event.
 
         Args:
@@ -87,7 +88,7 @@ class ChangeEvent:
         )
         return base_change_event
 
-    def _split_dos_address(self, dos_address: str) -> tuple[str, str, str, str, str]:
+    def _split_dos_address(self: Self, dos_address: str) -> tuple[str, str, str, str, str]:
         """Split a DoS address into its constituent parts.
 
         Args:
@@ -129,7 +130,7 @@ class ChangeEvent:
 
         return address_line_1, address_line_2, address_line_3, city, county
 
-    def _set_opening_times(self, base_change_event: dict) -> dict:
+    def _set_opening_times(self: Self, base_change_event: dict) -> dict:
         """Set the opening times attributes on the change event.
 
         Args:
@@ -165,7 +166,9 @@ class ChangeEvent:
         )
         return base_change_event
 
-    def _set_commissioned_services(self, base_change_event: dict, service_enabled: bool, service_code: str) -> dict:
+    def _set_commissioned_services(
+        self: Self, base_change_event: dict, service_enabled: bool, service_code: str
+    ) -> dict:
         """Set the commissioned services on services attribute on the change event.
 
         Args:

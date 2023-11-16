@@ -1,7 +1,7 @@
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, time
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 from aws_lambda_powertools.logging import Logger
 
@@ -24,7 +24,7 @@ class OpenPeriod:
     start: time
     end: time
 
-    def start_string(self) -> str:
+    def start_string(self: Self) -> str:
         """Get the start time as a string.
 
         Returns:
@@ -32,7 +32,7 @@ class OpenPeriod:
         """
         return self.start.strftime("%H:%M:%S")
 
-    def end_string(self) -> str:
+    def end_string(self: Self) -> str:
         """Get the end time as a string.
 
         Returns:
@@ -40,7 +40,7 @@ class OpenPeriod:
         """
         return self.end.strftime("%H:%M:%S")
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Get the open period as a string.
 
         Returns:
@@ -48,7 +48,7 @@ class OpenPeriod:
         """
         return f"{self.start_string()}-{self.end_string()}"
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Get the open period as a string.
 
         Returns:
@@ -56,7 +56,7 @@ class OpenPeriod:
         """
         return f"OpenPeriod({self})"
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self: Self, other: object) -> bool:
         """Check if two OpenPeriod objects are equal.
 
         Args:
@@ -67,7 +67,7 @@ class OpenPeriod:
         """
         return isinstance(other, OpenPeriod) and self.start == other.start and self.end == other.end
 
-    def __lt__(self, other: Any) -> bool:  # noqa: ANN401
+    def __lt__(self: Self, other: Any) -> bool:  # noqa: ANN401
         """Check if one OpenPeriod object is less than another.
 
         Args:
@@ -80,7 +80,7 @@ class OpenPeriod:
             return self.end < other.end
         return self.start < other.start
 
-    def __gt__(self, other: Any) -> bool:  # noqa: ANN401
+    def __gt__(self: Self, other: Any) -> bool:  # noqa: ANN401
         """Check if one OpenPeriod object is less than another.
 
         Args:
@@ -93,7 +93,7 @@ class OpenPeriod:
             return self.end > other.end
         return self.start > other.start
 
-    def start_before_end(self) -> bool:
+    def start_before_end(self: Self) -> bool:
         """Check if the start time is before the end time.
 
         Returns:
@@ -101,7 +101,7 @@ class OpenPeriod:
         """
         return self.start < self.end
 
-    def overlaps(self, other: Any) -> bool:  # noqa: ANN401
+    def overlaps(self: Self, other: Any) -> bool:  # noqa: ANN401
         """Check if two OpenPeriod objects overlap.
 
         Args:
@@ -114,15 +114,15 @@ class OpenPeriod:
         assert other.start_before_end()  # noqa: S101
         return self.start <= other.end and other.start <= self.end
 
-    def export_db_string_format(self) -> str:
+    def export_db_string_format(self: Self) -> str:
         """Exports open period into a DoS db accepted format for previous value in the service history entry."""
         return f"{self.start.strftime(DOS_TIME_FORMAT)}-{self.end.strftime(DOS_TIME_FORMAT)}"
 
-    def export_time_in_seconds(self) -> str:
+    def export_time_in_seconds(self: Self) -> str:
         """Exports open period into a DoS DB accepted format for service history."""
         return f"{self._seconds_since_midnight(self.start)}-{self._seconds_since_midnight(self.end)}"
 
-    def _seconds_since_midnight(self, time: time) -> int:
+    def _seconds_since_midnight(self: Self, time: time) -> int:
         """Returns the number of seconds since midnight for the given time."""
         return time.hour * 60 * 60 + time.minute * 60 + time.second
 
@@ -176,7 +176,7 @@ class OpenPeriod:
 
         return OpenPeriod(open_time, close_time)
 
-    def export_test_format(self) -> dict[str, str]:
+    def export_test_format(self: Self) -> dict[str, str]:
         """Exports open period for use in the DoS DB Hander."""
         return {
             "start_time": self.start.strftime(DOS_TIME_FORMAT),
@@ -187,7 +187,7 @@ class OpenPeriod:
 class SpecifiedOpeningTime:
     """A class to represent a specified opening time for a service."""
 
-    def __init__(self, open_periods: list[OpenPeriod], specified_date: date, is_open: bool = True) -> None:
+    def __init__(self: Self, open_periods: list[OpenPeriod], specified_date: date, is_open: bool = True) -> None:
         """Initialise a SpecifiedOpeningTime object.
 
         Args:
@@ -200,7 +200,7 @@ class SpecifiedOpeningTime:
         self.date = specified_date
         self.is_open = is_open
 
-    def date_string(self) -> str:
+    def date_string(self: Self) -> str:
         """Returns the date as a string in the format DD-MM-YYYY.
 
         Returns:
@@ -208,7 +208,7 @@ class SpecifiedOpeningTime:
         """
         return self.date.strftime("%d-%m-%Y")
 
-    def open_periods_string(self) -> str:
+    def open_periods_string(self: Self) -> str:
         """Returns a string version of the open periods.
 
         Returns:
@@ -216,7 +216,7 @@ class SpecifiedOpeningTime:
         """
         return OpenPeriod.list_string(self.open_periods)
 
-    def __hash__(self) -> int:
+    def __hash__(self: Self) -> int:
         """Returns a hash of the object.
 
         Returns:
@@ -224,7 +224,7 @@ class SpecifiedOpeningTime:
         """
         return hash((tuple(sorted(self.open_periods)), self.date, self.is_open))
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of the object.
 
         Returns:
@@ -232,7 +232,7 @@ class SpecifiedOpeningTime:
         """
         return f"<SpecifiedOpenTime: {self.date_string()} open={self.is_open} {self.open_periods_string()}>"
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns a string representation of the object.
 
         Returns:
@@ -240,7 +240,7 @@ class SpecifiedOpeningTime:
         """
         return f"{self.open_string()} on {self.date_string()} {self.open_periods_string()}"
 
-    def open_string(self) -> str:
+    def open_string(self: Self) -> str:
         """Returns a string representation of whether the service is open or closed.
 
         Returns:
@@ -248,7 +248,7 @@ class SpecifiedOpeningTime:
         """
         return "OPEN" if self.is_open else "CLOSED"
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self: Self, other: object) -> bool:
         """Checks equality between 2 SpecifiedOpeningTime objects.
 
         Args:
@@ -264,31 +264,31 @@ class SpecifiedOpeningTime:
             and OpenPeriod.equal_lists(self.open_periods, other.open_periods)
         )
 
-    def export_service_history_format(self) -> list[str]:
+    def export_service_history_format(self: Self) -> list[str]:
         """Exports Specified opening time into a DoS service history accepted format."""
         exp_open_periods = [op.export_time_in_seconds() for op in sorted(self.open_periods)]
         date_str = self.date.strftime(DOS_DATE_FORMAT)
         return [f"{date_str}-{period}" for period in exp_open_periods] if self.is_open else [f"{date_str}-closed"]
 
-    def export_dos_log_format(self) -> list[str]:
+    def export_dos_log_format(self: Self) -> list[str]:
         """Exports Specified opening times into a DoS Logs accepted format."""
         exp_open_periods = [op.export_db_string_format() for op in sorted(self.open_periods)]
         date_str = self.date.strftime(DOS_DATE_FORMAT)
         return [f"{date_str}-{period}" for period in exp_open_periods] if self.is_open else [f"{date_str}-closed"]
 
-    def contradiction(self) -> bool:
+    def contradiction(self: Self) -> bool:
         """Returns whether the open flag contradicts the number of open periods present."""
         return self.is_open != (len(self.open_periods) > 0)
 
-    def any_overlaps(self) -> bool:
+    def any_overlaps(self: Self) -> bool:
         """Returns whether any of the open periods overlap."""
         return OpenPeriod.any_overlaps(self.open_periods)
 
-    def all_start_before_end(self) -> bool:
+    def all_start_before_end(self: Self) -> bool:
         """Returns whether all open periods start before they end."""
         return OpenPeriod.all_start_before_end(self.open_periods)
 
-    def is_valid(self) -> bool:
+    def is_valid(self: Self) -> bool:
         """Validates no overlaps, 'starts before ends' and contradictions."""
         return self.all_start_before_end() and (not self.any_overlaps()) and (not self.contradiction())
 
@@ -318,7 +318,7 @@ class SpecifiedOpeningTime:
             date_now = datetime.now().date()  # noqa: DTZ005
         return [item for item in times_list if item.date >= date_now]
 
-    def export_test_format(self) -> dict:
+    def export_test_format(self: Self) -> dict:
         """Exports Specified opening time into a test format that can be used in the tests."""
         exp_open_periods = [op.export_test_format() for op in sorted(self.open_periods)]
         date_str = self.date.strftime(DOS_DATE_FORMAT)
@@ -345,14 +345,14 @@ class StandardOpeningTimes:
     An empty list that no open periods means CLOSED
     """
 
-    def __init__(self) -> None:
+    def __init__(self: Self) -> None:
         """Initialises the StandardOpeningTimes object with empty lists for each day."""
         for day in WEEKDAYS:
             setattr(self, day, [])
         self.generic_bankholiday = []
         self.explicit_closed_days = set()
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of the StandardOpeningTimes object."""
         closed_days_str = ""
         if len(self.explicit_closed_days) > 0:
@@ -360,15 +360,15 @@ class StandardOpeningTimes:
 
         return f"<StandardOpeningTimes: {self!s}{closed_days_str}>"
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Returns a string representation of the StandardOpeningTimes object."""
         return self.to_string(", ")
 
-    def __len__(self) -> int:
+    def __len__(self: Self) -> int:
         """Returns the number of OpenPeriods in the StandardOpeningTimes object."""
         return sum(len(getattr(self, day)) for day in WEEKDAYS)
 
-    def __eq__(self, other: "StandardOpeningTimes") -> bool:
+    def __eq__(self: Self, other: "StandardOpeningTimes") -> bool:
         """Check equality of 2 StandardOpeningTimes (generic bankholiday values are ignored)."""
         if not isinstance(other, StandardOpeningTimes):
             return False
@@ -378,15 +378,15 @@ class StandardOpeningTimes:
 
         return all(OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day)) for day in WEEKDAYS)
 
-    def to_string(self, seperator: str = ", ") -> str:
+    def to_string(self: Self, seperator: str = ", ") -> str:
         """Returns a string representation of the StandardOpeningTimes object."""
         return seperator.join([f"{day}={OpenPeriod.list_string(getattr(self, day))}" for day in WEEKDAYS])
 
-    def get_openings(self, day: str) -> list[OpenPeriod]:
+    def get_openings(self: Self, day: str) -> list[OpenPeriod]:
         """Returns the list of OpenPeriods for the given day."""
         return getattr(self, day.lower())
 
-    def all_closed_days(self) -> list[str]:
+    def all_closed_days(self: Self) -> list[str]:
         """Returns a set of all implicit AND explicit closed days."""
         all_closed_days = self.explicit_closed_days
 
@@ -397,19 +397,19 @@ class StandardOpeningTimes:
 
         return all_closed_days
 
-    def fully_closed(self) -> bool:
+    def fully_closed(self: Self) -> bool:
         """Returns whether the object contains any openings."""
         return all(len(getattr(self, day)) <= 0 for day in WEEKDAYS)
 
-    def is_open(self, weekday: str) -> bool:
+    def is_open(self: Self, weekday: str) -> bool:
         """Returns whether the object contains any openings for the given day."""
         return len(getattr(self, weekday)) > 0
 
-    def same_openings(self, other: "StandardOpeningTimes", day: str) -> bool:
+    def same_openings(self: Self, other: "StandardOpeningTimes", day: str) -> bool:
         """Returns whether the object contains the same openings for the given day."""
         return OpenPeriod.equal_lists(self.get_openings(day), other.get_openings(day))
 
-    def add_open_period(self, open_period: OpenPeriod, weekday: str) -> None:
+    def add_open_period(self: Self, open_period: OpenPeriod, weekday: str) -> None:
         """Adds a formatted open period to the specified weekday.
 
         Args:
@@ -425,33 +425,33 @@ class StandardOpeningTimes:
         else:
             logger.error(f"Cannot add opening time for invalid weekday '{weekday}', open period not added.")
 
-    def any_overlaps(self) -> bool:
+    def any_overlaps(self: Self) -> bool:
         """Returns True if any open period overlaps with another open period."""
         return any(OpenPeriod.any_overlaps(getattr(self, weekday)) for weekday in WEEKDAYS)
 
-    def all_start_before_end(self) -> bool:
+    def all_start_before_end(self: Self) -> bool:
         """Returns True if all open periods start before they end."""
         return all(OpenPeriod.all_start_before_end(getattr(self, weekday)) for weekday in WEEKDAYS)
 
-    def any_contradictions(self) -> bool:
+    def any_contradictions(self: Self) -> bool:
         """Returns True if any open period falls on a day that is marked as closed."""
         return any(self.is_open(weekday) for weekday in self.explicit_closed_days)
 
-    def is_valid(self) -> bool:
+    def is_valid(self: Self) -> bool:
         """Returns True if the object is valid."""
         return self.all_start_before_end() and not self.any_overlaps() and not self.any_contradictions()
 
-    def export_opening_times_for_day(self, weekday: str) -> list[str]:
+    def export_opening_times_for_day(self: Self, weekday: str) -> list[str]:
         """Exports standard opening times into DoS format for a specific day in the week."""
         open_periods = sorted(getattr(self, weekday))
         return [open_period.export_db_string_format() for open_period in open_periods]
 
-    def export_opening_times_in_seconds_for_day(self, weekday: str) -> list[str]:
+    def export_opening_times_in_seconds_for_day(self: Self, weekday: str) -> list[str]:
         """Exports standard opening times into time in seconds format for a specific day in the week."""
         open_periods = sorted(getattr(self, weekday))
         return [open_period.export_time_in_seconds() for open_period in open_periods]
 
-    def export_test_format(self) -> dict[str, list[dict[str, str]]]:
+    def export_test_format(self: Self) -> dict[str, list[dict[str, str]]]:
         """Exports standard opening times into a test format."""
         change = {}
         for weekday in WEEKDAYS:

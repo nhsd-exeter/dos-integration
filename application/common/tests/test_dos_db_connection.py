@@ -23,7 +23,7 @@ DB_PASSWORD = "my-password"
 
 @patch(f"{FILE_PATH}.connection_to_db")
 @patch(f"{FILE_PATH}.get_secret")
-def test_connect_to_db_reader(mock_get_secret, mock_connection_to_db):
+def test_connect_to_db_reader(mock_get_secret: MagicMock, mock_connection_to_db: MagicMock) -> None:
     # Arrange
     mock_get_secret.return_value = {"DB_READER_SECRET_KEY": DB_PASSWORD}
     environ["DB_READER_SECRET_NAME"] = "my_secret_name"
@@ -58,7 +58,7 @@ def test_connect_to_db_reader(mock_get_secret, mock_connection_to_db):
 
 @patch(f"{FILE_PATH}.connection_to_db")
 @patch(f"{FILE_PATH}.get_secret")
-def test_connect_to_db_writer(mock_get_secret, mock_connection_to_db):
+def test_connect_to_db_writer(mock_get_secret: MagicMock, mock_connection_to_db: MagicMock) -> None:
     # Arrange
     mock_get_secret.return_value = {"DB_WRITER_SECRET_KEY": DB_PASSWORD}
     environ["DB_WRITER_SECRET_NAME"] = "my_secret_name"
@@ -91,7 +91,7 @@ def test_connect_to_db_writer(mock_get_secret, mock_connection_to_db):
 
 
 @patch(f"{FILE_PATH}.connect")
-def test_connection_to_db(mock_connect):
+def test_connection_to_db(mock_connect: MagicMock) -> None:
     # Act
     connection_to_db(
         server=DB_WRITER_SERVER,
@@ -114,7 +114,7 @@ def test_connection_to_db(mock_connect):
     )
 
 
-def test_query_dos_db():
+def test_query_dos_db() -> None:
     # Arrange
     query = "SELECT * FROM my_table"
     connection = MagicMock()

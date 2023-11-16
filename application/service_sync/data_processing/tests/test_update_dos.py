@@ -36,7 +36,7 @@ def test_update_dos_data(
     mock_save_specified_opening_times_into_db: MagicMock,
     mock_save_palliative_care_into_db: MagicMock,
     mock_log_service_updates: MagicMock,
-):
+) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()
@@ -83,7 +83,7 @@ def test_update_dos_data_no_changes(
     mock_save_standard_opening_times_into_db: MagicMock,
     mock_save_specified_opening_times_into_db: MagicMock,
     mock_save_palliative_care_into_db: MagicMock,
-):
+) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()
@@ -123,7 +123,7 @@ def test_update_dos_data_no_changes(
 
 @patch(f"{FILE_PATH}.SQL")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: MagicMock):
+def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
@@ -140,7 +140,7 @@ def test_save_demographics_into_db(mock_query_dos_db: MagicMock, mock_sql: Magic
     )
 
 
-def test_save_demographics_into_db_no_changes():
+def test_save_demographics_into_db_no_changes() -> None:
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
@@ -152,7 +152,7 @@ def test_save_demographics_into_db_no_changes():
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_standard_opening_times_into_db(mock_query_dos_db: MagicMock):
+def test_save_standard_opening_times_into_db(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
@@ -173,7 +173,7 @@ def test_save_standard_opening_times_into_db(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock):
+def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
@@ -186,7 +186,7 @@ def test_save_specified_opening_times_into_db(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMock):
+def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     service_id = 1
@@ -203,7 +203,7 @@ def test_save_specified_opening_times_into_db_closed(mock_query_dos_db: MagicMoc
 def test_save_palliative_care_into_db_insert(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -232,7 +232,7 @@ def test_save_palliative_care_into_db_insert(
 def test_save_palliative_care_into_db_delete(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -261,7 +261,7 @@ def test_save_palliative_care_into_db_delete(
 def test_save_palliative_care_into_db_no_z_code(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -286,7 +286,7 @@ def test_save_palliative_care_into_db_no_z_code(
 def test_save_palliative_care_into_db_no_changes(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -304,7 +304,7 @@ def test_save_palliative_care_into_db_no_changes(
 def test_save_blood_pressure_into_db_insert(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists_on_service: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -329,7 +329,7 @@ def test_save_blood_pressure_into_db_insert(
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_blood_pressure_into_db_delete(mock_query_dos_db: MagicMock):
+def test_save_blood_pressure_into_db_delete(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -353,7 +353,7 @@ def test_save_blood_pressure_into_db_delete(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_blood_pressure_into_db_no_changes(mock_query_dos_db: MagicMock):
+def test_save_blood_pressure_into_db_no_changes(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -376,7 +376,7 @@ def test_save_blood_pressure_into_db_z_code_not_exist(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -418,7 +418,7 @@ def test_save_blood_pressure_into_db_z_not_valid(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -449,7 +449,7 @@ def test_save_blood_pressure_into_db_z_not_valid(
 def test_save_contraception_into_db_insert(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists_on_service: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -474,7 +474,7 @@ def test_save_contraception_into_db_insert(
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_contraception_into_db_delete(mock_query_dos_db: MagicMock):
+def test_save_contraception_into_db_delete(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -498,7 +498,7 @@ def test_save_contraception_into_db_delete(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_save_contraception_into_db_no_changes(mock_query_dos_db: MagicMock):
+def test_save_contraception_into_db_no_changes(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -521,7 +521,7 @@ def test_save_contraception_into_db_z_code_not_exist(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()
@@ -563,7 +563,7 @@ def test_save_contraception_into_db_z_not_valid(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-):
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     dos_service = MagicMock()

@@ -14,7 +14,7 @@ FILE_PATH = "application.quality_checker.quality_checker"
 
 
 @pytest.fixture()
-def lambda_context():
+def lambda_context() -> None:
     @dataclass
     class LambdaContext:
         """Mock LambdaContext - All dummy values."""

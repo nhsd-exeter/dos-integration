@@ -4,6 +4,7 @@ from json import dumps
 
 import pytest
 from aws_lambda_powertools.utilities.data_classes import SQSEvent
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from botocore.exceptions import ClientError
 
 from application.common.middlewares import (
@@ -15,9 +16,9 @@ from application.common.utilities import extract_body
 from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
 
 
-def test_redact_staff_key_from_event_with_no_staff_key(caplog):
+def test_redact_staff_key_from_event_with_no_staff_key(caplog: pytest.LogCaptureFixture):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context) -> SQSEvent:
+    def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
 
     # Arrange
@@ -31,9 +32,9 @@ def test_redact_staff_key_from_event_with_no_staff_key(caplog):
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
 
-def test_redact_staff_key_from_event(caplog):
+def test_redact_staff_key_from_event(caplog: pytest.LogCaptureFixture):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context) -> SQSEvent:
+    def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
 
     # Arrange
@@ -47,9 +48,9 @@ def test_redact_staff_key_from_event(caplog):
     assert "Staff" not in extract_body(result["Records"][0]["body"])
 
 
-def test_redact_staff_key_from_event_no_records(caplog):
+def test_redact_staff_key_from_event_no_records(caplog: pytest.LogCaptureFixture):
     @redact_staff_key_from_event()
-    def dummy_handler(event, context) -> SQSEvent:
+    def dummy_handler(event: dict[str, str], context: LambdaContext) -> SQSEvent:
         return event
 
     # Arrange
@@ -62,13 +63,13 @@ def test_redact_staff_key_from_event_no_records(caplog):
     assert len(result["Records"]) == 0
 
 
-def test_unhandled_exception_logging(caplog):
+def test_unhandled_exception_logging(caplog: pytest.LogCaptureFixture):
     @unhandled_exception_logging
-    def client_error_func(event, context) -> None:
+    def client_error_func(event: dict[str, str], context: LambdaContext) -> None:
         raise ClientError({"Error": {"Code": "dummy_error", "Message": "dummy_message"}}, "op_name")
 
     @unhandled_exception_logging
-    def regular_error_func(event, context) -> None:
+    def regular_error_func(event: dict[str, str], context: LambdaContext) -> None:
         msg = "dummy exception message"
         raise Exception(msg)  # noqa: TRY002
 
@@ -85,7 +86,7 @@ def test_unhandled_exception_logging(caplog):
 
 def test_unhandled_exception_logging_no_error():
     @unhandled_exception_logging
-    def dummy_handler(event, context) -> None:
+    def dummy_handler(event: dict[str, str], context: LambdaContext) -> None:
         pass
 
     # Arrange
@@ -95,9 +96,9 @@ def test_unhandled_exception_logging_no_error():
     dummy_handler(event, None)
 
 
-def test_unhandled_exception_logging_hidden_event(caplog):
+def test_unhandled_exception_logging_hidden_event(caplog: pytest.LogCaptureFixture):
     @unhandled_exception_logging_hidden_event
-    def regular_error_func(event, context) -> None:
+    def regular_error_func(event: dict[str, str], context: LambdaContext) -> None:
         msg = "dummy exception message"
         raise Exception(msg)  # noqa: TRY002
 
@@ -109,7 +110,7 @@ def test_unhandled_exception_logging_hidden_event(caplog):
 
 def test_unhandled_exception_logging_hidden_event_no_error():
     @unhandled_exception_logging_hidden_event
-    def dummy_handler(event, context) -> None:
+    def dummy_handler(event: dict[str, str], context: LambdaContext) -> None:
         pass
 
     # Arrange

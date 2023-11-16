@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Self
 
 from requests import Response
 
@@ -22,7 +23,7 @@ class Context:
     generator_data: dict | None = None
     # Other used as a catch all for any other data that is not covered by the above and only used in a couple tests
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Return a string representation of the object.
 
         Returns:

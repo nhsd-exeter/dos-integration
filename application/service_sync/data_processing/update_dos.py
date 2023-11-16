@@ -285,7 +285,7 @@ def save_specified_opening_times_into_db(
     return False
 
 
-def save_sgsdid_update(  # noqa: PLR0913
+def save_sgsdid_update(
     name: str,
     value: bool,
     sdid: int,

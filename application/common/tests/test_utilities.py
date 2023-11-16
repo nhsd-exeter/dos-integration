@@ -67,7 +67,7 @@ def test_get_sequence_number_empty():
     assert sequence_number is None
 
 
-def test_get_sqs_msg_attribute_string(dead_letter_message):
+def test_get_sqs_msg_attribute_string(dead_letter_message: dict[str, str]):
     # Arrange
     attribute = "error_msg"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -77,7 +77,7 @@ def test_get_sqs_msg_attribute_string(dead_letter_message):
     assert response == msg_attributes[attribute]["stringValue"]
 
 
-def test_get_sqs_msg_attribute_number(dead_letter_message):
+def test_get_sqs_msg_attribute_number(dead_letter_message: dict[str, str]):
     # Arrange
     attribute = "error_msg_http_code"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -87,7 +87,7 @@ def test_get_sqs_msg_attribute_number(dead_letter_message):
     assert response == float(msg_attributes[attribute]["stringValue"])
 
 
-def test_get_sqs_msg_attribute_other(dead_letter_message):
+def test_get_sqs_msg_attribute_other(dead_letter_message: dict[str, str]):
     # Arrange
     attribute = "other"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -106,7 +106,7 @@ def test_get_sqs_msg_attribute_no_attributes():
     assert response is None
 
 
-def test_handle_sqs_msg_attributes(dead_letter_message):
+def test_handle_sqs_msg_attributes(dead_letter_message: dict[str, str]):
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
 
     attributes = handle_sqs_msg_attributes(msg_attributes=msg_attributes)
@@ -115,7 +115,7 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
 
 
 @pytest.mark.parametrize(("val", "expected"), [("", True), ("    ", True), (None, True), ("True val", False)])
-def test_is_val_none_or_empty(val, expected):
+def test_is_val_none_or_empty(val: str | None, expected: bool):
     assert is_val_none_or_empty(val) == expected
 
 
