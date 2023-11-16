@@ -256,13 +256,11 @@ def test_save_palliative_care_into_db_delete(
     )
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.validate_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_no_z_code(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -280,17 +278,14 @@ def test_save_palliative_care_into_db_no_z_code(
         symptom_discriminator_id=DOS_PALLIATIVE_CARE_SYMPTOM_DISCRIMINATOR,
         z_code_alias="Palliative Care",
     )
-    mock_add_metric.assert_called_once_with("DoSPalliativeCareZCodeDoesNotExist")
     mock_query_dos_db.assert_not_called()
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.validate_z_code_exists")
 @patch(f"{FILE_PATH}.query_dos_db")
 def test_save_palliative_care_into_db_no_changes(
     mock_query_dos_db: MagicMock,
     mock_validate_z_code_exists: MagicMock,
-    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -301,7 +296,6 @@ def test_save_palliative_care_into_db_no_changes(
     # Assert
     assert False is response
     mock_validate_z_code_exists.assert_not_called()
-    mock_add_metric.assert_not_called()
     mock_query_dos_db.assert_not_called()
 
 
@@ -415,7 +409,6 @@ def test_save_blood_pressure_into_db_z_code_not_exist(
     )
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.save_sgsdid_update")
 @patch(f"{FILE_PATH}.validate_z_code_exists")
 @patch(f"{FILE_PATH}.validate_z_code_exists_on_service")
@@ -425,7 +418,6 @@ def test_save_blood_pressure_into_db_z_not_valid(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -450,7 +442,6 @@ def test_save_blood_pressure_into_db_z_not_valid(
         ],
     )
     mock_save_sgsdid_update.assert_not_called()
-    mock_add_metric.assert_called_once_with("DoSBloodPressureZCodeDoesNotExist")
 
 
 @patch(f"{FILE_PATH}.validate_z_code_exists_on_service")
@@ -563,7 +554,6 @@ def test_save_contraception_into_db_z_code_not_exist(
     )
 
 
-@patch(f"{FILE_PATH}.add_metric")
 @patch(f"{FILE_PATH}.save_sgsdid_update")
 @patch(f"{FILE_PATH}.validate_z_code_exists")
 @patch(f"{FILE_PATH}.validate_z_code_exists_on_service")
@@ -573,7 +563,6 @@ def test_save_contraception_into_db_z_not_valid(
     mock_validate_z_code_exists_on_service: MagicMock,
     mock_validate_z_code_exists: MagicMock,
     mock_save_sgsdid_update: MagicMock,
-    mock_add_metric: MagicMock,
 ):
     # Arrange
     mock_connection = MagicMock()
@@ -598,4 +587,3 @@ def test_save_contraception_into_db_z_not_valid(
         ],
     )
     mock_save_sgsdid_update.assert_not_called()
-    mock_add_metric.assert_called_once_with("DoSContraceptionZCodeDoesNotExist")

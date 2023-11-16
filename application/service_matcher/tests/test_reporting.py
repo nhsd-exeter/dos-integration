@@ -1,5 +1,4 @@
 import json
-from os import environ
 from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
@@ -93,7 +92,6 @@ def test_log_unmatched_nhsuk_service(mock_logger):
 @patch.object(Logger, "warning")
 def test_log_invalid_open_times(mock_logger):
     # Arrange
-    environ["ENV"] = "dev"
     opening_times = [
         {
             "Weekday": "Monday",
@@ -128,9 +126,9 @@ def test_log_invalid_open_times(mock_logger):
         nhsuk_open_times_payload=json.dumps(nhs_entity.entity_data["OpeningTimes"]),
         dos_service_type_name=", ".join(str(service.service_type_name) for service in dos_services),
         dos_services=", ".join(str(service.uid) for service in dos_services),
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="InvalidOpenTimes",
     )
-    # Clean up
-    del environ["ENV"]
 
 
 @patch.object(Logger, "warning")

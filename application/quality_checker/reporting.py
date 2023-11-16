@@ -1,7 +1,5 @@
-from os import environ
-from typing import Any
+from os import getenv
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 
 from common.dos import DoSService
@@ -26,30 +24,16 @@ def log_to_quality_check_report(
     for service in matched_services:
         logger.warning(
             reason,
-            extra={
-                "report_key": QUALITY_CHECK_REPORT_KEY,
-                "dos_service_uid": service.uid,
-                "dos_service_odscode": service.odscode,
-                "dos_service_name": service.name,
-                "dos_service_type_name": service.service_type_name,
-                "dos_service_type_id": service.typeid,
-                "dos_region": service.get_region(),
-                "z-code": z_code,
-                "reason": reason,
-                "odscode": service.odscode[:5],
-            },
+            report_key=QUALITY_CHECK_REPORT_KEY,
+            dos_service_uid=service.uid,
+            dos_service_odscode=service.odscode,
+            dos_service_name=service.name,
+            dos_service_type_name=service.service_type_name,
+            dos_service_type_id=service.typeid,
+            dos_region=service.get_region(),
+            z_code=z_code,
+            reason=reason,
+            odscode=service.odscode[:5],
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="QualityCheckerIssueFound",
         )
-        quality_check_report_metric()
-
-
-@metric_scope
-def quality_check_report_metric(metrics: Any) -> None:  # noqa: ANN401
-    """Send a metric to indicate that the quality checker has found an issue.
-
-    Args:
-        metrics (Metrics): CloudWatch embedded metrics object
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.set_property("level", "WARNING")
-    metrics.put_metric("QualityCheckerIssueFound", 1, "Count")

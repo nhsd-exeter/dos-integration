@@ -94,16 +94,12 @@ def test_validate_event_no_sequence_number(event):
 @patch(f"{FILE_PATH}.time_ns")
 def test_build_correlation_id(mock_time_ns):
     # Arrange
-    env = "unit-test"
-    environ["ENV"] = env
     time = "123456789"
     mock_time_ns.return_value = time
     # Act
     response = build_correlation_id()
     # Assert
-    assert response == f"{time}-{env}-replayed-event"
-    # Cleanup
-    del environ["ENV"]
+    assert response == f"{time}-local-replayed-event"
 
 
 @patch(f"{FILE_PATH}.client")

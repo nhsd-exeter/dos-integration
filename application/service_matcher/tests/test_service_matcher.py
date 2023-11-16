@@ -2,15 +2,14 @@ import hashlib
 from json import dumps
 from os import environ
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from aws_embedded_metrics.logger.metrics_logger import MetricsLogger
 from aws_lambda_powertools.logging import Logger
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
-from application.service_matcher.service_matcher import lambda_handler, send_update_request_metric, send_update_requests
+from application.service_matcher.service_matcher import lambda_handler, send_update_requests
 from common.nhs import NHSEntity
 
 FILE_PATH = "application.service_matcher.service_matcher"
@@ -120,15 +119,13 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
     del environ["ENV"]
 
 
-@patch(f"{FILE_PATH}.send_update_request_metric")
 @patch(f"{FILE_PATH}.sqs")
 @patch.object(Logger, "get_correlation_id", return_value="1")
-@patch.object(Logger, "info")
+@patch.object(Logger, "warning")
 def test_send_update_requests(
     mock_logger,
     get_correlation_id_mock,
     mock_sqs,
-    mock_send_update_request_metric: MagicMock,
 ) -> None:
     # Arrange
     q_name = "test-queue"
@@ -167,24 +164,14 @@ def test_send_update_requests(
         QueueUrl=q_name,
         Entries=[entry_details],
     )
-    mock_logger.assert_called_with("Sent off update request for id=1")
-    mock_send_update_request_metric.assert_called_once()
+    mock_logger.assert_called_with(
+        "Sent Off Update Request",
+        service_id="1",
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="UpdateRequestSent",
+    )
     # Clean up
     del environ["UPDATE_REQUEST_QUEUE_URL"]
-
-
-@patch.object(MetricsLogger, "set_dimensions")
-@patch.object(MetricsLogger, "put_metric")
-def test_send_update_request_metric(mock_put_metric, mock_set_dimensions):
-    # Arrange
-    environ["ENV"] = env = "test"
-    # Act
-    send_update_request_metric()
-    # Assert
-    mock_set_dimensions.assert_called_once_with({"ENV": env})
-    mock_put_metric.assert_called_once()
-    # Clean up
-    del environ["ENV"]
 
 
 HOLDING_QUEUE_CHANGE_EVENT_ITEM = HoldingQueueChangeEventItem(

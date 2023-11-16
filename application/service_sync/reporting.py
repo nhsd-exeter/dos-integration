@@ -1,7 +1,5 @@
-from os import environ
-from typing import Any
+from os import getenv
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.dos import DoSService
@@ -44,18 +42,15 @@ def log_blank_standard_opening_times(
     )
 
 
-@metric_scope
 def log_invalid_nhsuk_postcode(
     nhs_entity: NHSEntity,
     dos_service: DoSService,
-    metrics: Any,  # noqa: ANN401
 ) -> None:
     """Log invalid NHS pharmacy postcode.
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         dos_service (DoSService): DoS service to report
-        metrics (Any): The metrics object to report to.
     """
     error_msg = f"NHS entity '{nhs_entity.odscode}' postcode '{nhs_entity.postcode}' is not a valid DoS postcode!"
     logger.warning(
@@ -76,13 +71,9 @@ def log_invalid_nhsuk_postcode(
         dos_service_type_name=dos_service.service_type_name,
         dos_region=dos_service.get_region(),
         dos_service_name=dos_service.name,
+        environment=getenv("ENVIRONMENT"),
+        cloudwatch_metric_filter_matching_attribute="InvalidPostcode",
     )
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.set_property("ods_code", nhs_entity.odscode)
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.set_property("level", "WARNING")
-    metrics.put_metric("InvalidPostcode", 1, "Count")
 
 
 def log_service_with_generic_bank_holiday(
@@ -138,7 +129,7 @@ def log_generic_change_event_error(
     error_reason: str,
     error_info: str,
     dos_service: DoSService,
-    extra: dict[str, Any] | None = None,
+    extra: dict[str, str] | None = None,
 ) -> None:
     """Log a generic change event error.
 
@@ -147,7 +138,7 @@ def log_generic_change_event_error(
         error_reason (str): The error reason
         error_info (str): The error info
         dos_service (DoSService): The DoS service to report
-        extra (dict[str, Any], optional): Extra information to log. Defaults to None.
+        extra (dict[str, str], optional): Extra information to log. Defaults to None.
     """
     logger.warning(
         message,
@@ -193,5 +184,7 @@ def log_service_updated(  # noqa: PLR0913
             "service_uid": service_uid,
             "type_id": type_id,
             "dos_region": dos_service.get_region(),
+            "environment": getenv("ENVIRONMENT"),
+            "cloudwatch_metric_filter_matching_attribute": "ServiceUpdate",
         },
     )

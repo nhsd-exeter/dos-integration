@@ -1,8 +1,6 @@
 from json import dumps, loads
-from os import environ
 from typing import Any
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.data_classes.sqs_event import SQSRecord
 
@@ -105,18 +103,3 @@ def handle_sqs_msg_attributes(msg_attributes: dict[str, Any]) -> dict[str, Any] 
 
         return attributes
     return None
-
-
-@metric_scope
-def add_metric(metric_name: str, metrics: Any) -> None:  # noqa: ANN401
-    """Adds a metric to the custom metrics collection.
-
-    Args:
-        metric_name (str): Name of the metric to be added to CloudWatch
-        metrics (Class): Metrics class
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.set_property("level", "WARNING")
-    metrics.put_metric(metric_name, 1, "Count")

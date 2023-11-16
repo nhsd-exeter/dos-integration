@@ -66,7 +66,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_waiting_ale
   alarm_name                = "${var.project_id} | ${var.shared_environment} | Change Events Waiting"
   comparison_operator       = "GreaterThanThreshold"
   datapoints_to_alarm       = "2"
-  dimensions                = { ENV = var.change_event_queue }
+  dimensions                = { QueueName = var.change_event_queue }
   evaluation_periods        = "3"
   insufficient_data_actions = []
   metric_name               = "ApproximateNumberOfMessagesDelayed"
