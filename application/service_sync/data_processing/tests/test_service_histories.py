@@ -146,7 +146,7 @@ def test_service_histories_add_standard_opening_times_change(mock_service_histor
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
 def test_service_histories_add_standard_opening_times_change_no_change(
-    mock_service_histories_change: MagicMock
+    mock_service_histories_change: MagicMock,
 ) -> None:
     # Arrange
     service_history = ServiceHistories(service_id=SERVICE_ID)
