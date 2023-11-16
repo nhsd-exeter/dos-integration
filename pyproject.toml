@@ -135,8 +135,8 @@ line-length = 120
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Set target version to Python 3.11.
-target-version = "py311"
+# Set target version to Python 3.12.
+target-version = "py312"
 
 [tool.ruff.per-file-ignores]
 "application/**test_*.py" = [

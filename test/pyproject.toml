@@ -15,8 +15,8 @@ ignore = [
   "DTZ007",  # the use of `datetime.datetime.strptime()` without %z must be followed by `.replace(tzinfo=)` or `.astimezone()`
 ]
 
-# Set python version to 3.11.
-target-version = "py311"
+# Set python version to 3.12.
+target-version = "py312"
 
 [tool.ruff.per-file-ignores]
 "**test_*.py" = ["S101"] # Allow `assert` in tests.
