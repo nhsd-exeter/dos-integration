@@ -154,8 +154,7 @@ TF_VAR_waf_aws_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sql
 
 # Lambda Security Group
 TF_VAR_lambda_security_group_name := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-lambda-sg
-TF_VAR_db_writer_sg_name := $(DB_WRITER_SG_NAME)
-TF_VAR_db_reader_sg_name := $(DB_READER_SG_NAME)
+TF_VAR_db_sg_name := $(DB_SG_NAME)
 
 # SQS Queues
 TF_VAR_holding_queue := $(PROJECT_ID)-$(BLUE_GREEN_ENVIRONMENT)-holding-queue.fifo

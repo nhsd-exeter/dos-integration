@@ -20,8 +20,7 @@ DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DB_WRITER_SG_NAME := uec-core-dos-regression-datastore-sg
-DB_READER_SG_NAME := live-lk8s-nonprod-core-dos-db-rds-postgres-sg
+DB_SG_NAME := uec-core-dos-regression-datastore-di-sg
 
 # DB Secrets
 DB_WRITER_SECRET_NAME := core-dos-dev/deployment
