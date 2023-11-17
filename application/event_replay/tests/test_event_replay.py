@@ -1,11 +1,11 @@
 from decimal import Decimal
 from json import dumps
 from os import environ
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3.dynamodb.types import TypeSerializer
 
 from application.event_replay.event_replay import (
@@ -20,12 +20,12 @@ FILE_PATH = "application.event_replay.event_replay"
 
 
 @pytest.fixture()
-def event() -> dict[str, Any]:
+def event() -> dict[str, str]:
     return {"odscode": "FXXX1", "sequence_number": "1"}
 
 
 @pytest.fixture()
-def change_event():
+def change_event() -> None:
     return {
         "Address1": "Flat 619",
         "Address2": "62 Fake Street",
@@ -41,14 +41,14 @@ def change_event():
 @patch(f"{FILE_PATH}.get_change_event")
 @patch(f"{FILE_PATH}.build_correlation_id")
 def test_lambda_handler(
-    mock_build_correlation_id,
-    mock_get_change_event,
-    mock_send_change_event,
-    mock_append_keys,
-    change_event,
-    event,
-    lambda_context,
-):
+    mock_build_correlation_id: MagicMock,
+    mock_get_change_event: MagicMock,
+    mock_send_change_event: MagicMock,
+    mock_append_keys: MagicMock,
+    change_event: dict[str, str],
+    event: dict[str, str],
+    lambda_context: LambdaContext,
+) -> None:
     # Arrange
     correlation_id = "CORRELATION_ID"
     mock_build_correlation_id.return_value = correlation_id
@@ -70,12 +70,12 @@ def test_lambda_handler(
     )
 
 
-def test_validate_event(event):
+def test_validate_event(event: dict[str, str]) -> None:
     # Act & Assert
     validate_event(event)
 
 
-def test_validate_event_no_odscode(event):
+def test_validate_event_no_odscode(event: dict[str, str]) -> None:
     # Arrange
     del event["odscode"]
     # Act & Assert
@@ -83,7 +83,7 @@ def test_validate_event_no_odscode(event):
         validate_event(event)
 
 
-def test_validate_event_no_sequence_number(event):
+def test_validate_event_no_sequence_number(event: dict[str, str]) -> None:
     # Arrange
     del event["sequence_number"]
     # Act & Assert
@@ -92,7 +92,7 @@ def test_validate_event_no_sequence_number(event):
 
 
 @patch(f"{FILE_PATH}.time_ns")
-def test_build_correlation_id(mock_time_ns):
+def test_build_correlation_id(mock_time_ns: MagicMock) -> None:
     # Arrange
     time = "123456789"
     mock_time_ns.return_value = time
@@ -103,7 +103,7 @@ def test_build_correlation_id(mock_time_ns):
 
 
 @patch(f"{FILE_PATH}.client")
-def test_get_change_event(mock_client, event, change_event):
+def test_get_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]) -> None:
     # Arrange
     table_name = "my-table"
     environ["CHANGE_EVENTS_TABLE_NAME"] = table_name
@@ -131,7 +131,9 @@ def test_get_change_event(mock_client, event, change_event):
 
 
 @patch(f"{FILE_PATH}.client")
-def test_get_change_event_no_change_event_in_dynamodb(mock_client, event, change_event):
+def test_get_change_event_no_change_event_in_dynamodb(
+    mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]
+) -> None:
     # Arrange
     table_name = "my-table"
     environ["CHANGE_EVENTS_TABLE_NAME"] = table_name
@@ -157,7 +159,7 @@ def test_get_change_event_no_change_event_in_dynamodb(mock_client, event, change
 
 
 @patch(f"{FILE_PATH}.client")
-def test_send_change_event(mock_client, change_event, event):
+def test_send_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]) -> None:
     # Arrange
     correlation_id = "CORRELATION_ID"
     queue_name = "my-queue"

@@ -1,11 +1,11 @@
 import hashlib
 from json import dumps
 from os import environ
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from aws_lambda_powertools.logging import Logger
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from application.common.types import HoldingQueueChangeEventItem
 from application.conftest import PHARMACY_STANDARD_EVENT, dummy_dos_service
@@ -22,7 +22,7 @@ def _get_message_attributes(
     ods_code: str,
     message_deduplication_id: str,
     message_group_id: str,
-) -> dict[str, Any]:
+) -> dict[str, str]:
     return {
         "correlation_id": {"DataType": "String", "StringValue": correlation_id},
         "message_received": {"DataType": "Number", "StringValue": str(message_received)},
@@ -39,14 +39,14 @@ def _get_message_attributes(
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    mock_review_matches,
-    change_event,
-    lambda_context,
-):
+    mock_extract_body: MagicMock,
+    mock_nhs_entity: MagicMock,
+    mock_send_update_requests: MagicMock,
+    mock_get_matching_services: MagicMock,
+    mock_review_matches: MagicMock,
+    change_event: dict[str, str],
+    lambda_context: LambdaContext,
+) -> None:
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
@@ -80,13 +80,13 @@ def test_lambda_handler(
 @patch(f"{FILE_PATH}.NHSEntity")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_unmatched_service(
-    mock_extract_body,
-    mock_nhs_entity,
-    mock_send_update_requests,
-    mock_get_matching_services,
-    change_event,
-    lambda_context,
-):
+    mock_extract_body: MagicMock,
+    mock_nhs_entity: MagicMock,
+    mock_send_update_requests: MagicMock,
+    mock_get_matching_services: MagicMock,
+    change_event: dict[str, str],
+    lambda_context: LambdaContext,
+) -> None:
     # Arrange
     mock_entity = NHSEntity(change_event)
     sqs_event = SQS_EVENT.copy()
@@ -107,7 +107,7 @@ def test_lambda_handler_unmatched_service(
     del environ["ENV"]
 
 
-def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context):
+def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(lambda_context: LambdaContext) -> None:
     # Arrange
     sqs_event = SQS_EVENT.copy()
     sqs_event["Records"] = []
@@ -123,9 +123,9 @@ def test_lambda_handler_should_throw_exception_if_event_records_len_not_eq_one(l
 @patch.object(Logger, "get_correlation_id", return_value="1")
 @patch.object(Logger, "warning")
 def test_send_update_requests(
-    mock_logger,
-    get_correlation_id_mock,
-    mock_sqs,
+    mock_logger: MagicMock,
+    get_correlation_id_mock: MagicMock,
+    mock_sqs: MagicMock,
 ) -> None:
     # Arrange
     q_name = "test-queue"

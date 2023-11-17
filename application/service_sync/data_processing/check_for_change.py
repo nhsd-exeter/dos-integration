@@ -349,7 +349,7 @@ def check_contraception_for_change(changes_to_dos: ChangesToDoS) -> ChangesToDoS
     return changes_to_dos
 
 
-def services_change(  # noqa: PLR0913
+def services_change(
     changes_to_dos: ChangesToDoS,
     change_key: str,
     new_value: Any,  # noqa: ANN401

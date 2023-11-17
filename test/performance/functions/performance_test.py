@@ -17,7 +17,7 @@ class PerformanceTest(FastHttpUser):
     headers: dict[str, str]
     payload: dict[str, Any]
 
-    def on_start(self) -> None:
+    def on_start(self: Self) -> None:
         """Get the api key before starting the test."""
         self.api_key = get_api_key()
 

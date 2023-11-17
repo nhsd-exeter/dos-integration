@@ -27,7 +27,7 @@ EVENT = EmailMessage(
 
 
 @patch(f"{FILE_PATH}.send_email")
-def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContext):
+def test_lambda_handler(mock_send_email: MagicMock, lambda_context: LambdaContext) -> None:
     # Arrange
     event = EVENT.copy()
     # Act
@@ -49,7 +49,7 @@ def test_send_email(
     mock_get_secret: MagicMock,
     mock_smtp: MagicMock,
     mock_mime_multipart: MagicMock,
-):
+) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
     environ["EMAIL_SECRET_NAME"] = secret_name = "mock_secret_name"
@@ -89,7 +89,7 @@ def test_send_email(
 @patch(f"{FILE_PATH}.MIMEMultipart")
 @patch(f"{FILE_PATH}.SMTP")
 @patch(f"{FILE_PATH}.get_secret")
-def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock):
+def test_send_email_nonprod(mock_get_secret: MagicMock, mock_smtp: MagicMock, mock_mime_multipart: MagicMock) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "nonprod"
     # Act
@@ -115,7 +115,7 @@ def test_send_email_exception(
     mock_get_secret: MagicMock,
     mock_smtp: MagicMock,
     mock_mime_multipart: MagicMock,
-):
+) -> None:
     # Arrange
     environ["AWS_ACCOUNT_NAME"] = "test"
     environ["EMAIL_SECRET_NAME"] = secret_name = "mock_secret_name"

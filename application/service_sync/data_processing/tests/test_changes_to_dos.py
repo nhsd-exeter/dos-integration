@@ -5,7 +5,7 @@ from application.service_sync.data_processing.changes_to_dos import ChangesToDoS
 FILE_PATH = "application.service_sync.data_processing.changes_to_dos"
 
 
-def test_changes_to_dos():
+def test_changes_to_dos() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()

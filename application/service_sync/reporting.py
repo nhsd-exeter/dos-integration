@@ -150,7 +150,7 @@ def log_generic_change_event_error(
     )
 
 
-def log_service_updated(  # noqa: PLR0913
+def log_service_updated(
     action: str,
     data_field_modified: str,
     new_value: str,

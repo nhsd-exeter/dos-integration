@@ -1,5 +1,5 @@
 from os import environ
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from application.service_sync.reject_pending_changes.s3 import put_content_to_s3
 
@@ -7,7 +7,7 @@ FILE_PATH = "application.service_sync.reject_pending_changes.s3"
 
 
 @patch(f"{FILE_PATH}.client")
-def test_put_content_to_s3(mock_client):
+def test_put_content_to_s3(mock_client: MagicMock) -> None:
     # Arrange
     environ["SEND_EMAIL_BUCKET_NAME"] = bucket_name = "bucket_name"
     s3_filename = "s3_filename"

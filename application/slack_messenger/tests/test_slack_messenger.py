@@ -1,9 +1,10 @@
 from json import dumps
 from os import environ
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from aws_lambda_powertools.utilities.data_classes import SNSEvent
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from application.slack_messenger.slack_messenger import get_message_for_cloudwatch_event, lambda_handler, send_msg_slack
 
@@ -70,7 +71,9 @@ WEBHOOK_URL = "https://hooks.slack.com/services/1/2/3"
 
 @patch(f"{FILE_PATH}.get_message_for_cloudwatch_event")
 @patch(f"{FILE_PATH}.send_msg_slack")
-def test_lambda_handler_slack_messenger(mock_send, mock_get, lambda_context):
+def test_lambda_handler_slack_messenger(
+    mock_send: MagicMock, mock_get: MagicMock, lambda_context: LambdaContext
+) -> None:
     expected = {"somefield": "somevalue"}
     mock_send.return_value = None
     mock_get.return_value = expected
@@ -84,14 +87,14 @@ def test_lambda_handler_slack_messenger(mock_send, mock_get, lambda_context):
     mock_send.assert_called_once_with(expected)
 
 
-def test_send_message_missing_url(lambda_context):
+def test_send_message_missing_url() -> None:
     message = {}
     # Act
     with pytest.raises(KeyError):
         send_msg_slack(message)
 
 
-def test_send_message_url_no_channel(lambda_context):
+def test_send_message_url_no_channel() -> None:
     # Arrange
     message = {}
     environ["SLACK_WEBHOOK_URL"] = WEBHOOK_URL
@@ -103,7 +106,7 @@ def test_send_message_url_no_channel(lambda_context):
 
 
 @patch(f"{FILE_PATH}.post")
-def test_send_message(mock_post, lambda_context):
+def test_send_message(mock_post: MagicMock) -> None:
     # Arrange
     message = {"text": "hello dave"}
     environ["SLACK_WEBHOOK_URL"] = WEBHOOK_URL
@@ -129,7 +132,7 @@ def test_send_message(mock_post, lambda_context):
         ("INSUFFICIENT_DATA", "warning", ":rotating_light:"),
     ],
 )
-def test_get_message_from_event(new_state_value: str, colour: str, emoji: str):
+def test_get_message_from_event(new_state_value: str, colour: str, emoji: str) -> None:
     # Arrange
     environ["SHARED_ENVIRONMENT"] = "test"
     sns_event_dict = SNS_EVENT.copy()

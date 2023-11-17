@@ -1,7 +1,7 @@
 from itertools import chain
 from logging import INFO, Formatter, Logger, StreamHandler
 from os import getenv
-from typing import Any
+from typing import Any, Self
 
 from aws_lambda_powertools.logging import Logger as PowerToolsLogger
 
@@ -29,8 +29,8 @@ class ServiceUpdateLogger:
     logger: PowerToolsLogger
     dos_service: DoSService | None
 
-    def __init__(  # noqa: PLR0913
-        self,
+    def __init__(
+        self: Self,
         service_uid: str,
         service_name: str,
         type_id: str,
@@ -66,7 +66,7 @@ class ServiceUpdateLogger:
         self.dos_service = dos_service
 
     def get_opening_times_change(
-        self,
+        self: Self,
         data_field_modified: str,
         previous_value: str | None,
         new_value: str | None,
@@ -94,7 +94,7 @@ class ServiceUpdateLogger:
         return existing_value, updated_value
 
     def log_service_update(
-        self,
+        self: Self,
         data_field_modified: str,
         action: str,
         previous_value: str | None,
@@ -133,8 +133,8 @@ class ServiceUpdateLogger:
             extra={"environment": self.environment},
         )
 
-    def log_standard_opening_times_service_update_for_weekday(  # noqa: PLR0913
-        self,
+    def log_standard_opening_times_service_update_for_weekday(
+        self: Self,
         data_field_modified: str,
         action: str,
         previous_value: StandardOpeningTimes | str,
@@ -170,7 +170,7 @@ class ServiceUpdateLogger:
         )
 
     def log_specified_opening_times_service_update(
-        self,
+        self: Self,
         action: str,
         previous_value: list[SpecifiedOpeningTime] | None,
         new_value: list[SpecifiedOpeningTime] | None,
@@ -212,10 +212,7 @@ class ServiceUpdateLogger:
             new_value=updated_value,
         )
 
-    def log_rejected_change(
-        self,
-        change_id: str,
-    ) -> None:
+    def log_rejected_change(self: Self, change_id: str) -> None:
         """Logs a rejected change to DoS Splunk.
 
         Args:
@@ -231,11 +228,7 @@ class ServiceUpdateLogger:
             extra={"environment": self.environment},
         )
 
-    def log_sgsdid_service_update(
-        self,
-        action: str,
-        new_value: str,
-    ) -> None:
+    def log_sgsdid_service_update(self: Self, action: str, new_value: str) -> None:
         """Logs a service update to DoS Splunk for a sgsdid update.
 
         Args:

@@ -2,6 +2,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, fields
 from itertools import groupby
+from typing import Self
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
@@ -52,7 +53,7 @@ class DoSService:
         """Returns a list of field names for this class."""
         return [f.name for f in fields(DoSService)]
 
-    def __init__(self, db_cursor_row: dict) -> None:
+    def __init__(self: Self, db_cursor_row: dict) -> Self:
         """Sets the attributes of this object to those found in the db row.
 
         Args:
@@ -67,7 +68,7 @@ class DoSService:
         self.blood_pressure = False
         self.contraception = False
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of this object."""
         if self.publicname is not None:
             name = self.publicname
@@ -81,7 +82,7 @@ class DoSService:
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
 
-    def __eq__(self, other) -> bool:  # noqa: ANN001
+    def __eq__(self: Self, other) -> bool:  # noqa: ANN001
         """Checks DoS service equality using service id.
 
         Args:
@@ -92,15 +93,15 @@ class DoSService:
         """
         return self.id == other.id
 
-    def normal_postcode(self) -> str:
+    def normal_postcode(self: Self) -> str:
         """Returns the postcode with no spaces and in uppercase."""
         return self.postcode.replace(" ", "").upper()
 
-    def any_generic_bankholiday_open_periods(self) -> bool:
+    def any_generic_bankholiday_open_periods(self: Self) -> bool:
         """Returns True if any of the opening times are generic bank holiday opening times."""
         return len(self.standard_opening_times.generic_bankholiday) > 0
 
-    def get_region(self) -> str:
+    def get_region(self: Self) -> str:
         """Returns the region of the service."""
         if not self.region:
             self.region = get_region(self.id)

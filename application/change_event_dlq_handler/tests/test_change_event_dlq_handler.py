@@ -3,6 +3,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from application.change_event_dlq_handler.change_event_dlq_handler import lambda_handler
 from application.conftest import PHARMACY_STANDARD_EVENT, PHARMACY_STANDARD_EVENT_STAFF
@@ -29,7 +30,7 @@ STAFF_CHANGE_EVENT_FROM_HOLDING_QUEUE = {
 
 
 @pytest.fixture()
-def dead_letter_change_event_from_change_event_queue():
+def dead_letter_change_event_from_change_event_queue() -> None:
     return {
         "Records": [
             {
@@ -66,7 +67,7 @@ def dead_letter_change_event_from_change_event_queue():
 
 
 @pytest.fixture()
-def dead_letter_staff_change_event_from_change_event_queue():
+def dead_letter_staff_change_event_from_change_event_queue() -> None:
     return {
         "Records": [
             {
@@ -103,7 +104,7 @@ def dead_letter_staff_change_event_from_change_event_queue():
 
 
 @pytest.fixture()
-def dead_letter_change_event_from_holding_queue():
+def dead_letter_change_event_from_holding_queue() -> None:
     return {
         "Records": [
             {
@@ -133,8 +134,8 @@ def test_lambda_handler_event_from_change_event_queue(
     mock_extract_body: MagicMock,
     dead_letter_staff_change_event_from_change_event_queue: dict[str, Any],
     dead_letter_change_event_from_change_event_queue: dict[str, Any],
-    lambda_context,
-):
+    lambda_context: LambdaContext,
+) -> None:
     # Arrange
     mock_extract_body.return_value = extracted_body = "Test message1."
     # Act
@@ -152,8 +153,8 @@ def test_lambda_handler_event_from_change_event_queue(
 def test_lambda_handler_event_from_holding_queue(
     mock_add_change_event_to_dynamodb: MagicMock,
     dead_letter_change_event_from_holding_queue: dict[str, Any],
-    lambda_context,
-):
+    lambda_context: LambdaContext,
+) -> None:
     # Act
     lambda_handler(dead_letter_change_event_from_holding_queue, lambda_context)
     # Assert

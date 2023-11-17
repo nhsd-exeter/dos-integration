@@ -55,7 +55,7 @@ def test_lambda_handler(
     mock_remove_sqs_message_from_queue: MagicMock,
     mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     environ["ENV"] = "environment"
     dos_service = MagicMock()
@@ -100,7 +100,7 @@ def test_lambda_handler_exception(
     mock_logger_exception: MagicMock,
     mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     nhs_entity = MagicMock()
     mock_nhs_entity.return_value = nhs_entity
@@ -123,7 +123,7 @@ def test_lambda_handler_exception(
 
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info: MagicMock):
+def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info: MagicMock) -> None:
     # Arrange
     environ["UPDATE_REQUEST_QUEUE_URL"] = update_request_queue_url = "update_request_queue_url"
     # Act

@@ -8,7 +8,7 @@ FILE_PATH = "application.quality_checker.reporting"
 
 
 @patch.object(Logger, "warning")
-def test_log_to_quality_check_report(mock_warning_logger: MagicMock):
+def test_log_to_quality_check_report(mock_warning_logger: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     matched_services = [

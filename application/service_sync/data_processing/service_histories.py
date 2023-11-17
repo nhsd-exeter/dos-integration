@@ -2,7 +2,7 @@ from datetime import datetime
 from itertools import chain
 from json import dumps, loads
 from time import time
-from typing import Any
+from typing import Any, Self
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
@@ -31,7 +31,7 @@ class ServiceHistories:
     service_id: int
     history_already_exists: bool
 
-    def __init__(self, service_id: int) -> None:
+    def __init__(self: Self, service_id: int) -> None:
         """Initialises the ServiceHistories object.
 
         Args:
@@ -46,7 +46,7 @@ class ServiceHistories:
         self.service_history = {}
         self.NEW_CHANGE_KEY = "new_change"
 
-    def get_service_history_from_db(self, connection: Connection) -> None:
+    def get_service_history_from_db(self: Self, connection: Connection) -> None:
         """Gets the service_histories json from the database.
 
         Args:
@@ -69,7 +69,7 @@ class ServiceHistories:
             self.existing_service_history = {}
             self.history_already_exists = False
 
-    def create_service_histories_entry(self) -> None:
+    def create_service_histories_entry(self: Self) -> None:
         """Creates a new entry in the service_histories json for any changes that will be made to the service."""
         self.service_history[self.NEW_CHANGE_KEY] = {
             "new": {},
@@ -77,12 +77,12 @@ class ServiceHistories:
             "approver": {"userid": DOS_INTEGRATION_USER_NAME, "timestamp": "TBD"},
         }  # Timestamp will be created when the change is sent to db for it to be realtime
 
-    def add_change(self, dos_change_key: str, change: ServiceHistoriesChange) -> None:
+    def add_change(self: Self, dos_change_key: str, change: ServiceHistoriesChange) -> None:
         """Adds a change to the updated service_histories json."""
         self.service_history[self.NEW_CHANGE_KEY]["new"][dos_change_key] = change.get_change()
 
     def add_standard_opening_times_change(
-        self,
+        self: Self,
         current_opening_times: StandardOpeningTimes,
         new_opening_times: StandardOpeningTimes,
         weekday: str,
@@ -119,7 +119,7 @@ class ServiceHistories:
         return change
 
     def add_specified_opening_times_change(
-        self,
+        self: Self,
         current_opening_times: list[SpecifiedOpeningTime],
         new_opening_times: list[SpecifiedOpeningTime],
     ) -> ServiceHistoriesChange:
@@ -159,7 +159,7 @@ class ServiceHistories:
         )
         return change
 
-    def add_sgsdid_change(self, sgsdid: str, new_value: bool) -> ServiceHistoriesChange:
+    def add_sgsdid_change(self: Self, sgsdid: str, new_value: bool) -> ServiceHistoriesChange:
         """Adds a change to the updated service_histories json.
 
         Args:
@@ -185,7 +185,7 @@ class ServiceHistories:
         )
         return change
 
-    def get_formatted_specified_opening_times(self, opening_times: list[SpecifiedOpeningTime]) -> list[str]:
+    def get_formatted_specified_opening_times(self: Self, opening_times: list[SpecifiedOpeningTime]) -> list[str]:
         """Returns the specified opening times in the format that is expected by the DoS Service History.
 
         Args:
@@ -200,7 +200,7 @@ class ServiceHistories:
         ]
         return list(chain.from_iterable(opening_times))
 
-    def save_service_histories(self, connection: Connection) -> None:
+    def save_service_histories(self: Self, connection: Connection) -> None:
         """Saves the service_histories json to the database.
 
         Args:

@@ -27,11 +27,11 @@ FILE_PATH = "application.service_sync.service_update_logger"
 
 
 @pytest.fixture()
-def service_update_logger():
+def service_update_logger() -> ServiceUpdateLogger:
     return ServiceUpdateLogger(service_uid=SERVICE_UID, service_name=SERVICE_NAME, type_id=TYPE_ID, odscode=ODSCODE)
 
 
-def test_dos_logger(service_update_logger: ServiceUpdateLogger):
+def test_dos_logger(service_update_logger: ServiceUpdateLogger) -> None:
     # Assert
     assert service_update_logger.logger.name == "service_undefined.application.service_sync.service_update_logger"
     assert service_update_logger.dos_logger.name == "dos_logger"
@@ -45,7 +45,7 @@ def test_dos_logger(service_update_logger: ServiceUpdateLogger):
     assert service_update_logger.type_id == TYPE_ID
 
 
-def test_service_update_logger_get_opening_times_change_modify(service_update_logger: ServiceUpdateLogger):
+def test_service_update_logger_get_opening_times_change_modify(service_update_logger: ServiceUpdateLogger) -> None:
     # Arrange
     previous_value = "Test123"
     new_value = "321Test"
@@ -62,7 +62,7 @@ def test_service_update_logger_get_opening_times_change_modify(service_update_lo
     ) == response
 
 
-def test_service_update_logger_get_opening_times_change_remove(service_update_logger: ServiceUpdateLogger):
+def test_service_update_logger_get_opening_times_change_remove(service_update_logger: ServiceUpdateLogger) -> None:
     # Arrange
     previous_value = "Test123"
     new_value = ""
@@ -79,7 +79,7 @@ def test_service_update_logger_get_opening_times_change_remove(service_update_lo
     ) == response
 
 
-def test_service_update_logger_get_opening_times_change_add(service_update_logger: ServiceUpdateLogger):
+def test_service_update_logger_get_opening_times_change_add(service_update_logger: ServiceUpdateLogger) -> None:
     # Arrange
     previous_value = ""
     new_value = "321Test"
@@ -95,9 +95,8 @@ def test_service_update_logger_get_opening_times_change_add(service_update_logge
 
 @patch(f"{FILE_PATH}.log_service_updated")
 def test_service_update_logger_log_service_update(
-    mock_log_service_update: MagicMock,
-    service_update_logger: ServiceUpdateLogger,
-):
+    mock_log_service_update: MagicMock, service_update_logger: ServiceUpdateLogger
+) -> None:
     # Arrange
     service_update_logger.dos_logger = dos_logger_mock = MagicMock()
     service_update_logger.dos_service = dos_service = MagicMock()
@@ -137,7 +136,7 @@ def test_service_update_logger_log_standard_opening_times_service_update_for_wee
     mock_get_opening_times_change: MagicMock,
     mock_log_service_update: MagicMock,
     service_update_logger: ServiceUpdateLogger,
-):
+) -> None:
     # Arrange
     weekday = "monday"
     mock_get_opening_times_change.return_value = (EXAMPLE_PREVIOUS_VALUE, EXAMPLE_NEW_VALUE)
@@ -169,7 +168,7 @@ def test_service_update_logger_log_standard_opening_times_service_update_for_wee
 def test_service_update_logger_log_specified_opening_times_service_update(
     mock_get_opening_times_change: MagicMock,
     mock_log_service_update: MagicMock,
-):
+) -> None:
     # Arrange
     service_update_logger = ServiceUpdateLogger(
         service_uid=SERVICE_UID,
@@ -204,7 +203,7 @@ def test_service_update_logger_log_specified_opening_times_service_update(
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger")
-def test_log_service_updates_demographics_change(mock_service_update_logger: MagicMock):
+def test_log_service_updates_demographics_change(mock_service_update_logger: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()
@@ -245,7 +244,7 @@ def test_log_service_updates_demographics_change(mock_service_update_logger: Mag
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger")
-def test_log_service_updates_standard_opening_times_change(mock_service_update_logger: MagicMock):
+def test_log_service_updates_standard_opening_times_change(mock_service_update_logger: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()
@@ -287,7 +286,7 @@ def test_log_service_updates_standard_opening_times_change(mock_service_update_l
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger")
-def test_log_service_updates_specified_opening_times_change(mock_service_update_logger: MagicMock):
+def test_log_service_updates_specified_opening_times_change(mock_service_update_logger: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()
@@ -327,7 +326,7 @@ def test_log_service_updates_specified_opening_times_change(mock_service_update_
 
 
 @patch(f"{FILE_PATH}.ServiceUpdateLogger")
-def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock):
+def test_log_service_updates_sgsdid_change(mock_service_update_logger: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     service_histories = MagicMock()

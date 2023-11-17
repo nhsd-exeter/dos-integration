@@ -20,7 +20,7 @@ from common.nhs import NHSEntity
 
 
 @patch.object(Logger, "warning")
-def test_log_closed_or_hidden_services(mock_logger, change_event):
+def test_log_closed_or_hidden_services(mock_logger: MagicMock, change_event: dict[str, str]) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
@@ -49,7 +49,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_unmatched_nhsuk_service(mock_logger):
+def test_log_unmatched_nhsuk_service(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -90,7 +90,7 @@ def test_log_unmatched_nhsuk_service(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_open_times(mock_logger):
+def test_log_invalid_open_times(mock_logger: MagicMock) -> None:
     # Arrange
     opening_times = [
         {
@@ -132,7 +132,7 @@ def test_log_invalid_open_times(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
+def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock) -> None:
     dos_service = dummy_dos_service()
     dos_service.typeid = PHARMACY_SERVICE_TYPE_ID
     dos_service.statusid = 1
@@ -166,7 +166,7 @@ def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
 
 
 @patch.object(Logger, "warning")
-def test_log_missing_dos_service_for_a_given_type__no_active_dos_services(mock_logger: MagicMock):
+def test_log_missing_dos_service_for_a_given_type__no_active_dos_services(mock_logger: MagicMock) -> None:
     dos_service = dummy_dos_service()
     dos_service.statusid = 3
     reason = "reason 123"

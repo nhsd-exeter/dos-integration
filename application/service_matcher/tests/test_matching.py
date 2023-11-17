@@ -8,7 +8,10 @@ FILE_PATH = "application.service_matcher.matching"
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_matching_services(mock_get_matching_dos_services: MagicMock, change_event):
+def test_get_matching_services(
+    mock_get_matching_dos_services: MagicMock,
+    change_event: dict[str, str],
+) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     service = dummy_dos_service()
@@ -22,7 +25,10 @@ def test_get_matching_services(mock_get_matching_dos_services: MagicMock, change
 
 
 @patch(f"{FILE_PATH}.get_matching_dos_services")
-def test_get_unmatching_services(mock_get_matching_dos_services: MagicMock, change_event):
+def test_get_unmatching_services(
+    mock_get_matching_dos_services: MagicMock,
+    change_event: dict[str, str],
+) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     mock_get_matching_dos_services.return_value = []

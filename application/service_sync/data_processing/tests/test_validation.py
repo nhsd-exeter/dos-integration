@@ -19,7 +19,7 @@ FILE_PATH = "application.service_sync.data_processing.validation"
 def test_validate_opening_times_sucessful(
     mock_warning_logger: MagicMock,
     mock_log_service_with_generic_bank_holiday: MagicMock,
-):
+) -> None:
     # Arrange
     nhs_entity = MagicMock()
     nhs_entity.odscode.return_value = "12345"
@@ -39,7 +39,7 @@ def test_validate_opening_times_sucessful(
 def test_validate_opening_times_failure(
     mock_warning_logger: MagicMock,
     mock_log_service_with_generic_bank_holiday: MagicMock,
-):
+) -> None:
     # Arrange
     nhs_entity = MagicMock()
     nhs_entity.odscode.return_value = "12345"
@@ -67,7 +67,7 @@ def test_validate_opening_times_failure(
     ],
 )
 @patch(f"{FILE_PATH}.log_website_is_invalid")
-def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website: str):
+def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website: str) -> None:
     # Act & Assert
     assert True is validate_website(nhs_entity=NHSEntity({}), nhs_website=website, dos_service=MagicMock())
     mock_log_website_is_invalid.assert_not_called()
@@ -81,7 +81,7 @@ def test_validate_website_sucess(mock_log_website_is_invalid: MagicMock, website
     ],
 )
 @patch(f"{FILE_PATH}.log_website_is_invalid")
-def test_validate_website_failure(mock_log_website_is_invalid: MagicMock, website: str):
+def test_validate_website_failure(mock_log_website_is_invalid: MagicMock, website: str) -> None:
     # Arrange
     nhs_entity = NHSEntity({})
     dos_service = MagicMock()
@@ -91,7 +91,7 @@ def test_validate_website_failure(mock_log_website_is_invalid: MagicMock, websit
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_z_code_exists(mock_query_dos_db: MagicMock):
+def test_validate_z_code_exists(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 1
@@ -122,7 +122,7 @@ def test_validate_z_code_exists(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_validate_z_code_existss_does_not_exist(mock_query_dos_db: MagicMock):
+def test_validate_z_code_existss_does_not_exist(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_query_dos_db.return_value.rowcount = 0

@@ -25,7 +25,7 @@ from application.service_sync.data_processing.formatting import format_address, 
         ("TESTERSHIRE", "Testershire"),
     ],
 )
-def test_format_address(address: str, formatted_address: str):
+def test_format_address(address: str, formatted_address: str) -> None:
     assert formatted_address == format_address(address)
 
 
@@ -45,5 +45,5 @@ def test_format_address(address: str, formatted_address: str):
         ("https://www.rowlandspharmacy.co.uk/test?foo=test", "https://www.rowlandspharmacy.co.uk/test?foo=test"),
     ],
 )
-def test_format_website(website: str, formatted_website: str):
+def test_format_website(website: str, formatted_website: str) -> None:
     assert formatted_website == format_website(website)

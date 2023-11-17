@@ -56,7 +56,7 @@ def test_compare_nhs_uk_and_dos_data(
     mock_check_palliative_care_for_change: MagicMock,
     mock_check_blood_pressure_for_change: MagicMock,
     mock_check_contraception_for_change: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -93,7 +93,7 @@ def test_compare_nhs_uk_and_dos_data(
 
 @patch(f"{FILE_PATH}.compare_website")
 @patch(f"{FILE_PATH}.services_change")
-def test_check_website_for_change(mock_services_change: MagicMock, mock_compare_website: MagicMock):
+def test_check_website_for_change(mock_services_change: MagicMock, mock_compare_website: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     mock_compare_website.return_value = True
@@ -116,7 +116,7 @@ def test_check_website_for_change(mock_services_change: MagicMock, mock_compare_
 def test_check_website_for_change_no_change(
     mock_services_change: MagicMock,
     mock_compare_website: MagicMock,
-):
+) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     mock_compare_website.return_value = False
@@ -130,7 +130,7 @@ def test_check_website_for_change_no_change(
 
 @patch(f"{FILE_PATH}.compare_location")
 @patch(f"{FILE_PATH}.services_change")
-def test_check_location_for_change(mock_services_change: MagicMock, mock_compare_location: MagicMock):
+def test_check_location_for_change(mock_services_change: MagicMock, mock_compare_location: MagicMock) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     dos_location = dummy_dos_location()
@@ -203,7 +203,7 @@ def test_check_location_for_change(mock_services_change: MagicMock, mock_compare
 def test_check_location_for_change_no_changes(
     mock_services_change: MagicMock,
     mock_compare_location: MagicMock,
-):
+) -> None:
     # Arrange
     changes_to_dos = MagicMock()
     mock_compare_location.return_value = False, False, None
@@ -224,7 +224,7 @@ def test_check_opening_times_for_changes(
     mock_services_change: MagicMock,
     mock_compare_standard_opening_times: MagicMock,
     mock_compare_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -301,7 +301,7 @@ def test_check_opening_times_for_changes(
 @patch(f"{FILE_PATH}.validate_opening_times")
 def test_check_opening_times_for_changes_invalid_opening_times(
     mock_validate_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -320,7 +320,7 @@ def test_check_opening_times_for_changes_invalid_opening_times(
 @patch(f"{FILE_PATH}.validate_opening_times")
 def test_check_opening_times_for_changes_blank_opening_times(
     mock_validate_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -345,7 +345,7 @@ def test_check_opening_times_for_changes_no_change(
     mock_services_change: MagicMock,
     mock_compare_standard_opening_times: MagicMock,
     mock_compare_specified_opening_times: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -375,7 +375,7 @@ def test_check_opening_times_for_changes_no_change(
 def test_check_public_phone_for_change_change(
     mock_compare_public_phone: MagicMock,
     mock_set_up_for_service_table_change: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -406,7 +406,7 @@ def test_check_public_phone_for_change_change(
 def test_check_public_phone_for_change_no_change(
     mock_compare_public_phone: MagicMock,
     mock_set_up_for_service_table_change: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -426,7 +426,7 @@ def test_check_public_phone_for_change_no_change(
     assert response == changes_to_dos
 
 
-def test_check_palliative_care_for_change_unequal():
+def test_check_palliative_care_for_change_unequal() -> None:
     # Arrange
     dos_service = MagicMock()
     dos_service.odscode = "12345"
@@ -445,7 +445,7 @@ def test_check_palliative_care_for_change_unequal():
 @patch(f"{FILE_PATH}.get_palliative_care_log_value")
 def test_check_palliative_care_for_change_incorrect_odscode_length(
     mock_get_palliative_care_log_value: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     dos_service.odscode = "123456"
@@ -467,7 +467,7 @@ def test_check_palliative_care_for_change_incorrect_odscode_length(
 def test_check_blood_pressure_for_change(
     mock_compare_blood_pressure: MagicMock,
     mock_status_id_change: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -493,7 +493,7 @@ def test_check_blood_pressure_for_change(
 def test_check_contraception_for_change(
     mock_compare_contraception: MagicMock,
     mock_status_id_change: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -515,7 +515,7 @@ def test_check_contraception_for_change(
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_services_change(mock_service_histories_change: MagicMock):
+def test_services_change(mock_service_histories_change: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -549,7 +549,7 @@ def test_services_change(mock_service_histories_change: MagicMock):
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_services_change_no_service_history_update(mock_service_histories_change: MagicMock):
+def test_services_change_no_service_history_update(mock_service_histories_change: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -576,7 +576,7 @@ def test_services_change_no_service_history_update(mock_service_histories_change
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_status_id_change__active(mock_service_histories_change: MagicMock):
+def test_status_id_change__active(mock_service_histories_change: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -605,7 +605,7 @@ def test_status_id_change__active(mock_service_histories_change: MagicMock):
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange")
-def test_status_id_change__closed(mock_service_histories_change: MagicMock):
+def test_status_id_change__closed(mock_service_histories_change: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()

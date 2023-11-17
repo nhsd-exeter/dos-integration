@@ -20,7 +20,7 @@ from common.opening_times import OpenPeriod
 
 
 @patch.object(Logger, "warning")
-def test_log_blank_standard_opening_times(mock_logger, change_event):
+def test_log_blank_standard_opening_times(mock_logger: MagicMock, change_event: dict[str, str]) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
@@ -49,7 +49,7 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_nhsuk_postcode(mock_logger):
+def test_log_invalid_nhsuk_postcode(mock_logger: MagicMock) -> None:
     # Arrange
     county = "county"
     city = "city"
@@ -94,7 +94,7 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_service_with_generic_bank_holiday(mock_logger):
+def test_log_service_with_generic_bank_holiday(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC4X"
@@ -120,7 +120,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_website_is_invalid(mock_logger: MagicMock):
+def test_log_website_is_invalid(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity({})
     nhs_entity.website = nhs_website = "http://www.google.com"
@@ -142,7 +142,7 @@ def test_log_website_is_invalid(mock_logger: MagicMock):
 
 
 @patch.object(Logger, "warning")
-def test_log_service_updated(mock_logger: MagicMock):
+def test_log_service_updated(mock_logger: MagicMock) -> None:
     # Arrange
     action = "action"
     data_field_modified = "data_field_modified"

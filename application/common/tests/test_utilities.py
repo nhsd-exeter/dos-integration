@@ -13,7 +13,7 @@ from application.common.utilities import (
 )
 
 
-def test_extract_body():
+def test_extract_body() -> None:
     # Arrange
     expected_change_event = '{"test": "test"}'
     # Act
@@ -24,7 +24,7 @@ def test_extract_body():
     ), f"Change event should be {loads(expected_change_event)} but is {change_event}"
 
 
-def test_extract_body_exception():
+def test_extract_body_exception() -> None:
     # Arrange
     expected_change_event = "test"
     # Act & Assert
@@ -32,7 +32,7 @@ def test_extract_body_exception():
         extract_body(expected_change_event)
 
 
-def test_json_str_body():
+def test_json_str_body() -> None:
     # Arrange
     expected_json_str = '{"test": "test"}'
     # Act
@@ -41,13 +41,13 @@ def test_json_str_body():
     assert result == expected_json_str, f"Change event body should be {expected_json_str} str but is {result}"
 
 
-def test_expected_json_str_exception():
+def test_expected_json_str_exception() -> None:
     # Act & Assert
     with pytest.raises(TypeError, match="Object of type set is not JSON serializable"):
         json_str_body(body={"not a json dict"})
 
 
-def test_get_sequence_number():
+def test_get_sequence_number() -> None:
     # Arrange
     record = SQSRecord(SQS_EVENT["Records"][0])
     # Act
@@ -56,7 +56,7 @@ def test_get_sequence_number():
     assert sequence_number == int(SQS_EVENT["Records"][0]["messageAttributes"]["sequence-number"]["stringValue"])
 
 
-def test_get_sequence_number_empty():
+def test_get_sequence_number_empty() -> None:
     # Arrange
     sqs_event = SQS_EVENT.copy()
     del sqs_event["Records"][0]["messageAttributes"]["sequence-number"]
@@ -67,7 +67,7 @@ def test_get_sequence_number_empty():
     assert sequence_number is None
 
 
-def test_get_sqs_msg_attribute_string(dead_letter_message):
+def test_get_sqs_msg_attribute_string(dead_letter_message: dict[str, str]) -> None:
     # Arrange
     attribute = "error_msg"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -77,7 +77,7 @@ def test_get_sqs_msg_attribute_string(dead_letter_message):
     assert response == msg_attributes[attribute]["stringValue"]
 
 
-def test_get_sqs_msg_attribute_number(dead_letter_message):
+def test_get_sqs_msg_attribute_number(dead_letter_message: dict[str, str]) -> None:
     # Arrange
     attribute = "error_msg_http_code"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -87,7 +87,7 @@ def test_get_sqs_msg_attribute_number(dead_letter_message):
     assert response == float(msg_attributes[attribute]["stringValue"])
 
 
-def test_get_sqs_msg_attribute_other(dead_letter_message):
+def test_get_sqs_msg_attribute_other(dead_letter_message: dict[str, str]) -> None:
     # Arrange
     attribute = "other"
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
@@ -97,7 +97,7 @@ def test_get_sqs_msg_attribute_other(dead_letter_message):
     assert response is None
 
 
-def test_get_sqs_msg_attribute_no_attributes():
+def test_get_sqs_msg_attribute_no_attributes() -> None:
     # Arrange
     msg_attributes = {}
     # Act
@@ -106,7 +106,7 @@ def test_get_sqs_msg_attribute_no_attributes():
     assert response is None
 
 
-def test_handle_sqs_msg_attributes(dead_letter_message):
+def test_handle_sqs_msg_attributes(dead_letter_message: dict[str, str]) -> None:
     msg_attributes = dead_letter_message["Records"][0]["messageAttributes"]
 
     attributes = handle_sqs_msg_attributes(msg_attributes=msg_attributes)
@@ -115,7 +115,7 @@ def test_handle_sqs_msg_attributes(dead_letter_message):
 
 
 @pytest.mark.parametrize(("val", "expected"), [("", True), ("    ", True), (None, True), ("True val", False)])
-def test_is_val_none_or_empty(val, expected):
+def test_is_val_none_or_empty(val: str | None, expected: bool) -> None:
     assert is_val_none_or_empty(val) == expected
 
 
