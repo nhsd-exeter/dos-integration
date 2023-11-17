@@ -11,8 +11,8 @@ DB_WRITER_NAME := uec-core-dos-regression-cluster-14-one
 DB_READER_NAME := uec-core-dos-regression-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := core-dos-regression-master.dos-db-rds
-DB_READER_ROUTE_53 := uec-core-dos-dev-db-replica-di.dos-db-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-regression-dos-primary-rw.dos-datastore-regression
+DB_READER_ROUTE_53 := uec-core-dos-regression-di-ro.dos-datastore-regression
 
 # DB Connection Variables
 DB_PORT := 5432
