@@ -288,7 +288,7 @@ resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_schedule_fai
   dimensions                = { RuleName = "${var.quality_checker_lambda}-schedule" }
   evaluation_periods        = "1"
   insufficient_data_actions = []
-  metric_name               = "Invocations"
+  metric_name               = "FailedInvocations"
   namespace                 = "AWS/Events"
   period                    = "60"
   statistic                 = "Sum"
