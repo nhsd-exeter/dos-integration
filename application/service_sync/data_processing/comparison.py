@@ -2,7 +2,7 @@ from aws_lambda_powertools.logging import Logger
 
 from ..reporting import log_invalid_nhsuk_postcode
 from .changes_to_dos import ChangesToDoS
-from .formatting import format_address, format_website
+from .formatting import format_address, format_public_phone, format_website
 from .validation import validate_website
 from common.commissioned_service_type import BLOOD_PRESSURE, CONTRACEPTION, PALLIATIVE_CARE, CommissionedServiceType
 from common.dos import get_valid_dos_location
@@ -43,10 +43,12 @@ def compare_public_phone(changes: ChangesToDoS) -> bool:
         bool: True if the public phone has changed, False if not
     """
     changes.current_public_phone = changes.dos_service.publicphone
-    changes.new_public_phone = changes.nhs_entity.phone
-    if str(changes.current_public_phone) != str(changes.new_public_phone) and (
-        not is_val_none_or_empty(changes.current_public_phone) or not is_val_none_or_empty(changes.new_public_phone)
-    ):
+    changes.new_public_phone = (
+        changes.nhs_entity.phone
+        if is_val_none_or_empty(changes.nhs_entity.phone)
+        else format_public_phone(changes.nhs_entity.phone)
+    )
+    if str(changes.current_public_phone) != changes.new_public_phone:
         logger.info(
             f"Public Phone is not equal, DoS='{changes.current_public_phone}' != NHS UK='{changes.new_public_phone}'",
         )

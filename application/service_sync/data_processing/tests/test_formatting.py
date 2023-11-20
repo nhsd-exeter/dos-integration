@@ -1,6 +1,6 @@
 import pytest
 
-from application.service_sync.data_processing.formatting import format_address, format_website
+from application.service_sync.data_processing.formatting import format_address, format_public_phone, format_website
 
 
 @pytest.mark.parametrize(
@@ -47,3 +47,17 @@ def test_format_address(address: str, formatted_address: str) -> None:
 )
 def test_format_website(website: str, formatted_website: str) -> None:
     assert formatted_website == format_website(website)
+
+
+@pytest.mark.parametrize(
+    ("phone", "formatted_phone"),
+    [
+        (" 0123456789", "0123456789"),
+        ("01234 56789", "0123456789"),
+        ("01234 56789 ", "0123456789"),
+        ("01 234 5678 9", "0123456789"),
+        ("01234  56789  ", "0123456789"),
+    ],
+)
+def test_format_public_phone(phone: str, formatted_phone: str) -> None:
+    assert formatted_phone == format_public_phone(phone)
