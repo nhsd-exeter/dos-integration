@@ -10,6 +10,7 @@ ignore_names = [
   "encoding",
   "field_names",
   "is_health_check",
+  "is_matching_dos_service",
   "lambda_context",
   "lambda_handler",
   "metadata",
