@@ -1,4 +1,3 @@
-from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, fields
 from itertools import groupby
