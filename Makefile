@@ -392,12 +392,9 @@ trigger-dos-deployment-pipeline:
 	JENKINS_USERNAME=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_USERNAME)
 	JENKINS_PASSWORD=$$(make -s secret-get-existing-value NAME=uec-dos-int-dev/deployment KEY=JENKINS_API_PASSWORD)
 	JENKINS_CRUMB=$$(curl -L -X GET "$$JENKINS_URL/crumbIssuer/api/json" --user $$JENKINS_USERNAME:$$JENKINS_PASSWORD --cookie-jar jenkins.cookies | jq --raw-output '.crumb')
-	curl -L -X POST "$$JENKINS_URL/view/DoS/job/dos-deploy/job/develop/buildWithParameters" --cookie jenkins.cookies \
-	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD \
-	-H "Jenkins-Crumb: $$JENKINS_CRUMB" \
-	-F "TARGET=\"regressiondi\"" \
-	-F "IMAGE_TAG=\"8.4.1_6618c47\"" \
-	-F "REFRESH=\"true\""
+	curl -L -X POST "$$JENKINS_URL/job/Deploy%20App%20and%20Cron/build" --cookie jenkins.cookies \
+	--user $$JENKINS_USERNAME:$$JENKINS_PASSWORD -H "Jenkins-Crumb: $$JENKINS_CRUMB" \
+	--data BRANCH=develop --data TARGET="regressiondi" --data IMAGE_TAG="8.4.1_6618c47" --data REFRESH="true"
 	echo Jenkins Job has started
 	echo Sleeping for 3 minutes
 	sleep 180
