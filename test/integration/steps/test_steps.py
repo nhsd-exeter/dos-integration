@@ -875,6 +875,7 @@ def the_change_event_is_sent_with_custom_sequence(context: Context, seqid: str) 
     context.correlation_id = generate_correlation_id()
     context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
+    context.change_event["Address1"] = context.change_event["Address1"] + " - Updated"
     return context
 
 
