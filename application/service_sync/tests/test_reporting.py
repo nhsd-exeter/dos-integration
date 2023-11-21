@@ -100,7 +100,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger: MagicMock) -> None:
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
     dos_service = dummy_dos_service()
-    open_periods = [OpenPeriod.from_string("08:00-13:00"), OpenPeriod.from_string("04:00-18:00")]
+    open_periods = [OpenPeriod.from_string_times("08:00", "13:00"), OpenPeriod.from_string_times("04:00", "18:00")]
     dos_service.standard_opening_times.generic_bankholiday = open_periods
     # Act
     log_service_with_generic_bank_holiday(nhs_entity, dos_service)

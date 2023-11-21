@@ -1,4 +1,3 @@
-from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, fields
 from itertools import groupby
@@ -265,20 +264,6 @@ def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> list[SpecifiedOpening
     return specified_opening_times
 
 
-def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> dict[str, list[SpecifiedOpeningTime]]:
-    """Map DB rows to SpecifiedOpeningTime objects.
-
-    Turns a set of dos database rows (from multiple services) into lists of SpecifiedOpenTime objects
-    which are sorted into a dictionary where the key is the service id of the service those SpecifiedOpenTime
-    objects correspond to.
-    """
-    serviceid_dbrows_map = defaultdict(list)
-    for db_row in db_rows:
-        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-
-    return {service_id: db_rows_to_spec_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
-
-
 def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
     """Turns a set of dos database rows into a StandardOpeningTime object.
 
@@ -292,20 +277,6 @@ def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
     return standard_opening_times
-
-
-def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> dict[str, StandardOpeningTimes]:
-    """Map DB rows to StandardOpeningTime objects.
-
-    Turns a set of dos database rows (from multiple services) into StandardOpeningTime objects
-    which are sorted into a dictionary where the key is the service id of the service those StandardOpeningTime
-    objects correspond to.
-    """
-    serviceid_dbrows_map = defaultdict(list)
-    for db_row in db_rows:
-        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-
-    return {service_id: db_rows_to_std_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
 
 
 def has_palliative_care(service: DoSService, connection: Connection) -> bool:

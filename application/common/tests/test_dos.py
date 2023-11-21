@@ -5,9 +5,7 @@ from unittest.mock import MagicMock, patch
 from application.common.dos import (
     DoSService,
     db_rows_to_spec_open_times,
-    db_rows_to_spec_open_times_map,
     db_rows_to_std_open_times,
-    db_rows_to_std_open_times_map,
     get_dos_locations,
     get_matching_dos_services,
     get_region,
@@ -26,7 +24,6 @@ from common.constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
 )
 
-OP = OpenPeriod.from_string
 FILE_PATH = "application.common.dos"
 
 
@@ -573,71 +570,18 @@ def test_db_rows_to_spec_open_times() -> None:
     spec_open_times = db_rows_to_spec_open_times(db_rows)
 
     expected_spec_open_times = [
-        SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
-        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True),
-        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
+        SpecifiedOpeningTime(
+            [OpenPeriod.from_string_times("08:00", "20:00"), OpenPeriod.from_string_times("21:00", "22:00")],
+            date(2019, 5, 6),
+            True,
+        ),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("08:00", "20:00")], date(2019, 5, 27), True),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("08:00", "20:00")], date(2019, 8, 26), True),
         SpecifiedOpeningTime([], date(2019, 9, 20), False),
-        SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("06:00", "07:00")], date(2020, 5, 6), True),
     ]
 
     assert spec_open_times == expected_spec_open_times
-
-
-def test_db_rows_to_spec_open_times_map() -> None:
-    db_rows = [
-        {"serviceid": 214, "date": date(2019, 9, 20), "starttime": None, "endtime": None, "isclosed": True},
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 6),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 6),
-            "starttime": time(21, 0, 0),
-            "endtime": time(22, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 27),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 214,
-            "date": date(2019, 8, 26),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 333,
-            "date": date(2020, 5, 6),
-            "starttime": time(6, 0, 0),
-            "endtime": time(7, 0, 0),
-            "isclosed": False,
-        },
-    ]
-
-    spec_open_times_map = db_rows_to_spec_open_times_map(db_rows)
-
-    expected_spec_open_times_map = {
-        1: [
-            SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
-            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True),
-        ],
-        214: [
-            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
-            SpecifiedOpeningTime([], date(2019, 9, 20), False),
-        ],
-        333: [SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True)],
-    }
-
-    assert spec_open_times_map == expected_spec_open_times_map
 
 
 def test_db_rows_to_std_open_time() -> None:
@@ -651,77 +595,20 @@ def test_db_rows_to_std_open_time() -> None:
         {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
     ]
 
-    expcted_std_open_times = StandardOpeningTimes()
-    expcted_std_open_times.monday = [OP("08:00-17:00")]
-    expcted_std_open_times.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times.friday = [OP("13:00-15:30")]
-    expcted_std_open_times.sunday = [OP("13:00-15:30")]
+    expected_std_open_times = StandardOpeningTimes()
+    expected_std_open_times.monday = [OpenPeriod.from_string_times("08:00", "17:00")]
+    expected_std_open_times.tuesday = [
+        OpenPeriod.from_string_times("08:00", "12:00"),
+        OpenPeriod.from_string_times("13:00", "18:00"),
+    ]
+    expected_std_open_times.wednesday = [OpenPeriod.from_string_times("07:00", "15:30")]
+    expected_std_open_times.thursday = [OpenPeriod.from_string_times("11:00", "13:30")]
+    expected_std_open_times.friday = [OpenPeriod.from_string_times("13:00", "15:30")]
+    expected_std_open_times.sunday = [OpenPeriod.from_string_times("13:00", "15:30")]
 
     actual_std_open_times = db_rows_to_std_open_times(db_rows)
 
-    assert actual_std_open_times == expcted_std_open_times
-
-
-def test_db_rows_to_std_open_times_map() -> None:
-    db_rows = [
-        {"serviceid": 22, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 22, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 1, "dayid": 0, "name": "Monday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 333, "dayid": 0, "name": "Monday", "starttime": time(10, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 333, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 0, "name": "Monday", "starttime": time(13, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 22, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 333, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 333, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 333, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 1, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 1, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-    ]
-
-    expcted_std_open_times_1 = StandardOpeningTimes()
-    expcted_std_open_times_1.monday = [OP("08:00-17:00")]
-    expcted_std_open_times_1.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_1.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_1.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_1.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_1.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_22 = StandardOpeningTimes()
-    expcted_std_open_times_22.monday = [OP("13:00-17:00")]
-    expcted_std_open_times_22.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_22.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_22.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_22.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_22.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_333 = StandardOpeningTimes()
-    expcted_std_open_times_333.monday = [OP("10:00-17:00")]
-    expcted_std_open_times_333.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_333.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_333.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_333.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_333.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_map = {
-        1: expcted_std_open_times_1,
-        22: expcted_std_open_times_22,
-        333: expcted_std_open_times_333,
-    }
-
-    actual_std_open_times_map = db_rows_to_std_open_times_map(db_rows)
-
-    assert actual_std_open_times_map == expcted_std_open_times_map
+    assert actual_std_open_times == expected_std_open_times
 
 
 def get_db_item(odscode: str = "FA9321", name: str = "fake name", id: int = 9999, typeid: int = 13) -> dict:  # noqa: A002

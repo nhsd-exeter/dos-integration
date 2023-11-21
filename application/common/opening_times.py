@@ -158,15 +158,6 @@ class OpenPeriod:
         return sorted(a) == sorted(b)
 
     @staticmethod
-    def from_string(open_period_string: str) -> Optional["OpenPeriod"]:
-        """Builds an OpenPeriod object from a string like 12:00-13:00 or 12:00:00-13:00:00."""
-        try:
-            startime_str, endtime_str = open_period_string.split("-")
-            return OpenPeriod.from_string_times(startime_str, endtime_str)
-        except (ValueError, AttributeError):
-            return None
-
-    @staticmethod
     def from_string_times(opening_time_str: str, closing_time_str: str) -> Optional["OpenPeriod"]:
         """Builds an OpenPeriod object from string time arguments."""
         open_time = string_to_time(opening_time_str)
