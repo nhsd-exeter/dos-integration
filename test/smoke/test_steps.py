@@ -75,7 +75,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
         smoke_test_context.updated_service.website = FAKER.url()
 
     def update_phone() -> None:
-        smoke_test_context.updated_service.phone = FAKER.phone_number()
+        smoke_test_context.updated_service.phone = FAKER.phone_number().replace(" ", "")
 
     def update_standard_opening_times() -> None:
         smoke_test_context.updated_service.standard_opening_times = [
