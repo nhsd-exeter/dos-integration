@@ -7,7 +7,7 @@ resource "aws_cloudwatch_metric_alarm" "change_event_dlq_handler_error_rate_aler
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -55,7 +55,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_db_update_dlq_handler_error_rate_ale
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -103,7 +103,7 @@ resource "aws_cloudwatch_metric_alarm" "event_replay_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -151,7 +151,7 @@ resource "aws_cloudwatch_metric_alarm" "ingest_change_event_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -199,7 +199,7 @@ resource "aws_cloudwatch_metric_alarm" "send_email_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -247,7 +247,7 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -295,7 +295,7 @@ resource "aws_cloudwatch_metric_alarm" "service_sync_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -343,7 +343,7 @@ resource "aws_cloudwatch_metric_alarm" "slack_messenger_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
@@ -391,7 +391,7 @@ resource "aws_cloudwatch_metric_alarm" "quality_checker_error_rate_alert" {
   evaluation_periods        = "2"
   threshold                 = "1"
   insufficient_data_actions = []
-  treat_missing_data        = "notBreaching"
+  treat_missing_data        = "missing"
   ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
 
   metric_query {
