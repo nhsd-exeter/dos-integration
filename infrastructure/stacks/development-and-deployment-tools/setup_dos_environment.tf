@@ -39,7 +39,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
 
     environment_variable {
       name  = "PROFILE"
-      value = "test"
+      value = "dev"
     }
     environment_variable {
       name  = "ENVIRONMENT"
