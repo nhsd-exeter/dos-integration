@@ -455,8 +455,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "type" : "metric",
           "properties" : {
             "metrics" : [
-              ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.dos_db_writer_name, { stat : "Maximum" }],
-              ["...", var.dos_db_reader_name, { stat : "Maximum" }]
+              ["AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", var.dos_db_writer_name, { stat : "Maximum", label : "DB Writer" }],
+              ["...", var.dos_db_reader_name, { stat : "Maximum", label : "DB Reader" }]
             ],
             "view" : "timeSeries",
             "stacked" : false,
@@ -475,8 +475,8 @@ resource "aws_cloudwatch_dashboard" "cloudwatch_monitoring_dashboard" {
           "type" : "metric",
           "properties" : {
             "metrics" : [
-              ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.dos_db_writer_name],
-              ["...", var.dos_db_reader_name]
+              ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", var.dos_db_writer_name, { label : "DB Writer" }],
+              ["...", var.dos_db_reader_name, { label : "DB Reader" }]
             ],
             "view" : "timeSeries",
             "stacked" : false,
