@@ -1,6 +1,5 @@
-from typing import Any
+from os import getenv
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
@@ -21,8 +20,7 @@ CHANGE_EVENT_DLQ_HANDLER_EVENT = "CHANGE_EVENT_DLQ_HANDLER_RECEIVED_EVENT"
 @tracer.capture_lambda_handler()
 @event_source(data_class=SQSEvent)
 @logger.inject_lambda_context(clear_state=True)
-@metric_scope
-def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> None:  # noqa: ARG001, ANN401
+def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: ARG001
     """Entrypoint handler for the change event dlq handler lambda.
 
     Messages are sent to the change event dlq handler lambda when a message
@@ -31,7 +29,6 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
     Args:
         event (SQSEvent): Lambda function invocation event (list of 1 SQS Message)
         context (LambdaContext): Lambda function context object
-        metrics (Metrics): CloudWatch embedded metrics object
     """
     record = next(event.records)
     handle_sqs_msg_attributes(record.message_attributes)
@@ -65,12 +62,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext, metrics: Any) -> Non
         error_msg=f"Message Abandoned: {error_msg}",
         error_msg_http_code=attributes["error_msg_http_code"],
         payload=change_event,
+        environment=getenv("ENVIRONMENT"),
+        cloudwatch_metric_filter_matching_attribute="ChangeEventsDLQHandlerReceivedEvent",
     )
-    metrics.set_namespace("AWS/SQS")
-    metrics.set_property("level", "WARNING")
-    metrics.set_property("message", error_msg)
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.put_metric("NumberOfMessagesReceived", 1, "Count")
-
     sqs_timestamp = int(record.attributes["SentTimestamp"])
     add_change_event_to_dynamodb(change_event, sequence_number, sqs_timestamp)

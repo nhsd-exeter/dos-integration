@@ -542,6 +542,7 @@ def ce_values_updated_in_context(field_name: str, values: str, context: Context)
         context.generator_data["web"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
     elif field_name.lower() == "phone":
+        values = values.replace('"', "")
         context.previous_value = context.generator_data["publicphone"]
         context.generator_data["publicphone"] = values
         context.change_event["Contacts"] = build_change_event_contacts(context)
@@ -875,6 +876,7 @@ def the_change_event_is_sent_with_custom_sequence(context: Context, seqid: str) 
     context.correlation_id = generate_correlation_id()
     context.response = process_payload_with_sequence(context, context.correlation_id, seqid)
     context.sequence_number = seqid
+    context.change_event["Address1"] = context.change_event["Address1"] + " - Updated"
     return context
 
 
@@ -976,6 +978,8 @@ def expected_data_is_within_dos(context: Context, expected_data: str, plain_engl
         expected_data = int(expected_data)
     elif plain_english_service_table_field in {"latitude", "longitude"}:
         expected_data = float(expected_data)
+    elif plain_english_service_table_field in {"phone"}:
+        expected_data = expected_data.replace(" ", "")
     assert (
         field_data == expected_data
     ), f"ERROR!.. DoS doesn't have expected {plain_english_service_table_field} data, expected: {expected_data}, actual: {field_data}"  # noqa: E501

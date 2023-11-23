@@ -86,6 +86,8 @@ The current technology stack is:
 - Serverless Framework - Lambda
 - Terraform - Infrastructure as code tool (Where serverless not supported)
 
+- Terraform - Infrastructure as code tool
+
 ## Quick Start
 
 ### Development Requirements
@@ -186,7 +188,7 @@ Python code is required be formatted and linted by Ruff.
 
 To run ruff on you branch:
 
-  make python-ruff-fix
+  make python-run-ruff-fixes
 
 ## Testing
 
@@ -246,7 +248,7 @@ Prerequisites
 
 To run unit tests run the following commands
 
-    make integration-test PROFILE=dev TAGS=pharmacy PARALLEL_TEST_COUNT=10
+    make integration-test PROFILE=dev TAG=complete PARALLEL_TEST_COUNT=10
 
 Tests are currently separated into many tags. These tags are used to run the tests in parallel. The tags are as follows:
 
@@ -270,7 +272,7 @@ This testing includes:
 
 This testing is generally done by a tester
 
-To run the performance tests run the following commands after you have run `tx-mfa` to sign into Non-Prod
+To run the performance tests run the following commands after you have run `assume` to sign into Non-Prod
 
 To run a stress test
 

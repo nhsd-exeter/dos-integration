@@ -8,7 +8,7 @@ FILE_PATH = "application.common.secretsmanager"
 
 
 @mock_secretsmanager
-def test_get_secret():
+def test_get_secret() -> None:
     from application.common.secretsmanager import get_secret
 
     # Arrangement
@@ -23,7 +23,7 @@ def test_get_secret():
 
 
 @mock_secretsmanager
-def test_get_secret_resource_not_found():
+def test_get_secret_resource_not_found() -> None:
     from application.common.secretsmanager import get_secret
 
     with pytest.raises(Exception, match="Failed getting secret 'fake_secret_name' from secrets manager"):

@@ -1,8 +1,7 @@
-from os import environ
+from os import getenv
 from time import time_ns
 from typing import Any
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
@@ -17,7 +16,7 @@ from .reject_pending_changes.pending_changes import check_and_remove_pending_dos
 from common.middlewares import unhandled_exception_logging
 from common.nhs import NHSEntity
 from common.types import UpdateRequest
-from common.utilities import add_metric, extract_body
+from common.utilities import extract_body
 
 tracer = Tracer()
 logger = Logger()
@@ -62,14 +61,19 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
         # Delete the message from the queue
         remove_sqs_message_from_queue(receipt_handle=record.receipt_handle)
         # Log custom metrics
-        add_success_metric(
-            message_received=int(record.message_attributes.get("message_received", {}).get("stringValue")),
+        logger.warning(
+            "Update Request Success",
+            latency=(time_ns() // 1000000)
+            - int(record.message_attributes.get("message_received", {}).get("stringValue")),
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="UpdateRequestSuccess",
         )
-        add_metric("UpdateRequestSuccess")
-        add_metric("ServiceUpdateSuccess")
     except Exception:
-        add_metric("UpdateRequestFailed")
-        logger.exception("Error processing change event")
+        logger.exception(
+            "Error processing update request",
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="UpdateRequestError",
+        )
 
 
 def remove_sqs_message_from_queue(receipt_handle: str) -> None:
@@ -79,22 +83,5 @@ def remove_sqs_message_from_queue(receipt_handle: str) -> None:
         receipt_handle (str): The SQS message receipt handle
     """
     sqs = client("sqs")
-    sqs.delete_message(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], ReceiptHandle=receipt_handle)
+    sqs.delete_message(QueueUrl=getenv("UPDATE_REQUEST_QUEUE_URL"), ReceiptHandle=receipt_handle)
     logger.info("Removed SQS message from queue", receipt_handle=receipt_handle)
-
-
-@metric_scope
-def add_success_metric(message_received: int, metrics: Any) -> None:  # noqa: ANN401
-    """Adds a success metric to the custom metrics collection.
-
-    Args:
-        message_received (int): The time the message was received in milliseconds
-        metrics (Any): The custom metrics collection
-    """
-    after = time_ns() // 1000000
-    diff = after - message_received
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("message", f"Recording change event latency of {diff}")
-    metrics.set_property("correlation_id", logger.get_correlation_id())
-    metrics.put_metric("QueueToDoSLatency", diff, "Milliseconds")
-    metrics.set_dimensions({"ENV": environ["ENV"]})

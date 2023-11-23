@@ -10,10 +10,8 @@ from application.common.opening_times import (
     opening_period_times_from_list,
 )
 
-OP = OpenPeriod.from_string
 
-
-def test_open_period_repr():
+def test_open_period_repr() -> None:
     # Arrange
     open_period = OpenPeriod(time(8, 0), time(12, 0))
     # Act
@@ -29,7 +27,7 @@ def test_open_period_repr():
         (time(8, 0), time(12, 0), time(13, 0), time(23, 0), False),
     ],
 )
-def test_open_period_eq(start, end, other_start, other_end, expected):
+def test_open_period_eq(start: time, end: time, other_start: time, other_end: time, expected: bool) -> None:
     # Arrange
     open_period = OpenPeriod(start, end)
     # Act
@@ -38,13 +36,13 @@ def test_open_period_eq(start, end, other_start, other_end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-def test_open_period_eq_hash():
-    a = OP("9:00-17:00")
-    a2 = OP("9:00:00-17:00:00")
-    b = OP("09:00-16:00")
-    b2 = OP("9:00-16:00")
-    c = OP("02:00-16:00:00")
-    d = OP("09:00-17:00:01")
+def test_open_period_eq_hash() -> None:
+    a = OpenPeriod.from_string_times("9:00", "17:00")
+    a2 = OpenPeriod.from_string_times("9:00:00", "17:00:00")
+    b = OpenPeriod.from_string_times("09:00", "16:00")
+    b2 = OpenPeriod.from_string_times("9:00", "16:00")
+    c = OpenPeriod.from_string_times("02:00", "16:00:00")
+    d = OpenPeriod.from_string_times("09:00", "17:00:01")
 
     assert a == a2
     assert hash(a) == hash(a2)
@@ -77,7 +75,7 @@ def test_open_period_eq_hash():
     ("start", "end", "expected"),
     [(time(8, 0), time(12, 0), True), (time(12, 0), time(8, 0), False)],
 )
-def test_open_period_start_before_end(start, end, expected):
+def test_open_period_start_before_end(start: time, end: time, expected: bool) -> None:
     # Arrange
     open_period = OpenPeriod(start, end)
     # Act
@@ -86,23 +84,29 @@ def test_open_period_start_before_end(start, end, expected):
     assert expected == actual, f"Should return {expected} , actually: {actual}"
 
 
-def test_openperiod_overlaps():
-    assert OP("08:00-12:00").overlaps(OP("13:00-17:00")) is False
-    assert OP("08:00-12:00").overlaps(OP("12:01-17:00")) is False
-    assert OP("08:00:00-12:00:00").overlaps(OP("12:00:01-17:00:00")) is False
-    assert OP("13:00-17:00").overlaps(OP("08:00-12:00")) is False
-    assert OP("08:00-12:59").overlaps(OP("13:00-17:00")) is False
-    assert OP("12:40-15:23").overlaps(OP("18:03-22:16")) is False
+@pytest.mark.parametrize(
+    ("first_start", "first_end", "second_start", "second_end", "expected"),
+    [
+        (time(8, 0), time(12, 0), time(13, 0), time(17, 0), False),
+        (time(8, 0), time(12, 0), time(12, 1), time(17, 0), False),
+        (time(8, 0), time(12, 0), time(12, 0, 1), time(17, 0), False),
+        (time(13, 0), time(17, 0), time(8, 0), time(12, 0), False),
+        (time(8, 0), time(12, 59), time(13, 0), time(15, 0), False),
+        (time(12, 40), time(15, 23), time(18, 3), time(22, 16), False),
+        (time(8, 0), time(12, 0), time(12, 0), time(17, 0), True),
+        (time(8, 0), time(12, 0), time(10, 0), time(17, 0), True),
+        (time(0, 0), time(23, 59), time(0, 0), time(23, 59), True),
+        (time(8, 0), time(12, 0), time(7, 0), time(17, 0), True),
+        (time(1, 23), time(12, 0), time(10, 0), time(17, 0), True),
+    ],
+)
+def test_openperiod_overlaps(
+    first_start: time, first_end: time, second_start: time, second_end: time, expected: bool
+) -> None:
+    assert OpenPeriod(first_start, first_end).overlaps(OpenPeriod(second_start, second_end)) == expected
 
-    assert OP("08:00-12:00").overlaps(OP("12:00-17:00"))
-    assert OP("08:00-12:00").overlaps(OP("12:00-17:00"))
-    assert OP("08:00-12:00").overlaps(OP("10:00-17:00"))
-    assert OP("00:00-23:59").overlaps(OP("00:00-23:59"))
-    assert OP("08:00-12:00").overlaps(OP("07:00-17:00"))
-    assert OP("01:00-23:00").overlaps(OP("10:00-17:00"))
 
-
-def test_openperiod_any_overlaps():
+def test_openperiod_any_overlaps() -> None:
     open_periods = [
         OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
         OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
@@ -124,7 +128,7 @@ def test_openperiod_any_overlaps():
     assert spec.any_overlaps()
 
 
-def test_openperiod_all_start_before_end():
+def test_openperiod_all_start_before_end() -> None:
     open_periods = [
         OpenPeriod(time(1, 0, 0), time(2, 0, 0)),
         OpenPeriod(time(3, 0, 0), time(5, 0, 0)),
@@ -146,7 +150,7 @@ def test_openperiod_all_start_before_end():
     assert spec.all_start_before_end() is False
 
 
-def test_open_period_str():
+def test_open_period_str() -> None:
     assert str(OpenPeriod(time(8, 0, 0), time(15, 0, 0))) == "08:00:00-15:00:00"
     assert str(OpenPeriod(time(0, 0, 0), time(15, 0, 0))) == "00:00:00-15:00:00"
     assert str(OpenPeriod(time(8, 0, 0), time(23, 59, 59))) == "08:00:00-23:59:59"
@@ -155,7 +159,7 @@ def test_open_period_str():
     assert str(OpenPeriod(time(13, 35, 23), time(13, 35, 24))) == "13:35:23-13:35:24"
 
 
-def test_openperiod_list_string():
+def test_openperiod_list_string() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -167,7 +171,7 @@ def test_openperiod_list_string():
     assert OpenPeriod.list_string([c, b, a]) == "[08:00:00-12:00:00, 13:00:00-17:30:00, 19:00:00-23:59:59]"
 
 
-def test_openperiod_equal_lists():
+def test_openperiod_equal_lists() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -189,7 +193,7 @@ def test_openperiod_equal_lists():
     assert not OpenPeriod.equal_lists([a, b, c], [a])
 
 
-def test_open_period__lt__gt__():
+def test_open_period__lt__gt__() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     a2 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(9, 0, 0), time(12, 0, 0))
@@ -222,7 +226,7 @@ def test_open_period__lt__gt__():
         OpenPeriod((datetime(2000, 1, 1, 7, 0, 0) + timedelta(hours=1)).time(), time(12, 0, 0)),
     ],
 )
-def test_open_period_hash(opening_period_2: OpenPeriod):
+def test_open_period_hash(opening_period_2: OpenPeriod) -> None:
     open_period_1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
 
     assert open_period_1 == opening_period_2, f"{open_period_1} not found to be equal to {opening_period_2}"
@@ -231,39 +235,7 @@ def test_open_period_hash(opening_period_2: OpenPeriod):
     ), f"hash {hash(open_period_1)} not found to be equal to {hash(opening_period_2)}"
 
 
-def test_openperiod_from_string():
-    a = OpenPeriod.from_string("08:34-15:13")
-    assert a.start == time(8, 34, 0)
-    assert a.end == time(15, 13, 0)
-
-    b = OpenPeriod.from_string("04:45:55-09:32:22")
-    assert b.start == time(4, 45, 55)
-    assert b.end == time(9, 32, 22)
-
-    c = OpenPeriod.from_string("00:00:00-09:32:22")
-    assert c.start == time(0, 0, 0)
-    assert c.end == time(9, 32, 22)
-
-    d = OpenPeriod.from_string("00:00-23:59")
-    assert d.start == time(0, 0, 0)
-    assert d.end == time(23, 59, 00)
-
-    assert OpenPeriod.from_string("") is None
-    assert OpenPeriod.from_string("hello") is None
-    assert OpenPeriod.from_string("12:0015:32") is None
-    assert OpenPeriod.from_string("12:00 15:32") is None
-    assert OpenPeriod.from_string("12:00") is None
-    assert OpenPeriod.from_string("08:00-24:00") is None
-    assert OpenPeriod.from_string("38:00-12:00") is None
-    assert OpenPeriod.from_string("08:00-44:00") is None
-    assert OpenPeriod.from_string("08:0044:00") is None
-    assert OpenPeriod.from_string("08:00-44:00-08:00") is None
-    assert OpenPeriod.from_string(231892) is None
-    assert OpenPeriod.from_string(None) is None
-    assert OpenPeriod.from_string(2.38) is None
-
-
-def test_openperiod_from_string_times():
+def test_openperiod_from_string_times() -> None:
     a = OpenPeriod.from_string_times("08:34", "15:13")
     assert a.start == time(8, 34, 0)
     assert a.end == time(15, 13, 0)
@@ -300,7 +272,7 @@ def test_openperiod_from_string_times():
     assert OpenPeriod.from_string_times(2.38, "03:00") is None
 
 
-def test_open_period_export_test_format():
+def test_open_period_export_test_format() -> None:
     assert OpenPeriod(time(8, 0, 0), time(15, 0, 0)).export_test_format() == {
         "start_time": "08:00",
         "end_time": "15:00",
@@ -328,7 +300,7 @@ def test_open_period_export_test_format():
     }
 
 
-def test_specifiedopeningtime_eq_and_hash():
+def test_specifiedopeningtime_eq_and_hash() -> None:
     op1 = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     op2 = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     op3 = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
@@ -362,7 +334,7 @@ def test_specifiedopeningtime_eq_and_hash():
     assert hash(sp3) != hash(sp4)
 
 
-def test_specifiedopeningtime_open_string():
+def test_specifiedopeningtime_open_string() -> None:
     s = SpecifiedOpeningTime([], date(2020, 5, 5), is_open=True)
     assert s.open_string() == "OPEN"
 
@@ -370,7 +342,7 @@ def test_specifiedopeningtime_open_string():
     assert s.open_string() == "CLOSED"
 
 
-def test_specifiedopentime_contradiction():
+def test_specifiedopentime_contradiction() -> None:
     spec = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
     op = OpenPeriod(time(8, 0, 0), time(17, 0, 0))
 
@@ -386,7 +358,7 @@ def test_specifiedopentime_contradiction():
     assert spec.contradiction()
 
 
-def test_specifiedopentimes_is_valid():
+def test_specifiedopentimes_is_valid() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -432,7 +404,7 @@ def test_specifiedopentimes_is_valid():
     assert sp1.is_valid() is False
 
 
-def test_specifiedopentimes_equal_lists():
+def test_specifiedopentimes_equal_lists() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
@@ -467,7 +439,7 @@ def test_specifiedopentimes_equal_lists():
     assert not SpecifiedOpeningTime.equal_lists([sp1, sp3], [sp1, sp4])
 
 
-def test_specifiedopentimes_remove_past_dates():
+def test_specifiedopentimes_remove_past_dates() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 30, 0))
@@ -481,7 +453,7 @@ def test_specifiedopentimes_remove_past_dates():
     assert SpecifiedOpeningTime.remove_past_dates(times_list=[future1, future2, past]) == [future1, future2]
 
 
-def test_specifiedopentime_export_service_history_format_open():
+def test_specifiedopentime_export_service_history_format_open() -> None:
     # Arrange
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
@@ -497,7 +469,7 @@ def test_specifiedopentime_export_service_history_format_open():
     ] == result
 
 
-def test_specifiedopentime_export_service_history_format_closed():
+def test_specifiedopentime_export_service_history_format_closed() -> None:
     # Arrange
     specified_opening_time = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
     # Act
@@ -506,7 +478,7 @@ def test_specifiedopentime_export_service_history_format_closed():
     assert ["2021-12-24-closed"] == result
 
 
-def test_specifiedopentime_export_dos_log_format_open():
+def test_specifiedopentime_export_dos_log_format_open() -> None:
     # Arrange
     specified_opening_time = SpecifiedOpeningTime(
         [OpenPeriod(time(9, 0, 0), time(11, 0, 0))],
@@ -519,7 +491,7 @@ def test_specifiedopentime_export_dos_log_format_open():
     assert ["2021-12-24-09:00-11:00"] == result
 
 
-def test_specifiedopentime_export_dos_log_format_closed():
+def test_specifiedopentime_export_dos_log_format_closed() -> None:
     # Arrange
     specified_opening_time = SpecifiedOpeningTime([], date(2021, 12, 24), is_open=False)
     # Act
@@ -567,12 +539,12 @@ def test_specifiedopentime_export_dos_log_format_closed():
         ),
     ],
 )
-def test_specified_opening_time_export_test_format(expected: dict, actual: SpecifiedOpeningTime):
+def test_specified_opening_time_export_test_format(expected: dict, actual: SpecifiedOpeningTime) -> None:
     test_format = actual.export_test_format()
     assert test_format == expected, f"expected {expected} SpecifiedOpeningTime change req format but got {test_format}"
 
 
-def test_stdopeningtimes_eq_len():
+def test_stdopeningtimes_eq_len() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -623,7 +595,7 @@ def test_stdopeningtimes_eq_len():
     assert st1 == st2
 
 
-def test_stdopeningtimes_any_contradiction():
+def test_stdopeningtimes_any_contradiction() -> None:
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(17, 30, 0))
     c = OpenPeriod(time(19, 0, 0), time(23, 59, 59))
@@ -654,7 +626,7 @@ def test_stdopeningtimes_any_contradiction():
     assert st1.any_contradictions()
 
 
-def test_stdopeningtimes_export_opening_times_for_day():
+def test_stdopeningtimes_export_opening_times_for_day() -> None:
     # Arrange
     a = OpenPeriod(time(8, 0, 0), time(12, 0, 0))
     b = OpenPeriod(time(13, 0, 0), time(18, 0, 0))
@@ -667,7 +639,7 @@ def test_stdopeningtimes_export_opening_times_for_day():
     assert ["08:00-12:00", "13:00-18:00"] == response
 
 
-def test_stdopeningtimes_export_opening_times_in_seconds_for_day():
+def test_stdopeningtimes_export_opening_times_in_seconds_for_day() -> None:
     # Arrange
     a = OpenPeriod(time(9, 0, 0), time(13, 0, 0))
     b = OpenPeriod(time(14, 0, 0), time(19, 0, 0))
@@ -680,7 +652,7 @@ def test_stdopeningtimes_export_opening_times_in_seconds_for_day():
     assert ["32400-46800", "50400-68400"] == response
 
 
-def test_standard_opening_times_export_test_format():
+def test_standard_opening_times_export_test_format() -> None:
     # Start with empty
     std_opening_times = StandardOpeningTimes()
     expected = {
@@ -716,7 +688,7 @@ def test_standard_opening_times_export_test_format():
     assert std_opening_times.export_test_format() == expected
 
 
-def test_opening_period_times_from_list():
+def test_opening_period_times_from_list() -> None:
     # Arrange
     times = [OpenPeriod(time(8, 0, 0), time(9, 0, 0)), OpenPeriod(time(9, 0, 0), time(10, 0, 0))]
     # Act
@@ -725,11 +697,11 @@ def test_opening_period_times_from_list():
     assert response == "08:00-09:00, 09:00-10:00"
 
 
-def test_std_open_times_fully_closed():
+def test_std_open_times_fully_closed() -> None:
     std_open_times = StandardOpeningTimes()
     assert std_open_times.fully_closed()
 
     for day in WEEKDAYS:
-        std_open_times.add_open_period(OP("08:00-13:00"), day)
+        std_open_times.add_open_period(OpenPeriod.from_string_times("08:00", "13:00"), day)
         assert not std_open_times.fully_closed()
         setattr(std_open_times, day, [])

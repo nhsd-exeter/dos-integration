@@ -43,13 +43,15 @@ select = [
   "YTT",
 ]
 ignore = [
-  "D100",   # Missing docstring in public module
-  "D104",   # Missing docstring in public package
-  "PTH123", # Use `pathlib.Path` instead of `os.path`
-  "G004",   # Logging statement uses f-string
-  "ANN101", # Missing type annotation for self in method,
-  "DTZ007", # Allow Datetime used as timezone in tests.
-  "TID252", # Allow Relative imports from parent modules
+  "D100",    # Missing docstring in public module
+  "D104",    # Missing docstring in public package
+  "PTH123",  # Use `pathlib.Path` instead of `os.path`
+  "G004",    # Logging statement uses f-string
+  "PLR0913", # Too many arguments in function call
+  "DTZ007",  # Allow Datetime used as timezone in tests.
+  "TID252",  # Allow Relative imports from parent modules
+  "COM812",  # Ignore due to conflict with Ruff formatter
+  "ISC001",  # Ignore due to conflict with Ruff formatter
 ]
 
 # Allow autofix for all enabled rules (when `--fix`) is provided.
@@ -76,9 +78,12 @@ fixable = [
   "EM",
   "ERA",
   "EXE",
+  "FLY",
   "FBT",
   "ICN",
   "INP",
+  "PERF",
+  "FURB",
   "ISC",
   "NPY",
   "PD",
@@ -140,9 +145,7 @@ target-version = "py311"
   "S105",    # Allow fake secrets in tests.
   "SLF001",  # Allow `_function` in tests.
   "PLR0913", # Allow many arrguments in tests.
-  "ANN001",  # Allow missing type annotation in tests.
-  "ARG001",  # Allow missing type annotation in tests.
-  "ANN201",  # Allow missing type annotation in tests.
+  "ARG001",  # Unused function argument
   "D101",    # Allow Missing docstring in public class
   "D102",    # Allow Missing docstring in public method
   "D103",    # Allow missing docstring in tests.

@@ -170,7 +170,7 @@ def add_standard_openings_to_dos(context: Context) -> None:
             closing_time = day["closing_time"]
             day_id = day["dos_id"]
             query = (
-                "INSERT INTO pathwaysdos.servicedayopeningtimes(starttime, endtime, servicedayopeningid) VALUES "  # noqa: S608, E501
+                "INSERT INTO pathwaysdos.servicedayopeningtimes(starttime, endtime, servicedayopeningid) VALUES "  # noqa: S608
                 f"('{opening_time}', "
                 f"'{closing_time}', "
                 f"{int(day_id)}) RETURNING id"
@@ -567,7 +567,7 @@ def apply_palliative_care_to_service(context: Context) -> int:
         int: The ID of the entry in the database.
     """
     srv = context.service_id
-    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"  # noqa: E501,S608
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14167, 360) RETURNING id"  # noqa: S608
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return loads(invoke_dos_db_handler_lambda(lambda_payload))
 
@@ -582,7 +582,7 @@ def apply_blood_pressure_to_service(context: Context) -> int:
         int: The ID of the entry in the database.
     """
     srv = context.service_id
-    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14207, 360) RETURNING id"  # noqa: E501,S608
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14207, 360) RETURNING id"  # noqa: S608
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return loads(invoke_dos_db_handler_lambda(lambda_payload))
 
@@ -597,7 +597,7 @@ def apply_contraception_to_service(context: Context) -> int:
         int: The ID of the entry in the database.
     """
     srv = context.service_id
-    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14210, 360) RETURNING id"  # noqa: E501,S608
+    query = f"INSERT INTO pathwaysdos.servicesgsds (serviceid, sdid, sgid) VALUES ({srv}, 14210, 360) RETURNING id"  # noqa: S608
     lambda_payload = {"type": "read", "query": query, "query_vars": None}
     return loads(invoke_dos_db_handler_lambda(lambda_payload))
 

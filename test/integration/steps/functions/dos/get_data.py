@@ -70,7 +70,7 @@ def get_service_id(odscode: str) -> str:
         str: Service id.
     """
     data = []
-    query = f"SELECT id FROM services WHERE typeid = 13 AND statusid = 1 AND odscode like '{odscode}%' LIMIT 1"  # noqa: S608,E501
+    query = f"SELECT id FROM services WHERE typeid = 13 AND statusid = 1 AND odscode like '{odscode}%' LIMIT 1"  # noqa: S608
     for _ in range(16):
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         response = invoke_dos_db_handler_lambda(lambda_payload)

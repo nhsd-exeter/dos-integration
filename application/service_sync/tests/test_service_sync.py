@@ -1,11 +1,11 @@
 from json import dumps
 from os import environ
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
-from application.service_sync.service_sync import add_success_metric, lambda_handler, remove_sqs_message_from_queue
+from application.service_sync.service_sync import lambda_handler, remove_sqs_message_from_queue
 from common.types import UpdateRequest
 
 FILE_PATH = "application.service_sync.service_sync"
@@ -42,8 +42,6 @@ SQS_EVENT = {
 
 
 @patch(f"{FILE_PATH}.check_and_remove_pending_dos_changes")
-@patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.add_success_metric")
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
 @patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
@@ -55,11 +53,9 @@ def test_lambda_handler(
     mock_compare_nhs_uk_and_dos_data: MagicMock,
     mock_update_dos_data: MagicMock,
     mock_remove_sqs_message_from_queue: MagicMock,
-    mock_add_success_metric: MagicMock,
-    mock_add_metric: MagicMock,
     mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     environ["ENV"] = "environment"
     dos_service = MagicMock()
@@ -84,16 +80,12 @@ def test_lambda_handler(
         service_histories=mock_compare_nhs_uk_and_dos_data().service_histories,
     )
     mock_remove_sqs_message_from_queue.assert_called_once_with(receipt_handle=RECEIPT_HANDLE)
-    mock_add_success_metric.assert_called_once_with(message_received=int(MESSAGE_RECEIVED))
-    mock_add_metric.assert_has_calls(calls=[call("UpdateRequestSuccess"), call("ServiceUpdateSuccess")])
     # Cleanup
     del environ["ENV"]
 
 
 @patch(f"{FILE_PATH}.check_and_remove_pending_dos_changes")
 @patch.object(Logger, "exception")
-@patch(f"{FILE_PATH}.add_metric")
-@patch(f"{FILE_PATH}.add_success_metric")
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
 @patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
@@ -105,14 +97,11 @@ def test_lambda_handler_exception(
     mock_compare_nhs_uk_and_dos_data: MagicMock,
     mock_update_dos_data: MagicMock,
     mock_remove_sqs_message_from_queue: MagicMock,
-    mock_add_success_metric: MagicMock,
-    mock_add_metric: MagicMock,
     mock_logger_exception: MagicMock,
     mock_check_and_remove_pending_dos_changes: MagicMock,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
-    environ["ENV"] = "environment"
     nhs_entity = MagicMock()
     mock_nhs_entity.return_value = nhs_entity
     mock_get_dos_service_and_history.side_effect = Exception("Error")
@@ -125,16 +114,16 @@ def test_lambda_handler_exception(
     mock_compare_nhs_uk_and_dos_data.assert_not_called()
     mock_update_dos_data.assert_not_called()
     mock_remove_sqs_message_from_queue.assert_not_called()
-    mock_add_success_metric.assert_not_called()
-    mock_add_metric.assert_called_once_with("UpdateRequestFailed")
-    mock_logger_exception.assert_called_once_with("Error processing change event")
-    # Cleanup
-    del environ["ENV"]
+    mock_logger_exception.assert_called_once_with(
+        "Error processing update request",
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="UpdateRequestError",
+    )
 
 
 @patch.object(Logger, "info")
 @patch(f"{FILE_PATH}.client")
-def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info: MagicMock):
+def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info: MagicMock) -> None:
     # Arrange
     environ["UPDATE_REQUEST_QUEUE_URL"] = update_request_queue_url = "update_request_queue_url"
     # Act
@@ -148,12 +137,3 @@ def test_remove_sqs_message_from_queue(mock_client: MagicMock, mock_logger_info:
     mock_logger_info.assert_called_once_with("Removed SQS message from queue", receipt_handle=RECEIPT_HANDLE)
     # Cleanup
     del environ["UPDATE_REQUEST_QUEUE_URL"]
-
-
-def test_add_success_metric():
-    # Arrange
-    environ["ENV"] = "environment"
-    # Act
-    add_success_metric(message_received=int(MESSAGE_RECEIVED))
-    # Cleanup
-    del environ["ENV"]

@@ -1,9 +1,8 @@
 from hashlib import sha256
 from json import dumps
-from os import environ
+from os import environ, getenv
 from typing import Any
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import SQSEvent, event_source
@@ -112,23 +111,15 @@ def send_update_requests(
                 },
             },
         )
-        send_update_request_metric()
     chunks = list(divide_chunks(messages, 10))
     for i, chunk in enumerate(chunks):
         # TODO: Handle errors?
         logger.debug(f"Sending off message chunk {i+1}/{len(chunks)}")
         response = sqs.send_message_batch(QueueUrl=environ["UPDATE_REQUEST_QUEUE_URL"], Entries=chunk)
-        logger.info("Response received", response=response)
-        logger.info(f"Sent off update request for id={service_id}")
-
-
-@metric_scope
-def send_update_request_metric(metrics: Any) -> None:  # noqa: ANN401
-    """Send metric for update request sent.
-
-    Args:
-        metrics (Any): The custom metrics collection
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("UpdateRequestSent", 1, "Count")
+        logger.debug("Sent off message chunk", response=response)
+        logger.warning(
+            "Sent Off Update Request",
+            service_id=service_id,
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="UpdateRequestSent",
+        )

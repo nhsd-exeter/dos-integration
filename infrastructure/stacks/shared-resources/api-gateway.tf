@@ -110,10 +110,10 @@ resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   }
 }
 
-#tfsec:ignore:aws-cloudwatch-log-group-customer-key
 resource "aws_cloudwatch_log_group" "di_endpoint_access_logs" {
   name              = "/aws/api-gateway/${var.di_endpoint_api_gateway_name}"
   retention_in_days = 30
+  kms_key_id        = aws_kms_key.signing_key.arn
 }
 
 resource "aws_api_gateway_stage" "di_endpoint_stage" {

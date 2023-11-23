@@ -3,6 +3,7 @@ from datetime import datetime
 from json import JSONDecodeError, dumps, loads
 from os import environ
 from time import time_ns
+from typing import Self
 
 from aws_lambda_powertools.logging import Logger
 from boto3 import client
@@ -32,7 +33,7 @@ class PendingChange:
     uid: str  # Uid of the service
     user_id: str  # User id of the user who made the change
 
-    def __init__(self, db_cursor_row: dict) -> None:
+    def __init__(self: Self, db_cursor_row: dict) -> None:
         """Sets the attributes of this object to those found in the db row.
 
         Args:
@@ -41,7 +42,7 @@ class PendingChange:
         for row_key, row_value in db_cursor_row.items():
             setattr(self, row_key, row_value)
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of this object.
 
         Returns:
@@ -59,7 +60,7 @@ class PendingChange:
             f"name={self.name}, uid={self.uid}, user_id={self.user_id})"
         )
 
-    def is_valid(self) -> bool:
+    def is_valid(self: Self) -> bool:
         """Checks if the pending change is valid.
 
         Returns:

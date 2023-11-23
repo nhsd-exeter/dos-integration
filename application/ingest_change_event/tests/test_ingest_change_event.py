@@ -7,8 +7,7 @@ from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.utilities.typing import LambdaContext
 
 from application.common.types import HoldingQueueChangeEventItem
-from application.conftest import InvocationTracker
-from application.ingest_change_event.ingest_change_event import add_change_event_received_metric, lambda_handler
+from application.ingest_change_event.ingest_change_event import lambda_handler
 
 FILE_PATH = "application.ingest_change_event.ingest_change_event"
 
@@ -18,13 +17,11 @@ FILE_PATH = "application.ingest_change_event.ingest_change_event"
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler(
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
-    mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
@@ -32,7 +29,7 @@ def test_lambda_handler(
     mock_sqs: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -56,7 +53,6 @@ def test_lambda_handler(
     assert response is None
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
-    mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_called_once_with(
@@ -81,11 +77,9 @@ def test_lambda_handler(
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 def test_lambda_handler_with_sensitive_staff_key(
     mock_validate_change_event: MagicMock,
-    mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
@@ -94,7 +88,7 @@ def test_lambda_handler_with_sensitive_staff_key(
     change_event_staff: dict,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event_staff.copy())
@@ -116,7 +110,6 @@ def test_lambda_handler_with_sensitive_staff_key(
     # Assert
     assert response is None
     mock_validate_change_event.assert_called_once_with(change_event)
-    mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_called_once_with(
@@ -142,13 +135,11 @@ def test_lambda_handler_with_sensitive_staff_key(
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_no_sequence_number(
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
-    mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
@@ -157,7 +148,7 @@ def test_lambda_handler_no_sequence_number(
     mock_logger_error: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -181,7 +172,6 @@ def test_lambda_handler_no_sequence_number(
     assert response is None
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
-    mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_not_called()
@@ -198,13 +188,11 @@ def test_lambda_handler_no_sequence_number(
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_less_than_latest_sequence_number(
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
-    mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
@@ -213,7 +201,7 @@ def test_lambda_handler_less_than_latest_sequence_number(
     mock_logger_error: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     event["Records"][0]["body"] = dumps(change_event)
@@ -237,7 +225,6 @@ def test_lambda_handler_less_than_latest_sequence_number(
     assert response is None
     mock_extract_body.assert_called_once_with(dumps(change_event))
     mock_validate_change_event.assert_called_once_with(change_event)
-    mock_add_change_event_received_metric.assert_called_once_with(ods_code=change_event["ODSCode"])
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_called_once_with(change_event["ODSCode"])
     mock_add_change_event_to_dynamodb.assert_called_once_with(change_event, sequence_number, sqs_timestamp)
     mock_holding_queue_change_event_item.assert_not_called()
@@ -257,13 +244,11 @@ def test_lambda_handler_less_than_latest_sequence_number(
 @patch(f"{FILE_PATH}.add_change_event_to_dynamodb")
 @patch(f"{FILE_PATH}.get_latest_sequence_id_for_a_given_odscode_from_dynamodb")
 @patch(f"{FILE_PATH}.get_sequence_number")
-@patch(f"{FILE_PATH}.add_change_event_received_metric")
 @patch(f"{FILE_PATH}.validate_change_event")
 @patch(f"{FILE_PATH}.extract_body")
 def test_lambda_handler_mutiple_records(
     mock_extract_body: MagicMock,
     mock_validate_change_event: MagicMock,
-    mock_add_change_event_received_metric: MagicMock,
     mock_get_sequence_number: MagicMock,
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb: MagicMock,
     mock_add_change_event_to_dynamodb: MagicMock,
@@ -271,7 +256,7 @@ def test_lambda_handler_mutiple_records(
     mock_sqs: MagicMock,
     change_event: dict,
     lambda_context: LambdaContext,
-):
+) -> None:
     # Arrange
     event = SQS_EVENT.copy()
     record = event["Records"][0]
@@ -296,7 +281,6 @@ def test_lambda_handler_mutiple_records(
     # Assert
     mock_extract_body.assert_not_called()
     mock_validate_change_event.assert_not_called()
-    mock_add_change_event_received_metric.assert_not_called()
     mock_get_latest_sequence_id_for_a_given_odscode_from_dynamodb.assert_not_called()
     mock_add_change_event_to_dynamodb.assert_not_called()
     mock_holding_queue_change_event_item.assert_not_called()
@@ -304,19 +288,6 @@ def test_lambda_handler_mutiple_records(
     # Cleanup
     del environ["ENV"]
     del environ["HOLDING_QUEUE_URL"]
-
-
-def test_add_change_event_received_metric():
-    # Arrange
-    odscode = "V12345"
-    environ["ENV"] = "test"
-    # Act
-    add_change_event_received_metric(odscode)
-    # Assert
-    assert InvocationTracker.invocations == 1
-    # Cleanup
-    InvocationTracker.reset()
-    del environ["ENV"]
 
 
 SQS_EVENT = {

@@ -18,8 +18,6 @@ jobs:
           fetch-depth: 0
       - name: Check if code contains any Terraform Security Vulnerabilities
         run: make terraform-security
-      - name: Checkov Security and Best Practices - Serverless Framework
-        run: make -s serverless-best-practices
       - name: Checkov Security and Best Practices - Docker
         run: make -s docker-best-practices
       - name: Checkov Security and Best Practices - Terraform

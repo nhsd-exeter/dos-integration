@@ -9,9 +9,7 @@ Feature: F008. Check DoS data quality
     Examples:
       | service_count | service_status | service_type | reason                                             |
       | 2             | active         | 148          | Multiple 'Pharmacy' type services found (type 148) |
-      | 3             | active         | 148          | Multiple 'Pharmacy' type services found (type 148) |
       | 2             | active         | 149          | Multiple 'Pharmacy' type services found (type 149) |
-      | 3             | active         | 149          | Multiple 'Pharmacy' type services found (type 149) |
 
   @complete @slack_and_infrastructure
   Scenario Outline: F008SX02. Check for not too many services
@@ -22,16 +20,12 @@ Feature: F008. Check DoS data quality
     Examples:
       | service_count | service_status | service_type | reason                                             |
       | 2             | closed         | 148          | Multiple 'Pharmacy' type services found (type 148) |
-      | 3             | closed         | 148          | Multiple 'Pharmacy' type services found (type 148) |
       | 2             | commissioning  | 148          | Multiple 'Pharmacy' type services found (type 148) |
-      | 3             | commissioning  | 148          | Multiple 'Pharmacy' type services found (type 148) |
       | 2             | closed         | 149          | Multiple 'Pharmacy' type services found (type 149) |
-      | 3             | closed         | 149          | Multiple 'Pharmacy' type services found (type 149) |
       | 2             | commissioning  | 149          | Multiple 'Pharmacy' type services found (type 149) |
-      | 3             | commissioning  | 149          | Multiple 'Pharmacy' type services found (type 149) |
 
   @complete @slack_and_infrastructure
-  Scenario Outline: F008SX02. Palliative on correct service type with incorrect odscode length
+  Scenario Outline: F008SX03. Palliative on correct service type with incorrect odscode length
     Given an active service of type <service_type> for a <character_count> character odscode starting with A
     And the service in DoS supports palliative care
     When the quality checker is run
@@ -40,11 +34,10 @@ Feature: F008. Check DoS data quality
     Examples:
       | service_type | character_count | reason                                                                                        |
       | 13           | 6               | Palliative Care ZCode is on the correct service type, but the service is incorrectly profiled |
-      | 13           | 7               | Palliative Care ZCode is on the correct service type, but the service is incorrectly profiled |
 
 
   @complete @slack_and_infrastructure
-  Scenario Outline: F008SX03. Blood Pressure/Contraception/Palliative Care on a non-blood pressure/non-contraception/non-palliative care service type does report
+  Scenario Outline: F008SX04. Blood Pressure/Contraception/Palliative Care on a non-blood pressure/non-contraception/non-palliative care service type does report
     Given <service_count> <service_status> services of type <service_type> for an odscode starting with A
     And the DoS service has <commissioned_service> Z code
     When the quality checker is run
@@ -73,7 +66,7 @@ Feature: F008. Check DoS data quality
 
 
   @complete @slack_and_infrastructure
-  Scenario Outline: F008SX04. Blood Pressure/Contraception on a blood pressure/contraception service type does not report
+  Scenario Outline: F008SX05. Blood Pressure/Contraception on a blood pressure/contraception service type does not report
     Given <service_count> <service_status> services of type <service_type> for an odscode starting with A
     And the DoS service has <commissioned_service> Z code
     When the quality checker is run
@@ -87,7 +80,7 @@ Feature: F008. Check DoS data quality
 
 
   @complete @slack_and_infrastructure
-  Scenario Outline: F008SX05. Palliative on correct service type with correct odscode length does not report
+  Scenario Outline: F008SX06. Palliative on correct service type with correct odscode length does not report
     Given an active service of type <service_type> for a <character_count> character odscode starting with A
     And the service in DoS supports palliative care
     When the quality checker is run

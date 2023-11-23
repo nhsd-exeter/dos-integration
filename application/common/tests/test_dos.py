@@ -5,9 +5,7 @@ from unittest.mock import MagicMock, patch
 from application.common.dos import (
     DoSService,
     db_rows_to_spec_open_times,
-    db_rows_to_spec_open_times_map,
     db_rows_to_std_open_times,
-    db_rows_to_std_open_times_map,
     get_dos_locations,
     get_matching_dos_services,
     get_region,
@@ -26,11 +24,10 @@ from common.constants import (
     DOS_PALLIATIVE_CARE_SYMPTOM_GROUP,
 )
 
-OP = OpenPeriod.from_string
 FILE_PATH = "application.common.dos"
 
 
-def test_field_names():
+def test_field_names() -> None:
     assert DoSService.field_names() == [
         "id",
         "uid",
@@ -54,7 +51,7 @@ def test_field_names():
     ]
 
 
-def test__init__():
+def test__init__() -> None:
     # Arrange
     test_db_row = {}
     for column in DoSService.field_names():
@@ -67,7 +64,7 @@ def test__init__():
         assert getattr(dos_service, field_name) == test_db_row[field_name]
 
 
-def test__init__public_name():
+def test__init__public_name() -> None:
     # Arrange & Act
     test_name = "Test Public Name"
     dos_service = dummy_dos_service()
@@ -80,7 +77,7 @@ def test__init__public_name():
     assert test_name in str(dos_service), f"Should return '{test_name}' in string, actually: {dos_service}"
 
 
-def test__init__name():
+def test__init__name() -> None:
     # Arrange & Act
     dos_service = dummy_dos_service()
     dos_service.uid = 1
@@ -93,7 +90,7 @@ def test__init__name():
     assert "Test Name" in str(dos_service), f"Should return 'Test Name' in string, actually: {dos_service}"
 
 
-def test__init__no_name():
+def test__init__no_name() -> None:
     # Arrange & Act
     dos_service = dummy_dos_service()
     dos_service.uid = 1
@@ -106,7 +103,7 @@ def test__init__no_name():
     assert "NO-VALID-NAME" in str(dos_service), f"Should return 'NO-VALID-NAME' in string, actually: {dos_service}"
 
 
-def test__eq__():
+def test__eq__() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.id = 1
@@ -119,7 +116,7 @@ def test__eq__():
     # Assert
 
 
-def test_dos_service_get_region():
+def test_dos_service_get_region() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.region = "Test Region"
@@ -144,7 +141,9 @@ def test_dos_service_get_region_if_none(mock_get_region: MagicMock) -> None:
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_matching_dos_services_pharmacy_services_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
     # Arrange
     odscode = "FQ038"
     name = "My Pharmacy"
@@ -156,7 +155,7 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
     # Act
-    response = get_matching_dos_services(odscode, False)
+    response = get_matching_dos_services(odscode)
     # Assert
     service = response[0]
     assert service.odscode == odscode
@@ -165,53 +164,11 @@ def test_get_matching_dos_services_pharmacy_services_returned(mock_query_dos_db,
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
-            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-            "AND s.statusid = %(ACTIVE_STATUS_ID)s "
-        ),
-        query_vars={
-            "ODS": "FQ038%",
-            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
-            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
-        },
-    )
-    mock_cursor.fetchall.assert_called_with()
-    mock_cursor.close.assert_called_with()
-
-
-@patch(f"{FILE_PATH}.connect_to_db_reader")
-@patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
-    # Arrange
-    odscode = "FQ038"
-    name = "My Pharmacy"
-    service_id = 22851351399
-    db_return = [get_db_item(odscode, name, id=service_id)]
-    mock_connection = MagicMock()
-    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
-    mock_cursor = MagicMock()
-    mock_cursor.fetchall.return_value = db_return
-    mock_query_dos_db.return_value = mock_cursor
-    # Act
-    response = get_matching_dos_services(odscode, True)
-    # Assert
-    service = response[0]
-    assert service.odscode == odscode
-    assert service.id == service_id
-    assert service.name == name
-    mock_query_dos_db.assert_called_once_with(
-        connection=mock_connection,
-        query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
-            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-            "AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s AND s.typeid = "
-            "ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, ss.name status_name, "
+            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid "
+            "= st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id WHERE s.odscode LIKE %(ODS)s AND s.typeid = "
+            "ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s AND "
+            "s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
         ),
         query_vars={
             "ODS": "FQ038%",
@@ -225,7 +182,50 @@ def test_get_matching_dos_services_pharmacy_first_services_returned(mock_query_d
     mock_cursor.close.assert_called_with()
 
 
-def test_any_generic_bankholiday_open_periods():
+@patch(f"{FILE_PATH}.connect_to_db_reader")
+@patch(f"{FILE_PATH}.query_dos_db")
+def test_get_matching_dos_services_pharmacy_first_services_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
+    # Arrange
+    odscode = "FQ038"
+    name = "My Pharmacy"
+    service_id = 22851351399
+    db_return = [get_db_item(odscode, name, id=service_id)]
+    mock_connection = MagicMock()
+    mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
+    mock_cursor = MagicMock()
+    mock_cursor.fetchall.return_value = db_return
+    mock_query_dos_db.return_value = mock_cursor
+    # Act
+    response = get_matching_dos_services(odscode)
+    # Assert
+    service = response[0]
+    assert service.odscode == odscode
+    assert service.id == service_id
+    assert service.name == name
+    mock_query_dos_db.assert_called_once_with(
+        connection=mock_connection,
+        query=(
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, ss.name status_name, "
+            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid "
+            "= st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id WHERE s.odscode LIKE %(ODS)s AND s.typeid = "
+            "ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s AND "
+            "s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
+        ),
+        query_vars={
+            "ODS": "FQ038%",
+            "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
+            "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
+            "PHARMACY_FIRST_STATUSES": [1, 2, 3],
+        },
+    )
+    mock_cursor.fetchall.assert_called_with()
+    mock_cursor.close.assert_called_with()
+
+
+def test_any_generic_bankholiday_open_periods() -> None:
     dos_service = dummy_dos_service()
     dos_service.standard_opening_times = StandardOpeningTimes()
     op1 = OpenPeriod(time(8, 0, 0), time(13, 0, 0))
@@ -259,7 +259,9 @@ def test_any_generic_bankholiday_open_periods():
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_matching_dos_services_no_services_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
     # Arrange
     odscode = "FQ038"
     db_return = []
@@ -269,23 +271,24 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
     mock_cursor.fetchall.return_value = db_return
     mock_query_dos_db.return_value = mock_cursor
     # Act
-    response = get_matching_dos_services(odscode, False)
+    response = get_matching_dos_services(odscode)
     # Assert
     assert response == []
     mock_query_dos_db.assert_called_once_with(
         connection=mock_connection,
         query=(
-            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
-            "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
-            "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
-            "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
-            "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-            "AND s.statusid = %(ACTIVE_STATUS_ID)s "
+            "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,statusid, ss.name status_name, "
+            "publicphone, publicname, st.name service_type_name FROM services s LEFT JOIN servicetypes st ON s.typeid "
+            "= st.id LEFT JOIN servicestatuses ss on s.statusid = ss.id WHERE s.odscode LIKE %(ODS)s AND s.typeid = "
+            "ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s AND "
+            "s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
         ),
         query_vars={
-            "ODS": f"{odscode[:5]}%",
+            "ODS": "FQ038%",
             "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
             "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+            "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
+            "PHARMACY_FIRST_STATUSES": [1, 2, 3],
         },
     )
     mock_cursor.fetchall.assert_called_with()
@@ -294,7 +297,9 @@ def test_get_matching_dos_services_no_services_returned(mock_query_dos_db, mock_
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_specified_opening_times_from_db_times_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
@@ -383,7 +388,9 @@ def test_get_specified_opening_times_from_db_times_returned(mock_query_dos_db, m
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_standard_opening_times_from_db_times_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
     # Arrange
     db_return = [
         {"serviceid": 28334, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
@@ -422,7 +429,9 @@ def test_get_standard_opening_times_from_db_times_returned(mock_query_dos_db, mo
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_specified_opening_times_from_db_no_times_returned(
+    mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock
+) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
@@ -453,7 +462,7 @@ def test_get_specified_opening_times_from_db_no_times_returned(mock_query_dos_db
 
 @patch(f"{FILE_PATH}.connect_to_db_reader")
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_get_dos_locations(mock_query_dos_db, mock_connect_to_db_reader):
+def test_get_dos_locations(mock_query_dos_db: MagicMock, mock_connect_to_db_reader: MagicMock) -> None:
     # Arrange
     mock_connection = MagicMock()
     mock_connect_to_db_reader.return_value.__enter__.return_value = mock_connection
@@ -496,7 +505,7 @@ def test_get_dos_locations(mock_query_dos_db, mock_connect_to_db_reader):
 
 
 @patch(f"{FILE_PATH}.get_dos_locations")
-def test_get_valid_dos_location(mock_get_dos_locations: MagicMock):
+def test_get_valid_dos_location(mock_get_dos_locations: MagicMock) -> None:
     # Arrange
     mock_get_dos_locations.return_value.is_valid.return_value = True
     mock_get_dos_locations.return_value = mock_location = [MagicMock()]
@@ -508,7 +517,7 @@ def test_get_valid_dos_location(mock_get_dos_locations: MagicMock):
 
 
 @patch(f"{FILE_PATH}.get_dos_locations")
-def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMock):
+def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMock) -> None:
     # Arrange
     mock_get_dos_locations.return_value.is_valid.return_value = False
     postcode = "BA2 7AF"
@@ -518,7 +527,7 @@ def test_get_valid_dos_location_invalid_postcode(mock_get_dos_locations: MagicMo
     assert location is None
 
 
-def test_db_rows_to_spec_open_times():
+def test_db_rows_to_spec_open_times() -> None:
     db_rows = [
         {
             "serviceid": 1,
@@ -561,74 +570,21 @@ def test_db_rows_to_spec_open_times():
     spec_open_times = db_rows_to_spec_open_times(db_rows)
 
     expected_spec_open_times = [
-        SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
-        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True),
-        SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
+        SpecifiedOpeningTime(
+            [OpenPeriod.from_string_times("08:00", "20:00"), OpenPeriod.from_string_times("21:00", "22:00")],
+            date(2019, 5, 6),
+            True,
+        ),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("08:00", "20:00")], date(2019, 5, 27), True),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("08:00", "20:00")], date(2019, 8, 26), True),
         SpecifiedOpeningTime([], date(2019, 9, 20), False),
-        SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True),
+        SpecifiedOpeningTime([OpenPeriod.from_string_times("06:00", "07:00")], date(2020, 5, 6), True),
     ]
 
     assert spec_open_times == expected_spec_open_times
 
 
-def test_db_rows_to_spec_open_times_map():
-    db_rows = [
-        {"serviceid": 214, "date": date(2019, 9, 20), "starttime": None, "endtime": None, "isclosed": True},
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 6),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 6),
-            "starttime": time(21, 0, 0),
-            "endtime": time(22, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 1,
-            "date": date(2019, 5, 27),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 214,
-            "date": date(2019, 8, 26),
-            "starttime": time(8, 0, 0),
-            "endtime": time(20, 0, 0),
-            "isclosed": False,
-        },
-        {
-            "serviceid": 333,
-            "date": date(2020, 5, 6),
-            "starttime": time(6, 0, 0),
-            "endtime": time(7, 0, 0),
-            "isclosed": False,
-        },
-    ]
-
-    spec_open_times_map = db_rows_to_spec_open_times_map(db_rows)
-
-    expected_spec_open_times_map = {
-        1: [
-            SpecifiedOpeningTime([OP("08:00-20:00"), OP("21:00-22:00")], date(2019, 5, 6), True),
-            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 5, 27), True),
-        ],
-        214: [
-            SpecifiedOpeningTime([OP("08:00-20:00")], date(2019, 8, 26), True),
-            SpecifiedOpeningTime([], date(2019, 9, 20), False),
-        ],
-        333: [SpecifiedOpeningTime([OP("06:00-07:00")], date(2020, 5, 6), True)],
-    }
-
-    assert spec_open_times_map == expected_spec_open_times_map
-
-
-def test_db_rows_to_std_open_time():
+def test_db_rows_to_std_open_time() -> None:
     db_rows = [
         {"serviceid": 1, "dayid": 0, "name": "Monday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
         {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
@@ -639,80 +595,23 @@ def test_db_rows_to_std_open_time():
         {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
     ]
 
-    expcted_std_open_times = StandardOpeningTimes()
-    expcted_std_open_times.monday = [OP("08:00-17:00")]
-    expcted_std_open_times.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times.friday = [OP("13:00-15:30")]
-    expcted_std_open_times.sunday = [OP("13:00-15:30")]
+    expected_std_open_times = StandardOpeningTimes()
+    expected_std_open_times.monday = [OpenPeriod.from_string_times("08:00", "17:00")]
+    expected_std_open_times.tuesday = [
+        OpenPeriod.from_string_times("08:00", "12:00"),
+        OpenPeriod.from_string_times("13:00", "18:00"),
+    ]
+    expected_std_open_times.wednesday = [OpenPeriod.from_string_times("07:00", "15:30")]
+    expected_std_open_times.thursday = [OpenPeriod.from_string_times("11:00", "13:30")]
+    expected_std_open_times.friday = [OpenPeriod.from_string_times("13:00", "15:30")]
+    expected_std_open_times.sunday = [OpenPeriod.from_string_times("13:00", "15:30")]
 
     actual_std_open_times = db_rows_to_std_open_times(db_rows)
 
-    assert actual_std_open_times == expcted_std_open_times
+    assert actual_std_open_times == expected_std_open_times
 
 
-def test_db_rows_to_std_open_times_map():
-    db_rows = [
-        {"serviceid": 22, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 22, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 1, "dayid": 0, "name": "Monday", "starttime": time(8, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 1, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 1, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 333, "dayid": 0, "name": "Monday", "starttime": time(10, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 333, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 0, "name": "Monday", "starttime": time(13, 0, 0), "endtime": time(17, 0, 0)},
-        {"serviceid": 22, "dayid": 6, "name": "Sunday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 22, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 333, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 333, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 333, "dayid": 1, "name": "Tuesday", "starttime": time(8, 0, 0), "endtime": time(12, 0, 0)},
-        {"serviceid": 333, "dayid": 4, "name": "Thursday", "starttime": time(11, 0, 0), "endtime": time(13, 30, 0)},
-        {"serviceid": 1, "dayid": 1, "name": "Tuesday", "starttime": time(13, 0, 0), "endtime": time(18, 0, 0)},
-        {"serviceid": 1, "dayid": 4, "name": "Friday", "starttime": time(13, 0, 0), "endtime": time(15, 30, 0)},
-        {"serviceid": 1, "dayid": 6, "name": "Wednesday", "starttime": time(7, 0, 0), "endtime": time(15, 30, 0)},
-    ]
-
-    expcted_std_open_times_1 = StandardOpeningTimes()
-    expcted_std_open_times_1.monday = [OP("08:00-17:00")]
-    expcted_std_open_times_1.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_1.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_1.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_1.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_1.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_22 = StandardOpeningTimes()
-    expcted_std_open_times_22.monday = [OP("13:00-17:00")]
-    expcted_std_open_times_22.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_22.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_22.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_22.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_22.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_333 = StandardOpeningTimes()
-    expcted_std_open_times_333.monday = [OP("10:00-17:00")]
-    expcted_std_open_times_333.tuesday = [OP("08:00-12:00"), OP("13:00-18:00")]
-    expcted_std_open_times_333.wednesday = [OP("07:00-15:30")]
-    expcted_std_open_times_333.thursday = [OP("11:00-13:30")]
-    expcted_std_open_times_333.friday = [OP("13:00-15:30")]
-    expcted_std_open_times_333.sunday = [OP("13:00-15:30")]
-
-    expcted_std_open_times_map = {
-        1: expcted_std_open_times_1,
-        22: expcted_std_open_times_22,
-        333: expcted_std_open_times_333,
-    }
-
-    actual_std_open_times_map = db_rows_to_std_open_times_map(db_rows)
-
-    assert actual_std_open_times_map == expcted_std_open_times_map
-
-
-def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa: A002
+def get_db_item(odscode: str = "FA9321", name: str = "fake name", id: int = 9999, typeid: int = 13) -> dict:  # noqa: A002
     return {
         "id": id,
         "uid": "159514725",
@@ -738,7 +637,7 @@ def get_db_item(odscode="FA9321", name="fake name", id=9999, typeid=13):  # noqa
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_has_palliative_care(mock_query_dos_db: MagicMock):
+def test_has_palliative_care(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 13
@@ -764,7 +663,7 @@ def test_has_palliative_care(mock_query_dos_db: MagicMock):
 
 
 @patch(f"{FILE_PATH}.query_dos_db")
-def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock):
+def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock) -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 0
@@ -775,7 +674,7 @@ def test_has_palliative_care_not_correct_type(mock_query_dos_db: MagicMock):
     mock_query_dos_db.assert_not_called()
 
 
-def test_has_blood_pressure():
+def test_has_blood_pressure() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 148
@@ -784,7 +683,7 @@ def test_has_blood_pressure():
     assert True is has_blood_pressure(dos_service)
 
 
-def test_has_blood_pressure_not_correct_type():
+def test_has_blood_pressure_not_correct_type() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 13
@@ -793,7 +692,7 @@ def test_has_blood_pressure_not_correct_type():
     assert False is has_blood_pressure(dos_service)
 
 
-def test_has_contraception():
+def test_has_contraception() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 149
@@ -802,7 +701,7 @@ def test_has_contraception():
     assert True is has_contraception(dos_service)
 
 
-def test_has_contraception_not_correct_type():
+def test_has_contraception_not_correct_type() -> None:
     # Arrange
     dos_service = dummy_dos_service()
     dos_service.typeid = 13

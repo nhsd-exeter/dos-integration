@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Self
 
 
 @dataclass(init=True, repr=True)
@@ -13,10 +14,10 @@ class DoSLocation:
     latitude: float
     longitude: float
 
-    def normal_postcode(self) -> str:
+    def normal_postcode(self: Self) -> str:
         """Returns the postcode in a normalised format."""
         return self.postcode.replace(" ", "").upper()
 
-    def is_valid(self) -> bool:
+    def is_valid(self: Self) -> bool:
         """Returns True if the location is valid."""
         return None not in (self.easting, self.northing, self.latitude, self.longitude)

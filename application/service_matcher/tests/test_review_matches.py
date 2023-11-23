@@ -28,7 +28,7 @@ def test_review_changes() -> None:
 
 
 @patch(f"{FILE_PATH}.log_closed_or_hidden_services")
-def test_review_matches__hidden_or_closed(mock_log_closed_or_hidden_services: MagicMock):
+def test_review_matches__hidden_or_closed(mock_log_closed_or_hidden_services: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity(PHARMACY_STANDARD_EVENT)
     nhs_entity.org_status = "Closed"
@@ -78,7 +78,7 @@ def test_review_matches__invalid_opening_times(mock_log_invalid_open_times: Magi
 
 
 @patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_check_for_missing_dos_services__missing(mock_log_missing_dos_service_for_a_given_type):
+def test_check_for_missing_dos_services__missing(mock_log_missing_dos_service_for_a_given_type: MagicMock) -> None:
     # Arrange
     entity = MagicMock()
     entity.check_for_service.return_value = True
@@ -99,7 +99,9 @@ def test_check_for_missing_dos_services__missing(mock_log_missing_dos_service_fo
 
 
 @patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_check_for_missing_dos_services__not_missing(mock_log_missing_dos_service_for_a_given_type, change_event):
+def test_check_for_missing_dos_services__not_missing(
+    mock_log_missing_dos_service_for_a_given_type: MagicMock, change_event: dict[str, str]
+) -> None:
     # Arrange
     entity = MagicMock()
     entity.check_for_service.return_value = True
@@ -120,7 +122,9 @@ def test_check_for_missing_dos_services__not_missing(mock_log_missing_dos_servic
 
 
 @patch(f"{FILE_PATH}.log_missing_dos_service_for_a_given_type")
-def test_check_for_missing_dos_services__not_on_nhs_entity(mock_log_missing_dos_service_for_a_given_type, change_event):
+def test_check_for_missing_dos_services__not_on_nhs_entity(
+    mock_log_missing_dos_service_for_a_given_type: MagicMock, change_event: dict[str, str]
+) -> None:
     # Arrange
     entity = MagicMock()
     entity.check_for_service.return_value = False

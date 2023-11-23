@@ -97,7 +97,7 @@ from application.conftest import dummy_dos_location
         ),
     ],
 )
-def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
+def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool) -> None:
     actual_result = dos_location.is_valid()
     assert (
         actual_result is expected_result
@@ -118,7 +118,7 @@ def test_doslocation_is_valid(dos_location: DoSLocation, expected_result: bool):
         ("te5  7 e   r", "TE57ER"),
     ],
 )
-def test_doslocation_normal_postcode(input_postcode: str, expected_result: str):
+def test_doslocation_normal_postcode(input_postcode: str, expected_result: str) -> None:
     dos_location = dummy_dos_location()
     dos_location.postcode = input_postcode
     actual_output = dos_location.normal_postcode()

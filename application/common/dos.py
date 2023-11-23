@@ -1,7 +1,7 @@
-from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, fields
 from itertools import groupby
+from typing import Self
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
@@ -52,7 +52,7 @@ class DoSService:
         """Returns a list of field names for this class."""
         return [f.name for f in fields(DoSService)]
 
-    def __init__(self, db_cursor_row: dict) -> None:
+    def __init__(self: Self, db_cursor_row: dict) -> Self:
         """Sets the attributes of this object to those found in the db row.
 
         Args:
@@ -67,7 +67,7 @@ class DoSService:
         self.blood_pressure = False
         self.contraception = False
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         """Returns a string representation of this object."""
         if self.publicname is not None:
             name = self.publicname
@@ -81,7 +81,7 @@ class DoSService:
             f"odscode={self.odscode} type={self.typeid} status={self.statusid}>"
         )
 
-    def __eq__(self, other) -> bool:  # noqa: ANN001
+    def __eq__(self: Self, other) -> bool:  # noqa: ANN001
         """Checks DoS service equality using service id.
 
         Args:
@@ -92,27 +92,26 @@ class DoSService:
         """
         return self.id == other.id
 
-    def normal_postcode(self) -> str:
+    def normal_postcode(self: Self) -> str:
         """Returns the postcode with no spaces and in uppercase."""
         return self.postcode.replace(" ", "").upper()
 
-    def any_generic_bankholiday_open_periods(self) -> bool:
+    def any_generic_bankholiday_open_periods(self: Self) -> bool:
         """Returns True if any of the opening times are generic bank holiday opening times."""
         return len(self.standard_opening_times.generic_bankholiday) > 0
 
-    def get_region(self) -> str:
+    def get_region(self: Self) -> str:
         """Returns the region of the service."""
         if not self.region:
             self.region = get_region(self.id)
         return self.region
 
 
-def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_flag: bool) -> list[DoSService]:
+def get_matching_dos_services(odscode: str) -> list[DoSService]:
     """Retrieves DoS Services from DoS database.
 
     Args:
         odscode (str): ODScode to match on
-        pharmacy_first_phase_one_feature_flag (bool): Whether to include pharmacy first services
 
     Returns:
         list[DoSService]: List of DoSService objects with matching first 5
@@ -122,26 +121,17 @@ def get_matching_dos_services(odscode: str, pharmacy_first_phase_one_feature_fla
         "ODS": f"{odscode[:5]}%",
         "PHARMACY_SERVICE_TYPE_IDS": [13, 131, 132, 134, 137],
         "ACTIVE_STATUS_ID": DOS_ACTIVE_STATUS_ID,
+        "PHARMACY_FIRST_SERVICE_TYPE_IDS": [148, 149],
+        "PHARMACY_FIRST_STATUSES": [DOS_ACTIVE_STATUS_ID, DOS_CLOSED_STATUS_ID, DOS_COMMISSIONING_STATUS_ID],
     }
-
-    if pharmacy_first_phase_one_feature_flag:  # Add pharmacy first condition
-        pharmacy_first_condition = "OR s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"  # noqa: E501
-        named_args["PHARMACY_FIRST_SERVICE_TYPE_IDS"] = [148, 149]
-        named_args["PHARMACY_FIRST_STATUSES"] = [
-            DOS_ACTIVE_STATUS_ID,
-            DOS_CLOSED_STATUS_ID,
-            DOS_COMMISSIONING_STATUS_ID,
-        ]
-    else:
-        pharmacy_first_condition = ""
-
     sql_query = (
-        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"  # noqa: S608
+        "SELECT s.id, uid, s.name, odscode, address, postcode, web, typeid,"
         "statusid, ss.name status_name, publicphone, publicname, st.name service_type_name "
         "FROM services s LEFT JOIN servicetypes st ON s.typeid = st.id "
         "LEFT JOIN servicestatuses ss on s.statusid = ss.id "
         "WHERE s.odscode LIKE %(ODS)s AND s.typeid = ANY(%(PHARMACY_SERVICE_TYPE_IDS)s) "
-        f"AND s.statusid = %(ACTIVE_STATUS_ID)s {pharmacy_first_condition}"
+        "AND s.statusid = %(ACTIVE_STATUS_ID)s OR s.odscode LIKE %(ODS)s "
+        "AND s.typeid = ANY(%(PHARMACY_FIRST_SERVICE_TYPE_IDS)s) AND s.statusid = ANY(%(PHARMACY_FIRST_STATUSES)s)"
     )
     with connect_to_db_reader() as connection:
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=named_args)
@@ -274,20 +264,6 @@ def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> list[SpecifiedOpening
     return specified_opening_times
 
 
-def db_rows_to_spec_open_times_map(db_rows: Iterable[dict]) -> dict[str, list[SpecifiedOpeningTime]]:
-    """Map DB rows to SpecifiedOpeningTime objects.
-
-    Turns a set of dos database rows (from multiple services) into lists of SpecifiedOpenTime objects
-    which are sorted into a dictionary where the key is the service id of the service those SpecifiedOpenTime
-    objects correspond to.
-    """
-    serviceid_dbrows_map = defaultdict(list)
-    for db_row in db_rows:
-        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-
-    return {service_id: db_rows_to_spec_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
-
-
 def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
     """Turns a set of dos database rows into a StandardOpeningTime object.
 
@@ -301,20 +277,6 @@ def db_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTimes:
         open_period = OpenPeriod(start, end)
         standard_opening_times.add_open_period(open_period, weekday)
     return standard_opening_times
-
-
-def db_rows_to_std_open_times_map(db_rows: Iterable[dict]) -> dict[str, StandardOpeningTimes]:
-    """Map DB rows to StandardOpeningTime objects.
-
-    Turns a set of dos database rows (from multiple services) into StandardOpeningTime objects
-    which are sorted into a dictionary where the key is the service id of the service those StandardOpeningTime
-    objects correspond to.
-    """
-    serviceid_dbrows_map = defaultdict(list)
-    for db_row in db_rows:
-        serviceid_dbrows_map[db_row["serviceid"]].append(db_row)
-
-    return {service_id: db_rows_to_std_open_times(db_rows) for service_id, db_rows in serviceid_dbrows_map.items()}
 
 
 def has_palliative_care(service: DoSService, connection: Connection) -> bool:

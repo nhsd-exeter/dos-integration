@@ -23,7 +23,6 @@ from common.constants import (
 from common.dos import DoSService
 from common.dos_db_connection import connect_to_db_writer, query_dos_db
 from common.opening_times import OpenPeriod, SpecifiedOpeningTime
-from common.utilities import add_metric
 
 logger = Logger(child=True)
 
@@ -286,7 +285,7 @@ def save_specified_opening_times_into_db(
     return False
 
 
-def save_sgsdid_update(  # noqa: PLR0913
+def save_sgsdid_update(
     name: str,
     value: bool,
     sdid: int,
@@ -366,12 +365,11 @@ def save_palliative_care_into_db(
         )
         return True
 
-    add_metric("DoSPalliativeCareZCodeDoesNotExist")
-
     logger.error(
         f"Unable to save palliative care changes for service id {dos_service.id} as the "
         "palliative care Z code does not exist in the DoS database",
         palliative_care_is_set_to=palliative_care,
+        cloudwatch_metric_filter_matching_attribute="DoSPalliativeCareZCodeDoesNotExist",
     )
     return False
 
@@ -437,11 +435,11 @@ def save_blood_pressure_into_db(
             symptom_discriminator_id=DOS_BLOOD_PRESSURE_SYMPTOM_DISCRIMINATOR,
             z_code_alias="Blood Pressure",
         ):
-            add_metric("DoSBloodPressureZCodeDoesNotExist")
             logger.error(
                 f"Unable to save z code blood pressure changes for service id {dos_service.id} as the "
                 "blood pressure Z code does not exist in the DoS database",
                 new_blood_pressure_status=blood_pressure,
+                cloudwatch_metric_filter_matching_attribute="BloodPressureZCodeDoesNotExist",
             )
             return False, service_histories
 
@@ -522,11 +520,11 @@ def save_contraception_into_db(
             symptom_discriminator_id=DOS_CONTRACEPTION_SYMPTOM_DISCRIMINATOR,
             z_code_alias="Contraception",
         ):
-            add_metric("DoSContraceptionZCodeDoesNotExist")
             logger.error(
                 f"Unable to save z code contraception changes for service id {dos_service.id} as the "
                 "contraception Z code does not exist in the DoS database",
                 new_contraception_status=contraception,
+                cloudwatch_metric_filter_matching_attribute="ContraceptionZCodeDoesNotExist",
             )
             return False, service_histories
 

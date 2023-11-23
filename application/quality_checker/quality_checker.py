@@ -1,7 +1,5 @@
-from os import environ
-from typing import Any
+from os import getenv
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging import Logger
 from aws_lambda_powertools.tracing import Tracer
 from aws_lambda_powertools.utilities.data_classes import EventBridgeEvent, event_source
@@ -27,12 +25,19 @@ tracer = Tracer()
 def lambda_handler(event: EventBridgeEvent, context: LambdaContext) -> None:  # noqa: ARG001
     """Lambda handler for quality checker."""
     try:
-        logger.debug("Quality checker started.")
+        logger.info("Quality checker started")
         check_dos_data_quality()
-        logger.debug("Quality checker finished.")
-        send_finished_metric()
+        logger.warning(
+            "Quality checker finished",
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="QualityCheckerFinished",
+        )
     except Exception:
-        send_errored_metric()
+        logger.exception(
+            "Quality checker Errored",
+            environment=getenv("ENVIRONMENT"),
+            cloudwatch_metric_filter_matching_attribute="QualityCheckerErrored",
+        )
         raise
 
 
@@ -50,27 +55,3 @@ def check_dos_data_quality() -> None:
 
         # Checks matched odscode services for incorrectly profiled contraception
         check_for_zcode_profiling_on_incorrect_type(db_connection, CONTRACEPTION)
-
-
-@metric_scope
-def send_finished_metric(metrics: Any) -> None:  # noqa: ANN401
-    """Send a metric to indicate that the quality checker has finished.
-
-    Args:
-        metrics (Metrics): CloudWatch embedded metrics object
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QualityCheckerFinished", 1, "Count")
-
-
-@metric_scope
-def send_errored_metric(metrics: Any) -> None:  # noqa: ANN401
-    """Send a metric to indicate that the quality checker has errored.
-
-    Args:
-        metrics (Metrics): CloudWatch embedded metrics object
-    """
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("QualityCheckerErrored", 1, "Count")

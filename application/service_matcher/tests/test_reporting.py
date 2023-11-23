@@ -1,5 +1,4 @@
 import json
-from os import environ
 from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
@@ -21,7 +20,7 @@ from common.nhs import NHSEntity
 
 
 @patch.object(Logger, "warning")
-def test_log_closed_or_hidden_services(mock_logger, change_event):
+def test_log_closed_or_hidden_services(mock_logger: MagicMock, change_event: dict[str, str]) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
@@ -50,7 +49,7 @@ def test_log_closed_or_hidden_services(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_unmatched_nhsuk_service(mock_logger):
+def test_log_unmatched_nhsuk_service(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity(
         {
@@ -91,9 +90,8 @@ def test_log_unmatched_nhsuk_service(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_open_times(mock_logger):
+def test_log_invalid_open_times(mock_logger: MagicMock) -> None:
     # Arrange
-    environ["ENV"] = "dev"
     opening_times = [
         {
             "Weekday": "Monday",
@@ -128,13 +126,13 @@ def test_log_invalid_open_times(mock_logger):
         nhsuk_open_times_payload=json.dumps(nhs_entity.entity_data["OpeningTimes"]),
         dos_service_type_name=", ".join(str(service.service_type_name) for service in dos_services),
         dos_services=", ".join(str(service.uid) for service in dos_services),
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="InvalidOpenTimes",
     )
-    # Clean up
-    del environ["ENV"]
 
 
 @patch.object(Logger, "warning")
-def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
+def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock) -> None:
     dos_service = dummy_dos_service()
     dos_service.typeid = PHARMACY_SERVICE_TYPE_ID
     dos_service.statusid = 1
@@ -168,7 +166,7 @@ def test_log_missing_dos_service_for_a_given_type(mock_logger: MagicMock):
 
 
 @patch.object(Logger, "warning")
-def test_log_missing_dos_service_for_a_given_type__no_active_dos_services(mock_logger: MagicMock):
+def test_log_missing_dos_service_for_a_given_type__no_active_dos_services(mock_logger: MagicMock) -> None:
     dos_service = dummy_dos_service()
     dos_service.statusid = 3
     reason = "reason 123"

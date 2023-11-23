@@ -1,15 +1,7 @@
 Feature: F002. Invalid change event Exception handling
 
   @complete @validation
-  Scenario: F002SXX1. Unmatched DOS services exception is logged
-    Given a basic service is created
-    And the change event "ODSCode" is set to "F8KE1"
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-matcher" lambda shows field "message" with value "Found 0 services in DB"
-    And the "service-matcher" lambda shows field "message" with value "No matching DOS services"
-
-  @complete @validation
-  Scenario: F002SXX2. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
+  Scenario: F002SXX1. A Changed Event where OrganisationTypeID is NOT PHA is reported and ignored
     Given a basic service is created
     And the change event "OrganisationTypeId" is set to "DEN"
     When the Changed Event is sent for processing with "valid" api key
@@ -17,7 +9,7 @@ Feature: F002. Invalid change event Exception handling
     And the service history is not updated
 
   @complete @validation
-  Scenario: F002SXX3. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
+  Scenario: F002SXX2. A Changed Event where OrganisationSubType is NOT Community is reported and ignored
     Given a basic service is created
     And the change event "OrganisationSubType" is set to "com"
     And the change event staff field is populated
@@ -27,7 +19,7 @@ Feature: F002. Invalid change event Exception handling
     And the "ingest-change-event" lambda shows field "message" with value "Validation Error - Unexpected Org Sub Type ID: 'com'"
 
   @complete @validation
-  Scenario: F002SXX4. Address changes are discarded when postcode is invalid
+  Scenario: F002SXX3. Address changes are discarded when postcode is invalid
     Given a basic service is created
     And the change event "Postcode" is set to "FAKE"
     And the change event "Website" is set to "https://www.test.com"
@@ -36,21 +28,21 @@ Feature: F002. Invalid change event Exception handling
     Then the "address" has not been changed in DoS
 
   @complete @validation
-  Scenario: F002SXX5. Invalid Opening Times reported where Weekday is not identified
+  Scenario: F002SXX4. Invalid Opening Times reported where Weekday is not identified
     Given a basic service is created
     And the change event has no weekday present in opening times
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @general
-  Scenario: F002SXX6. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
+  Scenario: F002SXX5. Invalid Opening Times reported where OpeningTimeType is not defined as General or Additional
     Given a basic service is created
     And the change event has an invalid openingtimetype
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @general
-  Scenario: F002SXX7. IsOpen is true AND Times is blank
+  Scenario: F002SXX6. IsOpen is true AND Times is blank
     Given a basic service is created
     And the change event has undefined opening and closing times
     When the Changed Event is sent for processing with "valid" api key
@@ -58,22 +50,15 @@ Feature: F002. Invalid change event Exception handling
     And the service history is not updated
 
   @complete @general
-  Scenario: F002SXX8. IsOpen is false AND Times NOT blank
+  Scenario: F002SXX7. IsOpen is false AND Times NOT blank
     Given a basic service is created
     And the change event has opening times open status set to false
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
 
   @complete @general
-  Scenario: F002SXX9. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
+  Scenario: F002SXX8. OpeningTimeType is Additional AND AdditionalOpening Date is Blank
     Given a basic service is created
     And the change event has an additional date with no specified date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
-
-  @complete @general
-  Scenario: F002SX10. Pharmacies with blank standard opening times are reported in logs.
-    Given a basic service is created
-    And the change event has no standard opening times
-    When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "report_key" with value "BLANK_STANDARD_OPENINGS"

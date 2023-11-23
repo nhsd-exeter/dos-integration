@@ -1,7 +1,7 @@
 from application.common.types import UpdateRequest
 
 
-def test_update_request():
+def test_update_request() -> None:
     # Arrange
     change_event = {"ODSCode": "12345"}
     service_id = "1"

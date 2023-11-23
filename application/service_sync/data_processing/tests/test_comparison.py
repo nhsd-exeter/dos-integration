@@ -27,7 +27,7 @@ FILE_PATH = "application.service_sync.data_processing.comparison"
 def test_compare_website_remove_website(
     mock_format_website: MagicMock,
     mock_is_val_none_or_empty: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -50,7 +50,7 @@ def test_compare_website_add_website(
     mock_is_val_none_or_empty: MagicMock,
     format_website: MagicMock,
     mock_validate_website: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -75,8 +75,8 @@ def test_compare_website_add_website(
 def test_compare_website_no_change(
     mock_format_website: MagicMock,
     mock_is_val_none_or_empty: MagicMock,
-    mock_validate_website,
-):
+    mock_validate_website: MagicMock,
+) -> None:
     # Arrange
     dos_service = MagicMock()
     dos_service.web = "www.example2.com"
@@ -96,7 +96,7 @@ def test_compare_website_no_change(
 
 
 @patch(f"{FILE_PATH}.get_valid_dos_location")
-def test_compare_location(mock_get_valid_dos_location: MagicMock):
+def test_compare_location(mock_get_valid_dos_location: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -130,7 +130,7 @@ def test_compare_location(mock_get_valid_dos_location: MagicMock):
 def test_compare_location_postcode_invalid(
     mock_get_valid_dos_location: MagicMock,
     mock_log_invalid_nhsuk_postcode: MagicMock,
-):
+) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -152,7 +152,7 @@ def test_compare_location_postcode_invalid(
 
 
 @patch(f"{FILE_PATH}.get_valid_dos_location")
-def test_has_location_changed_no_change(mock_get_valid_dos_location: MagicMock):
+def test_has_location_changed_no_change(mock_get_valid_dos_location: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     dos_service.address = "1 Dummy Stub"
@@ -175,7 +175,7 @@ def test_has_location_changed_no_change(mock_get_valid_dos_location: MagicMock):
     mock_get_valid_dos_location.assert_not_called()
 
 
-def test_compare_public_phone():
+def test_compare_public_phone() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -189,7 +189,7 @@ def test_compare_public_phone():
     assert True is response
 
 
-def test_compare_public_phone_no_change():
+def test_compare_public_phone_no_change() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -204,7 +204,7 @@ def test_compare_public_phone_no_change():
 
 
 @pytest.mark.parametrize("weekday", WEEKDAYS)
-def test_compare_standard_opening_times(weekday: str):
+def test_compare_standard_opening_times(weekday: str) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -219,7 +219,7 @@ def test_compare_standard_opening_times(weekday: str):
 
 
 @pytest.mark.parametrize("weekday", WEEKDAYS)
-def test_compare_standard_opening_times_no_changes(weekday: str):
+def test_compare_standard_opening_times_no_changes(weekday: str) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -234,7 +234,7 @@ def test_compare_standard_opening_times_no_changes(weekday: str):
 
 
 @patch(f"{FILE_PATH}.SpecifiedOpeningTime")
-def test_compare_specified_opening_times_changed(mock_specified_opening_time: MagicMock):
+def test_compare_specified_opening_times_changed(mock_specified_opening_time: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -251,7 +251,7 @@ def test_compare_specified_opening_times_changed(mock_specified_opening_time: Ma
 
 
 @patch(f"{FILE_PATH}.SpecifiedOpeningTime")
-def test_compare_specified_opening_times_changed_no_change(mock_specified_opening_time: MagicMock):
+def test_compare_specified_opening_times_changed_no_change(mock_specified_opening_time: MagicMock) -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -266,7 +266,7 @@ def test_compare_specified_opening_times_changed_no_change(mock_specified_openin
     assert None is changes_to_dos.current_specified_opening_times
 
 
-def test_compare_palliative_care():
+def test_compare_palliative_care() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -280,7 +280,7 @@ def test_compare_palliative_care():
     assert True is response
 
 
-def test_compare_palliative_care_no_change():
+def test_compare_palliative_care_no_change() -> None:
     # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
@@ -369,7 +369,7 @@ def test_compare_contraception() -> None:
 
 @patch.object(Logger, "info")
 def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
-        # Arrange
+    # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
@@ -393,15 +393,17 @@ def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
     # Assert
     mock_logger.assert_called_once_with(
         f"{stub_service_type.TYPE_NAME} is not equal, DoS='{dos_service.stub_type}' != NHS UK='{nhs_entity.stub_type}'",
-        extra={f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
+        extra={
+            f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
             f"nhsuk_{stub_service_type.TYPE_NAME}": nhs_entity.stub_type,
-            },
-        )
+        },
+    )
     assert True is response
+
 
 @patch.object(Logger, "info")
 def test_compare_commissioned_service_no_change(mock_logger: MagicMock) -> None:
-        # Arrange
+    # Arrange
     dos_service = MagicMock()
     nhs_entity = MagicMock()
     service_histories = MagicMock()
@@ -424,5 +426,6 @@ def test_compare_commissioned_service_no_change(mock_logger: MagicMock) -> None:
     response = compare_commissioned_service(changes=changes_to_dos, service_type=stub_service_type)
     # Assert
     mock_logger.assert_called_once_with(
-        f"{stub_service_type.TYPE_NAME} is equal, DoS='{dos_service.stub_type}' == NHS UK='{nhs_entity.stub_type}'")
+        f"{stub_service_type.TYPE_NAME} is equal, DoS='{dos_service.stub_type}' == NHS UK='{nhs_entity.stub_type}'"
+    )
     assert False is response

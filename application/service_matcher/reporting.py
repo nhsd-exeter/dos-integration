@@ -1,8 +1,6 @@
 import json
-from os import environ
-from typing import Any
+from os import getenv
 
-from aws_embedded_metrics import metric_scope
 from aws_lambda_powertools.logging.logger import Logger
 
 from common.commissioned_service_type import CommissionedServiceType
@@ -70,18 +68,15 @@ def log_unmatched_nhsuk_service(nhs_entity: NHSEntity) -> None:
     )
 
 
-@metric_scope
 def log_invalid_open_times(
     nhs_entity: NHSEntity,
     matching_services: list[DoSService],
-    metrics: Any,  # noqa: ANN401
 ) -> None:
     """Report invalid open times for nhs entity.
 
     Args:
         nhs_entity (NHSEntity): The NHS entity to report
         matching_services (List[DoSService]): The list of DoS matching services
-        metrics (Any): The metrics object to report to.
     """
     error_msg = f"NHS Entity '{nhs_entity.odscode}' has a misformatted or illogical set of opening times."
     logger.warning(
@@ -92,12 +87,9 @@ def log_invalid_open_times(
         nhsuk_open_times_payload=json.dumps(nhs_entity.entity_data["OpeningTimes"]),
         dos_service_type_name=", ".join(str(service.service_type_name) for service in matching_services),
         dos_services=", ".join(str(service.uid) for service in matching_services),
+        environment=getenv("ENVIRONMENT"),
+        cloudwatch_metric_filter_matching_attribute="InvalidOpenTimes",
     )
-    metrics.set_namespace("UEC-DOS-INT")
-    metrics.set_property("level", "WARNING")
-    metrics.set_property("message", error_msg)
-    metrics.set_dimensions({"ENV": environ["ENV"]})
-    metrics.put_metric("InvalidOpenTimes", 1, "Count")
 
 
 def log_missing_dos_service_for_a_given_type(

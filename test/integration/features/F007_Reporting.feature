@@ -24,7 +24,6 @@ Feature: F007. Report Logging
     Examples:
       | open_or_closed | date        |
       | closed         | Dec 25 2025 |
-      | closed         | Jan 1 2025  |
       | open           | Dec 25 2025 |
 
   @complete @reporting
@@ -108,10 +107,6 @@ Feature: F007. Report Logging
       | service_type | OrganisationStatus |
       | 13           | Closed             |
       | 13           | Hidden             |
-      | 148          | Closed             |
-      | 148          | Hidden             |
-      | 149          | Closed             |
-      | 149          | Hidden             |
 
   @complete @reporting
   Scenario: F007SX08 Check for Invalid Postcode Report log

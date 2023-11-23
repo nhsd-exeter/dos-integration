@@ -10,7 +10,6 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from common.middlewares import unhandled_exception_logging_hidden_event
 from common.secretsmanager import get_secret
 from common.types import EmailMessage
-from common.utilities import add_metric
 
 tracer = Tracer()
 logger = Logger()
@@ -67,12 +66,10 @@ def send_email(email_address: str, html_content: str, subject: str, correlation_
             smtp.login(di_system_email_address, di_system_email_password)
             logger.info("Logged in to SMTP server")
             smtp.sendmail(from_addr=di_system_email_address, to_addrs=[to_email_address], msg=msg.as_string())
-            logger.info("Sent email")
+            logger.warning("Sent email", cloudwatch_metric_filter_matching_attribute="EmailSent")
             smtp.quit()
             logger.info("Disconnected from SMTP server")
-            add_metric("EmailSent")
         except BaseException:
-            add_metric("EmailFailed")
-            logger.exception("Email failed")
+            logger.exception("Email failed", cloudwatch_metric_filter_matching_attribute="EmailFailed")
             msg = "An error occurred while sending the email"
             raise SMTPException(msg) from None

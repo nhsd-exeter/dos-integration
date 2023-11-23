@@ -1,4 +1,3 @@
-from os import environ
 from unittest.mock import MagicMock, patch
 
 from aws_lambda_powertools.logging import Logger
@@ -21,7 +20,7 @@ from common.opening_times import OpenPeriod
 
 
 @patch.object(Logger, "warning")
-def test_log_blank_standard_opening_times(mock_logger, change_event):
+def test_log_blank_standard_opening_times(mock_logger: MagicMock, change_event: dict[str, str]) -> None:
     # Arrange
     nhs_entity = NHSEntity(change_event)
     dos_service = dummy_dos_service()
@@ -50,9 +49,8 @@ def test_log_blank_standard_opening_times(mock_logger, change_event):
 
 
 @patch.object(Logger, "warning")
-def test_log_invalid_nhsuk_postcode(mock_logger):
+def test_log_invalid_nhsuk_postcode(mock_logger: MagicMock) -> None:
     # Arrange
-    environ["ENV"] = "dev"
     county = "county"
     city = "city"
     nhs_entity = NHSEntity(
@@ -90,19 +88,19 @@ def test_log_invalid_nhsuk_postcode(mock_logger):
         dos_service_type_name=dos_service.service_type_name,
         dos_region=dos_service.get_region(),
         dos_service_name=dos_service.name,
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="InvalidPostcode",
     )
-    # Clean up
-    del environ["ENV"]
 
 
 @patch.object(Logger, "warning")
-def test_log_service_with_generic_bank_holiday(mock_logger):
+def test_log_service_with_generic_bank_holiday(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity({})
     nhs_entity.odscode = "SLC4X"
     nhs_entity.org_name = "OrganisationName"
     dos_service = dummy_dos_service()
-    open_periods = [OpenPeriod.from_string("08:00-13:00"), OpenPeriod.from_string("04:00-18:00")]
+    open_periods = [OpenPeriod.from_string_times("08:00", "13:00"), OpenPeriod.from_string_times("04:00", "18:00")]
     dos_service.standard_opening_times.generic_bankholiday = open_periods
     # Act
     log_service_with_generic_bank_holiday(nhs_entity, dos_service)
@@ -122,7 +120,7 @@ def test_log_service_with_generic_bank_holiday(mock_logger):
 
 
 @patch.object(Logger, "warning")
-def test_log_website_is_invalid(mock_logger: MagicMock):
+def test_log_website_is_invalid(mock_logger: MagicMock) -> None:
     # Arrange
     nhs_entity = NHSEntity({})
     nhs_entity.website = nhs_website = "http://www.google.com"
@@ -144,7 +142,7 @@ def test_log_website_is_invalid(mock_logger: MagicMock):
 
 
 @patch.object(Logger, "warning")
-def test_log_service_updated(mock_logger: MagicMock):
+def test_log_service_updated(mock_logger: MagicMock) -> None:
     # Arrange
     action = "action"
     data_field_modified = "data_field_modified"
@@ -179,5 +177,7 @@ def test_log_service_updated(mock_logger: MagicMock):
             "service_uid": service_uid,
             "type_id": type_id,
             "dos_region": dos_service.get_region(),
+            "environment": "local",
+            "cloudwatch_metric_filter_matching_attribute": "ServiceUpdate",
         },
     )
