@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_postcode_alert" {
+  count               = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions       = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Events received from NHS UK with invalid postcodes"
   alarm_name          = "${var.project_id} | ${var.blue_green_environment} | Invalid Postcode"
@@ -15,6 +16,7 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_postcode_alert" 
 }
 
 resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_alert" {
+  count               = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions       = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Events received from NHS UK with invalid opening times"
   alarm_name          = "${var.project_id} | ${var.blue_green_environment} | Invalid Opening Times"
@@ -31,7 +33,7 @@ resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_opening_times_al
 }
 
 resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Holding Queue Message DLQ has recieved messages"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Holding Queue Message DLQ'd"
@@ -48,6 +50,7 @@ resource "aws_cloudwatch_metric_alarm" "holiding_sqs_dlq_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Update Request DLQ has recieved messages"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests DLQ'd"
@@ -63,47 +66,8 @@ resource "aws_cloudwatch_metric_alarm" "update_request_dlq_alert" {
   threshold                 = "0"
 }
 
-resource "aws_cloudwatch_metric_alarm" "dos_writer_db_cpu_utilisation_alert" {
-  count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS Writer DB has too high CPU Utilisation"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Writer CPU  Utilisation"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_writer_name }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/RDS"
-  period                    = "60"
-  statistic                 = "Maximum"
-  threshold                 = "70"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-}
-
-resource "aws_cloudwatch_metric_alarm" "dos_reader_db_cpu_utilisation_alert" {
-  count                     = var.profile == "dev" || var.profile == "demo" ? 0 : 1
-  alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-  alarm_description         = "Alert when the DoS Reader DB has too high CPU Utilisation"
-  alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High DB Reader CPU Utilisation"
-  comparison_operator       = "GreaterThanThreshold"
-  datapoints_to_alarm       = "1"
-  dimensions                = { DBInstanceIdentifier = var.dos_db_reader_name }
-  evaluation_periods        = "1"
-  insufficient_data_actions = []
-  metric_name               = "CPUUtilization"
-  namespace                 = "AWS/RDS"
-  period                    = "60"
-  statistic                 = "Maximum"
-  threshold                 = "70"
-  treat_missing_data        = "notBreaching"
-  ok_actions                = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
-}
-
-
 resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert when the DI has recieved a high number of change events"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | High Number of Change Events received"
@@ -121,7 +85,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_change_events_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is waiting to process update requests in service sync"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Update Requests Waiting"
@@ -138,6 +102,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_update_requests_waiting_a
 }
 
 resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is failing to send emails"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Failed Emails"
@@ -154,7 +119,7 @@ resource "aws_cloudwatch_metric_alarm" "high_number_of_failed_emails_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the Latency for when changes are taken to long to process and save"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Average Message Latency"
@@ -173,7 +138,7 @@ resource "aws_cloudwatch_metric_alarm" "average_message_latency_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when DI is taking longer than expected to process update requests"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Maximum Message Latency"
@@ -192,7 +157,7 @@ resource "aws_cloudwatch_metric_alarm" "maximum_message_latency_alert" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exist" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the DoS Palliative Care Z Code does not exist"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Palliative Care Z Code Does Not Exist !!!"
@@ -209,7 +174,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_palliative_care_z_code_does_not_exis
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the DoS Blood Pressure Z Code does not exist"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Blood Pressure Z Code Does Not Exist !!!"
@@ -226,7 +191,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_blood_pressure_z_code_does_not_exist
 }
 
 resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description         = "Alert for when the DoS Contraception Z Code does not exist"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | DoS Contraception Z Code Does Not Exist !!!"
@@ -243,7 +208,7 @@ resource "aws_cloudwatch_metric_alarm" "dos_contraception_z_code_does_not_exist"
 }
 
 resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_completed" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_description         = "Alert for when the Quality Checker has completed"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Quality Checker Has Completed"
   comparison_operator       = "LessThanThreshold"
@@ -261,7 +226,7 @@ resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_complete
 }
 
 resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_errorred" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_description         = "Alert for when the Quality Checker has errorred"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Quality Checker Has Errorred"
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
@@ -279,7 +244,7 @@ resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_has_errorred
 }
 
 resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_schedule_failed_invocation" {
-  count                     = var.profile == "dev" ? 0 : 1
+  count                     = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_description         = "Alert for when the Quality Checker Schedule has failed invocation"
   alarm_name                = "${var.project_id} | ${var.blue_green_environment} | Quality Checker Schedule Failed Invocation"
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
