@@ -358,6 +358,10 @@ PERFORMANCE_TEST_DIR_AND_ARGS= \
 	DIR=./test/performance \
 	ARGS="-p 8089:8089 --env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 
+performance-test-results: # Get performance test results - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+	make -s docker-run-tester CMD="python scripts/performance_test_results/performance_test_results.py" \
+		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
+
 performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
 	rm -f $(TMP_DIR)/*.zip
@@ -542,3 +546,4 @@ python-run-ruff-fixes: # Auto fixes ruff warnings
 
 .SILENT: docker-run-ruff \
 	commit-date-hash-tag \
+	performance-test-results \
