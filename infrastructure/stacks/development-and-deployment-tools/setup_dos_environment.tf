@@ -2,7 +2,7 @@ resource "aws_cloudwatch_event_rule" "setup_dos_environment_rule" {
   count               = var.environment == "dev" ? 1 : 0
   name                = "${var.project_id}-${var.environment}-setup-dos-environment-rule"
   description         = "Trigger the setup of a DOS environment on a schedule"
-  schedule_expression = "cron(0 8 * * ? *)"
+  schedule_expression = "cron(0 1 * * MON-FRI *)"
 }
 
 resource "aws_cloudwatch_event_target" "setup_dos_environment_trigger" {
@@ -21,7 +21,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
   service_role   = data.aws_iam_role.pipeline_role.arn
 
   artifacts {
-    type = "CODEPIPELINE"
+    type = "NO_ARTIFACTS"
   }
 
   cache {
@@ -60,9 +60,12 @@ resource "aws_codebuild_project" "setup_dos_environment" {
       stream_name = ""
     }
   }
+
   source {
-    type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/setup-dos-environment-buildspec.yml")
+    type            = "GITHUB"
+    git_clone_depth = 0
+    location        = var.github_url
+    buildspec       = file("buildspecs/setup-dos-environment-buildspec.yml")
   }
   vpc_config {
     security_group_ids = [
