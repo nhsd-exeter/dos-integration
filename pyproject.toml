@@ -156,10 +156,15 @@ target-version = "py311"
   "DTZ005",  # The use of `datetime.datetime.now()` without `tz` argument is not allowed in tests.
 
 ]
+
 "application/**conftest.py" = [
   "S311", # Allow Standard pseudo-random generators are not suitable for cryptographic purposes in tests.
 ]
 
+
+"scripts/performance_test_results*.py" = [
+  "T201", # Allow print statements in scripts.
+]
 
 [tool.ruff.pydocstyle]
 convention = "google" # Use Google docstring convention.
