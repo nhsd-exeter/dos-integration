@@ -358,9 +358,12 @@ PERFORMANCE_TEST_DIR_AND_ARGS= \
 	DIR=./test/performance \
 	ARGS="-p 8089:8089 --env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
 
-performance-test-results: # Get performance test results - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp]
+performance-test-results: # Get performance test results - mandatory: PROFILE, ENVIRONMENT, START_TIME=[timestamp], END_TIME=[timestamp]
+# Timestamps are in ISO 1806 format e.g. 2023-01-01T00:00:00Z
+# Example: make performance-test-results PROFILE=perf ENVIRONMENT=perf START_TIME=2023-11-28T10:00:00Z END_TIME=2023-11-28T12:00:00Z
 	make -s docker-run-tester CMD="python scripts/performance_test_results/performance_test_results.py" \
-		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk)"
+		ARGS="--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
+			--env START_TIME=$(START_TIME) --env END_TIME=$(END_TIME)"
 
 performance-test-clean: # Clean up performance test results
 	rm -rf $(TMP_DIR)/performance
