@@ -1,5 +1,4 @@
 resource "aws_cloudwatch_metric_alarm" "service_matcher_invalid_postcode_alert" {
-  count               = var.profile == "dev" && var.blue_green_environment != "test" ? 0 : 1
   alarm_actions       = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   alarm_description   = "Events received from NHS UK with invalid postcodes"
   alarm_name          = "${var.project_id} | ${var.blue_green_environment} | Invalid Postcode"
