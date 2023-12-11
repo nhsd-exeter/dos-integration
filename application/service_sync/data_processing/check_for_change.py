@@ -215,7 +215,7 @@ def check_opening_times_for_changes(changes_to_dos: ChangesToDoS) -> ChangesToDo
                 dos_service=changes_to_dos.dos_service,
             )
         else:
-            logger.debug("Standard opening times are not blank")
+            logger.warning("Standard opening times are not blank")
             # Compare standard opening times
             for weekday, dos_weekday_key, day_id in zip(  # noqa: B905
                 WEEKDAYS,
