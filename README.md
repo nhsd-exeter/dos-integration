@@ -25,6 +25,7 @@
       - [Where are the integration tests run?](#where-are-the-integration-tests-run)
     - [Performance Testing](#performance-testing)
       - [Where are the performance tests run?](#where-are-the-performance-tests-run)
+      - [Collecting Performance Test Results](#collecting-performance-test-results)
     - [Test data and mock services](#test-data-and-mock-services)
   - [General Deployment](#general-deployment)
     - [API Key](#api-key)
@@ -293,6 +294,18 @@ To run a load test
 #### Where are the performance tests run?
 
 Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages ad hoc against the performance environment.
+
+#### Collecting Performance Test Results
+
+Performance Test results can be collected
+
+    make performance-test-results PROFILE= ENVIRONMENT= START_TIME=[timestamp], END_TIME=[timestamp]
+
+Example
+
+    make performance-test-results PROFILE=perf ENVIRONMENT=perf START_TIME=2023-11-28T10:00:00Z END_TIME=2023-11-28T12:00:00Z
+
+For more details review the make target documentation with the make file
 
 ### Test data and mock services
 
