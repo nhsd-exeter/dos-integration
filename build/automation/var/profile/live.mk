@@ -11,9 +11,10 @@ LOG_LEVEL := INFO
 DB_CLUSTER_NAME := uec-core-dos-live-cluster-14
 DB_WRITER_NAME := uec-core-dos-live-cluster-14-one
 DB_READER_NAME := uec-core-dos-live-cluster-14-two
+
 # DB Route 53s
-DB_WRITER_ROUTE_53 := uec-core-dos-live-primary.dos-db-sync-rds
-DB_READER_ROUTE_53 := uec-core-dos-live-db-replica-di.dos-db-sync-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-live-dos-primary-rw.dos-datastore-live
+DB_READER_ROUTE_53 := uec-core-dos-live-di-ro.dos-datastore-live
 
 # DB Connection Variables
 DB_PORT := 5432

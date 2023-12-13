@@ -12,8 +12,8 @@ DB_WRITER_NAME := uec-core-dos-put-cluster-14-one
 DB_READER_NAME := uec-core-dos-put-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := uec-core-dos-put-primary.dos-db-put
-DB_READER_ROUTE_53 := uec-core-dos-put-db-replica-di.dos-db-put
+DB_WRITER_ROUTE_53 := uec-core-dos-put-dos-primary-rw.dos-datastore-put
+DB_READER_ROUTE_53 := uec-core-dos-put-di-ro.dos-datastore-put
 
 # DB Connection Variables
 DB_PORT := 5432

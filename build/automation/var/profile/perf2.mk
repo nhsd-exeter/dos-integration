@@ -11,8 +11,8 @@ DB_WRITER_NAME := uec-core-dos-performance2-cluster-14-one
 DB_READER_NAME := uec-core-dos-performance2-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
-DB_READER_ROUTE_53 := uec-core-dos-performance2-di-replica.dos-db-sync-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-performance2-dos-primary-rw.dos-datastore-performance2
+DB_READER_ROUTE_53 := uec-core-dos-performance2-di-ro.dos-datastore-performance2
 
 # DB Connection Variables
 DB_PORT := 5432
