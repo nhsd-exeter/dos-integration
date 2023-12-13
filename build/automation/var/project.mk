@@ -130,10 +130,6 @@ TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alar
 TF_VAR_blue_green_deployment_previous_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-previous-version
 TF_VAR_blue_green_deployment_current_version_parameter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-blue-green-deployment-current-version
 
-# Parameter Store (Application)
-PHARMACY_FIRST_PHASE_ONE_PARAMETER := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-pharmacy-first-phase-one
-TF_VAR_pharmacy_first_phase_one_parameter:= $(PHARMACY_FIRST_PHASE_ONE_PARAMETER)
-
 # WAF
 TF_VAR_waf_enabled := $(WAF_ENABLED)
 TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl
