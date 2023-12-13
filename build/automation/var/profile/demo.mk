@@ -21,8 +21,7 @@ DB_NAME := pathwaysdos_uat3
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DB_WRITER_SG_NAME := live-lk8s-prod-core-dos-db-put-rds-postgres-sg
-DB_READER_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
+DB_SG_NAME := uec-core-dos-put-datastore-di-sg
 
 # DB Secrets
 DB_WRITER_SECRET_NAME := core-dos-uet-database-upgrade/deployment
