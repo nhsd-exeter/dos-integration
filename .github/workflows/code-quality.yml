@@ -50,14 +50,23 @@ jobs:
       - name: Check Markdown format
         uses: DavidAnson/markdownlint-cli2-action@v13
         with:
-          config: .github/workflows/configs/.markdownlint.json
+          config: .github/workflows/configs/markdownlint/.markdownlint.json
       - name: Check Markdown links
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           use-quiet-mode: "yes"
-          config-file: .github/workflows/configs/markdown-check-links.json
+          config-file: .github/workflows/configs/markdownlint/markdown-check-links.json
           base-branch: develop
           check-modified-files-only: "yes"
+
+  check-prose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check prose
+        uses: errata-ai/vale-action@reviewdog
 
   check-python-code-quality:
     runs-on: ubuntu-latest
