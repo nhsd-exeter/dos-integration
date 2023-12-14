@@ -84,10 +84,7 @@ The current technology stack is:
 
 - Python - Main programming language
 - AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS, S3
-- Serverless Framework - Lambda
-- Terraform - Infrastructure as code tool (Where serverless not supported)
-
-- Terraform - Infrastructure as code tool
+- Terraform
 
 ## Quick Start
 
@@ -103,7 +100,7 @@ The main components you will need for _basic_ development work, are your OS vers
 
 - A VPN Client (OpenVPN or Tunnelblick are 2 NHS Digital suggested options)
 - Git
-- Python (The project currenly runs on 3.11)
+- Python (The project currently runs on 3.11)
 - AWS CLI
 - Docker
 
@@ -121,7 +118,7 @@ Please, ask one of your colleagues for the AWS account numbers used by the proje
 Instructions and tips for basic authentication for AWS can be found online. Any method that lets you authenticate and assume roles will work with this project.
 <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html>
 
-There is also an automated method to setup AWS access within the mac setup. Once the mac stup scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
+There is also an automated method to setup AWS access within the mac setup. Once the mac step up scripts have been run, the following command can be used to choose and switch between AWS roles automatically.
 
     assume
 
@@ -145,7 +142,7 @@ Here is the list of the development practices that have to be followed by the te
 
 - Only use single canonical branch **develop**. Any intermediate branch significantly increases the maintenance overhead of the repository.
 - Apply the git rebase workflow and never merge from develop to a task branch. Follow the **squash-rebase-merge** pattern to keep the history linear and clean.
-- Cryptographically sign your commits using **gpg** to ensure its content have not been tampered with.
+- Cryptographically sign your commits using **GPG** to ensure its content have not been tampered with.
 - Format the summary message of your pull request (merge request) using the following pattern **"JIRA-XXX Summary of the change being made"** for complies and clarity as well as to enable tooling to produce release notes automatically.
 - Announce your PR/MR on the development Slack channel to allow any team member to review it and to share the knowledge. A change can be merged only if all comments have been addressed and it has been **approved by at least one peer**. Make good use of paring/mobbing/swarming practices for collaborative coding.
 
@@ -189,7 +186,7 @@ Python code is required be formatted and linted by Ruff.
 
 To run ruff on you branch:
 
-  make python-run-ruff-fixes
+    make python-run-ruff-fixes
 
 ## Testing
 
@@ -316,7 +313,7 @@ For more details review the make target documentation with the make file
 
 ### API Key
 
-API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=dev`. However the dev, demo and live profiles' key must be generated prior to deployment of the api gateway.
+API Key(s) must be generated prior to external API-Gateways being set up. It is automatically created when deploying with `make deploy PROFILE=dev`. However the dev, demo and live profiles' key must be generated prior to deployment of the API gateway.
 
 ### Artefacts Versioning
 
@@ -332,7 +329,7 @@ Deployment images are instead tagged with the commit hash of the commit it was b
 
 Docker images for releases are tagged with the version of the pipeline.
 
-However in the task deploy and test codebuild uses a timestamp and commit hash tag.
+However in the task deploy and test CodeBuild uses a timestamp and commit hash tag.
 
 ### CI/CD Pipelines
 
@@ -493,7 +490,7 @@ You can remove a dev deployment using a single command to create a tag which the
 ### Remove deployment on Pull Request merge
 
 When a pull request is merged it will run an AWS CodeBuild project that will destroy the environment if it exists.
-The AWS CodeBuild project can be found within the development-pipeline terraform stack.
+The AWS CodeBuild project can be found within the development-pipeline Terraform stack.
 
 ### Secrets
 
@@ -510,7 +507,7 @@ Assume the right AWS account using the following command
 
 ### Prerequisites
 
-The pipelines terraform stack must be deployed
+The pipelines Terraform stack must be deployed
 
     make deploy-development-and-deployment-tools ENVIRONMENT=dev
 
@@ -535,7 +532,7 @@ List of the high level principles that a product /development team must adhere t
   - Format
 - Tracing
   - AWS X-Ray Trace Ids (These are included in logs)
-  - `correlation-id` and `reference` (dos) provide a common key to track change events across systems: NHS UK Profile Editor, DoS Integrations, and DoS (Api Gateway)
+  - `correlation-id` and `reference` provide a common key to track change events across systems: NHS UK Profile Editor and DoS Integration
 - Monitoring
   - Dashboards
 - Alerting

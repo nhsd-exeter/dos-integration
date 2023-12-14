@@ -39,7 +39,7 @@ Pros:
 
 * A fully managed service in AWS
 * Easy to configure
-* Good experience of terraform in the team for provisioning the services
+* Good experience of Terraform in the team for provisioning the services
 * Faster time to value - we can start using this with very little effort
 * Slightly cheaper infrastructure costs compared to MSK (to be confirmed based on volumes of messages)
 * Better fit for non functional requirements especially around throttling requests into DoS API Gateway
@@ -122,7 +122,7 @@ For these known scenarios the message is removed from the queue as it will not p
 ### Exception routes
 
 1. Processing lambda fails or cant meet demand from the SQS queue.
-If the lambda fails to process the message for some unknown or intermittent reason, perhaps including a database connection issue, the message will be requeued and retried. The number of times it is retried and the time between each retry can be configured. This retry mechanism will make resilient to intermittent issues. If it still fails after retry attempts have been exhausted it will be moved to a dead letter queue. This will allow other messages for the same ODS code to come through and hopefully succeed.
+If the lambda fails to process the message for some unknown or intermittent reason, perhaps including a database connection issue, the message will be re-queued and retried. The number of times it is retried and the time between each retry can be configured. This retry mechanism will make resilient to intermittent issues. If it still fails after retry attempts have been exhausted it will be moved to a dead letter queue. This will allow other messages for the same ODS code to come through and hopefully succeed.
 
     1.1. New messages on the DLQ will trigger a Lambda function
 
@@ -131,6 +131,6 @@ If the lambda fails to process the message for some unknown or intermittent reas
     1.3. And fire a notification to inform someone that the message couldn't be processed.
 
 2. DoS API Gateway returns a potentially intermittent error (429 or 5xx).
-If the DoS API Gateway returns a 429 or a 5xx error the message, the event sender will update a record in the Dynamo DB to say there is an issue with the downstream system, it will also not remove the message from the queue so it can be retried when the downstream system is back up. The orchestrator checks this status before processing next batch of messages and if it finds there is an error, it pauses execution for a configured time and then sends a health check message to the event sender which is forwarded to the DoS API. If the healthcheck returns good then the Event Sender updates the Dynamo DB to say all is well and the orchestrator resumes sending change requests. If it is still down the orchestrator will repeat pausing and sending health checks until the service resumes. This solution ensures the system is resilient to temporary downstream outages. Messages will remain on the queue for upto 14 days or until the queue is full, which provides ample buffer for issues with the DoS Change request api to be resolved and processing continue without any intervention on the DI side.
+If the DoS API Gateway returns a 429 or a 5xx error the message, the event sender will update a record in the Dynamo DB to say there is an issue with the downstream system, it will also not remove the message from the queue so it can be retried when the downstream system is back up. The orchestrator checks this status before processing next batch of messages and if it finds there is an error, it pauses execution for a configured time and then sends a health check message to the event sender which is forwarded to the DoS API. If the healthcheck returns good then the Event Sender updates the Dynamo DB to say all is well and the orchestrator resumes sending change requests. If it is still down the orchestrator will repeat pausing and sending health checks until the service resumes. This solution ensures the system is resilient to temporary downstream outages. Messages will remain on the queue for up to 14 days or until the queue is full, which provides ample buffer for issues with the DoS Change request API to be resolved and processing continue without any intervention on the DI side.
 
 ![DoS Infrastructure](../diagrams/DoS%20Integration-Circuit%20Breaker.drawio.png "Dos Infrastructure")

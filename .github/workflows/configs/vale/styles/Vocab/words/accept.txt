@@ -1,3 +1,4 @@
+// Application Names
 Bitwarden
 Cyber
 Dependabot
@@ -12,6 +13,30 @@ Terraform
 Trufflehog
 bot
 idempotence
-onboarding
 toolchain
+GPG
+Splunk
+CodeBuild
+CodePipeline
+Xcode
+// Environments
+dev
+perf
+perf2
+nonprod
+prod
+NonProd
+Prod
+mgmt
+MGMT
+// Development/Deployment Terms
+adhoc
+healthcheck
+undeploy
+Undeploy
+Runbook
+runbooks
+Runbooks
+O
+onboarding
 [A-Z]+s
