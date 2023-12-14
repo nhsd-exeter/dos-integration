@@ -4,7 +4,6 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
     branches-ignore:
-      - "dependabot/**"
       - "release/**"
       - "main"
 
@@ -13,6 +12,7 @@ permissions:
 
 jobs:
   check-pull-request:
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
