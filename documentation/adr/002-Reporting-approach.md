@@ -51,7 +51,7 @@ This option is to use a range of AWS services to store logs, report, email and a
 Pros:
 
 * Control over infrastructure and reporting (we create and control what we require)
-* We can use python to create whatever kinds of reports we want CSV, PDF and graphs. All report data/format is within DoS Integration team's control.
+* We can use Python to create whatever kinds of reports we want CSV, PDF and graphs. All report data/format is within DoS Integration team's control.
 * 100% of logs in storage mechanism. (Less chance of log not reaching log storage)
 * Keep logs for longer than two years
 
@@ -60,7 +60,7 @@ Cons:
 * Need a pipeline to deploy reporting infrastructure (This pipeline would increase development time)
 * Additional Texas permissions required to trigger reports (Texas may not give us such permission)
 * A lengthy process to create a report. A developer is required to create each report and must be tested.
-* Requires multiple AWS Services that must be be put into infrastructure as code. Which must be maintained.
+* Requires multiple AWS Services that must be put into infrastructure as code. Which must be maintained.
 * Reporting solution must be paid for by our team. Money taken out of our budget
 
 ## Decision

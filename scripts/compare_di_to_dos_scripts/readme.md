@@ -1,19 +1,18 @@
 # How to run `compare_di_change_events_to_dos.py`
 
-This python script can be used to compare the latest change event specified openings for every ODS code received in DI, with the current specified dates on pharmacies in DoS.
+This Python script can be used to compare the latest change event specified openings for every ODS code received in DI, with the current specified dates on pharmacies in DoS.
 
 ## **How the script works**
 
 The script takes two extracts of live data, one for DI and one from DoS to compare the specified opening times between what has been received in DI with what is on DoS. These extract are captured in files with the DI extract being in JSON and the DoS extract being in CSV.
 
-These two file are processed and compared in the script using the python Pandas library. The script outputs a CSV file will an additional field called `sp_aligned`, which has a value True if a given service in dos matches the specified opening times for the latest change event for the base ODS Code it matches on.
-
+These two file are processed and compared in the script using the Python Pandas library. The script outputs a CSV file will an additional field called `sp_aligned`, which has a value True if a given service in dos matches the specified opening times for the latest change event for the base ODS Code it matches on.
 
 ## **Requesting clones**
 
 Firstly a DoS live database clone and a DI Dynamodb clone are need to be able to get the extracts. For the best result the clone should be request around the same time
 
-Clones for DoS and DI can be requested via the data clone tool that can be found here https://ddc-exeter-data-clone-prod-ddc-data-clone.k8s-prod.texasplatform.uk/data-source
+Clones for DoS and DI can be requested via the data clone tool that can be found here <https://ddc-exeter-data-clone-prod-ddc-data-clone.k8s-prod.texasplatform.uk/data-source>
 To access the site a Prod VPN connection is required
 
 Before requesting the clones it's worth checking these slack channels to see if someone else has requested clones recently
@@ -83,11 +82,11 @@ data-clone-instance-uec-dos-int-QYBALXKFBT
 
 ## Running the Script to compare Specified Dates
 
-Once the extracts from DoS Integration and DoS the `compare_di_change_events_to_dos` python script can be used to compare the DI JSON with the CSV of DoS future specified dates for pharmacies.
+Once the extracts from DoS Integration and DoS the `compare_di_change_events_to_dos` Python script can be used to compare the DI JSON with the CSV of DoS future specified dates for pharmacies.
 
 ### **Python Script Setup**
 
-To run the python script the modules `pandas` and `dynamodb-json` need to be installed on the python running the script. The best way to do this is to setup a python environment in the directory this readme `script/compare_di_to_dos_scripts` is in:
+To run the Python script the modules `pandas` and `dynamodb-json` need to be installed on the Python running the script. The best way to do this is to setup a Python environment in the directory this README `script/compare_di_to_dos_scripts` is in:
 
     python -m venv pyenv
     source pyenv/bin/activate
@@ -96,7 +95,7 @@ To run the python script the modules `pandas` and `dynamodb-json` need to be ins
 
 ### **Running the Python Script**
 
-To run the `compare_di_change_events_to_dos.py` python script the file path for the DI change event extracts and the dos specified dates extract need to be specified:
+To run the `compare_di_change_events_to_dos.py` Python script the file path for the DI change event extracts and the dos specified dates extract need to be specified:
 
     python compare_di_change_events_to_dos.py di_extract.json dos_specified_dates.csv
 
@@ -112,4 +111,4 @@ In excel you can use the filter tool under the `Sort & Filter` -> `Filter` on th
 
 ![how_to_filter](./how_to_filter.gif)
 
-More details on how to use filtering further in Excel can be found here: https://support.microsoft.com/en-us/office/filter-data-in-a-range-or-table-01832226-31b5-4568-8806-38c37dcc180e
+More details on how to use filtering further in Excel can be found here: <https://support.microsoft.com/en-us/office/filter-data-in-a-range-or-table-01832226-31b5-4568-8806-38c37dcc180e>

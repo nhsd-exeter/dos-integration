@@ -24,7 +24,6 @@ This is a generic onboarding template that can be used by any team to help to br
 ### Corporate Accounts
 
 - Give access to the NHSmail account which is the prerequisite to all the others
-- VDI to access corporate resources like ESR and Cherwell
 - Microsoft Teams - DoS, SF, PU, Tech Strategy
 - Slack - A2SI and Texas (`general` channel) workspaces
 - [JIRA](https://nhsd-jira.digital.nhs.uk/)
