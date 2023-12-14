@@ -15,5 +15,5 @@ while "LastEvaluatedKey" in response:
     )
     data.extend(response["Items"])
 
-df = pd.DataFrame(data)
-df.to_csv(OUTPUT_KEY, index=False, header=True)
+dataframe = pd.DataFrame(data)
+dataframe.to_csv(OUTPUT_KEY, index=False, header=True)

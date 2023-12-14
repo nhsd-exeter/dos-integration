@@ -12,8 +12,8 @@ DB_WRITER_NAME := uec-core-dos-put-cluster-14-one
 DB_READER_NAME := uec-core-dos-put-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := uec-core-dos-put-primary.dos-db-put
-DB_READER_ROUTE_53 := uec-core-dos-put-db-replica-di.dos-db-put
+DB_WRITER_ROUTE_53 := uec-core-dos-put-dos-primary-rw.dos-datastore-put
+DB_READER_ROUTE_53 := uec-core-dos-put-di-ro.dos-datastore-put
 
 # DB Connection Variables
 DB_PORT := 5432
@@ -21,8 +21,7 @@ DB_NAME := pathwaysdos_uat3
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DB_WRITER_SG_NAME := live-lk8s-prod-core-dos-db-put-rds-postgres-sg
-DB_READER_SG_NAME := uec-core-dos-put-db-12-replica-di-sg
+DB_SG_NAME := uec-core-dos-put-datastore-di-sg
 
 # DB Secrets
 DB_WRITER_SECRET_NAME := core-dos-uet-database-upgrade/deployment

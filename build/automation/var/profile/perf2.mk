@@ -11,8 +11,8 @@ DB_WRITER_NAME := uec-core-dos-performance2-cluster-14-one
 DB_READER_NAME := uec-core-dos-performance2-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := uec-core-dos-performance2-primary.dos-db-sync-rds
-DB_READER_ROUTE_53 := uec-core-dos-performance2-di-replica.dos-db-sync-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-performance2-dos-primary-rw.dos-datastore-performance2
+DB_READER_ROUTE_53 := uec-core-dos-performance2-di-ro.dos-datastore-performance2
 
 # DB Connection Variables
 DB_PORT := 5432
@@ -20,8 +20,7 @@ DB_NAME := pathwaysdos
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DB_WRITER_SG_NAME := uec-core-dos-performance2-datastore-sg
-DB_READER_SG_NAME := uec-core-dos-performance2-db-12-replica-di-sg
+DB_SG_NAME := uec-core-dos-performance2-datastore-di-sg
 
 # DB Secrets
 DB_WRITER_SECRET_NAME := uec-core-dos-performance2-db-di-readwrite-user-password

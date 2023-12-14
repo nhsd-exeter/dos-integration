@@ -11,8 +11,8 @@ DB_WRITER_NAME := uec-core-dos-regression-cluster-14-one
 DB_READER_NAME := uec-core-dos-regression-cluster-14-two
 
 # DB Route 53s
-DB_WRITER_ROUTE_53 := core-dos-regression-master.dos-db-rds
-DB_READER_ROUTE_53 := uec-core-dos-dev-db-replica-di.dos-db-rds
+DB_WRITER_ROUTE_53 := uec-core-dos-regression-dos-primary-rw.dos-datastore-regression
+DB_READER_ROUTE_53 := uec-core-dos-regression-di-ro.dos-datastore-regression
 
 # DB Connection Variables
 DB_PORT := 5432
@@ -20,8 +20,7 @@ DB_NAME := pathwaysdos_regressiondi
 DB_SCHEMA := pathwaysdos
 
 # DB Security Groups
-DB_WRITER_SG_NAME := uec-core-dos-regression-datastore-sg
-DB_READER_SG_NAME := live-lk8s-nonprod-core-dos-db-rds-postgres-sg
+DB_SG_NAME := uec-core-dos-regression-datastore-di-sg
 
 # DB Secrets
 DB_WRITER_SECRET_NAME := core-dos-dev/deployment

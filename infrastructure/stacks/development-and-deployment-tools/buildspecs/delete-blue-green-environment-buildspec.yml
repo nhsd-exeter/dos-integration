@@ -10,6 +10,7 @@ phases:
       - export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
       - export AWS_SESSION_TOKEN=$(echo $temp_role | jq -r .Credentials.SessionToken)
       - make docker-hub-signin
+      - make docker-pull NAME=serverless VERSION=latest
       - unset AWS_ACCESS_KEY_ID
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
@@ -38,6 +39,6 @@ phases:
       # Only destroy the environment if it exists
       - |
         if [ -n "$ENVIRONMENT_DEPLOYED" ]; then
-          make undeploy-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT TF_CLI_ARGS="-parallelism=30" OPTS="--refresh=false";
+          make undeploy-blue-green-environment PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT SHARED_ENVIRONMENT=$SHARED_ENVIRONMENT BLUE_GREEN_ENVIRONMENT=$BLUE_GREEN_ENVIRONMENT TF_CLI_ARGS="-parallelism=30";
         fi
       -

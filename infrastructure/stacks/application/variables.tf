@@ -44,16 +44,10 @@ variable "lambda_security_group_name" {
   description = "Name of the lambda security group"
 }
 
-variable "db_writer_sg_name" {
+variable "db_sg_name" {
   type        = string
-  description = "Name of db dos writer security group to connect to"
+  description = "Name of the db security group"
 }
-
-variable "db_reader_sg_name" {
-  type        = string
-  description = "Name of db dos reader security group to connect to"
-}
-
 
 # ##############
 # # DYNAMO DB
