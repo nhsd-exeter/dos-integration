@@ -67,6 +67,8 @@ jobs:
           fetch-depth: 0
       - name: Check prose
         uses: errata-ai/vale-action@reviewdog
+        with:
+          fail_on_error: true
 
   check-python-code-quality:
     runs-on: ubuntu-latest
