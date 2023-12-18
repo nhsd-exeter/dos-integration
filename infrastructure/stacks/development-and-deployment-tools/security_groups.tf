@@ -1,7 +1,7 @@
 resource "aws_security_group" "uec_dos_int_int_test_sg" {
   count       = var.environment == "dev" ? 1 : 0
   vpc_id      = data.aws_vpc.texas_mgmt_vpc.id
-  name        = "${var.project_id}-${var.environment}-int-test-sg"
+  name        = "${var.project_id}-${var.environment}-codebuild-sg"
   description = "Codebuild security group for UEC DoS Int Integration Tests"
 }
 
