@@ -2,7 +2,7 @@ resource "aws_cloudwatch_event_rule" "setup_dos_environment_rule" {
   count               = var.environment == "dev" ? 1 : 0
   name                = "${var.project_id}-${var.environment}-setup-dos-environment-rule"
   description         = "Trigger the setup of a DOS environment on a schedule"
-  schedule_expression = "cron(0 1 * * MON-FRI *)"
+  schedule_expression = "cron(0 1 ? * MON-FRI *)"
 }
 
 resource "aws_cloudwatch_event_target" "setup_dos_environment_trigger" {
