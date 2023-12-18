@@ -69,7 +69,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
   }
   vpc_config {
     security_group_ids = [
-      aws_security_group.uec_dos_int_int_test_sg[0].id,
+      aws_security_group.codebuild_sg[0].id,
     ]
     subnets = [
       data.aws_subnet.vpc_subnet_one.id,
