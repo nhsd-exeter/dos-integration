@@ -158,7 +158,7 @@ resource "aws_codebuild_project" "di_deploy_blue_green_environment_stage" {
 
     environment_variable {
       name  = "DELETE_BLUE_GREEN_ENVIRONMENT_CODEBUILD_NAME"
-      value = aws_codebuild_project.di_delete_blue_green_environment[0].name
+      value = aws_codebuild_project.di_delete_blue_green_environment.name
     }
 
     environment_variable {

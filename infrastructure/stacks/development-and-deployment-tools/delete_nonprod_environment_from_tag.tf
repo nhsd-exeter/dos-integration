@@ -1,6 +1,5 @@
 resource "aws_codebuild_webhook" "destroy_environment_from_tag_deployment_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_destroy_environment_from_tag[0].name
+  project_name = aws_codebuild_project.di_destroy_environment_from_tag.name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -16,7 +15,6 @@ resource "aws_codebuild_webhook" "destroy_environment_from_tag_deployment_webhoo
 }
 
 resource "aws_codebuild_project" "di_destroy_environment_from_tag" {
-  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-destroy-nonprod-environments-stage"
   description    = "Destroys nonprod environment based on tag"
   build_timeout  = "30"

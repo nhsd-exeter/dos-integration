@@ -1,5 +1,4 @@
 resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
-  count    = var.environment == "dev" ? 1 : 0 # Change this to "dev" when ready to deploy
   name     = var.cicd_blue_green_deployment_pipeline_name
   role_arn = data.aws_iam_role.pipeline_role.arn
 

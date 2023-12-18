@@ -1,5 +1,4 @@
 resource "aws_codepipeline" "development_pipeline" {
-  count    = var.environment == "dev" ? 1 : 0
   name     = "${var.project_id}-${var.environment}-development-pipeline"
   role_arn = data.aws_iam_role.pipeline_role.arn
 
@@ -22,7 +21,7 @@ resource "aws_codepipeline" "development_pipeline" {
         ConnectionArn    = aws_codestarconnections_connection.github.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.development_pipeline_branch_name
-        DetectChanges    = var.environment == "dev" ? true : false
+        DetectChanges    = true
       }
     }
   }
@@ -207,7 +206,6 @@ resource "aws_codepipeline" "development_pipeline" {
 
 
 module "development_pipeline_artefact_bucket" {
-  count              = var.environment == "dev" ? 1 : 0
   source             = "../../modules/s3"
   name               = "${var.project_id}-${var.environment}-development-pipeline-artefact-bucket"
   project_id         = var.project_id

@@ -1,19 +1,16 @@
 resource "aws_cloudwatch_event_rule" "setup_dos_environment_rule" {
-  count               = var.environment == "dev" ? 1 : 0
   name                = "${var.project_id}-${var.environment}-setup-dos-environment-rule"
   description         = "Trigger the setup of a DOS environment on a schedule"
   schedule_expression = "cron(0 1 ? * MON-FRI *)"
 }
 
 resource "aws_cloudwatch_event_target" "setup_dos_environment_trigger" {
-  count    = var.environment == "dev" ? 1 : 0
-  rule     = aws_cloudwatch_event_rule.setup_dos_environment_rule[0].name
-  arn      = aws_codebuild_project.setup_dos_environment[0].arn
+  rule     = aws_cloudwatch_event_rule.setup_dos_environment_rule.name
+  arn      = aws_codebuild_project.setup_dos_environment.arn
   role_arn = data.aws_iam_role.pipeline_role.arn
 }
 
 resource "aws_codebuild_project" "setup_dos_environment" {
-  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-setup-dos-environment-stage"
   description    = "Setup the DoS RegressionDI Environment"
   build_timeout  = "60"
@@ -69,7 +66,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
   }
   vpc_config {
     security_group_ids = [
-      aws_security_group.codebuild_sg[0].id,
+      aws_security_group.codebuild_sg.id,
     ]
     subnets = [
       data.aws_subnet.vpc_subnet_one.id,

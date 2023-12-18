@@ -1,5 +1,4 @@
 resource "aws_codebuild_project" "di_delete_blue_green_environment" {
-  count          = var.environment == "dev" ? 1 : 0
   name           = "${var.project_id}-${var.environment}-delete-blue-green-environment"
   description    = "Delete Blue/Green Environments"
   build_timeout  = "60"
