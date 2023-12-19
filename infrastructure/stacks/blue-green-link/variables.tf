@@ -21,19 +21,9 @@ variable "shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_a
   description = "The name of the sns topic to recieve alerts for the application to forward to slack in the route53 health check alarm region (shared resources)"
 }
 
-# ##############
-# # PARAMETER STORE
-# ##############
-
-variable "blue_green_deployment_previous_version_parameter_name" {
-  type        = string
-  description = "The name of the parameter in the parameter store that stores the previous version of the blue/green deployment"
-}
-
-variable "blue_green_deployment_current_version_parameter_name" {
-  type        = string
-  description = "The name of the parameter in the parameter store that stores the current version of the blue/green deployment"
-}
+# ######################
+# # OTHER
+# #######################
 
 variable "previous_blue_green_environment" {
   type        = string
