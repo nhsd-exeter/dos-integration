@@ -36,18 +36,15 @@ def get_dos_service_and_history(service_id: int) -> tuple[DoSService, ServiceHis
     with connect_to_db_writer() as connection:
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
-        rows: list[DictRow] = cursor.fetchone()
-        if len(rows) == 1:
+        row: DictRow = cursor.fetchone()
+        if row is not None:
             # Select first row (service) and create DoSService object
-            service = DoSService(rows[0])
+            service = DoSService(row)
             logger.append_keys(service_name=service.name)
             logger.append_keys(service_uid=service.uid)
             logger.append_keys(type_id=service.typeid)
-        elif not rows:
+        elif row is None:
             msg = f"Service ID {service_id} not found"
-            raise ValueError(msg)
-        else:
-            msg = f"Multiple services found for Service Id: {service_id}"
             raise ValueError(msg)
         # Set up remaining service data
         service.standard_opening_times = get_standard_opening_times_from_db(
