@@ -36,7 +36,7 @@ resource "aws_codepipeline" "development_pipeline" {
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = aws_codebuild_project.di_unit_tests_stage.name
+        ProjectName = aws_codebuild_project.unit_tests_stage.name
       }
     }
   }
@@ -52,7 +52,7 @@ resource "aws_codepipeline" "development_pipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = aws_codebuild_project.di_build_image_stage.name
+          ProjectName = aws_codebuild_project.build_image_stage.name
           EnvironmentVariables = jsonencode([
             {
               name  = "BUILD_ITEM_NAME"
@@ -77,7 +77,7 @@ resource "aws_codepipeline" "development_pipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = aws_codebuild_project.di_full_deploy_stage.name
+          ProjectName = aws_codebuild_project.full_deploy_stage.name
           EnvironmentVariables = jsonencode([
             {
               name  = "AWS_ACCOUNT"
@@ -109,7 +109,7 @@ resource "aws_codepipeline" "development_pipeline" {
         version         = "1"
         run_order       = 2
         configuration = {
-          ProjectName = aws_codebuild_project.di_integration_tests[action.key].name
+          ProjectName = aws_codebuild_project.integration_tests[action.key].name
           EnvironmentVariables = jsonencode([
             {
               name  = "PROFILE"
@@ -142,7 +142,7 @@ resource "aws_codepipeline" "development_pipeline" {
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = aws_codebuild_project.di_full_deploy_stage.name
+        ProjectName = aws_codebuild_project.full_deploy_stage.name
         EnvironmentVariables = jsonencode([
           {
             name  = "PROFILE"
@@ -196,10 +196,10 @@ resource "aws_codepipeline" "development_pipeline" {
 
   depends_on = [
     module.development_pipeline_artefact_bucket,
-    aws_codebuild_project.di_unit_tests_stage,
-    aws_codebuild_project.di_build_image_stage,
-    aws_codebuild_project.di_full_deploy_stage,
-    aws_codebuild_project.di_integration_tests,
+    aws_codebuild_project.unit_tests_stage,
+    aws_codebuild_project.build_image_stage,
+    aws_codebuild_project.full_deploy_stage,
+    aws_codebuild_project.integration_tests,
     aws_codebuild_project.production_smoke_test,
   ]
 }

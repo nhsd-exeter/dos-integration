@@ -1,4 +1,4 @@
-resource "aws_codebuild_project" "di_delete_blue_green_environment" {
+resource "aws_codebuild_project" "delete_blue_green_environment" {
   name           = "${var.project_id}-${var.environment}-delete-blue-green-environment"
   description    = "Delete Blue/Green Environments"
   build_timeout  = "60"

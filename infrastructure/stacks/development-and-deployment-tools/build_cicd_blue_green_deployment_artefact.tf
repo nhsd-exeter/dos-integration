@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_cicd_blue_green_artefact_webhook" {
-  project_name = aws_codebuild_project.di_build_cicd_blue_green_artefact.name
+  project_name = aws_codebuild_project.build_cicd_blue_green_artefact.name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -12,10 +12,10 @@ resource "aws_codebuild_webhook" "build_cicd_blue_green_artefact_webhook" {
       pattern = "^refs/tags/.*-blue-green-deployment"
     }
   }
-  depends_on = [aws_codebuild_project.di_build_cicd_blue_green_artefact]
+  depends_on = [aws_codebuild_project.build_cicd_blue_green_artefact]
 }
 
-resource "aws_codebuild_project" "di_build_cicd_blue_green_artefact" {
+resource "aws_codebuild_project" "build_cicd_blue_green_artefact" {
   name           = "${var.project_id}-${var.environment}-build-cicd-blue-green-artefact"
   description    = "Builds artefacts based on tag for CI/CD Pipeline"
   build_timeout  = "30"
