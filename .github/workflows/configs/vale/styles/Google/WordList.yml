@@ -6,7 +6,6 @@ ignorecase: false
 action:
   name: replace
 swap:
-  "(?:API Console|dev|developer) key": API key
   "(?:cell ?phone|smart ?phone)": phone|mobile phone
   "(?:dev|developer|APIs) console": API console
   "(?:e-mail|Email|E-mail)": email
@@ -17,7 +16,6 @@ swap:
   "(?:WiFi|wifi)": Wi-Fi
   '[\.]+apk': APK
   '3\-D': 3D
-  'Google (?:I\-O|IO)': Google I/O
   "tap (?:&|and) hold": touch & hold
   "un(?:check|select)": clear
   above: preceding
@@ -29,7 +27,6 @@ swap:
   Android device: Android-powered device
   android: Android
   API explorer: APIs Explorer
-  application: app
   approx\.: approximately
   authN: authentication
   authZ: authorization
@@ -41,20 +38,16 @@ swap:
   check: select
   CLI: command-line tool
   click on: click|click in
-  Cloud: Google Cloud Platform|GCP
   Container Engine: Kubernetes Engine
   content type: media type
   curated roles: predefined roles
   data are: data is
-  Developers Console: Google API Console|API Console
   disabled?: turn off|off
   ephemeral IP address: ephemeral external IP address
   fewer data: less data
   file name: filename
   firewalls: firewall rules
   functionality: capability|feature
-  Google account: Google Account
-  Google accounts: Google Accounts
   Googling: search with Google
   grayed-out: unavailable
   HTTPs: HTTPS
