@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "change_event_dlq_handler_policy" {
       "dynamodb:UpdateItem",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}",
     ]
   }
 
@@ -44,7 +44,7 @@ data "aws_iam_policy_document" "change_event_dlq_handler_policy" {
       "dynamodb:Query",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence",
     ]
   }
 }
@@ -56,7 +56,9 @@ data "aws_iam_policy_document" "dos_db_handler_policy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_deployment_secrets}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_writer_secret_name}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_reader_secret_name}-*",
     ]
   }
 }
@@ -104,7 +106,7 @@ data "aws_iam_policy_document" "event_replay_policy" {
       "sqs:GetQueueUrl",
     ]
     resources = [
-      "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.project_id}*",
+      "arn:aws:sqs:${var.aws_region}:${var.aws_account_id}:${var.change_event_queue}",
     ]
   }
 
@@ -116,7 +118,7 @@ data "aws_iam_policy_document" "event_replay_policy" {
       "dynamodb:Scan",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}",
     ]
   }
   statement {
@@ -125,7 +127,7 @@ data "aws_iam_policy_document" "event_replay_policy" {
       "dynamodb:Query",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence",
     ]
   }
 }
@@ -176,7 +178,7 @@ data "aws_iam_policy_document" "ingest_change_event_policy" {
       "dynamodb:UpdateItem",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}",
     ]
   }
   statement {
@@ -185,7 +187,7 @@ data "aws_iam_policy_document" "ingest_change_event_policy" {
       "dynamodb:Query",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence",
     ]
   }
 }
@@ -197,7 +199,9 @@ data "aws_iam_policy_document" "quality_checker_policy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_deployment_secrets}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_writer_secret_name}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_reader_secret_name}-*",
     ]
   }
 }
@@ -228,7 +232,7 @@ data "aws_iam_policy_document" "send_email_policy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:uec-dos-int-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_deployment_secrets}",
     ]
   }
 }
@@ -240,7 +244,9 @@ data "aws_iam_policy_document" "service_matcher_policy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_deployment_secrets}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_writer_secret_name}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_reader_secret_name}-*",
     ]
   }
   statement {
@@ -285,7 +291,9 @@ data "aws_iam_policy_document" "service_sync_policy" {
       "secretsmanager:GetSecretValue",
     ]
     resources = [
-      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.project_deployment_secrets}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_writer_secret_name}-*",
+      "arn:aws:secretsmanager:${var.aws_region}:${var.aws_account_id}:secret:${var.dos_db_reader_secret_name}-*",
     ]
   }
   statement {
@@ -329,7 +337,7 @@ data "aws_iam_policy_document" "service_sync_policy" {
       "dynamodb:UpdateItem",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}",
     ]
   }
   statement {
@@ -338,7 +346,7 @@ data "aws_iam_policy_document" "service_sync_policy" {
       "dynamodb:Query",
     ]
     resources = [
-      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.project_id}*/index/gsi_ods_sequence",
+      "arn:aws:dynamodb:${var.aws_region}:${var.aws_account_id}:table/${var.change_events_table_name}/index/gsi_ods_sequence",
     ]
   }
   statement {
@@ -376,11 +384,11 @@ data "aws_iam_policy_document" "slack_messenger_policy" {
   statement {
     effect = "Allow"
     actions = [
-      "sns:*",
+      "sns:Publish",
     ]
     resources = [
-      "arn:aws:sns:${var.aws_region}:${var.aws_account_id}:${var.project_id}-*",
-      "arn:aws:sns:${var.route53_health_check_alarm_region}:${var.aws_account_id}:${var.project_id}-*",
+      aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn,
+      aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn
     ]
   }
 }
