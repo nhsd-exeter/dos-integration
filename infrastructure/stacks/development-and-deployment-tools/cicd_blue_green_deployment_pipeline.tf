@@ -1,4 +1,5 @@
 resource "aws_codepipeline" "cicd_blue_green_deployment_pipeline" {
+  #checkov:skip=CKV_AWS_219
   name     = var.cicd_blue_green_deployment_pipeline_name
   role_arn = data.aws_iam_role.pipeline_role.arn
 

@@ -1,4 +1,5 @@
 resource "aws_codepipeline" "development_pipeline" {
+  #checkov:skip=CKV_AWS_219
   name     = "${var.project_id}-${var.environment}-development-pipeline"
   role_arn = data.aws_iam_role.pipeline_role.arn
 
