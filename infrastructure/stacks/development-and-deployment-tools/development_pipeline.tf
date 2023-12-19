@@ -209,7 +209,7 @@ module "development_pipeline_artefact_bucket" {
   source             = "../../modules/s3"
   name               = "${var.project_id}-${var.environment}-development-pipeline-artefact-bucket"
   project_id         = var.project_id
-  acl                = "private"
   versioning_enabled = "true"
   force_destroy      = "true"
+  object_ownership   = "ObjectWriter"
 }
