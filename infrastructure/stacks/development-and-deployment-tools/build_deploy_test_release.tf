@@ -33,6 +33,10 @@ resource "aws_codebuild_project" "build_deploy_test_release" {
   build_batch_config {
     service_role    = data.aws_iam_role.pipeline_role.arn
     timeout_in_mins = 60
+    restrictions {
+      compute_types_allowed  = []
+      maximum_builds_allowed = 100
+    }
   }
 
   environment {
