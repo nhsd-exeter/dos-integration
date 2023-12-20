@@ -278,11 +278,17 @@ is-environment-deployed:
 
 slack-codebuild-notification: ### Send codebuild pipeline notification - mandatory: PIPELINE_NAME,BUILD_STATUS=[success|failure]
 	time=$$(( $(shell date +"%s") - $(shell date -d '$(BUILD_DATE)' +"%s") ))
+	if [[ ! -z "$(PR)" ]]; then
+		NAME=codebuild-pipeline-pr-merge-$(shell echo $(BUILD_STATUS) | tr '[:upper:]' '[:lower:]')
+	else
+		NAME=codebuild-pipeline-$(shell echo $(BUILD_STATUS) | tr '[:upper:]' '[:lower:]')
+	fi
+	echo NAME=$$NAME
 	make slack-send-notification \
-		NAME=codebuild-pipeline-$(shell echo $(BUILD_STATUS) | tr '[:upper:]' '[:lower:]') \
-		BUILD_TIME=$$(( $$time / 60 ))m$$(( $$time % 60 ))s \
-		BUILD_URL=$$(echo https://$(AWS_REGION).console.aws.amazon.com/codesuite/codebuild/$(AWS_ACCOUNT_ID_MGMT)/projects/$(CODEBUILD_PROJECT_NAME)/build/$(CODEBUILD_BUILD_ID)/log?region=$(AWS_REGION)) \
-		SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=SLACK_WEBHOOK)
+			NAME=$$NAME \
+			BUILD_TIME=$$(( $$time / 60 ))m$$(( $$time % 60 ))s \
+			BUILD_URL=$$(echo https://$(AWS_REGION).console.aws.amazon.com/codesuite/codebuild/$(AWS_ACCOUNT_ID_MGMT)/projects/$(CODEBUILD_PROJECT_NAME)/build/$(CODEBUILD_BUILD_ID)/log?region=$(AWS_REGION)) \
+			SLACK_WEBHOOK_URL=$$(make -s secret-get-existing-value NAME=$(DEPLOYMENT_SECRETS) KEY=SLACK_WEBHOOK)
 
 aws-ecr-cleanup: # Mandatory: REPOS=[comma separated list of ECR repo names e.g. service-sync,slack-messenger]
 	export THIS_YEAR=$$(date +%Y)
