@@ -168,7 +168,7 @@ module "event_replay_lambda" {
     "LOG_LEVEL"                          = var.log_level
     "IMAGE_VERSION"                      = var.event_replay_version
     "CHANGE_EVENTS_TABLE_NAME"           = var.change_events_table_name
-    "CHANGE_EVENT_SQS_NAME"              = var.holding_queue
+    "CHANGE_EVENT_SQS_URL"               = data.aws_sqs_queue.change_event_queue.url
   }
 }
 

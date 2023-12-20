@@ -113,7 +113,7 @@ def send_change_event(change_event: dict[str, Any], odscode: str, sequence_numbe
         correlation_id (str): The correlation id of the event replay
     """
     sqs = client("sqs")
-    queue_url = sqs.get_queue_url(QueueName=getenv("CHANGE_EVENT_SQS_NAME"))["QueueUrl"]
+    queue_url = getenv("CHANGE_EVENT_SQS_URL")
     logger.info("Sending change event to SQS", queue_url=queue_url)
     change_event_str = dumps(change_event)
     response = sqs.send_message(
@@ -125,4 +125,4 @@ def send_change_event(change_event: dict[str, Any], odscode: str, sequence_numbe
             "sequence-number": {"StringValue": str(sequence_number), "DataType": "Number"},
         },
     )
-    logger.info("Message send to SQS, response from sqs", response=response)
+    logger.info("Message send to SQS, response from SQS", response=response)
