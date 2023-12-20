@@ -1,5 +1,5 @@
 resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
-  count    = var.environment == "dev" ? 1 : 0 # Change this to "dev" when ready to deploy
+  #checkov:skip=CKV_AWS_219
   name     = var.cicd_shared_resources_deployment_pipeline_name
   role_arn = data.aws_iam_role.pipeline_role.arn
 
@@ -37,7 +37,7 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = aws_codebuild_project.di_deploy_shared_resources_environment_stage.name
+          ProjectName = aws_codebuild_project.deploy_shared_resources_environment_stage.name
           EnvironmentVariables = jsonencode([
             {
               name  = "AWS_ACCOUNT"
@@ -69,7 +69,7 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
         version         = "1"
         run_order       = 2
         configuration = {
-          ProjectName = aws_codebuild_project.di_integration_tests[action.key].name
+          ProjectName = aws_codebuild_project.integration_tests[action.key].name
           EnvironmentVariables = jsonencode([
             {
               name  = "PROFILE"
@@ -99,7 +99,7 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
         input_artifacts = ["source_output"]
         version         = "1"
         configuration = {
-          ProjectName = aws_codebuild_project.di_deploy_shared_resources_environment_stage.name
+          ProjectName = aws_codebuild_project.deploy_shared_resources_environment_stage.name
           EnvironmentVariables = jsonencode([
             {
               name  = "AWS_ACCOUNT"
@@ -175,7 +175,7 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
       input_artifacts = ["source_output"]
       version         = "1"
       configuration = {
-        ProjectName = aws_codebuild_project.di_deploy_shared_resources_environment_stage.name
+        ProjectName = aws_codebuild_project.deploy_shared_resources_environment_stage.name
         EnvironmentVariables = jsonencode([
           {
             name  = "AWS_ACCOUNT"
@@ -198,9 +198,9 @@ resource "aws_codepipeline" "cicd_shared_resources_deployment_pipeline" {
   }
   depends_on = [
     module.cicd_blue_green_deployment_pipeline_artefact_bucket,
-    aws_codebuild_project.di_unit_tests_stage,
-    aws_codebuild_project.di_integration_tests,
-    aws_codebuild_project.di_deploy_shared_resources_environment_stage,
+    aws_codebuild_project.unit_tests_stage,
+    aws_codebuild_project.integration_tests,
+    aws_codebuild_project.deploy_shared_resources_environment_stage,
   ]
 }
 
