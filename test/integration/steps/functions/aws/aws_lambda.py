@@ -41,7 +41,7 @@ def invoke_dos_db_handler_lambda(lambda_payload: dict) -> Any:
                 return response_payload
 
             if retries > 6:
-                msg = f"Unable to run test db checker lambda successfully after {retries} retries, {response_payload}"
+                msg = f"Unable to run dos db handler lambda successfully after {retries} retries, {response_payload}"
                 raise ValueError(msg)  # noqa: TRY301, RUF100
 
         except ConnectionClosedError:
