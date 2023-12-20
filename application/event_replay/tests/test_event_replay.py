@@ -162,15 +162,11 @@ def test_get_change_event_no_change_event_in_dynamodb(
 def test_send_change_event(mock_client: MagicMock, change_event: dict[str, str], event: dict[str, str]) -> None:
     # Arrange
     correlation_id = "CORRELATION_ID"
-    queue_name = "my-queue"
-    environ["CHANGE_EVENT_SQS_NAME"] = queue_name
-    queue_url = "https://sqs.eu-west-1.amazonaws.com/123456789/my-queue"
-    mock_client().get_queue_url.return_value = {"QueueUrl": queue_url}
+    environ["CHANGE_EVENT_SQS_URL"] = queue_url = "https://sqs.eu-west-1.amazonaws.com/123456789/my-queue"
     # Act
     send_change_event(change_event, event["odscode"], int(event["sequence_number"]), correlation_id)
     # Assert
     mock_client.assert_called_with("sqs")
-    mock_client().get_queue_url.assert_called_with(QueueName=queue_name)
     mock_client().send_message.assert_called_with(
         QueueUrl=queue_url,
         MessageBody=dumps(change_event),
@@ -181,4 +177,4 @@ def test_send_change_event(mock_client: MagicMock, change_event: dict[str, str],
         },
     )
     # Clean up
-    del environ["CHANGE_EVENT_SQS_NAME"]
+    del environ["CHANGE_EVENT_SQS_URL"]
