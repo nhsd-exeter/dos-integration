@@ -127,7 +127,6 @@ exclude = [
   "dist",
   "node_modules",
   "venv",
-  "scripts/compare_di_to_dos_scripts",
 ]
 
 # Same as Black.
