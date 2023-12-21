@@ -70,6 +70,6 @@ resource "aws_codebuild_project" "task_env_deploy_and_test" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("batch-buildspecs/task-env-deploy-and-test-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/task-env-deploy-and-test-buildspec.yml"
   }
 }
