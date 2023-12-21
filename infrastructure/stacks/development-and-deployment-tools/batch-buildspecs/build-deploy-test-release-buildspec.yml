@@ -138,3 +138,16 @@ batch:
       buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/integration-test.yml
       depend-on:
         - deploy
+
+    - identifier: undeploy
+      env:
+        compute-type: BUILD_GENERAL1_SMALL
+        image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        type: LINUX_CONTAINER
+        privileged-mode: true
+        variables:
+          PROFILE: dev
+          ENVIRONMENT: release
+      buildspec: infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-batch-jobs/remove-set-environment.yml
+      depend-on:
+        - integration_test
