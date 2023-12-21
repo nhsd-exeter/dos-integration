@@ -31,8 +31,3 @@ phases:
       - echo ENVIRONMENT=$ENVIRONMENT
       - echo PROFILE=$PROFILE
       - make undeploy VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT TF_CLI_ARGS="-parallelism=30"
-    finally:
-      - |
-        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-          make slack-codebuild-notification ENVIRONMENT=$ENVIRONMENT PROFILE=$PROFILE PIPELINE_NAME="Delete Environment After Merge Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Failed Please investigate"
-        fi
