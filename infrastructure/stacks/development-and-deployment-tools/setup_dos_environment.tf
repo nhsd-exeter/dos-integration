@@ -62,7 +62,7 @@ resource "aws_codebuild_project" "setup_dos_environment" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/setup-dos-environment-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/setup-dos-environment-buildspec.yml"
   }
   vpc_config {
     security_group_ids = [

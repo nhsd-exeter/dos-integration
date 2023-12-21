@@ -70,7 +70,7 @@ resource "aws_codebuild_project" "build_cicd_shared_resources_artefact" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-cicd-shared-resources-artefact-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-cicd-shared-resources-artefact-buildspec.yml"
   }
   depends_on = [
     module.cicd_shared_resoures_deployment_pipeline_artefact_bucket

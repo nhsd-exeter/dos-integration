@@ -65,7 +65,7 @@ resource "aws_codebuild_project" "destroy_environment_from_tag" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/delete-nonprod-environment-from-tag-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/delete-nonprod-environment-from-tag-buildspec.yml"
   }
 
 }

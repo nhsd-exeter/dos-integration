@@ -39,6 +39,6 @@ resource "aws_codebuild_project" "delete_blue_green_environment" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/delete-blue-green-environment-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/delete-blue-green-environment-buildspec.yml"
   }
 }
