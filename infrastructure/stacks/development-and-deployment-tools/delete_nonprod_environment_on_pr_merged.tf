@@ -64,7 +64,7 @@ resource "aws_codebuild_project" "destroy_nonprod_environment_on_pr_merged" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/delete-nonprod-environment-on-pr-merged-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/delete-nonprod-environment-on-pr-merged-buildspec.yml"
   }
 
 }

@@ -74,7 +74,7 @@ resource "aws_codebuild_project" "build_cicd_blue_green_artefact" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-cicd-blue-green-deployment-artefact-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-cicd-blue-green-deployment-artefact-buildspec.yml"
   }
   depends_on = [module.cicd_blue_green_deployment_pipeline_artefact_bucket]
 }

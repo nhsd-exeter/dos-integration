@@ -43,7 +43,7 @@ resource "aws_codebuild_project" "unit_tests_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/unit-tests-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/unit-tests-buildspec.yml"
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_codebuild_project" "build_image_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/build-arm-image-in-pipeline-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-arm-image-in-pipeline-buildspec.yml"
   }
 }
 
@@ -128,7 +128,7 @@ resource "aws_codebuild_project" "full_deploy_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/deploy-full-environment-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/deploy-full-environment-buildspec.yml"
   }
 }
 
@@ -183,7 +183,7 @@ resource "aws_codebuild_project" "deploy_blue_green_environment_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/deploy-blue-green-environment-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/deploy-blue-green-environment-buildspec.yml"
   }
   depends_on = [
     aws_codebuild_project.delete_blue_green_environment
@@ -226,7 +226,7 @@ resource "aws_codebuild_project" "deploy_shared_resources_environment_stage" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/deploy-shared-resources-environment-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/deploy-shared-resources-environment-buildspec.yml"
   }
 }
 
@@ -275,7 +275,7 @@ resource "aws_codebuild_project" "integration_tests" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/integration-tests-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/integration-tests-buildspec.yml"
   }
 }
 
@@ -328,7 +328,7 @@ resource "aws_codebuild_project" "trigger_rollback" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/trigger-rollback-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/trigger-rollback-buildspec.yml"
   }
 }
 
@@ -372,6 +372,6 @@ resource "aws_codebuild_project" "production_smoke_test" {
   }
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("buildspecs/production-smoke-test-buildspec.yml")
+    buildspec = "infrastructure/stacks/development-and-deployment-tools/buildspecs/production-smoke-test-buildspec.yml"
   }
 }
