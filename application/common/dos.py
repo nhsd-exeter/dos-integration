@@ -270,18 +270,21 @@ def db_big_rows_to_spec_open_times(db_rows: Iterable[dict]) -> list[SpecifiedOpe
     note: The rows must to be for the same service.
     """
     specified_opening_times = []
-    date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
-    for date, db_rows in groupby(date_sorted_rows, lambda row: row["date"]):
+    specified_op_times_ids = []
+    db_rows_refined = []
+    for row in list(db_rows):
+        if row["ssot_id"] is not None and row["ssot_id"] not in specified_op_times_ids:
+            specified_op_times_ids.append(row["ssot_id"])
+            db_rows_refined.append(row)
+    date_sorted_rows = sorted(db_rows_refined, key=lambda row: (row["date"], row["date_starttime"]))
+    for date, db_rows_refined in groupby(date_sorted_rows, lambda row: row["date"]):
         is_open = True
         open_periods = []
-        specified_op_times_ids = []
-        for row in list(db_rows):
-            if row["ssot_id"] is not None and row["ssot_id"] not in specified_op_times_ids:
-                specified_op_times_ids.append = row["ssot_id"]
-                if row["isclosed"] is True:
-                    is_open = False
-                else:
-                    open_periods.append(OpenPeriod(row["starttime"], row["endtime"]))
+        for row in list(db_rows_refined):
+            if row["isclosed"] is True:
+                is_open = False
+            else:
+                open_periods.append(OpenPeriod(row["date_starttime"], row["date_endtime"]))
         specified_opening_times.append(SpecifiedOpeningTime(open_periods, date, is_open))
 
     return specified_opening_times
@@ -311,7 +314,7 @@ def db_big_rows_to_std_open_times(db_rows: Iterable[dict]) -> StandardOpeningTim
     std_op_times_ids = []
     for row in db_rows:
         if row["sdot_id"] is not None and row["sdot_id"] not in std_op_times_ids:
-            std_op_times_ids.append = row["sdot_id"]
+            std_op_times_ids.append(row["sdot_id"])
             weekday = row["name"].lower()
             start = row["day_starttime"]
             end = row["day_endtime"]

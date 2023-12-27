@@ -86,7 +86,7 @@ def get_dos_service_and_history_one_query(service_id: int) -> tuple[DoSService, 
         "publicphone, publicname, st.name service_type_name, easting, northing, latitude, longitude, "
         'sdo.id as "sdo_id", sdo.dayid, otd.name, sdot.id as "sdot_id", sdot.starttime as "day_starttime", '
         'sdot.endtime as "day_endtime", ssod.id as "ssod_id", ssod.date, ssot.id as "ssot_id", '
-        "ssot.starttime, ssot.endtime, ssot.isclosed "
+        'ssot.starttime as "date_starttime", ssot.endtime as "date_endtime", ssot.isclosed '
         "FROM services s "
         "INNER JOIN servicetypes st ON s.typeid = st.id INNER JOIN servicestatuses ss on s.statusid = ss.id "
         "LEFT JOIN servicedayopenings sdo ON s.id = sdo.serviceid "
