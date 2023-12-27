@@ -90,7 +90,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     def update_specified_opening_times() -> None:
         smoke_test_context.updated_service.specified_opening_times = [
             {
-                "date": FAKER.date_this_year(before_today=False, after_today=True),
+                "date": FAKER.date_this_decade(before_today=False, after_today=True),
                 "open": "09:00",
                 "close": "17:00",
                 "open_or_closed": True,
