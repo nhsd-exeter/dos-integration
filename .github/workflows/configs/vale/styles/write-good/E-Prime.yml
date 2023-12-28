@@ -6,7 +6,6 @@ tokens:
   - am
   - are
   - aren't
-  - be
   - been
   - being
   - he's
@@ -14,8 +13,6 @@ tokens:
   - here's
   - how's
   - i'm
-  - is
-  - isn't
   - it's
   - she's
   - that's
