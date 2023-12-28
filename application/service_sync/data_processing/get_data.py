@@ -102,7 +102,7 @@ def get_dos_service_and_history_one_query(service_id: int) -> tuple[DoSService, 
         # Query the DoS database for the service
         cursor = query_dos_db(connection=connection, query=sql_query, query_vars=query_vars)
         rows: DictRow = cursor.fetchall()
-        if len(rows) > 1:
+        if len(rows) >= 1:
             # Select first row (service) and create DoSService object
             service = DoSService(rows[0])
             logger.append_keys(service_name=service.name)
