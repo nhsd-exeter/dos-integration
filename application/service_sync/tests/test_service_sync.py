@@ -45,7 +45,7 @@ SQS_EVENT = {
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
 @patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
-@patch(f"{FILE_PATH}.get_dos_service_and_history")
+@patch(f"{FILE_PATH}.get_dos_service_and_history_one_query")
 @patch(f"{FILE_PATH}.NHSEntity")
 def test_lambda_handler(
     mock_nhs_entity: MagicMock,
@@ -89,7 +89,7 @@ def test_lambda_handler(
 @patch(f"{FILE_PATH}.remove_sqs_message_from_queue")
 @patch(f"{FILE_PATH}.update_dos_data")
 @patch(f"{FILE_PATH}.compare_nhs_uk_and_dos_data")
-@patch(f"{FILE_PATH}.get_dos_service_and_history")
+@patch(f"{FILE_PATH}.get_dos_service_and_history_one_query")
 @patch(f"{FILE_PATH}.NHSEntity")
 def test_lambda_handler_exception(
     mock_nhs_entity: MagicMock,
