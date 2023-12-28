@@ -1,6 +1,5 @@
 resource "aws_codebuild_webhook" "build_cicd_shared_resources_artefact_webhook" {
-  count        = var.environment == "dev" ? 1 : 0
-  project_name = aws_codebuild_project.di_build_cicd_shared_resources_artefact[0].name
+  project_name = aws_codebuild_project.build_cicd_shared_resources_artefact.name
   build_type   = "BUILD"
   filter_group {
     filter {
@@ -13,11 +12,10 @@ resource "aws_codebuild_webhook" "build_cicd_shared_resources_artefact_webhook" 
       pattern = "^refs/tags/.*-shared-resources-deployment"
     }
   }
-  depends_on = [aws_codebuild_project.di_build_cicd_shared_resources_artefact]
+  depends_on = [aws_codebuild_project.build_cicd_shared_resources_artefact]
 }
 
-resource "aws_codebuild_project" "di_build_cicd_shared_resources_artefact" {
-  count          = var.environment == "dev" ? 1 : 0
+resource "aws_codebuild_project" "build_cicd_shared_resources_artefact" {
   name           = "${var.project_id}-${var.environment}-build-cicd-shared-resources-artefact"
   description    = "Builds artefacts based on tag for CI/CD Pipeline"
   build_timeout  = "30"
@@ -72,7 +70,7 @@ resource "aws_codebuild_project" "di_build_cicd_shared_resources_artefact" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-cicd-shared-resources-artefact-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-cicd-shared-resources-artefact-buildspec.yml"
   }
   depends_on = [
     module.cicd_shared_resoures_deployment_pipeline_artefact_bucket

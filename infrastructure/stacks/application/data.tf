@@ -27,6 +27,10 @@ data "aws_kms_key" "signing_key" {
 # # SQS
 # ##############
 
+data "aws_sqs_queue" "change_event_queue" {
+  name = var.change_event_queue
+}
+
 data "aws_sqs_queue" "change_event_dlq" {
   name = var.change_event_dlq
 }

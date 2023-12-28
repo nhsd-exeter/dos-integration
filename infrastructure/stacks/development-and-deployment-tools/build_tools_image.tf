@@ -1,5 +1,5 @@
 resource "aws_codebuild_webhook" "build_image_webhook" {
-  for_each     = var.environment == "dev" ? local.independent_build_images : {}
+  for_each     = local.independent_build_images
   project_name = "${var.project_id}-${var.environment}-build-${each.key}-stage"
   build_type   = "BUILD"
   filter_group {
@@ -22,11 +22,11 @@ resource "aws_codebuild_webhook" "build_image_webhook" {
       pattern = local.independent_build_images[each.key].filematch
     }
   }
-  depends_on = [aws_codebuild_project.di_build_image]
+  depends_on = [aws_codebuild_project.build_image]
 }
 
-resource "aws_codebuild_project" "di_build_image" {
-  for_each       = var.environment == "dev" ? local.independent_build_images : {}
+resource "aws_codebuild_project" "build_image" {
+  for_each       = local.independent_build_images
   name           = "${var.project_id}-${var.environment}-build-${each.key}-stage"
   description    = "Builds ${each.key} x86 development docker container image"
   build_timeout  = "10"
@@ -89,6 +89,6 @@ resource "aws_codebuild_project" "di_build_image" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/build-tools-image-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-tools-image-buildspec.yml"
   }
 }

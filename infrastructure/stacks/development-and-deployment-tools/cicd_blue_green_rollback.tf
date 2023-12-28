@@ -62,7 +62,7 @@ resource "aws_codebuild_project" "blue_green_rollback_stage" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/rollback-blue-green-deployment-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/rollback-blue-green-deployment-buildspec.yml"
   }
 
 }

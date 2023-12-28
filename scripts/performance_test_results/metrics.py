@@ -28,7 +28,7 @@ def throughput_metrics(start_time: datetime, end_time: datetime) -> None:
     total_services_reviewed_or_updated = int(sum(response["MetricDataResults"][0]["Values"]))
     total_per_second = total_services_reviewed_or_updated / (end_time - start_time).total_seconds()
     print(f"Services Updated/Reviewed (UpdateRequestSuccess): {total_services_reviewed_or_updated}")
-    print(f"Average Services Updated/Reviewed per second: {total_per_second}")
+    print(f"Average Services Updated/Reviewed per second: {round(total_per_second,3)}")
 
 
 def database_metrics(database_name: str, database_description: str, start_time: datetime, end_time: datetime) -> None:
@@ -48,7 +48,7 @@ def database_metrics(database_name: str, database_description: str, start_time: 
         "AWS/RDS", "DatabaseConnections", database_name, start_time, end_time, "Maximum", "Count"
     )
     connections = int(max(db_connections_response["MetricDataResults"][0]["Values"]))
-    print(f"{database_description} - CPU Utilisation: {cpu_utilization}")
+    print(f"{database_description} - CPU Utilisation: {round(cpu_utilization,3)}%")
     print(f"{database_description} - Connections: {connections}")
 
 
@@ -65,7 +65,7 @@ def average_duration(lambda_name: str, start_time: datetime, end_time: datetime)
     )
     short_lambda_name = "-".join(lambda_name.split("-")[4:])
     values = response["MetricDataResults"][0]["Values"]
-    print(f"Average duration for {short_lambda_name} is {sum(values) / len(values)} ms")
+    print(f"Average duration for {short_lambda_name} is {round(sum(values) / len(values),3)} ms")
 
 
 def error_count(lambda_name: str, start_time: datetime, end_time: datetime) -> None:

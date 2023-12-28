@@ -1,0 +1,42 @@
+// Application Names
+Bitwarden
+Cyber
+Dependabot
+Gitleaks
+Grype
+OAuth
+Octokit
+Podman
+Python
+Syft
+Terraform
+Trufflehog
+bot
+idempotence
+toolchain
+GPG
+Splunk
+CodeBuild
+CodePipeline
+Xcode
+// Environments
+dev
+perf
+perf2
+nonprod
+prod
+NonProd
+Prod
+mgmt
+MGMT
+// Development/Deployment Terms
+adhoc
+healthcheck
+undeploy
+Undeploy
+Runbook
+runbooks
+Runbooks
+Onboarding
+onboarding
+[A-Z]+s

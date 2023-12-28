@@ -6,11 +6,11 @@ How to improve DoS Integration's application performance to allow for multi-coho
 
 * Date: 2023/04/12
 * Status: Decided
-* Deciders: DI Development Team
+* Deciders: DoS Integration Development Team
 
 ## Context
 
-How can DI's application throughput be increased to support multi-cohorts. While keeping services processed in FIFO order (per cohort).
+How can DoS Integration's application throughput be increased to support multi-cohorts. While keeping services processed in FIFO order (per cohort).
 
 High level requirements:
 
@@ -21,7 +21,7 @@ High level requirements:
 
 ### Constraints
 
-If DI's performance is improved it is likely that Profile Manager's (PM) side will be the bottleneck for DoS Integration. Which will have to be rectified by PM's development team.
+If DoS Integration's performance is improved it is likely that Profile Manager's (PM) side will be the bottleneck for DoS Integration. Which will have to be rectified by PM's development team.
 
 ### Detailed analysis of the options
 
@@ -31,7 +31,7 @@ This option is to remove the orchestrator and have the service matcher place the
 
 Pros:
 
-* DI's Performance can scale dramatically (1X - 1000X)
+* DoS Integration's Performance can scale dramatically (1X - 1000X)
 * Reduced code means less maintenance. Orchestrator is difficult to read and understand the message processing.
 * No Additional Cost
 * Easy to add new cohorts or add specific routes for DoS types

@@ -66,7 +66,7 @@ module "dos_db_handler_lambda" {
   attach_network_policy = true
 
   vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
-  vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
 
   environment_variables = {
     "PROFILE"                            = var.profile,
@@ -168,7 +168,7 @@ module "event_replay_lambda" {
     "LOG_LEVEL"                          = var.log_level
     "IMAGE_VERSION"                      = var.event_replay_version
     "CHANGE_EVENTS_TABLE_NAME"           = var.change_events_table_name
-    "CHANGE_EVENT_SQS_NAME"              = var.holding_queue
+    "CHANGE_EVENT_SQS_URL"               = data.aws_sqs_queue.change_event_queue.url
   }
 }
 
@@ -285,7 +285,7 @@ module "service_matcher_lambda" {
   attach_network_policy = true
 
   vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
-  vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
 
   environment_variables = {
     "PROFILE"                            = var.profile
@@ -338,7 +338,7 @@ module "service_sync_lambda" {
   attach_network_policy = true
 
   vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
-  vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
 
   environment_variables = {
     "PROFILE"                            = var.profile
@@ -438,7 +438,7 @@ module "quality_checker_lambda" {
   attach_network_policy = true
 
   vpc_subnet_ids         = data.aws_subnets.texas_vpc_private_subnets.ids
-  vpc_security_group_ids = [aws_security_group.uec_dos_int_lambda_sg.id]
+  vpc_security_group_ids = [aws_security_group.lambda_sg.id]
 
   environment_variables = {
     "PROFILE"                            = var.profile

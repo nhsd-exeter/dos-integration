@@ -30,9 +30,10 @@ phases:
           make undeploy PROFILE=$PROFILE ENVIRONMENT=$ENVIRONMENT OPTS="-parallelism=30";
         fi
     finally:
+      - export PR=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e "s|^refs/heads/||")
       - |
         if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
-          make slack-codebuild-notification ENVIRONMENT=$ENVIRONMENT PROFILE=$PROFILE PIPELINE_NAME="Delete Environment After Merge Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Failed Please investigate"
+          make slack-codebuild-notification PR=$PR ENVIRONMENT=$ENVIRONMENT PROFILE=$PROFILE PIPELINE_NAME="Delete Environment After Merge Codebuild Stage" BUILD_STATUS=failure CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Failed Please investigate"
         else
-          make slack-codebuild-notification ENVIRONMENT=$ENVIRONMENT PROFILE=$PROFILE PIPELINE_NAME="Delete Environment After Merge Codebuild Stage" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Succeeded"
+          make slack-codebuild-notification PR=$PR ENVIRONMENT=$ENVIRONMENT PROFILE=$PROFILE PIPELINE_NAME="Delete Environment After Merge Codebuild Stage" BUILD_STATUS=success CODEBUILD_PROJECT_NAME=$CB_PROJECT_NAME CODEBUILD_BUILD_ID=$CODEBUILD_BUILD_ID SLACK_MESSAGE="Delete Succeeded"
         fi

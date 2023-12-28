@@ -1,5 +1,4 @@
-resource "aws_codebuild_project" "di_delete_blue_green_environment" {
-  count          = var.environment == "dev" ? 1 : 0
+resource "aws_codebuild_project" "delete_blue_green_environment" {
   name           = "${var.project_id}-${var.environment}-delete-blue-green-environment"
   description    = "Delete Blue/Green Environments"
   build_timeout  = "60"
@@ -40,6 +39,6 @@ resource "aws_codebuild_project" "di_delete_blue_green_environment" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = file("buildspecs/delete-blue-green-environment-buildspec.yml")
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/delete-blue-green-environment-buildspec.yml"
   }
 }
