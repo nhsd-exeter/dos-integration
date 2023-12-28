@@ -70,7 +70,7 @@ resource "aws_codebuild_project" "build_deploy_test_release" {
     type            = "GITHUB"
     git_clone_depth = 0
     location        = var.github_url
-    buildspec       = "infrastructure/stacks/development-and-deployment-tools/build-deploy-test-release-buildspec.yml"
+    buildspec       = "infrastructure/stacks/development-and-deployment-tools/batch-buildspecs/build-deploy-test-release-buildspec.yml"
   }
 
 }
