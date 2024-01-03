@@ -461,3 +461,10 @@ module "quality_checker_lambda" {
     "ODSCODE_STARTING_CHARACTER"         = var.odscode_starting_character
   }
 }
+
+
+resource "aws_lambda_permission" "quality_checker_lambda" {
+  action        = "lambda:InvokeFunction"
+  function_name = module.quality_checker_lambda.lambda_function_name
+  principal     = "events.amazonaws.com"
+}
