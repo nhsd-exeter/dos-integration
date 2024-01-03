@@ -249,7 +249,7 @@ resource "aws_cloudwatch_metric_alarm" "notify_when_quality_checker_schedule_fai
   alarm_actions             = [data.aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   comparison_operator       = "GreaterThanOrEqualToThreshold"
   datapoints_to_alarm       = "1"
-  dimensions                = { RuleName = "${var.quality_checker_lambda}-schedule" }
+  dimensions                = { RuleName = var.quality_checker_lambda_schedule_name }
   evaluation_periods        = "1"
   insufficient_data_actions = []
   metric_name               = "FailedInvocations"

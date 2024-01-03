@@ -257,3 +257,7 @@ TF_VAR_dos_db_read_only_user_name_secret_name := $(DB_READ_ONLY_USER_NAME_SECRET
 TF_VAR_dos_db_read_only_user_name_secret_key := $(DB_READ_ONLY_USER_NAME_SECRET_KEY)
 TF_VAR_slack_webhook_secret_key := $(SLACK_WEBHOOK_SECRET_KEY)
 TF_VAR_odscode_starting_character := $(ODSCODE_STARTING_CHARACTER)
+
+# Lambda Schedules
+TF_VAR_quality_checker_schedule_role := $(QUALITY_CHECKER_LAMBDA)-schedule-role
+TF_VAR_quality_checker_lambda_schedule_name := $(QUALITY_CHECKER_LAMBDA)-schedule
