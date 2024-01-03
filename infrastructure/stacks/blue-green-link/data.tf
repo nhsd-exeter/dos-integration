@@ -51,11 +51,3 @@ data "aws_sns_topic" "sns_topic_app_alerts_for_slack_route53_health_check_alarm_
   provider = aws.route53_health_check_alarm_region
   name     = var.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region
 }
-
-# ##############
-# # IAM
-# ##############
-
-# data "aws_iam_role" "quality_checker_schedule_role" {
-#   name = var.quality_checker_schedule_role
-# }
