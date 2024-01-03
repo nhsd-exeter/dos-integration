@@ -462,7 +462,7 @@ module "quality_checker_lambda" {
   }
 }
 
-
+#tfsec:ignore:aws-lambda-restrict-source-arn
 resource "aws_lambda_permission" "quality_checker_lambda" {
   action        = "lambda:InvokeFunction"
   function_name = module.quality_checker_lambda.lambda_function_name
