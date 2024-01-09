@@ -5,6 +5,7 @@ from typing import Self
 
 from aws_lambda_powertools.logging import Logger
 from psycopg import Connection
+from psycopg.rows import DictRow
 
 from .constants import (
     DOS_ACTIVE_STATUS_ID,
@@ -221,6 +222,11 @@ def get_specified_opening_times_from_db(connection: Connection, service_id: int)
     return specified_opening_times
 
 
+def convert_db_to_specified_opening_times(db_specified_opening_times: list[DictRow]) -> list[SpecifiedOpeningTime]:
+    """Retrieves specified opening times from  DoS database."""
+    return db_rows_to_spec_open_times(db_specified_opening_times)
+
+
 def get_standard_opening_times_from_db(connection: Connection, service_id: int) -> StandardOpeningTimes:
     """Retrieves standard opening times from DoS database.
 
@@ -242,6 +248,15 @@ def get_standard_opening_times_from_db(connection: Connection, service_id: int) 
     standard_opening_times = db_rows_to_std_open_times(cursor.fetchall())
     cursor.close()
     return standard_opening_times
+
+
+def convent_db_to_standard_opening_times(db_std_opening_times: list[DictRow]) -> StandardOpeningTimes:
+    """Retrieves standard opening times from DoS database.
+
+    If the service id does not even match any service this function will still return a blank StandardOpeningTime
+    with no opening periods.
+    """
+    return db_rows_to_std_open_times(db_std_opening_times)
 
 
 def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> list[SpecifiedOpeningTime]:

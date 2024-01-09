@@ -10,7 +10,7 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 from boto3 import client
 
 from .data_processing.check_for_change import compare_nhs_uk_and_dos_data
-from .data_processing.get_data import get_dos_service_and_history_one_query
+from .data_processing.get_data import get_dos_service_and_history
 from .data_processing.update_dos import update_dos_data
 from .reject_pending_changes.pending_changes import check_and_remove_pending_dos_changes
 from common.middlewares import unhandled_exception_logging
@@ -47,7 +47,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
         change_event: dict[str, Any] = update_request["change_event"]
         nhs_entity = NHSEntity(change_event)
         # Get current DoS state
-        dos_service, service_histories = get_dos_service_and_history_one_query(service_id=int(service_id))
+        dos_service, service_histories = get_dos_service_and_history(service_id=int(service_id))
         # Compare NHS UK and DoS data
         changes_to_dos = compare_nhs_uk_and_dos_data(
             dos_service=dos_service,
