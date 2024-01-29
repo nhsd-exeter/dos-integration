@@ -2,12 +2,12 @@ from json import dumps
 
 import boto3
 import pytest
-from moto import mock_secretsmanager
+from moto import mock_aws
 
 FILE_PATH = "application.common.secretsmanager"
 
 
-@mock_secretsmanager
+@mock_aws
 def test_get_secret() -> None:
     from application.common.secretsmanager import get_secret
 
@@ -22,7 +22,7 @@ def test_get_secret() -> None:
     assert return_value == secret
 
 
-@mock_secretsmanager
+@mock_aws
 def test_get_secret_resource_not_found() -> None:
     from application.common.secretsmanager import get_secret
 
