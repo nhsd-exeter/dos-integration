@@ -462,9 +462,10 @@ module "quality_checker_lambda" {
   }
 }
 
-#tfsec:ignore:aws-lambda-restrict-source-arn
 resource "aws_lambda_permission" "quality_checker_lambda" {
-  action        = "lambda:InvokeFunction"
-  function_name = module.quality_checker_lambda.lambda_function_name
-  principal     = "events.amazonaws.com"
+  action         = "lambda:InvokeFunction"
+  function_name  = module.quality_checker_lambda.lambda_function_name
+  principal      = "events.amazonaws.com"
+  source_account = var.aws_account_id
+  source_arn     = "arn:aws:events:${var.aws_region}:${var.aws_account_id}:rule/${var.project_id}-*"
 }
