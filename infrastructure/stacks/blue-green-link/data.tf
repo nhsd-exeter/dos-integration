@@ -14,6 +14,10 @@ data "aws_lambda_function" "change_event_dlq_handler" {
   function_name = var.change_event_dlq_handler_lambda
 }
 
+data "aws_lambda_function" "quality_checker" {
+  function_name = var.quality_checker_lambda
+}
+
 # ##############
 # # SQS
 # ##############

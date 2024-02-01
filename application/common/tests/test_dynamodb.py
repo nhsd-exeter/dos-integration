@@ -47,9 +47,9 @@ def test_get_latest_sequence_id_for_same_change_event_from_dynamodb(
     )
 
     event_received_time = int(time())
+    add_change_event_to_dynamodb(change_event.copy(), 20, event_received_time)
     add_change_event_to_dynamodb(change_event.copy(), 1, event_received_time)
     add_change_event_to_dynamodb(change_event.copy(), 2, event_received_time)
-    add_change_event_to_dynamodb(change_event.copy(), 20, event_received_time)
     add_change_event_to_dynamodb(change_event.copy(), 3, event_received_time)
     add_change_event_to_dynamodb(change_event.copy(), 4, event_received_time)
 
@@ -116,11 +116,11 @@ def test_get_latest_sequence_id_for_different_change_event_from_dynamodb(
     event_received_time = int(time())
     odscode = change_event["ODSCode"]
     new_change_event = change_event.copy()
-    add_change_event_to_dynamodb(new_change_event, 1, event_received_time)
-    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test1.com"), 2, event_received_time)
-    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test2.com"), 3, event_received_time)
-    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test3.com"), 4, event_received_time)
-    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test4.com"), 44, event_received_time)
+    add_change_event_to_dynamodb(new_change_event, 44, event_received_time)
+    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test1.com"), 1, event_received_time)
+    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test2.com"), 2, event_received_time)
+    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test3.com"), 3, event_received_time)
+    add_change_event_to_dynamodb(copy_and_modify_website(new_change_event, "www.test4.com"), 4, event_received_time)
     resp = dynamodb_client.query(
         TableName=environ["CHANGE_EVENTS_TABLE_NAME"],
         IndexName="gsi_ods_sequence",

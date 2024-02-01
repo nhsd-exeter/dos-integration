@@ -6,8 +6,8 @@ from random import choices, randint, uniform
 
 import pytest
 from aws_lambda_powertools.utilities.typing import LambdaContext
-from boto3 import Session
-from moto import mock_dynamodb
+from boto3 import client
+from moto import mock_aws
 from testfixtures import LogCapture
 
 from application.common.dos import DoSLocation, DoSService
@@ -121,22 +121,10 @@ def _aws_credentials() -> None:
 
 
 @pytest.fixture()
-def dynamodb_client(boto_session: object) -> object:
+def dynamodb_client(_aws_credentials: None) -> Generator[object, None, None]:
     """DynamoDB Client Class."""
-    return boto_session.client("dynamodb", region_name=environ["AWS_REGION"])
-
-
-@pytest.fixture()
-def dynamodb_resource(boto_session: object) -> object:
-    """DynamoDB Resource Class."""
-    return boto_session.resource("dynamodb", region_name=environ["AWS_REGION"])
-
-
-@pytest.fixture()
-def boto_session(_aws_credentials: None) -> Generator[object, None, None]:
-    """Mocked AWS Credentials for moto."""
-    with mock_dynamodb():
-        yield Session()
+    with mock_aws():
+        yield client("dynamodb", region_name=environ["AWS_REGION"])
 
 
 @pytest.fixture()

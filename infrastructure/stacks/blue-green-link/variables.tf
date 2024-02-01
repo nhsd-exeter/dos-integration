@@ -160,3 +160,22 @@ variable "update_request_dlq" {
   type        = string
   description = "DLQ for update request queue"
 }
+
+
+# ############################
+# # CLOUDWATCH EVENTS
+# ############################
+
+variable "quality_checker_lambda_schedule_name" {
+  type        = string
+  description = "Name of the cloudwatch event for the quality checker lambda"
+}
+
+# ############################
+# # IAM
+# ############################
+
+variable "quality_checker_schedule_role" {
+  type        = string
+  description = "The name of the role for the quality checker schedule"
+}

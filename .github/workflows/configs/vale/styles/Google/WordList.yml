@@ -52,7 +52,6 @@ swap:
   grayed-out: unavailable
   HTTPs: HTTPS
   in order to: to
-  ingest: import|load
   k8s: Kubernetes
   long press: touch & hold
   network IP address: internal IP address

@@ -492,3 +492,12 @@ variable "odscode_starting_character" {
   type        = string
   description = "The starting character of the ods code"
 }
+
+# ############################
+# # IAM
+# ############################
+
+variable "quality_checker_schedule_role" {
+  type        = string
+  description = "The name of the role for the quality checker schedule"
+}
