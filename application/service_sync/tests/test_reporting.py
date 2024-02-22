@@ -134,10 +134,8 @@ def test_log_website_is_invalid(mock_logger: MagicMock) -> None:
         error_reason="Website is not valid",
         error_info=f"NHSUK unedited website: '{nhs_entity.website}', NHSUK website='{nhs_website}'",
         dos_region=dos_service.get_region(),
-        extra={
-            "nhs_unedited_website": nhs_entity.website,
-            "nhs_website": nhs_website,
-        },
+        nhs_unedited_website=nhs_entity.website,
+        nhs_website=nhs_website,
     )
 
 
@@ -167,17 +165,15 @@ def test_log_service_updated(mock_logger: MagicMock) -> None:
     assert SERVICE_UPDATE_REPORT_ID == "SERVICE_UPDATE"
     mock_logger.assert_called_with(
         "Service update complete",
-        extra={
-            "report_key": SERVICE_UPDATE_REPORT_ID,
-            "action": action,
-            "previous_value": previous_value,
-            "new_value": new_value,
-            "data_field_modified": data_field_modified,
-            "service_name": service_name,
-            "service_uid": service_uid,
-            "type_id": type_id,
-            "dos_region": dos_service.get_region(),
-            "environment": "local",
-            "cloudwatch_metric_filter_matching_attribute": "ServiceUpdate",
-        },
+        report_key=SERVICE_UPDATE_REPORT_ID,
+        action=action,
+        previous_value=previous_value,
+        new_value=new_value,
+        data_field_modified=data_field_modified,
+        service_name=service_name,
+        service_uid=service_uid,
+        type_id=type_id,
+        dos_region=dos_service.get_region(),
+        environment="local",
+        cloudwatch_metric_filter_matching_attribute="ServiceUpdate",
     )

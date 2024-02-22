@@ -218,7 +218,7 @@ def compare_commissioned_service(changes: ChangesToDoS, service_type: Commission
     if current_comm_service != new_comm_service:
         logger.info(
             f"{service_type.TYPE_NAME} is not equal, DoS='{current_comm_service}' != NHS UK='{new_comm_service}'",
-            extra={
+            kwargs={
                 f"dos_{service_type.TYPE_NAME}": current_comm_service,
                 f"nhsuk_{service_type.TYPE_NAME}": new_comm_service,
             },
