@@ -393,7 +393,7 @@ def test_compare_commissioned_service(mock_logger: MagicMock) -> None:
     # Assert
     mock_logger.assert_called_once_with(
         f"{stub_service_type.TYPE_NAME} is not equal, DoS='{dos_service.stub_type}' != NHS UK='{nhs_entity.stub_type}'",
-        extra={
+        kwargs={
             f"dos_{stub_service_type.TYPE_NAME}": dos_service.stub_type,
             f"nhsuk_{stub_service_type.TYPE_NAME}": nhs_entity.stub_type,
         },
