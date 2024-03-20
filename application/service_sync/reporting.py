@@ -117,10 +117,8 @@ def log_website_is_invalid(nhs_uk_entity: NHSEntity, nhs_website: str, dos_servi
         "Website is not valid",
         f"NHSUK unedited website: '{nhs_uk_entity.website}', NHSUK website='{nhs_website}'",
         dos_service,
-        {
-            "nhs_unedited_website": nhs_uk_entity.website,
-            "nhs_website": nhs_website,
-        },
+        nhs_unedited_website=nhs_uk_entity.website,
+        nhs_website=nhs_website,
     )
 
 
@@ -129,7 +127,7 @@ def log_generic_change_event_error(
     error_reason: str,
     error_info: str,
     dos_service: DoSService,
-    extra: dict[str, str] | None = None,
+    **kwargs: tuple[str, str],
 ) -> None:
     """Log a generic change event error.
 
@@ -138,7 +136,7 @@ def log_generic_change_event_error(
         error_reason (str): The error reason
         error_info (str): The error info
         dos_service (DoSService): The DoS service to report
-        extra (dict[str, str], optional): Extra information to log. Defaults to None.
+        **kwargs (tuple[str, str]): Additional key value pairs to log
     """
     logger.warning(
         message,
@@ -146,7 +144,7 @@ def log_generic_change_event_error(
         error_reason=error_reason,
         error_info=error_info,
         dos_region=dos_service.get_region(),
-        extra=extra,
+        **kwargs,
     )
 
 
@@ -174,17 +172,15 @@ def log_service_updated(
     """
     logger.warning(
         "Service update complete",
-        extra={
-            "report_key": SERVICE_UPDATE_REPORT_ID,
-            "action": action,
-            "previous_value": previous_value,
-            "new_value": new_value,
-            "data_field_modified": data_field_modified,
-            "service_name": service_name,
-            "service_uid": service_uid,
-            "type_id": type_id,
-            "dos_region": dos_service.get_region(),
-            "environment": getenv("ENVIRONMENT"),
-            "cloudwatch_metric_filter_matching_attribute": "ServiceUpdate",
-        },
+        report_key=SERVICE_UPDATE_REPORT_ID,
+        action=action,
+        previous_value=previous_value,
+        new_value=new_value,
+        data_field_modified=data_field_modified,
+        service_name=service_name,
+        service_uid=service_uid,
+        type_id=type_id,
+        dos_region=dos_service.get_region(),
+        environment=getenv("ENVIRONMENT"),
+        cloudwatch_metric_filter_matching_attribute="ServiceUpdate",
     )

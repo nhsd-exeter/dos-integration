@@ -31,4 +31,6 @@ phases:
 
   post_build:
     commands:
+      # Temp solution for issue with the scan not being available in time for the aws-ecr-get-security-scan make target
+      - sleep 20
       - make aws-ecr-get-security-scan REPOSITORY=$LAMBDA TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true

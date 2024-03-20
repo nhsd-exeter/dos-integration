@@ -83,7 +83,7 @@ The DoS Integration project aims to keep any updates made on NHS.uk consistent w
 The current technology stack is:
 
 - Python - Main programming language
-- AWS: Lambda, DynamoDB, API Gateway, Codepipeline, KMS, SQS, S3
+- AWS: Lambda, DynamoDB, API Gateway, CodePipeline, KMS, SQS, S3
 - Terraform
 
 ## Quick Start
@@ -128,7 +128,7 @@ The following is equivalent to the `curl -L bit.ly/make-devops-macos-setup | bas
 
     make macos-setup
 
-There are configuration options that should be set before proceeding. The following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you authenticated in the AWS non-prod account first before running `make setup`
+There are configuration options that should be set before proceeding. The following command will ensure that tooling like `docker` and `git` are going to operate as expected, including local secret scanning and code formatting are enabled. Make sure you authenticated in the AWS Non-Prod account first before running `make setup`
 
     make setup
 
@@ -290,7 +290,7 @@ To run a load test
 
 #### Where are the performance tests run?
 
-Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages ad hoc against the performance environment.
+Performance tests are run locally against development environments. They are also run in the performance AWS CodeBuild stages adhoc against the performance environment.
 
 #### Collecting Performance Test Results
 
@@ -335,7 +335,7 @@ However in the task deploy and test CodeBuild uses a timestamp and commit hash t
 
 ![CI/CD Pipelines](./documentation/diagrams/DevOps-Pipelines%20and%20Automation.drawio.png)
 
-All `test` CodeBuild automations can be found in the AWS CodePipeline/CodeBuild areas in the `Texas` `mgmt` account.
+All `test` CodeBuild automations can be found in the AWS CodePipeline/CodeBuild areas in the `Texas` `MGMT` account.
 
 More information can be found on DoS Integration's confluence workspace <https://nhsd-confluence.digital.nhs.uk/display/DI/Code+Development+and+Deployment>
 
@@ -411,7 +411,7 @@ Note: The shared environment must be unlinked from the blue/green environment be
 
 #### Trigger Blue/Green Deployment Pipeline
 
-This will trigger the blue/green deployment pipeline to deploy the commit hash to the blue/green environment in the mgmt account.
+This will trigger the blue/green deployment pipeline to deploy the commit hash to the blue/green environment in the MGMT account.
 The AWS CodePipeline name will be `uec-dos-int-dev-cicd-blue-green-deployment-pipeline`
 
 COMMIT should be the commit hash of the commit you want to deploy.
@@ -426,7 +426,7 @@ An approval stage stops this command from automatically deploying to Live. But i
 
 #### Trigger Shared Resources Deployment Pipeline
 
-This will trigger the shared resources deployment pipeline to deploy the commit hash to the shared resources environment in the mgmt account.
+This will trigger the shared resources deployment pipeline to deploy the commit hash to the shared resources environment in the MGMT account.
 The AWS CodePipeline name will be `uec-dos-int-dev-cicd-shared-resources-deployment-pipeline`
 
 COMMIT should be the commit hash of the commit you want to deploy.
@@ -441,7 +441,7 @@ An approval stage stops this command from automatically deploying to Live. But i
 
 #### Undeploy Blue/Green Environment
 
-This will undeploy the blue/green environment and is intended to be used when the blue/green rollback environment is no longer needed.
+This will remove the blue/green environment and is intended to be used when the blue/green rollback environment is no longer needed.
 
 Note: If the blue/green environment is linked to the shared resources environment then it must be unlinked before running this command.
 
@@ -451,7 +451,7 @@ Note: If the blue/green environment is linked to the shared resources environmen
 
 #### Undeploy Shared Resources Environment
 
-This will undeploy the shared resources environment and is intended to be used when the shared resources environment is no longer needed.
+This will remove the shared resources environment and is intended to be used when the shared resources environment is no longer needed.
 
 Note: No blue/green environments can exist for this shared resources environment when running this command.
 If they do the blue/green environments must be unlinked and undeployed first.
@@ -482,7 +482,7 @@ To quick update the lambdas run the following command. Note this only updates th
 
 ### Remove deployment with commit tag
 
-You can remove a dev deployment using a single command to create a tag which then runs an AWS CodeBuild project that will undeploy that environment
+You can remove a dev deployment using a single command to create a tag which then runs an AWS CodeBuild project that will remove that environment
 
     make tag-commit-to-destroy-environment ENVIRONMENT=[environment to destroy] COMMIT=[short commit hash]
     e.g. make tag-commit-to-destroy-environment ENVIRONMENT=ds-363 COMMIT=2bc43dd // This destroys the ds-363 dev environment
