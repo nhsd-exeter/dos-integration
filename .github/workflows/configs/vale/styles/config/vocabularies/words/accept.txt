@@ -19,6 +19,7 @@ Splunk
 CodeBuild
 CodePipeline
 Xcode
+Tunnelblick
 // Environments
 dev
 perf
@@ -32,11 +33,13 @@ MGMT
 // Development/Deployment Terms
 adhoc
 healthcheck
+runbook
+Runbook
 undeploy
 Undeploy
-Runbook
-runbooks
-Runbooks
 Onboarding
 onboarding
+// Miscellaneous
+bbbbbb
+gggggg
 [A-Z]+s
