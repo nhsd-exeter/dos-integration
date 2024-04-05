@@ -26,4 +26,6 @@ phases:
       - unset AWS_SECRET_ACCESS_KEY
       - unset AWS_SESSION_TOKEN
       - make docker-push NAME=$BUILD_ITEM_NAME VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      # Temp solution for issue with the scan not being available in time for the aws-ecr-get-security-scan make target
+      - sleep 20
       - make aws-ecr-get-security-scan REPOSITORY=$BUILD_ITEM_NAME TAG=$CODEBUILD_RESOLVED_SOURCE_VERSION SHOW_ALL_WARNINGS=true FAIL_ON_WARNINGS=true
