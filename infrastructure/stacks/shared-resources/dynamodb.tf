@@ -40,6 +40,10 @@ resource "aws_dynamodb_table" "message-history-table" {
     enabled = true
   }
 
+  tags = {
+    "backup_plan" = "none"
+  }
+
   depends_on = [
     aws_kms_key.signing_key
   ]
