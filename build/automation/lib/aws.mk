@@ -333,8 +333,8 @@ aws-ecr-get-image-digest: ### Get ECR image digest by matching tag pattern - man
 	" | make -s docker-run-tools CMD="jq -rf $$file" | head -n 1
 
 aws-ecr-get-security-scan: ### Fetches container scan report and returns findings - Mandatory REPOSITORY, TAG=[image tag], UNACCEPTABLE_VULNERABILITY_LEVELS=[LOW,MEDIUM,HIGH,CRITICAL]; optional: FAIL_ON_WARNINGS=false, SHOW_ALL_WARNINGS=false
-	make -s aws-ecr-wait-for-image-scan-complete REPOSITORY=$(REPOSITORY) TAG=$(TAG)
-	SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG))
+
+	SCAN_FINDINGS=$$(make -s aws-ecr-wait-for-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG) WAIT=30)
 	SCAN_WARNINGS=$$(echo $$SCAN_FINDINGS | jq '.imageScanFindings.findingSeverityCounts')
 	CRITICAL=$$(echo $$SCAN_WARNINGS | jq '.CRITICAL')
 	HIGH=$$(echo $$SCAN_WARNINGS | jq '.HIGH')
@@ -370,6 +370,12 @@ aws-ecr-wait-for-image-scan-complete: ### Waits for ECR image scan report - REPO
 			--image-id imageTag=$(TAG) \
 			--output json \
 		"
+
+aws-ecr-wait-for-describe-image-scan-findings:  ### Describes ECR image scan report - REPOSITORY, TAG=[image tag], WAIT=[wait in seconds]
+	for i in {1..$(WAIT)}; \
+	do SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG) 2>/dev/null) && break || sleep 1; done
+	echo $$SCAN_FINDINGS
+
 
 aws-ecr-describe-image-scan-findings: ### Describes ECR image scan report - REPOSITORY, TAG=[image tag]
 		make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
