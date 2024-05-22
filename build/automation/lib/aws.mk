@@ -372,9 +372,13 @@ aws-ecr-wait-for-image-scan-complete: ### Waits for ECR image scan report - REPO
 		"
 
 aws-ecr-wait-for-describe-image-scan-findings:  ### Describes ECR image scan report - REPOSITORY, TAG=[image tag], WAIT=[wait in seconds]
+	SUCCESS=false
 	for i in {1..$(WAIT)}; \
-	do SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG) 2>/dev/null) && break || sleep 1; done
+	do SCAN_FINDINGS=$$(make -s aws-ecr-describe-image-scan-findings REPOSITORY=$(REPOSITORY) TAG=$(TAG) 2>/dev/null) && SUCCESS=true && break || SUCCESS=false && sleep 1; done
 	echo $$SCAN_FINDINGS
+	if [[ $$SUCCESS != 'true' ]]; then
+		exit 1
+	fi
 
 
 aws-ecr-describe-image-scan-findings: ### Describes ECR image scan report - REPOSITORY, TAG=[image tag]
