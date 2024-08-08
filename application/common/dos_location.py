@@ -6,7 +6,7 @@ from typing import Self
 class DoSLocation:
     """A Class to represent a location in the UK store within the DoS Database locations table."""
 
-    id: int  # noqa: A003
+    id: int
     postcode: str
     easting: float
     northing: float

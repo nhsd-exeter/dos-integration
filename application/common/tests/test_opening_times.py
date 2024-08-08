@@ -462,11 +462,11 @@ def test_specifiedopentime_export_service_history_format_open() -> None:
     # Act
     result = specified_opening_time.export_service_history_format()
     # Assert
-    assert [
+    assert result == [
         "2021-12-24-28800-43200",
         "2021-12-24-46800-63000",
         "2021-12-24-68400-84600",
-    ] == result
+    ]
 
 
 def test_specifiedopentime_export_service_history_format_closed() -> None:
@@ -475,7 +475,7 @@ def test_specifiedopentime_export_service_history_format_closed() -> None:
     # Act
     result = specified_opening_time.export_service_history_format()
     # Assert
-    assert ["2021-12-24-closed"] == result
+    assert result == ["2021-12-24-closed"]
 
 
 def test_specifiedopentime_export_dos_log_format_open() -> None:
@@ -488,7 +488,7 @@ def test_specifiedopentime_export_dos_log_format_open() -> None:
     # Act
     result = specified_opening_time.export_dos_log_format()
     # Assert
-    assert ["2021-12-24-09:00-11:00"] == result
+    assert result == ["2021-12-24-09:00-11:00"]
 
 
 def test_specifiedopentime_export_dos_log_format_closed() -> None:
@@ -497,7 +497,7 @@ def test_specifiedopentime_export_dos_log_format_closed() -> None:
     # Act
     result = specified_opening_time.export_dos_log_format()
     # Assert
-    assert ["2021-12-24-closed"] == result
+    assert result == ["2021-12-24-closed"]
 
 
 @pytest.mark.parametrize(
@@ -636,7 +636,7 @@ def test_stdopeningtimes_export_opening_times_for_day() -> None:
     # Act
     response = st1.export_opening_times_for_day("monday")
     # Assert
-    assert ["08:00-12:00", "13:00-18:00"] == response
+    assert response == ["08:00-12:00", "13:00-18:00"]
 
 
 def test_stdopeningtimes_export_opening_times_in_seconds_for_day() -> None:
@@ -649,7 +649,7 @@ def test_stdopeningtimes_export_opening_times_in_seconds_for_day() -> None:
     # Act
     response = st1.export_opening_times_in_seconds_for_day("monday")
     # Assert
-    assert ["32400-46800", "50400-68400"] == response
+    assert response == ["32400-46800", "50400-68400"]
 
 
 def test_standard_opening_times_export_test_format() -> None:

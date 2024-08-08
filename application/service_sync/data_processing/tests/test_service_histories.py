@@ -24,9 +24,9 @@ def test_service_histories(mock_time: MagicMock) -> None:
     # Act
     service_histories = ServiceHistories(service_id=SERVICE_ID)
     # Assert
-    assert "new_change" == service_histories.NEW_CHANGE_KEY
-    assert {} == service_histories.service_history
-    assert {} == service_histories.existing_service_history
+    assert service_histories.NEW_CHANGE_KEY == "new_change"
+    assert service_histories.service_history == {}
+    assert service_histories.existing_service_history == {}
     assert service_histories.service_id == SERVICE_ID
     assert time == service_histories.current_epoch_time
     mock_time.assert_called_once()
@@ -61,7 +61,7 @@ def test_service_histories_get_service_history_from_db_no_rows_returned() -> Non
     service_history.get_service_history_from_db(mock_connection)
     # Assert
     assert False is service_history.history_already_exists
-    assert {} == service_history.existing_service_history
+    assert service_history.existing_service_history == {}
     mock_connection.cursor.assert_called_once_with(row_factory=dict_row)
     mock_connection.cursor.return_value.execute.assert_called_once_with(
         query="Select history from servicehistories where serviceid = %(SERVICE_ID)s",
@@ -77,13 +77,13 @@ def test_service_histories_create_service_histories_entry_no_history_already_exi
     # Act
     service_history.create_service_histories_entry()
     # Assert
-    assert {
+    assert service_history.service_history == {
         service_history.NEW_CHANGE_KEY: {
             "new": {},
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
         },
-    } == service_history.service_history
+    }
 
 
 def test_service_histories_add_change() -> None:
@@ -96,13 +96,13 @@ def test_service_histories_add_change() -> None:
     # Act
     service_history.add_change(change_key, mock_service_history_change)
     # Assert
-    assert {
+    assert service_history.service_history == {
         service_history.NEW_CHANGE_KEY: {
             "new": {change_key: change},
             "initiator": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
             "approver": {"userid": "DOS_INTEGRATION", "timestamp": "TBD"},
         },
-    } == service_history.service_history
+    }
     mock_service_history_change.get_change.assert_called_once_with()
 
 
@@ -115,9 +115,9 @@ def test_service_histories_add_standard_opening_times_change(mock_service_histor
     current_opening_times.export_opening_times_in_seconds_for_day.return_value = current_opening_times_in_seconds = [
         "456-789",
     ]
-    current_opening_times.export_opening_times_for_day.return_value = (
-        current_opening_times_for_day
-    ) = "current_opening_times_for_day"
+    current_opening_times.export_opening_times_for_day.return_value = current_opening_times_for_day = (
+        "current_opening_times_for_day"
+    )
     new_opening_times = MagicMock()
     new_opening_times.export_opening_times_in_seconds_for_day.return_value = new_opening_times_in_seconds = ["123-456"]
     weekday = "Monday"
@@ -153,9 +153,9 @@ def test_service_histories_add_standard_opening_times_change_no_change(
     service_history.add_change = mock_add_change = MagicMock()
     current_opening_times = MagicMock()
     current_opening_times.export_opening_times_in_seconds_for_day.return_value = []
-    current_opening_times.export_opening_times_for_day.return_value = (
-        current_opening_times_for_day
-    ) = "current_opening_times_for_day"
+    current_opening_times.export_opening_times_for_day.return_value = current_opening_times_for_day = (
+        "current_opening_times_for_day"
+    )
     new_opening_times = MagicMock()
     new_opening_times.export_opening_times_in_seconds_for_day.return_value = []
     weekday = "Monday"
@@ -354,11 +354,11 @@ def test_service_histories_get_formatted_specified_opening_times() -> None:
         opening_times=specified_opening_times,
     )
     # Assert
-    assert [
+    assert formatted_specified_opening_times == [
         "2022-12-26-3600-7200",
         "2022-12-26-10800-18000",
         "2022-12-26-28800-43200",
-    ] == formatted_specified_opening_times
+    ]
 
 
 @patch(f"{FILE_PATH}.datetime")
