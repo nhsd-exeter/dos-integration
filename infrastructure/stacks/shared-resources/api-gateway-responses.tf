@@ -7,9 +7,6 @@ resource "aws_api_gateway_method_response" "response_200" {
     "method.response.header.Cache-control"             = true
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
   response_models = {
     "application/json" = aws_api_gateway_model.default_model.name
@@ -25,9 +22,6 @@ resource "aws_api_gateway_method_response" "response_400" {
     "method.response.header.Cache-control"             = true
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
   response_models = {
     "application/json" = aws_api_gateway_model.default_model.name
@@ -43,9 +37,6 @@ resource "aws_api_gateway_method_response" "response_500" {
     "method.response.header.Cache-control"             = true
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
   response_models = {
     "application/json" = aws_api_gateway_model.default_model.name
@@ -63,8 +54,8 @@ resource "aws_api_gateway_integration_response" "di_endpoint_integration_success
     "method.response.header.Cache-control"             = "'no-cache'"
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
+    "method.response.header.X-Frame-Options"           = "'DENY'"
+    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
 
@@ -87,8 +78,8 @@ resource "aws_api_gateway_integration_response" "response_400" {
     "method.response.header.Cache-control"             = "'no-cache'"
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
+    "method.response.header.X-Frame-Options"           = "'DENY'"
+    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
 
@@ -111,8 +102,8 @@ resource "aws_api_gateway_integration_response" "response_500" {
     "method.response.header.Cache-control"             = "'no-cache'"
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
+    "method.response.header.X-Frame-Options"           = "'DENY'"
+    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "default-src 'self'"
   }
 
@@ -129,11 +120,6 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
   status_code        = "403"
   response_type      = "ACCESS_DENIED"
   response_templates = ({ "application/json" : jsonencode({ "Message" : "Access Denied, please contact the development team for assistance" }) })
-  response_parameters = {
-    "method.response.header.X-Frame-Options"           = "DENY"
-    "method.response.header.X-Content-Type-Option"     = "nosniff"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
-  }
 
   depends_on = [
     aws_api_gateway_integration.di_endpoint_integration,
