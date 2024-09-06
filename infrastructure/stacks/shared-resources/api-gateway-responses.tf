@@ -65,7 +65,7 @@ resource "aws_api_gateway_integration_response" "di_endpoint_integration_success
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
     "method.response.header.X-Content-Type-Option"     = "'nosniff'"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
+    "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
   depends_on = [
@@ -89,7 +89,7 @@ resource "aws_api_gateway_integration_response" "response_400" {
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
     "method.response.header.X-Content-Type-Option"     = "'nosniff'"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
+    "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
   depends_on = [
@@ -113,7 +113,7 @@ resource "aws_api_gateway_integration_response" "response_500" {
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
     "method.response.header.X-Content-Type-Option"     = "'nosniff'"
-    "method.response.header.Content-Security-Policy"   = "default-src 'self'"
+    "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
   depends_on = [
