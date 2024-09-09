@@ -167,3 +167,4 @@ resource "aws_api_gateway_gateway_response" "invalid_api_key_403_response" {
     aws_api_gateway_method.di_endpoint_method,
   ]
 }
+
