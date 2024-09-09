@@ -8,7 +8,6 @@ resource "aws_api_gateway_method_response" "response_200" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
     "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
@@ -27,7 +26,6 @@ resource "aws_api_gateway_method_response" "response_400" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
     "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
@@ -46,7 +44,6 @@ resource "aws_api_gateway_method_response" "response_500" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
     "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
