@@ -8,7 +8,7 @@ resource "aws_api_gateway_method_response" "response_200" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
+    "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
   response_models = {
@@ -26,7 +26,7 @@ resource "aws_api_gateway_method_response" "response_400" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
+    "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
   response_models = {
@@ -44,7 +44,7 @@ resource "aws_api_gateway_method_response" "response_500" {
     "method.response.header.Pragma"                    = true
     "method.response.header.Strict-Transport-Security" = true
     "method.response.header.X-Frame-Options"           = true
-    "method.response.header.X-Content-Type-Option"     = true
+    "method.response.header.X-Content-Type-Options"    = true
     "method.response.header.Content-Security-Policy"   = true
   }
   response_models = {
@@ -64,7 +64,7 @@ resource "aws_api_gateway_integration_response" "di_endpoint_integration_success
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
-    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
+    "method.response.header.X-Content-Type-Options"    = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
@@ -88,7 +88,7 @@ resource "aws_api_gateway_integration_response" "response_400" {
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
-    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
+    "method.response.header.X-Content-Type-Options"    = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
@@ -112,7 +112,7 @@ resource "aws_api_gateway_integration_response" "response_500" {
     "method.response.header.Pragma"                    = "'no-store'"
     "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
     "method.response.header.X-Frame-Options"           = "'DENY'"
-    "method.response.header.X-Content-Type-Option"     = "'nosniff'"
+    "method.response.header.X-Content-Type-Options"    = "'nosniff'"
     "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
@@ -136,4 +136,3 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
     aws_api_gateway_method.di_endpoint_method,
   ]
 }
-
