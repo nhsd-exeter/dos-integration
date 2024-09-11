@@ -148,6 +148,15 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
   response_type      = "ACCESS_DENIED"
   response_templates = ({ "application/json" : jsonencode({ "Message" : "Access Denied, please contact the development team for assistance" }) })
 
+  response_parameters = {
+    "method.response.header.Cache-control"             = "'no-cache'"
+    "method.response.header.Pragma"                    = "'no-store'"
+    "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
+    "method.response.header.X-Frame-Options"           = "'DENY'"
+    "method.response.header.X-Content-Type-Options"    = "'nosniff'"
+    "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
+  }
+
   depends_on = [
     aws_api_gateway_integration.di_endpoint_integration,
     aws_api_gateway_resource.di_endpoint_change_event_path,
