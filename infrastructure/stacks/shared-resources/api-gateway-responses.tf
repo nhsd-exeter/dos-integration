@@ -163,3 +163,4 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
     aws_api_gateway_method.di_endpoint_method,
   ]
 }
+
