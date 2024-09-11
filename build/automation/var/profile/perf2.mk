@@ -7,8 +7,8 @@ LOG_LEVEL := INFO
 
 # DB Name
 DB_CLUSTER_NAME := uec-core-dos-performance2-cluster-14
-DB_WRITER_NAME := uec-core-dos-performance2-cluster-14-one
-DB_READER_NAME := uec-core-dos-performance2-cluster-14-two
+DB_WRITER_NAME := uec-core-dos-performance2-cluster-14-two
+DB_READER_NAME := uec-core-dos-performance2-cluster-14-one
 
 # DB Route 53s
 DB_WRITER_ROUTE_53 := uec-core-dos-performance2-dos-primary-rw.dos-datastore-performance2
