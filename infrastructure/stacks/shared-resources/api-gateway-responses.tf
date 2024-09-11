@@ -149,12 +149,12 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
   response_templates = ({ "application/json" : jsonencode({ "Message" : "Access Denied, please contact the development team for assistance" }) })
 
   response_parameters = {
-    "gatewayresponse.response.header.Cache-control"             = "'no-cache'"
-    "gatewayresponse.response.header.Pragma"                    = "'no-store'"
-    "gatewayresponse.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
-    "gatewayresponse.response.header.X-Frame-Options"           = "'DENY'"
-    "gatewayresponse.response.header.X-Content-Type-Options"    = "'nosniff'"
-    "gatewayresponse.response.header.Content-Security-Policy"   = "'default-src 'self''"
+    "gatewayresponse.header.Cache-control"             = "'no-cache'"
+    "gatewayresponse.header.Pragma"                    = "'no-store'"
+    "gatewayresponse.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
+    "gatewayresponse.header.X-Frame-Options"           = "'DENY'"
+    "gatewayresponse.header.X-Content-Type-Options"    = "'nosniff'"
+    "gatewayresponse.header.Content-Security-Policy"   = "'default-src 'self''"
   }
 
   depends_on = [
