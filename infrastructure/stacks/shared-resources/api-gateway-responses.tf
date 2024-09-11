@@ -20,7 +20,7 @@ resource "aws_api_gateway_method_response" "response_400" {
   http_method = aws_api_gateway_method.di_endpoint_method.http_method
   resource_id = aws_api_gateway_resource.di_endpoint_change_event_path.id
   rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
-  status_code = "400"
+  status_code = "4xx"
   response_parameters = {
     "method.response.header.Cache-control"             = true
     "method.response.header.Pragma"                    = true
