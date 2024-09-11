@@ -118,6 +118,30 @@ resource "aws_api_gateway_integration_response" "response_400" {
   ]
 }
 
+resource "aws_api_gateway_integration_response" "response_403" {
+  http_method        = aws_api_gateway_method.di_endpoint_method.http_method
+  resource_id        = aws_api_gateway_resource.di_endpoint_change_event_path.id
+  rest_api_id        = aws_api_gateway_rest_api.di_endpoint.id
+  status_code        = aws_api_gateway_method_response.response_403.status_code
+  selection_pattern  = "^4[0-9][0-9]"
+  response_templates = ({ "application/json" : jsonencode({ "Message" : "Bad Request" }) })
+  response_parameters = {
+    "method.response.header.Cache-control"             = "'no-cache'"
+    "method.response.header.Pragma"                    = "'no-store'"
+    "method.response.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
+    "method.response.header.X-Frame-Options"           = "'DENY'"
+    "method.response.header.X-Content-Type-Options"    = "'nosniff'"
+    "method.response.header.Content-Security-Policy"   = "'default-src 'self''"
+  }
+
+  depends_on = [
+    aws_api_gateway_method_response.response_403,
+    aws_api_gateway_integration.di_endpoint_integration,
+    aws_api_gateway_resource.di_endpoint_change_event_path,
+    aws_api_gateway_method.di_endpoint_method,
+  ]
+}
+
 resource "aws_api_gateway_integration_response" "response_500" {
   http_method        = aws_api_gateway_method.di_endpoint_method.http_method
   resource_id        = aws_api_gateway_resource.di_endpoint_change_event_path.id
