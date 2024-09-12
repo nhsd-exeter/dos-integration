@@ -171,6 +171,37 @@ resource "aws_api_gateway_gateway_response" "access_denied_403_gateway_response"
   response_type      = "ACCESS_DENIED"
   response_templates = ({ "application/json" : jsonencode({ "Message" : "Access Denied, please contact the development team for assistance" }) })
 
+  response_parameters = {
+    "gatewayresponse.header.Cache-control"             = "'no-cache'"
+    "gatewayresponse.header.Pragma"                    = "'no-store'"
+    "gatewayresponse.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
+    "gatewayresponse.header.X-Frame-Options"           = "'DENY'"
+    "gatewayresponse.header.X-Content-Type-Options"    = "'nosniff'"
+    "gatewayresponse.header.Content-Security-Policy"   = "'default-src 'self''"
+  }
+
+  depends_on = [
+    aws_api_gateway_integration.di_endpoint_integration,
+    aws_api_gateway_resource.di_endpoint_change_event_path,
+    aws_api_gateway_method.di_endpoint_method,
+  ]
+}
+
+resource "aws_api_gateway_gateway_response" "invalid_api_key_403_response" {
+  rest_api_id        = aws_api_gateway_rest_api.di_endpoint.id
+  status_code        = "403"
+  response_type      = "INVALID_API_KEY"
+  response_templates = ({ "application/json" : jsonencode({ "message" : "Forbiddennn" }) })
+
+  response_parameters = {
+    "gatewayresponse.header.Cache-Control"             = "'no-cache'"
+    "gatewayresponse.header.Pragma"                    = "'no-store'"
+    "gatewayresponse.header.Strict-Transport-Security" = "'max-age=31536000; includeSubDomains'"
+    "gatewayresponse.header.X-Frame-Options"           = "'DENY'"
+    "gatewayresponse.header.X-Content-Type-Options"    = "'nosniff'"
+    "gatewayresponse.header.Content-Security-Policy"   = "'default-src 'self''"
+  }
+
   depends_on = [
     aws_api_gateway_integration.di_endpoint_integration,
     aws_api_gateway_resource.di_endpoint_change_event_path,
