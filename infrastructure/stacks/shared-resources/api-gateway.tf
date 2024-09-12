@@ -95,8 +95,7 @@ EOF
 resource "aws_api_gateway_deployment" "di_endpoint_deployment" {
   rest_api_id = aws_api_gateway_rest_api.di_endpoint.id
   depends_on = [
-    aws_api_gateway_rest_api_policy.di_endpoint_policy,
-    aws_api_gateway_gateway_response.invalid_api_key_403_response
+    aws_api_gateway_rest_api_policy.di_endpoint_policy
   ]
   triggers = {
     redeployment = join("", [md5(jsonencode([
