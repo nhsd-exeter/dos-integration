@@ -191,7 +191,7 @@ resource "aws_api_gateway_gateway_response" "invalid_api_key_403_response" {
   rest_api_id        = aws_api_gateway_rest_api.di_endpoint.id
   status_code        = "403"
   response_type      = "INVALID_API_KEY"
-  response_templates = ({ "application/json" : jsonencode({ "message" : "Forbiddennn" }) })
+  response_templates = ({ "application/json" : jsonencode({ "message" : "Forbidden" }) })
 
   response_parameters = {
     "gatewayresponse.header.Cache-Control"             = "'no-cache'"
@@ -208,4 +208,3 @@ resource "aws_api_gateway_gateway_response" "invalid_api_key_403_response" {
     aws_api_gateway_method.di_endpoint_method,
   ]
 }
-

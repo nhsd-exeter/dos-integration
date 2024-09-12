@@ -59,7 +59,9 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
   Scenario: F001SXX3. A Changed event with aligned data does not save an update to DoS
     Given a basic service is created
     When the Changed Event is sent for processing with "valid" api key
-    Then the "service-sync" lambda shows field "message" with value "No changes to save"
+    Then the change event response has status code "200"
+    And the response has security headers
+    And the "service-sync" lambda shows field "message" with value "No changes to save"
     And the service history is not updated
 
   @complete @general

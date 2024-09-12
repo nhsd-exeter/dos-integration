@@ -1211,6 +1211,25 @@ def step_then_should_transform_into(context: Context, status: str) -> None:
         str(context.response.status_code) == status
     ), f"Status code not as expected: {context.response.status_code} != {status} Error: {message} - {status}"
 
+@then('the response has security headers')
+def step_then_security_headers_are_present(context: Context) -> None:
+    """Assert the change event response has security headers.
+
+    Args:
+        context (Context): The context object.
+    """
+    expected_headers = {
+        'X-Frame-Options': 'DENY',
+        'Content-Security-Policy': "default-src 'self'",
+        'X-Content-Type-Options': 'nosniff',
+    }
+
+    for header, expected_value in expected_headers.items():
+        assert header in context.response.headers, f"'{header}' header is missing in the response"
+        assert context.response.headers[header] == expected_value, (
+            f"'{header}' value is not as expected: {context.response.headers[header]} != {expected_value}"
+        )
+
 
 @then(parse('"{attribute}" attribute is identified in the "{report}" report in "{lambda_name}" logs'))
 def step_then_attribute_is_identified_in_the_report(
