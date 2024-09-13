@@ -84,7 +84,7 @@ integration-test: # End to end test DI project - mandatory: PROFILE, TAG=[comple
 	RUN_ID=$$RANDOM
 	echo RUN_ID=$$RUN_ID
 	make -s docker-run-tester \
-	CMD="pytest steps -k $(TAG) -vvvv --gherkin-terminal-reporter -p no:sugar -n $(PARALLEL_TEST_COUNT) --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10" \
+	CMD="sh -c 'pip show pytest-bdd pytest-xdist && pytest steps -k $(TAG) -vvvv --gherkin-terminal-reporter -p no:sugar --cucumberjson=./testresults.json --reruns 2 --reruns-delay 10'" \
 	DIR=./test/integration \
 	ARGS=" \
 		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VAR_DIR)/project.mk) \
@@ -499,7 +499,7 @@ docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,
 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+		docker run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
