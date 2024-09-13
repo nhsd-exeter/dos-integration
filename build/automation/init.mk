@@ -765,6 +765,7 @@ endif
 
 ifeq (true, $(shell [ ! -f $(SETUP_COMPLETE_FLAG_FILE) ] && echo true))
 ifeq (true, $(shell [ $(SYSTEM_DIST) = "macos" ] && echo true))
+ifneq ("dumb", "$$TERM")
 # macOS: Xcode Command Line Tools
 ifneq (0, $(shell xcode-select -p > /dev/null 2>&1; echo $$?))
 $(info )
@@ -807,6 +808,7 @@ endif
 # *NIX: Docker
 ifneq (0, $(shell which docker > /dev/null 2>&1; echo $$?))
 $(error $(shell tput setaf 202; echo "WARNING: Please, before proceeding install Docker"; tput sgr0))
+endif
 endif
 endif
 endif

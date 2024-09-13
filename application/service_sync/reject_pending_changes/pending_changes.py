@@ -24,7 +24,7 @@ logger = Logger(child=True)
 class PendingChange:
     """A class representing a pending change from the DoS database with useful information about the change."""
 
-    id: str  # Id of the pending change from the change table  # noqa: A003
+    id: str  # Id of the pending change from the change table
     value: str  # Value of the pending change as a JSON string
     creatorsname: str  # User name of the user who made the change
     email: str  # Email address of the user who made the change

@@ -27,7 +27,7 @@ dos_location_cache = {}
 class DoSService:
     """Class to represent a DoS Service."""
 
-    id: int  # noqa: A003
+    id: int
     uid: int
     name: str
     odscode: str
@@ -251,10 +251,10 @@ def db_rows_to_spec_open_times(db_rows: Iterable[dict]) -> list[SpecifiedOpening
     """
     specified_opening_times = []
     date_sorted_rows = sorted(db_rows, key=lambda row: (row["date"], row["starttime"]))
-    for date, db_rows in groupby(date_sorted_rows, lambda row: row["date"]):
+    for date, rows in groupby(date_sorted_rows, lambda row: row["date"]):
         is_open = True
         open_periods = []
-        for row in list(db_rows):
+        for row in list(rows):
             if row["isclosed"] is True:
                 is_open = False
             else:

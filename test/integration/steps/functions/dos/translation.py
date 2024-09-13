@@ -17,7 +17,7 @@ from integration.steps.functions.constants import (
 )
 
 
-def get_service_table_field_name(plain_english_field_name: str) -> str:
+def get_service_table_field_name(plain_english_field_name: str) -> str:  # noqa: C901
     """Convert a plain English field name to the name of the field in the services table."""
     match plain_english_field_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":

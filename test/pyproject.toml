@@ -1,7 +1,7 @@
 [tool.ruff]
 extend = "../pyproject.toml"
 
-ignore = [
+lint.ignore = [
   "D100",    # Missing docstring in public module
   "D104",    # Missing docstring in public package
   "PTH123",  # Use `pathlib.Path` instead of `os.path`,
@@ -15,10 +15,10 @@ ignore = [
   "DTZ007",  # the use of `datetime.datetime.strptime()` without %z must be followed by `.replace(tzinfo=)` or `.astimezone()`
 ]
 
-# Set python version to 3.11.
-target-version = "py311"
+# Set python version to 3.12.
+target-version = "py312"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "**test_*.py" = ["S101"] # Allow `assert` in tests.
 "integration**.py" = ["S101"] # Allow `assert` in tests.
 "smoke**.py" = ["S101"] # Allow `assert` in tests.
@@ -33,5 +33,5 @@ target-version = "py311"
   "ERA001",
 ] # Allow commented out code in performance tests.
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google" # Use Google docstring convention.

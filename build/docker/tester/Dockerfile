@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.12
 # Update Pip
 RUN python -m pip install --upgrade pip
 # Copy Python requirements

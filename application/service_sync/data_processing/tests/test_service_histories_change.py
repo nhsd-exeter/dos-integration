@@ -137,12 +137,12 @@ def test_service_histories_change_get_change(mock_get_demographics_change_action
     # Act
     response = service_histories_change.get_change()
     # Assert
-    assert {
+    assert response == {
         "changetype": change_action,
         "data": DATA,
         "area": DOS_DEMOGRAPHICS_AREA_TYPE,
         "previous": PREVIOUS_VALUE,
-    } == response
+    }
 
 
 @patch(f"{FILE_PATH}.ServiceHistoriesChange.get_demographics_change_action")
@@ -157,8 +157,8 @@ def test_service_histories_change_get_change_add(mock_get_demographics_change_ac
     # Act
     response = service_histories_change.get_change()
     # Assert
-    assert {
+    assert response == {
         "changetype": change_action,
         "data": DATA,
         "area": DOS_DEMOGRAPHICS_AREA_TYPE,
-    } == response
+    }

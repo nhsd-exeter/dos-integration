@@ -1,6 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.11-arm64
-# Update all packages
-RUN yum update -y
+FROM public.ecr.aws/lambda/python:3.12-arm64
 # Update Pip
 RUN python -m pip install --upgrade pip
 # Copy Python requirements
