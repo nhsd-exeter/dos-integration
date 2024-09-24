@@ -16,8 +16,8 @@ def test_changes_to_dos() -> None:
     assert dos_service == changes_to_dos.dos_service
     assert nhs_entity == changes_to_dos.nhs_entity
     assert service_histories == changes_to_dos.service_histories
-    assert {} == changes_to_dos.demographic_changes
-    assert {} == changes_to_dos.standard_opening_times_changes
+    assert changes_to_dos.demographic_changes == {}
+    assert changes_to_dos.standard_opening_times_changes == {}
     assert False is changes_to_dos.specified_opening_times_changes
     assert None is changes_to_dos.new_address
     assert None is changes_to_dos.new_postcode

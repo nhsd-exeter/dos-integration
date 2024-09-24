@@ -15,6 +15,6 @@ pytest-rerunfailures
 pytest-sugar
 pytest-xdist
 requests
-ruff == 0.1.5
+ruff == 0.5.6
 testfixtures
 vulture

@@ -49,7 +49,7 @@ def add_change_event_to_dynamodb(change_event: dict[str, Any], sequence_number: 
         put_item = {k: serializer.serialize(v) for k, v in dynamo_record.items()}
         response = dynamodb.put_item(TableName=environ["CHANGE_EVENTS_TABLE_NAME"], Item=put_item)
         logger.info("Added record to dynamodb", response=response, item=put_item)
-    except Exception as err:  # noqa: BLE001
+    except Exception as err:
         msg = f"Unable to add change event (seq no: {sequence_number}) into dynamodb"
         raise DynamoDBError(msg) from err
     return record_id
