@@ -51,11 +51,12 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_default_re
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
   }
+
   statement {
-    effect = "Deny"
+    effect  = "Deny"
     actions = ["sns:Publish"]
     principals {
-      type = "*"
+      type        = "*"
       identifiers = ["*"]
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
@@ -77,14 +78,15 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_regi
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
   }
+
   statement {
-    effect = "Deny"
+    effect  = "Deny"
     actions = ["sns:Publish"]
     principals {
-      type = "*"
+      type        = "*"
       identifiers = ["*"]
     }
-    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
