@@ -70,6 +70,7 @@ data "aws_iam_policy_document" "shared_resources_sns_topic_app_alerts_for_slack_
   }
 
   statement {
+    sid     = "DenyNonSecureTransport"
     effect  = "Deny"
     actions = ["sns:Publish"]
     principals {
@@ -97,6 +98,7 @@ data "aws_iam_policy_document" "shared_resources_sns_topic_app_alerts_for_slack_
   }
 
   statement {
+    sid     = "DenyNonSecureTransport"
     effect  = "Deny"
     actions = ["sns:Publish"]
     principals {
