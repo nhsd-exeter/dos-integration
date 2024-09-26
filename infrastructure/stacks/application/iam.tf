@@ -376,6 +376,7 @@ data "aws_iam_policy_document" "slack_messenger_policy" {
       "kms:Encrypt",
       "kms:GenerateDataKey*",
       "kms:DescribeKey",
+      "kms:Decrypt",
     ]
     resources = [
       data.aws_kms_key.signing_key.arn,
