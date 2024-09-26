@@ -50,10 +50,19 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_default_re
       ]
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
+  }
+  statement {
+    effect = "Deny"
+    actions = ["sns:Publish"]
+    principals {
+      type = "*"
+      identifiers = ["*"]
+    }
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
     condition {
-      test     = "StringEquals"
-      variable = "sns:Protocol"
-      values   = ["https"]
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
     }
   }
 }
@@ -67,10 +76,19 @@ data "aws_iam_policy_document" "sns_topic_app_alerts_for_slack_access_alarm_regi
       identifiers = ["cloudwatch.amazonaws.com"]
     }
     resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_route53_health_check_alarm_region.arn]
+  }
+  statement {
+    effect = "Deny"
+    actions = ["sns:Publish"]
+    principals {
+      type = "*"
+      identifiers = ["*"]
+    }
+    resources = [aws_sns_topic.sns_topic_app_alerts_for_slack_default_region.arn]
     condition {
-      test     = "StringEquals"
-      variable = "sns:Protocol"
-      values   = ["https"]
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
     }
   }
 }
