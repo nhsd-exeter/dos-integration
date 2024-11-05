@@ -1,5 +1,5 @@
 # DoS Integration
-test
+
 ## Table of Contents
 
 - [DoS Integration](#dos-integration)
