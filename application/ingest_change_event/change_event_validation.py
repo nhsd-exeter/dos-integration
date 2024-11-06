@@ -58,6 +58,7 @@ def validate_organisation_keys(org_type_id: str, org_sub_type: str) -> None:
         ValidationError: Either Org Type ID or Org Sub Type is not part of the valid list
     """
     validate_organisation_type_id(org_type_id)
+    logger.info("test log: "+ PHARMACY_ORGANISATION_SUB_TYPES)
     if org_sub_type in PHARMACY_ORGANISATION_SUB_TYPES:
         logger.info(f"Subtype type id: {org_sub_type} validated")
     else:
