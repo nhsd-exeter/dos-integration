@@ -58,12 +58,8 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
             logger.info("NHS ENTITY IS NONE")
         }
 
-        logger.info("TEST LOG", nhs_entity.org_sub_type)
-        logger.info("TEST LOG", changes_to_dos)
-        logger.warning("TOM TEST LOG", nhs_entity.org_sub_type,
-            environment=getenv("ENVIRONMENT"),
-            cloudwatch_metric_filter_matching_attribute="UpdateRequestSuccess"
-            )
+        logger.info(f"TEST LOG {nhs_entity.org_sub_type}")
+        logger.info(f"TEST LOG {changes_to_dos}")
         # Update Service History with changes to be made
         service_histories = changes_to_dos.service_histories
         # Update DoS data
