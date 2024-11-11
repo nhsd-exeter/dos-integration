@@ -63,6 +63,10 @@ def compare_nhs_uk_and_dos_data(
     Returns:
         ChangesToDoS: ChangesToDoS class with all the flags if changes need to be made and the changes to make
     """
+
+    logger.info(f"TEST LOG {nhs_entity.org_sub_type}")
+    logger.warning(f"TEST LOG {nhs_entity.org_sub_type}")
+
     # Set up the holder class
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
 
@@ -411,4 +415,23 @@ def status_id_change(changes_to_dos: ChangesToDoS, new_value: bool, previous_val
             change_key=DOS_STATUS_CHANGE_KEY,
         ),
     )
+    return changes_to_dos
+
+def check_org_for_change(changes_to_dos: ChangesToDoS) -> ChangesToDoS:
+    """Compares and creates change for website if needed.
+
+    Args:
+        changes_to_dos (ChangesToDoS): ChangesToDoS holder object
+
+    Returns:
+        ChangesToDoS: ChangesToDoS holder object
+    """
+    if compare_website(changes=changes_to_dos):
+        changes_to_dos = services_change(
+            changes_to_dos=changes_to_dos,
+            change_key=DOS_WEBSITE_CHANGE_KEY,
+            new_value=changes_to_dos.new_website,
+            previous_value=changes_to_dos.current_website,
+            service_table_field_name="web",
+        )
     return changes_to_dos
