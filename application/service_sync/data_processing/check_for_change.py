@@ -64,9 +64,6 @@ def compare_nhs_uk_and_dos_data(
         ChangesToDoS: ChangesToDoS class with all the flags if changes need to be made and the changes to make
     """
 
-    logger.info(f"TEST LOG {nhs_entity.org_sub_type}")
-    logger.warning(f"TEST LOG {nhs_entity.org_sub_type}")
-
     # Set up the holder class
     changes_to_dos = ChangesToDoS(dos_service=dos_service, nhs_entity=nhs_entity, service_histories=service_histories)
 
@@ -83,6 +80,8 @@ def compare_nhs_uk_and_dos_data(
     # Compare blood pressure
     changes_to_dos = check_blood_pressure_for_change(changes_to_dos=changes_to_dos)
     # Compare contraception
+    logger.warning(f"TEST LOG check for change {nhs_entity.org_sub_type}")
+
     return check_contraception_for_change(changes_to_dos=changes_to_dos)
 
 
