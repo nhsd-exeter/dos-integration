@@ -66,7 +66,7 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
         remove_sqs_message_from_queue(receipt_handle=record.receipt_handle)
         # Log custom metrics
         logger.warning(
-            "Update Request Success",
+            "Update Request Success TEST",
             latency=(time_ns() // 1000000)
             - int(record.message_attributes.get("message_received", {}).get("stringValue")),
             environment=getenv("ENVIRONMENT"),
