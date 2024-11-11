@@ -54,6 +54,10 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
             nhs_entity=nhs_entity,
             service_histories=service_histories,
         )
+        logger.warning("TEST LOG ", nhs_entity.org_sub_type
+        )
+        logger.warning("TEST LOG ", changes_to_dos
+        )
         # Update Service History with changes to be made
         service_histories = changes_to_dos.service_histories
         # Update DoS data
