@@ -55,15 +55,17 @@ def lambda_handler(event: SQSEvent, context: LambdaContext) -> None:  # noqa: AR
             service_histories=service_histories,
         )
 
-        logger.info(f"TEST LOG {nhs_entity.org_sub_type}")
+        logger.warning(f"TEST LOG {changes_to_dos.nhs_entity.org_sub_type}")
 
-        logger.warning(f"TEST LOG {changes_to_dos}")
+        logger.warning(f"TEST LOG22 {changes_to_dos}")
         # Update Service History with changes to be made
         service_histories = changes_to_dos.service_histories
         # Update DoS data
         update_dos_data(changes_to_dos=changes_to_dos, service_id=int(service_id), service_histories=service_histories)
         # Delete the message from the queue
         remove_sqs_message_from_queue(receipt_handle=record.receipt_handle)
+        logger.warning(f"final log {changes_to_dos}")
+
         # Log custom metrics
         logger.warning(
             "Update Request Success TEST",
