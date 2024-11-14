@@ -1,6 +1,5 @@
 # DoS Integration
 
-
 ## Table of Contents
 
 - [DoS Integration](#dos-integration)
