@@ -259,7 +259,7 @@ def create_basic_service_entry(context: Context) -> Context:
     return service_table_entry_is_committed(context)
 
 
-@given(parse('a pharmacy service is created with type "{service_type:d}"'), target_fixture="context")
+@given(parse('a {service_name} service is created with type "{service_type:d}"'), target_fixture="context")
 def _(context: Context, service_type: int) -> Context:
     """Create a basic service with a specific service type.
 
