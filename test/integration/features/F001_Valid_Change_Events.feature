@@ -513,3 +513,26 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | " 0123456789"  | 0123456789     |
       | "0123456789 "  | 0123456789     |
       | "012 34567 89" | 0123456789     |
+
+
+  @complete @general
+  Scenario Outline: F001SX40. Changes are processed successfully for service_type = "134" with OrganisationSubType = "DistanceSelling"
+    Given an entry is created in the services table
+    And the service "service_type" is set to "134"
+    And the service "service_status" is set to "1"
+    And the entry is committed to the services table
+    And the change event "OrganisationSubType" is set to "DistanceSelling"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "service-sync" lambda shows field "message" with value "Update Request Success"
+    And the service history is not updated
+    When the change event "<field>" is set to "<value>"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "<DOS_field>" is updated within the DoS DB
+    And the service history is updated with the "<field>"
+    And the service history shows "<service_hist_field>" change type is "modify"
+
+    Examples:
+      | field      | value              | DOS_field     |service_hist_field |
+      | Postcode   | CT1 1AA            | Postcode      | postalcode        |
+      | website    | www.testonetwo.com | website       | cmsurl            |
+      | phone      | 22459436909        | phone         | cmstelephoneno    |

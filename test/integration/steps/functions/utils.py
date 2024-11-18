@@ -80,9 +80,9 @@ def get_expected_data(context: Context, changed_data_name: str) -> Any:
     """Get the previous data from the context."""
     match changed_data_name.lower():
         case "phone_no" | "phone" | "public_phone" | "publicphone":
-            changed_data = context.phone
+            changed_data = context.generator_data["publicphone"]
         case "website" | "web":
-            changed_data = context.website
+            changed_data = context.generator_data["web"]
         case "address":
             changed_data = get_address_string(context)
         case "postcode":

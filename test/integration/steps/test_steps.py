@@ -817,6 +817,21 @@ def change_event_with_blank_opening_times(context: Context) -> Context:
     return context
 
 
+@when(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
+def _(field_name: str, values: str, context: Context) -> Context:
+    """Update the change event values in the context.
+
+    Args:
+        field_name (str): The field name to update.
+        values (str): The values to update the field with.
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    return ce_values_updated_in_context(field_name, values, context)
+
+
 @when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
 def post_an_sqs_message(queue_type: str, context: Context) -> None:
     """Post an SQS message to the queue.
