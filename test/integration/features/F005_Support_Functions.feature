@@ -7,6 +7,14 @@ Feature: F005. Support Functions
     Then the Changed Event is stored in dynamo db
     And the stored Changed Event is reprocessed in DI
 
+  @complete @general
+  Scenario: F005SXX1. An unprocessed Changed Event with service_type = "134" and OrganisationSubType = "DistanceSelling" is replayed in DI
+    Given a basic service is created with type "134"
+    And the change event "OrganisationSubType" is set to "DistanceSelling"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the Changed Event is stored in dynamo db
+    And the stored Changed Event is reprocessed in DI
+
   @complete @slack_and_infrastructure
   Scenario: F005SXX2 SQS Message for Change Event DLQ Alert
     Given a basic service is created

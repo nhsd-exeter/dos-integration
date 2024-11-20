@@ -83,7 +83,7 @@ def get_expected_data(context: Context, changed_data_name: str) -> Any:
             changed_data = context.generator_data["publicphone"]
         case "website" | "web":
             changed_data = context.generator_data["web"]
-        case "address":
+        case "address" | "address1":
             changed_data = get_address_string(context)
         case "postcode":
             changed_data = context.change_event["Postcode"]
