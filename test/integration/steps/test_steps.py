@@ -1210,7 +1210,6 @@ def the_dos_service_has_been_updated_with_the_specified_date_is_captured_by_dos(
         Context: The context object.
     """
     context.service_id = get_service_id(context.change_event["ODSCode"], context.generator_data["service_type"])
-    print("service.id======>", context.service_id)
     wait_for_service_update(context.service_id)
     changed_date = context.change_event["OpeningTimes"][-1]["AdditionalOpeningDate"]
     current_specified_openings = get_change_event_specified_opening_times(context.service_id)

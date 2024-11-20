@@ -80,8 +80,8 @@ Feature: F006. Opening times
     Then DoS is open from "10:00" until "16:00" on "Jan 01 2025"
     And the "service-sync" lambda does not show "report_key" with value "BLANK_STANDARD_OPENINGS"
 
-   @complete @opening_times
-   Scenario: F006SXX11. Confirm actual opening times change for specified date and time is captured by DoS with service_type = "134" and OrganisationSubType = "DistanceSelling"
+  @complete @opening_times
+  Scenario: F006SXX11. Confirm actual opening times change for specified date and time is captured by DoS with service_type = "134" and OrganisationSubType = "DistanceSelling"
     Given a basic service is created with type "134"
     And the change event "OrganisationSubType" is set to "DistanceSelling"
     When the Changed Event is sent for processing with "valid" api key

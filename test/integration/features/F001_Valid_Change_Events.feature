@@ -538,8 +538,8 @@ Feature: F001. Ensure valid change events are converted and sent to DoS
       | phone      | 22459436909              | phone         | cmstelephoneno    |
       | Address1   | 5 Tester Way             | address       | postaladdress     |
 
-   @complete @general
-   Scenario: F001SX41. Changed Event with updated postcode to verify location changes with service_type = "134" and OrganisationSubType = "DistanceSelling"
+  @complete @general
+  Scenario: F001SX41. Changed Event with updated postcode to verify location changes with service_type = "134" and OrganisationSubType = "DistanceSelling"
     Given an entry is created in the services table
     And the service "service_type" is set to "134"
     And the service "service_status" is set to "1"
