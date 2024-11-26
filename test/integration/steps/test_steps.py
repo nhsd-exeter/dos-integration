@@ -259,7 +259,7 @@ def create_basic_service_entry(context: Context) -> Context:
     return service_table_entry_is_committed(context)
 
 
-@given(parse('a pharmacy service is created with type "{service_type:d}"'), target_fixture="context")
+@given(parse('a {service_name} service is created with type "{service_type:d}"'), target_fixture="context")
 def _(context: Context, service_type: int) -> Context:
     """Create a basic service with a specific service type.
 
@@ -817,6 +817,38 @@ def change_event_with_blank_opening_times(context: Context) -> Context:
     return context
 
 
+@when(parse('the change event is "{service_status}" on date "{date}"'), target_fixture="context")
+def change_event_specified_opening(service_status: str, date: str, context: Context) -> Context:
+    """Set the change event specified opening times.
+
+    Args:
+        service_status (str): The service status to set.
+        date (str): The date to set the service status for.
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    query_specified_opening_builder(context, service_status, date)
+    context.change_event["OpeningTimes"] = build_change_event_opening_times(context)
+    return context
+
+
+@when(parse('the change event "{field_name}" is set to "{values}"'), target_fixture="context")
+def _(field_name: str, values: str, context: Context) -> Context:
+    """Update the change event values in the context.
+
+    Args:
+        field_name (str): The field name to update.
+        values (str): The values to update the field with.
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    return ce_values_updated_in_context(field_name, values, context)
+
+
 @when(parse('a "{queue_type}" SQS message is added to the queue'), target_fixture="context")
 def post_an_sqs_message(queue_type: str, context: Context) -> None:
     """Post an SQS message to the queue.
@@ -1165,6 +1197,24 @@ def the_dos_service_has_been_updated_with_the_specified_date_and_time_is_capture
     assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
     assert current_specified_openings[expected_opening_date][0]["start_time"] == opening_time
     assert current_specified_openings[expected_opening_date][0]["end_time"] == closing_time
+
+
+@then("the DoS service has been updated with the specified date is captured by DoS")
+def the_dos_service_has_been_updated_with_the_specified_date_is_captured_by_dos(context: Context) -> Context:
+    """Assert DoS service has been updated with the specified date and time is captured by DoS.
+
+    Args:
+        context (Context): The context object.
+
+    Returns:
+        Context: The context object.
+    """
+    context.service_id = get_service_id(context.change_event["ODSCode"], context.generator_data["service_type"])
+    wait_for_service_update(context.service_id)
+    changed_date = context.change_event["OpeningTimes"][-1]["AdditionalOpeningDate"]
+    current_specified_openings = get_change_event_specified_opening_times(context.service_id)
+    expected_opening_date = dt.strptime(changed_date, "%b %d %Y").strftime("%Y-%m-%d")
+    assert expected_opening_date in current_specified_openings, "DoS not updated with specified opening time"
 
 
 @then(parse('the DoS DB has no open date in "{year}"'))

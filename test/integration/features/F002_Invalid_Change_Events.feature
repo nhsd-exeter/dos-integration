@@ -62,3 +62,11 @@ Feature: F002. Invalid change event Exception handling
     And the change event has an additional date with no specified date
     When the Changed Event is sent for processing with "valid" api key
     Then the "service-sync" lambda shows field "message" with value "Opening times are not valid"
+
+  @complete @validation
+  Scenario: F002SXX9. A Changed Event where OrganisationSubType is NOT DistanceSelling is reported and ignored
+    Given a basic service is created with type "134"
+    And the change event "OrganisationSubType" is set to "Distance Selling"
+    When the Changed Event is sent for processing with "valid" api key
+    Then the "ingest-change-event" lambda shows field "message" with value "Validation Error - Unexpected Org Sub Type ID: 'Distance Selling'"
+    And the service history is not updated
