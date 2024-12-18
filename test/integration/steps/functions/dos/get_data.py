@@ -60,17 +60,18 @@ def get_services_table_location_data(service_id: str) -> list:
     return loads(loads(response))
 
 
-def get_service_id(odscode: str) -> str:
+def get_service_id(odscode: str, typeid: int = 13) -> str:
     """Get service id.
 
     Args:
         odscode (str): ODSCode.
+        typeid (int, optional): Type ID. Defaults to 13. If not provided, the default value is 13.
 
     Returns:
         str: Service id.
     """
     data = []
-    query = f"SELECT id FROM services WHERE typeid = 13 AND statusid = 1 AND odscode like '{odscode}%' LIMIT 1"  # noqa: S608
+    query = f"SELECT id FROM services WHERE typeid = {typeid} AND statusid = 1 AND odscode like '{odscode}%' LIMIT 1"  # noqa: S608
     for _ in range(16):
         lambda_payload = {"type": "read", "query": query, "query_vars": None}
         response = invoke_dos_db_handler_lambda(lambda_payload)

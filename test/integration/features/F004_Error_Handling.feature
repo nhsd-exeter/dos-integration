@@ -5,6 +5,7 @@ Feature: F004. Error Handling
     Given a basic service is created
     When the Changed Event is sent for processing with no sequence id
     Then the change event response has status code "400"
+    And the response has security headers
 
   @complete @slack_and_infrastructure
   Scenario: F004SXX6. An Alphanumeric Sequence number raises a 400 Bad Request exception
