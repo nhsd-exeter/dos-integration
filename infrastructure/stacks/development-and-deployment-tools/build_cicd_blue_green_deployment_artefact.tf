@@ -76,5 +76,6 @@ resource "aws_codebuild_project" "build_cicd_blue_green_artefact" {
     location        = var.github_url
     buildspec       = "infrastructure/stacks/development-and-deployment-tools/buildspecs/build-cicd-blue-green-deployment-artefact-buildspec.yml"
   }
+  source_version = "task/DS-3268_Release_pipeline_xbuild_bug"
   depends_on = [module.cicd_blue_green_deployment_pipeline_artefact_bucket]
 }
