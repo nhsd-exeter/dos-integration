@@ -15,8 +15,8 @@ phases:
       - docker run --privileged --rm tonistiigi/binfmt --install all
       - export DOCKER_BUILDKIT=1
       - export DOCKER_CLI_EXPERIMENTAL=enabled
-      - docker buildx create --name mybuilder --use
       - docker buildx version
+      - docker buildx create --name mybuilder --use
   build:
     commands:
       - echo "[Building docker containers]"
