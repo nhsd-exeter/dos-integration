@@ -2,7 +2,7 @@
 version: 0.2
 
 phases:
-  pre_build:
+  install:
     commands:
       - mkdir -p $HOME/.docker/cli-plugins
       - wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.10.3/buildx-v0.10.3.linux-arm64
