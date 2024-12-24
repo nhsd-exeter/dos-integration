@@ -1,4 +1,0 @@
-{
-  "Type": "TAG_FILTERS_1_0",
-  "Query": "{\"ResourceTypeFilters\":[\"AWS::KMS::Key\"], \"TagFilters\":[{\"Key\": \"Service\", \"Values\":\"uec-dos-int\"}]}"
-}
