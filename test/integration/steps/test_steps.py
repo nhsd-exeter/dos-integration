@@ -1908,5 +1908,3 @@ def _(context: Context, reason: str) -> Context:
         is True
     ), f"ERROR: {reason} logs found"
     return context
-
-    
