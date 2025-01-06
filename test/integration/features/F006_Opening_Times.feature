@@ -93,3 +93,4 @@ Feature: F006. Opening times
     Then the Changed Event is stored in dynamo db
     Then the DoS service has been updated with the specified date is captured by DoS
     And the service history is updated with the "added" specified opening times
+
