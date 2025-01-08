@@ -109,6 +109,7 @@ TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-events
 DYNAMO_DB_TABLE := $(TF_VAR_change_events_table_name)
+TF_VAR_ddb_delete_protection :=$(DDB_DELETE_PROTECTION)
 
 # Log Group Filters for Firehose
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
@@ -128,7 +129,6 @@ TF_VAR_shared_resources_sns_topic_app_alerts_for_slack_route53_health_check_alar
 
 # WAF
 TF_VAR_waf_enabled := $(WAF_ENABLED)
-TF_VAR_ddb_delete_protection :=$(DDB_DELETE_PROTECTION)
 TF_VAR_waf_acl_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-acl
 TF_VAR_waf_log_group_name := aws-waf-logs-$(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-group
 TF_VAR_waf_log_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-log-subscription-filter
