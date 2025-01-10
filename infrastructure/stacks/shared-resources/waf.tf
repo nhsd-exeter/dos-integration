@@ -156,19 +156,46 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
         vendor_name = "AWS"
       }
 
-      sqli_match_statement {
-        sensitivity_level = "HIGH"
-        text_transformation {
-          priority = 0
-          type = "LOWERCASE"
-        }
-      }
+      # sqli_match_statement {
+      #   sensitivity_level = "HIGH"
+      #   text_transformation {
+      #     priority = 0
+      #     type = "LOWERCASE"
+      #   }
+      # }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = var.waf_aws_sqli_rule_name
       sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = var.waf_custom_sqli_rule_name
+    priority = 8
+
+    action {
+      count {}
+    }
+
+    statement {
+      sqli_match_statement {
+        field_to_match {
+          body {}
+        }
+        sensitivity_level = "HIGH"
+        text_transformation {
+          priority = 0
+          type = "NONE"
+        }
+      }
+    }
+    visibility_config {
+      sampled_requests_enabled = true
+      metric_name = var.waf_custom_sqli_rule_name
+      cloudwatch_metrics_enabled = true
     }
   }
 

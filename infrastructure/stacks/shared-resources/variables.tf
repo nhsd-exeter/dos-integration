@@ -216,3 +216,8 @@ variable "waf_aws_sqli_rule_name" {
   type        = string
   description = "WAF AWS SQLi rule name"
 }
+
+variable "waf_custom_sqli_rule_name" {
+  type        = string
+  description = "WAF Custom SQLi rule name"
+}
