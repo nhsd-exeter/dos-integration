@@ -118,6 +118,26 @@ resource "aws_cloudwatch_metric_alarm" "waf_aws_managed_sql_injection_blocked_re
   threshold          = "1"
 }
 
+resource "aws_cloudwatch_metric_alarm" "waf_custom_sql_injection_blocked_requests" {
+  count               = var.waf_enabled ? 1 : 0
+  alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
+  alarm_description   = "WAF Custom SQL Injection Blocked Requests"
+  alarm_name          = "${var.project_id} | ${var.shared_environment} | WAF Custom SQL Injection Blocked Requests"
+  comparison_operator = "GreaterThanThreshold"
+  datapoints_to_alarm = "1"
+  dimensions = {
+    Rule   = var.waf_custom_sqli_rule_name
+    WebACL = var.waf_acl_name,
+    Region = var.aws_region
+  }
+  evaluation_periods = "1"
+  metric_name        = "BlockedRequests"
+  namespace          = "AWS/WAFV2"
+  period             = "60"
+  statistic          = "Sum"
+  threshold          = "1"
+}
+
 resource "aws_cloudwatch_metric_alarm" "waf_aws_managed_ip_reputation_list_blocked_requests" {
   count               = var.waf_enabled ? 1 : 0
   alarm_actions       = [aws_sns_topic.shared_resources_sns_topic_app_alerts_for_slack_default_region.arn]
