@@ -158,6 +158,11 @@ variable "waf_enabled" {
   description = "Whether to enable WAF"
 }
 
+variable "ddb_delete_protection" {
+  type        = bool
+  description = "Whether to enable delete protection"
+}
+
 variable "waf_acl_name" {
   type        = string
   description = "Name of the WAF ACL"

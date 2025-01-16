@@ -41,6 +41,7 @@ SLACK_ALERT_CHANNEL := dos-integration-live-status
 
 # WAF
 WAF_ENABLED := true
+DDB_DELETE_PROTECTION :=true
 
 # ==============================================================================
 # Performance variables

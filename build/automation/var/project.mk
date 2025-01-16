@@ -109,6 +109,7 @@ TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-events
 DYNAMO_DB_TABLE := $(TF_VAR_change_events_table_name)
+TF_VAR_ddb_delete_protection :=$(DDB_DELETE_PROTECTION)
 
 # Log Group Filters for Firehose
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
