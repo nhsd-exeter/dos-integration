@@ -155,14 +155,6 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
         name        = "AWSManagedRulesSQLiRuleSet"
         vendor_name = "AWS"
       }
-
-      # sqli_match_statement {
-      #   sensitivity_level = "HIGH"
-      #   text_transformation {
-      #     priority = 0
-      #     type = "LOWERCASE"
-      #   }
-      # }
     }
 
     visibility_config {
