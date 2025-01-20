@@ -219,5 +219,5 @@ variable "waf_aws_sqli_rule_name" {
 
 variable "waf_custom_sqli_rule_name" {
   type        = string
-  description = "WAF Custom SQLi rule name"
+  description = "WAF custom SQLi rule name"
 }
