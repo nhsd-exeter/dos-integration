@@ -177,7 +177,6 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
         field_to_match {
           body {}
         }
-        
         sensitivity_level = "HIGH"
         text_transformation {
           priority = 0
