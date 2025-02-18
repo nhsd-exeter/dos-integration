@@ -165,6 +165,33 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
   }
 
   rule {
+    name     = var.waf_custom_sqli_rule_name
+    priority = 8
+
+    action {
+      count {}
+    }
+
+    statement {
+      sqli_match_statement {
+        field_to_match {
+          body {}
+        }
+        sensitivity_level = "HIGH"
+        text_transformation {
+          priority = 0
+          type = "NONE"
+        }
+      }
+    }
+    visibility_config {
+      sampled_requests_enabled = true
+      metric_name = var.waf_custom_sqli_rule_name
+      cloudwatch_metrics_enabled = true
+    }
+  }
+
+  rule {
     name     = var.waf_ip_reputation_list_rule_name
     priority = 7
 

@@ -2,3 +2,4 @@
 
 # WAF
 WAF_ENABLED := true
+DDB_DELETE_PROTECTION :=false

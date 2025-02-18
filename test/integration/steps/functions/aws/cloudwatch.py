@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 from json import dumps
 from os import getenv
@@ -15,8 +16,8 @@ def get_logs(
     query: str,
     lambda_name: str,
     start_time: Timestamp | None = None,
-    retry_count: int = 32,
-    sleep_per_loop: int = 20,
+    retry_count: int = 32,  # Retry Count
+    sleep_per_loop: int = 20,  # Sleep time between retries.
 ) -> str:
     """Get logs from CloudWatch.
 
@@ -44,15 +45,19 @@ def get_logs(
             )
         except ClientError as error:
             if error.response["Error"]["Code"] == "LimitExceededException":
-                limit_exceeded_timeout += 30
+                limit_exceeded_timeout += random.uniform(30, 60) * (2**counter)  # Exponential backoff with jitter
+                print(f"Limit exceeded, retrying after {limit_exceeded_timeout} seconds.")
                 sleep(limit_exceeded_timeout)
                 continue
             raise
         query_id = start_query_response["queryId"]
         response = None
+
+        # Wait for the query to complete without a max timeout
         while response is None or response["status"] != "Complete":
             sleep(sleep_per_loop)
             response = LAMBDA_CLIENT_LOGS.get_query_results(queryId=query_id)
+
         counter += 1
         if response["results"] != []:
             logs_found = True
