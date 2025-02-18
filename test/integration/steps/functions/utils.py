@@ -1,3 +1,5 @@
+import random
+import string
 from json import dumps, loads
 from os import getenv
 from random import randint, randrange
@@ -274,3 +276,9 @@ def quality_checker_negative_log_check(
 | filter message="{reason}"
 | sort @timestamp asc"""
     return negative_log_check(query=query, event_lambda="quality-checker", start_time=start_time)
+
+
+def generate_unique_ods_code() -> str:
+    """Generate a unique 5-character uppercase alphanumeric ODSCode."""
+    chars = string.ascii_uppercase + string.digits  # A-Z, 0-9
+    return "".join(random.choice(chars) for _ in range(5))  # 5-character random string
