@@ -70,6 +70,7 @@ from .functions.utils import (
     create_pending_change_for_service,
     generate_correlation_id,
     generate_random_int,
+    generate_unique_ods_code,
     get_address_string,
     get_expected_data,
     quality_checker_log_check,
@@ -136,7 +137,7 @@ def a_service_table_entry_is_created(context: Context, ods_code: int = 0, servic
         Context: The context object.
     """
     if ods_code == 0:
-        ods_code = str(randint(10000, 99999))
+        ods_code = generate_unique_ods_code()
     query_values = {
         "uid": f"test{randint(10000, 99999)!s}",
         "service_type": service_type,
