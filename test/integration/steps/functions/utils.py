@@ -1,4 +1,4 @@
-import random
+import secrets
 import string
 from json import dumps, loads
 from os import getenv
@@ -281,4 +281,4 @@ def quality_checker_negative_log_check(
 def generate_unique_ods_code() -> str:
     """Generate a unique 5-character uppercase alphanumeric ODSCode."""
     chars = string.ascii_uppercase + string.digits  # A-Z, 0-9
-    return "".join(random.choice(chars) for _ in range(5))  # 5-character random string
+    return "".join(secrets.choice(chars) for _ in range(5))  # 5-character random string
