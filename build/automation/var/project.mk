@@ -109,6 +109,7 @@ TF_VAR_change_event_dlq := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-dead
 # Dynamodb
 TF_VAR_change_events_table_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-events
 DYNAMO_DB_TABLE := $(TF_VAR_change_events_table_name)
+TF_VAR_ddb_delete_protection :=$(DDB_DELETE_PROTECTION)
 
 # Log Group Filters for Firehose
 TF_VAR_change_event_gateway_subscription_filter_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-change-event-api-gateway-cw-logs-firehose-subscription
@@ -140,6 +141,7 @@ TF_VAR_waf_ip_allow_list_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-ip
 TF_VAR_waf_rate_based_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-rate-based-rule
 TF_VAR_waf_aws_known_bad_inputs_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-known-bad-inputs-rule
 TF_VAR_waf_aws_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-aws-sqli-rule
+TF_VAR_waf_custom_sqli_rule_name := $(PROJECT_ID)-$(SHARED_ENVIRONMENT)-waf-custom-sqli-rule
 
 # -------------------------------
 # BLUE/GREEN ENVIRONMENT VARIABLES

@@ -158,6 +158,11 @@ variable "waf_enabled" {
   description = "Whether to enable WAF"
 }
 
+variable "ddb_delete_protection" {
+  type        = bool
+  description = "Whether to enable delete protection"
+}
+
 variable "waf_acl_name" {
   type        = string
   description = "Name of the WAF ACL"
@@ -210,4 +215,9 @@ variable "waf_aws_known_bad_inputs_rule_name" {
 variable "waf_aws_sqli_rule_name" {
   type        = string
   description = "WAF AWS SQLi rule name"
+}
+
+variable "waf_custom_sqli_rule_name" {
+  type        = string
+  description = "WAF custom SQLi rule name"
 }

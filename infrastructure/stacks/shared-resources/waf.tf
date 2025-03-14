@@ -61,39 +61,29 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
   }
 
   rule {
-    name     = var.waf_aws_common_rule_name
+    name     = var.waf_custom_sqli_rule_name
     priority = 3
 
-    override_action {
-      none {}
+    action {
+      count {}
     }
+
     statement {
-      managed_rule_group_statement {
-        name        = "AWSManagedRulesCommonRuleSet"
-        vendor_name = "AWS"
-
-        rule_action_override {
-          action_to_use {
-            count {}
-          }
-
-          name = "NoUserAgent_HEADER"
+      sqli_match_statement {
+        field_to_match {
+          body {}
         }
-
-        rule_action_override {
-          action_to_use {
-            count {}
-          }
-
-          name = "SizeRestrictions_BODY"
+        sensitivity_level = "HIGH"
+        text_transformation {
+          priority = 0
+          type = "NONE"
         }
       }
     }
-
     visibility_config {
+      sampled_requests_enabled = true
+      metric_name = var.waf_custom_sqli_rule_name
       cloudwatch_metrics_enabled = true
-      metric_name                = var.waf_aws_common_rule_name
-      sampled_requests_enabled   = true
     }
   }
 
@@ -182,6 +172,43 @@ resource "aws_wafv2_web_acl" "di_endpoint_waf" {
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = var.waf_ip_reputation_list_rule_name
+      sampled_requests_enabled   = true
+    }
+  }
+
+  rule {
+    name     = var.waf_aws_common_rule_name
+    priority = 8
+
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
+          name = "NoUserAgent_HEADER"
+        }
+
+        rule_action_override {
+          action_to_use {
+            count {}
+          }
+
+          name = "SizeRestrictions_BODY"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = var.waf_aws_common_rule_name
       sampled_requests_enabled   = true
     }
   }
