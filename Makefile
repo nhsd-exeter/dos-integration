@@ -335,7 +335,8 @@ batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" se
 
 tester-build: ### Build tester docker image
 	cat $(APPLICATION_DIR)/*/requirements.txt $(APPLICATION_DIR)/requirements-dev.txt | sort --unique > $(DOCKER_DIR)/tester/assets/requirements.txt
-	make -s docker-image NAME=tester
+	# make -s docker-image NAME=tester
+	make -s podman-image NAME=tester
 
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
