@@ -5,7 +5,8 @@ DOCKER_LIB_DIR = $(LIB_DIR)/docker
 DOCKER_LIB_DIR_REL = $(shell echo $(DOCKER_LIB_DIR) | sed "s;$(PROJECT_DIR);;g")
 DOCKER_LIB_IMAGE_DIR = $(LIB_DIR)/docker/image
 DOCKER_LIB_IMAGE_DIR_REL = $(shell echo $(DOCKER_LIB_IMAGE_DIR) | sed "s;$(PROJECT_DIR);;g")
-DOCKER_NETWORK = $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(BUILD_ID)
+# DOCKER_NETWORK = $(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)/$(BUILD_ID)
+DOCKER_NETWORK = $(PROJECT_GROUP_SHORT)_$(PROJECT_NAME_SHORT)_$(BUILD_ID)
 DOCKER_REGISTRY = $(AWS_ECR)/$(PROJECT_GROUP_SHORT)/$(PROJECT_NAME_SHORT)
 DOCKER_LIBRARY_REGISTRY = nhsd
 
@@ -93,7 +94,7 @@ podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: V
 	# Cache
 	cache_from=
 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-		make podman-pull NAME=$(NAME) VERSION=latest
+		make /opt/podman/bin/podman-pull NAME=$(NAME) VERSION=latest
 		cache_from="--cache-from $$reg/$(NAME):latest"
 	fi
 	# Build
@@ -101,7 +102,7 @@ podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: V
 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
 	export VERSION=$$(make docker-image-get-version)
 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
-	podman build --rm \
+	/opt/podman/bin/podman build --rm \
 		--build-arg IMAGE=$$IMAGE \
 		--build-arg VERSION=$$VERSION \
 		--build-arg BUILD_ID=$(BUILD_ID) \
@@ -123,12 +124,12 @@ podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: V
 		--tag $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
 		$$dir
 	# Tag
-	podman tag \
+	/opt/podman/bin/podman tag \
 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest
-	podman rmi --force $$(podman images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
+	/opt/podman/bin/podman rmi --force $$(/opt/podman/bin/podman images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
 	make docker-image-keep-latest-only NAME=$(NAME)
-	podman image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
+	/opt/podman/bin/podman image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
 
 
 ######### Trial for podman #############
