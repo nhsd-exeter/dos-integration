@@ -44,6 +44,13 @@ DOCKER_LIBRARY_TOOLS_VERSION = $(shell cat $(DOCKER_LIB_IMAGE_DIR)/tools/VERSION
 COMPOSE_HTTP_TIMEOUT := $(or $(COMPOSE_HTTP_TIMEOUT), 6000)
 DOCKER_CLIENT_TIMEOUT := $(or $(DOCKER_CLIENT_TIMEOUT), 6000)
 
+######### Trial for podman #############
+
+# DOCKER_CMD=$(shell type -p docker >/dev/null 2>&1 && echo docker || echo podman)
+DOCKER_CMD=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
+
+######### Trial for podman #############
+
 # ==============================================================================
 
 docker-create-from-template: ### Create Docker image from template - mandatory: NAME,TEMPLATE=[library template image name]
@@ -66,35 +73,98 @@ docker-create-from-template: ### Create Docker image from template - mandatory: 
 # ==============================================================================
 
 docker-config: ### Configure Docker networking
-	docker network create $(DOCKER_NETWORK) 2> /dev/null ||:
+	$(DOCKER_CMD) network create $(DOCKER_NETWORK) 2> /dev/null ||:
 
 ######### Trial for podman #############
 
-podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: VERSION, FROM_CACHE=true, BUILD_OPTS=[build options], EXAMPLE=true
+# podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: VERSION, FROM_CACHE=true, BUILD_OPTS=[build options], EXAMPLE=true
+# 	reg=$$(make _docker-get-reg)
+# 	# Try to execute `make build` from the image directory
+# 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+# 		cd $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
+# 		make build __PODMAN_BUILD=true PODMAN_REGISTRY=$(PODMAN_LIBRARY_REGISTRY)
+# 		exit
+# 	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+# 		cd $(DOCKER_CUSTOM_DIR)/$(NAME)
+# 		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
+# 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+# 		cd $(DOCKER_DIR)/$(NAME)
+# 		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
+# 	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+# 		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
+# 		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
+# 	fi
+# 	# Dockerfile (now Podman)
+# 	make NAME=$(NAME) \
+# 		docker-create-dockerfile FILE=Dockerfile$(shell [ -n "$(EXAMPLE)" ] && echo .example) \
+# 		docker-image-set-version VERSION=$(VERSION)
+# 	# Cache
+# 	cache_from=
+# 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
+# 		make /opt/podman/bin/podman-pull NAME=$(NAME) VERSION=latest
+# 		cache_from="--cache-from $$reg/$(NAME):latest"
+# 	fi
+# 	# Build
+# 	dir=$$(make _docker-get-dir)
+# 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
+# 	export VERSION=$$(make docker-image-get-version)
+# 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
+# 	/opt/podman/bin/podman build --rm \
+# 		--build-arg IMAGE=$$IMAGE \
+# 		--build-arg VERSION=$$VERSION \
+# 		--build-arg BUILD_ID=$(BUILD_ID) \
+# 		--build-arg BUILD_DATE=$(BUILD_DATE) \
+# 		--build-arg BUILD_REPO=$(BUILD_REPO) \
+# 		--build-arg BUILD_BRANCH=$(BUILD_BRANCH) \
+# 		--build-arg BUILD_COMMIT_HASH=$(BUILD_COMMIT_HASH) \
+# 		--build-arg BUILD_COMMIT_DATE=$(BUILD_COMMIT_DATE) \
+# 		--label name=$$IMAGE \
+# 		--label version=$$VERSION \
+# 		--label build-id=$(BUILD_ID) \
+# 		--label build-date=$(BUILD_DATE) \
+# 		--label build-repo=$(BUILD_REPO) \
+# 		--label build-branch=$(BUILD_BRANCH) \
+# 		--label build-commit-hash=$(BUILD_COMMIT_HASH) \
+# 		--label build-commit-date=$(BUILD_COMMIT_DATE) \
+# 		$(BUILD_OPTS) $$cache_from \
+# 		--file $$dir/Dockerfile.effective \
+# 		--tag $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
+# 		$$dir
+# 	# Tag
+# 	/opt/podman/bin/podman tag \
+# 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
+# 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest
+# 	/opt/podman/bin/podman rmi --force $$(/opt/podman/bin/podman images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
+# 	make docker-image-keep-latest-only NAME=$(NAME)
+# 	/opt/podman/bin/podman image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
+
+
+######### Trial for podman #############
+docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: VERSION,FROM_CACHE=true,BUILD_OPTS=[build options],EXAMPLE=true
 	reg=$$(make _docker-get-reg)
 	# Try to execute `make build` from the image directory
-	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
-		make build __PODMAN_BUILD=true PODMAN_REGISTRY=$(PODMAN_LIBRARY_REGISTRY)
+		make build __DOCKER_BUILD=true DOCKER_REGISTRY=$(DOCKER_LIBRARY_REGISTRY)
 		exit
-	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_CUSTOM_DIR)/$(NAME)
-		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
-	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
+	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_DIR)/$(NAME)
-		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
-	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__PODMAN_BUILD)" ]; then
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
+	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
 		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
-		make build __PODMAN_BUILD=true && exit || cd $(PROJECT_DIR)
+		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
-	# Dockerfile (now Podman)
+	# Dockerfile
 	make NAME=$(NAME) \
 		docker-create-dockerfile FILE=Dockerfile$(shell [ -n "$(EXAMPLE)" ] && echo .example) \
 		docker-image-set-version VERSION=$(VERSION)
 	# Cache
 	cache_from=
 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-		make /opt/podman/bin/podman-pull NAME=$(NAME) VERSION=latest
+		make docker-pull NAME=$(NAME) VERSION=latest
 		cache_from="--cache-from $$reg/$(NAME):latest"
 	fi
 	# Build
@@ -102,7 +172,7 @@ podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: V
 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
 	export VERSION=$$(make docker-image-get-version)
 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
-	/opt/podman/bin/podman build --rm \
+	$(DOCKER_CMD) buildx build --rm \
 		--build-arg IMAGE=$$IMAGE \
 		--build-arg VERSION=$$VERSION \
 		--build-arg BUILD_ID=$(BUILD_ID) \
@@ -124,76 +194,12 @@ podman-build podman-image: ### Build Podman image - mandatory: NAME; optional: V
 		--tag $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
 		$$dir
 	# Tag
-	/opt/podman/bin/podman tag \
+	$(DOCKER_CMD) tag \
 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest
-	/opt/podman/bin/podman rmi --force $$(/opt/podman/bin/podman images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
+	$(DOCKER_CMD) rmi --force $$($(DOCKER_CMD) images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
 	make docker-image-keep-latest-only NAME=$(NAME)
-	/opt/podman/bin/podman image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
-
-
-######### Trial for podman #############
-# docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: VERSION,FROM_CACHE=true,BUILD_OPTS=[build options],EXAMPLE=true
-# 	reg=$$(make _docker-get-reg)
-# 	# Try to execute `make build` from the image directory
-# 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-# 		cd $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
-# 		make build __DOCKER_BUILD=true DOCKER_REGISTRY=$(DOCKER_LIBRARY_REGISTRY)
-# 		exit
-# 	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-# 		cd $(DOCKER_CUSTOM_DIR)/$(NAME)
-# 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
-# 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-# 		cd $(DOCKER_DIR)/$(NAME)
-# 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
-# 	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-# 		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
-# 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
-# 	fi
-# 	# Dockerfile
-# 	make NAME=$(NAME) \
-# 		docker-create-dockerfile FILE=Dockerfile$(shell [ -n "$(EXAMPLE)" ] && echo .example) \
-# 		docker-image-set-version VERSION=$(VERSION)
-# 	# Cache
-# 	cache_from=
-# 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-# 		make docker-pull NAME=$(NAME) VERSION=latest
-# 		cache_from="--cache-from $$reg/$(NAME):latest"
-# 	fi
-# 	# Build
-# 	dir=$$(make _docker-get-dir)
-# 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
-# 	export VERSION=$$(make docker-image-get-version)
-# 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
-# 	docker buildx build --rm \
-# 		--build-arg IMAGE=$$IMAGE \
-# 		--build-arg VERSION=$$VERSION \
-# 		--build-arg BUILD_ID=$(BUILD_ID) \
-# 		--build-arg BUILD_DATE=$(BUILD_DATE) \
-# 		--build-arg BUILD_REPO=$(BUILD_REPO) \
-# 		--build-arg BUILD_BRANCH=$(BUILD_BRANCH) \
-# 		--build-arg BUILD_COMMIT_HASH=$(BUILD_COMMIT_HASH) \
-# 		--build-arg BUILD_COMMIT_DATE=$(BUILD_COMMIT_DATE) \
-# 		--output type=docker \
-# 		--label name=$$IMAGE \
-# 		--label version=$$VERSION \
-# 		--label build-id=$(BUILD_ID) \
-# 		--label build-date=$(BUILD_DATE) \
-# 		--label build-repo=$(BUILD_REPO) \
-# 		--label build-branch=$(BUILD_BRANCH) \
-# 		--label build-commit-hash=$(BUILD_COMMIT_HASH) \
-# 		--label build-commit-date=$(BUILD_COMMIT_DATE) \
-# 		$(BUILD_OPTS) $$cache_from \
-# 		--file $$dir/Dockerfile.effective \
-# 		--tag $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
-# 		$$dir
-# 	# Tag
-# 	docker tag \
-# 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):$$(make docker-image-get-version) \
-# 		$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest
-# 	docker rmi --force $$(docker images | grep "<none>" | awk '{ print $$3 }') 2> /dev/null ||:
-# 	make docker-image-keep-latest-only NAME=$(NAME)
-# 	docker image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
+	$(DOCKER_CMD) image inspect $$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example):latest --format='{{.Size}}'
 
 docker-test: ### Test image - mandatory: NAME; optional: ARGS,CMD,GOSS_OPTS,EXAMPLE=true
 	dir=$$(make _docker-get-dir)
@@ -209,9 +215,9 @@ docker-test: ### Test image - mandatory: NAME; optional: ARGS,CMD,GOSS_OPTS,EXAM
 
 docker-login: ### Log into the Docker registry - optional: DOCKER_USERNAME,DOCKER_PASSWORD
 	if [ -n "$(DOCKER_USERNAME)" ] && [ -n "$$(make _docker-get-login-password)" ]; then
-		make _docker-get-login-password | docker login --username "$(DOCKER_USERNAME)" --password-stdin
+		make _docker-get-login-password | $(DOCKER_CMD) login --username "$(DOCKER_USERNAME)" --password-stdin
 	else
-		make aws-ecr-get-login-password | docker login --username AWS --password-stdin $(AWS_ECR)
+		make aws-ecr-get-login-password | $(DOCKER_CMD) login --username AWS --password-stdin $(AWS_ECR)
 	fi
 
 docker-create-repository: ### Create Docker repository to store an image - mandatory: NAME; optional: POLICY_FILE=[policy file]
@@ -221,11 +227,14 @@ docker-push: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
 	make docker-login
 	reg=$$(make _docker-get-reg)
 	if [ -n "$(or $(VERSION), $(TAG))" ]; then
-		docker push $$reg/$(NAME):$(or $(VERSION), $(TAG))
+		echo "1 -----------------------------------------------------------------$(NAME) or $(VERSION) or $(TAG)"
+		$(DOCKER_CMD) push $$reg/$(NAME):$(or $(VERSION), $(TAG))
 	else
-		docker push $$reg/$(NAME):$$(make docker-image-get-version)
+		echo "2 -----------------------------------------------------------------$(NAME) $$(make docker-image-get-version)"
+		$(DOCKER_CMD) push $$reg/$(NAME):$$(make docker-image-get-version)
 	fi
-	docker push $$reg/$(NAME):latest 2> /dev/null ||:
+		echo "3 -----------------------------------------------------------------$(NAME)"
+	$(DOCKER_CMD) push $$reg/$(NAME):latest 2> /dev/null ||:
 
 docker-push-for-production: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
 	make docker-login
@@ -240,23 +249,23 @@ docker-pull: ### Pull Docker image - mandatory: NAME,DIGEST|VERSION|TAG
 	[ $$(make _docker-is-lib-image) == false ] && make docker-login
 	reg=$$(make _docker-get-reg)
 	if [ -n "$(DIGEST)" ]; then
-		docker pull $$reg/$(NAME)@$(DIGEST) ||:
+		$(DOCKER_CMD) pull $$reg/$(NAME)@$(DIGEST) ||:
 	else
-		docker pull $$reg/$(NAME):$(or $(VERSION), $(TAG)) ||:
+		$(DOCKER_CMD) pull $$reg/$(NAME):$(or $(VERSION), $(TAG)) ||:
 	fi
 
 docker-tag: ### Tag latest or provide arguments - mandatory: NAME,VERSION|TAG|[SOURCE,TARGET]|[DIGEST,VERSION|TAG]
 	reg=$$(make _docker-get-reg)
 	if [ -n "$(DIGEST)" ] && [ -n "$(TAG)" ]; then
-		docker tag \
+		$(DOCKER_CMD) tag \
 			$$reg/$(NAME)@$(DIGEST) \
 			$$reg/$(NAME):$(or $(VERSION), $(TAG))
 	elif [ -n "$(SOURCE)" ] && [ -n "$(TARGET)" ]; then
-		docker tag \
+		$(DOCKER_CMD) tag \
 			$$reg/$(NAME):$(SOURCE) \
 			$$reg/$(NAME):$(TARGET)
 	elif [ -n "$(or $(VERSION), $(TAG))" ]; then
-		docker tag \
+		$(DOCKER_CMD) tag \
 			$$reg/$(NAME):latest \
 			$$reg/$(NAME):$(or $(VERSION), $(TAG))
 	fi
@@ -346,25 +355,25 @@ docker-image-set-version: ### Set effective Docker image version - mandatory: NA
 docker-image-pull-or-build: ### Pull or build image - mandatory: NAME; optional VERSION|TAG=[defaults to 'latest'],LATEST=true
 	version=$(or $(or $(VERSION), $(TAG)), latest)
 	image=$(DOCKER_LIBRARY_REGISTRY)/$(NAME):$$version
-	if [ -z "$$(docker images --filter=reference="$$image" --quiet)" ]; then
+	if [ -z "$$($(DOCKER_CMD) images --filter=reference="$$image" --quiet)" ]; then
 		make docker-pull NAME=$(NAME) VERSION=$$version ||:
 	fi
-	if [ -z "$$(docker images --filter=reference="$$image" --quiet)" ]; then
+	if [ -z "$$($(DOCKER_CMD) images --filter=reference="$$image" --quiet)" ]; then
 			make docker-build NAME=$(NAME) || ( \
 				echo "ERROR: No image $$image found"; \
 				exit 1 \
 			)
 	fi
-	if [ -n "$$(docker images --filter=reference="$$image" --quiet)" ]; then
+	if [ -n "$$($(DOCKER_CMD) images --filter=reference="$$image" --quiet)" ]; then
 		[[ "$(LATEST)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]] && \
 			make docker-tag NAME=$(NAME) SOURCE=$$version TARGET=latest ||:
 	fi
 
 docker-image-keep-latest-only: ### Remove other images than latest - mandatory: NAME
 	reg=$$(make _docker-get-reg)
-	docker rmi --force $$( \
-		docker images --filter=reference="$$reg/$(NAME):*" --quiet | \
-			grep -v $$(docker images --filter=reference="$$reg/$(NAME):latest" --quiet) \
+	$(DOCKER_CMD) rmi --force $$( \
+		$(DOCKER_CMD) images --filter=reference="$$reg/$(NAME):*" --quiet | \
+			grep -v $$($(DOCKER_CMD) images --filter=reference="$$reg/$(NAME):latest" --quiet) \
 	) 2> /dev/null ||:
 
 docker-image-start: ### Start container - mandatory: NAME; optional: CMD,DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],EXAMPLE=true
@@ -430,7 +439,7 @@ docker-run: ### Run specified image - mandatory: IMAGE; optional: CMD,SH=true,DI
 	make docker-config > /dev/null 2>&1
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo $$(echo '$(IMAGE)' | md5sum | cut -c1-7)-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
 	if [[ ! "$(SH)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-		docker run --interactive $(_TTY) --rm \
+		$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 			--name $$container \
 			--user $$(id -u):$$(id -g) \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -491,7 +500,7 @@ docker-run-editorconfig: ### Run editorconfig container - optional: DIR=[working
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo mstruebing/editorconfig-checker:$(DOCKER_EDITORCONFIG_CHECKER_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo editorconfig-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--volume $$([ -n "$(DIR)" ] && echo $(abspath $(DIR)) || echo $(PWD)):/check \
@@ -780,7 +789,7 @@ docker-run-tools: ### Run tools (Python) container - mandatory: CMD; optional: S
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tools-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
 	make docker-image-pull-or-build NAME=tools VERSION=$(DOCKER_LIBRARY_TOOLS_VERSION) >&2
 	if [[ ! "$(SH)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-		docker run --interactive $(_TTY) --rm \
+		$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 			--name $$container \
 			--user $$(id -u):$$(id -g) \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -803,7 +812,7 @@ docker-run-tools: ### Run tools (Python) container - mandatory: CMD; optional: S
 			$$image \
 				$(CMD)
 	else
-		docker run --interactive $(_TTY) --rm \
+		$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 			--name $$container \
 			--user $$(id -u):$$(id -g) \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \

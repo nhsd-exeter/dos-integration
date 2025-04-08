@@ -4,6 +4,16 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # ==============================================================================
 # Development workflow targets
 
+docker_cmd:
+	DOCKER_CMD=$(DOCKER_CMD)
+
+# docker_get_reg:
+# 	echo $(_docker-get-reg)
+
+# build_ts:
+# 	echo $(or $(BUILD_DATE), $(shell date -u +"%Y-%m-%dT%H:%M:%S%z"))
+# 	echo $(shell date -j -f "%Y-%m-%dT%H:%M:%S%z" "$(BUILD_DATE)" -u +"%Y%m%d%H%M%S" 2>/dev/null)
+
 setup: project-config # Set up project
 	make tester-build
 
@@ -51,8 +61,7 @@ populate-tagging-variables:
 	echo "export TF_VAR_distribution_list=$$(echo $$DEPLOYMENT_SECRETS | jq -r '.$(DISTRIBUTION_LIST_KEY)')"
 
 unit-test:
-	# make -s docker-run-tester \
-	make -s podman-run-tester \
+	make -s docker-run-tester \
 	CMD="python -m pytest application --junitxml=./testresults.xml --cov-report term-missing --cov-report xml:coverage.xml --cov=application -vv" \
 	ARGS=$(UNIT_TEST_ARGS)
 
@@ -336,8 +345,7 @@ batch-delete-ecr-images: # Mandatory - LIST_OF_DIGESTS: [list of "sha:digest" se
 
 tester-build: ### Build tester docker image
 	cat $(APPLICATION_DIR)/*/requirements.txt $(APPLICATION_DIR)/requirements-dev.txt | sort --unique > $(DOCKER_DIR)/tester/assets/requirements.txt
-	# make -s docker-image NAME=tester
-	make -s podman-image NAME=tester
+	make -s docker-image NAME=tester
 
 tester-clean:
 	rm -fv $(DOCKER_DIR)/tester/assets/*.txt
@@ -498,43 +506,12 @@ commit-date-hash-tag:
 
 ######### Trial for podman #############
 
-podman-run-tester: ### Run Python container with Podman
-	make docker-config > /dev/null 2>&1
-	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
-	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume=$(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume=$(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
-	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date -u +"%Y%m%d%H%M%S")-$$(make secret-random LENGTH=8))
-	/opt/podman/bin/podman run --interactive $(_TTY) --rm \
-		--name $$container \
-		--user $$(id -u):$$(id -g) \
-		--env-file /tmp/env_aws_tx.env \
-		--env-file /tmp/env_db_api.env \
-		--env-file /tmp/env_profile.env \
-		--env-file /tmp/env_custom.env \
-		--env HOME=/tmp \
-		--env PIP_TARGET=/tmp/.packages \
-		--env PYTHONPATH=/tmp/.packages \
-		--env XDG_CACHE_HOME=/tmp/.cache \
-		--volume $(PROJECT_DIR):/project \
-		--volume $(HOME)/.aws:/tmp/.aws \
-		--volume $(HOME)/bin:/tmp/bin \
-		--volume $(HOME)/etc:/tmp/etc \
-		--volume $(HOME)/usr:/tmp/usr \
-		$$lib_volume_mount \
-		--network $(DOCKER_NETWORK) \
-		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
-		$(ARGS) \
-		$$(make _docker-get-reg)/tester:latest \
-			$(CMD)
-
-
-######### Trial for podman #############
-
-# docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
+# podman-run-tester: ### Run Python container with Podman
 # 	make docker-config > /dev/null 2>&1
 # 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
 # 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
 # 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-# 	docker run --interactive $(_TTY) --rm \
+# 	/opt/podman/bin/podman run --interactive $(_TTY) --rm \
 # 		--name $$container \
 # 		--user $$(id -u):$$(id -g) \
 # 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -556,6 +533,37 @@ podman-run-tester: ### Run Python container with Podman
 # 		$(ARGS) \
 # 		$$(make _docker-get-reg)/tester:latest \
 # 			$(CMD)
+
+
+######### Trial for podman #############
+
+docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],LIB_VOLUME_MOUNT=true,VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
+	make docker-config > /dev/null 2>&1
+	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
+	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
+	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
+		--name $$container \
+		--user $$(id -u):$$(id -g) \
+		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
+		--env-file <(make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)") \
+		--env-file <(make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)") \
+		--env-file <(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE)) \
+		--env HOME=/tmp \
+		--env PIP_TARGET=/tmp/.packages \
+		--env PYTHONPATH=/tmp/.packages \
+		--env XDG_CACHE_HOME=/tmp/.cache \
+		--volume $(PROJECT_DIR):/project \
+		--volume $(HOME)/.aws:/tmp/.aws \
+		--volume $(HOME)/bin:/tmp/bin \
+		--volume $(HOME)/etc:/tmp/etc \
+		--volume $(HOME)/usr:/tmp/usr \
+		$$lib_volume_mount \
+		--network $(DOCKER_NETWORK) \
+		--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+		$(ARGS) \
+		$$(make _docker-get-reg)/tester:latest \
+			$(CMD)
 
 
 # ==============================================================================
