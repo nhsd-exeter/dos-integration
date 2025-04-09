@@ -44,7 +44,6 @@ DOCKER_LIBRARY_TOOLS_VERSION = $(shell cat $(DOCKER_LIB_IMAGE_DIR)/tools/VERSION
 COMPOSE_HTTP_TIMEOUT := $(or $(COMPOSE_HTTP_TIMEOUT), 6000)
 DOCKER_CLIENT_TIMEOUT := $(or $(DOCKER_CLIENT_TIMEOUT), 6000)
 
-# DOCKER_CMD=$(shell type -p docker >/dev/null 2>&1 && echo docker || echo podman)
 DOCKER_CMD=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
 
 # ==============================================================================
@@ -75,17 +74,20 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	reg=$$(make _docker-get-reg)
 	# Try to execute `make build` from the image directory
 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-	echo "0_____________________________$(DOCKER_LIB_IMAGE_DIR), $(NAME), $(__DOCKER_BUILD), $(DOCKER_LIBRARY_REGISTRY)"
+		echo "00------------------------------------------------------------------"
 		cd $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true DOCKER_REGISTRY=$(DOCKER_LIBRARY_REGISTRY)
 		exit
 	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		echo "01------------------------------------------------------------------"
 		cd $(DOCKER_CUSTOM_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		echo "02------------------------------------------------------------------"
 		cd $(DOCKER_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
+		echo "03------------------------------------------------------------------"
 		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
@@ -93,6 +95,7 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	make NAME=$(NAME) \
 		docker-create-dockerfile FILE=Dockerfile$(shell [ -n "$(EXAMPLE)" ] && echo .example) \
 		docker-image-set-version VERSION=$(VERSION)
+		echo "VERSION----------------------------------------------$(VERSION)"
 	# Cache
 	cache_from=
 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
@@ -103,6 +106,7 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	dir=$$(make _docker-get-dir)
 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
 	export VERSION=$$(make docker-image-get-version)
+	echo "$$(make docker-image-get-version)--------------------------"
 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
 	$(DOCKER_CMD) buildx build --rm \
 		--build-arg IMAGE=$$IMAGE \
@@ -158,7 +162,7 @@ docker-create-repository: ### Create Docker repository to store an image - manda
 docker-push: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
 	make docker-login
 	reg=$$(make _docker-get-reg)
-	echo "0 -----------------------------------------------------------------$(IMAGE_NAME) or $(IMAGE_VERSION) or $(IMAGE_TAG)"
+	echo "0 -----------------------------------------------------------------$(NAME) or $(VERSION) or $(TAG)"
 	if [ -n "$(or $(VERSION), $(TAG))" ]; then
 		echo "1 -----------------------------------------------------------------$(NAME) or $(VERSION) or $(TAG)"
 		$(DOCKER_CMD) push $$reg/$(NAME):$(or $(VERSION), $(TAG))
@@ -812,18 +816,13 @@ docker-compose-exec: ### Run Docker Compose exec command - mandatory: CMD; optio
 # ==============================================================================
 
 _docker-get-dir:
-	echo "---------------------- NAME=$(NAME)"
 	if [ -n "$(DOCKER_CUSTOM_DIR)" ] && [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ]; then
-		echo "0----------------------"
 		echo $(DOCKER_CUSTOM_DIR)/$(NAME)
 	elif [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ]; then
-		echo "1----------------------"
 		echo $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
 	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ ! -z $(GENERIC_IMAGE_NAME) ] ; then
-		echo "2----------------------"
 		echo $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 	else
-		echo "3----------------------"
 		echo $(DOCKER_DIR)/$(NAME)
 	fi
 

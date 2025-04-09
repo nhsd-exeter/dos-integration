@@ -38,6 +38,7 @@ build-lambda: ### Build lambda docker image - mandatory: NAME
 build-and-push: # Build lambda docker images and pushes them to ECR
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
 		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
+		echo $$IMAGE_NAME+"1"
 		make -s docker-push NAME=$$IMAGE_NAME
 	done
 
