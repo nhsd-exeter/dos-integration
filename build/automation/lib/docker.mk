@@ -270,14 +270,18 @@ docker-image-get-version: ### Get effective Docker image version - mandatory: NA
 	cat $$dir/.version 2> /dev/null || cat $$dir/VERSION 2> /dev/null || echo unknown
 
 docker-image-set-version: ### Set effective Docker image version - mandatory: NAME; optional: VERSION
+	echo "-----------------printing variables to get the .version file location $(DOCKER_LIB_IMAGE_DIR), $(NAME), $(DOCKER_CUSTOM_DIR), $(VERSION)"
 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(DOCKER_CUSTOM_DIR)" ]; then
+		echo "000---------------------------Inside set image version if $(DOCKER_LIB_IMAGE_DIR)/$(NAME)/.version"
 		rm -f $(DOCKER_LIB_IMAGE_DIR)/$(NAME)/.version
 		exit
 	fi
 	dir=$$(make _docker-get-dir)
 	if [ -n "$(VERSION)" ]; then
+		echo "001---------------------------Inside set image version if $(VERSION), $$(make _docker-get-dir)"
 		echo $(VERSION) > $$dir/.version
 	else
+		echo "002---------------------------Inside set image version else $$(cat $$dir/VERSION)"
 		echo $$(cat $$dir/VERSION) | \
 			sed "s/YYYY/$$(date --date=$(BUILD_DATE) -u +"%Y")/g" | \
 			sed "s/mm/$$(date --date=$(BUILD_DATE) -u +"%m")/g" | \
@@ -288,6 +292,7 @@ docker-image-set-version: ### Set effective Docker image version - mandatory: NA
 			sed "s/SS/$$(date --date=$(BUILD_DATE) -u +"%S")/g" | \
 			sed "s/hash/$$(git rev-parse --short HEAD)/g" \
 		> $$dir/.version
+		echo "-------------------------------------dir/.version = $$(cat $$dir/.version)"
 	fi
 
 # ==============================================================================
@@ -609,7 +614,7 @@ docker-run-terraform: ### Run terraform container - mandatory: CMD; optional: DI
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo hashicorp/terraform:$(DOCKER_TERRAFORM_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo terraform-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
