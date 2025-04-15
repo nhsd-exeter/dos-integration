@@ -617,7 +617,7 @@ GIT_COMMIT_MESSAGE_MAX_LENGTH := 72
 GIT_PULL_REQUEST_TITLE_MAX_LENGTH := $(shell echo $$(( $(GIT_COMMIT_MESSAGE_MAX_LENGTH) + 12 )))
 
 BUILD_DATE := $(or $(BUILD_DATE), $(shell date -u +"%Y-%m-%dT%H:%M:%S%z"))
-BUILD_TIMESTAMP := $(shell gdate --date=$(BUILD_DATE) -u +"%Y%m%d%H%M%S" 2> /dev/null)
+BUILD_TIMESTAMP := $(shell date --date=$(BUILD_DATE) -u +"%Y%m%d%H%M%S" 2> /dev/null)
 BUILD_ID := $(or $(or $(or $(or $(shell ([ -z "$(BUILD_ID)" ] && [ -n "$(JENKINS_URL)" ]) && echo $(BUILD_TIMESTAMP) ||:), $(BUILD_ID)), $(CIRCLE_BUILD_NUM)), $(CODEBUILD_BUILD_NUMBER)), 0)
 BUILD_REPO := $(or $(shell git config --get remote.origin.url 2> /dev/null ||:), unknown)
 BUILD_BRANCH := $(if $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null | grep -E ^HEAD$ ||:),$(or $(shell git name-rev --name-only HEAD 2> /dev/null | sed "s;remotes/origin/;;g" ||:), unknown),$(or $(shell git rev-parse --abbrev-ref HEAD 2> /dev/null | sed "s;remotes/origin/;;g" ||:), unknown))

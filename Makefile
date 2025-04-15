@@ -4,19 +4,6 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 # ==============================================================================
 # Development workflow targets
 
-docker-cmd:
-	DOCKER_CMD=$(DOCKER_CMD)
-
-docker-debugger:
-	DOCKER_LIB_IMAGE_DIR=$(DOCKER_LIB_IMAGE_DIR)
-
-# docker_get_reg:
-# 	echo $(_docker-get-reg)
-
-# build_ts:
-# 	echo $(or $(BUILD_DATE), $(shell date -u +"%Y-%m-%dT%H:%M:%S%z"))
-# 	echo $(shell date -j -f "%Y-%m-%dT%H:%M:%S%z" "$(BUILD_DATE)" -u +"%Y%m%d%H%M%S" 2>/dev/null)
-
 setup: project-config # Set up project
 	make tester-build
 

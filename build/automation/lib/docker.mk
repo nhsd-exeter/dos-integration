@@ -74,20 +74,16 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	reg=$$(make _docker-get-reg)
 	# Try to execute `make build` from the image directory
 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-		echo "00------------------------------------------------------------------"
 		cd $(DOCKER_LIB_IMAGE_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true DOCKER_REGISTRY=$(DOCKER_LIBRARY_REGISTRY)
 		exit
 	elif [ -d $(DOCKER_CUSTOM_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-		echo "01------------------------------------------------------------------"
 		cd $(DOCKER_CUSTOM_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	elif [ -d $(DOCKER_DIR)/$(NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-		echo "02------------------------------------------------------------------"
 		cd $(DOCKER_DIR)/$(NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	elif [ -d $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME) ] && [ -z "$(__DOCKER_BUILD)" ]; then
-		echo "03------------------------------------------------------------------"
 		cd $(DOCKER_DIR)/$(GENERIC_IMAGE_NAME)
 		make build __DOCKER_BUILD=true && exit || cd $(PROJECT_DIR)
 	fi
@@ -95,7 +91,6 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	make NAME=$(NAME) \
 		docker-create-dockerfile FILE=Dockerfile$(shell [ -n "$(EXAMPLE)" ] && echo .example) \
 		docker-image-set-version VERSION=$(VERSION)
-		echo "VERSION----------------------------------------------$(VERSION)"
 	# Cache
 	cache_from=
 	if [[ "$(FROM_CACHE)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
@@ -106,7 +101,6 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 	dir=$$(make _docker-get-dir)
 	export IMAGE=$$reg/$(NAME)$(shell [ -n "$(EXAMPLE)" ] && echo -example)
 	export VERSION=$$(make docker-image-get-version)
-	echo "$$(make docker-image-get-version)--------------------------"
 	make -s file-replace-variables FILE=$$dir/Dockerfile.effective
 	$(DOCKER_CMD) buildx build --rm \
 		--build-arg IMAGE=$$IMAGE \
@@ -162,15 +156,11 @@ docker-create-repository: ### Create Docker repository to store an image - manda
 docker-push: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
 	make docker-login
 	reg=$$(make _docker-get-reg)
-	echo "0 -----------------------------------------------------------------$(NAME) or $(VERSION) or $(TAG)"
 	if [ -n "$(or $(VERSION), $(TAG))" ]; then
-		echo "1 -----------------------------------------------------------------$(NAME) or $(VERSION) or $(TAG)"
 		$(DOCKER_CMD) push $$reg/$(NAME):$(or $(VERSION), $(TAG))
 	else
-		echo "2 -----------------------------------------------------------------$(NAME) $$(make docker-image-get-version)"
 		$(DOCKER_CMD) push $$reg/$(NAME):$$(make docker-image-get-version)
 	fi
-		echo "3 -----------------------------------------------------------------$(NAME)"
 	$(DOCKER_CMD) push $$reg/$(NAME):latest 2> /dev/null ||:
 
 docker-push-for-production: ### Push Docker image - mandatory: NAME; optional: VERSION|TAG
@@ -194,17 +184,14 @@ docker-pull: ### Pull Docker image - mandatory: NAME,DIGEST|VERSION|TAG
 docker-tag: ### Tag latest or provide arguments - mandatory: NAME,VERSION|TAG|[SOURCE,TARGET]|[DIGEST,VERSION|TAG]
 	reg=$$(make _docker-get-reg)
 	if [ -n "$(DIGEST)" ] && [ -n "$(TAG)" ]; then
-		echo "0_____________________________$(DIGEST), $(NAME), $(VERSION), $(TAG)"
 		$(DOCKER_CMD) tag \
 			$$reg/$(NAME)@$(DIGEST) \
 			$$reg/$(NAME):$(or $(VERSION), $(TAG))
 	elif [ -n "$(SOURCE)" ] && [ -n "$(TARGET)" ]; then
-		echo "1_____________________________$(SOURCE), $(TARGET) "
 		$(DOCKER_CMD) tag \
 			$$reg/$(NAME):$(SOURCE) \
 			$$reg/$(NAME):$(TARGET)
 	elif [ -n "$(or $(VERSION), $(TAG))" ]; then
-		echo "2_____________________________$(NAME), $(VERSION), $(TAG)"
 		$(DOCKER_CMD) tag \
 			$$reg/$(NAME):latest \
 			$$reg/$(NAME):$(or $(VERSION), $(TAG))
@@ -270,18 +257,14 @@ docker-image-get-version: ### Get effective Docker image version - mandatory: NA
 	cat $$dir/.version 2> /dev/null || cat $$dir/VERSION 2> /dev/null || echo unknown
 
 docker-image-set-version: ### Set effective Docker image version - mandatory: NAME; optional: VERSION
-	echo "-----------------printing variables to get the .version file location $(DOCKER_LIB_IMAGE_DIR), $(NAME), $(DOCKER_CUSTOM_DIR), $(VERSION)"
 	if [ -d $(DOCKER_LIB_IMAGE_DIR)/$(NAME) ] && [ -z "$(DOCKER_CUSTOM_DIR)" ]; then
-		echo "000---------------------------Inside set image version if $(DOCKER_LIB_IMAGE_DIR)/$(NAME)/.version"
 		rm -f $(DOCKER_LIB_IMAGE_DIR)/$(NAME)/.version
 		exit
 	fi
 	dir=$$(make _docker-get-dir)
 	if [ -n "$(VERSION)" ]; then
-		echo "001---------------------------Inside set image version if $(VERSION), $$(make _docker-get-dir)"
 		echo $(VERSION) > $$dir/.version
 	else
-		echo "002---------------------------Inside set image version else $$(cat $$dir/VERSION)"
 		echo $$(cat $$dir/VERSION) | \
 			sed "s/YYYY/$$(date --date=$(BUILD_DATE) -u +"%Y")/g" | \
 			sed "s/mm/$$(date --date=$(BUILD_DATE) -u +"%m")/g" | \
@@ -292,7 +275,6 @@ docker-image-set-version: ### Set effective Docker image version - mandatory: NA
 			sed "s/SS/$$(date --date=$(BUILD_DATE) -u +"%S")/g" | \
 			sed "s/hash/$$(git rev-parse --short HEAD)/g" \
 		> $$dir/.version
-		echo "-------------------------------------dir/.version = $$(cat $$dir/.version)"
 	fi
 
 # ==============================================================================
@@ -551,7 +533,7 @@ docker-run-python: ### Run python container - mandatory: CMD; optional: SH=true,
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo python:$(DOCKER_PYTHON_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo python-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
 	if [[ ! "$(SH)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then
-		docker run --interactive $(_TTY) --rm \
+		$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 			--name $$container \
 			--user $$(id -u):$$(id -g) \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -569,7 +551,7 @@ docker-run-python: ### Run python container - mandatory: CMD; optional: SH=true,
 			$$image \
 				$(CMD)
 	else
-		docker run --interactive $(_TTY) --rm \
+		$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 			--name $$container \
 			--user $$(id -u):$$(id -g) \
 			--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
