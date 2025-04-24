@@ -11,7 +11,7 @@ from requests import Response
 
 cfg = botocore_config.Config(
     retries={"max_attempts": 0},
-    read_timeout=900,
+    read_timeout=1000,
     connect_timeout=900,
 )
 LAMBDA_CLIENT_FUNCTIONS = client("lambda", config=cfg)
