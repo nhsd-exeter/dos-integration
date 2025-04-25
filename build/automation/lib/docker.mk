@@ -45,6 +45,7 @@ COMPOSE_HTTP_TIMEOUT := $(or $(COMPOSE_HTTP_TIMEOUT), 6000)
 DOCKER_CLIENT_TIMEOUT := $(or $(DOCKER_CLIENT_TIMEOUT), 6000)
 
 DOCKER_CMD=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
+IS_PODMAN := $(shell [ "$(DOCKER_CMD)" = "podman" ] && echo true || echo false)
 
 # ==============================================================================
 
@@ -572,6 +573,75 @@ docker-run-python: ### Run python container - mandatory: CMD; optional: SH=true,
 				"
 	fi
 
+####################################################################################################################################################
+# Enabling podman for docker-run-python target
+
+# Detect Docker or Podman (default to Docker if both available)
+# docker-run-python: ### Run python container - works with Docker or Podman
+# 	make docker-config > /dev/null 2>&1
+# 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
+
+# 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" = true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
+
+# 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo python:$(DOCKER_PYTHON_VERSION))
+
+# 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo python-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date -u +"%Y%m%d%H%M%S")-$$(make secret-random LENGTH=8))
+
+# 	# Handle env-files
+# 	if [ "$(IS_PODMAN)" = "true" ]; then \
+# 		envfile1=$$(mktemp); make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)" > $$envfile1; \
+# 		envfile2=$$(mktemp); make _list-variables PATTERN="^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)" > $$envfile2; \
+# 		envfile3=$$(mktemp); make _list-variables PATTERN="^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)" > $$envfile3; \
+# 		envfile4=$$(mktemp); make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE) > $$envfile4; \
+# 		env_files="--env-file=$$envfile1 --env-file=$$envfile2 --env-file=$$envfile3 --env-file=$$envfile4"; \
+# 	else \
+# 		env_files="--env-file=<(make _list-variables PATTERN=\"^(AWS|TX|TEXAS|NHSD|TERRAFORM)\") \
+# 			--env-file=<(make _list-variables PATTERN=\"^(DB|DATABASE|SMTP|APP|APPLICATION|UI|API|SERVER|HOST|URL)\") \
+# 			--env-file=<(make _list-variables PATTERN=\"^(PROFILE|ENVIRONMENT|BUILD|PROGRAMME|ORG|SERVICE|PROJECT)\") \
+# 			--env-file=<(make _docker-get-variables-from-file VARS_FILE=$(VARS_FILE))"; \
+# 	fi; \
+
+# 	# Choose shell or not
+# 	if [[ ! "$(SH)" =~ ^(true|yes|y|on|1|TRUE|YES|Y|ON)$$ ]]; then \
+# 		eval $$(echo $(DOCKER_CMD)) run --interactive $(_TTY) --rm \
+# 			--name $$container \
+# 			--user $$(id -u):$$(id -g) \
+# 			$$env_files \
+# 			--env PIP_TARGET=/tmp/.packages \
+# 			--env PYTHONPATH=/tmp/.packages \
+# 			--env XDG_CACHE_HOME=/tmp/.cache \
+# 			--volume $(PROJECT_DIR):/project$(if $(filter podman,$(DOCKER_CMD)),:Z,) \
+# 			$$lib_volume_mount \
+# 			--network $(DOCKER_NETWORK) \
+# 			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+# 			$(ARGS) \
+# 			$$image \
+# 			$(CMD); \
+# 	else \
+# 		eval $$(echo $(DOCKER_CMD)) run --interactive $(_TTY) --rm \
+# 			--name $$container \
+# 			--user $$(id -u):$$(id -g) \
+# 			$$env_files \
+# 			--env PIP_TARGET=/tmp/.packages \
+# 			--env PYTHONPATH=/tmp/.packages \
+# 			--env XDG_CACHE_HOME=/tmp/.cache \
+# 			--volume $(PROJECT_DIR):/project$(if $(filter podman,$(DOCKER_CMD)),:Z,) \
+# 			$$lib_volume_mount \
+# 			--network $(DOCKER_NETWORK) \
+# 			--workdir /project/$(shell echo $(abspath $(DIR)) | sed "s;$(PROJECT_DIR);;g") \
+# 			$(ARGS) \
+# 			$$image \
+# 			/bin/sh -c "$(CMD)"; \
+# 	fi; \
+
+# 	# Cleanup temp env files
+# 	if [ "$(IS_PODMAN)" = "true" ]; then \
+# 		rm -f $$envfile1 $$envfile2 $$envfile3 $$envfile4; \
+# 	fi
+
+
+####################################################################################################################################################
+
 docker-run-sonar-scanner-cli: ### Run sonar-scanner-cli container - mandatory: CMD; optional: SH=true,DIR,ARGS=[Docker args],VARS_FILE=[Makefile vars file],IMAGE=[image name],CONTAINER=[container name]
 	make docker-config > /dev/null 2>&1
 	mkdir -p $(TMP_DIR)/.sonar/cache
@@ -615,7 +685,7 @@ docker-run-terraform-tfsec: ### Run terraform tfsec container - optional: DIR,AR
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo aquasec/tfsec:$(DOCKER_TERRAFORM_TFSEC_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tfsec-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -634,7 +704,7 @@ docker-run-checkov: ### Run checkov container - optional: DIR,ARGS=[Docker args]
 	make docker-config > /dev/null 2>&1
 	image=$$([ -n "$(IMAGE)" ] && echo $(IMAGE) || echo bridgecrew/checkov:$(DOCKER_CHECKOV_VERSION))
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tfsec-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
