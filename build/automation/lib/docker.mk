@@ -46,6 +46,7 @@ DOCKER_CLIENT_TIMEOUT := $(or $(DOCKER_CLIENT_TIMEOUT), 6000)
 
 DOCKER_CMD=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
 IS_PODMAN := $(shell [ "$(DOCKER_CMD)" = "podman" ] && echo true || echo false)
+OUTPUT_OPTION := $(if $(filter false,$(IS_PODMAN)),--output type=docker)
 
 # ==============================================================================
 
@@ -112,6 +113,7 @@ docker-build docker-image: ### Build Docker image - mandatory: NAME; optional: V
 		--build-arg BUILD_BRANCH=$(BUILD_BRANCH) \
 		--build-arg BUILD_COMMIT_HASH=$(BUILD_COMMIT_HASH) \
 		--build-arg BUILD_COMMIT_DATE=$(BUILD_COMMIT_DATE) \
+		$(OUTPUT_OPTION) \
 		--label name=$$IMAGE \
 		--label version=$$VERSION \
 		--label build-id=$(BUILD_ID) \
