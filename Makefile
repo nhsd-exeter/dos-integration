@@ -7,6 +7,9 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 setup: project-config # Set up project
 	make tester-build
 
+container-check: # Check the container management tool - can be set with: "export DOCKER_CMD=`which podman`" or "export DOCKER_CMD=`which docker`"
+	echo $(DOCKER_CMD)
+
 build: # Build lambdas
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
 		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
@@ -556,3 +559,4 @@ python-run-ruff-fixes: # Auto fixes ruff warnings
 .SILENT: docker-run-ruff \
 	commit-date-hash-tag \
 	performance-test-results \
+	container-check \

@@ -44,8 +44,8 @@ DOCKER_LIBRARY_TOOLS_VERSION = $(shell cat $(DOCKER_LIB_IMAGE_DIR)/tools/VERSION
 COMPOSE_HTTP_TIMEOUT := $(or $(COMPOSE_HTTP_TIMEOUT), 6000)
 DOCKER_CLIENT_TIMEOUT := $(or $(DOCKER_CLIENT_TIMEOUT), 6000)
 
-DOCKER_CMD=$(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman)
-IS_PODMAN := $(shell [ "$(DOCKER_CMD)" = "podman" ] && echo true || echo false)
+DOCKER_CMD := $(or $(DOCKER_CMD), $(shell command -v docker >/dev/null 2>&1 && echo docker || echo podman))
+IS_PODMAN := $(shell [[ "$(DOCKER_CMD)" == *podman ]] && echo true || echo false)
 OUTPUT_OPTION := $(if $(filter false,$(IS_PODMAN)),--output type=docker)
 
 # ==============================================================================
