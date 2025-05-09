@@ -7,6 +7,9 @@ include $(abspath $(PROJECT_DIR)/build/automation/init.mk)
 setup: project-config # Set up project
 	make tester-build
 
+container-check: # Check the container management tool - can be set with: "export DOCKER_CMD=`which podman`" or "export DOCKER_CMD=`which docker`"
+	echo $(DOCKER_CMD)
+
 build: # Build lambdas
 	for IMAGE_NAME in $$(echo $(PROJECT_LAMBDAS_LIST) | tr "," "\n"); do
 		make -s build-lambda GENERIC_IMAGE_NAME=lambda NAME=$$IMAGE_NAME
@@ -499,7 +502,7 @@ docker-run-tester: ### Run python container - mandatory: CMD; optional: SH=true,
 	mkdir -p $(TMP_DIR)/.python/pip/{cache,packages}
 	lib_volume_mount=$$(([ $(BUILD_ID) -eq 0 ] || [ "$(LIB_VOLUME_MOUNT)" == true ]) && echo "--volume $(TMP_DIR)/.python/pip/cache:/tmp/.cache/pip --volume $(TMP_DIR)/.python/pip/packages:/tmp/.packages" ||:)
 	container=$$([ -n "$(CONTAINER)" ] && echo $(CONTAINER) || echo tester-$(BUILD_COMMIT_HASH)-$(BUILD_ID)-$$(date --date=$$(date -u +"%Y-%m-%dT%H:%M:%S%z") -u +"%Y%m%d%H%M%S" 2> /dev/null)-$$(make secret-random LENGTH=8))
-	docker run --interactive $(_TTY) --rm \
+	$(DOCKER_CMD) run --interactive $(_TTY) --rm \
 		--name $$container \
 		--user $$(id -u):$$(id -g) \
 		--env-file <(make _list-variables PATTERN="^(AWS|TX|TEXAS|NHSD|TERRAFORM)") \
@@ -556,3 +559,4 @@ python-run-ruff-fixes: # Auto fixes ruff warnings
 .SILENT: docker-run-ruff \
 	commit-date-hash-tag \
 	performance-test-results \
+	container-check \
