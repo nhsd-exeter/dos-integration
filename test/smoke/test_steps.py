@@ -39,7 +39,7 @@ def _(smoke_test_context: SmokeTestContext) -> SmokeTestContext:
     Returns:
         SmokeTestContext: The smoke test context
     """
-    smoke_test_context.original_service = get_change_event_for_service("FC766")
+    smoke_test_context.original_service = get_change_event_for_service("FDL64")
     smoke_test_context.updated_service = ChangeEvent(
         address=smoke_test_context.original_service.address,
         website=smoke_test_context.original_service.website,
