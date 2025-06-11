@@ -1,5 +1,5 @@
-/.github @NHSDigital/data-sourcing-ftrs
-/build/automation/lib @NHSDigital/data-sourcing-ftrs
-/build/automation/init.mk @NHSDigital/data-sourcing-ftrs
-/.gitignore @NHSDigital/data-sourcing-ftrs
-/project.code-workspace @NHSDigital/data-sourcing-ftrs
+/.github @NHSDigital/data-sourcing-ftrs/maintainers
+/build/automation/lib @NHSDigital/data-sourcing-ftrs/maintainers
+/build/automation/init.mk @NHSDigital/data-sourcing-ftrs/maintainers
+/.gitignore @NHSDigital/data-sourcing-ftrs/maintainers
+/project.code-workspace @NHSDigital/data-sourcing-ftrs/maintainers
