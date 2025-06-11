@@ -25,22 +25,19 @@ jobs:
       - name: Check Python Unit Test Coverage
         run: |
           make coverage-report
-      - uses: sonarsource/sonarcloud-github-action@master
-        # SEE: https://github.com/SonarSource/sonarcloud-github-action
+      - name: Perform SonarCloud static analysis
+        uses: sonarsource/sonarqube-scan-action@v5.2.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectBaseDir: .
           args: >
-            -Dsonar.sources=application,infrastructure,scripts,test,build/docker
-            -Dsonar.organization=nhsd-exeter
-            -Dsonar.projectKey=uec-dos-int
-            -Dsonar.coverage.exclusions=tests/**,**/tests/**,infrastructure,application/dos_db_handler/**,test/**,scripts/**,application/conftest.py
+            -Dsonar.organization=${{ vars.SONAR_ORGANISATION_KEY }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+            -Dsonar.branch.name=${{ github.ref_name }}
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.12
-            -Dsonar.exclusions=application/**/tests/**
-
+            -Dproject.settings=./scripts/config/sonar-scanner.properties
+        continue-on-error: true # quick toggle to disable sonar-cloud if down
   check-markdown-code-quality:
     runs-on: ubuntu-latest
     steps:
