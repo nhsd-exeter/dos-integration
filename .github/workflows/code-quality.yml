@@ -37,7 +37,7 @@ jobs:
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.12
             -Dproject.settings=./scripts/config/sonar-scanner.properties
-        continue-on-error: true
+        continue-on-error: false # quick toggle to disable sonar-cloud if down
   check-markdown-code-quality:
     runs-on: ubuntu-latest
     steps:
