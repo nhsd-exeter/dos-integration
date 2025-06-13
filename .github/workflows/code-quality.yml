@@ -34,8 +34,8 @@ jobs:
           projectBaseDir: .
           args: >
             -Dsonar.sources=application,infrastructure,scripts,test,build/docker
-            -Dsonar.organization=nhsd-exeter
-            -Dsonar.projectKey=uec-dos-int
+            -Dsonar.organization=nhsdigital
+            -Dsonar.projectKey=nhsdigital_dos-integration
             -Dsonar.coverage.exclusions=tests/**,**/tests/**,infrastructure,application/dos_db_handler/**,test/**,scripts/**,application/conftest.py
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.python.version=3.12
