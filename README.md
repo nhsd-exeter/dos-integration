@@ -108,7 +108,7 @@ The main components you will need for _basic_ development work, are your OS vers
 
 Clone the repository
 
-    git clone git@github.com:nhsd-exeter/dos-integration.git
+    git clone git@github.com:NHSDigital/dos-integration.git
     cd ./dos-integration
 
 ### AWS Authentication
