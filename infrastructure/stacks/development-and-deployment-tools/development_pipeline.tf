@@ -19,7 +19,7 @@ resource "aws_codepipeline" "development_pipeline" {
       output_artifacts = ["source_output"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        ConnectionArn    = aws_codestarconnections_connection.github_nhsdigital.arn
         FullRepositoryId = "${var.github_owner}/${var.github_repo}"
         BranchName       = var.development_pipeline_branch_name
         DetectChanges    = true
