@@ -102,7 +102,7 @@ The main components you will need for _basic_ development work, are your OS vers
 - Git
 - Python (The project currently runs on 3.12)
 - AWS CLI
-- Docker
+- Docker/Podman
 
 ### Clone Repository
 
