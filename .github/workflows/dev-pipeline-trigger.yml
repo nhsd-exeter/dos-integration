@@ -14,4 +14,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trigger CodePipeline via Make
-        run: make aws-codepipeline-trigger NAME=uec-dos-int-dev-development-pipeline AWS_REGION=eu-west-2
+        run: |
+          make aws-assume-role-export-variables
+          make aws-codepipeline-trigger NAME=uec-dos-int-dev-development-pipeline AWS_REGION=eu-west-2

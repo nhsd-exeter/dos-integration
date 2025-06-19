@@ -87,7 +87,7 @@ aws-codepipeline-trigger: ### Trigger pipeline - mandatory: NAME=[pipeline name]
 		$(AWSCLI) codepipeline start-pipeline-execution \
 			--name $(NAME) \
 			--region $(AWS_REGION) \
-	"
+	" | tr -d '\r' | tr -d '\n'
 
 aws-secret-get-and-format: ### Get secret - mandatory: NAME=[secret name]; optional: AWS_REGION=[AWS region]
 	make aws-secret-get NAME=$(NAME) \
