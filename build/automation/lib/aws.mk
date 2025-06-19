@@ -82,6 +82,13 @@ aws-secret-get: ### Get secret - mandatory: NAME=[secret name]; optional: AWS_RE
 			--output text \
 	" | tr -d '\r' | tr -d '\n'
 
+aws-codepipeline-trigger: ### Trigger pipeline - mandatory: NAME=[pipeline name]; optional: AWS_REGION=[region]
+	make -s docker-run-tools ARGS="$$(echo $(AWSCLI) | grep awslocal > /dev/null 2>&1 && echo '--env LOCALSTACK_HOST=$(LOCALSTACK_HOST)' ||:)" CMD=" \
+		$(AWSCLI) codepipeline start-pipeline-execution \
+			--name $(NAME) \
+			--region $(AWS_REGION) \
+	"
+
 aws-secret-get-and-format: ### Get secret - mandatory: NAME=[secret name]; optional: AWS_REGION=[AWS region]
 	make aws-secret-get NAME=$(NAME) \
 		| make -s docker-run-tools CMD="jq -r"
